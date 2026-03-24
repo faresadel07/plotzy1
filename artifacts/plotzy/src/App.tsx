@@ -23,10 +23,8 @@ import Pricing from "@/pages/pricing";
 import SubscriptionSuccess from "@/pages/subscription-success";
 import Marketplace from "@/pages/marketplace";
 import Library from "@/pages/library";
-import GutenbergLibrary from "@/pages/gutenberg-library";
 import ReadBook from "@/pages/read-book";
 import AuthorProfile from "@/pages/author-profile";
-import GutenbergReader from "@/pages/gutenberg-reader";
 import SupportPage from "@/pages/support";
 
 function ScrollToTop() {
@@ -56,8 +54,6 @@ function Router() {
         <Route path="/subscription/success" component={SubscriptionSuccess} />
         <Route path="/marketplace" component={Marketplace} />
         <Route path="/library" component={Library} />
-        <Route path="/gutenberg" component={GutenbergLibrary} />
-        <Route path="/gutenberg/read/:id" component={GutenbergReader} />
         <Route path="/read/:id" component={ReadBook} />
         <Route path="/authors/:userId" component={AuthorProfile} />
         <Route path="/support" component={SupportPage} />

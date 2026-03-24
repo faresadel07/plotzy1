@@ -32,7 +32,6 @@ const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/writing-guide", key: "navGuide" },
   { href: "/marketplace",   key: "navMarketplace" },
   { href: "/library",       key: "navCommunity" },
-  { href: "/gutenberg",     key: "navPublicDomain" },
   { href: "/pricing",       key: "navPro" },
   { href: "/support",       key: "navSupport" },
 ];
