@@ -1648,6 +1648,156 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // ─── Project Gutenberg proxy (gutendex.com) ────────────────────────────────
+
+  app.get("/api/gutenberg/books", async (req, res) => {
+    try {
+      const params = new URLSearchParams();
+      if (req.query.page)      params.set("page",      String(req.query.page));
+      if (req.query.search)    params.set("search",    String(req.query.search));
+      if (req.query.topic)     params.set("topic",     String(req.query.topic));
+      if (req.query.languages) params.set("languages", String(req.query.languages));
+      if (req.query.sort)      params.set("sort",      String(req.query.sort));
+
+      const response = await fetch(`https://gutendex.com/books?${params.toString()}`, {
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) return res.status(response.status).json({ message: "Gutenberg API error" });
+
+      const raw = await response.json() as any;
+      const books = (raw.results || []).map((b: any) => {
+        const formats = b.formats || {};
+        return {
+          id: b.id,
+          title: b.title,
+          authors: (b.authors || []).map((a: any) => {
+            const parts = (a.name || "").split(", ");
+            return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
+          }),
+          subjects: (b.subjects || []).slice(0, 6),
+          bookshelves: (b.bookshelves || []).slice(0, 4),
+          languages: b.languages || [],
+          coverImage: formats["image/jpeg"] || null,
+          readUrl: formats["text/html"] || formats["text/html; charset=utf-8"] || null,
+          downloadUrl: formats["application/epub+zip"] || null,
+          pdfUrl: formats["application/pdf"] || null,
+          txtUrl: formats["text/plain"] || formats["text/plain; charset=utf-8"] || formats["text/plain; charset=us-ascii"] || null,
+          downloadCount: b.download_count || 0,
+        };
+      });
+
+      res.json({
+        count: raw.count || 0,
+        page: Number(req.query.page) || 1,
+        hasNext: !!raw.next,
+        books,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch from Gutenberg" });
+    }
+  });
+
+  app.get("/api/gutenberg/books/:id", async (req, res) => {
+    try {
+      const response = await fetch(`https://gutendex.com/books/${req.params.id}`, {
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) return res.status(response.status).json({ message: "Book not found" });
+      const b = await response.json() as any;
+      const formats = b.formats || {};
+      res.json({
+        id: b.id,
+        title: b.title,
+        authors: (b.authors || []).map((a: any) => {
+          const parts = (a.name || "").split(", ");
+          return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
+        }),
+        subjects: b.subjects || [],
+        bookshelves: b.bookshelves || [],
+        languages: b.languages || [],
+        coverImage: formats["image/jpeg"] || null,
+        readUrl: formats["text/html"] || formats["text/html; charset=utf-8"] || null,
+        downloadUrl: formats["application/epub+zip"] || null,
+        pdfUrl: formats["application/pdf"] || null,
+        txtUrl: formats["text/plain"] || formats["text/plain; charset=utf-8"] || formats["text/plain; charset=us-ascii"] || null,
+        downloadCount: b.download_count || 0,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch book" });
+    }
+  });
+
+  // ─── Internet Archive proxy ─────────────────────────────────────────────────
+
+  app.get("/api/archive/books", async (req, res) => {
+    try {
+      const page    = Number(req.query.page) || 1;
+      const rows    = 20;
+      const start   = (page - 1) * rows;
+      const search  = String(req.query.search  || "");
+      const subject = String(req.query.subject  || "");
+      const lang    = String(req.query.language || "");
+      const sort    = String(req.query.sort     || "downloads desc");
+
+      let query = "mediatype:texts AND format:epub";
+      if (search)  query += ` AND (title:${search} OR creator:${search})`;
+      if (subject) query += ` AND subject:${subject}`;
+      if (lang)    query += ` AND language:${lang}`;
+
+      const params = new URLSearchParams({
+        q: query,
+        fl: "identifier,title,creator,subject,language,downloads,date,description",
+        sort,
+        rows: String(rows),
+        start: String(start),
+        output: "json",
+      });
+
+      const response = await fetch(`https://archive.org/advancedsearch.php?${params.toString()}`, {
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) return res.status(response.status).json({ message: "Archive API error" });
+
+      const raw = await response.json() as any;
+      const docs = raw?.response?.docs || [];
+      const numFound = raw?.response?.numFound || 0;
+
+      const books = docs.map((d: any) => {
+        const id = d.identifier || "";
+        const title = Array.isArray(d.title) ? d.title[0] : d.title || "Untitled";
+        const creator = Array.isArray(d.creator) ? d.creator : (d.creator ? [d.creator] : []);
+        const subjects = Array.isArray(d.subject) ? d.subject.slice(0, 6) : [];
+        const languages = Array.isArray(d.language) ? d.language : (d.language ? [d.language] : []);
+        return {
+          id,
+          title,
+          authors: creator,
+          subjects,
+          bookshelves: [],
+          languages,
+          coverImage: `https://archive.org/services/img/${id}`,
+          readUrl: `https://archive.org/details/${id}`,
+          downloadUrl: `https://archive.org/download/${id}/${id}.epub`,
+          pdfUrl: `https://archive.org/download/${id}/${id}.pdf`,
+          txtUrl: null,
+          downloadCount: d.downloads || 0,
+        };
+      });
+
+      res.json({
+        count: numFound,
+        page,
+        hasNext: start + rows < numFound,
+        books,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch from Internet Archive" });
+    }
+  });
+
   // Seed professionals if none exist
   const existingPros = await db.select().from(professionals);
   if (existingPros.length === 0) {
