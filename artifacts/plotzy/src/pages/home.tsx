@@ -1,0 +1,1003 @@
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Link, useLocation } from "wouter";
+import { Layout } from "@/components/layout";
+import { FeatureVideo } from "@/components/FeatureVideo";
+import { WritingAnimation } from "@/components/WritingAnimation";
+import { AIAssistantAnimation } from "@/components/AIAssistantAnimation";
+import { CardStack } from "@/components/ui/card-stack";
+import { BookCarousel } from "@/components/BookCarousel";
+import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
+import { BookViewerOverlay } from "@/components/BookViewerOverlay";
+import { useBooks, useCreateBook, useGenerateCover, useTrashBook, useDuplicateBook } from "@/hooks/use-books";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { ContentTypeSelector } from "@/components/ContentTypeSelector";
+import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2 } from "lucide-react";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { HeroMockup } from "@/components/HeroMockup";
+import { format } from "date-fns";
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/language-context";
+import { useAuth } from "@/contexts/auth-context";
+import { BOOK_LANGUAGES } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
+import { LandingCanvas } from "@/components/landing/LandingCanvas";
+import { TextShimmer } from "@/components/ui/text-shimmer";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { BookCoverShader } from "@/components/ui/book-cover-shader";
+import { PerspectiveBook } from "@/components/ui/perspective-book";
+import { ConfirmModal } from "@/components/confirm-modal";
+import { WritingCalendar } from "@/components/writing-calendar";
+
+
+const BOOKS_PER_SHELF = 4;
+
+const COVER_PALETTES = [
+  { bg: 'linear-gradient(150deg,#0f0c29,#302b63,#24243e)', accent: '#a78bfa' },
+  { bg: 'linear-gradient(150deg,#1a0800,#6b2d00,#c2410c)', accent: '#fb923c' },
+  { bg: 'linear-gradient(150deg,#001c2e,#003d5b,#0369a1)', accent: '#38bdf8' },
+  { bg: 'linear-gradient(150deg,#12001a,#2a003a,#7e22ce)', accent: '#e879f9' },
+  { bg: 'linear-gradient(150deg,#052010,#0f4a20,#15803d)', accent: '#4ade80' },
+  { bg: 'linear-gradient(150deg,#1a0505,#5c1010,#991b1b)', accent: '#f87171' },
+  { bg: 'linear-gradient(150deg,#0a0a1a,#1e1b4b,#3730a3)', accent: '#818cf8' },
+];
+
+/* ── Book pages ────────────────────────────────────────────── */
+const BOOK_FONT  = "'Merriweather', 'Lora', Georgia, serif";
+const PAGE_BG    = "#F2ECD8";
+const PAGE_TEXT  = "#1a1209";
+const PAGE_FAINT = "#7a6a55";
+
+const LEFT_PARAGRAPHS = [
+  "Every great book begins not with a plot or a character, but with a single decision: to sit down and write. Plotzy was built around that moment: the fragile instant before the first word appears on the page.",
+  "The editor is a full-screen canvas that silences every distraction. No notifications, no banners, no menus competing for attention. When you open a chapter in Plotzy, the only thing that exists is the story.",
+  "Beneath that simplicity lies a complete manuscript management system. Chapters can be reordered with a single drag. Word counts update with every keystroke. Status labels (drafted, revised, final) give writers a clear picture of where their book stands at any moment.",
+  "The AI Smart Editor reads as you write. It suggests stronger verbs, flags passive constructions, and offers alternative phrasings, not to replace your voice, but to sharpen it. Think of it as an invisible co-author, always present, never intrusive.",
+  "Cover Art Studio translates your story's mood into a professional jacket within seconds. Describe the tone, the era, the feeling you want to evoke, and Plotzy generates gallery-quality artwork ready for the shelf.",
+];
+
+const RIGHT_PARAGRAPHS = [
+  "World Publish turns the complex world of distribution into a single button. Your manuscript reaches every major platform, digital and print, while Plotzy handles formatting, rights management, and royalty tracking.",
+  "The analytics dashboard goes far beyond download counts. You can see exactly where readers slow down, where they accelerate, and where they quietly close the book. Armed with that data, revision becomes a precise science rather than a guessing game.",
+  "Multi-language support means Plotzy adapts to you, not the other way around. Whether you write in Arabic, English, French, or Spanish, the editor adjusts its direction, spacing, and typography to honour your language's natural rhythm.",
+  "Version History saves every keystroke. Nothing is ever truly deleted. You can roll back to any point in your manuscript's life, from yesterday's draft to the very first sentence you typed in Plotzy.",
+  "Collaboration Mode lets you invite editors and co-authors into your workspace. They can annotate, suggest, and comment without disturbing your flow, keeping every voice in the conversation without confusion.",
+];
+
+function BookPages() {
+  const [paraIdx, setParaIdx] = useState(0);
+  const [typed, setTyped]     = useState("");
+  const [charIdx, setCharIdx] = useState(0);
+  const SPEED = 14;
+  const TYPED_OFFSET = 2;
+  const TYPED_COUNT  = RIGHT_PARAGRAPHS.length - TYPED_OFFSET;
+
+  useEffect(() => { setTyped(""); setCharIdx(0); }, [paraIdx]);
+  useEffect(() => {
+    const para = RIGHT_PARAGRAPHS[TYPED_OFFSET + paraIdx];
+    if (charIdx >= para.length) {
+      const t = setTimeout(() => setParaIdx(i => (i + 1) % TYPED_COUNT), 2600);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => { setTyped(para.slice(0, charIdx + 1)); setCharIdx(c => c + 1); }, SPEED);
+    return () => clearTimeout(t);
+  }, [charIdx, paraIdx]);
+
+  const page: React.CSSProperties = {
+    flex: 1, height: "100%",
+    background: `linear-gradient(180deg, ${PAGE_BG} 0%, #EDE5CC 100%)`,
+    position: "relative", overflow: "hidden",
+    display: "flex", flexDirection: "column",
+    padding: "20px 56px 42px", boxSizing: "border-box",
+  };
+
+  /* small-caps running header */
+  const runHeader: React.CSSProperties = {
+    fontFamily: BOOK_FONT,
+    fontSize: "0.5rem",
+    fontStyle: "normal",
+    color: PAGE_FAINT,
+    textAlign: "center",
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    marginBottom: 10,
+  };
+
+  /* thin rule under running header */
+  const headerRule: React.CSSProperties = {
+    border: "none",
+    borderTop: `0.5px solid ${PAGE_FAINT}44`,
+    margin: "0 0 14px",
+  };
+
+  /* Roman chapter numeral */
+  const chapterNum: React.CSSProperties = {
+    fontFamily: BOOK_FONT,
+    fontSize: "0.82rem",
+    fontWeight: "normal",
+    fontStyle: "italic",
+    color: PAGE_FAINT,
+    textAlign: "center",
+    letterSpacing: "0.08em",
+    marginBottom: 4,
+  };
+
+  const chapterHeading: React.CSSProperties = {
+    fontFamily: BOOK_FONT,
+    fontSize: "1.32rem",
+    fontWeight: "bold",
+    fontStyle: "normal",
+    color: PAGE_TEXT,
+    textAlign: "center",
+    marginBottom: 5,
+    lineHeight: 1.25,
+    letterSpacing: "0.03em",
+  };
+
+  /* ornamental divider */
+  const ornamentRow: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginBottom: 8,
+  };
+  const ornamentLine: React.CSSProperties = {
+    flex: 1, height: 0.5,
+    background: `linear-gradient(90deg, transparent, ${PAGE_FAINT}66, transparent)`,
+  };
+  const ornamentDiamond: React.CSSProperties = {
+    width: 5, height: 5,
+    background: PAGE_FAINT,
+    transform: "rotate(45deg)",
+    opacity: 0.55,
+    flexShrink: 0,
+  };
+
+  const chapterSubtitle: React.CSSProperties = {
+    fontFamily: BOOK_FONT,
+    fontSize: "0.66rem",
+    fontStyle: "italic",
+    color: PAGE_FAINT,
+    textAlign: "center",
+    marginBottom: 18,
+    letterSpacing: "0.05em",
+  };
+
+  const para: React.CSSProperties = {
+    fontFamily: BOOK_FONT,
+    fontSize: "0.82rem",
+    lineHeight: 1.9,
+    fontStyle: "normal",
+    fontWeight: "normal",
+    color: PAGE_TEXT,
+    textAlign: "justify",
+    textIndent: "2.2em",
+    margin: "0 0 2px",
+  };
+
+  /* drop-cap first letter */
+  const dropCapStyle: React.CSSProperties = {
+    float: "left",
+    fontFamily: BOOK_FONT,
+    fontSize: "3.4em",
+    lineHeight: "0.76",
+    fontWeight: "bold",
+    color: PAGE_TEXT,
+    paddingRight: "0.06em",
+    paddingTop: "0.1em",
+    marginBottom: "-0.05em",
+  };
+
+  /* page number with em-dash decoration */
+  const pageNumRow: React.CSSProperties = {
+    position: "absolute", bottom: 9, left: 0, right: 0,
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+  };
+  const pageNumDash: React.CSSProperties = {
+    fontFamily: BOOK_FONT, fontSize: "0.54rem",
+    color: PAGE_FAINT, letterSpacing: "0.05em",
+  };
+  const pageNumText: React.CSSProperties = {
+    fontFamily: BOOK_FONT, fontSize: "0.62rem",
+    color: PAGE_TEXT, fontWeight: 500, letterSpacing: "0.04em",
+  };
+
+  const leftPageShadow  = "inset -60px 0 70px rgba(0,0,0,0.14), inset -2px 0 6px rgba(0,0,0,0.18)";
+  const rightPageShadow = "inset 60px 0 70px rgba(0,0,0,0.14), inset 2px 0 6px rgba(0,0,0,0.18)";
+
+  return (
+    <div style={{ width: "100%", height: "100%", display: "flex", position: "relative" }}>
+
+      {/* ── LEFT PAGE ── */}
+      <div style={{ ...page, boxShadow: leftPageShadow }}>
+        <p style={runHeader}>Plotzy · The Writer's Platform</p>
+
+        <p style={chapterNum}>Chapter 1</p>
+        <h2 style={chapterHeading}>An Introduction to Plotzy</h2>
+
+        <div style={{ flex: 1, overflow: "hidden", marginTop: 18 }}>
+          {LEFT_PARAGRAPHS.map((p, i) => {
+            if (i === 0) {
+              const [first, ...rest] = p.split("");
+              return (
+                <p key={i} style={{ ...para, textIndent: 0 }}>
+                  <span style={dropCapStyle}>{first}</span>
+                  {rest.join("")}
+                </p>
+              );
+            }
+            return <p key={i} style={para}>{p}</p>;
+          })}
+        </div>
+
+        {/* Page number */}
+        <div style={pageNumRow}>
+          <span style={pageNumDash}>—</span>
+          <span style={pageNumText}>5</span>
+          <span style={pageNumDash}>—</span>
+        </div>
+      </div>
+
+
+      {/* ── RIGHT PAGE ── */}
+      <div style={{ ...page, boxShadow: rightPageShadow }}>
+        <p style={runHeader}>Plotzy · The Writer's Platform</p>
+
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          {RIGHT_PARAGRAPHS.slice(0, TYPED_OFFSET).map((p, i) => (
+            <p key={i} style={para}>{p}</p>
+          ))}
+          <p style={para}>
+            {typed}
+            <motion.span
+              animate={{ opacity: [1, 0] }}
+              transition={{ duration: 0.55, repeat: Infinity }}
+              style={{ display: "inline-block", width: 1.5, height: "0.78em", background: PAGE_TEXT, marginLeft: 1, verticalAlign: "middle" }}
+            />
+          </p>
+        </div>
+
+        {/* Page number */}
+        <div style={pageNumRow}>
+          <span style={pageNumDash}>—</span>
+          <span style={pageNumText}>6</span>
+          <span style={pageNumDash}>—</span>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+export default function Home() {
+  const [, setLocation] = useLocation();
+  const { data: books, isLoading } = useBooks();
+  const createBook = useCreateBook();
+  const generateCover = useGenerateCover();
+  const trashBook = useTrashBook();
+  const duplicateBook = useDuplicateBook();
+  const { t, lang, isRTL } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [authorName, setAuthorName] = useState("");
+  const [bookLang, setBookLang] = useState(lang);
+  const [selectedShelfBook, setSelectedShelfBook] = useState<ShelfBookData | null>(null);
+  const [confirmTrashId, setConfirmTrashId] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  // ── Mouse-parallax for hero ──────────────────────────────
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const parallaxX = useTransform(mouseX, [-1, 1], [-18, 18]);
+  const parallaxY = useTransform(mouseY, [-1, 1], [-10, 10]);
+  const smoothX = useSpring(parallaxX, { stiffness: 50, damping: 20 });
+  const smoothY = useSpring(parallaxY, { stiffness: 50, damping: 20 });
+  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(((e.clientX - rect.left) / rect.width - 0.5) * 2);
+    mouseY.set(((e.clientY - rect.top) / rect.height - 0.5) * 2);
+  }, [mouseX, mouseY]);
+  const handleHeroMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+  }, [mouseX, mouseY]);
+
+  const handleCreateWizardBook = async (data: { title: string; summary: string; authorName: string; genre: string; protagonist: string }) => {
+    try {
+      const newBook = await createBook.mutateAsync({
+        title: data.title,
+        summary: data.summary,
+        authorName: data.authorName,
+        language: lang,
+      });
+
+      if (data.protagonist) {
+        generateCover.mutate({ id: newBook.id, prompt: `A ${data.genre} book cover featuring ${data.protagonist}` });
+      }
+
+      setLocation(`/books/${newBook.id}`);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to create book", description: err?.message || String(err) });
+      throw err;
+    }
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    try {
+      await createBook.mutateAsync({ title, summary, authorName, language: bookLang });
+      setIsOpen(false);
+      setTitle("");
+      setSummary("");
+      setAuthorName("");
+      setBookLang(lang);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Could not create book", description: err?.message || String(err) });
+    }
+  };
+
+  const handleSelectorCreateBook = async (data: { title: string; summary: string; authorName: string; language: string }) => {
+    const newBook = await createBook.mutateAsync({ ...data, contentType: "book" } as any);
+    setIsOpen(false);
+    setLocation(`/books/${newBook.id}`);
+  };
+
+  const handleSelectorCreateArticle = async (data: { title: string; authorName: string; language: string; category: string }) => {
+    const newArticle = await createBook.mutateAsync({
+      title: data.title,
+      authorName: data.authorName,
+      language: data.language,
+      contentType: "article",
+      articleCategory: data.category,
+    } as any);
+    setIsOpen(false);
+    setLocation(`/articles/${newArticle.id}`);
+  };
+
+  const { user } = useAuth();
+  const firstName = user?.displayName ? user.displayName.trim().split(/\s+/)[0] : null;
+
+  const shelfRows = books ? Array.from({ length: Math.ceil(books.length / BOOKS_PER_SHELF) }, (_, i) => books.slice(i * BOOKS_PER_SHELF, (i + 1) * BOOKS_PER_SHELF)) : [];
+  const getBookLangInfo = (code: string) => BOOK_LANGUAGES.find(l => l.code === code);
+
+  // Smooth scroll helper
+  const scrollToFeatures = () => {
+    document.getElementById('platform-features')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <>
+      <BookViewerOverlay isOpen={!!selectedShelfBook} onClose={() => setSelectedShelfBook(null)} bookData={selectedShelfBook} />
+
+      <ConfirmModal
+        isOpen={confirmTrashId !== null}
+        onClose={() => setConfirmTrashId(null)}
+        onConfirm={() => { if (confirmTrashId !== null) trashBook.mutate(confirmTrashId); }}
+        title="Move to Recycle Bin"
+        message="This project will be moved to the Recycle Bin. You can restore it at any time."
+        confirmLabel="Move to Trash"
+        variant="warning"
+      />
+
+      <ContentTypeSelector
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        lang={lang}
+        isRTL={isRTL}
+        onCreateBook={handleSelectorCreateBook}
+        onCreateArticle={handleSelectorCreateArticle}
+        isCreating={createBook.isPending}
+      />
+
+      {/* 
+        Pass isLanding=true so Layout removes margins 
+        and allows Edge-to-Edge hero canvas 
+      */}
+      <Layout isLanding>
+
+        {/* ===== HERO SECTION — ContainerScroll 3D ===== */}
+        <div className="bg-[#080808]">
+          <ContainerScroll
+            titleComponent={
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                  style={{
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                    fontWeight: 400,
+                    letterSpacing: "0.01em",
+                    color: "rgba(255,255,255,0.88)",
+                    margin: 0,
+                    textAlign: "center",
+                  }}
+                >
+                  write your first book with
+                </motion.p>
+                <motion.h1
+                  initial={{ opacity: 0, y: 32 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                  style={{
+                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: "clamp(5rem, 13vw, 10rem)",
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    letterSpacing: "-0.055em",
+                    color: "#EFEFEF",
+                    margin: 0,
+                    userSelect: "none",
+                    textAlign: "center",
+                  }}
+                >
+                  PLOTZY
+                </motion.h1>
+              </div>
+            }
+          >
+            <BookPages />
+          </ContainerScroll>
+        </div>
+
+        {/* ===== FEATURE PHRASES ===== */}
+        <div style={{ background: "#080808", overflow: "hidden", padding: "14px 6%", marginTop: "-60px" }}>
+          <div style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            columnGap: "6%",
+            rowGap: "0",
+          }}>
+            {[
+              "The world's first platform of its kind.",
+              "A powerful community that reads, rates, and elevates your book.",
+              "A proven guide to start writing, crafted with real authors.",
+              "An AI-powered marketplace that perfects every detail of your book.",
+              "Access hundreds of thousands of free books to spark your creativity.",
+              "From your first word to your cover, we've got everything covered.",
+            ].map((phrase, i) => {
+              const fromLeft = i % 2 === 0;
+              return (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0, x: fromLeft ? -60 : 60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.5 }}
+                  transition={{ duration: 0.6, delay: Math.floor(i / 2) * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+                  style={{
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
+                    fontSize: "clamp(1.1rem, 1.9vw, 1.45rem)",
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.88)",
+                    lineHeight: 1.5,
+                    letterSpacing: "-0.01em",
+                    padding: "18px 0",
+                  }}
+                >
+                  <span style={{ color: "rgba(255,255,255,0.3)", marginRight: "10px", fontSize: "0.8em" }}>●</span>
+                  {phrase}
+                </motion.p>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ===== EXISTING ACTIVE LIBRARY SECTION (SLEEK INTEGRATION) ===== */}
+        {books && books.length > 0 && (
+          <section className="bg-[#050505] border-b border-white/5 py-24 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+
+              {/* ── Personalized Greeting ── */}
+              {firstName && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, ease: "easeOut" }}
+                  className="mb-10"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30 mb-1">
+                    Welcome back
+                  </p>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+                    Hello, <span className="text-white">{firstName}!</span>
+                  </h1>
+                </motion.div>
+              )}
+
+              {/* Library Header */}
+              <div id="workspace" className="flex items-end justify-between gap-4 mb-10">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">Workspace</p>
+                  <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Your Projects</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-semibold text-white/20 uppercase tracking-widest hidden sm:block">
+                    {books.length} {books.length === 1 ? "Project" : "Projects"}
+                  </span>
+                  <Link href="/trash">
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                      style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Trash
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => setIsOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                    style={{ background: '#ffffff', color: '#111111' }}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    New Project
+                  </button>
+                </div>
+              </div>
+
+              {/* Shelf display (reusing standard bookshelf loop logic with new styles) */}
+              <div className="space-y-12">
+                {shelfRows.map((rowBooks, rowIndex) => (
+                  <div key={rowIndex} className={`grid gap-5 ${books.length === 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+                    {/* "Add new" placeholder card — only in first row */}
+                    {rowIndex === 0 && books.length < 4 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.25 }}
+                        onClick={() => setIsOpen(true)}
+                        className="cursor-pointer group"
+                      >
+                        <div
+                          className="relative aspect-[2/3] rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 border border-dashed border-white/[0.12] hover:border-white/25 transition-all duration-300"
+                          style={{ background: 'rgba(255,255,255,0.02)' }}
+                        >
+                          <div className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center group-hover:border-white/30 transition-colors">
+                            <Plus className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
+                          </div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/20 group-hover:text-white/40 transition-colors">New Project</p>
+                        </div>
+                        <div className="mt-2.5 px-0.5 h-7" />
+                      </motion.div>
+                    )}
+                    {rowBooks.map((book, bookIndex) => {
+                      const langInfo = getBookLangInfo(book.language || "en");
+                      const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];
+                      const titleLen = book.title.length;
+                      const titleFontSize = titleLen > 30 ? '0.67rem' : titleLen > 20 ? '0.78rem' : titleLen > 12 ? '0.9rem' : '1.05rem';
+                      return (
+                        <motion.div
+                          key={book.id}
+                          initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                          viewport={{ once: true, margin: "-50px" }}
+                          transition={{ duration: 0.5, delay: (bookIndex % BOOKS_PER_SHELF) * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                        >
+                          <Link href={book.contentType === "article" ? `/articles/${book.id}` : `/books/${book.id}`} className="block">
+
+                            {/* ── 3D Perspective Book ── */}
+                            <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
+                              {/* Animated shader background (no custom cover) */}
+                              {!book.coverImage && (
+                                <div className="absolute inset-0">
+                                  <BookCoverShader bookId={book.id} speed={0.5} />
+                                </div>
+                              )}
+
+                              {/* Cover image (if exists) */}
+                              {book.coverImage && (
+                                <img
+                                  src={book.coverImage}
+                                  alt={book.title}
+                                  className="absolute inset-0 w-full h-full object-cover object-center"
+                                />
+                              )}
+
+                              {/* Top-half lighting sheen */}
+                              <div
+                                className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20"
+                                style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }}
+                              />
+
+                              {/* Bottom gradient + title block */}
+                              <div
+                                className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20"
+                                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}
+                              >
+                                <div
+                                  className="w-full h-px mb-2"
+                                  style={{ background: coverPalette.accent, opacity: 0.7 }}
+                                />
+                                <h3
+                                  className="text-white font-bold leading-tight line-clamp-2"
+                                  style={{
+                                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+                                    fontSize: titleFontSize,
+                                    textShadow: '0 1px 8px rgba(0,0,0,0.7)',
+                                  }}
+                                >
+                                  {book.title}
+                                </h3>
+                                <div
+                                  className="mt-0.5 tracking-[0.18em] uppercase"
+                                  style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}
+                                >
+                                  {book.genre ? book.genre : book.contentType === 'article' ? 'Blog' : 'Book'}
+                                </div>
+                              </div>
+
+                              {/* Lang badge */}
+                              {langInfo && langInfo.code !== 'en' && (
+                                <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">
+                                  {langInfo.nativeName.slice(0, 3)}
+                                </div>
+                              )}
+
+                              {/* Hover overlay */}
+                              <div
+                                className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                                style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
+                              >
+                                <span className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                  Continue Writing
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    duplicateBook.mutate(book.id);
+                                  }}
+                                  disabled={duplicateBook.isPending}
+                                  className="text-violet-300/80 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-violet-400/20 bg-violet-500/10 hover:bg-violet-500/25 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
+                                >
+                                  {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setConfirmTrashId(book.id);
+                                  }}
+                                  className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-75"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </PerspectiveBook>
+
+                            {/* ── Label below card ── */}
+                            <div className="mt-2.5 px-0.5">
+                              <p className="text-[12px] font-semibold text-white/75 truncate leading-snug">{book.title}</p>
+                              <p className="text-[10px] text-white/28 mt-0.5">
+                                {book.createdAt ? format(new Date(book.createdAt), 'MMM d, yyyy') : ''}
+                              </p>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ===== WRITING HABIT CALENDAR ===== */}
+        {user && books && books.length > 0 && (
+          <section className="bg-[#0a0a0a] border-b border-white/5 py-12 px-4 sm:px-8">
+            <div className="max-w-5xl mx-auto">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1.5 h-5 rounded-full bg-violet-500" />
+                <h2 className="text-white/80 text-sm font-bold uppercase tracking-wider">Writing Activity</h2>
+              </div>
+              <WritingCalendar />
+            </div>
+          </section>
+        )}
+
+        {/* ===== ONBOARDING HERO CTA FOR EMPTY STATES ===== */}
+        {(!books || books.length === 0) && !isLoading && (
+          <section className="bg-[#050505] border-b border-white/5 py-16 px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-md mx-auto text-center"
+            >
+              {/* Icon with floating animation */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-white/10 bg-white/[0.04] mb-6 shadow-[0_0_30px_rgba(255,255,255,0.04)]"
+              >
+                <Sparkles className="w-6 h-6 text-white/60" />
+              </motion.div>
+
+              {/* Greeting */}
+              {firstName && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-3"
+                >
+                  Welcome back, {firstName}
+                </motion.p>
+              )}
+
+              <motion.h3
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="text-2xl font-semibold text-white mb-3 tracking-tight"
+              >
+                No active projects yet
+              </motion.h3>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-sm text-white/40 mb-8 leading-relaxed max-w-xs mx-auto"
+              >
+                Start writing your first book and join thousands of authors building their next bestseller.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.38 }}
+                className="flex flex-col items-center gap-3"
+              >
+                <button
+                  onClick={() => setIsOpen(true)}
+                  className="group inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                  style={{ background: '#fff', color: '#111', boxShadow: '0 4px 20px rgba(255,255,255,0.1)' }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Begin Your Journey
+                </button>
+                <button
+                  onClick={scrollToFeatures}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-medium text-white/40 transition-all duration-200 hover:text-white/70"
+                >
+                  View Full Features
+                  <ChevronDown className="w-3 h-3 opacity-70" />
+                </button>
+              </motion.div>
+            </motion.div>
+          </section>
+        )}
+
+
+
+        {/* ===== HOW IT WORKS — REEDSY-STYLE ALTERNATING SECTIONS ===== */}
+        <section className="bg-white pt-28 pb-14 px-6 sm:px-8 border-b border-[#f0f0f0]">
+          <div className="max-w-7xl mx-auto">
+            {/* — Step 1 — */}
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-32">
+              {/* Text left */}
+              <motion.div
+                className="flex-1 max-w-[500px]"
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+              >
+                <div className="text-xs font-bold uppercase tracking-[0.25em] text-foreground/40 mb-4">Step 1</div>
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-6">
+                  Write your story,<br/>your way
+                </h2>
+                <p className="text-lg text-[#555] leading-[1.75] mb-8">
+                  A distraction-free editor built for authors. Outline your chapters,
+                  structure your plot, and pour your ideas onto the page — all in one focused workspace.
+                </p>
+                <ul className="space-y-3">
+                  {['Chapter-by-chapter organisation','Auto-save & version history','Full RTL & multi-language support'].map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-[#444] text-sm font-medium">
+                      <span className="w-5 h-5 rounded-full bg-black/8 border border-black/15 flex items-center justify-center flex-shrink-0">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* Editor mockup right */}
+              <motion.div
+                className="flex-1 max-w-[560px] w-full"
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+              >
+                <WritingAnimation />
+              </motion.div>
+            </div>
+
+            {/* — Step 2 — */}
+            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24">
+              {/* Text right */}
+              <motion.div
+                className="flex-1 max-w-[500px]"
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+              >
+                <div className="text-xs font-bold uppercase tracking-[0.25em] text-foreground/40 mb-4">Step 2</div>
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-6">
+                  AI that writes<br/>alongside you
+                </h2>
+                <p className="text-lg text-[#555] leading-[1.75] mb-8">
+                  Stuck on a scene? Just ask. Plotzy's AI reads your story's context and
+                  suggests continuations, rewrites, and ideas that sound like you — not a machine.
+                </p>
+                <ul className="space-y-3">
+                  {['Context-aware chapter suggestions','Tone & style matching','Expand, rewrite, or brainstorm on demand'].map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-[#444] text-sm font-medium">
+                      <span className="w-5 h-5 rounded-full bg-black/8 border border-black/15 flex items-center justify-center flex-shrink-0">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+
+              {/* AI chat mockup left */}
+              <motion.div
+                className="flex-1 max-w-[560px] w-full"
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+              >
+                <AIAssistantAnimation />
+              </motion.div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ===== CARD STACK FEATURES ===== */}
+        <div id="platform-features" style={{ background: "#080808", padding: "80px 0 100px" }}>
+          <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px" }}>
+            <div style={{ textAlign: "center", marginBottom: 60 }}>
+              <p style={{
+                fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em",
+                color: "rgba(255,255,255,0.3)", textTransform: "uppercase",
+                marginBottom: 16, fontFamily: '-apple-system,"SF Pro Display",sans-serif',
+              }}>
+                What Plotzy offers
+              </p>
+              <h2 style={{
+                fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 700,
+                color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1,
+                fontFamily: '-apple-system,"SF Pro Display",sans-serif',
+              }}>
+                Everything a writer needs,<br />in a single place.
+              </h2>
+            </div>
+
+            <CardStack
+              cardWidth={480}
+              cardHeight={280}
+              overlap={0.46}
+              spreadDeg={40}
+              autoAdvance
+              intervalMs={3200}
+              pauseOnHover
+              items={[
+                {
+                  id: 1,
+                  tag: "Writing",
+                  title: "A distraction-free editor built for long-form writing",
+                  description: "Full-screen chapters, live word count, drag-to-reorder, and status labels. The page stays out of your way so the story stays in focus.",
+                  accent: "linear-gradient(90deg,#fff 0%,#aaa 100%)",
+                },
+                {
+                  id: 2,
+                  tag: "AI",
+                  title: "An AI that reads as you write, never as you wait",
+                  description: "Stronger verbs, passive-voice flags, alternative phrasings — offered quietly, so your voice stays yours. Think of it as an invisible co-author.",
+                  accent: "linear-gradient(90deg,#a78bfa 0%,#7c3aed 100%)",
+                },
+                {
+                  id: 3,
+                  tag: "Publishing",
+                  title: "One button to reach every major platform",
+                  description: "Your manuscript lands on every digital and print platform simultaneously. Formatting, rights management, and royalty tracking handled automatically.",
+                  accent: "linear-gradient(90deg,#34d399 0%,#059669 100%)",
+                },
+                {
+                  id: 4,
+                  tag: "Cover Design",
+                  title: "Professional covers generated in seconds",
+                  description: "Describe your story's tone, era, and feeling. Plotzy generates gallery-quality artwork ready for the shelf — no design skills required.",
+                  accent: "linear-gradient(90deg,#fb923c 0%,#ea580c 100%)",
+                },
+                {
+                  id: 5,
+                  tag: "Analytics",
+                  title: "Know exactly where readers slow down or stop",
+                  description: "See where readers accelerate, where they drift, and where they quietly close the book. Revision becomes a precise science rather than a guessing game.",
+                  accent: "linear-gradient(90deg,#38bdf8 0%,#0284c7 100%)",
+                },
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* ===== BOOK CAROUSEL ===== */}
+        <BookCarousel />
+
+        {/* ===== CTA SECTION ===== */}
+        <section className="relative bg-[#080808] text-center py-10 px-6 sm:px-8 overflow-hidden">
+
+          {/* Corner dots */}
+          <div className="absolute top-8 left-8 w-1 h-1 rounded-full bg-white/10" />
+          <div className="absolute top-8 right-8 w-1 h-1 rounded-full bg-white/10" />
+          <div className="absolute bottom-8 left-8 w-1 h-1 rounded-full bg-white/10" />
+          <div className="absolute bottom-8 right-8 w-1 h-1 rounded-full bg-white/10" />
+
+          <div className="max-w-3xl mx-auto relative">
+            <TextShimmer
+              as="h2"
+              duration={3}
+              spread={3}
+              className="text-[clamp(2rem,4.5vw,3.2rem)] font-bold mb-5 leading-[1.1] block text-white"
+            >
+              Ready to Claim Your Legacy?
+            </TextShimmer>
+
+            <p className="text-base font-light mb-10 leading-[1.8] max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.42)' }}>
+              The platform. The tools. The community.<br />Everything you need to transform your vision into reality.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <button
+                onClick={() => setIsOpen(true)}
+                className="group inline-flex items-center gap-2.5 px-8 py-3 rounded-full font-bold text-sm tracking-wide transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
+                style={{ background: '#EFEFEF', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', color: '#111111' }}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Begin Your Journey
+              </button>
+              <button
+                onClick={scrollToFeatures}
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm tracking-wide border transition-all duration-300 hover:border-white/30 hover:bg-white/[0.06] hover:scale-[1.03] active:scale-[0.97]"
+                style={{ color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.03)' }}
+              >
+                View Full Features
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes ctaGlowPulse {
+              0%, 100% { opacity: 1; transform: scale(1); }
+              50% { opacity: 0.6; transform: scale(1.08); }
+            }
+          `}</style>
+        </section>
+
+      </Layout>
+
+      <OnboardingWizard open={showWizard} onClose={() => setShowWizard(false)} onCreateBook={handleCreateWizardBook} />
+    </>
+  );
+}

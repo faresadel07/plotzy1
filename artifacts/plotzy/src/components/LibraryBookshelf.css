@@ -1,0 +1,424 @@
+:root {
+    /* Ultra-realistic leather & cloth colors based on the reference image */
+    --c-white: #e8e6df;
+    /* Slightly warm off-white */
+    --c-maroon: #4a1c20;
+    /* Deep rich maroon */
+    --c-crimson: #63211c;
+    /* Slightly brighter crimson */
+    --c-red-orange: #a13220;
+    /* Muted brick red/orange */
+    --c-navy: #182536;
+    /* Dark desaturated navy blue */
+    --c-blue: #23324d;
+    /* Slightly lighter navy */
+    --c-yellow: #cda22d;
+    /* Mustard yellow */
+    --c-orange: #b8621b;
+    /* Muted leather orange */
+    --c-purple: #422949;
+    /* Deep aubergine purple */
+    --c-black: #141517;
+    /* Charcoal black leather */
+    --c-green: #23452b;
+    /* Dark forest green */
+
+    --gold-light: #ffffff;
+    --gold-mid: #a3a3a3;
+    --gold-dark: #404040;
+
+    /* Shelf dark wood/matte black colors */
+    --shelf-bg: #111111;
+    --shelf-border: #1a1a1a;
+    --shelf-shadow: #080808;
+}
+
+.library-container {
+    padding: 30px 45px 35px 45px;
+    background: var(--shelf-bg);
+    /* The frame is thick and matte */
+    border: 18px solid var(--shelf-border);
+    border-bottom-width: 24px;
+    box-shadow:
+        0 40px 80px rgba(0, 0, 0, 0.95),
+        inset 0 25px 50px rgba(0, 0, 0, 0.9);
+    perspective: 1600px;
+    border-radius: 4px;
+    max-width: fit-content;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Inner shadow to simulate the depth of the shelf box */
+.library-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 1);
+    pointer-events: none;
+    z-index: 20;
+}
+
+.bookshelf {
+    direction: ltr;
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5px;
+    /* Tighter gap like real books squeezed together */
+    padding-bottom: 2px;
+    border-bottom: 4px solid #050505;
+    position: relative;
+    z-index: 10;
+}
+
+/* --- Anatomical Structure and Leather --- */
+.book {
+    position: relative;
+    width: 44px;
+    height: 290px;
+    /* Books are slightly rounded at the spine */
+    border-radius: 4px 6px 6px 4px;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease, z-index 0s;
+    z-index: 1;
+
+    /* Complex internal shading for a 3D cylindrical spine effect */
+    box-shadow:
+        inset 6px 0 12px rgba(255, 255, 255, 0.08),
+        /* Left highlight */
+        inset -12px 0 20px rgba(0, 0, 0, 0.8),
+        /* Right deep shadow */
+        inset 1px 0 2px rgba(255, 255, 255, 0.2),
+        /* Left edge rim light */
+        inset -1px 0 2px rgba(0, 0, 0, 0.9),
+        /* Right edge rim shadow */
+        inset 0 4px 6px rgba(0, 0, 0, 0.6),
+        /* Top ambient occlusion */
+        inset 0 -4px 6px rgba(0, 0, 0, 0.6),
+        /* Bottom ambient occlusion */
+        -5px 0 10px rgba(0, 0, 0, 0.8);
+    /* Cast shadow onto left neighbor */
+
+    /* Leather grain noise + lighting gradient overlay */
+    background-image:
+        linear-gradient(90deg,
+            rgba(0, 0, 0, 0.4) 0%,
+            rgba(255, 255, 255, 0.08) 15%,
+            rgba(255, 255, 255, 0.15) 25%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0.6) 85%,
+            rgba(0, 0, 0, 0.9) 100%),
+        url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.45"/%3E%3C/svg%3E');
+    background-blend-mode: overlay, multiply;
+
+    /* Top and bottom edges mimicking the cardboard lip */
+    border-top: 2px solid rgba(0, 0, 0, 0.6);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.8);
+}
+
+.book:hover {
+    transform: translateY(-16px) translateZ(30px) scale(1.03);
+    z-index: 50;
+    box-shadow:
+        inset 8px 0 15px rgba(255, 255, 255, 0.12),
+        inset -12px 0 20px rgba(0, 0, 0, 0.7),
+        inset 0 4px 6px rgba(0, 0, 0, 0),
+        -20px 25px 40px rgba(0, 0, 0, 0.95),
+        /* Strong drop shadow when pulled out */
+        0 0 15px rgba(0, 0, 0, 0.5);
+    /* Ambient glow */
+}
+
+/* Simulate the headband (cloth at top and bottom of spine) */
+.book:not(.book-pages)::after,
+.book:not(.book-pages)::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 6px;
+    height: 3.5px;
+    background: repeating-linear-gradient(90deg,
+            #bfb6a8 0,
+            #bfb6a8 1px,
+            #2a2a2a 1px,
+            #2a2a2a 2px);
+    z-index: 5;
+    opacity: 0.85;
+    border-radius: 1px;
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.8),
+        inset 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.book:not(.book-pages)::before {
+    top: 0;
+}
+
+.book:not(.book-pages)::after {
+    bottom: 0;
+}
+
+.spine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    pointer-events: none;
+    /* Let hover trigger on the parent book */
+}
+
+/* 🔥 Golden PLOTZY Letters 🔥 */
+.letter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    font-weight: 800;
+    font-family: "Times New Roman", Times, serif;
+    /* Serifs match the image perfectly */
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+
+    /* Highly realistic gold foil effect */
+    background: linear-gradient(135deg,
+            var(--gold-light) 0%,
+            var(--gold-mid) 40%,
+            #ffebb8 50%,
+            var(--gold-dark) 80%,
+            var(--gold-mid) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    /* Giving the foil an "embossed" depth */
+    text-shadow:
+        -1px -1px 0 rgba(255, 255, 255, 0.1),
+        1px 1px 1px rgba(0, 0, 0, 0.6),
+        0px 0px 8px rgba(212, 169, 83, 0.2);
+}
+
+/* Reversed Book (Paper pages showing) */
+.book-pages {
+    width: 40px;
+    /* Thicker book */
+    background-color: #d1c1a3;
+    /* Aged paper color */
+    background-image: none;
+    /* Deep shadow inside the shelf, simulating pages squeezed together */
+    box-shadow:
+        inset 5px 0 10px rgba(0, 0, 0, 0.7),
+        inset -5px 0 12px rgba(0, 0, 0, 0.9),
+        inset 0 15px 25px rgba(0, 0, 0, 0.8),
+        inset 0 -15px 25px rgba(0, 0, 0, 0.8) !important;
+    border-radius: 2px;
+    border-top: none;
+    border-bottom: none;
+}
+
+.book-pages .paper-lines {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 4px;
+    right: 4px;
+    /* Simulate hundreds of pages */
+    background: repeating-linear-gradient(90deg,
+            transparent,
+            transparent 1px,
+            rgba(0, 0, 0, 0.15) 1px,
+            rgba(0, 0, 0, 0.15) 2px,
+            transparent 2px,
+            transparent 3px,
+            rgba(90, 60, 30, 0.1) 3px,
+            rgba(90, 60, 30, 0.1) 4px);
+    border-radius: inherit;
+}
+
+/* --- Structural Lines & Decorations (Raised Bands & Gold Foil) --- */
+/* The lines on books represent physical bumps (raised bands) under the leather OR gold stamped lines */
+
+/* Decor: Multiple thick bands (like raised leather bands) */
+.decor-heavy .spine::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        linear-gradient(var(--gold-mid), var(--gold-mid)),
+        linear-gradient(var(--gold-mid), var(--gold-mid)),
+        linear-gradient(var(--gold-mid), var(--gold-mid)),
+        linear-gradient(var(--gold-mid), var(--gold-mid));
+    background-size:
+        80% 2px,
+        80% 1px,
+        80% 1px,
+        80% 2px;
+    background-position:
+        center 25px,
+        center 35px,
+        center calc(100% - 35px),
+        center calc(100% - 25px);
+    background-repeat: no-repeat;
+    opacity: 0.6;
+}
+
+/* Simpler gold lines */
+.decor-simple .spine::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        linear-gradient(var(--gold-dark), var(--gold-dark)),
+        linear-gradient(var(--gold-dark), var(--gold-dark));
+    background-size: 50% 1.5px;
+    background-position:
+        center 30px,
+        center calc(100% - 30px);
+    background-repeat: no-repeat;
+    opacity: 0.5;
+}
+
+/* Lines all across the spine simulating many raised bands */
+.has-lines .spine::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(180deg,
+            transparent,
+            transparent 40px,
+            rgba(0, 0, 0, 0.4) 40px,
+            rgba(0, 0, 0, 0.4) 42px,
+            rgba(255, 255, 255, 0.1) 42px,
+            rgba(255, 255, 255, 0.1) 43px);
+    opacity: 0.7;
+}
+
+/* Vertical line at bottom */
+.line-bottom .spine::after {
+    content: "";
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 55px;
+    background: linear-gradient(180deg, transparent, var(--gold-mid), var(--gold-dark), transparent);
+    opacity: 0.7;
+}
+
+/* Long vertical line */
+.long-line .spine::after {
+    content: "";
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1.5px;
+    height: 120px;
+    background: linear-gradient(180deg, var(--gold-dark) 0%, var(--gold-mid) 50%, var(--gold-dark) 100%);
+    opacity: 0.6;
+}
+
+/* Vertical text (simulated) for the first two white books */
+.has-simple-text .spine::after {
+    content: "";
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 60px;
+    background: repeating-linear-gradient(180deg,
+            var(--gold-dark),
+            var(--gold-dark) 4px,
+            transparent 4px,
+            transparent 8px);
+    opacity: 0.5;
+}
+
+
+/* Colors & Widths specifically matching the 20 books in the image */
+.white {
+    background-color: var(--c-white);
+    width: 44px;
+}
+
+.white:nth-child(2) {
+    width: 40px;
+    /* Second white book is slightly thinner */
+}
+
+.maroon {
+    background-color: var(--c-maroon);
+    width: 46px;
+}
+
+.crimson {
+    background-color: var(--c-crimson);
+    width: 42px;
+}
+
+.orange-red {
+    background-color: var(--c-red-orange);
+    width: 40px;
+}
+
+.orange-red.has-lines {
+    width: 44px;
+}
+
+.navy.decor-heavy {
+    background-color: var(--c-navy);
+    width: 45px;
+}
+
+.yellow.thin {
+    background-color: var(--c-yellow);
+    width: 18px;
+    /* Very thin book */
+}
+
+.orange {
+    background-color: var(--c-orange);
+    width: 48px;
+}
+
+.purple {
+    background-color: var(--c-purple);
+    width: 46px;
+}
+
+.blue {
+    background-color: var(--c-blue);
+    width: 48px;
+}
+
+.navy {
+    background-color: var(--c-navy);
+    width: 48px;
+}
+
+.black {
+    background-color: var(--c-black);
+    width: 46px;
+}
+
+.green {
+    background-color: var(--c-green);
+    width: 48px;
+}
