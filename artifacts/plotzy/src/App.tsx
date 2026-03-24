@@ -3,6 +3,7 @@ import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/language-context";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -32,6 +33,26 @@ function ScrollToTop() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location]);
+  return null;
+}
+
+function OAuthCallbackHandler() {
+  const { toast } = useToast();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const auth = params.get("auth");
+    if (!auth) return;
+    if (auth === "success") {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({ title: "Signed in successfully", description: "Welcome to Plotzy!" });
+    } else if (auth === "error") {
+      toast({ title: "Sign in failed", description: "Something went wrong. Please try again.", variant: "destructive" });
+    }
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("auth");
+    clean.searchParams.delete("msg");
+    window.history.replaceState({}, "", clean.pathname + (clean.search || ""));
+  }, []);
   return null;
 }
 
@@ -71,6 +92,7 @@ function App() {
           <AuthProvider>
             <TooltipProvider>
               <ScrollToTop />
+              <OAuthCallbackHandler />
               <Router />
               <QuickDropNotepad />
               <Toaster />

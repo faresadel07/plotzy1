@@ -9,7 +9,7 @@ import OpenAI, { toFile } from "openai";
 import express from "express";
 import passport from "passport";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripe-client";
-import { getEnabledProviders } from "./auth";
+import { getEnabledProviders, getLinkedinCallbackUrl } from "./auth";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -1556,42 +1556,117 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   );
 
-  // LinkedIn OAuth (stub — redirects to config page if not set up)
+  // ─── LinkedIn OAuth (OpenID Connect) ────────────────────────────────────────
+
   app.get("/auth/linkedin", (req, res) => {
     if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
-      return res.redirect("/?auth=linkedin-unconfigured");
+      return res.redirect("/?auth=error&msg=linkedin-not-configured");
     }
+    const state = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    (req.session as any).linkedinOAuthState = state;
     const params = new URLSearchParams({
       response_type: "code",
       client_id: process.env.LINKEDIN_CLIENT_ID,
-      redirect_uri: `${process.env.REPLIT_DOMAINS?.split(",")[0] ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}` : "http://localhost:5000"}/auth/linkedin/callback`,
-      scope: "r_liteprofile r_emailaddress",
-      state: Math.random().toString(36).slice(2),
+      redirect_uri: getLinkedinCallbackUrl(),
+      scope: "openid profile email",
+      state,
     });
     res.redirect(`https://www.linkedin.com/oauth/v2/authorization?${params}`);
   });
 
-  app.get("/auth/linkedin/callback", (req, res) => {
-    res.redirect("/?auth=linkedin-unconfigured");
-  });
+  app.get("/auth/linkedin/callback", async (req, res) => {
+    try {
+      const { code, state, error } = req.query as Record<string, string>;
 
-  // Facebook OAuth (stub — redirects to config page if not set up)
-  app.get("/auth/facebook", (req, res) => {
-    if (!process.env.FACEBOOK_APP_ID || !process.env.FACEBOOK_APP_SECRET) {
-      return res.redirect("/?auth=facebook-unconfigured");
+      if (error) {
+        console.error("[linkedin] OAuth error:", error);
+        return res.redirect("/?auth=error");
+      }
+
+      const savedState = (req.session as any).linkedinOAuthState;
+      if (!state || state !== savedState) {
+        console.error("[linkedin] State mismatch");
+        return res.redirect("/?auth=error");
+      }
+      delete (req.session as any).linkedinOAuthState;
+
+      if (!code) return res.redirect("/?auth=error");
+
+      if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
+        return res.redirect("/?auth=error");
+      }
+
+      // Exchange code for access token
+      const tokenRes = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: getLinkedinCallbackUrl(),
+          client_id: process.env.LINKEDIN_CLIENT_ID,
+          client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!tokenRes.ok) {
+        const txt = await tokenRes.text();
+        console.error("[linkedin] Token exchange failed:", txt);
+        return res.redirect("/?auth=error");
+      }
+
+      const { access_token } = await tokenRes.json() as { access_token: string };
+
+      // Fetch user info via OpenID Connect userinfo endpoint
+      const infoRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+        headers: { Authorization: `Bearer ${access_token}` },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!infoRes.ok) {
+        console.error("[linkedin] Userinfo fetch failed:", infoRes.status);
+        return res.redirect("/?auth=error");
+      }
+
+      const profile = await infoRes.json() as {
+        sub: string;
+        name?: string;
+        given_name?: string;
+        family_name?: string;
+        email?: string;
+        picture?: string;
+      };
+
+      const linkedinId = profile.sub;
+      if (!linkedinId) return res.redirect("/?auth=error");
+
+      const email = profile.email || null;
+      const displayName = profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || null;
+      const avatarUrl = profile.picture || null;
+
+      let user = await storage.getUserByLinkedinId(linkedinId);
+      if (!user) {
+        if (email) {
+          user = await storage.getUserByEmail(email);
+          if (user) {
+            user = await storage.updateUser(user.id, { linkedinId, avatarUrl: user.avatarUrl || avatarUrl });
+          }
+        }
+        if (!user) {
+          user = await storage.createUser({ linkedinId, email, displayName, avatarUrl });
+        }
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        req.login(user!, err => (err ? reject(err) : resolve()));
+      });
+
+      res.redirect("/?auth=success");
+    } catch (err) {
+      console.error("[linkedin] callback error:", err);
+      res.redirect("/?auth=error");
     }
-    const base = process.env.REPLIT_DOMAINS?.split(",")[0] ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}` : "http://localhost:5000";
-    const params = new URLSearchParams({
-      client_id: process.env.FACEBOOK_APP_ID,
-      redirect_uri: `${base}/auth/facebook/callback`,
-      scope: "public_profile,email",
-      state: Math.random().toString(36).slice(2),
-    });
-    res.redirect(`https://www.facebook.com/v18.0/dialog/oauth?${params}`);
-  });
-
-  app.get("/auth/facebook/callback", (req, res) => {
-    res.redirect("/?auth=facebook-unconfigured");
   });
 
   // ─── Marketplace ───────────────────────────────────────────────────────────

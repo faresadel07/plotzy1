@@ -10,6 +10,7 @@ declare global {
       displayName?: string | null;
       googleId?: string | null;
       appleId?: string | null;
+      linkedinId?: string | null;
       avatarUrl?: string | null;
       subscriptionStatus?: string | null;
       subscriptionPlan?: string | null;
@@ -122,15 +123,16 @@ export function setupPassport() {
 
 export function getEnabledProviders() {
   return {
-    google: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-    apple: !!(
-      process.env.APPLE_CLIENT_ID &&
-      process.env.APPLE_TEAM_ID &&
-      process.env.APPLE_KEY_ID &&
-      process.env.APPLE_PRIVATE_KEY
-    ),
+    google:   !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    apple:    !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY),
     linkedin: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
-    facebook: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
-    email: true,
+    facebook: false,
+    email:    true,
   };
+}
+
+export function getLinkedinCallbackUrl(): string {
+  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
+  const base = domain ? `https://${domain}` : `http://localhost:5000`;
+  return `${base}/auth/linkedin/callback`;
 }
