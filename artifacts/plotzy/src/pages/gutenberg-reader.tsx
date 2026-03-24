@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useGutenbergBook } from "@/hooks/use-gutenberg";
 import {
@@ -151,7 +151,7 @@ export default function GutenbergReader() {
     const v = localStorage.getItem("reader-fontIdx"); return v ? parseInt(v) : 0;
   });
   const [showSettings, setShowSettings] = useState(false);
-  const [spreadIdx, setSpreadIdx] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   /* ─── Highlights & Notes ─── */
   const [highlights, setHighlights] = useState<Highlight[]>([]);
@@ -199,63 +199,48 @@ export default function GutenbergReader() {
     localStorage.setItem(key, JSON.stringify([entry, ...filtered].slice(0, 8)));
   }, [book?.id]);
 
-  /* ─── Paginated spreads ─── */
-  const CHARS_PER_PAGE = [700, 950, 1200, 1500][fontSizeIdx] ?? 950;
-  const spreads = useMemo(() => {
-    if (!paragraphs.length) return [] as [string[], string[]][];
-    const pages: string[][] = [];
-    let cur: string[] = [];
-    let curLen = 0;
-    for (const para of paragraphs) {
-      if (curLen + para.length > CHARS_PER_PAGE && cur.length > 0) {
-        pages.push(cur);
-        cur = [para];
-        curLen = para.length;
-      } else {
-        cur.push(para);
-        curLen += para.length;
-      }
-    }
-    if (cur.length > 0) pages.push(cur);
-    const out: [string[], string[]][] = [];
-    for (let i = 0; i < pages.length; i += 2) {
-      out.push([pages[i], pages[i + 1] ?? []]);
-    }
-    return out;
-  }, [paragraphs, fontSizeIdx]);
-
-  const progress = spreads.length > 1 ? Math.round((spreadIdx / (spreads.length - 1)) * 100) : 0;
-
-  /* ─── Clamp spreadIdx when spreads change (font-size change) ─── */
-  useEffect(() => {
-    setSpreadIdx(i => Math.min(i, Math.max(0, spreads.length - 1)));
-  }, [spreads.length]);
-
-  /* ─── Save / restore page position per book ─── */
-  const lsKeySpread = `gutenberg-spread-${bookId}`;
+  /* ─── Scroll progress ─── */
   useEffect(() => {
     if (!reading) return;
-    const saved = localStorage.getItem(lsKeySpread);
-    if (saved) setSpreadIdx(Math.max(0, parseInt(saved)));
-  }, [reading, lsKeySpread]);
+    const h = () => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const max = scrollHeight - clientHeight;
+      setScrollProgress(max > 0 ? Math.round((scrollTop / max) * 100) : 0);
+    };
+    window.addEventListener("scroll", h, { passive: true });
+    h();
+    return () => window.removeEventListener("scroll", h);
+  }, [reading]);
+
+  const progress = scrollProgress;
+
+  /* ─── Save / restore scroll position per book ─── */
+  const lsKeyScroll = `gutenberg-scroll-${bookId}`;
   useEffect(() => {
     if (!reading) return;
-    localStorage.setItem(lsKeySpread, String(spreadIdx));
-  }, [spreadIdx, reading, lsKeySpread]);
+    const saved = localStorage.getItem(lsKeyScroll);
+    if (saved) setTimeout(() => window.scrollTo({ top: parseInt(saved, 10) }), 80);
+  }, [reading, lsKeyScroll]);
+  useEffect(() => {
+    if (!reading) return;
+    const h = () => localStorage.setItem(lsKeyScroll, String(window.scrollY));
+    window.addEventListener("scroll", h, { passive: true });
+    return () => window.removeEventListener("scroll", h);
+  }, [reading, lsKeyScroll]);
 
-  /* ─── Keyboard navigation ─── */
+  /* ─── Keyboard navigation (page up/down) ─── */
   useEffect(() => {
     if (!reading) return;
     const h = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        setSpreadIdx(i => Math.min(i + 1, spreads.length - 1));
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        setSpreadIdx(i => Math.max(i - 1, 0));
+      if (e.key === "ArrowDown" || e.key === "PageDown") {
+        window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
       }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [reading, spreads.length]);
+  }, [reading]);
 
   /* ─── Close popups on outside click ─── */
   useEffect(() => {
@@ -674,112 +659,32 @@ export default function GutenbergReader() {
         </div>
       </div>
 
-      {/* ── Book Spread ── */}
+      {/* ── Scrollable reading area ── */}
       <div
-        className={cn("transition-all duration-300 flex flex-col", showNotes ? "mr-80" : "")}
-        style={{ paddingTop: 52, height: "100vh" }}
+        className={cn("transition-all duration-300", showNotes ? "mr-80" : "")}
+        style={{ paddingTop: 56 }}
         onMouseUp={handleMouseUp}
       >
-        {/* ── Pages area ── */}
-        <div className="flex-1 flex items-stretch px-3 sm:px-6 py-4 gap-0 overflow-hidden min-h-0">
-
-          {/* Left page */}
-          <div
-            className={cn("flex-1 overflow-hidden flex flex-col rounded-l-2xl", fontSize.cls, font.cls)}
-            style={
-              theme.id === "light" ? { background: "#fafaf9", borderTop: "1px solid rgba(0,0,0,0.07)", borderBottom: "1px solid rgba(0,0,0,0.07)", borderLeft: "1px solid rgba(0,0,0,0.07)" }
-              : theme.id === "sepia" ? { background: "#f5efe0", borderTop: "1px solid rgba(61,43,31,0.10)", borderBottom: "1px solid rgba(61,43,31,0.10)", borderLeft: "1px solid rgba(61,43,31,0.10)" }
-              : theme.id === "dark" ? { background: "#1c1c1e", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", borderLeft: "1px solid rgba(255,255,255,0.06)" }
-              : { background: "#0d0d14", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", borderLeft: "1px solid rgba(255,255,255,0.06)" }
-            }
-          >
-            <div className="flex-1 overflow-hidden px-6 sm:px-10 py-8">
-              {/* Title header on first spread */}
-              {spreadIdx === 0 && (
-                <div className="text-center mb-8 pb-6 border-b border-current/10">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest opacity-35 mb-2">Project Gutenberg</p>
-                  <h1 className="text-lg sm:text-xl font-bold mb-1 leading-snug">{book.title}</h1>
-                  <p className="opacity-45 text-sm">{authorLine}</p>
-                </div>
-              )}
-              {(spreads[spreadIdx]?.[0] ?? []).map((para, i) => {
-                const isHeading  = /^[A-Z\s\d\.\-_,'"]+$/.test(para) && para.length < 80 && !para.includes(".");
-                const isOrnament = /^[\*\-_=~\s]{3,}$/.test(para);
-                const html       = applyHighlights(para, highlights);
-                if (isOrnament) return <div key={i} className="text-center opacity-25 my-6">* * *</div>;
-                if (isHeading)  return <h2 key={i} className="text-base font-bold mt-8 mb-3 opacity-75 tracking-wide text-center" dangerouslySetInnerHTML={{ __html: html }} />;
-                return <p key={i} className="mb-4 indent-8 opacity-90 text-pretty" dangerouslySetInnerHTML={{ __html: html }} />;
-              })}
-              {/* End-of-book indicator on last spread */}
-              {spreadIdx === spreads.length - 1 && (spreads[spreadIdx]?.[1] ?? []).length === 0 && (
-                <div className="text-center mt-10 opacity-25 text-sm">— fin —</div>
-              )}
-            </div>
+        <div className={cn("max-w-[72ch] mx-auto px-6 sm:px-10 py-12 pb-40", fontSize.cls, font.cls)}>
+          {/* Title header */}
+          <div className="text-center mb-14 pb-8 border-b border-current/15">
+            <p className="text-[10px] font-semibold uppercase tracking-widest opacity-35 mb-3">Project Gutenberg</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 leading-snug">{book.title}</h1>
+            <p className="opacity-45 text-sm">{authorLine}</p>
           </div>
 
-          {/* Spine */}
-          <div
-            style={{
-              width: 2, flexShrink: 0,
-              background: theme.id === "dark" || theme.id === "night"
-                ? "rgba(255,255,255,0.05)"
-                : "rgba(0,0,0,0.07)",
-            }}
-          />
+          {/* All paragraphs */}
+          {paragraphs.map((para, i) => {
+            const isHeading  = /^[A-Z\s\d\.\-_,'"]+$/.test(para) && para.length < 80 && !para.includes(".");
+            const isOrnament = /^[\*\-_=~\s]{3,}$/.test(para);
+            const html       = applyHighlights(para, highlights);
+            if (isOrnament) return <div key={i} className="text-center opacity-25 my-8">* * *</div>;
+            if (isHeading)  return <h2 key={i} className="text-lg font-bold mt-12 mb-4 opacity-75 tracking-wide" dangerouslySetInnerHTML={{ __html: html }} />;
+            return <p key={i} className="mb-5 indent-8 opacity-90 text-pretty leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />;
+          })}
 
-          {/* Right page */}
-          <div
-            className={cn("flex-1 overflow-hidden flex-col rounded-r-2xl hidden sm:flex", fontSize.cls, font.cls)}
-            style={
-              theme.id === "light" ? { background: "#fafaf9", borderTop: "1px solid rgba(0,0,0,0.07)", borderBottom: "1px solid rgba(0,0,0,0.07)", borderRight: "1px solid rgba(0,0,0,0.07)" }
-              : theme.id === "sepia" ? { background: "#f0e9d6", borderTop: "1px solid rgba(61,43,31,0.10)", borderBottom: "1px solid rgba(61,43,31,0.10)", borderRight: "1px solid rgba(61,43,31,0.10)" }
-              : theme.id === "dark" ? { background: "#1c1c1e", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }
-              : { background: "#0d0d14", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }
-            }
-          >
-            <div className="flex-1 overflow-hidden px-6 sm:px-10 py-8">
-              {(spreads[spreadIdx]?.[1] ?? []).map((para, i) => {
-                const isHeading  = /^[A-Z\s\d\.\-_,'"]+$/.test(para) && para.length < 80 && !para.includes(".");
-                const isOrnament = /^[\*\-_=~\s]{3,}$/.test(para);
-                const html       = applyHighlights(para, highlights);
-                if (isOrnament) return <div key={i} className="text-center opacity-25 my-6">* * *</div>;
-                if (isHeading)  return <h2 key={i} className="text-base font-bold mt-8 mb-3 opacity-75 tracking-wide text-center" dangerouslySetInnerHTML={{ __html: html }} />;
-                return <p key={i} className="mb-4 indent-8 opacity-90 text-pretty" dangerouslySetInnerHTML={{ __html: html }} />;
-              })}
-              {/* End-of-book indicator */}
-              {spreadIdx === spreads.length - 1 && (spreads[spreadIdx]?.[1] ?? []).length > 0 && (
-                <div className="text-center mt-10 opacity-25 text-sm">— fin —</div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Navigation bar ── */}
-        <div
-          className={cn("flex items-center justify-between px-6 py-3 border-t flex-shrink-0", theme.bar)}
-          style={{ borderColor: theme.id === "dark" || theme.id === "night" ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)" }}
-        >
-          <button
-            onClick={() => setSpreadIdx(i => Math.max(0, i - 1))}
-            disabled={spreadIdx === 0}
-            className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl transition-all disabled:opacity-25 hover:opacity-70"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Previous
-          </button>
-
-          <span className="text-xs opacity-40 font-medium tabular-nums select-none">
-            {spreads.length > 0 ? `${spreadIdx + 1} / ${spreads.length}` : "—"}
-          </span>
-
-          <button
-            onClick={() => setSpreadIdx(i => Math.min(spreads.length - 1, i + 1))}
-            disabled={spreadIdx >= spreads.length - 1}
-            className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-xl transition-all disabled:opacity-25 hover:opacity-70"
-          >
-            Next
-            <ArrowLeft className="w-4 h-4 rotate-180" />
-          </button>
+          {/* End of book */}
+          <div className="text-center mt-20 mb-4 opacity-25 text-sm tracking-widest">— fin —</div>
         </div>
       </div>
     </div>
