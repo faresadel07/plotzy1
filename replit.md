@@ -104,6 +104,15 @@ Database layer using Drizzle ORM.
 
 Shared route type definitions and achievement constants used by both frontend and backend.
 
+## External API Notes
+
+- **gutendex.com** is NOT reachable from Replit. Replaced with:
+  - Book listing: `https://archive.org/advancedsearch.php` (collection:gutenberg), Gutenberg IDs extracted from IA identifiers (`/(\d+)gut$/`)
+  - Individual book: `https://www.gutenberg.org/cache/epub/{id}/pg{id}.rdf` (Gutenberg RDF, parsed via regex)
+  - Cover images: `https://www.gutenberg.org/cache/epub/{id}/pg{id}.cover.medium.jpg`
+  - Text content: proxy via `/api/gutenberg/proxy-text?url=...` (gutenberg.org accessible)
+- **Gutenberg reader** is now a scrollable single-column layout (replaced paginated book-spread)
+
 ## Environment Variables Needed
 
 - `DATABASE_URL` — PostgreSQL connection string (auto-provided by Replit)

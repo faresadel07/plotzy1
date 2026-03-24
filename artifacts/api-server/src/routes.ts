@@ -1669,51 +1669,77 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  // ─── Project Gutenberg proxy (gutendex.com) ────────────────────────────────
+  // ─── Project Gutenberg via Internet Archive + Gutenberg RDF ─────────────────
+
+  const GUTENBERG_TOPIC_MAP: Record<string, string> = {
+    fiction: "fiction", mystery: "mystery", adventure: "adventure",
+    romance: "romance", "sci-fi": "science fiction", horror: "horror",
+    philosophy: "philosophy", history: "history", biography: "biography",
+    poetry: "poetry", drama: "drama", "children's": "children",
+    humor: "humor", war: "war", travel: "travel",
+  };
+
+  function parseGutenbergAuthor(raw: string): string {
+    const name = (raw || "").replace(/,?\s*\d{4}-?\d{0,4}$/, "").trim();
+    const parts = name.split(", ");
+    return parts.length === 2 ? `${parts[1]} ${parts[0]}` : name;
+  }
 
   app.get("/api/gutenberg/books", async (req, res) => {
     try {
-      const params = new URLSearchParams();
-      if (req.query.page)      params.set("page",      String(req.query.page));
-      if (req.query.search)    params.set("search",    String(req.query.search));
-      if (req.query.topic)     params.set("topic",     String(req.query.topic));
-      if (req.query.languages) params.set("languages", String(req.query.languages));
-      if (req.query.sort)      params.set("sort",      String(req.query.sort));
+      const search  = String(req.query.search || "").trim();
+      const topic   = String(req.query.topic  || "").trim().toLowerCase();
+      const page    = Math.max(1, Number(req.query.page) || 1);
+      const limit   = 20;
 
-      const response = await fetch(`https://gutendex.com/books?${params.toString()}`, {
-        headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(10000),
+      let q = "collection:gutenberg";
+      if (search) q += ` AND (title:${search} OR creator:${search})`;
+      const mappedTopic = GUTENBERG_TOPIC_MAP[topic];
+      if (mappedTopic) q += ` AND subject:${mappedTopic}`;
+
+      const params = new URLSearchParams({
+        q,
+        output: "json",
+        rows: String(limit),
+        start: String((page - 1) * limit),
       });
-      if (!response.ok) return res.status(response.status).json({ message: "Gutenberg API error" });
+      params.append("sort[]", "downloads desc");
+      params.append("fl[]", "identifier,title,creator,subject,downloads");
 
-      const raw = await response.json() as any;
-      const books = (raw.results || []).map((b: any) => {
-        const formats = b.formats || {};
+      const response = await fetch(`https://archive.org/advancedsearch.php?${params}`, {
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!response.ok) throw new Error("IA API error");
+
+      const data = await response.json() as any;
+      const docs: any[] = data.response?.docs || [];
+      const numFound: number = data.response?.numFound || 0;
+
+      const books = docs.map((doc: any) => {
+        const match = /(\d+)gut$/.exec(doc.identifier);
+        const id = match ? parseInt(match[1]) : null;
+        if (!id) return null;
+
+        const rawCreator = Array.isArray(doc.creator) ? doc.creator[0] : (doc.creator || "");
+        const subjects   = Array.isArray(doc.subject)  ? doc.subject.slice(0, 6)
+                         : doc.subject ? [doc.subject] : [];
         return {
-          id: b.id,
-          title: b.title,
-          authors: (b.authors || []).map((a: any) => {
-            const parts = (a.name || "").split(", ");
-            return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
-          }),
-          subjects: (b.subjects || []).slice(0, 6),
-          bookshelves: (b.bookshelves || []).slice(0, 4),
-          languages: b.languages || [],
-          coverImage: formats["image/jpeg"] || null,
-          readUrl: formats["text/html"] || formats["text/html; charset=utf-8"] || null,
-          downloadUrl: formats["application/epub+zip"] || null,
-          pdfUrl: formats["application/pdf"] || null,
-          txtUrl: formats["text/plain"] || formats["text/plain; charset=utf-8"] || formats["text/plain; charset=us-ascii"] || null,
-          downloadCount: b.download_count || 0,
+          id,
+          title:         doc.title || "",
+          authors:       rawCreator ? [parseGutenbergAuthor(rawCreator)] : [],
+          subjects,
+          bookshelves:   [],
+          languages:     ["en"],
+          coverImage:    `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`,
+          readUrl:       `https://www.gutenberg.org/ebooks/${id}`,
+          downloadUrl:   `https://www.gutenberg.org/ebooks/${id}.epub.images`,
+          pdfUrl:        null,
+          txtUrl:        `https://www.gutenberg.org/ebooks/${id}.txt.utf-8`,
+          downloadCount: doc.downloads || 0,
         };
-      });
+      }).filter(Boolean);
 
-      res.json({
-        count: raw.count || 0,
-        page: Number(req.query.page) || 1,
-        hasNext: !!raw.next,
-        books,
-      });
+      res.json({ count: numFound, page, hasNext: page * limit < numFound, books });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch from Gutenberg" });
     }
@@ -1721,29 +1747,53 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   app.get("/api/gutenberg/books/:id", async (req, res) => {
     try {
-      const response = await fetch(`https://gutendex.com/books/${req.params.id}/`, {
-        headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (!response.ok) return res.status(response.status).json({ message: "Book not found" });
-      const b = await response.json() as any;
-      const formats = b.formats || {};
+      const id = parseInt(req.params.id);
+      if (!id) return res.status(400).json({ message: "Invalid book ID" });
+
+      const rdfUrl  = `https://www.gutenberg.org/cache/epub/${id}/pg${id}.rdf`;
+      const response = await fetch(rdfUrl, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) return res.status(404).json({ message: "Book not found" });
+
+      const xml = await response.text();
+
+      const title     = /<dcterms:title>([^<]+)<\/dcterms:title>/.exec(xml)?.[1]?.trim() || "";
+      const downloads = parseInt(/<pgterms:downloads[^>]*>(\d+)<\/pgterms:downloads>/.exec(xml)?.[1] || "0");
+
+      const authorMatches = [...xml.matchAll(/<pgterms:name>([^<]+)<\/pgterms:name>/g)];
+      const authors = authorMatches.map(m => parseGutenbergAuthor(m[1]));
+
+      const subjectMatches = [...xml.matchAll(/<dcterms:subject>[\s\S]*?<rdf:value[^>]*>([^<]+)<\/rdf:value>[\s\S]*?<\/dcterms:subject>/g)];
+      const subjects = subjectMatches.map(m => m[1].trim());
+
+      const fileMatches = [...xml.matchAll(/<pgterms:file rdf:about="([^"]+)">[\s\S]*?<rdf:value[^>]*>([^<]+)<\/rdf:value>/g)];
+      const fmt: Record<string, string> = {};
+      for (const m of fileMatches) {
+        const mtype = m[2].trim();
+        if (mtype === "image/jpeg") {
+          if (!fmt[mtype] || m[1].includes(".medium")) fmt[mtype] = m[1];
+        } else {
+          if (!fmt[mtype]) fmt[mtype] = m[1];
+        }
+      }
+
+      const txtUrl = fmt["text/plain; charset=utf-8"]
+                  || fmt["text/plain; charset=us-ascii"]
+                  || fmt["text/plain"]
+                  || `https://www.gutenberg.org/ebooks/${id}.txt.utf-8`;
+
       res.json({
-        id: b.id,
-        title: b.title,
-        authors: (b.authors || []).map((a: any) => {
-          const parts = (a.name || "").split(", ");
-          return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
-        }),
-        subjects: b.subjects || [],
-        bookshelves: b.bookshelves || [],
-        languages: b.languages || [],
-        coverImage: formats["image/jpeg"] || null,
-        readUrl: formats["text/html"] || formats["text/html; charset=utf-8"] || null,
-        downloadUrl: formats["application/epub+zip"] || null,
-        pdfUrl: formats["application/pdf"] || null,
-        txtUrl: formats["text/plain"] || formats["text/plain; charset=utf-8"] || formats["text/plain; charset=us-ascii"] || null,
-        downloadCount: b.download_count || 0,
+        id,
+        title,
+        authors,
+        subjects,
+        bookshelves: [],
+        languages:   ["en"],
+        coverImage:  fmt["image/jpeg"] || `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`,
+        readUrl:     fmt["text/html"]  || `https://www.gutenberg.org/ebooks/${id}`,
+        downloadUrl: fmt["application/epub+zip"] || `https://www.gutenberg.org/ebooks/${id}.epub.images`,
+        pdfUrl:      null,
+        txtUrl,
+        downloadCount: downloads,
       });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch book" });
