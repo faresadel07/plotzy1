@@ -12,6 +12,20 @@ const PALETTES = [
   ["hsl(45,90%,28%)", "hsl(30,85%,42%)", "hsl(55,75%,16%)", "hsl(25,70%,10%)"],
 ];
 
+function isWebGLSupported(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      canvas.getContext("webgl") ||
+      canvas.getContext("experimental-webgl")
+    );
+  } catch {
+    return false;
+  }
+}
+
+const webGLSupported = typeof window !== "undefined" && isWebGLSupported();
+
 interface BookCoverShaderProps {
   bookId: number;
   speed?: number;
@@ -19,6 +33,19 @@ interface BookCoverShaderProps {
 
 export const BookCoverShader = memo(function BookCoverShader({ bookId, speed = 0.6 }: BookCoverShaderProps) {
   const palette = PALETTES[bookId % PALETTES.length];
+
+  if (!webGLSupported) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          background: `linear-gradient(135deg, ${palette[0]}, ${palette[1]}, ${palette[2]})`,
+        }}
+      />
+    );
+  }
+
   return (
     <Warp
       style={{ width: "100%", height: "100%" }}

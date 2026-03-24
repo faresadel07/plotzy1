@@ -12,7 +12,7 @@ export function useChapters(bookId: number) {
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch chapters");
       const data = await res.json();
-      return parseWithLogging(api.chapters.list.responses[200], data, "chapters.list");
+      return parseWithLogging(api.chapters.list.responses?.[200], data, "chapters.list");
     },
     enabled: !!bookId,
   });
@@ -31,7 +31,7 @@ export function useCreateChapter() {
       });
       if (!res.ok) throw new Error("Failed to create chapter");
       const data = await res.json();
-      return parseWithLogging(api.chapters.create.responses[201], data, "chapters.create");
+      return parseWithLogging(api.chapters.create.responses?.[201], data, "chapters.create");
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.chapters.list.path, variables.bookId] });
@@ -52,7 +52,7 @@ export function useUpdateChapter() {
       });
       if (!res.ok) throw new Error("Failed to update chapter");
       const data = await res.json();
-      return parseWithLogging(api.chapters.update.responses[200], data, "chapters.update");
+      return parseWithLogging(api.chapters.update.responses?.[200], data, "chapters.update");
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.chapters.list.path, variables.bookId] });
@@ -110,7 +110,7 @@ export function useVoiceToChapter() {
       });
       if (!res.ok) throw new Error("Voice transcription failed");
       const data = await res.json();
-      return parseWithLogging(api.chapters.voice.responses[200], data, "chapters.voice");
+      return parseWithLogging(api.chapters.voice.responses?.[200], data, "chapters.voice");
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.chapters.list.path, variables.bookId] });

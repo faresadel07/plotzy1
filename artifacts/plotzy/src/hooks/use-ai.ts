@@ -13,7 +13,7 @@ export function useImproveText() {
       });
       if (!res.ok) throw new Error("Failed to improve text");
       const data = await res.json();
-      return parseWithLogging(api.ai.improve.responses[200], data, "ai.improve");
+      return parseWithLogging(api.ai.improve.responses?.[200], data, "ai.improve");
     },
   });
 }
@@ -29,7 +29,7 @@ export function useExpandIdea() {
       });
       if (!res.ok) throw new Error("Failed to expand idea");
       const data = await res.json();
-      return parseWithLogging(api.ai.expand.responses[200], data, "ai.expand");
+      return parseWithLogging(api.ai.expand.responses?.[200], data, "ai.expand");
     },
   });
 }
@@ -45,7 +45,7 @@ export function useContinueText() {
       });
       if (!res.ok) throw new Error("Failed to continue text");
       const data = await res.json();
-      return parseWithLogging(api.ai.continueText.responses[200], data, "ai.continueText");
+      return parseWithLogging(api.ai.continueText.responses?.[200], data, "ai.continueText");
     },
   });
 }
@@ -61,7 +61,7 @@ export function useTranslateText() {
       });
       if (!res.ok) throw new Error("Failed to translate text");
       const data = await res.json();
-      return parseWithLogging(api.ai.translate.responses[200], data, "ai.translate");
+      return parseWithLogging(api.ai.translate.responses?.[200], data, "ai.translate");
     },
   });
 }

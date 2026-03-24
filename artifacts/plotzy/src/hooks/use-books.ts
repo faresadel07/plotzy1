@@ -10,7 +10,7 @@ export function useBooks() {
       const res = await fetch(api.books.list.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch books");
       const data = await res.json();
-      return parseWithLogging(api.books.list.responses[200], data, "books.list");
+      return parseWithLogging(api.books.list.responses?.[200], data, "books.list");
     },
   });
 }
@@ -22,7 +22,7 @@ export function useTrashedBooks() {
       const res = await fetch(api.books.trashList.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch trashed books");
       const data = await res.json();
-      return parseWithLogging(api.books.trashList.responses[200], data, "books.trashList");
+      return parseWithLogging(api.books.trashList.responses?.[200], data, "books.trashList");
     },
   });
 }
@@ -37,7 +37,7 @@ export function useBook(id: number) {
       if (res.status === 404) return null;
       if (!res.ok) throw new Error("Failed to fetch book");
       const data = await res.json();
-      return parseWithLogging(api.books.get.responses[200], data, "books.get");
+      return parseWithLogging(api.books.get.responses?.[200], data, "books.get");
     },
     enabled: !!id,
   });
@@ -62,7 +62,7 @@ export function useCreateBook() {
         throw new Error(msg);
       }
       const data = await res.json();
-      return parseWithLogging(api.books.create.responses[201], data, "books.create");
+      return parseWithLogging(api.books.create.responses?.[201], data, "books.create");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
@@ -83,7 +83,7 @@ export function useUpdateBook() {
       });
       if (!res.ok) throw new Error("Failed to update book");
       const data = await res.json();
-      return parseWithLogging(api.books.update.responses[200], data, "books.update");
+      return parseWithLogging(api.books.update.responses?.[200], data, "books.update");
     },
     onSuccess: (updatedBook) => {
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
@@ -104,7 +104,7 @@ export function useTrashBook() {
       });
       if (!res.ok) throw new Error("Failed to trash book");
       const data = await res.json();
-      return parseWithLogging(api.books.trash.responses[200], data, "books.trash");
+      return parseWithLogging(api.books.trash.responses?.[200], data, "books.trash");
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
@@ -126,7 +126,7 @@ export function useRestoreBook() {
       });
       if (!res.ok) throw new Error("Failed to restore book");
       const data = await res.json();
-      return parseWithLogging(api.books.restore.responses[200], data, "books.restore");
+      return parseWithLogging(api.books.restore.responses?.[200], data, "books.restore");
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
@@ -185,7 +185,7 @@ export function useGenerateCover() {
       });
       if (!res.ok) throw new Error("Failed to generate cover");
       const data = await res.json();
-      return parseWithLogging(api.books.generateCover.responses[200], data, "books.generateCover");
+      return parseWithLogging(api.books.generateCover.responses?.[200], data, "books.generateCover");
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.books.get.path, variables.id] });
@@ -207,7 +207,7 @@ export function useGenerateBlurb() {
       });
       if (!res.ok) throw new Error("Failed to generate blurb");
       const data = await res.json();
-      return parseWithLogging(api.books.generateBlurb.responses[200], data, "books.generateBlurb");
+      return parseWithLogging(api.books.generateBlurb.responses?.[200], data, "books.generateBlurb");
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.books.get.path, variables.id] });
