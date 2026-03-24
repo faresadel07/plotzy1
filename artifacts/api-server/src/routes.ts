@@ -1700,9 +1700,9 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   app.get("/api/gutenberg/books/:id", async (req, res) => {
     try {
-      const response = await fetch(`https://gutendex.com/books/${req.params.id}`, {
+      const response = await fetch(`https://gutendex.com/books/${req.params.id}/`, {
         headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(15000),
       });
       if (!response.ok) return res.status(response.status).json({ message: "Book not found" });
       const b = await response.json() as any;
