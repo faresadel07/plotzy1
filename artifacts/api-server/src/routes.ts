@@ -1648,6 +1648,27 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // ─── Gutenberg text proxy (for reader) ─────────────────────────────────────
+
+  app.get("/api/gutenberg/proxy-text", async (req, res) => {
+    const url = String(req.query.url || "");
+    if (!url || !url.startsWith("https://www.gutenberg.org/")) {
+      return res.status(400).json({ message: "Invalid URL" });
+    }
+    try {
+      const response = await fetch(url, {
+        headers: { "Accept": "text/plain,*/*", "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!response.ok) return res.status(response.status).send(`HTTP ${response.status}`);
+      const text = await response.text();
+      res.set("Content-Type", "text/plain; charset=utf-8");
+      res.send(text);
+    } catch (err) {
+      res.status(500).send("Failed to fetch book text");
+    }
+  });
+
   // ─── Project Gutenberg proxy (gutendex.com) ────────────────────────────────
 
   app.get("/api/gutenberg/books", async (req, res) => {
