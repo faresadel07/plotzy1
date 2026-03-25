@@ -151,7 +151,7 @@ export function BookCarousel() {
       <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#f1f1f1,transparent)", zIndex: 2, pointerEvents: "none" }} />
 
       <p style={{ textAlign: "center", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", color: "#000", fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif", fontWeight: 600, marginBottom: 20 }}>
-        Public Domain Classics
+        Write your first book — and become an author like them
       </p>
 
       <Track books={ROW1} />
