@@ -17,6 +17,7 @@ export type PublishedBook = {
   language: string | null;
   authorDisplayName: string | null;
   authorAvatarUrl: string | null;
+  featured?: boolean;
 };
 
 export type PublishedChapter = {
@@ -38,6 +39,41 @@ export type BookComment = {
   content: string;
   createdAt: string | null;
 };
+
+export function useFeaturedBook() {
+  return useQuery<PublishedBook>({
+    queryKey: ["/api/public/books/featured"],
+    queryFn: async () => {
+      const res = await fetch("/api/public/books/featured");
+      if (!res.ok) throw new Error("No featured book");
+      return res.json();
+    },
+    retry: false,
+  });
+}
+
+export function useSetFeaturedBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bookId, feature }: { bookId: number; feature: boolean }) => {
+      const res = await fetch(`/api/admin/books/${bookId}/feature`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feature }),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to update featured status");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/public/books/featured"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/public/books"] });
+    },
+  });
+}
 
 export function usePublishedBooks() {
   return useQuery<PublishedBook[]>({

@@ -12,6 +12,7 @@ interface AuthUser {
   subscriptionStatus?: string | null;
   subscriptionPlan?: string | null;
   subscriptionEndDate?: string | null;
+  isAdmin?: boolean;
 }
 
 interface AuthContextValue {

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, or, count, desc, sql, sum } from "drizzle-orm";
+import { eq, or, count, desc, sql, sum, and } from "drizzle-orm";
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements,
@@ -73,6 +73,8 @@ export interface IStorage {
   getPublishedBook(id: number): Promise<PublishedBook | undefined>;
   getPublishedBookChapters(bookId: number): Promise<Chapter[]>;
   incrementBookViewCount(id: number): Promise<void>;
+  getFeaturedBook(): Promise<PublishedBook | undefined>;
+  setFeaturedBook(bookId: number | null): Promise<void>;
 
   // Gamification
   getOrCreateUserStats(userId: number): Promise<UserStats>;
@@ -329,6 +331,27 @@ export class DatabaseStorage implements IStorage {
       .update(books)
       .set({ viewCount: sql`${books.viewCount} + 1` } as any)
       .where(eq(books.id, id));
+  }
+
+  async getFeaturedBook(): Promise<PublishedBook | undefined> {
+    const [row] = await db
+      .select({
+        ...books,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+      })
+      .from(books)
+      .leftJoin(users, eq(books.userId, users.id))
+      .where(and(eq(books.isPublished, true), eq(books.featured, true)))
+      .limit(1);
+    return row as PublishedBook | undefined;
+  }
+
+  async setFeaturedBook(bookId: number | null): Promise<void> {
+    await db.update(books).set({ featured: false } as any);
+    if (bookId !== null) {
+      await db.update(books).set({ featured: true } as any).where(eq(books.id, bookId));
+    }
   }
 
   // ─── Gamification ──────────────────────────────────────────────────────────

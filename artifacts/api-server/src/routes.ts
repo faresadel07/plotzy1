@@ -175,6 +175,31 @@ export async function registerRoutes(
 
   // ─── Public Library ────────────────────────────────────────────────────────
 
+  app.get("/api/public/books/featured", async (_req, res) => {
+    try {
+      const book = await storage.getFeaturedBook();
+      if (!book) return res.status(404).json({ message: "No featured book" });
+      res.json(book);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.post("/api/admin/books/:id/feature", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const dbUser = await storage.getUserById(req.user.id);
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (!adminEmail || dbUser?.email !== adminEmail) return res.status(403).json({ message: "Forbidden" });
+      const bookId = Number(req.params.id);
+      const { feature } = z.object({ feature: z.boolean() }).parse(req.body);
+      await storage.setFeaturedBook(feature ? bookId : null);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
   app.get("/api/public/books", async (_req, res) => {
     try {
       const publishedBooks = await storage.getPublishedBooks();
@@ -1316,7 +1341,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const dbUser = await storage.getUserById(req.user.id);
       if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
       const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = dbUser;
-      return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
+      const isAdmin = !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
+      return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin });
     }
     return res.status(401).json({ message: "Not authenticated" });
   });

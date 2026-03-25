@@ -67,6 +67,8 @@ export const books = pgTable("books", {
   isPublished: boolean("is_published").default(false).notNull(),
   publishedAt: timestamp("published_at"),
   viewCount: integer("view_count").default(0).notNull(),
+  // Featured by admin in community library
+  featured: boolean("featured").default(false),
 });
 
 export const chapters = pgTable("chapters", {
