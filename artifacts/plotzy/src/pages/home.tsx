@@ -521,22 +521,22 @@ export default function Home() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">Workspace</p>
                   <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Your Projects</h2>
                 </div>
-                {user && (
-                  <div className="flex items-center gap-3">
-                    {books && books.length > 0 && (
-                      <span className="text-[11px] font-semibold text-white/20 uppercase tracking-widest hidden sm:block">
-                        {books.length} {books.length === 1 ? "Project" : "Projects"}
-                      </span>
-                    )}
-                    <Link href="/trash">
-                      <button
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Trash
-                      </button>
-                    </Link>
+                <div className="flex items-center gap-3">
+                  {books && books.length > 0 && (
+                    <span className="text-[11px] font-semibold text-white/20 uppercase tracking-widest hidden sm:block">
+                      {books.length} {books.length === 1 ? "Project" : "Projects"}
+                    </span>
+                  )}
+                  <Link href="/trash">
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                      style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Trash
+                    </button>
+                  </Link>
+                  {user && (
                     <button
                       onClick={() => setIsOpen(true)}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
@@ -545,8 +545,8 @@ export default function Home() {
                       <Plus className="w-3.5 h-3.5" />
                       New Project
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Shelf display */}
