@@ -260,7 +260,7 @@ export function ContentTypeSelector({
 
             {/* Genre */}
             <div>
-              <label style={labelStyle}>Genre <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— optional</span></label>
+              <label style={labelStyle}>Genre <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {BOOK_GENRES.map(g => (
                   <button
