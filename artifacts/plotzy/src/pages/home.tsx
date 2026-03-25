@@ -516,8 +516,8 @@ export default function Home() {
               )}
 
               {/* Library Header */}
-              <div id="workspace" className="flex items-end justify-between gap-4 mb-10">
-                <div className="mx-auto text-center">
+              <div id="workspace" className="flex items-center justify-between gap-4 mb-10">
+                <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">Workspace</p>
                   <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Your Projects</h2>
                 </div>
