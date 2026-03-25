@@ -73,11 +73,12 @@ const LETTER_SPACING_MAP: Record<string, string> = {
 };
 
 export type DrawingSize = 'small' | 'medium' | 'large' | 'full';
+export type DrawingAlign = 'left' | 'center' | 'right';
 
 export type PageBlock =
   | string
   | { type: 'text' | 'image', content: string }
-  | { type: 'drawing', content: string, size?: DrawingSize };
+  | { type: 'drawing', content: string, size?: DrawingSize, align?: DrawingAlign, widthPct?: number };
 
 function parsePages(raw: string): PageBlock[] {
   if (!raw) return [""];
@@ -253,6 +254,8 @@ export default function ChapterEditor() {
   const [canvasStroke, setCanvasStroke] = useState(4);
   const [isEraser, setIsEraser] = useState(false);
   const [drawingSize, setDrawingSize] = useState<DrawingSize>('large');
+  const [selectedDrawingIdx, setSelectedDrawingIdx] = useState<number | null>(null);
+  const [resizingDrawing, setResizingDrawing] = useState<{ idx: number, startX: number, startPct: number } | null>(null);
 
   // Voice dictation state
   const [isRecording, setIsRecording] = useState(false);
@@ -315,6 +318,28 @@ export default function ChapterEditor() {
       canvasRef.current.eraseMode(isEraser);
     }
   }, [isEraser, showCanvas]);
+
+  useEffect(() => {
+    if (!resizingDrawing) return;
+    const { idx, startX, startPct } = resizingDrawing;
+    const onMove = (e: MouseEvent) => {
+      const dx = e.clientX - startX;
+      const newPct = Math.max(20, Math.min(100, startPct + (dx / 508) * 100));
+      setPages(prev => {
+        const next = [...prev];
+        const block = next[idx];
+        if (typeof block !== 'string' && block.type === 'drawing') {
+          next[idx] = { ...block, widthPct: Math.round(newPct) };
+        }
+        return next;
+      });
+      setIsDirty(true);
+    };
+    const onUp = () => setResizingDrawing(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [resizingDrawing]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -602,6 +627,18 @@ export default function ChapterEditor() {
       console.error(e);
       toast({ title: ar ? "فشل حفظ الرسم" : "Failed to save drawing", variant: "destructive" });
     }
+  };
+
+  const updateDrawingBlock = (idx: number, updates: Partial<{ size: DrawingSize; align: DrawingAlign; widthPct: number }>) => {
+    setPages(prev => {
+      const next = [...prev];
+      const block = next[idx];
+      if (typeof block !== 'string' && block.type === 'drawing') {
+        next[idx] = { ...block, ...updates };
+      }
+      return next;
+    });
+    setIsDirty(true);
   };
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -956,7 +993,7 @@ export default function ChapterEditor() {
         </div>
 
         {/* Pages — each rendered as a fixed-size book page card */}
-        <div className="flex flex-col items-center gap-10 px-4">
+        <div className="flex flex-col items-center gap-10 px-4" onClick={() => setSelectedDrawingIdx(null)}>
           {pages.map((pageContent, index) => {
             const pageText = getPageText(pageContent);
             const pageWords = countWords(pageText);
@@ -1039,27 +1076,104 @@ export default function ChapterEditor() {
                       />
                     ) : (
                       (() => {
-                        const sz = typeof pageContent !== 'string' && pageContent.type === 'drawing'
-                          ? (pageContent as any).size as DrawingSize | undefined
-                          : undefined;
-                        const widthMap: Record<DrawingSize, string> = {
-                          small: '42%',
-                          medium: '64%',
-                          large: '86%',
-                          full: '100%',
-                        };
-                        const w = widthMap[sz || 'full'];
+                        const drawBlock = typeof pageContent !== 'string' && pageContent.type === 'drawing' ? pageContent : null;
+                        if (!drawBlock) return null;
+                        const sizeMap: Record<DrawingSize, number> = { small: 42, medium: 64, large: 86, full: 100 };
+                        const rawPct = drawBlock.widthPct ?? sizeMap[drawBlock.size || 'full'];
+                        const wPct = `${rawPct}%`;
+                        const align = drawBlock.align || 'center';
+                        const justifyMap: Record<DrawingAlign, string> = { left: 'flex-start', center: 'center', right: 'flex-end' };
+                        const isSelected = selectedDrawingIdx === index;
                         return (
                           <div
-                            className="flex items-center justify-center w-full"
-                            style={{ minHeight: sz === 'full' ? `${PAGE_CONTENT_HEIGHT}px` : undefined, paddingTop: '16px', paddingBottom: '16px' }}
-                            onClick={() => setActivePageIndex(index)}
+                            className="w-full select-none"
+                            style={{ paddingTop: '24px', paddingBottom: '24px', display: 'flex', justifyContent: justifyMap[align] }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedDrawingIdx(index); setActivePageIndex(index); }}
+                            onMouseLeave={() => {}}
                           >
-                            <img
-                              src={typeof pageContent !== 'string' ? pageContent.content : ''}
-                              alt={`Page ${index + 1} drawing`}
-                              style={{ width: w, maxWidth: w, borderRadius: '4px', boxShadow: '0 2px 12px rgba(0,0,0,0.10)' }}
-                            />
+                            <div className="relative" style={{ width: wPct, minWidth: '80px' }}>
+                              {/* Floating toolbar — appears above when selected */}
+                              {isSelected && (
+                                <div
+                                  className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-xl z-10 whitespace-nowrap"
+                                  style={{ background: '#1a1a1d', border: '1px solid rgba(255,255,255,0.12)' }}
+                                  onMouseDown={e => e.stopPropagation()}
+                                >
+                                  {/* Alignment */}
+                                  {([
+                                    { a: 'left'   as DrawingAlign, icon: <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="0" width="12" height="2" rx="1"/><rect x="0" y="4" width="8" height="2" rx="1"/><rect x="0" y="8" width="10" height="2" rx="1"/></svg> },
+                                    { a: 'center' as DrawingAlign, icon: <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="0" width="12" height="2" rx="1"/><rect x="2" y="4" width="8" height="2" rx="1"/><rect x="1" y="8" width="10" height="2" rx="1"/></svg> },
+                                    { a: 'right'  as DrawingAlign, icon: <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="0" width="12" height="2" rx="1"/><rect x="4" y="4" width="8" height="2" rx="1"/><rect x="2" y="8" width="10" height="2" rx="1"/></svg> },
+                                  ]).map(({ a, icon }) => (
+                                    <button key={a} onClick={() => updateDrawingBlock(index, { align: a })}
+                                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+                                      style={{ background: align === a ? 'rgba(255,255,255,0.18)' : 'transparent', color: align === a ? '#fff' : 'rgba(255,255,255,0.45)' }}
+                                    >
+                                      {icon}
+                                    </button>
+                                  ))}
+                                  <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                                  {/* Size presets */}
+                                  {([
+                                    { label: 'S', pct: 42 },
+                                    { label: 'M', pct: 64 },
+                                    { label: 'L', pct: 86 },
+                                    { label: '↔', pct: 100 },
+                                  ]).map(opt => (
+                                    <button key={opt.label} onClick={() => updateDrawingBlock(index, { widthPct: opt.pct })}
+                                      className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold transition-colors"
+                                      style={{ background: Math.abs(rawPct - opt.pct) < 5 ? 'rgba(255,255,255,0.18)' : 'transparent', color: Math.abs(rawPct - opt.pct) < 5 ? '#fff' : 'rgba(255,255,255,0.45)' }}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                  <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                                  {/* Width % indicator */}
+                                  <span className="text-[9px] tabular-nums px-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{rawPct}%</span>
+                                  <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                                  {/* Delete */}
+                                  <button
+                                    onClick={() => { setPages(prev => { const n = [...prev]; n.splice(index, 1); return n.length ? n : [""]; }); setIsDirty(true); setSelectedDrawingIdx(null); }}
+                                    className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+                                    style={{ color: 'rgba(239,68,68,0.6)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,1)')}
+                                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.6)')}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
+                              {/* The image */}
+                              <img
+                                src={drawBlock.content}
+                                alt={`Page ${index + 1} drawing`}
+                                draggable={false}
+                                style={{
+                                  width: '100%',
+                                  display: 'block',
+                                  borderRadius: '6px',
+                                  boxShadow: isSelected
+                                    ? '0 0 0 2px #3b82f6, 0 4px 24px rgba(0,0,0,0.18)'
+                                    : '0 2px 12px rgba(0,0,0,0.10)',
+                                  transition: 'box-shadow 0.15s',
+                                  cursor: 'pointer',
+                                }}
+                              />
+                              {/* Resize handle — bottom-right corner */}
+                              {isSelected && (
+                                <div
+                                  className="absolute bottom-0 right-0 w-5 h-5 flex items-end justify-end cursor-ew-resize z-10"
+                                  style={{ transform: 'translate(50%, 50%)' }}
+                                  onMouseDown={e => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setResizingDrawing({ idx: index, startX: e.clientX, startPct: rawPct });
+                                  }}
+                                >
+                                  <div className="w-3 h-3 rounded-full shadow-md" style={{ background: '#3b82f6', border: '2px solid #fff' }} />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })()
