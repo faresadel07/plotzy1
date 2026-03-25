@@ -395,11 +395,11 @@ const sections = [
 
 function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; title: string; subtitle: string; accent?: string }) {
   return (
-    <div className="mb-14">
+    <div className="mb-14 text-center">
       <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-3">{label}</p>
       <h2 className="text-3xl md:text-[2.5rem] font-bold text-foreground mb-4 leading-[1.15] tracking-tight">{title}</h2>
-      <div className="w-12 h-[2px] bg-foreground/15 mb-5" />
-      <p className="text-muted-foreground text-base max-w-2xl leading-relaxed">{subtitle}</p>
+      <div className="w-12 h-[2px] bg-foreground/15 mb-5 mx-auto" />
+      <p className="text-muted-foreground text-base max-w-2xl leading-relaxed mx-auto">{subtitle}</p>
     </div>
   );
 }
