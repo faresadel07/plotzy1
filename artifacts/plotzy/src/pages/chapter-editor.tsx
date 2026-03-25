@@ -1465,7 +1465,7 @@ export default function ChapterEditor() {
       {showAI && (
         <AIAssistant
           bookId={bookId}
-          currentContent={pages.join("\n\n---\n\n")}
+          currentContent={pages.map(p => getPageText(p)).filter(Boolean).join("\n\n---\n\n")}
           onApply={(newContent) => { setPages([newContent]); setIsDirty(true); }}
           onClose={() => setShowAI(false)}
         />

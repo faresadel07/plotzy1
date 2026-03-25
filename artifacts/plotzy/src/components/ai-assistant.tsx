@@ -172,10 +172,11 @@ export function AIAssistant({ bookId, currentContent, onApply, onClose }: AIAssi
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 p-4 bg-black/50 backdrop-blur-md" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div
-        className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden dark"
         style={{
-          background: "hsl(var(--card))",
-          border: "1px solid hsl(var(--border))",
+          background: "#0a0a0a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          colorScheme: "dark",
         }}
       >
         {/* ── Header ── */}
