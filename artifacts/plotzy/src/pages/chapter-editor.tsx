@@ -218,6 +218,13 @@ export default function ChapterEditor() {
   const [refChapterId, setRefChapterId] = useState<number | null>(null);
   const [refDropdownOpen, setRefDropdownOpen] = useState(false);
 
+  // ── Inline AI Ghost-Text Suggestion ──────────────────────────────────────
+  const [inlineSuggestion, setInlineSuggestion] = useState<string>("");
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [suggestionPageIdx, setSuggestionPageIdx] = useState<number>(-1);
+  const suggestionDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suggestionAbortRef = useRef<AbortController | null>(null);
+
   const toggleTypewriterMode = () => {
     setIsTypewriterMode(v => {
       const next = !v;
@@ -344,6 +351,55 @@ export default function ChapterEditor() {
     window.addEventListener('mouseup', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [resizingDrawing]);
+
+  // ── Inline ghost-text suggestion: debounce → AI → show ─────────────────
+  useEffect(() => {
+    // Clear any pending suggestion immediately when active page changes
+    setInlineSuggestion("");
+    setSuggestionPageIdx(-1);
+
+    const currentText = getPageText(pages[activePageIndex] ?? "").trim();
+    if (currentText.split(/\s+/).filter(Boolean).length < 8) return; // need ≥8 words
+
+    // Cancel previous debounce
+    if (suggestionDebounceRef.current) clearTimeout(suggestionDebounceRef.current);
+
+    // Debounce 1.6 s of inactivity
+    suggestionDebounceRef.current = setTimeout(async () => {
+      // Cancel any in-flight request
+      if (suggestionAbortRef.current) suggestionAbortRef.current.abort();
+      suggestionAbortRef.current = new AbortController();
+
+      setSuggestionLoading(true);
+      try {
+        const res = await fetch("/api/continue-text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: currentText, language: lang, bookId }),
+          credentials: "include",
+          signal: suggestionAbortRef.current.signal,
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const raw: string = data.continuedText || "";
+        // Take up to first ~12 words as the inline hint
+        const words = raw.trim().split(/\s+/).slice(0, 12).join(" ");
+        if (words) {
+          setInlineSuggestion(words);
+          setSuggestionPageIdx(activePageIndex);
+        }
+      } catch {
+        // aborted or network error — ignore
+      } finally {
+        setSuggestionLoading(false);
+      }
+    }, 1600);
+
+    return () => {
+      if (suggestionDebounceRef.current) clearTimeout(suggestionDebounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages[activePageIndex], activePageIndex]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -1115,7 +1171,29 @@ export default function ChapterEditor() {
                         data-page-textarea
                         data-testid={`textarea-page-${index}`}
                         onKeyDown={(e) => {
+                          // Tab → accept inline suggestion
+                          if (e.key === "Tab" && inlineSuggestion && suggestionPageIdx === index) {
+                            e.preventDefault();
+                            const current = getPageText(pageContent);
+                            const accepted = current.trimEnd() + " " + inlineSuggestion;
+                            handlePageChange(index, accepted);
+                            setInlineSuggestion("");
+                            setSuggestionPageIdx(-1);
+                            return;
+                          }
+                          // Escape → dismiss suggestion
+                          if (e.key === "Escape" && inlineSuggestion) {
+                            e.preventDefault();
+                            setInlineSuggestion("");
+                            setSuggestionPageIdx(-1);
+                            return;
+                          }
                           if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter" || e.key === " ") {
+                            // Any typing dismisses current suggestion
+                            if (inlineSuggestion) {
+                              setInlineSuggestion("");
+                              setSuggestionPageIdx(-1);
+                            }
                             playTypewriterSound(isFocusMode);
                             if (isTypewriterMode) scrollToCursorCenter(e.currentTarget as HTMLTextAreaElement);
                           }
@@ -1227,6 +1305,48 @@ export default function ChapterEditor() {
                         );
                       })()
                     )}
+
+                  {/* ── Inline AI suggestion chip ── */}
+                  {activePageIndex === index && (inlineSuggestion || suggestionLoading) && (
+                    <div
+                      className="flex items-start gap-2 px-1 pb-2 animate-in fade-in duration-200"
+                      style={{ direction: textDir }}
+                    >
+                      {suggestionLoading && !inlineSuggestion ? (
+                        <div className="flex items-center gap-1.5 opacity-30">
+                          <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      ) : inlineSuggestion ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className="text-sm leading-relaxed opacity-30 italic select-none"
+                            style={{
+                              ...(FONT_STYLE_MAP[prefs.fontFamily || ''] || {}),
+                              color: isFocusMode ? '#e4e4e7' : (effectivePrefs.textColor || undefined),
+                            }}
+                          >
+                            {inlineSuggestion}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <kbd className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium opacity-40 border border-current">
+                              Tab
+                            </kbd>
+                            <span className="text-[10px] opacity-25">
+                              {ar ? "للقبول" : "to accept"}
+                            </span>
+                            <button
+                              onClick={() => { setInlineSuggestion(""); setSuggestionPageIdx(-1); }}
+                              className="text-[10px] opacity-20 hover:opacity-50 transition-opacity ml-1"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                   </div>
 
                   {/* Page bottom — decorative rule + centered page number */}
