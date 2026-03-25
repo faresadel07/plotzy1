@@ -304,7 +304,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(books)
       .leftJoin(users, eq(books.userId, users.id))
-      .where(eq(books.isPublished, true))
+      .where(and(eq(books.isPublished, true), eq(books.isDeleted, false)))
       .orderBy(desc(books.publishedAt));
     return rows as PublishedBook[];
   }

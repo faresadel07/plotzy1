@@ -626,6 +626,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                               ? "كتابك الآن متاح في المكتبة المجتمعية."
                               : "Your book is now live in the Plotzy Community Library.",
                           });
+                          setTimeout(() => navigate("/library"), 800);
                         },
                       })}
                     >
