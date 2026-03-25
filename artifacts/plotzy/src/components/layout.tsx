@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, PenLine, LogOut, User, Trash2, GraduationCap, Zap, Store, Library, Globe } from "lucide-react";
+import { BookOpen, LogOut, User, Trash2, GraduationCap, Zap, Store, Library, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -141,22 +141,19 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
       }}>
 
         {/* ── Left: Logo ── */}
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7 }}>
-          <div style={{
-            width: 26, height: 26, borderRadius: 7,
-            background: "#111",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
-          }}>
-            <PenLine style={{ width: 13, height: 13, color: "#fff" }} />
-          </div>
-          <span style={{
-            fontFamily: SF,
-            fontWeight: 700,
-            fontSize: 14,
-            letterSpacing: "-0.04em",
-            color: isFullDark ? "#fff" : "#111",
-          }}>PLOTZY</span>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+          <img
+            src={`${import.meta.env.BASE_URL}plotzy-logo.png`}
+            alt="Plotzy"
+            style={{
+              height: 32,
+              width: 32,
+              objectFit: "contain",
+              borderRadius: 6,
+              filter: isFullDark ? "invert(1)" : "none",
+              flexShrink: 0,
+            }}
+          />
         </Link>
 
         {/* ── Center: Nav links ── */}
