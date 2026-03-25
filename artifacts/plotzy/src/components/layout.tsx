@@ -214,6 +214,10 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
                     <User className="w-4 h-4" />
                     {t("changeDisplayName")}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/trash")} className="gap-2 cursor-pointer">
+                    <Trash2 className="w-4 h-4" />
+                    Trash
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer text-destructive focus:text-destructive" data-testid="menuitem-logout">
                     <LogOut className="w-4 h-4" />
