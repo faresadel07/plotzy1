@@ -68,13 +68,13 @@ function serializePages(pages: PageBlock[]): string {
   return JSON.stringify(pages);
 }
 
-// ── Fixed Page Dimensions (A5 proportional) ──────────────────────────────────
-// Page card is 560px wide with 52px horizontal padding on each side.
-// Content area width = 560 - 104 = 456px.
-// Page card height is A5 proportional: 560 × (297/210) ≈ 792px
-// Vertical padding: 56px top + 56px bottom → content height ≈ 680px
-const PAGE_CONTENT_HEIGHT = 676; // px — textarea height (fixed)
-const PAGE_CONTENT_WIDTH  = 456; // px — matches content area inside page card
+// ── Fixed Page Dimensions (A4 proportional) ──────────────────────────────────
+// Page card is 660px wide — matches industry-standard writing tools (Reedsy, Scrivener).
+// Horizontal margin: 76px each side → content width = 660 - 152 = 508px.
+// Total page height: 660 × (297/210) ≈ 934px (true A4 ratio).
+// Strip heights (header + footer) ≈ 164px → content height ≈ 770px.
+const PAGE_CONTENT_HEIGHT = 770; // px — textarea height (fixed, A4 proportional)
+const PAGE_CONTENT_WIDTH  = 508; // px — content area inside page card (660 - 2×76)
 
 function getPageText(block: PageBlock): string {
   if (typeof block === "string") return block;
@@ -894,7 +894,7 @@ export default function ChapterEditor() {
         }}
       >
         {/* Chapter Title — above all pages */}
-        <div className="max-w-[560px] mx-auto px-4 mb-8">
+        <div className="max-w-[660px] mx-auto px-4 mb-8">
           <input
             type="text"
             value={title}
@@ -919,7 +919,7 @@ export default function ChapterEditor() {
             const pageWords = countWords(pageText);
 
             return (
-              <div key={index} className="relative group w-full max-w-[560px]">
+              <div key={index} className="relative group w-full max-w-[660px]">
 
                 {/* Book Page Card */}
                 <div
@@ -939,9 +939,9 @@ export default function ChapterEditor() {
                   }}
                   onClick={() => setActivePageIndex(index)}
                 >
-                  {/* Page top strip — number + recording indicator */}
-                  <div className="flex items-center justify-between px-[52px] pt-5 pb-2 select-none" dir="ltr">
-                    <span className="text-[10px] tracking-widest uppercase opacity-25 font-medium" style={{ color: prefs.textColor || undefined }}>
+                  {/* Page top strip — chapter label + delete button */}
+                  <div className="flex items-center justify-between px-[76px] pt-6 pb-2 select-none" dir="ltr">
+                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: prefs.textColor || undefined }}>
                       {ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`}
                     </span>
                     <div className="flex items-center gap-2">
@@ -962,10 +962,10 @@ export default function ChapterEditor() {
                   </div>
 
                   {/* Thin decorative line under header */}
-                  <div className="mx-[52px] h-px opacity-10" style={{ background: prefs.textColor || "currentColor" }} />
+                  <div className="mx-[76px] h-px opacity-8" style={{ background: prefs.textColor || "currentColor" }} />
 
                   {/* Page Content Area */}
-                  <div className="px-[52px] py-9">
+                  <div className="px-[76px] py-10">
                     {typeof pageContent === 'string' || pageContent.type === 'text' ? (
                       <textarea
                         value={typeof pageContent === 'string' ? pageContent : pageContent.content}
@@ -1007,14 +1007,19 @@ export default function ChapterEditor() {
                     )}
                   </div>
 
-                  {/* Page bottom — word count + page number */}
-                  <div className="mx-[52px] h-px opacity-10 mb-3" style={{ background: prefs.textColor || "currentColor" }} />
-                  <div className="flex items-center justify-between px-[52px] pb-5 select-none" dir="ltr">
-                    <span className="text-[10px] opacity-20 tabular-nums" style={{ color: prefs.textColor || undefined }}>
+                  {/* Page bottom — decorative rule + centered page number */}
+                  <div className="mx-[76px] h-px opacity-8 mt-2" style={{ background: prefs.textColor || "currentColor" }} />
+                  <div className="relative flex items-center justify-center px-[76px] pb-6 pt-3 select-none">
+                    {/* Word count — left edge */}
+                    <span className="absolute left-[76px] text-[9px] opacity-15 tabular-nums" style={{ color: prefs.textColor || undefined }}>
                       {pageWords} {ar ? "كلمة" : "words"}
                     </span>
-                    <span className="text-[10px] opacity-25 font-medium" style={{ color: prefs.textColor || undefined }}>
-                      {index + 1}
+                    {/* Centered page number — book style */}
+                    <span
+                      className="text-[11px] font-medium tracking-widest opacity-30"
+                      style={{ color: prefs.textColor || undefined, letterSpacing: "0.2em" }}
+                    >
+                      — {index + 1} —
                     </span>
                   </div>
                 </div>
@@ -1027,7 +1032,7 @@ export default function ChapterEditor() {
           })}
 
           {/* Add Page Button */}
-          <div className="flex flex-col items-center gap-3 pb-24 mt-2 w-full max-w-[560px]">
+          <div className="flex flex-col items-center gap-3 pb-24 mt-2 w-full max-w-[660px]">
             <Button
               variant="ghost"
               onClick={handleAddPage}
