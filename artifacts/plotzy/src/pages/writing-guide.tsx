@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Layout } from "@/components/layout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -423,8 +423,36 @@ export default function WritingGuide() {
   const [expandedAct, setExpandedAct] = useState<number | null>(null);
   const [expandedChecklist, setExpandedChecklist] = useState<number | null>(0);
 
+  const isScrollingRef = useRef(false);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const sectionIds = ["genres", "structure", "characters", "dialogue", "process", "editing", "mistakes"];
+    const observers: IntersectionObserver[] = [];
+
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && !isScrollingRef.current) {
+            setActiveSection(id);
+          }
+        },
+        { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach(o => o.disconnect());
+  }, []);
+
   const scrollTo = (id: string) => {
     setActiveSection(id);
+    isScrollingRef.current = true;
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => { isScrollingRef.current = false; }, 1000);
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
