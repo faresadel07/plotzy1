@@ -430,7 +430,8 @@ export default function WritingGuide() {
   };
 
   return (
-    <Layout>
+    <Layout isFullDark>
+      <div className="dark">
       {/* ── Hero ── */}
       <motion.div
         initial="hidden" animate="visible" variants={fadeUp}
@@ -907,6 +908,121 @@ export default function WritingGuide() {
           ))}
         </div>
 
+        {/* Author Wisdom */}
+        <motion.div
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
+          className="mt-20 mb-4"
+        >
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">Words From the Masters</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-4">
+              Advice From the World's Greatest Writers
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              These authors have written some of the most beloved books in history. Here is what they learned.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {[
+              {
+                quote: "It is impossible to live without failing at something, unless you live so cautiously that you might as well not have lived at all — in which case, you fail by default.",
+                author: "J.K. Rowling",
+                work: "Harvard Commencement Speech, 2008",
+                tip: "Embrace failure as part of the creative process. Every rejected manuscript, every abandoned draft, is a step toward your finished book.",
+                accent: "#a78bfa",
+                initials: "JKR",
+              },
+              {
+                quote: "If you don't have time to read, you don't have the time (or the tools) to write. Simple as that.",
+                author: "Stephen King",
+                work: "On Writing: A Memoir of the Craft",
+                tip: "Read voraciously in your genre and outside it. Every book you read is a masterclass in how story, voice, and structure work.",
+                accent: "#f87171",
+                initials: "SK",
+              },
+              {
+                quote: "You don't write because you want to say something; you write because you have something to say.",
+                author: "F. Scott Fitzgerald",
+                work: "The Crack-Up, 1936",
+                tip: "Before you begin, ask yourself: what is the one thing this story must say? That core truth will guide every scene you write.",
+                accent: "#38bdf8",
+                initials: "FSF",
+              },
+              {
+                quote: "There is no greater agony than bearing an untold story inside you.",
+                author: "Maya Angelou",
+                work: "I Know Why the Caged Bird Sings",
+                tip: "The story already exists inside you. Your job as a writer is not to invent it — it is to find the courage to tell it honestly.",
+                accent: "#fb923c",
+                initials: "MA",
+              },
+              {
+                quote: "A reader lives a thousand lives before he dies. The man who never reads lives only one.",
+                author: "George R.R. Martin",
+                work: "A Dance with Dragons",
+                tip: "Remember why stories matter: they expand empathy. Write characters so real that readers feel they have truly lived inside another life.",
+                accent: "#4ade80",
+                initials: "GRRM",
+              },
+              {
+                quote: "The first draft is just you telling yourself the story.",
+                author: "Terry Pratchett",
+                work: "Advice on Writing",
+                tip: "Give yourself permission to write badly at first. The magic of writing happens in revision — but only if there is a first draft to revise.",
+                accent: "#facc15",
+                initials: "TP",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.author}
+                initial="hidden" whileInView="visible" viewport={{ once: true }}
+                custom={i % 2}
+                variants={fadeUp}
+                className="rounded-2xl border border-border bg-card overflow-hidden"
+              >
+                <div className="p-6">
+                  {/* Quote mark */}
+                  <div
+                    className="text-5xl font-serif leading-none mb-3 select-none"
+                    style={{ color: item.accent, opacity: 0.6 }}
+                  >"</div>
+
+                  {/* Quote */}
+                  <p className="text-foreground text-[15px] leading-relaxed font-medium italic mb-5">
+                    {item.quote}
+                  </p>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-3 mb-5">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                      style={{ backgroundColor: item.accent + "22", color: item.accent }}
+                    >
+                      {item.initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{item.author}</p>
+                      <p className="text-xs text-muted-foreground">{item.work}</p>
+                    </div>
+                  </div>
+
+                  {/* Practical tip */}
+                  <div
+                    className="rounded-xl p-4"
+                    style={{ backgroundColor: item.accent + "0f", borderLeft: `3px solid ${item.accent}` }}
+                  >
+                    <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: item.accent }}>
+                      Practical Takeaway
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.tip}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Final CTA */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
@@ -924,6 +1040,7 @@ export default function WritingGuide() {
           </p>
         </motion.div>
       </section>
+      </div>
     </Layout>
   );
 }
