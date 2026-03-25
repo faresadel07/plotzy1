@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { EtherealShadow } from "@/components/ui/etheral-shadow";
 import { useRoute, Link, useLocation } from "wouter";
 import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
@@ -632,17 +631,6 @@ export default function ChapterEditor() {
       className="min-h-screen transition-all duration-700 relative"
       style={{ backgroundColor: "#000" }}
     >
-      {/* Animated Etheral Shadow — always visible background */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <EtherealShadow
-          color="rgba(30, 30, 30, 1)"
-          animation={{ scale: 100, speed: 90 }}
-          noise={{ opacity: 0.6, scale: 1.2 }}
-          sizing="fill"
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
-
       {/* Subtle vignette in focus mode */}
       {isFocusMode && (
         <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.7)_100%)] z-[1]" />
