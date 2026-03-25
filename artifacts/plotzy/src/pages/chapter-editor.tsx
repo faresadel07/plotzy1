@@ -1139,7 +1139,17 @@ export default function ChapterEditor() {
                   <div className="mx-[76px] h-px opacity-8" style={{ background: effectivePrefs.textColor || "currentColor" }} />
 
                   {/* Page Content Area */}
-                  <div className="px-[76px] py-10">
+                  <div
+                    className="px-[76px] py-10 cursor-text"
+                    style={{ minHeight: `${PAGE_CONTENT_HEIGHT + 80}px` }}
+                    onClick={(e) => {
+                      const ta = (e.currentTarget as HTMLElement).querySelector<HTMLTextAreaElement>('[data-page-textarea]');
+                      if (ta && e.target === e.currentTarget) {
+                        ta.focus();
+                        ta.setSelectionRange(ta.value.length, ta.value.length);
+                      }
+                    }}
+                  >
                     {typeof pageContent === 'string' || pageContent.type === 'text' ? (() => {
                         // Per-block font: use the font frozen in this block if available,
                         // otherwise fall back to the SAVED (applied) global font — never
@@ -1162,7 +1172,8 @@ export default function ChapterEditor() {
                           ...blockFontStyle,
                           color: isFocusMode ? '#e4e4e7' : effectivePrefs.textColor || undefined,
                           direction: textDir,
-                          height: `${PAGE_CONTENT_HEIGHT}px`,
+                          minHeight: `${PAGE_CONTENT_HEIGHT}px`,
+                          height: 'auto',
                           overflow: "hidden",
                           lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
                           letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
