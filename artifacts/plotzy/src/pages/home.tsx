@@ -494,7 +494,7 @@ export default function Home() {
         </div>
 
         {/* ===== EXISTING ACTIVE LIBRARY SECTION (SLEEK INTEGRATION) ===== */}
-        {books && books.length > 0 && (
+        {user && !isLoading && (
           <section className="bg-[#050505] border-b border-white/5 py-24 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
 
@@ -523,7 +523,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-[11px] font-semibold text-white/20 uppercase tracking-widest hidden sm:block">
-                    {books.length} {books.length === 1 ? "Project" : "Projects"}
+                    {(books?.length ?? 0)} {(books?.length ?? 0) === 1 ? "Project" : "Projects"}
                   </span>
                   <Link href="/trash">
                     <button
@@ -545,7 +545,31 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Empty state — big + card when no books */}
+              {(!books || books.length === 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={() => setIsOpen(true)}
+                  className="cursor-pointer group max-w-sm mx-auto"
+                >
+                  <div
+                    className="relative rounded-2xl border border-dashed border-white/10 hover:border-white/25 transition-all duration-300 flex flex-col items-center justify-center gap-4"
+                    style={{ background: 'rgba(255,255,255,0.02)', minHeight: 380 }}
+                  >
+                    <div className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center group-hover:border-white/35 transition-colors duration-300">
+                      <Plus className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors duration-300" />
+                    </div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/20 group-hover:text-white/40 transition-colors duration-300">
+                      New Project
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Shelf display (reusing standard bookshelf loop logic with new styles) */}
+              {books && books.length > 0 && (
               <div className="space-y-12">
                 {shelfRows.map((rowBooks, rowIndex) => (
                   <div key={rowIndex} className={`grid gap-5 ${books.length === 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
@@ -689,6 +713,7 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           </section>
         )}
@@ -706,78 +731,6 @@ export default function Home() {
           </section>
         )}
 
-        {/* ===== ONBOARDING HERO CTA FOR EMPTY STATES ===== */}
-        {(!books || books.length === 0) && !isLoading && (
-          <section className="bg-[#050505] border-b border-white/5 py-16 px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-md mx-auto text-center"
-            >
-              {/* Icon with floating animation */}
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-white/10 bg-white/[0.04] mb-6 shadow-[0_0_30px_rgba(255,255,255,0.04)]"
-              >
-                <Sparkles className="w-6 h-6 text-white/60" />
-              </motion.div>
-
-              {/* Greeting */}
-              {firstName && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                  className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-3"
-                >
-                  Welcome back, {firstName}
-                </motion.p>
-              )}
-
-              <motion.h3
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="text-2xl font-semibold text-white mb-3 tracking-tight"
-              >
-                No active projects yet
-              </motion.h3>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-sm text-white/40 mb-8 leading-relaxed max-w-xs mx-auto"
-              >
-                Start writing your first book and join thousands of authors building their next bestseller.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.38 }}
-                className="flex flex-col items-center gap-3"
-              >
-                <button
-                  onClick={() => setIsOpen(true)}
-                  className="group inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                  style={{ background: '#fff', color: '#111', boxShadow: '0 4px 20px rgba(255,255,255,0.1)' }}
-                >
-                  Begin Your Journey
-                </button>
-                <button
-                  onClick={scrollToFeatures}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-medium text-white/40 transition-all duration-200 hover:text-white/70"
-                >
-                  View Full Features
-                  <ChevronDown className="w-3 h-3 opacity-70" />
-                </button>
-              </motion.div>
-            </motion.div>
-          </section>
-        )}
 
 
 
