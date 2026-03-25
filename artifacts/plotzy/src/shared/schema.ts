@@ -9,9 +9,14 @@ export type BookPages = {
 };
 
 export type BookPreferences = {
-  font?: string;
+  fontFamily?: string;
   fontSize?: string;
   lineHeight?: string;
+  letterSpacing?: string;
+  bgColor?: string;
+  textColor?: string;
+  pageStyle?: string;
+  font?: string;
   textAlign?: string;
   theme?: string;
   chapterHeadingStyle?: string;

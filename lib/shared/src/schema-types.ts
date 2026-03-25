@@ -116,7 +116,12 @@ export type BookPreferences = {
   bgColor?: string;
   textColor?: string;
   lineHeight?: string;
+  letterSpacing?: string;
   pageStyle?: string;
+  font?: string;
+  textAlign?: string;
+  theme?: string;
+  chapterHeadingStyle?: string;
 };
 
 export const dailyProgress = pgTable("daily_progress", {

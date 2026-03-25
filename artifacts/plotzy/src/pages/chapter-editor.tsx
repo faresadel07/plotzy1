@@ -33,13 +33,43 @@ const FONT_MAP: Record<string, string> = {
   "serif": "font-serif",
   "sans": "font-sans",
   "mono": "font-mono",
-  "arabic-sans": "",
-  "arabic-serif": "",
 };
 
 const FONT_STYLE_MAP: Record<string, React.CSSProperties> = {
-  "arabic-sans": { fontFamily: "'Cairo', sans-serif" },
-  "arabic-serif": { fontFamily: "'Amiri', serif" },
+  "eb-garamond":       { fontFamily: "'EB Garamond', serif" },
+  "cormorant":         { fontFamily: "'Cormorant Garamond', serif" },
+  "libre-baskerville": { fontFamily: "'Libre Baskerville', serif" },
+  "lora":              { fontFamily: "'Lora', serif" },
+  "merriweather":      { fontFamily: "'Merriweather', serif" },
+  "source-serif":      { fontFamily: "'Source Serif 4', serif" },
+  "playfair":          { fontFamily: "'Playfair Display', serif" },
+  "crimson":           { fontFamily: "'Crimson Text', serif" },
+  "inter":             { fontFamily: "'Inter', sans-serif" },
+  "open-sans":         { fontFamily: "'Open Sans', sans-serif" },
+  "poppins":           { fontFamily: "'Poppins', sans-serif" },
+  "montserrat":        { fontFamily: "'Montserrat', sans-serif" },
+  "plus-jakarta":      { fontFamily: "'Plus Jakarta Sans', sans-serif" },
+  "space-grotesk":     { fontFamily: "'Space Grotesk', sans-serif" },
+  "courier-prime":     { fontFamily: "'Courier Prime', monospace" },
+  "special-elite":     { fontFamily: "'Special Elite', cursive" },
+  "roboto-mono":       { fontFamily: "'Roboto Mono', monospace" },
+  "space-mono":        { fontFamily: "'Space Mono', monospace" },
+  "arabic-sans":       { fontFamily: "'Cairo', sans-serif" },
+  "arabic-serif":      { fontFamily: "'Amiri', serif" },
+  "arabic-naskh":      { fontFamily: "'Noto Naskh Arabic', serif" },
+};
+
+const LINE_HEIGHT_MAP: Record<string, string> = {
+  "tight":    "1.55",
+  "normal":   "1.85",
+  "relaxed":  "2.15",
+  "spacious": "2.55",
+};
+
+const LETTER_SPACING_MAP: Record<string, string> = {
+  "tight":  "-0.02em",
+  "normal": "0em",
+  "wide":   "0.04em",
 };
 
 export type DrawingSize = 'small' | 'medium' | 'large' | 'full';
@@ -578,7 +608,8 @@ export default function ChapterEditor() {
 
   const fontClass = FONT_MAP[prefs.fontFamily || "serif"] || "";
   const fontStyle = FONT_STYLE_MAP[prefs.fontFamily || ""] || {};
-  const textDir = (prefs.fontFamily?.startsWith("arabic") || ar) ? "rtl" : "ltr";
+  const isArabicFont = prefs.fontFamily?.startsWith("arabic");
+  const textDir = (isArabicFont || ar) ? "rtl" : "ltr";
   const isDark = resolvedTheme === "dark";
 
   // Page style background pattern (from saved preference)
@@ -986,13 +1017,15 @@ export default function ChapterEditor() {
                         placeholder={index === 0
                           ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
                           : (ar ? "تابع قصتك..." : "Continue your story...")}
-                        className={`w-full bg-transparent outline-none resize-none ${prefs.fontSize || "text-lg"} placeholder:opacity-20 focus:ring-0 leading-[1.9] transition-colors duration-700 ${fontClass}`}
+                        className={`w-full bg-transparent outline-none resize-none ${prefs.fontSize || "text-lg"} placeholder:opacity-20 focus:ring-0 transition-colors duration-700 ${fontClass}`}
                         style={{
                           ...fontStyle,
                           color: isFocusMode ? '#e4e4e7' : prefs.textColor || undefined,
                           direction: textDir,
                           height: `${PAGE_CONTENT_HEIGHT}px`,
                           overflow: "hidden",
+                          lineHeight: LINE_HEIGHT_MAP[prefs.lineHeight || "normal"] || "1.85",
+                          letterSpacing: LETTER_SPACING_MAP[prefs.letterSpacing || "normal"] || "0em",
                         } as React.CSSProperties}
                         dir={textDir}
                         data-page-textarea
@@ -1083,7 +1116,8 @@ export default function ChapterEditor() {
             left: "-9999px",
             width: `${PAGE_CONTENT_WIDTH}px`,
             fontSize: prefs.fontSize === "text-sm" ? "14px" : prefs.fontSize === "text-base" ? "16px" : prefs.fontSize === "text-xl" ? "20px" : prefs.fontSize === "text-2xl" ? "24px" : "18px",
-            lineHeight: "1.9",
+            lineHeight: LINE_HEIGHT_MAP[prefs.lineHeight || "normal"] || "1.85",
+            letterSpacing: LETTER_SPACING_MAP[prefs.letterSpacing || "normal"] || "0em",
             fontFamily: fontStyle.fontFamily || undefined,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
