@@ -629,20 +629,23 @@ export default function ChapterEditor() {
 
   return (
     <div
-      className={`min-h-screen transition-all duration-700 relative ${isFocusMode ? "text-white" : ""}`}
-      style={isFocusMode ? { backgroundColor: "#000" } : editorOuterStyle}
+      className="dark min-h-screen transition-all duration-700 relative"
+      style={{ backgroundColor: "#000" }}
     >
-      {/* Animated Etheral Shadow background for focus mode */}
+      {/* Animated Etheral Shadow — always visible background */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <EtherealShadow
+          color="rgba(30, 30, 30, 1)"
+          animation={{ scale: 100, speed: 90 }}
+          noise={{ opacity: 0.6, scale: 1.2 }}
+          sizing="fill"
+          style={{ width: "100%", height: "100%" }}
+        />
+      </div>
+
+      {/* Subtle vignette in focus mode */}
       {isFocusMode && (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <EtherealShadow
-            color="rgba(30, 30, 30, 1)"
-            animation={{ scale: 100, speed: 90 }}
-            noise={{ opacity: 0.6, scale: 1.2 }}
-            sizing="fill"
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
+        <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.7)_100%)] z-[1]" />
       )}
 
       {/* Typewriter Mode — fixed center guide line */}
@@ -659,8 +662,8 @@ export default function ChapterEditor() {
 
       {/* Editor Header */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
-        style={{ backgroundColor: isFocusMode ? undefined : (resolvedBgColor || "white") + "cc" }}
+        className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 border-transparent" : "border-white/10"}`}
+        style={{ backgroundColor: isFocusMode ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.55)" }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-10">
           <Link href={`/books/${bookId}`} className="flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group">
