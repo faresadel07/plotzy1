@@ -765,7 +765,6 @@ export default function Home() {
                   className="group inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                   style={{ background: '#fff', color: '#111', boxShadow: '0 4px 20px rgba(255,255,255,0.1)' }}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
                   Begin Your Journey
                 </button>
                 <button
@@ -973,7 +972,6 @@ export default function Home() {
                 className="group inline-flex items-center gap-2.5 px-8 py-3 rounded-full font-bold text-sm tracking-wide transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
                 style={{ background: '#EFEFEF', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', color: '#111111' }}
               >
-                <Sparkles className="w-3.5 h-3.5" />
                 Begin Your Journey
               </button>
               <button
