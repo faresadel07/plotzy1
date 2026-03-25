@@ -1,23 +1,26 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTrashedBooks, useRestoreBook, useDeleteBook } from "@/hooks/use-books";
 import { Layout } from "@/components/layout";
-import { BookOpen, Sparkles, RefreshCcw, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { BookOpen, RefreshCcw, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { ConfirmModal } from "@/components/confirm-modal";
+
+const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif';
 
 export default function Trash() {
   const { data: trashedBooks, isLoading } = useTrashedBooks();
   const restoreBook = useRestoreBook();
   const deleteBook = useDeleteBook();
   const [confirmDelete, setConfirmDelete] = useState<{ id: number; title: string } | null>(null);
+  const [, navigate] = useLocation();
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <Layout isFullDark>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(255,255,255,0.3)" }} />
         </div>
       </Layout>
     );
@@ -35,71 +38,240 @@ export default function Trash() {
         variant="danger"
       />
 
-      <Layout>
-        <div className="max-w-6xl mx-auto py-8">
-          <div className="flex items-center gap-4 mb-10">
-            <Link href="/" className="p-2 hover:bg-white/5 rounded-full transition-colors mr-2">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <Trash2 className="w-5 h-5 text-white/80" />
-            </div>
-            <h1 className="text-3xl font-bold">Recycle Bin</h1>
-          </div>
+      <Layout isFullDark>
+        <div style={{ minHeight: "100vh", background: "#080808", paddingTop: 72, paddingBottom: 60 }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
 
-          {!trashedBooks || trashedBooks.length === 0 ? (
-            <div className="text-center py-20 bg-white/5 rounded-[2rem] border border-white/10">
-              <Trash2 className="w-12 h-12 mx-auto text-white/20 mb-4" />
-              <h3 className="text-2xl font-bold mb-2">Trash is empty</h3>
-              <p className="text-white/50">Deleted projects will appear here.</p>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
+              <button
+                onClick={() => navigate("/")}
+                style={{
+                  width: 34, height: 34, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", flexShrink: 0,
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+              >
+                <ArrowLeft style={{ width: 14, height: 14, color: "rgba(255,255,255,0.6)" }} />
+              </button>
+              <div>
+                <p style={{ fontFamily: SF, fontSize: 10, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 2 }}>
+                  Workspace
+                </p>
+                <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
+                  Recycle Bin
+                </h1>
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {trashedBooks.map((book, index) => (
-                <motion.div
-                  key={book.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <div className="bg-[#0a0a0a] rounded-2xl overflow-hidden border border-red-500/20 shadow-2xl h-full flex flex-col group relative">
-                    <div className="aspect-[2/3] bg-black relative overflow-hidden opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-80 transition-all duration-500">
+
+            {/* Empty */}
+            {!trashedBooks || trashedBooks.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  textAlign: "center",
+                  padding: "80px 24px",
+                  border: "1.5px dashed rgba(255,255,255,0.08)",
+                  borderRadius: 28,
+                  background: "rgba(255,255,255,0.015)",
+                }}
+              >
+                <Trash2 style={{ width: 40, height: 40, margin: "0 auto 16px", color: "rgba(255,255,255,0.12)" }} />
+                <p style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
+                  Trash is empty
+                </p>
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+                  Deleted projects will appear here.
+                </p>
+              </motion.div>
+            ) : (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                gap: 20,
+              }}>
+                {trashedBooks.map((book, index) => (
+                  <motion.div
+                    key={book.id}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ position: "relative" }}
+                    onMouseEnter={e => {
+                      const card = e.currentTarget;
+                      const img = card.querySelector<HTMLImageElement>("img");
+                      const dimOverlay = card.querySelector<HTMLElement>("[data-dim]");
+                      const actionOverlay = card.querySelector<HTMLElement>("[data-actions]");
+                      if (img) img.style.filter = "none";
+                      if (dimOverlay) dimOverlay.style.opacity = "0";
+                      if (actionOverlay) actionOverlay.style.opacity = "1";
+                    }}
+                    onMouseLeave={e => {
+                      const card = e.currentTarget;
+                      const img = card.querySelector<HTMLImageElement>("img");
+                      const dimOverlay = card.querySelector<HTMLElement>("[data-dim]");
+                      const actionOverlay = card.querySelector<HTMLElement>("[data-actions]");
+                      if (img) img.style.filter = "grayscale(60%) brightness(0.55) sepia(15%)";
+                      if (dimOverlay) dimOverlay.style.opacity = "1";
+                      if (actionOverlay) actionOverlay.style.opacity = "0";
+                    }}
+                  >
+                    {/* Portrait card */}
+                    <div style={{
+                      aspectRatio: "2/3",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      position: "relative",
+                      background: "#111",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}>
+                      {/* Cover image with gray desaturated filter */}
                       {book.coverImage ? (
-                        <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
+                        <img
+                          src={book.coverImage}
+                          alt={book.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            filter: "grayscale(60%) brightness(0.55) sepia(15%)",
+                            transition: "filter 0.4s ease",
+                          }}
+                        />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#222] to-[#111]">
-                          <BookOpen className="w-10 h-10 text-white/20" />
+                        <div style={{
+                          width: "100%", height: "100%",
+                          background: "linear-gradient(160deg, #1a1a1a 0%, #0d0d0d 100%)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <BookOpen style={{ width: 28, height: 28, color: "rgba(255,255,255,0.1)" }} />
                         </div>
                       )}
 
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                      {/* Gray overlay (visible by default, hides on hover) */}
+                      <div
+                        data-dim
+                        style={{
+                          position: "absolute", inset: 0,
+                          background: "rgba(20,18,18,0.4)",
+                          transition: "opacity 0.4s ease",
+                          pointerEvents: "none",
+                          opacity: 1,
+                        }}
+                      />
+
+                      {/* Hover overlay: actions */}
+                      <div
+                        data-actions
+                        style={{
+                          position: "absolute", inset: 0,
+                          background: "rgba(0,0,0,0.72)",
+                          opacity: 0,
+                          transition: "opacity 0.3s ease",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 10,
+                          padding: 12,
+                        }}
+                      >
                         <button
                           onClick={() => restoreBook.mutate(book.id)}
-                          className="px-6 py-2 bg-white text-black font-semibold rounded-full flex items-center gap-2 hover:scale-105 transition-transform"
+                          style={{
+                            width: "100%",
+                            padding: "8px 0",
+                            background: "#fff",
+                            color: "#111",
+                            border: "none",
+                            borderRadius: 30,
+                            fontFamily: SF,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 6,
+                            transition: "opacity 0.15s",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                         >
-                          <RefreshCcw className="w-4 h-4" />
+                          <RefreshCcw style={{ width: 12, height: 12 }} />
                           Restore
                         </button>
                         <button
                           onClick={() => setConfirmDelete({ id: book.id, title: book.title })}
-                          className="px-6 py-2 bg-red-500/20 text-red-500 border border-red-500/50 font-semibold rounded-full flex items-center gap-2 hover:bg-red-500 hover:text-white transition-all"
+                          style={{
+                            width: "100%",
+                            padding: "7px 0",
+                            background: "transparent",
+                            color: "rgba(255,80,80,0.85)",
+                            border: "1px solid rgba(255,80,80,0.35)",
+                            borderRadius: 30,
+                            fontFamily: SF,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 6,
+                            transition: "all 0.15s",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = "rgba(255,60,60,0.18)";
+                            e.currentTarget.style.borderColor = "rgba(255,80,80,0.7)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.borderColor = "rgba(255,80,80,0.35)";
+                          }}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 style={{ width: 11, height: 11 }} />
                           Delete Forever
                         </button>
                       </div>
                     </div>
-                    <div className="p-4 flex flex-col pt-3">
-                      <h3 className="text-sm font-bold text-white/60 line-clamp-2">{book.title}</h3>
-                      <div className="mt-2 text-[10px] text-white/30">
-                        Deleted: {book.createdAt ? format(new Date(book.createdAt), "MMM d, yyyy") : "Unknown"}
-                      </div>
+
+                    {/* Title + date below card */}
+                    <div style={{ paddingTop: 10 }}>
+                      <p style={{
+                        fontFamily: SF,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "rgba(255,255,255,0.55)",
+                        lineHeight: 1.3,
+                        marginBottom: 3,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {book.title}
+                      </p>
+                      <p style={{
+                        fontFamily: SF,
+                        fontSize: 10,
+                        color: "rgba(255,255,255,0.22)",
+                      }}>
+                        {book.createdAt ? format(new Date(book.createdAt), "MMM d, yyyy") : ""}
+                      </p>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+          </div>
         </div>
       </Layout>
     </>
