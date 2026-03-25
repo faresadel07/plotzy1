@@ -463,7 +463,7 @@ export default function WritingGuide() {
       {/* ── Hero ── */}
       <motion.div
         initial="hidden" animate="visible" variants={fadeUp}
-        className="relative pt-12 pb-6 md:pt-16 md:pb-8 mb-4 overflow-hidden"
+        className="relative pt-12 pb-2 md:pt-16 md:pb-3 mb-4 overflow-hidden"
       >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-foreground/[0.03] rounded-full blur-[80px] -translate-y-1/2" />
@@ -484,7 +484,7 @@ export default function WritingGuide() {
 
       {/* ── Sticky Nav ── */}
       <div className="sticky top-[44px] z-20 mb-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none max-w-5xl mx-auto">
+        <div className="flex items-center justify-center gap-1 overflow-x-auto scrollbar-none max-w-5xl mx-auto">
           {sections.map(({ id, label }) => (
             <button
               key={id}
