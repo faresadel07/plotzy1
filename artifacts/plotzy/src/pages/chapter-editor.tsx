@@ -42,9 +42,12 @@ const FONT_STYLE_MAP: Record<string, React.CSSProperties> = {
   "arabic-serif": { fontFamily: "'Amiri', serif" },
 };
 
+export type DrawingSize = 'small' | 'medium' | 'large' | 'full';
+
 export type PageBlock =
   | string
-  | { type: 'text' | 'image' | 'drawing', content: string };
+  | { type: 'text' | 'image', content: string }
+  | { type: 'drawing', content: string, size?: DrawingSize };
 
 function parsePages(raw: string): PageBlock[] {
   if (!raw) return [""];
@@ -218,6 +221,8 @@ export default function ChapterEditor() {
   const [showCanvas, setShowCanvas] = useState(false);
   const [canvasColor, setCanvasColor] = useState("#000000");
   const [canvasStroke, setCanvasStroke] = useState(4);
+  const [isEraser, setIsEraser] = useState(false);
+  const [drawingSize, setDrawingSize] = useState<DrawingSize>('large');
 
   // Voice dictation state
   const [isRecording, setIsRecording] = useState(false);
@@ -274,6 +279,12 @@ export default function ChapterEditor() {
   useEffect(() => {
     if (book?.bookPreferences) setPrefs(book.bookPreferences as BookPreferences);
   }, [book]);
+
+  useEffect(() => {
+    if (showCanvas && canvasRef.current) {
+      canvasRef.current.eraseMode(isEraser);
+    }
+  }, [isEraser, showCanvas]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -543,10 +554,11 @@ export default function ChapterEditor() {
       setPages(prev => {
         const next = [...prev];
         const currentBlock = next[activePageIndex];
+        const block: PageBlock = { type: 'drawing', content: base64, size: drawingSize };
         if (typeof currentBlock === 'string' && !currentBlock.trim() && pages.length === 1) {
-          next[activePageIndex] = { type: 'drawing', content: base64 };
+          next[activePageIndex] = block;
         } else {
-          next.splice(activePageIndex + 1, 0, { type: 'drawing', content: base64 });
+          next.splice(activePageIndex + 1, 0, block);
           next.splice(activePageIndex + 2, 0, "");
           setTimeout(() => setActivePageIndex(activePageIndex + 2), 50);
         }
@@ -554,7 +566,7 @@ export default function ChapterEditor() {
       });
       setIsDirty(true);
       setShowCanvas(false);
-      // Reset canvas for next time
+      setIsEraser(false);
       canvasRef.current.clearCanvas();
     } catch (e) {
       console.error(e);
@@ -993,17 +1005,31 @@ export default function ChapterEditor() {
                         }}
                       />
                     ) : (
-                      <div
-                        className="relative w-full overflow-hidden rounded-lg"
-                        style={{ height: `${PAGE_CONTENT_HEIGHT}px` }}
-                        onClick={() => setActivePageIndex(index)}
-                      >
-                        <img
-                          src={pageContent.content}
-                          alt={`Page ${index + 1} image`}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+                      (() => {
+                        const sz = typeof pageContent !== 'string' && pageContent.type === 'drawing'
+                          ? (pageContent as any).size as DrawingSize | undefined
+                          : undefined;
+                        const widthMap: Record<DrawingSize, string> = {
+                          small: '42%',
+                          medium: '64%',
+                          large: '86%',
+                          full: '100%',
+                        };
+                        const w = widthMap[sz || 'full'];
+                        return (
+                          <div
+                            className="flex items-center justify-center w-full"
+                            style={{ minHeight: sz === 'full' ? `${PAGE_CONTENT_HEIGHT}px` : undefined, paddingTop: '16px', paddingBottom: '16px' }}
+                            onClick={() => setActivePageIndex(index)}
+                          >
+                            <img
+                              src={typeof pageContent !== 'string' ? pageContent.content : ''}
+                              alt={`Page ${index + 1} drawing`}
+                              style={{ width: w, maxWidth: w, borderRadius: '4px', boxShadow: '0 2px 12px rgba(0,0,0,0.10)' }}
+                            />
+                          </div>
+                        );
+                      })()
                     )}
                   </div>
 
@@ -1386,85 +1412,218 @@ export default function ChapterEditor() {
         />
       )}
 
-      {/* Hand Draw Canvas Modal */}
+      {/* Hand Draw Canvas Modal — full-screen professional layout */}
       {showCanvas && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-md p-4 sm:p-8 animate-in fade-in duration-300">
-          <div className="w-full max-w-5xl h-full max-h-[85vh] bg-card border border-border/40 shadow-2xl rounded-3xl flex flex-col overflow-hidden relative">
+        <div className="fixed inset-0 z-[100] flex flex-col animate-in fade-in duration-200" style={{ background: '#0e0e10' }}>
 
-            {/* Modal Header */}
-            <div className="h-16 border-b border-border/20 px-6 flex items-center justify-between bg-muted/20">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <PenTool className="w-5 h-5 text-primary" />
-                {ar ? "المسودة الحرة" : "Sketch Canvas"}
-              </h3>
-              <button
-                onClick={() => setShowCanvas(false)}
-                className="p-2 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          {/* ── Top Bar ── */}
+          <div className="shrink-0 h-12 flex items-center justify-between px-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-2.5">
+              <PenTool className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                {ar ? "لوحة الرسم" : "Sketch Canvas"}
+              </span>
             </div>
+            <button
+              onClick={() => { setShowCanvas(false); setIsEraser(false); }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-            {/* Canvas Toolbar */}
-            <div className="p-4 flex flex-wrap items-center gap-4 bg-background/50 border-b border-border/10 justify-center">
-              <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-xl">
-                <button onClick={() => setCanvasColor("#000000")} className={`w-8 h-8 rounded-full bg-black border-2 transition-transform hover:scale-110 ${canvasColor === "#000000" ? "border-primary scale-110" : "border-transparent"}`} />
-                <button onClick={() => setCanvasColor("#ef4444")} className={`w-8 h-8 rounded-full bg-red-500 border-2 transition-transform hover:scale-110 ${canvasColor === "#ef4444" ? "border-primary scale-110" : "border-transparent"}`} />
-                <button onClick={() => setCanvasColor("#3b82f6")} className={`w-8 h-8 rounded-full bg-blue-500 border-2 transition-transform hover:scale-110 ${canvasColor === "#3b82f6" ? "border-primary scale-110" : "border-transparent"}`} />
-                <button onClick={() => setCanvasColor("#22c55e")} className={`w-8 h-8 rounded-full bg-green-500 border-2 transition-transform hover:scale-110 ${canvasColor === "#22c55e" ? "border-primary scale-110" : "border-transparent"}`} />
-                <input
-                  type="color"
-                  value={canvasColor}
-                  onChange={e => setCanvasColor(e.target.value)}
-                  className="w-8 h-8 rounded-full overflow-hidden cursor-pointer"
-                />
+          {/* ── Main: sidebar + canvas ── */}
+          <div className="flex flex-1 overflow-hidden">
+
+            {/* Left Sidebar — Tools */}
+            <div className="shrink-0 w-52 flex flex-col gap-5 p-4 border-r overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
+
+              {/* Colors */}
+              <div>
+                <p className="text-[10px] uppercase tracking-widest mb-2.5 font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  {ar ? "اللون" : "Color"}
+                </p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {["#000000","#ffffff","#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#8b5cf6","#ec4899","#6b7280"].map(c => (
+                    <button
+                      key={c}
+                      onClick={() => { setCanvasColor(c); setIsEraser(false); }}
+                      className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
+                      style={{
+                        background: c,
+                        borderColor: canvasColor === c && !isEraser ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.12)',
+                        transform: canvasColor === c && !isEraser ? 'scale(1.15)' : undefined,
+                        boxShadow: c === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : undefined,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{ar ? "مخصص" : "Custom"}</span>
+                  <input
+                    type="color"
+                    value={canvasColor}
+                    onChange={e => { setCanvasColor(e.target.value); setIsEraser(false); }}
+                    className="w-8 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                </div>
               </div>
 
-              <div className="w-px h-8 bg-border/20 mx-2" />
+              {/* Divider */}
+              <div className="h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
 
-              <div className="flex items-center gap-3 bg-muted/30 p-1.5 px-4 rounded-xl">
-                <span className="text-xs font-medium text-muted-foreground">{ar ? "حجم الفرشاة:" : "Brush Size:"} {canvasStroke}px</span>
+              {/* Brush Size */}
+              <div>
+                <p className="text-[10px] uppercase tracking-widest mb-2.5 font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  {ar ? "حجم الفرشاة" : "Brush Size"} — {canvasStroke}px
+                </p>
                 <input
-                  type="range"
-                  min="1" max="20"
+                  type="range" min="1" max="30"
                   value={canvasStroke}
                   onChange={e => setCanvasStroke(parseInt(e.target.value))}
-                  className="w-32 accent-primary"
+                  className="w-full accent-white"
                 />
+                <div className="flex justify-between text-[9px] mt-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  <span>1</span><span>30</span>
+                </div>
+                {/* Visual brush preview */}
+                <div className="mt-3 flex items-center justify-center" style={{ height: '36px' }}>
+                  <div
+                    className="rounded-full"
+                    style={{
+                      width: `${Math.min(canvasStroke * 1.8, 36)}px`,
+                      height: `${Math.min(canvasStroke * 1.8, 36)}px`,
+                      background: isEraser ? 'rgba(255,255,255,0.15)' : canvasColor,
+                      border: isEraser ? '2px dashed rgba(255,255,255,0.3)' : 'none',
+                    }}
+                  />
+                </div>
               </div>
 
-              <div className="w-px h-8 bg-border/20 mx-2" />
+              {/* Divider */}
+              <div className="h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
 
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => canvasRef.current?.undo()} className="rounded-lg">
-                  {ar ? "تراجع" : "Undo"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => canvasRef.current?.clearCanvas()} className="rounded-lg text-muted-foreground hover:text-destructive">
-                  {ar ? "مسح" : "Clear"}
-                </Button>
+              {/* Tools */}
+              <div>
+                <p className="text-[10px] uppercase tracking-widest mb-2.5 font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  {ar ? "الأدوات" : "Tools"}
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    onClick={() => setIsEraser(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+                    style={{
+                      background: !isEraser ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      color: !isEraser ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.45)',
+                    }}
+                  >
+                    <PenTool className="w-3.5 h-3.5" />
+                    {ar ? "قلم" : "Pen"}
+                  </button>
+                  <button
+                    onClick={() => setIsEraser(true)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+                    style={{
+                      background: isEraser ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      color: isEraser ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.45)',
+                    }}
+                  >
+                    <span className="text-sm">⊘</span>
+                    {ar ? "ممحاة" : "Eraser"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+
+              {/* Actions */}
+              <div className="flex flex-col gap-1.5">
+                <button
+                  onClick={() => canvasRef.current?.undo()}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors w-full text-left"
+                  style={{ color: 'rgba(255,255,255,0.5)' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                >
+                  ↩ {ar ? "تراجع" : "Undo"}
+                </button>
+                <button
+                  onClick={() => canvasRef.current?.clearCanvas()}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors w-full text-left"
+                  style={{ color: 'rgba(239,68,68,0.55)' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,1)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.55)')}
+                >
+                  🗑 {ar ? "مسح الكل" : "Clear All"}
+                </button>
               </div>
             </div>
 
-            {/* React Sketch Canvas */}
-            <div className="flex-1 w-full bg-white cursor-crosshair relative dark:bg-[#080808]">
+            {/* Canvas Area */}
+            <div className="flex-1 relative" style={{ background: '#ffffff', cursor: isEraser ? 'cell' : 'crosshair' }}>
               <ReactSketchCanvas
                 ref={canvasRef}
-                strokeWidth={canvasStroke}
+                strokeWidth={isEraser ? Math.max(canvasStroke * 2.5, 12) : canvasStroke}
                 strokeColor={canvasColor}
-                className="w-full h-full border-none shadow-inner"
-                canvasColor="transparent"
+                className="w-full h-full border-none"
+                canvasColor="white"
               />
             </div>
+          </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-border/20 flex justify-end gap-3 bg-muted/10">
-              <Button variant="ghost" onClick={() => setShowCanvas(false)} className="rounded-xl">
+          {/* ── Bottom Bar — size selector + actions ── */}
+          <div className="shrink-0 h-14 flex items-center justify-between px-5 border-t gap-4" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
+
+            {/* Size selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase tracking-widest mr-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                {ar ? "حجم الإدراج:" : "Insert size:"}
+              </span>
+              {([
+                { id: 'small', label: ar ? 'صغير' : 'Small', hint: '42%' },
+                { id: 'medium', label: ar ? 'متوسط' : 'Medium', hint: '64%' },
+                { id: 'large', label: ar ? 'كبير' : 'Large', hint: '86%' },
+                { id: 'full', label: ar ? 'كامل' : 'Full', hint: '100%' },
+              ] as { id: DrawingSize, label: string, hint: string }[]).map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setDrawingSize(opt.id)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{
+                    background: drawingSize === opt.id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)',
+                    color: drawingSize === opt.id ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)',
+                    border: `1px solid ${drawingSize === opt.id ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.07)'}`,
+                  }}
+                >
+                  {opt.label}
+                  <span className="opacity-50 text-[9px]">({opt.hint})</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setShowCanvas(false); setIsEraser(false); }}
+                className="px-4 py-2 rounded-lg text-xs font-medium transition-colors"
+                style={{ color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.05)' }}
+              >
                 {ar ? "إلغاء" : "Cancel"}
-              </Button>
-              <Button onClick={handleSaveDrawing} className="rounded-xl bg-primary text-primary-foreground gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                {ar ? "حفظ وإدراج" : "Save & Insert"}
-              </Button>
+              </button>
+              <button
+                onClick={handleSaveDrawing}
+                className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: 'rgba(255,255,255,0.92)', color: '#0e0e10' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#ffffff')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.92)')}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {ar ? "إدراج في الكتاب" : "Insert into Book"}
+              </button>
             </div>
           </div>
         </div>
