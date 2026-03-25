@@ -388,7 +388,7 @@ export default function Library() {
   const isEmpty = !isLoading && (!filtered || filtered.length === 0);
 
   return (
-    <Layout isFullDark>
+    <Layout isFullDark lightNav>
       <div className="dark max-w-6xl mx-auto px-4 py-10">
         {/* Header */}
         <motion.div

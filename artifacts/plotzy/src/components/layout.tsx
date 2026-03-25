@@ -95,7 +95,7 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
   );
 }
 
-export function Layout({ children, isLanding, isFullDark }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean }) {
+export function Layout({ children, isLanding, isFullDark, lightNav }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean }) {
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
   const { user, isLoading, logout } = useAuth();
@@ -125,12 +125,12 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
         top: 0, left: 0, right: 0,
         zIndex: 100,
         height: 44,
-        background: isFullDark
+        background: (isFullDark && !lightNav)
           ? (scrolled ? "rgba(10,10,10,0.95)" : "rgba(10,10,10,0.98)")
           : (scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)"),
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderBottom: isFullDark
+        borderBottom: (isFullDark && !lightNav)
           ? `1px solid rgba(255,255,255,0.08)`
           : `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
         transition: "background 0.3s ease, border-color 0.3s ease",
@@ -150,7 +150,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
               width: 32,
               objectFit: "contain",
               borderRadius: 6,
-              filter: isFullDark ? "invert(1)" : "none",
+              filter: (isFullDark && !lightNav) ? "invert(1)" : "none",
               flexShrink: 0,
             }}
           />
@@ -159,7 +159,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
             fontWeight: 700,
             fontSize: 14,
             letterSpacing: "-0.04em",
-            color: isFullDark ? "#fff" : "#111",
+            color: (isFullDark && !lightNav) ? "#fff" : "#111",
           }}>PLOTZY</span>
         </Link>
 
@@ -167,9 +167,9 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
         <nav style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {NAV_ITEMS.map(({ href, key }) =>
             key === "myLibrary" ? (
-              <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} dark={isFullDark} />
+              <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} dark={isFullDark && !lightNav} />
             ) : (
-              <NavLink key={href} href={href} label={t(key)} active={location === href} dark={isFullDark} />
+              <NavLink key={href} href={href} label={t(key)} active={location === href} dark={isFullDark && !lightNav} />
             )
           )}
         </nav>
@@ -181,7 +181,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
           <LanguagePicker />
 
           {/* Divider */}
-          <div style={{ width: 1, height: 16, background: isFullDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)", margin: "0 2px" }} />
+          <div style={{ width: 1, height: 16, background: (isFullDark && !lightNav) ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)", margin: "0 2px" }} />
 
           {/* User */}
           {!isLoading && (
@@ -192,11 +192,11 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px 3px 4px",
                     borderRadius: 20,
-                    border: isFullDark ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.1)",
+                    border: (isFullDark && !lightNav) ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.1)",
                     background: "transparent", cursor: "pointer",
                     transition: "background 0.15s",
                   }}
-                    onMouseEnter={e => (e.currentTarget.style.background = isFullDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = (isFullDark && !lightNav) ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <Avatar className="w-[22px] h-[22px]">
@@ -205,7 +205,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
                         {getInitials(user.displayName, user.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: isFullDark ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: (isFullDark && !lightNav) ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {user.displayName || user.email?.split("@")[0] || "Me"}
                     </span>
                   </button>
