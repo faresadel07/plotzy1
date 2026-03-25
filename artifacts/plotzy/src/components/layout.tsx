@@ -38,28 +38,28 @@ const NAV_ITEMS: { href: string; key: string }[] = [
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-const NAV_SPAN_STYLE = (active: boolean): React.CSSProperties => ({
+const NAV_SPAN_STYLE = (active: boolean, dark = false): React.CSSProperties => ({
   display: "inline-block",
   padding: "4px 10px",
   borderRadius: 6,
   fontFamily: SF,
   fontSize: 13,
   fontWeight: active ? 600 : 400,
-  color: "#111",
+  color: dark ? (active ? "#fff" : "rgba(255,255,255,0.7)") : "#111",
   letterSpacing: "-0.015em",
   cursor: "pointer",
   transition: "color 0.15s, background 0.15s",
-  background: active ? "rgba(0,0,0,0.06)" : "transparent",
+  background: active ? (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)") : "transparent",
   userSelect: "none",
   textDecoration: "none",
 });
 
-function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+function NavLink({ href, label, active, dark }: { href: string; label: string; active: boolean; dark?: boolean }) {
   return (
     <Link href={href} style={{ textDecoration: "none" }}>
       <span
-        style={NAV_SPAN_STYLE(active)}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(0,0,0,0.04)"; } }}
+        style={NAV_SPAN_STYLE(active, dark)}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)"; } }}
         onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; } }}
       >
         {label}
@@ -68,7 +68,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
   );
 }
 
-function LibraryNavLink({ active, navigate, label }: { active: boolean; navigate: (path: string) => void; label?: string }) {
+function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; navigate: (path: string) => void; label?: string; dark?: boolean }) {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     const scrollToWorkspace = () => {
@@ -85,8 +85,8 @@ function LibraryNavLink({ active, navigate, label }: { active: boolean; navigate
   return (
     <a href="/" onClick={handleClick} style={{ textDecoration: "none" }}>
       <span
-        style={NAV_SPAN_STYLE(active)}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(0,0,0,0.04)"; } }}
+        style={NAV_SPAN_STYLE(active, dark)}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)"; } }}
         onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; } }}
       >
         {label ?? "Library"}
@@ -117,7 +117,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
   }, []);
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen flex flex-col${!isFullDark ? " bg-background text-foreground" : ""}`} style={isFullDark ? { background: "#0a0a0a", color: "#fff" } : undefined}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}>
 
       {/* ── Apple-style white top navbar ── */}
       <header style={{
@@ -125,10 +125,14 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
         top: 0, left: 0, right: 0,
         zIndex: 100,
         height: 44,
-        background: scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)",
+        background: isFullDark
+          ? (scrolled ? "rgba(10,10,10,0.95)" : "rgba(10,10,10,0.98)")
+          : (scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)"),
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderBottom: `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
+        borderBottom: isFullDark
+          ? `1px solid rgba(255,255,255,0.08)`
+          : `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
         transition: "background 0.3s ease, border-color 0.3s ease",
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
@@ -151,7 +155,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
             fontWeight: 700,
             fontSize: 14,
             letterSpacing: "-0.04em",
-            color: "#111",
+            color: isFullDark ? "#fff" : "#111",
           }}>PLOTZY</span>
         </Link>
 
@@ -159,9 +163,9 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
         <nav style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {NAV_ITEMS.map(({ href, key }) =>
             key === "myLibrary" ? (
-              <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} />
+              <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} dark={isFullDark} />
             ) : (
-              <NavLink key={href} href={href} label={t(key)} active={location === href} />
+              <NavLink key={href} href={href} label={t(key)} active={location === href} dark={isFullDark} />
             )
           )}
         </nav>
@@ -173,7 +177,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
           <LanguagePicker />
 
           {/* Divider */}
-          <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
+          <div style={{ width: 1, height: 16, background: isFullDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)", margin: "0 2px" }} />
 
           {/* User */}
           {!isLoading && (
@@ -184,11 +188,11 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px 3px 4px",
                     borderRadius: 20,
-                    border: "1px solid rgba(0,0,0,0.1)",
+                    border: isFullDark ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(0,0,0,0.1)",
                     background: "transparent", cursor: "pointer",
                     transition: "background 0.15s",
                   }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = isFullDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <Avatar className="w-[22px] h-[22px]">
@@ -197,7 +201,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
                         {getInitials(user.displayName, user.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: isFullDark ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {user.displayName || user.email?.split("@")[0] || "Me"}
                     </span>
                   </button>

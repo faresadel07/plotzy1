@@ -143,9 +143,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
   if (isLoadingBook || isLoadingChapters) {
     return (
-      <Layout>
+      <Layout isFullDark>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-black dark:text-white" />
+          <Loader2 className="w-8 h-8 animate-spin text-white" />
         </div>
       </Layout>
     );
@@ -153,7 +153,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
   if (!book) {
     return (
-      <Layout>
+      <Layout isFullDark>
         <div className="text-center py-20 flex flex-col items-center">
           <p className="text-xl font-bold">{lang === "ar" ? "الكتاب غير موجود." : "Book not found."}</p>
           {bookError && <p className="text-red-500 mt-4 text-sm font-mono max-w-lg mx-auto bg-red-50 p-2 rounded">{String(bookError)}</p>}
@@ -323,7 +323,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   );
 
   return (
-    <Layout>
+    <Layout isFullDark>
       {/* Hidden file input for cover upload */}
       <input
         ref={fileInputRef}
