@@ -663,7 +663,7 @@ export default function ChapterEditor() {
       {/* Editor Header */}
       <header
         className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
-        style={{ backgroundColor: isFocusMode ? undefined : (resolvedBgColor || "white") + "cc" }}
+        style={{ backgroundColor: isFocusMode ? undefined : resolvedBgColor ? `${resolvedBgColor}cc` : "rgba(255,255,255,0.85)" }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-10">
           <Link href={`/books/${bookId}`} className="flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group">
