@@ -278,7 +278,9 @@ export function BookCustomizer({ preferences, onSave, onClose, onPreview }: Book
   const updatePrefs = (updater: (p: BookPreferences) => BookPreferences) => {
     setPrefs(prev => {
       const next = updater(prev);
-      onPreview?.(next);
+      // Schedule onPreview outside the state updater to avoid React's
+      // "cannot update while rendering another component" warning
+      setTimeout(() => onPreview?.(next), 0);
       return next;
     });
   };

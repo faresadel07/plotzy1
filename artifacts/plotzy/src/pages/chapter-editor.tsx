@@ -357,8 +357,9 @@ export default function ChapterEditor() {
     // Helper: stamp the active font into a block when the user first types in it
     const stampBlock = (cur: PageBlock, text: string): PageBlock => {
       if (typeof cur === 'string') {
-        // Legacy string block → convert to text block and freeze current font
-        return { type: 'text', content: text, fontFamily: effectivePrefs.fontFamily || undefined };
+        // Legacy string block → convert to text block and freeze the APPLIED font
+        // (never the live-preview font — existing text must not shift)
+        return { type: 'text', content: text, fontFamily: prefs.fontFamily || undefined };
       }
       if (cur.type === 'text') {
         // Already a text block — preserve its stored font, just update content
@@ -394,8 +395,8 @@ export default function ChapterEditor() {
     // Overflow — split into page-sized chunks and distribute
     const chunks = splitIntoPages(value, measureEl, PAGE_CONTENT_HEIGHT);
     const blockFont = typeof pages[index] === 'string'
-      ? effectivePrefs.fontFamily
-      : (pages[index] as { type: string; fontFamily?: string }).fontFamily ?? effectivePrefs.fontFamily;
+      ? prefs.fontFamily
+      : (pages[index] as { type: string; fontFamily?: string }).fontFamily ?? prefs.fontFamily;
 
     setPages(prev => {
       const next = [...prev];
@@ -1077,11 +1078,12 @@ export default function ChapterEditor() {
                   {/* Page Content Area */}
                   <div className="px-[76px] py-10">
                     {typeof pageContent === 'string' || pageContent.type === 'text' ? (() => {
-                        // Per-block font: use the font stored with this block if available,
-                        // otherwise fall back to the current effective (global/preview) font.
+                        // Per-block font: use the font frozen in this block if available,
+                        // otherwise fall back to the SAVED (applied) global font — never
+                        // the live-preview font, so existing text never shifts while browsing fonts.
                         const blockFontId = (typeof pageContent !== 'string' && pageContent.fontFamily)
                           ? pageContent.fontFamily
-                          : (effectivePrefs.fontFamily || '');
+                          : (prefs.fontFamily || '');
                         const blockFontStyle = FONT_STYLE_MAP[blockFontId] || fontStyle;
                         const blockFontClass = FONT_MAP[blockFontId] || fontClass;
                         return (
