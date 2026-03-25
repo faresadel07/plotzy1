@@ -77,7 +77,8 @@ export type DrawingAlign = 'left' | 'center' | 'right';
 
 export type PageBlock =
   | string
-  | { type: 'text' | 'image', content: string }
+  | { type: 'text', content: string, fontFamily?: string }
+  | { type: 'image', content: string }
   | { type: 'drawing', content: string, size?: DrawingSize, align?: DrawingAlign, widthPct?: number };
 
 function parsePages(raw: string): PageBlock[] {
@@ -201,6 +202,9 @@ export default function ChapterEditor() {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showPageStylePicker, setShowPageStylePicker] = useState(false);
   const [prefs, setPrefs] = useState<BookPreferences>({});
+  const [previewPrefs, setPreviewPrefs] = useState<BookPreferences | null>(null);
+  // effectivePrefs — uses live preview while customizer is open, real prefs otherwise
+  const effectivePrefs = previewPrefs ?? prefs;
   const [deletingPage, setDeletingPage] = useState<number | null>(null);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -350,15 +354,23 @@ export default function ChapterEditor() {
 
   const handlePageChange = (index: number, value: string) => {
     const measureEl = measureRef.current;
+    // Helper: stamp the active font into a block when the user first types in it
+    const stampBlock = (cur: PageBlock, text: string): PageBlock => {
+      if (typeof cur === 'string') {
+        // Legacy string block → convert to text block and freeze current font
+        return { type: 'text', content: text, fontFamily: effectivePrefs.fontFamily || undefined };
+      }
+      if (cur.type === 'text') {
+        // Already a text block — preserve its stored font, just update content
+        return { ...cur, content: text };
+      }
+      return cur; // drawing / image — shouldn't happen here
+    };
 
     if (!measureEl) {
-      // Fallback with no measurement — just update
       setPages(prev => {
         const next = [...prev];
-        const cur = next[index];
-        next[index] = typeof cur === "object" && cur !== null && cur.type === "text"
-          ? { ...cur, content: value }
-          : value;
+        next[index] = stampBlock(next[index], value);
         return next;
       });
       setIsDirty(true);
@@ -370,13 +382,9 @@ export default function ChapterEditor() {
     const textHeight = measureEl.offsetHeight;
 
     if (textHeight <= PAGE_CONTENT_HEIGHT) {
-      // Fits on this page — normal update
       setPages(prev => {
         const next = [...prev];
-        const cur = next[index];
-        next[index] = typeof cur === "object" && cur !== null && cur.type === "text"
-          ? { ...cur, content: value }
-          : value;
+        next[index] = stampBlock(next[index], value);
         return next;
       });
       setIsDirty(true);
@@ -385,27 +393,32 @@ export default function ChapterEditor() {
 
     // Overflow — split into page-sized chunks and distribute
     const chunks = splitIntoPages(value, measureEl, PAGE_CONTENT_HEIGHT);
+    const blockFont = typeof pages[index] === 'string'
+      ? effectivePrefs.fontFamily
+      : (pages[index] as { type: string; fontFamily?: string }).fontFamily ?? effectivePrefs.fontFamily;
 
     setPages(prev => {
       const next = [...prev];
-
-      // Replace current page with first chunk
       const cur = next[index];
-      next[index] = typeof cur === "object" && cur !== null && cur.type === "text"
-        ? { ...cur, content: chunks[0] }
-        : chunks[0];
 
-      // Distribute remaining chunks into subsequent pages
+      // Replace current page with first chunk (preserve/stamp font)
+      if (typeof cur === 'string') {
+        next[index] = { type: 'text', content: chunks[0], fontFamily: blockFont || undefined };
+      } else if (cur.type === 'text') {
+        next[index] = { ...cur, content: chunks[0] };
+      } else {
+        next[index] = chunks[0];
+      }
+
+      // Distribute remaining chunks into subsequent pages (inherit same font)
       for (let i = 1; i < chunks.length; i++) {
         const targetIndex = index + i;
         if (targetIndex < next.length) {
           const existing = getPageText(next[targetIndex]);
-          // Prepend overflow; if existing page also overflows it will be caught on next change
-          next[targetIndex] = existing.trim()
-            ? chunks[i] + "\n" + existing
-            : chunks[i];
+          const chunkBlock: PageBlock = { type: 'text', content: existing.trim() ? chunks[i] + "\n" + existing : chunks[i], fontFamily: blockFont || undefined };
+          next[targetIndex] = chunkBlock;
         } else {
-          next.push(chunks[i]);
+          next.push({ type: 'text', content: chunks[i], fontFamily: blockFont || undefined } as PageBlock);
         }
       }
 
@@ -496,7 +509,24 @@ export default function ChapterEditor() {
   };
 
   const handleSavePrefs = async (newPrefs: BookPreferences) => {
+    const oldFont = prefs.fontFamily;
+    const newFont = newPrefs.fontFamily;
+    // Freeze the OLD font into every existing unfrozen text block so it doesn't
+    // inherit the new global font going forward.
+    if (oldFont && newFont && oldFont !== newFont) {
+      setPages(prev => prev.map(block => {
+        if (typeof block === 'string' && block.trim()) {
+          return { type: 'text' as const, content: block, fontFamily: oldFont };
+        }
+        if (typeof block !== 'string' && block.type === 'text' && !block.fontFamily) {
+          return { ...block, fontFamily: oldFont };
+        }
+        return block;
+      }));
+    }
+    setPreviewPrefs(null);
     setPrefs(newPrefs);
+    setIsDirty(true);
     await updateBook.mutateAsync({ id: bookId, bookPreferences: newPrefs });
   };
 
@@ -643,18 +673,18 @@ export default function ChapterEditor() {
 
   // ────────────────────────────────────────────────────────────────────────────
 
-  const fontClass = FONT_MAP[prefs.fontFamily || "serif"] || "";
-  const fontStyle = FONT_STYLE_MAP[prefs.fontFamily || ""] || {};
-  const isArabicFont = prefs.fontFamily?.startsWith("arabic");
+  const fontClass = FONT_MAP[effectivePrefs.fontFamily || "serif"] || "";
+  const fontStyle = FONT_STYLE_MAP[effectivePrefs.fontFamily || ""] || {};
+  const isArabicFont = effectivePrefs.fontFamily?.startsWith("arabic");
   const textDir = (isArabicFont || ar) ? "rtl" : "ltr";
   const isDark = resolvedTheme === "dark";
 
   // Page style background pattern (from saved preference)
-  const activePageStyleDef = PAGE_STYLES.find(s => s.id === (prefs.pageStyle || "blank"));
+  const activePageStyleDef = PAGE_STYLES.find(s => s.id === (effectivePrefs.pageStyle || "blank"));
   const bgPatternCSS = activePageStyleDef ? activePageStyleDef.background(isDark) : {};
 
   // Manuscript uses its own background color unless user has set a custom one
-  const resolvedBgColor = prefs.bgColor || (bgPatternCSS as any).backgroundColor;
+  const resolvedBgColor = effectivePrefs.bgColor || (bgPatternCSS as any).backgroundColor;
 
   const editorOuterStyle: React.CSSProperties = {
     backgroundColor: resolvedBgColor || "hsl(var(--background))",
@@ -664,7 +694,7 @@ export default function ChapterEditor() {
   };
 
   const pageStyle: React.CSSProperties = {
-    color: prefs.textColor || undefined,
+    color: effectivePrefs.textColor || undefined,
     ...fontStyle,
   };
   const totalWords = pages.join(" ").split(/\s+/).filter(Boolean).length;
@@ -1021,7 +1051,7 @@ export default function ChapterEditor() {
                 >
                   {/* Page top strip — chapter label + delete button */}
                   <div className="flex items-center justify-between px-[76px] pt-6 pb-2 select-none" dir="ltr">
-                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: prefs.textColor || undefined }}>
+                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: effectivePrefs.textColor || undefined }}>
                       {ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`}
                     </span>
                     <div className="flex items-center gap-2">
@@ -1042,11 +1072,19 @@ export default function ChapterEditor() {
                   </div>
 
                   {/* Thin decorative line under header */}
-                  <div className="mx-[76px] h-px opacity-8" style={{ background: prefs.textColor || "currentColor" }} />
+                  <div className="mx-[76px] h-px opacity-8" style={{ background: effectivePrefs.textColor || "currentColor" }} />
 
                   {/* Page Content Area */}
                   <div className="px-[76px] py-10">
-                    {typeof pageContent === 'string' || pageContent.type === 'text' ? (
+                    {typeof pageContent === 'string' || pageContent.type === 'text' ? (() => {
+                        // Per-block font: use the font stored with this block if available,
+                        // otherwise fall back to the current effective (global/preview) font.
+                        const blockFontId = (typeof pageContent !== 'string' && pageContent.fontFamily)
+                          ? pageContent.fontFamily
+                          : (effectivePrefs.fontFamily || '');
+                        const blockFontStyle = FONT_STYLE_MAP[blockFontId] || fontStyle;
+                        const blockFontClass = FONT_MAP[blockFontId] || fontClass;
+                        return (
                       <textarea
                         value={typeof pageContent === 'string' ? pageContent : pageContent.content}
                         onChange={(e) => handlePageChange(index, e.target.value)}
@@ -1054,15 +1092,15 @@ export default function ChapterEditor() {
                         placeholder={index === 0
                           ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
                           : (ar ? "تابع قصتك..." : "Continue your story...")}
-                        className={`w-full bg-transparent outline-none resize-none ${prefs.fontSize || "text-lg"} placeholder:opacity-20 focus:ring-0 transition-colors duration-700 ${fontClass}`}
+                        className={`w-full bg-transparent outline-none resize-none ${effectivePrefs.fontSize || "text-lg"} placeholder:opacity-20 focus:ring-0 transition-colors duration-700 ${blockFontClass}`}
                         style={{
-                          ...fontStyle,
-                          color: isFocusMode ? '#e4e4e7' : prefs.textColor || undefined,
+                          ...blockFontStyle,
+                          color: isFocusMode ? '#e4e4e7' : effectivePrefs.textColor || undefined,
                           direction: textDir,
                           height: `${PAGE_CONTENT_HEIGHT}px`,
                           overflow: "hidden",
-                          lineHeight: LINE_HEIGHT_MAP[prefs.lineHeight || "normal"] || "1.85",
-                          letterSpacing: LETTER_SPACING_MAP[prefs.letterSpacing || "normal"] || "0em",
+                          lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
+                          letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
                         } as React.CSSProperties}
                         dir={textDir}
                         data-page-textarea
@@ -1074,7 +1112,9 @@ export default function ChapterEditor() {
                           }
                         }}
                       />
-                    ) : (
+                        );
+                      })()
+                    : (
                       (() => {
                         const drawBlock = typeof pageContent !== 'string' && pageContent.type === 'drawing' ? pageContent : null;
                         if (!drawBlock) return null;
@@ -1181,16 +1221,16 @@ export default function ChapterEditor() {
                   </div>
 
                   {/* Page bottom — decorative rule + centered page number */}
-                  <div className="mx-[76px] h-px opacity-8 mt-2" style={{ background: prefs.textColor || "currentColor" }} />
+                  <div className="mx-[76px] h-px opacity-8 mt-2" style={{ background: effectivePrefs.textColor || "currentColor" }} />
                   <div className="relative flex items-center justify-center px-[76px] pb-6 pt-3 select-none">
                     {/* Word count — left edge */}
-                    <span className="absolute left-[76px] text-[9px] opacity-15 tabular-nums" style={{ color: prefs.textColor || undefined }}>
+                    <span className="absolute left-[76px] text-[9px] opacity-15 tabular-nums" style={{ color: effectivePrefs.textColor || undefined }}>
                       {pageWords} {ar ? "كلمة" : "words"}
                     </span>
                     {/* Centered page number — book style */}
                     <span
                       className="text-[11px] font-medium tracking-widest opacity-30"
-                      style={{ color: prefs.textColor || undefined, letterSpacing: "0.2em" }}
+                      style={{ color: effectivePrefs.textColor || undefined, letterSpacing: "0.2em" }}
                     >
                       — {index + 1} —
                     </span>
@@ -1229,10 +1269,10 @@ export default function ChapterEditor() {
             top: "-9999px",
             left: "-9999px",
             width: `${PAGE_CONTENT_WIDTH}px`,
-            fontSize: prefs.fontSize === "text-sm" ? "14px" : prefs.fontSize === "text-base" ? "16px" : prefs.fontSize === "text-xl" ? "20px" : prefs.fontSize === "text-2xl" ? "24px" : "18px",
-            lineHeight: LINE_HEIGHT_MAP[prefs.lineHeight || "normal"] || "1.85",
-            letterSpacing: LETTER_SPACING_MAP[prefs.letterSpacing || "normal"] || "0em",
-            fontFamily: fontStyle.fontFamily || undefined,
+            fontSize: effectivePrefs.fontSize === "text-sm" ? "14px" : effectivePrefs.fontSize === "text-base" ? "16px" : effectivePrefs.fontSize === "text-xl" ? "20px" : effectivePrefs.fontSize === "text-2xl" ? "24px" : "18px",
+            lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
+            letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
+            fontFamily: (FONT_STYLE_MAP[effectivePrefs.fontFamily || ''] || fontStyle).fontFamily || undefined,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             padding: 0,
@@ -1556,7 +1596,8 @@ export default function ChapterEditor() {
         <BookCustomizer
           preferences={prefs}
           onSave={handleSavePrefs}
-          onClose={() => setShowCustomizer(false)}
+          onPreview={(p) => setPreviewPrefs(p)}
+          onClose={() => { setShowCustomizer(false); setPreviewPrefs(null); }}
         />
       )}
 

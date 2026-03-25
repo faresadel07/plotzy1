@@ -8,6 +8,7 @@ interface BookCustomizerProps {
   preferences: BookPreferences;
   onSave: (prefs: BookPreferences) => void;
   onClose: () => void;
+  onPreview?: (prefs: BookPreferences) => void;
 }
 
 // ── Font Definitions ─────────────────────────────────────────────────────────
@@ -259,7 +260,7 @@ function fontSizeToPx(id: string): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerProps) {
+export function BookCustomizer({ preferences, onSave, onClose, onPreview }: BookCustomizerProps) {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
@@ -272,6 +273,15 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
     textColor:     preferences.textColor     || "#111111",
     pageStyle:     preferences.pageStyle     || "blank",
   });
+
+  // Live-preview helper — updates local state AND pushes to editor immediately
+  const updatePrefs = (updater: (p: BookPreferences) => BookPreferences) => {
+    setPrefs(prev => {
+      const next = updater(prev);
+      onPreview?.(next);
+      return next;
+    });
+  };
 
   const [activeTab, setActiveTab] = useState<FontCategoryId>(() => {
     const found = FONTS.find(f => f.id === (prefs.fontFamily || "eb-garamond"));
@@ -372,7 +382,7 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
                 return (
                   <button
                     key={font.id}
-                    onClick={() => setPrefs(p => ({ ...p, fontFamily: font.id }))}
+                    onClick={() => updatePrefs(p => ({ ...p, fontFamily: font.id }))}
                     className={`w-full rounded-xl border transition-all text-left overflow-hidden ${
                       isSelected
                         ? "border-primary/60 bg-primary/5 ring-1 ring-primary/20"
@@ -419,7 +429,7 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
               {FONT_SIZES.map(size => (
                 <button
                   key={size.id}
-                  onClick={() => setPrefs(p => ({ ...p, fontSize: size.id }))}
+                  onClick={() => updatePrefs(p => ({ ...p, fontSize: size.id }))}
                   className={`flex-1 py-2 rounded-lg text-[11px] font-bold border transition-all ${
                     prefs.fontSize === size.id
                       ? "border-primary bg-primary text-primary-foreground shadow-sm"
@@ -445,7 +455,7 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
                   {LINE_HEIGHTS.map(lh => (
                     <button
                       key={lh.id}
-                      onClick={() => setPrefs(p => ({ ...p, lineHeight: lh.id }))}
+                      onClick={() => updatePrefs(p => ({ ...p, lineHeight: lh.id }))}
                       className={`w-full px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border flex items-center gap-1.5 transition-all ${
                         prefs.lineHeight === lh.id
                           ? "border-primary bg-primary/10 text-primary"
@@ -468,7 +478,7 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
                   {LETTER_SPACINGS.map(ls => (
                     <button
                       key={ls.id}
-                      onClick={() => setPrefs(p => ({ ...p, letterSpacing: ls.id }))}
+                      onClick={() => updatePrefs(p => ({ ...p, letterSpacing: ls.id }))}
                       className={`w-full px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
                         prefs.letterSpacing === ls.id
                           ? "border-primary bg-primary/10 text-primary"
@@ -492,7 +502,7 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
               {BG_COLORS.map(color => (
                 <button
                   key={color.id}
-                  onClick={() => setPrefs(p => ({ ...p, bgColor: color.id }))}
+                  onClick={() => updatePrefs(p => ({ ...p, bgColor: color.id }))}
                   title={ar ? color.labelAr : color.label}
                   className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center hover:scale-105 ${
                     prefs.bgColor === color.id
@@ -521,7 +531,7 @@ export function BookCustomizer({ preferences, onSave, onClose }: BookCustomizerP
               {TEXT_COLORS.map(color => (
                 <button
                   key={color.id}
-                  onClick={() => setPrefs(p => ({ ...p, textColor: color.id }))}
+                  onClick={() => updatePrefs(p => ({ ...p, textColor: color.id }))}
                   title={ar ? color.labelAr : color.label}
                   className={`aspect-square rounded-lg border-2 transition-all flex items-center justify-center hover:scale-105 ${
                     prefs.textColor === color.id
