@@ -431,7 +431,7 @@ export default function WritingGuide() {
 
   return (
     <Layout isFullDark>
-      <div className="dark">
+      <div className="dark px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* ── Hero ── */}
       <motion.div
         initial="hidden" animate="visible" variants={fadeUp}
