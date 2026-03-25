@@ -137,8 +137,8 @@ export default function Library() {
   });
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto px-4 py-10">
+    <Layout isFullDark>
+      <div className="dark max-w-6xl mx-auto px-4 py-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
