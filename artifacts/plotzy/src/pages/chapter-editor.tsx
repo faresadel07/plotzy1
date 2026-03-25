@@ -629,7 +629,7 @@ export default function ChapterEditor() {
 
   return (
     <div
-      className="dark min-h-screen transition-all duration-700 relative"
+      className="min-h-screen transition-all duration-700 relative"
       style={{ backgroundColor: "#000" }}
     >
       {/* Animated Etheral Shadow — always visible background */}
@@ -662,8 +662,8 @@ export default function ChapterEditor() {
 
       {/* Editor Header */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 border-transparent" : "border-white/10"}`}
-        style={{ backgroundColor: isFocusMode ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.55)" }}
+        className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
+        style={{ backgroundColor: isFocusMode ? undefined : (resolvedBgColor || "white") + "cc" }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-10">
           <Link href={`/books/${bookId}`} className="flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group">
@@ -899,7 +899,7 @@ export default function ChapterEditor() {
       <main
         className="relative z-10 py-10 md:py-14 transition-all duration-700 min-h-screen"
         style={{
-          background: isFocusMode ? undefined : "hsl(var(--background))",
+          background: "transparent",
           paddingBottom: isTypewriterMode ? "50vh" : undefined,
           paddingRight: showRefPanel ? '410px' : undefined,
           transition: 'padding-right 0.3s ease',
@@ -913,7 +913,7 @@ export default function ChapterEditor() {
             onChange={(e) => { setTitle(e.target.value); setIsDirty(true); }}
             placeholder={ar ? "عنوان الفصل..." : "Chapter Title"}
             className={`w-full bg-transparent text-4xl md:text-5xl font-bold outline-none placeholder:text-muted-foreground/20 focus:ring-0 pb-3 border-b border-border/20 transition-colors duration-300 ${fontClass}`}
-            style={{ ...fontStyle, color: isFocusMode ? '#f4f4f5' : prefs.textColor || undefined, direction: textDir }}
+            style={{ ...fontStyle, color: '#f4f4f5', direction: textDir }}
             dir={textDir}
             onKeyDown={(e) => {
               if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter" || e.key === " ") {
