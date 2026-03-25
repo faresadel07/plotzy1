@@ -338,7 +338,7 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
       </div>
 
       {/* CTA */}
-      <div className="text-center flex flex-col items-center gap-5">
+      <div className="text-center flex flex-col items-center gap-5 mt-12">
         <div>
           <p className="text-xl font-bold text-foreground mb-2">Be the first to publish your story</p>
           <p className="text-muted-foreground text-sm max-w-sm mx-auto">
