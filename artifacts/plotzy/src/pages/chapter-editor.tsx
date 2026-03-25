@@ -954,11 +954,11 @@ export default function ChapterEditor() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-3 rounded-lg text-xs font-medium gap-1.5 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-colors hidden sm:flex"
+              className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 text-secondary hover:text-secondary hover:bg-secondary/10 transition-colors hidden sm:flex"
               onClick={() => setShowAI(true)}
               data-testid="button-ai-assistant"
             >
-              <Wand2 className="w-3.5 h-3.5 text-secondary" />
+              <Wand2 className="w-3.5 h-3.5" />
               {t("aiAssistant")}
             </Button>
 
