@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  BookOpen, FileText, ChevronRight, Loader2, Sparkles, X,
+  BookOpen, FileText, ChevronRight, Loader2, X,
   Layers, Tag, Image as ImageIcon, AlignLeft, ArrowLeft, PenLine,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ interface ContentTypeSelectorProps {
   onClose: () => void;
   lang: string;
   isRTL: boolean;
-  onCreateBook: (data: { title: string; summary: string; authorName: string; language: string }) => Promise<void>;
+  onCreateBook: (data: { title: string; summary: string; authorName: string; language: string; genre?: string }) => Promise<void>;
   onCreateArticle: (data: { title: string; authorName: string; language: string; category: string }) => Promise<void>;
   isCreating: boolean;
 }
@@ -24,9 +24,14 @@ const BLOG_CATEGORIES = [
   "Author Interviews", "Book Reviews", "Self-Publishing", "Marketing", "Other",
 ];
 
+const BOOK_GENRES = [
+  "Fantasy", "Romance", "Mystery", "Thriller", "Science Fiction",
+  "Historical Fiction", "Horror", "Literary Fiction", "Adventure",
+  "Biography", "Self-Help", "Young Adult", "Children's", "Other",
+];
+
 const BOOK_FEATURES = [
   { icon: Layers, text: "Chapter-by-chapter workspace" },
-  { icon: Sparkles, text: "AI writing assistance" },
   { icon: ImageIcon, text: "Full cover designer" },
   { icon: AlignLeft, text: "Lore & outline tools" },
 ];
@@ -35,7 +40,6 @@ const BLOG_FEATURES = [
   { icon: FileText, text: "Single-page rich editor" },
   { icon: ImageIcon, text: "Featured cover image" },
   { icon: Tag, text: "Tags & categories for SEO" },
-  { icon: Sparkles, text: "AI content generation" },
 ];
 
 export function ContentTypeSelector({
@@ -47,12 +51,13 @@ export function ContentTypeSelector({
   const [summary, setSummary] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [bookLang, setBookLang] = useState(lang);
+  const [genre, setGenre] = useState("");
   const [blogCategory, setBlogCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
     setStep("choose");
-    setTitle(""); setSummary(""); setAuthorName(""); setBookLang(lang); setBlogCategory("");
+    setTitle(""); setSummary(""); setAuthorName(""); setBookLang(lang); setGenre(""); setBlogCategory("");
     setError(null);
   };
 
@@ -63,7 +68,7 @@ export function ContentTypeSelector({
     if (!title.trim()) return;
     setError(null);
     try {
-      await onCreateBook({ title, summary, authorName, language: bookLang });
+      await onCreateBook({ title, summary, authorName, language: bookLang, genre: genre || undefined });
       reset();
     } catch (err: any) {
       setError(err?.message || "Failed to create book. Please try again.");
@@ -84,6 +89,9 @@ export function ContentTypeSelector({
 
   if (!open) return null;
 
+  const inputStyle = "rounded-xl bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-0 placeholder:text-white/20";
+  const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 };
+
   const modal = (
     <div
       style={{
@@ -95,12 +103,10 @@ export function ContentTypeSelector({
         justifyContent: "center",
         padding: "16px",
         backgroundColor: "rgba(0, 0, 0, 0.92)",
-        backdropFilter: "none",
         isolation: "isolate",
       }}
       onClick={handleClose}
     >
-      {/* Card */}
       <div
         onClick={e => e.stopPropagation()}
         style={{
@@ -115,7 +121,6 @@ export function ContentTypeSelector({
           zIndex: 10000,
         }}
       >
-        {/* Top line */}
         <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.15) 40%,rgba(255,255,255,0.15) 60%,transparent)" }} />
 
         {/* Header */}
@@ -158,7 +163,6 @@ export function ContentTypeSelector({
         {/* ── Step 1: Choose ── */}
         {step === "choose" && (
           <div style={{ padding: "0 26px 26px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {/* Book */}
             <button
               onClick={() => setStep("book")}
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
@@ -182,7 +186,6 @@ export function ContentTypeSelector({
               </div>
             </button>
 
-            {/* Blog */}
             <button
               onClick={() => setStep("blog")}
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
@@ -216,59 +219,103 @@ export function ContentTypeSelector({
                 {error}
               </div>
             )}
+
+            {/* Title */}
             <div>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Book Title</label>
+              <label style={labelStyle}>Book Title</label>
               <Input
                 placeholder="e.g. The Last Kingdom"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="rounded-xl bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-0 placeholder:text-white/20"
+                className={inputStyle}
                 autoFocus
                 dir={isRTL ? "rtl" : "ltr"}
               />
             </div>
+
+            {/* Author */}
             <div>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Author Name</label>
+              <label style={labelStyle}>Author Name</label>
               <Input
                 placeholder="Your name"
                 value={authorName}
                 onChange={e => setAuthorName(e.target.value)}
-                className="rounded-xl bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-0 placeholder:text-white/20"
+                className={inputStyle}
                 dir={isRTL ? "rtl" : "ltr"}
               />
             </div>
+
+            {/* Summary */}
             <div>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Brief Summary</label>
+              <label style={labelStyle}>Brief Summary</label>
               <Textarea
                 placeholder="A short description of your story…"
                 value={summary}
                 onChange={e => setSummary(e.target.value)}
-                className="rounded-xl bg-white/5 border-white/10 text-white resize-none focus:border-white/30 focus:ring-0 placeholder:text-white/20"
+                className={`${inputStyle} resize-none`}
                 rows={2}
                 dir={isRTL ? "rtl" : "ltr"}
               />
             </div>
+
+            {/* Genre */}
             <div>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Language</label>
+              <label style={labelStyle}>Genre <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— optional</span></label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {BOOK_GENRES.map(g => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGenre(genre === g ? "" : g)}
+                    style={{
+                      padding: "5px 12px",
+                      borderRadius: 20,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.03em",
+                      border: genre === g ? "1px solid rgba(255,255,255,0.55)" : "1px solid rgba(255,255,255,0.1)",
+                      background: genre === g ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                      color: genre === g ? "#fff" : "rgba(255,255,255,0.38)",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { if (genre !== g) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}}
+                    onMouseLeave={e => { if (genre !== g) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Language */}
+            <div>
+              <label style={labelStyle}>Language</label>
               <Select value={bookLang} onValueChange={setBookLang}>
-                <SelectTrigger className="rounded-xl bg-white/5 border-white/10 text-white focus:ring-0">
+                <SelectTrigger className={`${inputStyle} focus:ring-0`}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-56 overflow-y-auto bg-[#1a1400] border-white/10 text-white">
+                <SelectContent
+                  className="bg-[#1a1a1a] border-white/10 text-white max-h-56 overflow-y-auto"
+                  style={{ zIndex: 99999 }}
+                  position="popper"
+                >
                   {BOOK_LANGUAGES.map(l => (
-                    <SelectItem key={l.code} value={l.code} className="focus:bg-white/10">
+                    <SelectItem key={l.code} value={l.code} className="focus:bg-white/10 text-white">
                       {l.nativeName} <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>({l.name})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Submit */}
             <button
               type="submit"
               disabled={isCreating || !title.trim()}
               style={{ padding: "12px 0", borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: isCreating || !title.trim() ? "not-allowed" : "pointer", opacity: isCreating || !title.trim() ? 0.5 : 1, background: "#EFEFEF", color: "#111111", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
             >
-              {isCreating ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : <><Sparkles size={15} /> Create Book</>}
+              {isCreating ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : "Create Book"}
             </button>
           </form>
         )}
@@ -289,49 +336,57 @@ export function ContentTypeSelector({
               </div>
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Post Title</label>
+              <label style={labelStyle}>Post Title</label>
               <Input
                 placeholder="e.g. 10 Tips for Better Dialogue"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="rounded-xl bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-0 placeholder:text-white/20"
+                className={inputStyle}
                 autoFocus
                 dir={isRTL ? "rtl" : "ltr"}
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Author Name</label>
+              <label style={labelStyle}>Author Name</label>
               <Input
                 placeholder="Your name"
                 value={authorName}
                 onChange={e => setAuthorName(e.target.value)}
-                className="rounded-xl bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-0 placeholder:text-white/20"
+                className={inputStyle}
                 dir={isRTL ? "rtl" : "ltr"}
               />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
-                <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Category</label>
+                <label style={labelStyle}>Category</label>
                 <Select value={blogCategory} onValueChange={setBlogCategory}>
-                  <SelectTrigger className="rounded-xl bg-white/5 border-white/10 text-white focus:ring-0 text-sm">
+                  <SelectTrigger className={`${inputStyle} focus:ring-0 text-sm`}>
                     <SelectValue placeholder="Pick one" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1400] border-white/10 text-white max-h-48 overflow-y-auto">
+                  <SelectContent
+                    className="bg-[#1a1a1a] border-white/10 text-white max-h-48 overflow-y-auto"
+                    style={{ zIndex: 99999 }}
+                    position="popper"
+                  >
                     {BLOG_CATEGORIES.map(cat => (
-                      <SelectItem key={cat} value={cat} className="focus:bg-white/10 text-sm">{cat}</SelectItem>
+                      <SelectItem key={cat} value={cat} className="focus:bg-white/10 text-white text-sm">{cat}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>Language</label>
+                <label style={labelStyle}>Language</label>
                 <Select value={bookLang} onValueChange={setBookLang}>
-                  <SelectTrigger className="rounded-xl bg-white/5 border-white/10 text-white focus:ring-0 text-sm">
+                  <SelectTrigger className={`${inputStyle} focus:ring-0 text-sm`}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="max-h-56 overflow-y-auto bg-[#1a1400] border-white/10 text-white">
+                  <SelectContent
+                    className="bg-[#1a1a1a] border-white/10 text-white max-h-56 overflow-y-auto"
+                    style={{ zIndex: 99999 }}
+                    position="popper"
+                  >
                     {BOOK_LANGUAGES.map(l => (
-                      <SelectItem key={l.code} value={l.code} className="focus:bg-white/10 text-sm">{l.nativeName}</SelectItem>
+                      <SelectItem key={l.code} value={l.code} className="focus:bg-white/10 text-white text-sm">{l.nativeName}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -344,7 +344,7 @@ export default function Home() {
     }
   };
 
-  const handleSelectorCreateBook = async (data: { title: string; summary: string; authorName: string; language: string }) => {
+  const handleSelectorCreateBook = async (data: { title: string; summary: string; authorName: string; language: string; genre?: string }) => {
     const newBook = await createBook.mutateAsync({ ...data, contentType: "book" } as any);
     setIsOpen(false);
     setLocation(`/books/${newBook.id}`);
