@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { EtherealShadow } from "@/components/ui/etheral-shadow";
 import { useRoute, Link, useLocation } from "wouter";
 import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
@@ -628,12 +629,20 @@ export default function ChapterEditor() {
 
   return (
     <div
-      className={`min-h-screen transition-all duration-700 relative ${isFocusMode ? "bg-black text-white" : ""}`}
-      style={isFocusMode ? undefined : editorOuterStyle}
+      className={`min-h-screen transition-all duration-700 relative ${isFocusMode ? "text-white" : ""}`}
+      style={isFocusMode ? { backgroundColor: "#000" } : editorOuterStyle}
     >
-      {/* Subtle vignette for focus mode */}
+      {/* Animated Etheral Shadow background for focus mode */}
       {isFocusMode && (
-        <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)] z-0" />
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <EtherealShadow
+            color="rgba(30, 30, 30, 1)"
+            animation={{ scale: 100, speed: 90 }}
+            noise={{ opacity: 0.6, scale: 1.2 }}
+            sizing="fill"
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
       )}
 
       {/* Typewriter Mode — fixed center guide line */}
