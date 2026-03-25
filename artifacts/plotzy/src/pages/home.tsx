@@ -495,7 +495,7 @@ export default function Home() {
 
         {/* ===== EXISTING ACTIVE LIBRARY SECTION (SLEEK INTEGRATION) ===== */}
         {!isLoading && (
-          <section className="bg-[#050505] border-b border-white/5 py-24 px-4 sm:px-6 lg:px-8">
+          <section className="bg-[#050505] border-t border-b border-white/10 py-24 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
 
               {/* ── Personalized Greeting ── */}
