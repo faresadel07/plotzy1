@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useRoute, Link, useLocation } from "wouter";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { Layout } from "@/components/layout";
+import { AuthModal } from "@/components/auth-modal";
 import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
 import { useChapters, useCreateChapter, useUpdateChapter, useReorderChapters } from "@/hooks/use-chapters";
 import { usePublishBook } from "@/hooks/use-public-library";
@@ -140,6 +141,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const [goalDraft, setGoalDraft] = useState("");
   // Finish & Publish confirmation dialog
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   if (isLoadingBook || isLoadingChapters) {
     return (
@@ -586,7 +588,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     <button
                       className="w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-[12px] font-semibold transition-all border-0 hover:opacity-90 bg-foreground text-background"
                       data-testid="button-finish-publish"
-                      onClick={() => setIsPublishConfirmOpen(true)}
+                      onClick={() => { if (!user) { setIsAuthModalOpen(true); } else { setIsPublishConfirmOpen(true); } }}
                     >
                       <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
                       <span className="truncate">{lang === "ar" ? "نشر الكتاب" : "Publish"}</span>
@@ -996,6 +998,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         document.body
       )}
 
+      <AuthModal open={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </Layout>
   );
 }
