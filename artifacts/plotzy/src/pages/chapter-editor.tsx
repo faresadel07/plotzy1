@@ -951,16 +951,15 @@ export default function ChapterEditor() {
 
           {/* ── Right: AI + Save ── */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 text-secondary hover:text-secondary hover:bg-secondary/10 transition-colors hidden sm:flex"
+            <button
+              className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 text-white hidden sm:flex items-center transition-all hover:opacity-90 hover:-translate-y-px active:translate-y-0"
+              style={{ background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%)", boxShadow: "0 2px 8px rgba(124,58,237,0.35)" }}
               onClick={() => setShowAI(true)}
               data-testid="button-ai-assistant"
             >
               <Wand2 className="w-3.5 h-3.5" />
               {t("aiAssistant")}
-            </Button>
+            </button>
 
             <button
               className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
