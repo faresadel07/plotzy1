@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Mail, Lock, Eye, EyeOff, User, X, Loader2, AlertCircle, Check, PenLine } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, X, Loader2, AlertCircle, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -209,13 +209,11 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           {/* Logo + close */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 9,
-                background: "#ffffff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <PenLine style={{ width: 16, height: 16, color: "#0a0a0a" }} />
-              </div>
+              <img
+                src={`${import.meta.env.BASE_URL}plotzy-logo.png`}
+                alt="Plotzy"
+                style={{ width: 32, height: 32, objectFit: "contain", borderRadius: 7, filter: "invert(1)" }}
+              />
               <span style={{ fontWeight: 700, fontSize: 16, color: "#f5f5f5", letterSpacing: "-0.03em" }}>Plotzy</span>
             </div>
             <button
