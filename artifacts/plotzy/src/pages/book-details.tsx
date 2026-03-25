@@ -599,22 +599,22 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             {/* ── Publish Confirmation Dialog ── */}
             {book && (
               <Dialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
-                <DialogContent className="rounded-2xl max-w-sm" style={{ background: "linear-gradient(160deg, #F5EDD6 0%, #EDE0C4 100%)", border: "1px solid #C8A84B50" }}>
+                <DialogContent className="rounded-2xl max-w-sm" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)" }}>
                   <DialogHeader className="text-center pb-2">
                     <div className="text-5xl mb-3 text-center" aria-hidden="true">✒</div>
-                    <DialogTitle className="text-xl font-bold text-center leading-snug" style={{ color: "#2D2315" }}>
+                    <DialogTitle className="text-xl font-bold text-center leading-snug text-white">
                       {lang === "ar" ? "هل أنت مستعد لمشاركة تحفتك الفنية؟" : "Ready to share your masterpiece?"}
                     </DialogTitle>
                   </DialogHeader>
-                  <p className="text-sm text-center leading-relaxed px-2 mb-2" style={{ color: "#5C4A1E" }}>
+                  <p className="text-sm text-center leading-relaxed px-2 mb-2 text-white/55">
                     {lang === "ar"
                       ? `سيصبح كتابك "${book.title}" متاحًا للقراء في المكتبة المجتمعية لـ Plotzy. يمكنك إلغاء النشر في أي وقت.`
                       : `"${book.title}" will be available for readers in the Plotzy Community Library. You can unpublish at any time.`}
                   </p>
                   <DialogFooter className="flex flex-col gap-2 sm:flex-col mt-2">
                     <Button
-                      className="w-full rounded-xl font-bold text-sm shadow-md border-0 transition-all hover:-translate-y-0.5"
-                      style={{ background: "linear-gradient(135deg, #2D2315 0%, #3D3020 100%)", color: "#F5EDD6" }}
+                      className="w-full rounded-xl font-bold text-sm shadow-md border-0 transition-all hover:opacity-90"
+                      style={{ background: "#ffffff", color: "#111111" }}
                       disabled={publishBook.isPending}
                       data-testid="button-confirm-publish"
                       onClick={() => publishBook.mutate({ id: bookId, publish: true }, {
@@ -626,19 +626,25 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                               ? "كتابك الآن متاح في المكتبة المجتمعية."
                               : "Your book is now live in the Plotzy Community Library.",
                           });
-                          setTimeout(() => navigate("/library"), 800);
+                          navigate("/library");
+                        },
+                        onError: (err: any) => {
+                          toast({
+                            title: lang === "ar" ? "فشل النشر" : "Publish failed",
+                            description: err?.message || (lang === "ar" ? "حدث خطأ ما، حاول مجدداً." : "Something went wrong, please try again."),
+                            variant: "destructive",
+                          });
                         },
                       })}
                     >
                       {publishBook.isPending
                         ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{lang === "ar" ? "جارٍ النشر..." : "Publishing..."}</>
-                        : <><BookOpen className="w-4 h-4 mr-2" style={{ color: "#C8A84B" }} />{lang === "ar" ? "نعم، انشر الآن ✦" : "Yes, Publish Now ✦"}</>
+                        : <><BookOpen className="w-4 h-4 mr-2" />{lang === "ar" ? "نعم، انشر الآن ✦" : "Yes, Publish Now ✦"}</>
                       }
                     </Button>
                     <Button
                       variant="ghost"
-                      className="w-full rounded-xl font-medium text-sm"
-                      style={{ color: "#5C4A1E" }}
+                      className="w-full rounded-xl font-medium text-sm text-white/50 hover:text-white hover:bg-white/[0.06]"
                       onClick={() => setIsPublishConfirmOpen(false)}
                     >
                       {lang === "ar" ? "ليس الآن" : "Not yet, keep writing"}
