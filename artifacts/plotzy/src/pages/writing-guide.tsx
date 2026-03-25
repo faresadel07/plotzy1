@@ -463,7 +463,7 @@ export default function WritingGuide() {
       {/* ── Hero ── */}
       <motion.div
         initial="hidden" animate="visible" variants={fadeUp}
-        className="relative pt-12 pb-20 md:pt-16 md:pb-24 mb-4 overflow-hidden"
+        className="relative pt-12 pb-6 md:pt-16 md:pb-8 mb-4 overflow-hidden"
       >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-foreground/[0.03] rounded-full blur-[80px] -translate-y-1/2" />
