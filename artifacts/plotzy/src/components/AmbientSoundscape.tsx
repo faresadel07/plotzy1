@@ -5,7 +5,6 @@ import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Volume2, VolumeX, CloudRain, Wind, Coffee, Bird, Pause } from "lucide-react";
 
-// Using highly stable wikimedia commons public domain ogg files
 const TRACKS = [
     { id: 'rain', name: 'Rainstorm', icon: CloudRain, url: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Rain_sounds.ogg' },
     { id: 'birds', name: 'Forest Birds', icon: Bird, url: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Bird_sounds_in_spring.ogg' },
@@ -19,9 +18,13 @@ export function AmbientSoundscape() {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 rounded-full border-border/50 bg-background/50 backdrop-blur-md transition-all hover:bg-background/80">
-                    {isPlaying ? <Volume2 className="w-4 h-4 text-primary animate-pulse" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
-                    <span className="hidden sm:inline font-medium tracking-tight">{isPlaying ? "Atmosphere On" : "Atmosphere"}</span>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`rounded-xl transition-colors ${isPlaying ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
+                    title={isPlaying ? "Atmosphere On" : "Atmosphere"}
+                >
+                    {isPlaying ? <Volume2 className="w-4 h-4 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72 p-5 rounded-2xl border-border/50 bg-background/80 backdrop-blur-2xl shadow-2xl" align="end" sideOffset={10}>

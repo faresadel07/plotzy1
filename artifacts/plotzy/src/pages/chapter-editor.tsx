@@ -827,170 +827,105 @@ export default function ChapterEditor() {
         className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
         style={{ backgroundColor: isFocusMode ? undefined : resolvedBgColor ? `${resolvedBgColor}cc` : "rgba(255,255,255,0.85)" }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-10">
-          <Link href={`/books/${bookId}`} className="flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group">
-            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform rtl-flip" />
-            {t("backToBook")}
-          </Link>
+        <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between relative z-10 gap-2">
 
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground/60 mr-1 hidden sm:block">
-              {pages.length} {ar ? (pages.length === 1 ? "صفحة" : "صفحات") : (pages.length === 1 ? "page" : "pages")}
-              {" · "}
-              {totalWords} {ar ? "كلمة" : "words"}
+          {/* ── Left: Back + stats ── */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href={`/books/${bookId}`} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors group shrink-0">
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform rtl-flip" />
+              <span className="hidden sm:block">{t("backToBook")}</span>
+            </Link>
+            <span className="text-[10px] text-muted-foreground/40 hidden sm:block whitespace-nowrap">
+              {pages.length} {ar ? (pages.length === 1 ? "صفحة" : "صفحات") : (pages.length === 1 ? "pg" : "pgs")}
+              {" · "}{totalWords} {ar ? "كلمة" : "w"}
             </span>
+          </div>
 
-            {/* Voice dictation button */}
+          {/* ── Center: tool icons ── */}
+          <div className="flex items-center gap-0.5 flex-1 justify-center">
+
+            {/* Voice */}
             {isTranscribing ? (
-              <div className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-primary/10 text-primary text-xs font-medium">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span className="hidden sm:block">{ar ? "جارٍ التحويل..." : "Transcribing..."}</span>
+              <div className="flex items-center gap-1 px-2 h-7 rounded-lg bg-primary/10 text-primary text-[10px] font-medium">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span className="hidden sm:block">{ar ? "جارٍ..." : "…"}</span>
               </div>
             ) : isRecording ? (
               <button
                 onClick={stopRecording}
-                className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors animate-pulse"
+                className="flex items-center gap-1 px-2 h-7 rounded-lg bg-red-500 text-white text-[10px] font-medium hover:bg-red-600 transition-colors animate-pulse"
                 title={ar ? "إيقاف التسجيل" : "Stop recording"}
                 data-testid="button-stop-recording"
               >
-                <Square className="w-3.5 h-3.5 fill-current" />
+                <Square className="w-3 h-3 fill-current" />
                 <span className="font-mono">{formatTime(recordingTime)}</span>
               </button>
             ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors text-muted-foreground"
-                onClick={startRecording}
-                title={ar ? "تسجيل صوتي" : "Dictate with voice"}
-                data-testid="button-start-recording"
-              >
+              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors text-muted-foreground" onClick={startRecording} title={ar ? "تسجيل صوتي" : "Voice dictation"} data-testid="button-start-recording">
                 <Mic className="w-4 h-4" />
               </Button>
             )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex"
-              onClick={() => setShowStoryBible(true)}
-              title={ar ? "الكتاب المقدس للقصة" : "Story Bible"}
-            >
-              <BookOpen className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowStoryBible(true)} title={ar ? "الكتاب المقدس للقصة" : "Story Bible"}>
+              <BookOpen className="w-4 h-4" />
             </Button>
 
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex"
-              onClick={() => fileInputRef.current?.click()}
-              title={ar ? "إدراج صورة" : "Insert Image"}
-            >
-              <ImageIcon className="w-5 h-5" />
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex" onClick={() => fileInputRef.current?.click()} title={ar ? "إدراج صورة" : "Insert Image"}>
+              <ImageIcon className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex"
-              onClick={() => setShowCanvas(true)}
-              title={ar ? "رسم حر" : "Hand draw sketch"}
-            >
-              <PenTool className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex" onClick={() => setShowCanvas(true)} title={ar ? "رسم حر" : "Draw sketch"}>
+              <PenTool className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex"
-              onClick={() => setShowCustomizer(true)}
-              title={t("settings")}
-            >
-              <Palette className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowCustomizer(true)} title={t("settings")}>
+              <Palette className="w-4 h-4" />
             </Button>
 
-            {/* Page Style Picker */}
+            {/* Page Style */}
             <div className="relative hidden sm:block">
               <Button
-                variant="ghost"
-                size="icon"
-                className={`rounded-xl transition-colors ${showPageStylePicker || (prefs.pageStyle && prefs.pageStyle !== "blank") ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
+                variant="ghost" size="icon"
+                className={`w-8 h-8 rounded-lg transition-colors ${showPageStylePicker || (prefs.pageStyle && prefs.pageStyle !== "blank") ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
                 onClick={() => setShowPageStylePicker(v => !v)}
                 title="Page Style"
               >
-                <Layers className="w-5 h-5" />
+                <Layers className="w-4 h-4" />
               </Button>
               {showPageStylePicker && (
                 <PageStylePicker
                   currentStyle={prefs.pageStyle || "blank"}
                   isDark={isDark}
-                  onSelect={(styleId) => {
-                    const newPrefs = { ...prefs, pageStyle: styleId };
-                    setPrefs(newPrefs);
-                    handleSavePrefs(newPrefs);
-                  }}
+                  onSelect={(styleId) => { const newPrefs = { ...prefs, pageStyle: styleId }; setPrefs(newPrefs); handleSavePrefs(newPrefs); }}
                   onClose={() => setShowPageStylePicker(false)}
                 />
               )}
             </div>
 
-            <div className="w-px h-6 bg-border/30 mx-1 hidden sm:block" />
+            <div className="w-px h-5 bg-border/40 mx-1 hidden sm:block" />
 
             <AmbientSoundscape />
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`rounded-xl transition-colors hidden sm:flex ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`}
-              onClick={() => {
-                setShowRefPanel(v => !v);
-                if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id);
-              }}
-              title={ar ? "عرض مرجعي — فتح فصل آخر للقراءة بجانب كتابتك" : "Reference Mode — view another chapter alongside your writing"}
-            >
-              <PanelRight className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"}>
+              <PanelRight className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`rounded-xl transition-colors ${isPrintView ? "text-foreground bg-foreground/10" : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"}`}
-              onClick={() => { setIsPrintView(v => !v); setCurrentSpread(0); }}
-              title={ar ? "معاينة الطباعة" : "Print View"}
-            >
-              <Printer className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isPrintView ? "text-foreground bg-foreground/10" : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"}`} onClick={() => { setIsPrintView(v => !v); setCurrentSpread(0); }} title={ar ? "معاينة الطباعة" : "Print View"}>
+              <Printer className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`rounded-xl transition-colors ${isTypewriterMode ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500"}`}
-              onClick={toggleTypewriterMode}
-              title={ar ? "وضع الآلة الكاتبة — يُبقي المؤشر في مركز الشاشة" : "Typewriter Mode — keeps cursor centered"}
-            >
-              <AlignCenter className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isTypewriterMode ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500"}`} onClick={toggleTypewriterMode} title={ar ? "وضع الآلة الكاتبة" : "Typewriter Mode"}>
+              <AlignCenter className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`rounded-xl transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
-              onClick={() => setIsFocusMode(!isFocusMode)}
-              title={ar ? "وضع التركيز" : "Focus Mode"}
-            >
-              {isFocusMode ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setIsFocusMode(!isFocusMode)} title={ar ? "وضع التركيز" : "Focus Mode"}>
+              {isFocusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </Button>
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors">
+                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </AlertDialogTrigger>
@@ -1001,59 +936,53 @@ export default function ChapterEditor() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel className="rounded-lg">{t("cancel")}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">
-                    {t("delete")}
-                  </AlertDialogAction>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">{t("delete")}</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
 
-            <div className="w-px h-6 bg-border/30 mx-1" />
+            <div className="w-px h-5 bg-border/40 mx-1" />
 
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors relative ${showVersionHistory ? "text-violet-500 bg-violet-500/10" : "text-muted-foreground hover:bg-violet-500/10 hover:text-violet-500"}`} onClick={() => setShowVersionHistory(v => !v)} title={ar ? "سجل الإصدارات" : "Version History"}>
+              <History className="w-4 h-4" />
+              {versions.length > 0 && <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-violet-500" />}
+            </Button>
+          </div>
+
+          {/* ── Right: AI + Save ── */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <Button
               variant="ghost"
-              size="icon"
-              className={`rounded-xl transition-colors relative ${showVersionHistory ? "text-violet-500 bg-violet-500/10" : "text-muted-foreground hover:bg-violet-500/10 hover:text-violet-500"}`}
-              onClick={() => setShowVersionHistory(v => !v)}
-              title={ar ? "سجل الإصدارات" : "Version History"}
-            >
-              <History className="w-5 h-5" />
-              {versions.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-violet-500" />
-              )}
-            </Button>
-
-            <div className="w-px h-6 bg-border/30 mx-1" />
-
-            <Button
-              variant="outline"
-              className="rounded-xl border-2 border-secondary/30 hover:border-secondary hover:bg-secondary/10 transition-all"
+              size="sm"
+              className="h-8 px-3 rounded-lg text-xs font-medium gap-1.5 text-muted-foreground hover:text-primary hover:bg-primary/8 transition-colors hidden sm:flex"
               onClick={() => setShowAI(true)}
               data-testid="button-ai-assistant"
             >
-              <Wand2 className="w-4 h-4 mr-2 text-secondary" />
+              <Wand2 className="w-3.5 h-3.5 text-secondary" />
               {t("aiAssistant")}
             </Button>
 
             <button
-              style={justSaved
-                ? { background: "#10b981", color: "#fff", border: "none", borderRadius: "12px", fontWeight: 600, padding: "8px 18px", display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", cursor: "default", boxShadow: "0 4px 14px rgba(16,185,129,0.35)", transition: "all 0.2s" }
-                : { background: "hsl(var(--primary))", color: "#fff", border: "none", borderRadius: "12px", fontWeight: 600, padding: "8px 18px", display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", cursor: "pointer", boxShadow: "0 4px 14px hsl(var(--primary) / 0.35)", transition: "all 0.2s" }
-              }
+              className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                justSaved
+                  ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 cursor-default"
+                  : updateChapter.isPending
+                    ? "bg-primary/80 text-white cursor-wait"
+                    : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-px"
+              }`}
               onClick={updateChapter.isPending || justSaved ? undefined : handleSave}
               disabled={updateChapter.isPending}
               data-testid="button-save"
-              onMouseEnter={e => { if (!justSaved && !updateChapter.isPending) (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
             >
               {updateChapter.isPending
-                ? <><Loader2 className="w-4 h-4 animate-spin" />{t("saving")}</>
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{t("saving")}</>
                 : justSaved
-                  ? <><CheckCircle2 className="w-4 h-4" />{ar ? "محفوظ" : "Saved"}</>
-                  : <><Save className="w-4 h-4" />{t("save")}</>
+                  ? <><CheckCircle2 className="w-3.5 h-3.5" />{ar ? "محفوظ" : "Saved"}</>
+                  : <><Save className="w-3.5 h-3.5" />{t("save")}</>
               }
             </button>
           </div>
+
         </div>
       </header>
 
