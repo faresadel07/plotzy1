@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen, Search, Eye, User, Calendar, Loader2, Star, Filter,
-  Award, PenLine, Sparkles, X, Trophy,
+  Award, X, Trophy,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -339,9 +339,6 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
 
       {/* CTA */}
       <div className="text-center flex flex-col items-center gap-5">
-        <div className="w-16 h-16 rounded-2xl bg-foreground/5 flex items-center justify-center">
-          <Sparkles className="w-8 h-8 text-muted-foreground" />
-        </div>
         <div>
           <p className="text-xl font-bold text-foreground mb-2">Be the first to publish your story</p>
           <p className="text-muted-foreground text-sm max-w-sm mx-auto">
@@ -350,9 +347,8 @@ function EmptyState({ hasFilter }: { hasFilter: boolean }) {
         </div>
         <Button
           onClick={() => navigate("/")}
-          className="gap-2 rounded-xl px-6"
+          className="rounded-xl px-6"
         >
-          <PenLine className="w-4 h-4" />
           Go to My Library
         </Button>
       </div>
