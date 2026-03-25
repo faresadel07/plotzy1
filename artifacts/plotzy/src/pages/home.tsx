@@ -833,35 +833,6 @@ export default function Home() {
         <section className="bg-white pt-20 pb-14 px-6 sm:px-8 border-b border-[#f0f0f0]">
           <div className="max-w-7xl mx-auto">
 
-            {/* ── Stats Bar ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "1px",
-                background: "#e8e8e8",
-                border: "1px solid #e8e8e8",
-                borderRadius: 20,
-                overflow: "hidden",
-                marginBottom: 80,
-              }}
-            >
-              {[
-                { to: 12000, suffix: "+", label: "Authors on Plotzy" },
-                { to: 48, suffix: "M+", label: "Words Written" },
-                { to: 52, suffix: "+", label: "Languages Supported" },
-                { to: 97, suffix: "%", label: "Author Satisfaction" },
-              ].map(({ to, suffix, label }, i) => (
-                <div key={i} style={{ background: "#fff", padding: "28px 20px" }}>
-                  <StatCounter to={to} suffix={suffix} label={label} />
-                </div>
-              ))}
-            </motion.div>
-
             {/* — Step 1 — */}
             <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-32">
               {/* Text left */}
