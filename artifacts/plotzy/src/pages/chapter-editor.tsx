@@ -359,7 +359,7 @@ export default function ChapterEditor() {
       if (typeof cur === 'string') {
         // Legacy string block → convert to text block and freeze the APPLIED font
         // (never the live-preview font — existing text must not shift)
-        return { type: 'text', content: text, fontFamily: prefs.fontFamily || undefined };
+        return { type: 'text', content: text, fontFamily: prefs.fontFamily || 'eb-garamond' };
       }
       if (cur.type === 'text') {
         // Already a text block — preserve its stored font, just update content
@@ -395,8 +395,8 @@ export default function ChapterEditor() {
     // Overflow — split into page-sized chunks and distribute
     const chunks = splitIntoPages(value, measureEl, PAGE_CONTENT_HEIGHT);
     const blockFont = typeof pages[index] === 'string'
-      ? prefs.fontFamily
-      : (pages[index] as { type: string; fontFamily?: string }).fontFamily ?? prefs.fontFamily;
+      ? (prefs.fontFamily || 'eb-garamond')
+      : ((pages[index] as { type: string; fontFamily?: string }).fontFamily ?? (prefs.fontFamily || 'eb-garamond'));
 
     setPages(prev => {
       const next = [...prev];
@@ -510,17 +510,24 @@ export default function ChapterEditor() {
   };
 
   const handleSavePrefs = async (newPrefs: BookPreferences) => {
-    const oldFont = prefs.fontFamily;
     const newFont = newPrefs.fontFamily;
-    // Freeze the OLD font into every existing unfrozen text block so it doesn't
-    // inherit the new global font going forward.
-    if (oldFont && newFont && oldFont !== newFont) {
+    // The font that existing unfrozen blocks are currently RENDERED with
+    // (fall back to "eb-garamond" if never explicitly set).
+    const currentRenderedFont = prefs.fontFamily || 'eb-garamond';
+
+    // Freeze the current rendered font into every unfrozen text block whenever
+    // the global font is changing, so those blocks never inherit the new font.
+    // We run this unconditionally (even when oldFont was undefined) so that
+    // blocks written before the font system existed are locked in correctly.
+    if (newFont && currentRenderedFont !== newFont) {
       setPages(prev => prev.map(block => {
         if (typeof block === 'string' && block.trim()) {
-          return { type: 'text' as const, content: block, fontFamily: oldFont };
+          // Plain string → promote to typed block and freeze font
+          return { type: 'text' as const, content: block, fontFamily: currentRenderedFont };
         }
         if (typeof block !== 'string' && block.type === 'text' && !block.fontFamily) {
-          return { ...block, fontFamily: oldFont };
+          // Text block without a frozen font → freeze it now
+          return { ...block, fontFamily: currentRenderedFont };
         }
         return block;
       }));
@@ -1083,7 +1090,7 @@ export default function ChapterEditor() {
                         // the live-preview font, so existing text never shifts while browsing fonts.
                         const blockFontId = (typeof pageContent !== 'string' && pageContent.fontFamily)
                           ? pageContent.fontFamily
-                          : (prefs.fontFamily || '');
+                          : (prefs.fontFamily || 'eb-garamond');
                         const blockFontStyle = FONT_STYLE_MAP[blockFontId] || fontStyle;
                         const blockFontClass = FONT_MAP[blockFontId] || fontClass;
                         return (
