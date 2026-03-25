@@ -555,33 +555,43 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setIsOpen(true)}
-                  className="cursor-pointer mx-auto"
+                  className="cursor-pointer mx-auto group"
                   style={{ maxWidth: 260 }}
                 >
-                  <div
-                    className="flex flex-col items-center justify-center rounded-2xl transition-all duration-300 hover:border-white/20 hover:bg-white/[0.03]"
+                  <motion.div
+                    className="flex flex-col items-center justify-center rounded-2xl"
                     style={{
                       height: 360,
                       border: '1.5px dashed rgba(255,255,255,0.1)',
                       background: 'rgba(255,255,255,0.015)',
+                      transition: 'border-color 0.25s, background 0.25s, box-shadow 0.25s',
+                    }}
+                    whileHover={{
+                      borderColor: 'rgba(255,255,255,0.22)',
+                      background: 'rgba(255,255,255,0.04)',
+                      boxShadow: '0 0 40px rgba(255,255,255,0.04)',
                     }}
                   >
-                    <div
-                      className="flex items-center justify-center rounded-full mb-3 transition-colors duration-200"
+                    <motion.div
+                      className="flex items-center justify-center rounded-full mb-3"
                       style={{
                         width: 40,
                         height: 40,
                         border: '1.5px solid rgba(255,255,255,0.15)',
                       }}
+                      whileHover={{ scale: 1.15, borderColor: 'rgba(255,255,255,0.4)' }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      <Plus className="w-4 h-4 text-white/40" />
-                    </div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25">
+                      <Plus className="w-4 h-4 text-white/40 group-hover:text-white/70 transition-colors duration-200" />
+                    </motion.div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 group-hover:text-white/50 transition-colors duration-200">
                       New Project
                     </p>
-                  </div>
+                  </motion.div>
                 </motion.div>
               ) : (
               <div className="space-y-12">
