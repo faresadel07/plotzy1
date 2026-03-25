@@ -20,7 +20,7 @@ import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, Pe
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
 import { format } from "date-fns";
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, useScroll, useInView } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import { BOOK_LANGUAGES } from "@/lib/i18n";
@@ -35,6 +35,45 @@ import { WritingCalendar } from "@/components/writing-calendar";
 
 
 const BOOKS_PER_SHELF = 4;
+
+function StatCounter({ to, suffix = "", label }: { to: number; suffix?: string; label: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const duration = 1800;
+    const step = 16;
+    const increment = to / (duration / step);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= to) { setCount(to); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    }, step);
+    return () => clearInterval(timer);
+  }, [inView, to]);
+
+  return (
+    <div ref={ref} style={{ textAlign: "center" }}>
+      <div style={{
+        fontFamily: "-apple-system,'SF Pro Display',sans-serif",
+        fontSize: "clamp(2.2rem,4vw,3rem)", fontWeight: 800,
+        letterSpacing: "-0.04em", color: "#111", lineHeight: 1,
+      }}>
+        {count.toLocaleString()}{suffix}
+      </div>
+      <div style={{
+        fontFamily: "-apple-system,'SF Pro Display',sans-serif",
+        fontSize: "0.78rem", fontWeight: 500,
+        color: "#888", marginTop: 8, letterSpacing: "0.01em",
+      }}>
+        {label}
+      </div>
+    </div>
+  );
+}
 
 const COVER_PALETTES = [
   { bg: 'linear-gradient(150deg,#0f0c29,#302b63,#24243e)', accent: '#a78bfa' },
@@ -373,8 +412,21 @@ export default function Home() {
     document.getElementById('platform-features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const { scrollYProgress } = useScroll();
+  const progressScaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 30, restDelta: 0.001 });
+
   return (
     <>
+      {/* ── Scroll Progress Bar ── */}
+      <motion.div
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, height: 2, zIndex: 99999,
+          background: "linear-gradient(90deg, #a78bfa, #818cf8)",
+          transformOrigin: "0%",
+          scaleX: progressScaleX,
+        }}
+      />
+
       <BookViewerOverlay isOpen={!!selectedShelfBook} onClose={() => setSelectedShelfBook(null)} bookData={selectedShelfBook} />
 
       <ConfirmModal
@@ -778,8 +830,38 @@ export default function Home() {
 
 
         {/* ===== HOW IT WORKS — REEDSY-STYLE ALTERNATING SECTIONS ===== */}
-        <section className="bg-white pt-28 pb-14 px-6 sm:px-8 border-b border-[#f0f0f0]">
+        <section className="bg-white pt-20 pb-14 px-6 sm:px-8 border-b border-[#f0f0f0]">
           <div className="max-w-7xl mx-auto">
+
+            {/* ── Stats Bar ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "1px",
+                background: "#e8e8e8",
+                border: "1px solid #e8e8e8",
+                borderRadius: 20,
+                overflow: "hidden",
+                marginBottom: 80,
+              }}
+            >
+              {[
+                { to: 12000, suffix: "+", label: "Authors on Plotzy" },
+                { to: 48, suffix: "M+", label: "Words Written" },
+                { to: 52, suffix: "+", label: "Languages Supported" },
+                { to: 97, suffix: "%", label: "Author Satisfaction" },
+              ].map(({ to, suffix, label }, i) => (
+                <div key={i} style={{ background: "#fff", padding: "28px 20px" }}>
+                  <StatCounter to={to} suffix={suffix} label={label} />
+                </div>
+              ))}
+            </motion.div>
+
             {/* — Step 1 — */}
             <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-32">
               {/* Text left */}
@@ -798,16 +880,26 @@ export default function Home() {
                   A distraction-free editor built for authors. Outline your chapters,
                   structure your plot, and pour your ideas onto the page — all in one focused workspace.
                 </p>
-                <ul className="space-y-3">
+                <motion.ul
+                  className="space-y-3"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
+                >
                   {['Chapter-by-chapter organisation','Auto-save & version history','Full RTL & multi-language support'].map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-[#444] text-sm font-medium">
+                    <motion.li
+                      key={item}
+                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
+                      className="flex items-center gap-3 text-[#444] text-sm font-medium"
+                    >
                       <span className="w-5 h-5 rounded-full bg-black/8 border border-black/15 flex items-center justify-center flex-shrink-0">
                         <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </li>
+                    </motion.li>
                   ))}
-                </ul>
+                </motion.ul>
               </motion.div>
 
               {/* Editor mockup right */}
@@ -840,16 +932,26 @@ export default function Home() {
                   Stuck on a scene? Just ask. Plotzy's AI reads your story's context and
                   suggests continuations, rewrites, and ideas that sound like you — not a machine.
                 </p>
-                <ul className="space-y-3">
+                <motion.ul
+                  className="space-y-3"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
+                >
                   {['Context-aware chapter suggestions','Tone & style matching','Expand, rewrite, or brainstorm on demand'].map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-[#444] text-sm font-medium">
+                    <motion.li
+                      key={item}
+                      variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
+                      className="flex items-center gap-3 text-[#444] text-sm font-medium"
+                    >
                       <span className="w-5 h-5 rounded-full bg-black/8 border border-black/15 flex items-center justify-center flex-shrink-0">
                         <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </li>
+                    </motion.li>
                   ))}
-                </ul>
+                </motion.ul>
               </motion.div>
 
               {/* AI chat mockup left */}
