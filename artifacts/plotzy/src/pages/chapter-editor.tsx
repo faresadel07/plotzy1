@@ -103,13 +103,13 @@ function serializePages(pages: PageBlock[]): string {
   return JSON.stringify(pages);
 }
 
-// ── Fixed Page Dimensions (A4 proportional) ──────────────────────────────────
-// Page card is 660px wide — matches industry-standard writing tools (Reedsy, Scrivener).
-// Horizontal margin: 76px each side → content width = 660 - 152 = 508px.
-// Total page height: 660 × (297/210) ≈ 934px (true A4 ratio).
-// Strip heights (header + footer) ≈ 164px → content height ≈ 770px.
-const PAGE_CONTENT_HEIGHT = 770; // px — textarea height (fixed, A4 proportional)
-const PAGE_CONTENT_WIDTH  = 508; // px — content area inside page card (660 - 2×76)
+// ── Fixed Page Dimensions (true A4 at 72 dpi) ────────────────────────────────
+// Page card is 595px wide (A4 = 595pt wide at 72dpi — same as PDF standard).
+// Horizontal margin: 76px each side → content width = 595 - 152 = 443px.
+// True A4 at 72 dpi: 595 × 842 px.
+// Strip heights (header + footer) ≈ 185px → content height = 842 - 185 = 657px.
+const PAGE_CONTENT_HEIGHT = 657; // px — textarea height (A4 at 72dpi)
+const PAGE_CONTENT_WIDTH  = 443; // px — content area inside page card (595 - 2×76)
 
 function getPageText(block: PageBlock): string {
   if (typeof block === "string") return block;
@@ -1068,7 +1068,7 @@ export default function ChapterEditor() {
         }}
       >
         {/* Chapter Title — above all pages */}
-        <div className="max-w-[660px] mx-auto px-4 mb-8">
+        <div className="max-w-[595px] mx-auto px-4 mb-8">
           <input
             type="text"
             value={title}
@@ -1093,7 +1093,7 @@ export default function ChapterEditor() {
             const pageWords = countWords(pageText);
 
             return (
-              <div key={index} className="relative group w-full max-w-[660px]">
+              <div key={index} className="relative group w-full max-w-[595px]">
 
                 {/* Book Page Card */}
                 <div
@@ -1141,7 +1141,6 @@ export default function ChapterEditor() {
                   {/* Page Content Area */}
                   <div
                     className="px-[76px] py-10 cursor-text"
-                    style={{ minHeight: `${PAGE_CONTENT_HEIGHT + 80}px` }}
                     onClick={(e) => {
                       const ta = (e.currentTarget as HTMLElement).querySelector<HTMLTextAreaElement>('[data-page-textarea]');
                       if (ta && e.target === e.currentTarget) {
@@ -1385,7 +1384,7 @@ export default function ChapterEditor() {
           })}
 
           {/* Add Page Button */}
-          <div className="flex flex-col items-center gap-3 pb-24 mt-2 w-full max-w-[660px]">
+          <div className="flex flex-col items-center gap-3 pb-24 mt-2 w-full max-w-[595px]">
             <Button
               variant="ghost"
               onClick={handleAddPage}
