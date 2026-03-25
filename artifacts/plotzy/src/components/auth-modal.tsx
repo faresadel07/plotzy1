@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { SiGoogle, SiApple } from "react-icons/si";
 import { Mail, Lock, Eye, EyeOff, User, X, Loader2, AlertCircle, Check, PenLine } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,120 +12,6 @@ interface AuthModalProps {
 type Tab = "signin" | "signup";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
-
-const C = {
-  bg:       "#0a0a0a",
-  card:     "#111111",
-  border:   "rgba(255,255,255,0.08)",
-  input:    "#1a1a1a",
-  text:     "#f5f5f5",
-  muted:    "rgba(255,255,255,0.38)",
-  faint:    "rgba(255,255,255,0.14)",
-  accent:   "#ffffff",
-  accentFg: "#0a0a0a",
-};
-
-const inputBase: React.CSSProperties = {
-  width: "100%",
-  padding: "12px 14px 12px 42px",
-  borderRadius: 10,
-  border: `1px solid ${C.border}`,
-  background: C.input,
-  color: C.text,
-  fontSize: 14,
-  fontFamily: SF,
-  outline: "none",
-  boxSizing: "border-box",
-  transition: "border-color 0.18s",
-  letterSpacing: "-0.01em",
-};
-
-function InputField({
-  icon: Icon, type = "text", placeholder, value, onChange, right, error, autoComplete,
-}: {
-  icon: React.ElementType; type?: string; placeholder: string;
-  value: string; onChange: (v: string) => void;
-  right?: React.ReactNode; error?: string; autoComplete?: string;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <div style={{ position: "relative", width: "100%" }}>
-      <div style={{
-        position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)",
-        color: focused ? "rgba(255,255,255,0.65)" : C.muted,
-        transition: "color 0.18s", pointerEvents: "none",
-        display: "flex", alignItems: "center",
-      }}>
-        <Icon style={{ width: 15, height: 15 }} />
-      </div>
-      <input
-        type={type} placeholder={placeholder} value={value}
-        autoComplete={autoComplete}
-        onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{
-          ...inputBase,
-          borderColor: error ? "#e05555" : focused ? "rgba(255,255,255,0.28)" : C.border,
-          paddingRight: right ? 44 : 14,
-        }}
-      />
-      {right && (
-        <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", display: "flex" }}>
-          {right}
-        </div>
-      )}
-      {error && (
-        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
-          <AlertCircle style={{ width: 11, height: 11, color: "#e05555" }} />
-          <span style={{ fontFamily: SF, fontSize: 11, color: "#e05555" }}>{error}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SocialBtn({
-  icon: Icon, label, href, enabled,
-}: {
-  icon: React.ElementType; label: string; href: string; enabled: boolean;
-}) {
-  return (
-    <button
-      onClick={() => { window.location.href = href; }}
-      title={!enabled ? `${label} — coming soon` : label}
-      style={{
-        flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-        padding: "10px 10px",
-        borderRadius: 10,
-        border: `1px solid ${C.border}`,
-        background: "rgba(255,255,255,0.04)",
-        color: C.text,
-        fontSize: 13, fontWeight: 500, fontFamily: SF,
-        cursor: enabled ? "pointer" : "default",
-        transition: "background 0.15s, border-color 0.15s",
-        opacity: enabled ? 1 : 0.42,
-        position: "relative",
-        minWidth: 0,
-        letterSpacing: "-0.01em",
-      }}
-      onMouseEnter={e => { if (enabled) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; } }}
-      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = C.border; }}
-    >
-      <Icon style={{ width: 15, height: 15, flexShrink: 0 }} />
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-      {!enabled && (
-        <span style={{
-          position: "absolute", top: 3, right: 4,
-          fontSize: 8, fontFamily: SF, fontWeight: 600,
-          color: C.muted, background: "rgba(255,255,255,0.06)",
-          borderRadius: 3, padding: "1px 4px", letterSpacing: "0.04em",
-          textTransform: "uppercase",
-        }}>Soon</span>
-      )}
-    </button>
-  );
-}
 
 export function AuthModal({ open, onClose }: AuthModalProps) {
   const { lang } = useLanguage();
@@ -189,60 +74,158 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   if (!open) return null;
 
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
+    flex: 1,
+    background: "transparent",
+    border: "none",
+    outline: "none",
+    color: "rgba(255,255,255,0.88)",
+    fontSize: 14,
+    fontFamily: SF,
+    letterSpacing: "-0.01em",
+  });
+
+  const wrapStyle = (focused: boolean, hasError?: boolean): React.CSSProperties => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    border: `1px solid ${hasError ? "#e05555" : focused ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.1)"}`,
+    borderRadius: 10,
+    padding: "0 14px",
+    height: 46,
+    background: "rgba(255,255,255,0.04)",
+    transition: "border-color 0.18s",
+  });
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: SF,
+    fontSize: 13,
+    fontWeight: 500,
+    color: "rgba(255,255,255,0.7)",
+    letterSpacing: "-0.01em",
+    marginBottom: 6,
+    display: "block",
+  };
+
+  function FieldInput({
+    label, icon: Icon, type = "text", placeholder, value, onChange, error, autoComplete, rightSlot,
+  }: {
+    label: string; icon: React.ElementType; type?: string; placeholder: string;
+    value: string; onChange: (v: string) => void; error?: string; autoComplete?: string;
+    rightSlot?: React.ReactNode;
+  }) {
+    const [focused, setFocused] = useState(false);
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <label style={labelStyle}>{label}</label>
+        <div style={wrapStyle(focused, !!error)}>
+          <Icon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
+          <input
+            type={type} placeholder={placeholder} value={value}
+            autoComplete={autoComplete}
+            onChange={e => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={inputStyle(!!error)}
+          />
+          {rightSlot}
+        </div>
+        {error && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
+            <AlertCircle style={{ width: 11, height: 11, color: "#e05555" }} />
+            <span style={{ fontFamily: SF, fontSize: 11, color: "#e05555" }}>{error}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function SocialBtn({ src, alt, label, enabled, href }: { src: string; alt: string; label: string; enabled: boolean; href: string }) {
+    return (
+      <button
+        onClick={() => { if (enabled) window.location.href = href; }}
+        style={{
+          width: "100%",
+          height: 46,
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.04)",
+          color: "rgba(255,255,255,0.75)",
+          fontFamily: SF,
+          fontSize: 13.5, fontWeight: 500,
+          cursor: enabled ? "pointer" : "default",
+          opacity: enabled ? 1 : 0.45,
+          transition: "background 0.15s, border-color 0.15s",
+          position: "relative",
+          letterSpacing: "-0.01em",
+        }}
+        onMouseEnter={e => { if (enabled) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; } }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+      >
+        <img src={src} alt={alt} style={{ width: 18, height: 18, objectFit: "contain" }} />
+        {label}
+        {!enabled && (
+          <span style={{
+            position: "absolute", top: 3, right: 5,
+            fontSize: 8, fontWeight: 700, fontFamily: SF,
+            color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.06)",
+            borderRadius: 3, padding: "1px 5px", letterSpacing: "0.05em",
+            textTransform: "uppercase",
+          }}>Soon</span>
+        )}
+      </button>
+    );
+  }
+
   const modal = (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 99999,
         background: "rgba(0,0,0,0.75)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 20,
       }}
     >
       <div
         style={{
-          background: C.bg,
-          border: `1px solid rgba(255,255,255,0.1)`,
-          borderRadius: 20,
+          background: "#0e0e0e",
+          border: "1px solid rgba(255,255,255,0.09)",
+          borderRadius: 22,
           width: "100%",
-          maxWidth: 400,
-          maxHeight: "92vh",
+          maxWidth: 420,
+          maxHeight: "94vh",
           overflowY: "auto",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.04)",
+          boxShadow: "0 40px 100px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.04)",
           direction: ar ? "rtl" : "ltr",
-          color: C.text,
           fontFamily: SF,
         }}
       >
         {/* ── Header ── */}
-        <div style={{
-          padding: "20px 20px 0",
-          borderBottom: `1px solid ${C.border}`,
-        }}>
-          {/* Logo row + close */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ padding: "22px 22px 0", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          {/* Logo + close */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <div style={{
-                width: 30, height: 30, borderRadius: 8,
-                background: "#fff",
+                width: 32, height: 32, borderRadius: 9,
+                background: "#ffffff",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <PenLine style={{ width: 15, height: 15, color: "#0a0a0a" }} />
+                <PenLine style={{ width: 16, height: 16, color: "#0a0a0a" }} />
               </div>
-              <span style={{ fontFamily: SF, fontWeight: 700, fontSize: 15, color: C.text, letterSpacing: "-0.03em" }}>
-                Plotzy
-              </span>
+              <span style={{ fontWeight: 700, fontSize: 16, color: "#f5f5f5", letterSpacing: "-0.03em" }}>Plotzy</span>
             </div>
             <button
               onClick={onClose}
               style={{
                 width: 28, height: 28, borderRadius: 7,
-                border: `1px solid ${C.border}`,
+                border: "1px solid rgba(255,255,255,0.09)",
                 background: "rgba(255,255,255,0.04)",
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                color: C.muted, transition: "background 0.15s",
+                color: "rgba(255,255,255,0.4)", transition: "background 0.15s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.09)")}
               onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
@@ -266,8 +249,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   fontFamily: SF,
                   fontSize: 13.5,
                   fontWeight: tab === t.id ? 600 : 400,
-                  color: tab === t.id ? C.text : C.muted,
-                  borderBottom: `2px solid ${tab === t.id ? "rgba(255,255,255,0.9)" : "transparent"}`,
+                  color: tab === t.id ? "#f5f5f5" : "rgba(255,255,255,0.38)",
+                  borderBottom: `2px solid ${tab === t.id ? "rgba(255,255,255,0.85)" : "transparent"}`,
                   transition: "all 0.18s",
                   marginBottom: -1,
                   letterSpacing: "-0.02em",
@@ -280,50 +263,54 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         </div>
 
         {/* ── Body ── */}
-        <div style={{ padding: "22px 20px 24px", display: "flex", flexDirection: "column", gap: 18 }}>
-
-          {/* Social buttons */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <SocialBtn icon={SiGoogle} label="Google" href="/auth/google" enabled={providers.google} />
-            <SocialBtn icon={SiApple}  label="Apple"  href="/auth/apple"  enabled={providers.apple} />
-          </div>
-
-          {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-            <span style={{ fontFamily: SF, fontSize: 11, color: C.muted, letterSpacing: "0.02em" }}>
-              {ar ? "أو بالبريد الإلكتروني" : "or with email"}
-            </span>
-            <div style={{ flex: 1, height: 1, background: C.border }} />
-          </div>
+        <div style={{ padding: "24px 22px 26px", display: "flex", flexDirection: "column", gap: 0 }}>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {tab === "signup" && (
-              <InputField icon={User} placeholder={ar ? "اسمك الكامل" : "Full name"}
+              <FieldInput
+                label={ar ? "الاسم الكامل" : "Full name"}
+                icon={User}
+                placeholder={ar ? "اكتب اسمك" : "Enter your name"}
                 value={displayName} onChange={setDisplayName}
-                error={fieldErrors.displayName} autoComplete="name" />
+                error={fieldErrors.displayName} autoComplete="name"
+              />
             )}
-            <InputField icon={Mail} type="email" placeholder={ar ? "البريد الإلكتروني" : "Email address"}
+
+            <FieldInput
+              label={ar ? "البريد الإلكتروني" : "Email"}
+              icon={Mail}
+              type="email"
+              placeholder={ar ? "أدخل بريدك الإلكتروني" : "Enter your email"}
               value={email} onChange={setEmail}
-              error={fieldErrors.email} autoComplete="email" />
-            <InputField icon={Lock} type={showPw ? "text" : "password"}
-              placeholder={ar ? "كلمة المرور" : "Password"}
+              error={fieldErrors.email} autoComplete="email"
+            />
+
+            <FieldInput
+              label={ar ? "كلمة المرور" : "Password"}
+              icon={Lock}
+              type={showPw ? "text" : "password"}
+              placeholder={ar ? "أدخل كلمة مرورك" : "Enter your password"}
               value={password} onChange={setPassword}
               error={fieldErrors.password}
               autoComplete={tab === "signin" ? "current-password" : "new-password"}
-              right={
+              rightSlot={
                 <button type="button" onClick={() => setShowPw(v => !v)}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, display: "flex", padding: 0 }}>
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0, flexShrink: 0 }}>
                   {showPw ? <EyeOff style={{ width: 15, height: 15 }} /> : <Eye style={{ width: 15, height: 15 }} />}
                 </button>
               }
             />
+
             {tab === "signup" && (
-              <InputField icon={Lock} type={showPw ? "text" : "password"}
-                placeholder={ar ? "تأكيد كلمة المرور" : "Confirm password"}
+              <FieldInput
+                label={ar ? "تأكيد كلمة المرور" : "Confirm password"}
+                icon={Lock}
+                type={showPw ? "text" : "password"}
+                placeholder={ar ? "أعد إدخال كلمة المرور" : "Re-enter your password"}
                 value={confirmPw} onChange={setConfirmPw}
-                error={fieldErrors.confirmPw} autoComplete="new-password" />
+                error={fieldErrors.confirmPw} autoComplete="new-password"
+              />
             )}
 
             {/* Remember / Forgot */}
@@ -334,7 +321,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     onClick={() => setRememberMe(v => !v)}
                     style={{
                       width: 16, height: 16, borderRadius: 4,
-                      border: `1.5px solid ${rememberMe ? "rgba(255,255,255,0.7)" : C.border}`,
+                      border: `1.5px solid ${rememberMe ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.18)"}`,
                       background: rememberMe ? "#fff" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
@@ -342,14 +329,14 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   >
                     {rememberMe && <Check style={{ width: 10, height: 10, color: "#0a0a0a" }} />}
                   </div>
-                  <span style={{ fontFamily: SF, fontSize: 12, color: C.muted }}>
+                  <span style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.45)" }}>
                     {ar ? "تذكّرني" : "Remember me"}
                   </span>
                 </label>
                 <button type="button"
-                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.55)", padding: 0, fontWeight: 500 }}
-                  onMouseEnter={e => (e.currentTarget.style.color = C.text)}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.5)", padding: 0, fontWeight: 500, letterSpacing: "-0.01em" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#f5f5f5")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
                   onClick={() => setGlobalError(ar ? "ميزة استعادة كلمة المرور قيد التطوير." : "Password reset coming soon.")}
                 >
                   {ar ? "نسيت كلمة المرور؟" : "Forgot password?"}
@@ -374,18 +361,18 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               type="submit"
               disabled={loading || success}
               style={{
-                width: "100%", padding: "12px",
+                width: "100%", height: 46,
                 borderRadius: 10, border: "none",
                 background: success ? "rgba(52,199,89,0.15)" : "#ffffff",
                 color: success ? "#34c759" : "#0a0a0a",
                 fontFamily: SF,
-                fontSize: 14, fontWeight: 600,
+                fontSize: 14.5, fontWeight: 600,
                 cursor: loading || success ? "not-allowed" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 transition: "opacity 0.15s",
                 opacity: loading ? 0.65 : 1,
                 letterSpacing: "-0.02em",
-                marginTop: 4,
+                marginTop: 6,
               }}
               onMouseEnter={e => { if (!loading && !success) e.currentTarget.style.opacity = "0.88"; }}
               onMouseLeave={e => { e.currentTarget.style.opacity = loading ? "0.65" : "1"; }}
@@ -402,23 +389,42 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             </button>
           </form>
 
+          {/* ── Social buttons (below form) ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
+            <SocialBtn
+              src="https://www.svgrepo.com/show/355037/google.svg"
+              alt="Google" label={ar ? "المتابعة عبر Google" : "Continue with Google"}
+              href="/auth/google" enabled={providers.google}
+            />
+            <SocialBtn
+              src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
+              alt="Apple" label={ar ? "المتابعة عبر Apple" : "Continue with Apple"}
+              href="/auth/apple" enabled={providers.apple}
+            />
+            <SocialBtn
+              src="https://www.svgrepo.com/show/303615/github-icon-1-logo.svg"
+              alt="GitHub" label={ar ? "المتابعة عبر GitHub" : "Continue with GitHub"}
+              href="/auth/github" enabled={false}
+            />
+          </div>
+
           {/* Switch tab */}
-          <p style={{ fontFamily: SF, fontSize: 12, textAlign: "center", color: C.muted, margin: 0 }}>
+          <p style={{ fontFamily: SF, fontSize: 12.5, textAlign: "center", color: "rgba(255,255,255,0.35)", margin: "20px 0 0" }}>
             {tab === "signin"
               ? (ar ? "ليس لديك حساب؟ " : "Don't have an account? ")
               : (ar ? "لديك حساب بالفعل؟ " : "Already have an account? ")}
             <button
               onClick={() => { setTab(tab === "signin" ? "signup" : "signin"); setGlobalError(""); setFieldErrors({}); }}
-              style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.8)", fontWeight: 600, fontSize: 12, padding: 0, letterSpacing: "-0.01em" }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0, letterSpacing: "-0.01em" }}
               onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.75)")}
             >
               {tab === "signin" ? (ar ? "أنشئ حساباً" : "Create one") : (ar ? "سجّل الدخول" : "Sign in")}
             </button>
           </p>
 
           {/* Legal */}
-          <p style={{ fontFamily: SF, fontSize: 10, textAlign: "center", color: "rgba(255,255,255,0.2)", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontFamily: SF, fontSize: 10.5, textAlign: "center", color: "rgba(255,255,255,0.18)", margin: "10px 0 0", lineHeight: 1.6 }}>
             {ar
               ? "بالمتابعة، توافق على شروط الخدمة وسياسة الخصوصية الخاصة بـ Plotzy."
               : "By continuing, you agree to Plotzy's Terms of Service and Privacy Policy."}
