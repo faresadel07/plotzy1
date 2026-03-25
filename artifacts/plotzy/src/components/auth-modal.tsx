@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { SiGoogle, SiApple, SiFacebook } from "react-icons/si";
-import { Linkedin } from "lucide-react";
+import { SiGoogle, SiApple } from "react-icons/si";
 import { Mail, Lock, Eye, EyeOff, User, X, Loader2, AlertCircle, Check, PenLine } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -144,7 +143,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [providers, setProviders] = useState({ google: false, apple: false, linkedin: false, facebook: false, email: true });
+  const [providers, setProviders] = useState({ google: false, apple: false, email: true });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -285,10 +284,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
           {/* Social buttons */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <SocialBtn icon={SiGoogle}   label="Google"   href="/auth/google"   enabled={providers.google} />
-            <SocialBtn icon={SiApple}    label="Apple"    href="/auth/apple"    enabled={providers.apple} />
-            <SocialBtn icon={Linkedin}   label="LinkedIn" href="/auth/linkedin" enabled={providers.linkedin} />
-            <SocialBtn icon={SiFacebook} label="Facebook" href="/auth/facebook" enabled={providers.facebook} />
+            <SocialBtn icon={SiGoogle} label="Google" href="/auth/google" enabled={providers.google} />
+            <SocialBtn icon={SiApple}  label="Apple"  href="/auth/apple"  enabled={providers.apple} />
           </div>
 
           {/* Divider */}
