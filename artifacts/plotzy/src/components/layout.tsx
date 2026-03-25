@@ -141,7 +141,7 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
       }}>
 
         {/* ── Left: Logo ── */}
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7 }}>
           <img
             src={`${import.meta.env.BASE_URL}plotzy-logo.png`}
             alt="Plotzy"
@@ -154,6 +154,13 @@ export function Layout({ children, isLanding, isFullDark }: { children: React.Re
               flexShrink: 0,
             }}
           />
+          <span style={{
+            fontFamily: SF,
+            fontWeight: 700,
+            fontSize: 14,
+            letterSpacing: "-0.04em",
+            color: isFullDark ? "#fff" : "#111",
+          }}>PLOTZY</span>
         </Link>
 
         {/* ── Center: Nav links ── */}
