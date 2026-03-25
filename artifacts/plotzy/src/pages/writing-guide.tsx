@@ -477,25 +477,8 @@ export default function WritingGuide() {
             <span className="text-foreground">to Finished Book</span>
           </h1>
           <p className="text-foreground/55 text-lg max-w-xl mx-auto leading-relaxed mb-10">
-            A professional, end-to-end guide covering everything a new writer needs to know — from choosing a genre to writing, revising, and publishing a complete book.
+            A professional, end-to-end guide covering everything a new writer needs to know, from choosing a genre to writing, revising, and publishing a complete book.
           </p>
-
-          {/* Guide overview grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto text-left">
-            {[
-              { num: "01", label: "8 Genres Explained" },
-              { num: "02", label: "3 Story Structures" },
-              { num: "03", label: "Character Craft" },
-              { num: "04", label: "Dialogue Mastery" },
-              { num: "05", label: "Full Writing Process" },
-              { num: "06", label: "Self-Editing System" },
-            ].map(({ num, label }) => (
-              <div key={num} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-foreground/[0.025]">
-                <span className="text-xs font-bold text-muted-foreground/60 tabular-nums">{num}</span>
-                <span className="text-xs font-semibold text-foreground/80">{label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </motion.div>
 
