@@ -260,7 +260,8 @@ export function AIAssistant({ bookId, currentContent, onApply, onClose }: AIAssi
                     : (ar ? "الصق نصك أو اكتب هنا…" : "Paste or type your text here…")}
                   rows={needsInput ? 5 : 6}
                   dir={ar ? "rtl" : "ltr"}
-                  className="w-full rounded-2xl text-sm leading-relaxed resize-none p-4 border border-border/50 bg-muted/20 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all placeholder:text-muted-foreground/40"
+                  className="w-full rounded-2xl text-sm leading-relaxed resize-none p-4 border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.88)' }}
                 />
               </div>
             </div>
@@ -290,38 +291,50 @@ export function AIAssistant({ bookId, currentContent, onApply, onClose }: AIAssi
             {/* ── Output ── */}
             {output && (
               <div ref={outputRef} className="space-y-2 animate-in fade-in slide-in-from-bottom-3 duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <label className="text-[11px] font-semibold uppercase tracking-widest text-primary">
-                      {ar ? "النتيجة" : "Result"}
-                    </label>
-                    <span className="text-[10px] text-muted-foreground">{outputWc} {ar ? "كلمة" : "words"}</span>
-                    {mode === "polish" && inputWc > 0 && (
-                      <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                        outputWc > inputWc ? "text-green-600 bg-green-50 dark:bg-green-950/30" : "text-blue-600 bg-blue-50 dark:bg-blue-950/30")}>
-                        {outputWc > inputWc ? `+${outputWc - inputWc}` : `${outputWc - inputWc}`} {ar ? "كلمة" : "words"}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={copyOutput}
-                    className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted/50"
-                  >
-                    {copied ? <><Check className="w-3 h-3 text-green-500" />{ar ? "تم النسخ" : "Copied"}</> : <><Copy className="w-3 h-3" />{ar ? "نسخ" : "Copy"}</>}
-                  </button>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  <label className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+                    {ar ? "النتيجة" : "Result"}
+                  </label>
+                  <span className="text-[10px] text-muted-foreground">{outputWc} {ar ? "كلمة" : "words"}</span>
+                  {mode === "polish" && inputWc > 0 && (
+                    <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                      outputWc > inputWc ? "text-green-400/80 bg-green-950/40" : "text-blue-400/80 bg-blue-950/40")}>
+                      {outputWc > inputWc ? `+${outputWc - inputWc}` : `${outputWc - inputWc}`} {ar ? "كلمة" : "words"}
+                    </span>
+                  )}
                 </div>
 
-                <div
-                  className="rounded-2xl p-4 text-sm leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto border border-primary/15 bg-primary/[0.04]"
-                  dir={mode === "translate" ? (targetLang === "ar" ? "rtl" : "ltr") : (ar ? "rtl" : "ltr")}
-                >
-                  {output}
+                {/* Result box with floating copy button */}
+                <div className="relative">
+                  <div
+                    className="rounded-2xl p-4 text-sm leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto border border-white/10"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.88)' }}
+                    dir={mode === "translate" ? (targetLang === "ar" ? "rtl" : "ltr") : (ar ? "rtl" : "ltr")}
+                  >
+                    {output}
+                  </div>
+                  {/* Floating copy pill — top corner */}
+                  <button
+                    onClick={copyOutput}
+                    className={cn(
+                      "absolute top-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all",
+                      ar ? "left-2" : "right-2",
+                      copied
+                        ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                        : "bg-black/40 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/90"
+                    )}
+                  >
+                    {copied
+                      ? <><Check className="w-3 h-3" />{ar ? "تم" : "Copied"}</>
+                      : <><Copy className="w-3 h-3" />{ar ? "نسخ" : "Copy"}</>
+                    }
+                  </button>
                 </div>
 
                 <button
                   onClick={applyOutput}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-primary/25 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border border-white/15 text-white/70 hover:bg-white/10 hover:text-white transition-all"
                 >
                   <Feather className="w-3.5 h-3.5" />
                   {ar ? "تطبيق في المحرر ✓" : "Apply to Editor ✓"}
