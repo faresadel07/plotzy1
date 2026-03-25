@@ -552,6 +552,7 @@ export default function Home() {
               {/* Shelf display */}
               {(!books || books.length === 0) ? (
                 /* ── Empty State: New Project Card ── */
+                <>
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -593,6 +594,24 @@ export default function Home() {
                     </p>
                   </motion.div>
                 </motion.div>
+                {user && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex justify-center mt-4"
+                  >
+                    <Link href="/trash">
+                      <button
+                        className="flex items-center gap-1.5 text-[11px] font-medium text-white/25 hover:text-white/50 transition-colors duration-200"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Trash
+                      </button>
+                    </Link>
+                  </motion.div>
+                )}
+                </>
               ) : (
               <div className="space-y-12">
                 {shelfRows.map((rowBooks, rowIndex) => (
