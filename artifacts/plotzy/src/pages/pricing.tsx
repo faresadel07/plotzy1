@@ -12,22 +12,26 @@ const YEARLY_TOTAL = (YEARLY_PRICE * 12).toFixed(2);
 const SAVE_PCT = Math.round(((MONTHLY_PRICE - YEARLY_PRICE) / MONTHLY_PRICE) * 100);
 
 const FEATURES_FREE = [
-  "1 chapter to try the experience",
+  "1 chapter to start writing",
   "Up to 3,750 words (15 pages)",
-  "AI writing suggestions",
-  "All 45+ language support",
+  "Inline AI ghost-text suggestions",
   "Book cover designer",
+  "45+ languages & RTL support",
 ];
 
 const FEATURES_PAID = [
   "Unlimited books & chapters",
   "Unlimited words & pages",
-  "AI writing assistance & voice input",
-  "All 45+ languages with RTL support",
-  "Book cover designer",
-  "Story beat planner",
-  "World-building lore tracker",
-  "PDF & EPUB export",
+  "Full AI suite — Polish, Expand, Continue & Rewrite",
+  "Voice dictation & transcription",
+  "Version history & auto-snapshots",
+  "AI cover generator — front, back & spine",
+  "Story Bible — characters, world & plot notes",
+  "Writing streaks, calendar & analytics",
+  "PDF & EPUB professional export",
+  "AI Marketplace — editing, proofreading & marketing kits",
+  "Community library publishing & ARC distribution",
+  "45+ languages & full RTL support",
   "Priority support",
 ];
 
