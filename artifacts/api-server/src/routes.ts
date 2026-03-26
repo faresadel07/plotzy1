@@ -16,7 +16,7 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import bcrypt from "bcryptjs";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests, researchItems } from "../../../lib/db/src/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -1749,6 +1749,55 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+
+  // ─── Research Items ────────────────────────────────────────────────────────
+
+  app.get("/api/books/:bookId/research", async (req, res) => {
+    const bookId = parseInt(req.params.bookId);
+    if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
+    try {
+      const items = await db.select().from(researchItems).where(eq(researchItems.bookId, bookId));
+      res.json(items);
+    } catch {
+      res.status(500).json({ message: "Failed to fetch research items" });
+    }
+  });
+
+  app.post("/api/books/:bookId/research", async (req, res) => {
+    const bookId = parseInt(req.params.bookId);
+    if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
+    const { type = "note", title, content = "", previewImageUrl, description, color } = req.body;
+    try {
+      const [item] = await db.insert(researchItems).values({ bookId, type, title, content, previewImageUrl, description, color }).returning();
+      res.status(201).json(item);
+    } catch {
+      res.status(500).json({ message: "Failed to create research item" });
+    }
+  });
+
+  app.put("/api/books/:bookId/research/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    const { type, title, content, previewImageUrl, description, color } = req.body;
+    try {
+      const [item] = await db.update(researchItems).set({ type, title, content, previewImageUrl, description, color }).where(eq(researchItems.id, id)).returning();
+      if (!item) return res.status(404).json({ message: "Not found" });
+      res.json(item);
+    } catch {
+      res.status(500).json({ message: "Failed to update research item" });
+    }
+  });
+
+  app.delete("/api/books/:bookId/research/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    try {
+      await db.delete(researchItems).where(eq(researchItems.id, id));
+      res.status(204).send();
+    } catch {
+      res.status(500).json({ message: "Failed to delete research item" });
+    }
+  });
 
   // Seed professionals if none exist
   const existingPros = await db.select().from(professionals);
