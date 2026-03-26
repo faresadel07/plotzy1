@@ -93,6 +93,8 @@ export default function CoverDesigner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<DragState>(null);
   const resizeRef = useRef<ResizeState>(null);
+  const savedAppliedRef = useRef<number | null>(null);   // book ID for which saved data was applied
+  const defaultAppliedRef = useRef<number | null>(null); // book ID for which defaults were applied
 
   const [elements, setElements] = useState<CoverElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -150,12 +152,21 @@ export default function CoverDesigner() {
   useEffect(() => {
     if (!book) return;
     const saved = (book as any).coverData as { elements?: CoverElement[]; settings?: CoverSettings } | null | undefined;
+
     if (saved?.elements && saved.elements.length > 0) {
+      // Saved data found — apply it once (overrides any previously shown defaults)
+      if (savedAppliedRef.current === book.id) return;
+      savedAppliedRef.current = book.id;
+      defaultAppliedRef.current = book.id; // also mark defaults as done
       setElements(saved.elements);
       setHistory([saved.elements]);
       if (saved.settings) setCoverSettings(saved.settings);
       return;
     }
+
+    // No saved data — show defaults once per book
+    if (defaultAppliedRef.current === book.id) return;
+    defaultAppliedRef.current = book.id;
     const initialEls: CoverElement[] = [
       { id: nanoid(), type: "text", face: "front", x: 20, y: 280, width: 260, height: 80, zIndex: 10, visible: true, locked: false, content: book.title || "Book Title", fontSize: 32, fontFamily: "Playfair Display", fontWeight: "bold", color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 },
       { id: nanoid(), type: "text", face: "front", x: 20, y: 380, width: 260, height: 40, zIndex: 11, visible: true, locked: false, content: book.authorName || "Author Name", fontSize: 16, fontFamily: "Inter", fontWeight: "normal", color: "rgba(255,255,255,0.75)", textAlign: "center", lineHeight: 1.4, letterSpacing: 2 },
@@ -163,7 +174,7 @@ export default function CoverDesigner() {
     ];
     setElements(initialEls);
     setHistory([initialEls]);
-  }, [book?.id]);
+  }, [book]);
 
   /* ─── Mouse handlers for drag/resize ─── */
   const getRelativePos = (e: React.MouseEvent, face: Face): { x: number; y: number } => {
