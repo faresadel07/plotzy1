@@ -375,10 +375,21 @@ export default function CoverDesigner() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Capture front face thumbnail (3rd child of bookRef: back, spine, front)
+      let coverImage: string | undefined;
+      const frontEl = bookRef.current?.children[2] as HTMLElement | undefined;
+      if (frontEl) {
+        try {
+          const thumbCanvas = await html2canvas(frontEl, { scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: null });
+          coverImage = thumbCanvas.toDataURL("image/jpeg", 0.85);
+        } catch { /* thumbnail failure is non-fatal */ }
+      }
+
       await updateBook.mutateAsync({
         id: bookId,
         spineColor: coverSettings.spine.background,
         coverData: { elements, settings: coverSettings },
+        ...(coverImage ? { coverImage } : {}),
       } as any);
       toast({ title: "Design saved!" });
     } catch {
