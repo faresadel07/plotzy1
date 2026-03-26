@@ -13,6 +13,122 @@ type Tab = "signin" | "signup";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
+const labelStyle: React.CSSProperties = {
+  fontFamily: SF,
+  fontSize: 13,
+  fontWeight: 500,
+  color: "rgba(255,255,255,0.7)",
+  letterSpacing: "-0.01em",
+  marginBottom: 6,
+  display: "block",
+};
+
+function getInputStyle(): React.CSSProperties {
+  return {
+    flex: 1,
+    background: "transparent",
+    border: "none",
+    outline: "none",
+    color: "rgba(255,255,255,0.88)",
+    fontSize: 14,
+    fontFamily: SF,
+    letterSpacing: "-0.01em",
+  };
+}
+
+function getWrapStyle(focused: boolean, hasError?: boolean): React.CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    border: `1px solid ${hasError ? "#e05555" : focused ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.1)"}`,
+    borderRadius: 10,
+    padding: "0 14px",
+    height: 46,
+    background: "rgba(255,255,255,0.04)",
+    transition: "border-color 0.18s",
+  };
+}
+
+function FieldInput({
+  label, icon: Icon, type = "text", placeholder, value, onChange, error, autoComplete, rightSlot,
+}: {
+  label: string;
+  icon: React.ElementType;
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+  autoComplete?: string;
+  rightSlot?: React.ReactNode;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <label style={labelStyle}>{label}</label>
+      <div style={getWrapStyle(focused, !!error)}>
+        <Icon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          autoComplete={autoComplete}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={getInputStyle()}
+        />
+        {rightSlot}
+      </div>
+      {error && (
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
+          <AlertCircle style={{ width: 11, height: 11, color: "#e05555" }} />
+          <span style={{ fontFamily: SF, fontSize: 11, color: "#e05555" }}>{error}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SocialBtn({ src, alt, label, enabled, href }: { src: string; alt: string; label: string; enabled: boolean; href: string }) {
+  return (
+    <button
+      onClick={() => { if (enabled) window.location.href = href; }}
+      style={{
+        width: "100%",
+        height: 46,
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 10,
+        background: "rgba(255,255,255,0.04)",
+        color: "rgba(255,255,255,0.75)",
+        fontFamily: SF,
+        fontSize: 13.5, fontWeight: 500,
+        cursor: enabled ? "pointer" : "default",
+        opacity: enabled ? 1 : 0.45,
+        transition: "background 0.15s, border-color 0.15s",
+        position: "relative",
+        letterSpacing: "-0.01em",
+      }}
+      onMouseEnter={e => { if (enabled) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; } }}
+      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+    >
+      <img src={src} alt={alt} style={{ width: 18, height: 18, objectFit: "contain" }} />
+      {label}
+      {!enabled && (
+        <span style={{
+          position: "absolute", top: 3, right: 5,
+          fontSize: 8, fontWeight: 700, fontFamily: SF,
+          color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.06)",
+          borderRadius: 3, padding: "1px 5px", letterSpacing: "0.05em",
+          textTransform: "uppercase",
+        }}>Soon</span>
+      )}
+    </button>
+  );
+}
+
 export function AuthModal({ open, onClose }: AuthModalProps) {
   const { lang } = useLanguage();
   const qc = useQueryClient();
@@ -74,110 +190,6 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   if (!open) return null;
 
-  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
-    flex: 1,
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "rgba(255,255,255,0.88)",
-    fontSize: 14,
-    fontFamily: SF,
-    letterSpacing: "-0.01em",
-  });
-
-  const wrapStyle = (focused: boolean, hasError?: boolean): React.CSSProperties => ({
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    border: `1px solid ${hasError ? "#e05555" : focused ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.1)"}`,
-    borderRadius: 10,
-    padding: "0 14px",
-    height: 46,
-    background: "rgba(255,255,255,0.04)",
-    transition: "border-color 0.18s",
-  });
-
-  const labelStyle: React.CSSProperties = {
-    fontFamily: SF,
-    fontSize: 13,
-    fontWeight: 500,
-    color: "rgba(255,255,255,0.7)",
-    letterSpacing: "-0.01em",
-    marginBottom: 6,
-    display: "block",
-  };
-
-  function FieldInput({
-    label, icon: Icon, type = "text", placeholder, value, onChange, error, autoComplete, rightSlot,
-  }: {
-    label: string; icon: React.ElementType; type?: string; placeholder: string;
-    value: string; onChange: (v: string) => void; error?: string; autoComplete?: string;
-    rightSlot?: React.ReactNode;
-  }) {
-    const [focused, setFocused] = useState(false);
-    return (
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <label style={labelStyle}>{label}</label>
-        <div style={wrapStyle(focused, !!error)}>
-          <Icon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
-          <input
-            type={type} placeholder={placeholder} value={value}
-            autoComplete={autoComplete}
-            onChange={e => onChange(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            style={inputStyle(!!error)}
-          />
-          {rightSlot}
-        </div>
-        {error && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
-            <AlertCircle style={{ width: 11, height: 11, color: "#e05555" }} />
-            <span style={{ fontFamily: SF, fontSize: 11, color: "#e05555" }}>{error}</span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function SocialBtn({ src, alt, label, enabled, href }: { src: string; alt: string; label: string; enabled: boolean; href: string }) {
-    return (
-      <button
-        onClick={() => { if (enabled) window.location.href = href; }}
-        style={{
-          width: "100%",
-          height: 46,
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 10,
-          background: "rgba(255,255,255,0.04)",
-          color: "rgba(255,255,255,0.75)",
-          fontFamily: SF,
-          fontSize: 13.5, fontWeight: 500,
-          cursor: enabled ? "pointer" : "default",
-          opacity: enabled ? 1 : 0.45,
-          transition: "background 0.15s, border-color 0.15s",
-          position: "relative",
-          letterSpacing: "-0.01em",
-        }}
-        onMouseEnter={e => { if (enabled) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; } }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
-      >
-        <img src={src} alt={alt} style={{ width: 18, height: 18, objectFit: "contain" }} />
-        {label}
-        {!enabled && (
-          <span style={{
-            position: "absolute", top: 3, right: 5,
-            fontSize: 8, fontWeight: 700, fontFamily: SF,
-            color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.06)",
-            borderRadius: 3, padding: "1px 5px", letterSpacing: "0.05em",
-            textTransform: "uppercase",
-          }}>Soon</span>
-        )}
-      </button>
-    );
-  }
-
   const modal = (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
@@ -204,9 +216,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           fontFamily: SF,
         }}
       >
-        {/* ── Header ── */}
+        {/* Header */}
         <div style={{ padding: "22px 22px 0", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          {/* Logo + close */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <img
@@ -260,10 +271,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           </div>
         </div>
 
-        {/* ── Body ── */}
+        {/* Body */}
         <div style={{ padding: "24px 22px 26px", display: "flex", flexDirection: "column", gap: 0 }}>
-
-          {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {tab === "signup" && (
               <FieldInput
@@ -387,7 +396,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             </button>
           </form>
 
-          {/* ── Social buttons (below form) ── */}
+          {/* Social buttons */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
             <SocialBtn
               src="https://www.svgrepo.com/show/355037/google.svg"
