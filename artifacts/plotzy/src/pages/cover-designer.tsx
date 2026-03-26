@@ -174,7 +174,8 @@ export default function CoverDesigner() {
     ];
     setElements(initialEls);
     setHistory([initialEls]);
-  }, [book]);
+  // depend on book ID + whether coverData exists (not entire book object)
+  }, [book?.id, !!(book as any)?.coverData]);
 
   /* ─── Mouse handlers for drag/resize ─── */
   const getRelativePos = (e: React.MouseEvent, face: Face): { x: number; y: number } => {
