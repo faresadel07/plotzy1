@@ -95,6 +95,24 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
   );
 }
 
+const SF_FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
+
+function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', margin: '0 0 6px', fontFamily: SF_FONT }}>
+        {title}
+      </p>
+      {links.map(({ label, href }) => (
+        <a key={label} href={href} style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.48)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4 }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
+        >{label}</a>
+      ))}
+    </div>
+  );
+}
+
 export function Layout({ children, isLanding, isFullDark, lightNav }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean }) {
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
@@ -261,77 +279,66 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
         {children}
       </main>
 
-      <footer style={{ background: '#080808', borderTop: '1px solid rgba(255,255,255,0.07)', fontFamily: SF }}>
-        {/* Main footer grid */}
-        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '52px 24px 40px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '40px 32px' }}>
+      <footer style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 100%)', fontFamily: SF, position: 'relative', overflow: 'hidden' }}>
 
-            {/* Brand column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6, filter: 'invert(1)' }} />
-                <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.04em', color: '#fff' }}>PLOTZY</span>
+        {/* Accent top border */}
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.12) 70%, transparent 100%)' }} />
+
+        {/* Subtle radial glow in background */}
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 300, background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.025) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        {/* Main content */}
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '64px 32px 48px', position: 'relative' }}>
+
+          {/* Top section: brand + quote */}
+          <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr 1fr 1fr', gap: '40px 48px', alignItems: 'start' }}>
+
+            {/* Brand */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
+                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 7, filter: 'invert(1)' }} />
+                <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
               </a>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.38)', maxWidth: 240 }}>
+              <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.35)', maxWidth: 260, margin: 0 }}>
                 The modern platform for writers — write, publish, and share your stories with the world.
+              </p>
+              {/* Tagline quote */}
+              <p style={{ fontSize: 11.5, fontStyle: 'italic', color: 'rgba(255,255,255,0.18)', margin: 0, paddingTop: 4, borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: 10 }}>
+                "Every great story begins with a blank page."
               </p>
             </div>
 
-            {/* Product column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Product</p>
-              {[
-                { label: 'Home', href: '/' },
-                { label: 'Writing Guide', href: '/writing-guide' },
-                { label: 'Marketplace', href: '/marketplace' },
-                { label: 'Pricing', href: '/pricing' },
-              ].map(({ label, href }) => (
-                <a key={href} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
-                >{label}</a>
-              ))}
-            </div>
+            {/* Product */}
+            <FooterCol title="Product" links={[
+              { label: 'Home', href: '/' },
+              { label: 'Writing Guide', href: '/writing-guide' },
+              { label: 'Marketplace', href: '/marketplace' },
+              { label: 'Pricing', href: '/pricing' },
+            ]} />
 
-            {/* Community column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Community</p>
-              {[
-                { label: 'Community Library', href: '/library' },
-                { label: 'Support', href: '/support' },
-              ].map(({ label, href }) => (
-                <a key={href} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
-                >{label}</a>
-              ))}
-            </div>
+            {/* Community */}
+            <FooterCol title="Community" links={[
+              { label: 'Community Library', href: '/library' },
+              { label: 'Support', href: '/support' },
+            ]} />
 
-            {/* Legal column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Legal</p>
-              {[
-                { label: 'Privacy Policy', href: '#' },
-                { label: 'Terms of Service', href: '#' },
-              ].map(({ label, href }) => (
-                <a key={label} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
-                >{label}</a>
-              ))}
-            </div>
+            {/* Legal */}
+            <FooterCol title="Legal" links={[
+              { label: 'Privacy Policy', href: '#' },
+              { label: 'Terms of Service', href: '#' },
+            ]} />
 
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ maxWidth: 1152, margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ maxWidth: 1152, margin: '0 auto', padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.22)', margin: 0 }}>
               &copy; {new Date().getFullYear()} Plotzy. All rights reserved.
             </p>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
-              Made with <span style={{ color: 'rgba(255,255,255,0.45)' }}>♥</span> for writers worldwide
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.18)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+              Made with <span style={{ color: '#e05', fontSize: 13 }}>♥</span> for writers worldwide
             </p>
           </div>
         </div>
