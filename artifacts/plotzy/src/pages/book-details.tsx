@@ -417,32 +417,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 </div>
               )}
 
-              {/* Stats */}
-              {(() => {
-                const totalWords = (chapters || []).reduce((acc, ch) => acc + countChapterWords(ch.content), 0);
-                const chapCount = (chapters || []).length;
-                const estPages = Math.ceil(totalWords / 300);
-                return (
-                  <div className="grid grid-cols-3 gap-0" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    {[
-                      { value: chapCount, label: lang === "ar" ? "فصل" : "Chapters" },
-                      { value: totalWords >= 1000 ? `${(totalWords / 1000).toFixed(1)}k` : totalWords, label: lang === "ar" ? "كلمة" : "Words" },
-                      { value: estPages || "—", label: lang === "ar" ? "صفحة" : "Pages" },
-                    ].map(({ value, label }, i) => (
-                      <div key={label} className="flex flex-col items-center justify-center py-3.5" style={{ background: 'rgba(255,255,255,0.03)', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-                        <span className="text-xl font-bold tabular-nums" style={{ color: 'rgba(255,255,255,0.85)' }}>{value}</span>
-                        <span className="text-[10px] font-semibold mt-1 tracking-wide uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-
-              {/* Created date */}
-              <div className="flex items-center gap-1.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.22)' }}>
-                <Calendar className="w-3 h-3" />
-                {book.createdAt ? format(new Date(book.createdAt), 'MMM d, yyyy') : ''}
-              </div>
             </div>
           </div>
 
