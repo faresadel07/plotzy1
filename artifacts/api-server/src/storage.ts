@@ -53,6 +53,7 @@ export interface IStorage {
   updateStoryBeat(id: number, updates: Partial<InsertStoryBeat>): Promise<StoryBeat>;
   deleteStoryBeat(id: number): Promise<void>;
   reorderStoryBeats(updates: { id: number; columnId: string; order: number }[]): Promise<void>;
+  reorderChapters(updates: { id: number; order: number }[]): Promise<void>;
 
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, updates: Partial<InsertTransaction>): Promise<Transaction>;
@@ -175,6 +176,12 @@ export class DatabaseStorage implements IStorage {
   async reorderStoryBeats(updates: { id: number; columnId: string; order: number }[]): Promise<void> {
     for (const update of updates) {
       await db.update(storyBeats).set({ columnId: update.columnId, order: update.order }).where(eq(storyBeats.id, update.id));
+    }
+  }
+
+  async reorderChapters(updates: { id: number; order: number }[]): Promise<void> {
+    for (const update of updates) {
+      await db.update(chapters).set({ order: update.order }).where(eq(chapters.id, update.id));
     }
   }
 

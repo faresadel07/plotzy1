@@ -710,6 +710,17 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  app.patch('/api/books/:bookId/chapters/reorder', async (req, res) => {
+    try {
+      const updates = z.array(z.object({ id: z.number(), order: z.number() })).parse(req.body);
+      await storage.reorderChapters(updates);
+      res.status(200).json({ ok: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
   const audioBodyParser = express.json({ limit: '50mb' });
 
   app.post(api.chapters.voice.path, audioBodyParser, async (req, res) => {
