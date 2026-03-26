@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
@@ -401,6 +401,15 @@ export default function ChapterEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages[activePageIndex], activePageIndex]);
 
+  // ── Auto-resize all page textareas to show their full content ────────────
+  // Fixes the "hidden text / empty space" bug caused by overflow:hidden + fixed height.
+  useLayoutEffect(() => {
+    document.querySelectorAll<HTMLTextAreaElement>('[data-page-textarea]').forEach(ta => {
+      ta.style.height = '1px';
+      ta.style.height = `${Math.max(PAGE_CONTENT_HEIGHT, ta.scrollHeight)}px`;
+    });
+  }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing]);
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
@@ -433,6 +442,13 @@ export default function ChapterEditor() {
       setIsDirty(true);
       return;
     }
+
+    // Sync measureEl font to the actual block font for accurate measurement
+    const blockFontIdForMeasure = typeof pages[index] === 'string'
+      ? (prefs.fontFamily || 'eb-garamond')
+      : ((pages[index] as { type: string; fontFamily?: string }).fontFamily ?? (prefs.fontFamily || 'eb-garamond'));
+    const blockFontFamilyForMeasure = (FONT_STYLE_MAP[blockFontIdForMeasure] || {}).fontFamily;
+    if (blockFontFamilyForMeasure) measureEl.style.fontFamily = blockFontFamilyForMeasure;
 
     // Measure the full text height
     measureEl.textContent = value;
@@ -1089,7 +1105,13 @@ export default function ChapterEditor() {
                         return (
                       <textarea
                         value={typeof pageContent === 'string' ? pageContent : pageContent.content}
-                        onChange={(e) => handlePageChange(index, e.target.value)}
+                        onChange={(e) => {
+                          // Immediately resize to show all content (prevents hidden text)
+                          const ta = e.currentTarget;
+                          ta.style.height = '1px';
+                          ta.style.height = `${Math.max(PAGE_CONTENT_HEIGHT, ta.scrollHeight)}px`;
+                          handlePageChange(index, e.target.value);
+                        }}
                         onFocus={() => setActivePageIndex(index)}
                         placeholder={index === 0
                           ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
@@ -1100,7 +1122,7 @@ export default function ChapterEditor() {
                           color: isFocusMode ? '#e4e4e7' : effectivePrefs.textColor || undefined,
                           direction: textDir,
                           minHeight: `${PAGE_CONTENT_HEIGHT}px`,
-                          height: 'auto',
+                          height: `${PAGE_CONTENT_HEIGHT}px`,
                           overflow: "hidden",
                           lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
                           letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
