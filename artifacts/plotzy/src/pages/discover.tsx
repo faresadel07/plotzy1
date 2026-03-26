@@ -275,40 +275,49 @@ export default function DiscoverPage() {
   const hasActiveFilters = topic || language !== "en" || sort !== "popular";
 
   return (
-    <Layout>
+    <Layout darkNav isLanding>
       <div className="min-h-screen" style={{ background: "#080808" }}>
 
         {/* ══ HERO ══════════════════════════════════════════════════════════ */}
-        <div className="relative pt-14 pb-10 px-6 text-center overflow-hidden">
+        <div className="relative pt-16 pb-12 px-6 text-center overflow-hidden">
+          {/* Glow background */}
           <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(212,172,100,0.06) 0%, transparent 70%)" }} />
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <BookMarked className="w-4 h-4" style={{ color: "rgba(212,172,100,0.6)" }} />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.3)" }}>
+            style={{ background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,172,100,0.10) 0%, transparent 65%)" }} />
+
+          {/* Label pill */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+            style={{ background: "rgba(212,172,100,0.08)", border: "1px solid rgba(212,172,100,0.18)" }}>
+            <BookMarked className="w-3.5 h-3.5" style={{ color: "rgba(212,172,100,0.75)" }} />
+            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(212,172,100,0.75)" }}>
               {ar ? "مكتبة الأدب العالمي" : "World Literature Library"}
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight" style={{ color: "rgba(255,255,255,0.92)" }}>
+
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: "rgba(255,255,255,0.94)" }}>
             {ar ? "اكتشف الكلاسيكيات" : "Discover Classics"}
           </h1>
-          <p className="text-sm max-w-md mx-auto mb-8" style={{ color: "rgba(255,255,255,0.38)" }}>
+          <p className="text-sm mx-auto mb-10 whitespace-nowrap" style={{ color: "rgba(255,255,255,0.35)" }}>
             {ar ? "أكثر من 70,000 كتاب من المجال العام — اقرأها مجاناً داخل Plotzy"
               : "Over 70,000 public-domain books — read them free, right inside Plotzy"}
           </p>
 
           {/* Search */}
-          <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: "rgba(255,255,255,0.3)" }} />
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: "rgba(255,255,255,0.28)" }} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={ar ? "ابحث عن كتاب أو مؤلف..." : "Search title, author, or subject…"}
-              className="w-full pl-11 pr-10 h-12 rounded-2xl text-sm outline-none"
+              className="w-full pl-11 pr-10 h-13 rounded-2xl text-sm outline-none"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: "rgba(255,255,255,0.88)",
+                height: 52,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "rgba(255,255,255,0.90)",
+                boxShadow: "0 0 0 0 transparent",
               }}
+              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(212,172,100,0.35)")}
+              onBlur={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)")}
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-4 top-1/2 -translate-y-1/2"

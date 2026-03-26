@@ -114,7 +114,7 @@ function FooterCol({ title, links }: { title: string; links: { label: string; hr
   );
 }
 
-export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean; noScroll?: boolean }) {
+export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, darkNav }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean; noScroll?: boolean; darkNav?: boolean }) {
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
   const { user, isLoading, logout } = useAuth();
@@ -136,18 +136,23 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
   }, []);
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className={`${noScroll ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`${noScroll ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}
+      style={darkNav ? { background: "#080808" } : undefined}>
 
-      {/* ── Apple-style white top navbar ── */}
+      {/* ── Top navbar ── */}
       <header style={{
         position: "fixed",
         top: 0, left: 0, right: 0,
         zIndex: 100,
         height: 44,
-        background: scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)",
+        background: darkNav
+          ? (scrolled ? "rgba(8,8,8,0.96)" : "rgba(8,8,8,0.88)")
+          : (scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)"),
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderBottom: `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
+        borderBottom: darkNav
+          ? `1px solid ${scrolled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)"}`
+          : `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
         transition: "background 0.3s ease, border-color 0.3s ease",
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
@@ -174,7 +179,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
             fontWeight: 700,
             fontSize: 14,
             letterSpacing: "-0.04em",
-            color: "#111",
+            color: darkNav ? "#fff" : "#111",
           }}>PLOTZY</span>
         </Link>
 
@@ -182,9 +187,9 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
         <nav style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {NAV_ITEMS.map(({ href, key }) =>
             key === "myLibrary" ? (
-              <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} dark={false} />
+              <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} dark={darkNav} />
             ) : (
-              <NavLink key={href} href={href} label={t(key)} active={location === href} dark={false} />
+              <NavLink key={href} href={href} label={t(key)} active={location === href} dark={darkNav} />
             )
           )}
         </nav>
@@ -196,7 +201,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
           <LanguagePicker />
 
           {/* Divider */}
-          <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
+          <div style={{ width: 1, height: 16, background: darkNav ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", margin: "0 2px" }} />
 
           {/* User */}
           {!isLoading && (
@@ -207,20 +212,20 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px 3px 4px",
                     borderRadius: 20,
-                    border: "1px solid rgba(0,0,0,0.1)",
+                    border: darkNav ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.1)",
                     background: "transparent", cursor: "pointer",
                     transition: "background 0.15s",
                   }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = darkNav ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <Avatar className="w-[22px] h-[22px]">
                       <AvatarImage src={user.avatarUrl || undefined} />
-                      <AvatarFallback style={{ background: "#111", color: "#fff", fontSize: 9, fontWeight: 700 }}>
+                      <AvatarFallback style={{ background: darkNav ? "#333" : "#111", color: "#fff", fontSize: 9, fontWeight: 700 }}>
                         {getInitials(user.displayName, user.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: darkNav ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {user.displayName || user.email?.split("@")[0] || "Me"}
                     </span>
                   </button>
@@ -254,7 +259,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
                 style={{
                   padding: "5px 14px",
                   borderRadius: 20,
-                  background: "#111", border: "none",
+                  background: darkNav ? "rgba(255,255,255,0.1)" : "#111",
+                  border: darkNav ? "1px solid rgba(255,255,255,0.15)" : "none",
                   cursor: "pointer",
                   fontFamily: SF,
                   fontSize: 12.5, fontWeight: 600, color: "#fff",
