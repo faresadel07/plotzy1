@@ -271,7 +271,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
         </div>
       </header>
 
-      <main className={isLanding || isFullDark ? "flex-1 w-full pt-11" : "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-10"}>
+      <main className={isLanding ? "flex-1 w-full pt-11" : isFullDark ? "flex-1 w-full pt-[60px]" : "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-10"}>
         {children}
       </main>
 
