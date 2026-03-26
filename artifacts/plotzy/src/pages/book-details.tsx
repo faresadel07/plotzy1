@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import AnalyticsDashboard from "@/components/analytics-dashboard";
-import OutlineBoard from "@/components/outline-board";
 import { ResearchBoard } from "@/components/research-board";
 import { AIAnalysisTools } from "@/components/ai-analysis-tools";
 import { BookPublishingTools } from "@/components/book-publishing-tools";
@@ -21,7 +20,7 @@ import LegacyImporter from "@/components/LegacyImporter";
 import {
   FileText, Image as ImageIcon, Loader2, Plus, Wand2, Calendar, Sparkles,
   BookOpen, Palette, PenLine, Zap, Download, FileDown, Upload, Globe,
-  BarChart3, LayoutTemplate, ScrollText, Check, Edit3, Target, ChevronDown, Quote, User, Eye, EyeOff,
+  BarChart3, ScrollText, Check, Edit3, Target, ChevronDown, Quote, User, Eye, EyeOff,
   GripVertical, BookMarked
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -129,7 +128,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const [chapterTitle, setChapterTitle] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [activeTab, setActiveTab] = useState<"chapters" | "outline" | "analytics" | "tools" | "pages" | "research">("chapters");
+  const [activeTab, setActiveTab] = useState<"chapters" | "analytics" | "tools" | "pages" | "research">("chapters");
   // Pages (front/back matter)
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [sectionDraft, setSectionDraft] = useState("");
@@ -499,7 +498,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 [
                   { key: "chapters",  icon: BookOpen,       label: lang === "ar" ? "الفصول"        : "Chapters"       },
                   { key: "pages",     icon: ScrollText,      label: lang === "ar" ? "صفحات الكتاب"  : "Book Pages"     },
-                  { key: "outline",   icon: LayoutTemplate, label: lang === "ar" ? "لوحة الأحداث"  : "Story Board"    },
                   { key: "research",  icon: BookMarked,      label: lang === "ar" ? "لوحة البحث"   : "Research"       },
                   { key: "analytics", icon: BarChart3,       label: lang === "ar" ? "الإحصائيات"   : "Analytics"      },
                   { key: "tools",     icon: Sparkles,        label: lang === "ar" ? "أدوات"         : "Tools"          },
@@ -900,10 +898,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 </div>
               );
             })()}
-
-            {activeTab === "outline" && (
-              <OutlineBoard bookId={bookId} />
-            )}
 
             {activeTab === "research" && (
               <div className="p-4">
