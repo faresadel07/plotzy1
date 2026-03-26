@@ -361,73 +361,77 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       >
 
         {/* ── Left Column ── */}
-        <div className="lg:col-span-4 pb-8 space-y-3">
+        <div className="lg:col-span-4 pb-8 flex flex-col gap-4">
 
           {/* Cover Card */}
-          <div className="rounded-2xl overflow-hidden border border-border/50 shadow-sm bg-card">
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
 
             {/* Cover with hover */}
             <div className="relative group cursor-pointer">
               <BookCoverWrap book={book} />
-              <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Link href={`/books/${bookId}/cover-designer`}>
-                  <Button size="sm" className="bg-white text-black hover:bg-white/95 font-semibold rounded-lg shadow-lg border-0">
-                    <Palette className="w-4 h-4 mr-1.5" />
+                  <Button size="sm" className="bg-white/95 text-black hover:bg-white font-semibold rounded-xl shadow-xl border-0 backdrop-blur-sm">
+                    <Palette className="w-3.5 h-3.5 mr-1.5" />
                     {lang === "ar" ? "مصمم الغلاف" : "Cover Designer"}
                   </Button>
                 </Link>
               </div>
             </div>
 
+            {/* Divider */}
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+
             {/* Book Info */}
-            <div className="p-5">
-              {/* Title */}
-              <h1 className="text-xl font-bold text-foreground leading-snug mb-1" dir={bookRTL ? "rtl" : "ltr"}>
-                {book.title}
-              </h1>
-              {/* Author */}
-              {book.authorName && (
-                <p className="text-sm text-muted-foreground font-medium mb-3">{book.authorName}</p>
-              )}
+            <div className="p-5 space-y-4">
+              {/* Title + Author */}
+              <div>
+                <h1 className="text-lg font-bold leading-snug" style={{ color: 'rgba(255,255,255,0.92)' }} dir={bookRTL ? "rtl" : "ltr"}>
+                  {book.title}
+                </h1>
+                {book.authorName && (
+                  <p className="text-sm mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>{book.authorName}</p>
+                )}
+              </div>
 
               {/* Summary */}
               {book.summary && (
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-4" dir={bookRTL ? "rtl" : "ltr"}>
+                <p className="text-sm leading-relaxed line-clamp-3" style={{ color: 'rgba(255,255,255,0.45)' }} dir={bookRTL ? "rtl" : "ltr"}>
                   {book.summary}
                 </p>
               )}
 
               {/* Genre + Language chips */}
               {(book.genre || book.language) && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
+                <div className="flex flex-wrap gap-1.5">
                   {book.genre && (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-foreground/[0.06] text-foreground/70">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', letterSpacing: '0.02em' }}>
                       {book.genre}
                     </span>
                   )}
                   {book.language && (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-foreground/[0.06] text-foreground/70 uppercase">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', letterSpacing: '0.05em' }}>
                       {book.language}
                     </span>
                   )}
                 </div>
               )}
 
-              {/* Stats row */}
+              {/* Stats */}
               {(() => {
                 const totalWords = (chapters || []).reduce((acc, ch) => acc + countChapterWords(ch.content), 0);
                 const chapCount = (chapters || []).length;
                 const estPages = Math.ceil(totalWords / 300);
                 return (
-                  <div className="grid grid-cols-3 gap-px bg-border/40 rounded-xl overflow-hidden mb-4">
+                  <div className="grid grid-cols-3 gap-0" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)' }}>
                     {[
-                      { value: chapCount, label: lang === "ar" ? "فصل" : chapCount === 1 ? "Chapter" : "Chapters" },
+                      { value: chapCount, label: lang === "ar" ? "فصل" : "Chapters" },
                       { value: totalWords >= 1000 ? `${(totalWords / 1000).toFixed(1)}k` : totalWords, label: lang === "ar" ? "كلمة" : "Words" },
                       { value: estPages || "—", label: lang === "ar" ? "صفحة" : "Pages" },
-                    ].map(({ value, label }) => (
-                      <div key={label} className="bg-card flex flex-col items-center justify-center py-3 px-2">
-                        <span className="text-base font-bold text-foreground leading-none">{value}</span>
-                        <span className="text-[10px] text-muted-foreground mt-1 font-medium">{label}</span>
+                    ].map(({ value, label }, i) => (
+                      <div key={label} className="flex flex-col items-center justify-center py-3.5" style={{ background: 'rgba(255,255,255,0.03)', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+                        <span className="text-xl font-bold tabular-nums" style={{ color: 'rgba(255,255,255,0.85)' }}>{value}</span>
+                        <span className="text-[10px] font-semibold mt-1 tracking-wide uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>{label}</span>
                       </div>
                     ))}
                   </div>
@@ -435,7 +439,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               })()}
 
               {/* Created date */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
+              <div className="flex items-center gap-1.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.22)' }}>
                 <Calendar className="w-3 h-3" />
                 {book.createdAt ? format(new Date(book.createdAt), 'MMM d, yyyy') : ''}
               </div>
@@ -444,59 +448,65 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2">
-            {/* Download */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  className="w-full rounded-xl font-semibold border-0 text-foreground bg-foreground/[0.06] hover:bg-foreground/[0.1] transition-all"
+                  className="w-full rounded-xl h-10 font-semibold border-0 transition-all text-sm"
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)' }}
                   disabled={isDownloading}
                   data-testid="button-download-book"
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
                 >
-                  {isDownloading
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <><Download className="w-4 h-4 mr-2" />{lang === "ar" ? "تحميل" : "Download"}</>}
+                  {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Download className="w-4 h-4 mr-2" />{lang === "ar" ? "تحميل" : "Download"}</>}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-52 rounded-xl">
                 <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf")} data-testid="download-pdf">
-                  <FileDown className="w-4 h-4 mr-2 text-red-500" />PDF
+                  <FileDown className="w-4 h-4 mr-2 text-red-400" />PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("epub")} data-testid="download-epub">
-                  <BookOpen className="w-4 h-4 mr-2 text-foreground/60" />EPUB
+                  <BookOpen className="w-4 h-4 mr-2" />EPUB
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("txt")} data-testid="download-txt">
-                  <FileText className="w-4 h-4 mr-2 text-muted-foreground" />TXT
+                  <FileText className="w-4 h-4 mr-2" />TXT
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Cover Designer */}
             <Link href={`/books/${bookId}/cover-designer`} className="flex-1">
-              <Button className="w-full rounded-xl font-semibold border border-border bg-card hover:bg-foreground/[0.04] text-foreground transition-all">
+              <Button
+                className="w-full rounded-xl h-10 font-semibold transition-all text-sm"
+                style={{ background: 'transparent', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
                 <Palette className="w-4 h-4 mr-2" />
                 {lang === "ar" ? "الغلاف" : "Cover"}
               </Button>
             </Link>
           </div>
 
-          {/* Find Publisher — compact */}
-          <Link href={`/books/${bookId}/find-publishers`} className="block">
+          {/* Find Publisher */}
+          <Link href={`/books/${bookId}/find-publishers`} className="block" data-testid="button-find-publishers">
             <div
-              className="group rounded-xl border border-border/50 bg-card hover:border-border hover:shadow-sm transition-all p-4 flex items-center gap-3 cursor-pointer"
-              data-testid="button-find-publishers"
+              className="group rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
+              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
             >
-              <div className="w-9 h-9 rounded-lg bg-foreground/[0.05] flex items-center justify-center flex-shrink-0 group-hover:bg-foreground/[0.08] transition-colors">
-                <Globe className="w-4 h-4 text-foreground/60" />
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <Globe className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>
                   {lang === "ar" ? "ابحث عن ناشر" : "Find a Publisher"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                  {lang === "ar" ? "توليد رسالة تقديم احترافية بالذكاء الاصطناعي" : "Generate a professional submission proposal"}
+                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  {lang === "ar" ? "توليد رسالة تقديم احترافية بالذكاء الاصطناعي" : "AI-generated submission proposal"}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground/40 flex-shrink-0 -rotate-90 group-hover:text-muted-foreground transition-colors" />
+              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }} />
             </div>
           </Link>
 
@@ -505,11 +515,11 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         {/* Right Column */}
         <div className="lg:col-span-8 pb-8 space-y-5">
 
-          {/* ── Top bar: horizontal tabs + action buttons ── */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* ── Top bar: underline tabs + action buttons ── */}
+          <div className="flex items-center justify-between gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>
 
-            {/* Horizontal tab pills */}
-            <div className="flex items-center gap-0.5 bg-foreground/[0.04] rounded-xl p-1 flex-wrap">
+            {/* Underline tabs */}
+            <div className="flex items-center gap-0 -mb-px">
               {(
                 [
                   { key: "chapters",  icon: BookOpen,   label: lang === "ar" ? "الفصول"       : "Chapters"   },
@@ -524,61 +534,66 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                   <button
                     key={key}
                     onClick={() => setActiveTab(key)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-                    style={{
-                      background: active ? "hsl(var(--background))" : "transparent",
-                      color: active ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                      fontWeight: active ? 600 : 500,
-                      boxShadow: active ? "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px hsl(var(--border)/0.5)" : "none",
-                    }}
+                    className="relative flex items-center gap-1.5 px-3.5 py-3 text-sm font-medium transition-all"
+                    style={{ color: active ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.32)', fontWeight: active ? 600 : 400 }}
+                    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.60)'; }}
+                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.32)'; }}
                   >
-                    <Icon size={14} />
+                    <Icon size={13} />
                     <span className="hidden sm:inline">{label}</span>
+                    {active && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full" style={{ background: 'rgba(255,255,255,0.85)' }} />
+                    )}
                   </button>
                 );
               })}
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0 pb-2">
               <Link href="/marketplace">
-                <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs font-semibold gap-1.5 border-border/70 hover:border-border">
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.80)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.2)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.50)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{lang === "ar" ? "مجموعة الذكاء" : "AI Suite"}</span>
-                </Button>
+                </button>
               </Link>
 
               {book && (
                 (book as any).isPublished ? (
                   <div className="flex items-center gap-1.5">
                     <Link href={`/read/${bookId}`}>
-                      <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs font-semibold gap-1.5 border-border/70">
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all" style={{ color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent' }}>
                         <Eye className="w-3.5 h-3.5" />
                         {lang === "ar" ? "عرض" : "View"}
-                      </Button>
+                      </button>
                     </Link>
-                    <Button
-                      size="sm" variant="outline"
-                      className="rounded-lg h-8 text-xs font-semibold gap-1.5 border-border/70 text-muted-foreground"
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                      style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent' }}
                       disabled={publishBook.isPending}
-                      onClick={() => publishBook.mutate({ id: bookId, publish: false }, {
-                        onSuccess: () => toast({ title: lang === "ar" ? "تم إلغاء النشر" : "Unpublished" }),
-                      })}
+                      onClick={() => publishBook.mutate({ id: bookId, publish: false }, { onSuccess: () => toast({ title: lang === "ar" ? "تم إلغاء النشر" : "Unpublished" }) })}
                     >
                       <EyeOff className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">{publishBook.isPending ? "..." : (lang === "ar" ? "إلغاء النشر" : "Unpublish")}</span>
-                    </Button>
+                    </button>
                   </div>
                 ) : (
-                  <Button
-                    size="sm"
-                    className="rounded-lg h-8 text-xs font-semibold gap-1.5 bg-foreground text-background hover:bg-foreground/90 border-0"
+                  <button
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+                    style={{ background: 'rgba(255,255,255,0.92)', color: '#111', border: 'none' }}
                     data-testid="button-finish-publish"
                     onClick={() => { if (!user) { setIsAuthModalOpen(true); } else { setIsPublishConfirmOpen(true); } }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fff')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.92)')}
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     {lang === "ar" ? "نشر الكتاب" : "Publish"}
-                  </Button>
+                  </button>
                 )
               )}
             </div>
@@ -647,14 +662,20 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
             {activeTab === "chapters" && (
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("chapters")}</h2>
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.22)' }}>{t("chapters")}</p>
                   <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm" className="rounded-lg font-semibold text-sm bg-foreground text-background hover:bg-foreground/90 border-0" data-testid="button-new-chapter">
-                        <Plus className="w-4 h-4 mr-1.5" />
+                      <button
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+                        style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.70)', border: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                        data-testid="button-new-chapter"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
                         {t("newChapter")}
-                      </Button>
+                      </button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md rounded-2xl" dir={isRTL ? "rtl" : "ltr"}>
                       <form onSubmit={handleCreateChapter}>
@@ -683,40 +704,52 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 </div>
 
                 {!sortedChapters.length ? (
-                  <div className="text-center py-14 rounded-xl border border-dashed border-foreground/10">
-                    <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground font-medium">{t("noChaptersYet")}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{t("noChaptersDesc")}</p>
+                  <div className="text-center py-16 rounded-2xl" style={{ border: '1px dashed rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.01)' }}>
+                    <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                      <FileText className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                    </div>
+                    <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>{t("noChaptersYet")}</p>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.22)' }}>{t("noChaptersDesc")}</p>
                   </div>
                 ) : (
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId="chapters-list">
                       {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-1.5">
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="" style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)' }}>
                           {sortedChapters.map((chapter, index) => (
                             <Draggable key={chapter.id} draggableId={String(chapter.id)} index={index}>
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${snapshot.isDragging ? "bg-foreground/[0.08] shadow-md ring-1 ring-foreground/10" : "hover:bg-foreground/[0.04]"}`}
+                                  className="group relative flex items-center gap-0 transition-colors"
+                                  style={{
+                                    background: snapshot.isDragging ? 'rgba(255,255,255,0.055)' : 'transparent',
+                                    borderBottom: index < sortedChapters.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                                  }}
+                                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
                                   data-testid={`card-chapter-${chapter.id}`}
                                 >
+                                  {/* Large faded chapter number */}
+                                  <div
+                                    className="flex-shrink-0 flex items-center justify-center select-none"
+                                    style={{ width: 56, color: 'rgba(255,255,255,0.07)', fontSize: 32, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, padding: '18px 0 18px 16px' }}
+                                  >
+                                    {String(index + 1).padStart(2, '0')}
+                                  </div>
+
                                   {/* Drag handle */}
                                   <div
                                     {...provided.dragHandleProps}
-                                    className="text-muted-foreground/20 hover:text-muted-foreground/50 cursor-grab active:cursor-grabbing shrink-0 transition-colors"
+                                    className="px-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                                    style={{ color: 'rgba(255,255,255,0.25)' }}
                                   >
-                                    <GripVertical className="w-4 h-4" />
+                                    <GripVertical className="w-3.5 h-3.5" />
                                   </div>
 
-                                  {/* Number badge */}
-                                  <div className="w-6 h-6 rounded-md bg-foreground/[0.06] text-muted-foreground flex items-center justify-center font-bold text-[11px] shrink-0 tabular-nums">
-                                    {index + 1}
-                                  </div>
-
-                                  {/* Title & meta — clicking navigates to editor */}
-                                  <div className="flex-1 min-w-0">
+                                  {/* Title & meta */}
+                                  <div className="flex-1 min-w-0 py-4 pr-3">
                                     {editingChapterId === chapter.id ? (
                                       <input
                                         autoFocus
@@ -728,15 +761,16 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                           if (e.key === "Escape") { setEditingChapterId(null); }
                                         }}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="font-semibold text-sm bg-background border border-black/30 dark:border-white/20 rounded-md px-2 py-0.5 w-full outline-none focus:ring-1 focus:ring-foreground/30"
+                                        className="font-semibold text-sm rounded-md px-2 py-0.5 w-full outline-none"
+                                        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)' }}
                                         dir={isRTL ? "rtl" : "ltr"}
                                       />
                                     ) : (
-                                      <Link href={`/books/${bookId}/chapters/${chapter.id}`} className="block group/link">
-                                        <h4 className="font-semibold text-sm text-foreground line-clamp-1 group-hover/link:text-foreground/80 transition-colors">
+                                      <Link href={`/books/${bookId}/chapters/${chapter.id}`} className="block">
+                                        <h4 className="font-semibold text-[15px] leading-tight line-clamp-1 transition-colors" style={{ color: 'rgba(255,255,255,0.82)' }}>
                                           {chapter.title}
                                         </h4>
-                                        <p className="text-xs text-muted-foreground/60 flex items-center gap-1.5 mt-0.5">
+                                        <p className="text-xs flex items-center gap-1.5 mt-1" style={{ color: 'rgba(255,255,255,0.28)' }}>
                                           {chapter.createdAt ? format(new Date(chapter.createdAt), 'MMM d, h:mm a') : ''}
                                           {countChapterWords(chapter.content) > 0 && (
                                             <><span>·</span><span>{countChapterWords(chapter.content).toLocaleString()} {lang === "ar" ? "كلمة" : "words"}</span></>
@@ -747,19 +781,26 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   </div>
 
                                   {/* Actions */}
-                                  <div className="flex items-center gap-1 shrink-0">
+                                  <div className="flex items-center gap-0.5 pr-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {editingChapterId !== chapter.id && (
                                       <button
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-muted-foreground hover:bg-foreground/[0.06] transition-all opacity-0 group-hover:opacity-100"
+                                        className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                                        style={{ color: 'rgba(255,255,255,0.25)', background: 'transparent' }}
                                         onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
-                                        title={lang === "ar" ? "إعادة التسمية" : "Rename"}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.25)'; }}
                                       >
                                         <Edit3 className="w-3.5 h-3.5" />
                                       </button>
                                     )}
                                     {editingChapterId !== chapter.id && (
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`}>
-                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.06] transition-all">
+                                        <button
+                                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                                          style={{ color: 'rgba(255,255,255,0.25)', background: 'transparent' }}
+                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)'; }}
+                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.25)'; }}
+                                        >
                                           <PenLine className="w-3.5 h-3.5" />
                                         </button>
                                       </Link>
