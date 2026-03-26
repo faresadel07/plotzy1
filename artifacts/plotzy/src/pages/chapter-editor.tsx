@@ -464,32 +464,42 @@ export default function ChapterEditor() {
       return;
     }
 
-    // Overflow — split into page-sized chunks and distribute
-    const chunks = splitIntoPages(value, measureEl, PAGE_CONTENT_HEIGHT);
+    // Overflow — collect text from this page + all subsequent pages, re-split cleanly
     const blockFont = typeof pages[index] === 'string'
       ? (prefs.fontFamily || 'eb-garamond')
       : ((pages[index] as { type: string; fontFamily?: string }).fontFamily ?? (prefs.fontFamily || 'eb-garamond'));
 
     setPages(prev => {
       const next = [...prev];
-      const cur = next[index];
 
-      // Replace current page with first chunk (preserve/stamp font)
-      if (typeof cur === 'string') {
-        next[index] = { type: 'text', content: chunks[0], fontFamily: blockFont || undefined };
-      } else if (cur.type === 'text') {
-        next[index] = { ...cur, content: chunks[0] };
-      } else {
-        next[index] = chunks[0];
+      // Gather all text from the current page onwards (avoids duplication)
+      const allParts: string[] = [value];
+      for (let j = index + 1; j < next.length; j++) {
+        const t = getPageText(next[j]);
+        if (t.trim()) allParts.push(t);
       }
+      const allText = allParts.join('\n');
 
-      // Distribute remaining chunks into subsequent pages (inherit same font)
-      for (let i = 1; i < chunks.length; i++) {
+      // Re-split the combined text
+      const chunks = splitIntoPages(allText, measureEl, PAGE_CONTENT_HEIGHT);
+
+      // Distribute chunks starting from the current page
+      for (let i = 0; i < chunks.length; i++) {
         const targetIndex = index + i;
         if (targetIndex < next.length) {
-          const existing = getPageText(next[targetIndex]);
-          const chunkBlock: PageBlock = { type: 'text', content: existing.trim() ? chunks[i] + "\n" + existing : chunks[i], fontFamily: blockFont || undefined };
-          next[targetIndex] = chunkBlock;
+          const cur = next[targetIndex];
+          if (i === 0) {
+            // First chunk: preserve font stamp on current page
+            if (typeof cur === 'string') {
+              next[targetIndex] = { type: 'text', content: chunks[0], fontFamily: blockFont || undefined };
+            } else if (cur.type === 'text') {
+              next[targetIndex] = { ...cur, content: chunks[0] };
+            } else {
+              next[targetIndex] = chunks[0] as PageBlock;
+            }
+          } else {
+            next[targetIndex] = { type: 'text', content: chunks[i], fontFamily: blockFont || undefined } as PageBlock;
+          }
         } else {
           next.push({ type: 'text', content: chunks[i], fontFamily: blockFont || undefined } as PageBlock);
         }
