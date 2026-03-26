@@ -407,6 +407,40 @@ export default function Home() {
   const shelfRows = books ? Array.from({ length: Math.ceil(books.length / BOOKS_PER_SHELF) }, (_, i) => books.slice(i * BOOKS_PER_SHELF, (i + 1) * BOOKS_PER_SHELF)) : [];
   const getBookLangInfo = (code: string) => BOOK_LANGUAGES.find(l => l.code === code);
 
+  // ── Shelf auto-scroll on mouse edge proximity ──
+  const shelfRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+
+  const handleShelfMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = shelfRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const w = rect.width;
+    const ZONE = 120; // px from edge that triggers scroll
+    const MAX_SPEED = 14;
+
+    let speed = 0;
+    if (x < ZONE) speed = -MAX_SPEED * (1 - x / ZONE);
+    else if (x > w - ZONE) speed = MAX_SPEED * (1 - (w - x) / ZONE);
+
+    if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+    if (speed === 0) return;
+
+    const tick = () => {
+      el.scrollLeft += speed;
+      scrollRafRef.current = requestAnimationFrame(tick);
+    };
+    scrollRafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const handleShelfMouseLeave = useCallback(() => {
+    if (scrollRafRef.current) {
+      cancelAnimationFrame(scrollRafRef.current);
+      scrollRafRef.current = null;
+    }
+  }, []);
+
   // Smooth scroll helper
   const scrollToFeatures = () => {
     document.getElementById('platform-features')?.scrollIntoView({ behavior: 'smooth' });
@@ -666,8 +700,11 @@ export default function Home() {
                 </>
               ) : (
               <div
+                ref={shelfRef}
                 className="flex gap-5 pb-4"
                 style={{ overflowX: 'auto', overflowY: 'visible', scrollbarWidth: 'none' }}
+                onMouseMove={handleShelfMouseMove}
+                onMouseLeave={handleShelfMouseLeave}
               >
                 {/* Always-visible "Add New" card */}
                 <motion.div
