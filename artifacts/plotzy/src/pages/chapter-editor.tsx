@@ -297,6 +297,48 @@ export default function ChapterEditor() {
     }
   }, [chapter, isDirty]);
 
+  // ── Re-paginate oversized pages after chapter loads ───────────────────────
+  // Fixes old data that was saved with too-long pages (duplication bug).
+  // Runs once per chapter load after the measureEl div is in the DOM.
+  useEffect(() => {
+    if (!chapter || isDirty) return;
+    const measureEl = measureRef.current;
+    if (!measureEl) return;
+
+    // Use rAF to ensure the DOM is fully painted before measuring
+    const raf = requestAnimationFrame(() => {
+      setPages(prev => {
+        let changed = false;
+        const result: PageBlock[] = [];
+
+        for (const block of prev) {
+          const text = getPageText(block);
+          const fontId = typeof block === 'string'
+            ? 'eb-garamond'
+            : ((block as { type: string; fontFamily?: string }).fontFamily ?? 'eb-garamond');
+          const fontFamily = (FONT_STYLE_MAP[fontId] || {}).fontFamily as string | undefined;
+          if (fontFamily) measureEl.style.fontFamily = fontFamily;
+
+          measureEl.textContent = text;
+          if (measureEl.offsetHeight > PAGE_CONTENT_HEIGHT) {
+            const chunks = splitIntoPages(text, measureEl, PAGE_CONTENT_HEIGHT);
+            for (const chunk of chunks) {
+              result.push({ type: 'text', content: chunk, fontFamily: fontId || undefined } as PageBlock);
+            }
+            changed = true;
+          } else {
+            result.push(block);
+          }
+        }
+
+        return changed ? result : prev;
+      });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapter?.id]);
+
   /* ── Print View: scroll to top when opened ── */
   useEffect(() => {
     if (isPrintView && printScrollRef.current) {
@@ -401,12 +443,12 @@ export default function ChapterEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages[activePageIndex], activePageIndex]);
 
-  // ── Auto-resize all page textareas to show their full content ────────────
-  // Fixes the "hidden text / empty space" bug caused by overflow:hidden + fixed height.
+  // ── Lock all page textareas to the fixed page height ──────────────────────
+  // Overflow is handled by the pagination system (handlePageChange), not by
+  // letting the textarea grow. Keeping a fixed height preserves the page metaphor.
   useLayoutEffect(() => {
     document.querySelectorAll<HTMLTextAreaElement>('[data-page-textarea]').forEach(ta => {
-      ta.style.height = '1px';
-      ta.style.height = `${Math.max(PAGE_CONTENT_HEIGHT, ta.scrollHeight)}px`;
+      ta.style.height = `${PAGE_CONTENT_HEIGHT}px`;
     });
   }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing]);
 
