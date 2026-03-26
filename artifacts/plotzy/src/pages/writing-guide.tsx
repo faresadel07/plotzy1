@@ -406,10 +406,8 @@ function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; 
 
 function Divider() {
   return (
-    <div className="flex items-center gap-4 my-24">
-      <div className="flex-1 border-t border-border/40" />
-      <div className="w-1.5 h-1.5 rounded-full bg-foreground/20" />
-      <div className="flex-1 border-t border-border/40" />
+    <div className="my-24">
+      <div className="border-t border-border/40" />
     </div>
   );
 }
