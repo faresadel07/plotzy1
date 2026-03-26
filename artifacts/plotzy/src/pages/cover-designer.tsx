@@ -285,14 +285,29 @@ export default function CoverDesigner() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const src = ev.target?.result as string;
-      const el: CoverElement = {
-        id: nanoid(), type: "image", face: activeFace,
-        x: 0, y: 0, width: FACE_W[activeFace], height: FACE_H,
-        zIndex: elements.length + 1, visible: true, locked: false,
-        src, objectFit: "cover", opacity: 1, borderRadius: 0,
+      const img = new Image();
+      img.onload = () => {
+        const faceW = FACE_W[activeFace];
+        const faceH = FACE_H;
+        const naturalW = img.naturalWidth;
+        const naturalH = img.naturalHeight;
+        // Scale to fit within face while preserving aspect ratio
+        const scale = Math.min(faceW / naturalW, faceH / naturalH, 1);
+        const displayW = Math.round(naturalW * scale);
+        const displayH = Math.round(naturalH * scale);
+        // Center on face
+        const x = Math.round((faceW - displayW) / 2);
+        const y = Math.round((faceH - displayH) / 2);
+        const el: CoverElement = {
+          id: nanoid(), type: "image", face: activeFace,
+          x, y, width: displayW, height: displayH,
+          zIndex: elements.length + 1, visible: true, locked: false,
+          src, objectFit: "fill", opacity: 1, borderRadius: 0,
+        };
+        updateElements([...elements, el]);
+        setSelectedId(el.id);
       };
-      updateElements([...elements, el]);
-      setSelectedId(el.id);
+      img.src = src;
     };
     reader.readAsDataURL(file);
     e.target.value = "";
