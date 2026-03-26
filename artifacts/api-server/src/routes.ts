@@ -712,9 +712,32 @@ export async function registerRoutes(
 
   app.patch('/api/books/:bookId/chapters/reorder', async (req, res) => {
     try {
-      const updates = z.array(z.object({ id: z.number(), order: z.number() })).parse(req.body);
-      await storage.reorderChapters(updates);
+      const body = z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() })) }).parse(req.body);
+      await storage.reorderChapters(body.updates);
       res.status(200).json({ ok: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ─── Daily Progress ────────────────────────────────────────────────────────
+  app.get('/api/books/:bookId/progress', async (req, res) => {
+    try {
+      const bookId = Number(req.params.bookId);
+      const progress = await storage.getDailyProgress(bookId);
+      res.json(progress);
+    } catch {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.post('/api/books/:bookId/progress', async (req, res) => {
+    try {
+      const bookId = Number(req.params.bookId);
+      const { wordsAdded } = z.object({ wordsAdded: z.number() }).parse(req.body);
+      const record = await storage.updateDailyProgress(bookId, wordsAdded);
+      res.json(record);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
       res.status(500).json({ message: "Internal error" });
