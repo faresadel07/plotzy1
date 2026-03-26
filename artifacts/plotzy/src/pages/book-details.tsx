@@ -502,19 +502,21 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
         </div>
 
-        {/* Right Column — vertical tab sidebar + content */}
-        <div className="lg:col-span-8 pb-8">
-          <div className="flex gap-4">
+        {/* Right Column */}
+        <div className="lg:col-span-8 pb-8 space-y-5">
 
-            {/* ── Vertical Tab Sidebar ── */}
-            <div className="flex-shrink-0 flex flex-col gap-1 pt-1" style={{ width: 130 }}>
+          {/* ── Top bar: horizontal tabs + action buttons ── */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+
+            {/* Horizontal tab pills */}
+            <div className="flex items-center gap-0.5 bg-foreground/[0.04] rounded-xl p-1 flex-wrap">
               {(
                 [
-                  { key: "chapters",  icon: BookOpen,       label: lang === "ar" ? "الفصول"        : "Chapters"       },
-                  { key: "pages",     icon: ScrollText,      label: lang === "ar" ? "صفحات الكتاب"  : "Book Pages"     },
-                  { key: "research",  icon: BookMarked,      label: lang === "ar" ? "لوحة البحث"   : "Research"       },
-                  { key: "analytics", icon: BarChart3,       label: lang === "ar" ? "الإحصائيات"   : "Analytics"      },
-                  { key: "tools",     icon: Sparkles,        label: lang === "ar" ? "أدوات"         : "Tools"          },
+                  { key: "chapters",  icon: BookOpen,   label: lang === "ar" ? "الفصول"       : "Chapters"   },
+                  { key: "pages",     icon: ScrollText,  label: lang === "ar" ? "صفحات الكتاب" : "Book Pages" },
+                  { key: "research",  icon: BookMarked,  label: lang === "ar" ? "البحث"        : "Research"   },
+                  { key: "analytics", icon: BarChart3,   label: lang === "ar" ? "الإحصائيات"  : "Analytics"  },
+                  { key: "tools",     icon: Sparkles,    label: lang === "ar" ? "أدوات"        : "Tools"      },
                 ] as const
               ).map(({ key, icon: Icon, label }) => {
                 const active = activeTab === key;
@@ -522,154 +524,126 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                   <button
                     key={key}
                     onClick={() => setActiveTab(key)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "9px 12px",
-                      borderRadius: 10,
-                      border: active
-                        ? "1px solid hsl(var(--foreground) / 0.12)"
-                        : "1px solid transparent",
-                      background: active
-                        ? "hsl(var(--foreground) / 0.06)"
-                        : "transparent",
-                      cursor: "pointer",
-                      width: "100%",
-                      textAlign: isRTL ? "right" : "left",
-                      transition: "all 0.15s",
+                      background: active ? "hsl(var(--background))" : "transparent",
+                      color: active ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      fontWeight: active ? 600 : 500,
+                      boxShadow: active ? "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px hsl(var(--border)/0.5)" : "none",
                     }}
-                    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--foreground) / 0.04)"; }}
-                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                   >
-                    <Icon
-                      size={15}
-                      style={{ color: active ? "hsl(var(--foreground))" : "var(--muted-foreground)", flexShrink: 0 }}
-                    />
-                    <span style={{
-                      fontSize: 13,
-                      fontWeight: active ? 700 : 500,
-                      color: active ? "var(--foreground)" : "var(--muted-foreground)",
-                      whiteSpace: "nowrap",
-                    }}>
-                      {label}
-                    </span>
+                    <Icon size={14} />
+                    <span className="hidden sm:inline">{label}</span>
                   </button>
                 );
               })}
-
-              {/* ── Actions below tabs ── */}
-              <div className="mt-3 pt-3 border-t border-border/50 flex flex-col gap-1.5">
-                {/* AI Suite */}
-                <Link href="/marketplace">
-                  <button
-                    className="w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-[12px] font-semibold transition-all border border-border/60 bg-card hover:bg-foreground/[0.04] text-foreground/70 hover:text-foreground"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="truncate">{lang === "ar" ? "مجموعة الذكاء الاصطناعي" : "AI Suite"}</span>
-                  </button>
-                </Link>
-
-                {book && (
-                  (book as any).isPublished ? (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 px-1 py-1">
-                        <Check className="w-3 h-3 text-foreground/50 flex-shrink-0" />
-                        <span className="text-[11px] font-semibold text-foreground/60 truncate">
-                          {lang === "ar" ? "منشور" : "Published"}
-                        </span>
-                      </div>
-                      <div className="flex gap-1">
-                        <Link href={`/read/${bookId}`} className="flex-1">
-                          <button className="w-full text-[11px] font-semibold rounded-lg py-1.5 border border-border/60 bg-card hover:bg-foreground/[0.04] text-foreground/70 transition-colors">
-                            {lang === "ar" ? "عرض" : "View"}
-                          </button>
-                        </Link>
-                        <button
-                          className="flex-1 text-[11px] font-semibold rounded-lg py-1.5 border border-border/60 bg-card hover:bg-foreground/[0.04] text-foreground/60 transition-colors"
-                          disabled={publishBook.isPending}
-                          onClick={() => publishBook.mutate({ id: bookId, publish: false }, {
-                            onSuccess: () => toast({ title: lang === "ar" ? "تم إلغاء النشر" : "Unpublished" }),
-                          })}
-                        >
-                          {publishBook.isPending ? "..." : (lang === "ar" ? "إلغاء النشر" : "Unpublish")}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      className="w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-[12px] font-semibold transition-all border-0 hover:opacity-90 bg-foreground text-background"
-                      data-testid="button-finish-publish"
-                      onClick={() => { if (!user) { setIsAuthModalOpen(true); } else { setIsPublishConfirmOpen(true); } }}
-                    >
-                      <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="truncate">{lang === "ar" ? "نشر الكتاب" : "Publish"}</span>
-                    </button>
-                  )
-                )}
-              </div>
             </div>
 
-            {/* ── Publish Confirmation Dialog ── */}
-            {book && (
-              <Dialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
-                <DialogContent className="rounded-2xl max-w-sm" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <DialogHeader className="text-center pb-2">
-                    <div className="text-5xl mb-3 text-center" aria-hidden="true">✒</div>
-                    <DialogTitle className="text-xl font-bold text-center leading-snug text-white">
-                      {lang === "ar" ? "هل أنت مستعد لمشاركة تحفتك الفنية؟" : "Ready to share your masterpiece?"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <p className="text-sm text-center leading-relaxed px-2 mb-2 text-white/55">
-                    {lang === "ar"
-                      ? `سيصبح كتابك "${book.title}" متاحًا للقراء في المكتبة المجتمعية لـ Plotzy. يمكنك إلغاء النشر في أي وقت.`
-                      : `"${book.title}" will be available for readers in the Plotzy Community Library. You can unpublish at any time.`}
-                  </p>
-                  <DialogFooter className="flex flex-col gap-2 sm:flex-col mt-2">
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Link href="/marketplace">
+                <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs font-semibold gap-1.5 border-border/70 hover:border-border">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{lang === "ar" ? "مجموعة الذكاء" : "AI Suite"}</span>
+                </Button>
+              </Link>
+
+              {book && (
+                (book as any).isPublished ? (
+                  <div className="flex items-center gap-1.5">
+                    <Link href={`/read/${bookId}`}>
+                      <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs font-semibold gap-1.5 border-border/70">
+                        <Eye className="w-3.5 h-3.5" />
+                        {lang === "ar" ? "عرض" : "View"}
+                      </Button>
+                    </Link>
                     <Button
-                      className="w-full rounded-xl font-bold text-sm shadow-md border-0 transition-all hover:opacity-90"
-                      style={{ background: "#ffffff", color: "#111111" }}
+                      size="sm" variant="outline"
+                      className="rounded-lg h-8 text-xs font-semibold gap-1.5 border-border/70 text-muted-foreground"
                       disabled={publishBook.isPending}
-                      data-testid="button-confirm-publish"
-                      onClick={() => publishBook.mutate({ id: bookId, publish: true }, {
-                        onSuccess: () => {
-                          setIsPublishConfirmOpen(false);
-                          toast({
-                            title: lang === "ar" ? "🎉 تم النشر!" : "🎉 Published!",
-                            description: lang === "ar"
-                              ? "كتابك الآن متاح في المكتبة المجتمعية."
-                              : "Your book is now live in the Plotzy Community Library.",
-                          });
-                          navigate("/library");
-                        },
-                        onError: (err: any) => {
-                          toast({
-                            title: lang === "ar" ? "فشل النشر" : "Publish failed",
-                            description: err?.message || (lang === "ar" ? "حدث خطأ ما، حاول مجدداً." : "Something went wrong, please try again."),
-                            variant: "destructive",
-                          });
-                        },
+                      onClick={() => publishBook.mutate({ id: bookId, publish: false }, {
+                        onSuccess: () => toast({ title: lang === "ar" ? "تم إلغاء النشر" : "Unpublished" }),
                       })}
                     >
-                      {publishBook.isPending
-                        ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{lang === "ar" ? "جارٍ النشر..." : "Publishing..."}</>
-                        : <><BookOpen className="w-4 h-4 mr-2" />{lang === "ar" ? "نعم، انشر الآن ✦" : "Yes, Publish Now ✦"}</>
-                      }
+                      <EyeOff className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">{publishBook.isPending ? "..." : (lang === "ar" ? "إلغاء النشر" : "Unpublish")}</span>
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full rounded-xl font-medium text-sm text-white/50 hover:text-white hover:bg-white/[0.06]"
-                      onClick={() => setIsPublishConfirmOpen(false)}
-                    >
-                      {lang === "ar" ? "ليس الآن" : "Not yet, keep writing"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="rounded-lg h-8 text-xs font-semibold gap-1.5 bg-foreground text-background hover:bg-foreground/90 border-0"
+                    data-testid="button-finish-publish"
+                    onClick={() => { if (!user) { setIsAuthModalOpen(true); } else { setIsPublishConfirmOpen(true); } }}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    {lang === "ar" ? "نشر الكتاب" : "Publish"}
+                  </Button>
+                )
+              )}
+            </div>
+          </div>
 
-            {/* ── Tab Content ── */}
-            <div className="flex-1 min-w-0">
+          {/* ── Publish Confirmation Dialog ── */}
+          {book && (
+            <Dialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
+              <DialogContent className="rounded-2xl max-w-sm" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <DialogHeader className="text-center pb-2">
+                  <div className="text-5xl mb-3 text-center" aria-hidden="true">✒</div>
+                  <DialogTitle className="text-xl font-bold text-center leading-snug text-white">
+                    {lang === "ar" ? "هل أنت مستعد لمشاركة تحفتك الفنية؟" : "Ready to share your masterpiece?"}
+                  </DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-center leading-relaxed px-2 mb-2 text-white/55">
+                  {lang === "ar"
+                    ? `سيصبح كتابك "${book.title}" متاحًا للقراء في المكتبة المجتمعية لـ Plotzy. يمكنك إلغاء النشر في أي وقت.`
+                    : `"${book.title}" will be available for readers in the Plotzy Community Library. You can unpublish at any time.`}
+                </p>
+                <DialogFooter className="flex flex-col gap-2 sm:flex-col mt-2">
+                  <Button
+                    className="w-full rounded-xl font-bold text-sm shadow-md border-0 transition-all hover:opacity-90"
+                    style={{ background: "#ffffff", color: "#111111" }}
+                    disabled={publishBook.isPending}
+                    data-testid="button-confirm-publish"
+                    onClick={() => publishBook.mutate({ id: bookId, publish: true }, {
+                      onSuccess: () => {
+                        setIsPublishConfirmOpen(false);
+                        toast({
+                          title: lang === "ar" ? "🎉 تم النشر!" : "🎉 Published!",
+                          description: lang === "ar"
+                            ? "كتابك الآن متاح في المكتبة المجتمعية."
+                            : "Your book is now live in the Plotzy Community Library.",
+                        });
+                        navigate("/library");
+                      },
+                      onError: (err: any) => {
+                        toast({
+                          title: lang === "ar" ? "فشل النشر" : "Publish failed",
+                          description: err?.message || (lang === "ar" ? "حدث خطأ ما، حاول مجدداً." : "Something went wrong, please try again."),
+                          variant: "destructive",
+                        });
+                      },
+                    })}
+                  >
+                    {publishBook.isPending
+                      ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{lang === "ar" ? "جارٍ النشر..." : "Publishing..."}</>
+                      : <><BookOpen className="w-4 h-4 mr-2" />{lang === "ar" ? "نعم، انشر الآن ✦" : "Yes, Publish Now ✦"}</>
+                    }
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full rounded-xl font-medium text-sm text-white/50 hover:text-white hover:bg-white/[0.06]"
+                    onClick={() => setIsPublishConfirmOpen(false)}
+                  >
+                    {lang === "ar" ? "ليس الآن" : "Not yet, keep writing"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {/* ── Tab Content ── */}
+          <div className="min-w-0">
 
             {activeTab === "chapters" && (
               <section>
@@ -725,23 +699,23 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  className={`flex items-center gap-2 px-3 py-3 rounded-xl transition-all group ${snapshot.isDragging ? "bg-foreground/[0.06] shadow-md ring-1 ring-foreground/10" : "hover:bg-foreground/[0.04]"}`}
+                                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${snapshot.isDragging ? "bg-foreground/[0.08] shadow-md ring-1 ring-foreground/10" : "hover:bg-foreground/[0.04]"}`}
                                   data-testid={`card-chapter-${chapter.id}`}
                                 >
                                   {/* Drag handle */}
                                   <div
                                     {...provided.dragHandleProps}
-                                    className="text-muted-foreground/20 hover:text-muted-foreground/60 cursor-grab active:cursor-grabbing shrink-0 transition-colors"
+                                    className="text-muted-foreground/20 hover:text-muted-foreground/50 cursor-grab active:cursor-grabbing shrink-0 transition-colors"
                                   >
                                     <GripVertical className="w-4 h-4" />
                                   </div>
 
                                   {/* Number badge */}
-                                  <div className="w-7 h-7 rounded-full bg-foreground/[0.06] text-foreground/60 flex items-center justify-center font-bold text-xs shrink-0">
+                                  <div className="w-6 h-6 rounded-md bg-foreground/[0.06] text-muted-foreground flex items-center justify-center font-bold text-[11px] shrink-0 tabular-nums">
                                     {index + 1}
                                   </div>
 
-                                  {/* Title & meta */}
+                                  {/* Title & meta — clicking navigates to editor */}
                                   <div className="flex-1 min-w-0">
                                     {editingChapterId === chapter.id ? (
                                       <input
@@ -758,35 +732,39 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                         dir={isRTL ? "rtl" : "ltr"}
                                       />
                                     ) : (
-                                      <h4
-                                        className="font-semibold text-sm text-foreground line-clamp-1 cursor-text hover:text-black dark:hover:text-white transition-colors"
-                                        onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
-                                        title={lang === "ar" ? "انقر للتعديل المباشر" : "Click to rename"}
-                                      >
-                                        {chapter.title}
-                                      </h4>
-                                    )}
-                                    {editingChapterId !== chapter.id && (
-                                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                                        {chapter.createdAt ? format(new Date(chapter.createdAt), 'MMM d, h:mm a') : ''}
-                                        {chapter.content.length > 0 && (
-                                          <><span>·</span><span>{Math.ceil(chapter.content.length / 250)} {t("minRead")}</span></>
-                                        )}
-                                      </p>
+                                      <Link href={`/books/${bookId}/chapters/${chapter.id}`} className="block group/link">
+                                        <h4 className="font-semibold text-sm text-foreground line-clamp-1 group-hover/link:text-foreground/80 transition-colors">
+                                          {chapter.title}
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground/60 flex items-center gap-1.5 mt-0.5">
+                                          {chapter.createdAt ? format(new Date(chapter.createdAt), 'MMM d, h:mm a') : ''}
+                                          {countChapterWords(chapter.content) > 0 && (
+                                            <><span>·</span><span>{countChapterWords(chapter.content).toLocaleString()} {lang === "ar" ? "كلمة" : "words"}</span></>
+                                          )}
+                                        </p>
+                                      </Link>
                                     )}
                                   </div>
 
-                                  {/* Open chapter button */}
-                                  {editingChapterId !== chapter.id && (
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                  {/* Actions */}
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    {editingChapterId !== chapter.id && (
+                                      <button
+                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-muted-foreground hover:bg-foreground/[0.06] transition-all opacity-0 group-hover:opacity-100"
+                                        onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
+                                        title={lang === "ar" ? "إعادة التسمية" : "Rename"}
+                                      >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    {editingChapterId !== chapter.id && (
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`}>
-                                        <Button variant="ghost" size="sm" className="rounded-lg hover:bg-primary/10 text-primary text-xs flex items-center gap-1">
-                                          <PenLine className="w-3 h-3" />
-                                          {t("editChapter")}
-                                        </Button>
+                                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-foreground/[0.06] transition-all">
+                                          <PenLine className="w-3.5 h-3.5" />
+                                        </button>
                                       </Link>
-                                    </div>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </Draggable>
@@ -957,8 +935,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               </section>
             )}
 
-            </div>{/* end tab content */}
-          </div>{/* end flex row */}
+          </div>{/* end tab content */}
         </div>{/* end right column */}
       </div>{/* end grid */}
 
