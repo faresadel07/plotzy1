@@ -27,6 +27,8 @@ import Library from "@/pages/library";
 import ReadBook from "@/pages/read-book";
 import AuthorProfile from "@/pages/author-profile";
 import SupportPage from "@/pages/support";
+import DiscoverPage from "@/pages/discover";
+import GutenbergReader from "@/pages/gutenberg-reader";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -76,6 +78,8 @@ function Router() {
         <Route path="/marketplace" component={Marketplace} />
         <Route path="/library" component={Library} />
         <Route path="/read/:id" component={ReadBook} />
+        <Route path="/discover" component={DiscoverPage} />
+        <Route path="/discover/:id" component={GutenbergReader} />
         <Route path="/authors/:userId" component={AuthorProfile} />
         <Route path="/support" component={SupportPage} />
         <Route component={NotFound} />

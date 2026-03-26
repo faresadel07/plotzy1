@@ -16,9 +16,9 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import bcrypt from "bcryptjs";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests, researchItems } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks } from "../../../lib/db/src/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, or, ilike, sql } from "drizzle-orm";
 
 const isMockOpenAI = !process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY;
 
@@ -1854,6 +1854,158 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     });
   }
 
+  // ── Gutenberg Public-Domain Library ────────────────────────────────────────
+
+  // GET /api/gutenberg/books?search=&topic=&page=&lang=
+  app.get("/api/gutenberg/books", async (req: any, res: any) => {
+    try {
+      const { search = "", topic = "", page = "1", lang = "en" } = req.query as Record<string, string>;
+      const params = new URLSearchParams({ page });
+      if (search) params.set("search", search);
+      if (topic) params.set("topic", topic);
+      if (lang) params.set("languages", lang);
+
+      const resp = await fetch(`${GUTENDEX}?${params}`);
+      if (!resp.ok) throw new Error(`Gutendex error: ${resp.status}`);
+      const data = await resp.json() as any;
+
+      // Cache metadata in DB (non-blocking)
+      Promise.all((data.results || []).map((b: any) => upsertGutenbergMeta(b))).catch(() => {});
+
+      res.json({
+        count: data.count,
+        next: data.next,
+        previous: data.previous,
+        results: (data.results || []).map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          authors: b.authors || [],
+          subjects: (b.subjects || []).slice(0, 5),
+          languages: b.languages || [],
+          coverUrl: pickCoverUrl(b.formats || {}),
+          downloadCount: b.download_count || 0,
+          hasText: !!pickTextUrl(b.formats || {}),
+        })),
+      });
+    } catch (err: any) {
+      res.status(502).json({ error: "Failed to fetch from Gutendex", message: err.message });
+    }
+  });
+
+  // GET /api/gutenberg/books/:id — metadata only
+  app.get("/api/gutenberg/books/:id", async (req: any, res: any) => {
+    const gutId = parseInt(req.params.id);
+    if (!gutId) return res.status(400).json({ error: "Invalid id" });
+
+    const cached = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
+    if (cached.length > 0) {
+      const b = cached[0];
+      return res.json({
+        id: b.gutenbergId,
+        dbId: b.id,
+        title: b.title,
+        authors: b.authors || [],
+        subjects: b.subjects || [],
+        bookshelves: b.bookshelves || [],
+        languages: b.languages || [],
+        coverUrl: b.coverUrl,
+        downloadCount: b.downloadCount || 0,
+        hasContent: !!b.content,
+        contentCachedAt: b.contentCachedAt,
+      });
+    }
+
+    try {
+      const resp = await fetch(`${GUTENDEX}/${gutId}`);
+      if (!resp.ok) return res.status(404).json({ error: "Book not found" });
+      const b = await resp.json() as any;
+      const row = await upsertGutenbergMeta(b);
+      return res.json({
+        id: row.gutenbergId,
+        dbId: row.id,
+        title: row.title,
+        authors: row.authors || [],
+        subjects: row.subjects || [],
+        bookshelves: row.bookshelves || [],
+        languages: row.languages || [],
+        coverUrl: row.coverUrl,
+        downloadCount: row.downloadCount || 0,
+        hasContent: !!row.content,
+        contentCachedAt: row.contentCachedAt,
+      });
+    } catch {
+      return res.status(502).json({ error: "Failed to fetch book metadata" });
+    }
+  });
+
+  // GET /api/gutenberg/books/:id/content — full text (cached in DB)
+  app.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
+    const gutId = parseInt(req.params.id);
+    if (!gutId) return res.status(400).json({ error: "Invalid id" });
+
+    const cached = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
+    const row = cached[0];
+
+    if (row?.content && row.contentCachedAt) {
+      const age = Date.now() - new Date(row.contentCachedAt).getTime();
+      if (age < GUTENBERG_TEXT_CACHE_TTL_MS) {
+        return res.json({ content: row.content, fromCache: true, cachedAt: row.contentCachedAt });
+      }
+    }
+
+    let textUrl = row?.textUrl || null;
+    if (!textUrl) {
+      try {
+        const resp = await fetch(`${GUTENDEX}/${gutId}`);
+        if (!resp.ok) return res.status(404).json({ error: "Book not found" });
+        const b = await resp.json() as any;
+        const updated = await upsertGutenbergMeta(b);
+        textUrl = updated.textUrl;
+      } catch {
+        return res.status(502).json({ error: "Could not resolve book text URL" });
+      }
+    }
+
+    if (!textUrl) {
+      return res.status(404).json({ error: "No plain-text version available for this book" });
+    }
+
+    try {
+      const textResp = await fetch(textUrl);
+      if (!textResp.ok) return res.status(502).json({ error: "Failed to fetch book text" });
+      const rawText = await textResp.text();
+
+      const startMarker = /\*\*\* START OF (THE|THIS) PROJECT GUTENBERG/i;
+      const endMarker = /\*\*\* END OF (THE|THIS) PROJECT GUTENBERG/i;
+      let content = rawText;
+      const startMatch = rawText.search(startMarker);
+      if (startMatch !== -1) {
+        const afterStart = rawText.indexOf("\n", startMatch) + 1;
+        content = rawText.slice(afterStart);
+      }
+      const endMatch = content.search(endMarker);
+      if (endMatch !== -1) {
+        content = content.slice(0, endMatch).trim();
+      }
+
+      if (row) {
+        await db.update(gutenbergBooks).set({ content, contentCachedAt: new Date() }).where(eq(gutenbergBooks.gutenbergId, gutId));
+      } else {
+        await db.insert(gutenbergBooks).values({
+          gutenbergId: gutId,
+          title: "Unknown",
+          textUrl,
+          content,
+          contentCachedAt: new Date(),
+        }).onConflictDoUpdate({ target: gutenbergBooks.gutenbergId, set: { content, contentCachedAt: new Date() } });
+      }
+
+      return res.json({ content, fromCache: false, cachedAt: new Date() });
+    } catch (err: any) {
+      return res.status(502).json({ error: "Failed to retrieve book text", message: err.message });
+    }
+  });
+
   return httpServer;
 }
 
@@ -1873,6 +2025,64 @@ function getChapterText(content: string): string {
     if (Array.isArray(parsed)) return parsed.join("\n\n");
   } catch { }
   return content;
+}
+
+// ── Gutenberg Public-Domain Library ──────────────────────────────────────────
+
+const GUTENDEX = "https://gutendex.com/books";
+const GUTENBERG_TEXT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+/** Extract the best plain-text URL from Gutendex formats object */
+function pickTextUrl(formats: Record<string, string>): string | null {
+  const prefer = [
+    "text/plain; charset=utf-8",
+    "text/plain; charset=us-ascii",
+    "text/plain",
+  ];
+  for (const mime of prefer) {
+    if (formats[mime] && !formats[mime].endsWith(".zip")) return formats[mime];
+  }
+  // Fallback: any text/plain key
+  const key = Object.keys(formats).find(k => k.startsWith("text/plain") && !formats[k].endsWith(".zip"));
+  return key ? formats[key] : null;
+}
+
+/** Extract cover image URL from Gutendex formats */
+function pickCoverUrl(formats: Record<string, string>): string | null {
+  return formats["image/jpeg"] || null;
+}
+
+/** Upsert Gutendex result into DB and return the DB row */
+async function upsertGutenbergMeta(book: any) {
+  const textUrl = pickTextUrl(book.formats || {});
+  const coverUrl = pickCoverUrl(book.formats || {});
+  const existing = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, book.id)).limit(1);
+  if (existing.length > 0) {
+    await db.update(gutenbergBooks).set({
+      title: book.title,
+      authors: book.authors || [],
+      subjects: book.subjects || [],
+      bookshelves: book.bookshelves || [],
+      languages: book.languages || [],
+      coverUrl,
+      textUrl,
+      downloadCount: book.download_count || 0,
+    }).where(eq(gutenbergBooks.gutenbergId, book.id));
+    return existing[0];
+  } else {
+    const [inserted] = await db.insert(gutenbergBooks).values({
+      gutenbergId: book.id,
+      title: book.title,
+      authors: book.authors || [],
+      subjects: book.subjects || [],
+      bookshelves: book.bookshelves || [],
+      languages: book.languages || [],
+      coverUrl,
+      textUrl,
+      downloadCount: book.download_count || 0,
+    }).returning();
+    return inserted;
+  }
 }
 
 function getChapterPages(content: string): string[] {

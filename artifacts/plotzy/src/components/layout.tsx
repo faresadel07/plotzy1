@@ -30,6 +30,7 @@ function getInitials(name?: string | null, email?: string | null): string {
 const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/",              key: "myLibrary" },
   { href: "/writing-guide", key: "navGuide" },
+  { href: "/discover",      key: "navDiscover" },
   { href: "/marketplace",   key: "navMarketplace" },
   { href: "/library",       key: "navCommunity" },
   { href: "/pricing",       key: "navPro" },
@@ -314,6 +315,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: 
             <FooterCol title="Product" links={[
               { label: 'Home', href: '/' },
               { label: 'Writing Guide', href: '/writing-guide' },
+              { label: 'Discover Library', href: '/discover' },
               { label: 'Marketplace', href: '/marketplace' },
               { label: 'Pricing', href: '/pricing' },
             ]} />

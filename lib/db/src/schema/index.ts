@@ -232,6 +232,26 @@ export const bookComments = pgTable("book_comments", {
 export type BookRating = typeof bookRatings.$inferSelect;
 export type BookComment = typeof bookComments.$inferSelect;
 
+// ── Gutenberg public-domain reading library ──────────────────────────────────
+export const gutenbergBooks = pgTable("gutenberg_books", {
+  id: serial("id").primaryKey(),
+  gutenbergId: integer("gutenberg_id").notNull().unique(),
+  title: text("title").notNull(),
+  authors: jsonb("authors").$type<{ name: string; birth_year?: number; death_year?: number }[]>().default([]),
+  subjects: jsonb("subjects").$type<string[]>().default([]),
+  bookshelves: jsonb("bookshelves").$type<string[]>().default([]),
+  languages: jsonb("languages").$type<string[]>().default([]),
+  coverUrl: text("cover_url"),
+  textUrl: text("text_url"),
+  downloadCount: integer("download_count").default(0),
+  // Cached full text — NULL until first read, then persists across deployments
+  content: text("content"),
+  contentCachedAt: timestamp("content_cached_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type GutenbergBook = typeof gutenbergBooks.$inferSelect;
+
 export const researchItems = pgTable("research_items", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
