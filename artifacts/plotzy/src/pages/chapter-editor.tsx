@@ -761,7 +761,7 @@ export default function ChapterEditor() {
     color: effectivePrefs.textColor || undefined,
     ...fontStyle,
   };
-  const totalWords = pages.join(" ").split(/\s+/).filter(Boolean).length;
+  const totalWords = pages.map(getPageText).join(" ").split(/\s+/).filter(Boolean).length;
 
   /* ── Reference Panel ── */
   const otherChapters = chapters?.filter(c => c.id !== chapterId) ?? [];

@@ -32,6 +32,26 @@ import type { Book } from "@/shared/schema";
 
 const RTL_LANGS = ["ar", "he", "fa", "ur"];
 
+// Extracts plain text from serialized chapter content (PageBlock[])
+function extractChapterText(content: string): string {
+  try {
+    const blocks = JSON.parse(content);
+    if (Array.isArray(blocks)) {
+      return blocks.map((b: unknown) => {
+        if (typeof b === "string") return b;
+        if (b && typeof b === "object" && "content" in b && typeof (b as { content: unknown }).content === "string") return (b as { content: string }).content;
+        return "";
+      }).join(" ");
+    }
+  } catch {}
+  return content;
+}
+
+function countChapterWords(content: string): number {
+  const text = extractChapterText(content).trim();
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
+}
+
 // Book cover component — realistic book look, fully contained
 function BookCoverWrap({ book }: { book: Book }) {
   const spineColor = book.spineColor || "#7c3aed";
@@ -395,13 +415,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
               {/* Stats row */}
               {(() => {
-                const totalWords = (chapters || []).reduce((acc, ch) => {
-                  try {
-                    const p = JSON.parse(ch.content);
-                    if (Array.isArray(p)) return acc + p.join(" ").trim().split(/\s+/).filter(Boolean).length;
-                  } catch {}
-                  return acc + ch.content.trim().split(/\s+/).filter(Boolean).length;
-                }, 0);
+                const totalWords = (chapters || []).reduce((acc, ch) => acc + countChapterWords(ch.content), 0);
                 const chapCount = (chapters || []).length;
                 const estPages = Math.ceil(totalWords / 300);
                 return (
@@ -789,10 +803,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
             {activeTab === "pages" && (() => {
               const pages: BookPages = (book as any).bookPages || {};
-              const totalWords = (chapters || []).reduce((acc, ch) => {
-                try { const p = JSON.parse(ch.content); if (Array.isArray(p)) return acc + p.join(" ").trim().split(/\s+/).filter(Boolean).length; } catch {}
-                return acc + ch.content.trim().split(/\s+/).filter(Boolean).length;
-              }, 0);
+              const totalWords = (chapters || []).reduce((acc, ch) => acc + countChapterWords(ch.content), 0);
               const goal = (book as any).wordGoal || 0;
               const goalPct = goal > 0 ? Math.min(100, Math.round((totalWords / goal) * 100)) : 0;
 
