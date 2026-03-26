@@ -793,7 +793,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
                                         title={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                       >
-                                        <Edit3 className="w-3 h-3" />
                                         <span>{lang === "ar" ? "تسمية" : "Rename"}</span>
                                       </button>
 
@@ -806,7 +805,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.10)'; }}
                                           title={lang === "ar" ? "فتح المحرر" : "Open Editor"}
                                         >
-                                          <PenLine className="w-3 h-3" />
                                           <span>{lang === "ar" ? "كتابة" : "Write"}</span>
                                         </button>
                                       </Link>
