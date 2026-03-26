@@ -818,7 +818,7 @@ export default function ChapterEditor() {
 
   return (
     <div
-      className="min-h-screen transition-all duration-700 relative"
+      className="flex flex-col h-screen overflow-hidden transition-all duration-700"
       style={{ backgroundColor: "#000" }}
     >
       {/* Subtle vignette in focus mode */}
@@ -1001,14 +1001,15 @@ export default function ChapterEditor() {
         </div>
       </header>
 
+      {/* Body: editor + reference panel side by side */}
+      <div className="flex flex-1 overflow-hidden relative z-10">
+
       {/* Editor Canvas — book-desk background */}
       <main
-        className="relative z-10 py-10 md:py-14 transition-all duration-700 min-h-screen"
+        className="flex-1 overflow-y-auto relative py-10 md:py-14 transition-colors duration-700"
         style={{
           background: "transparent",
           paddingBottom: isTypewriterMode ? "50vh" : undefined,
-          paddingRight: showRefPanel ? '410px' : undefined,
-          transition: 'padding-right 0.3s ease',
         }}
       >
         {/* Chapter Title — above all pages */}
@@ -1394,15 +1395,14 @@ export default function ChapterEditor() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Reference Panel (read-only side panel) ── */}
+      {/* ── Reference Panel (fixed-height flex sidebar) ── */}
       <div
-        className="fixed top-[65px] bottom-0 z-[90] flex flex-col transition-all duration-300 ease-in-out"
+        className="flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
         style={{
-          right: showRefPanel ? 0 : '-420px',
-          width: '400px',
+          width: showRefPanel ? '380px' : '0',
+          minWidth: showRefPanel ? '380px' : '0',
           background: 'hsl(var(--background))',
-          borderLeft: '1px solid hsl(var(--border)/40%)',
-          boxShadow: showRefPanel ? '-8px 0 32px rgba(0,0,0,0.12)' : 'none',
+          borderLeft: showRefPanel ? '1px solid hsl(var(--border)/40%)' : 'none',
         }}
       >
         {/* Panel Header */}
@@ -1533,14 +1533,7 @@ export default function ChapterEditor() {
         </div>
       </div>
 
-      {/* Backdrop dimmer when ref panel open */}
-      {showRefPanel && (
-        <div
-          className="fixed inset-0 z-[89] pointer-events-none"
-          style={{ background: 'rgba(0,0,0,0.0)' }}
-          onClick={() => setShowRefPanel(false)}
-        />
-      )}
+      </div>{/* end body flex row */}
 
       {showAI && (
         <AIAssistant
