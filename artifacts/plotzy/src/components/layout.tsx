@@ -113,7 +113,7 @@ function FooterCol({ title, links }: { title: string; links: { label: string; hr
   );
 }
 
-export function Layout({ children, isLanding, isFullDark, lightNav }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean }) {
+export function Layout({ children, isLanding, isFullDark, lightNav, noScroll }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean; noScroll?: boolean }) {
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
   const { user, isLoading, logout } = useAuth();
@@ -135,7 +135,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
   }, []);
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className={`min-h-screen flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`${noScroll ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}>
 
       {/* ── Apple-style white top navbar ── */}
       <header style={{
@@ -271,10 +271,16 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
         </div>
       </header>
 
-      <main className={isLanding ? "flex-1 w-full pt-11" : isFullDark ? "flex-1 w-full pt-[60px]" : "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-10"}>
+      <main className={
+        noScroll ? "flex-1 overflow-hidden pt-[44px]" :
+        isLanding ? "flex-1 w-full pt-11" :
+        isFullDark ? "flex-1 w-full pt-[60px]" :
+        "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-10"
+      }>
         {children}
       </main>
 
+      {!noScroll && (
       <footer style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 100%)', fontFamily: SF, position: 'relative', overflow: 'hidden' }}>
 
         {/* Accent top border */}
@@ -339,6 +345,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
           </div>
         </div>
       </footer>
+      )}
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
       <DisplayNameModal

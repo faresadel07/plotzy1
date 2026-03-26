@@ -344,7 +344,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   );
 
   return (
-    <Layout isFullDark>
+    <Layout isFullDark noScroll>
       {/* Hidden file input for cover upload */}
       <input
         ref={fileInputRef}
@@ -356,12 +356,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       />
 
       <div
-        className={`grid grid-cols-1 lg:grid-cols-12 gap-8 ${isRTL ? "direction-rtl" : ""}`}
+        className={`grid grid-cols-1 lg:grid-cols-12 h-full overflow-hidden ${isRTL ? "direction-rtl" : ""}`}
         dir={isRTL ? "rtl" : "ltr"}
       >
 
         {/* ── Left Column ── */}
-        <div className="lg:col-span-4 pb-8 flex flex-col gap-4">
+        <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto px-6 pt-6 pb-10" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
           {/* Cover Card */}
           <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -513,7 +513,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         </div>
 
         {/* Right Column */}
-        <div className="lg:col-span-8 pb-8 space-y-5">
+        <div className="lg:col-span-8 h-full overflow-y-auto px-6 pt-6 pb-10 space-y-5">
 
           {/* ── Top bar: underline tabs + action buttons ── */}
           <div className="flex items-center justify-between gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>
