@@ -782,31 +782,36 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   </div>
 
                                   {/* Actions */}
-                                  <div className="flex items-center gap-0.5 pr-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {editingChapterId !== chapter.id && (
+                                  {editingChapterId !== chapter.id && (
+                                    <div className="flex items-center gap-2 pr-4 flex-shrink-0">
+                                      {/* Rename */}
                                       <button
-                                        className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-                                        style={{ color: 'rgba(255,255,255,0.25)', background: 'transparent' }}
+                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
+                                        style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 500 }}
                                         onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
-                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.25)'; }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                                        title={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                       >
-                                        <Edit3 className="w-3.5 h-3.5" />
+                                        <Edit3 className="w-3 h-3" />
+                                        <span>{lang === "ar" ? "تسمية" : "Rename"}</span>
                                       </button>
-                                    )}
-                                    {editingChapterId !== chapter.id && (
+
+                                      {/* Write / Open Editor */}
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`}>
                                         <button
-                                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-                                          style={{ color: 'rgba(255,255,255,0.25)', background: 'transparent' }}
-                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)'; }}
-                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.25)'; }}
+                                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
+                                          style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', fontSize: 11, fontWeight: 600 }}
+                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.16)'; }}
+                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.10)'; }}
+                                          title={lang === "ar" ? "فتح المحرر" : "Open Editor"}
                                         >
-                                          <PenLine className="w-3.5 h-3.5" />
+                                          <PenLine className="w-3 h-3" />
+                                          <span>{lang === "ar" ? "كتابة" : "Write"}</span>
                                         </button>
                                       </Link>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </Draggable>
