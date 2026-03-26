@@ -665,31 +665,34 @@ export default function Home() {
                 )}
                 </>
               ) : (
-              <div className="space-y-12">
-                {shelfRows.map((rowBooks, rowIndex) => (
-                  <div key={rowIndex} className={`grid gap-5 ${books.length === 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
-                    {/* "Add new" placeholder card — only in first row */}
-                    {rowIndex === 0 && books.length < 4 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.25 }}
-                        onClick={() => setIsOpen(true)}
-                        className="cursor-pointer group"
-                      >
-                        <div
-                          className="relative aspect-[2/3] rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 border border-dashed border-white/[0.12] hover:border-white/25 transition-all duration-300"
-                          style={{ background: 'rgba(255,255,255,0.02)' }}
-                        >
-                          <div className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center group-hover:border-white/30 transition-colors">
-                            <Plus className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
-                          </div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/20 group-hover:text-white/40 transition-colors">New Project</p>
-                        </div>
-                        <div className="mt-2.5 px-0.5 h-7" />
-                      </motion.div>
-                    )}
-                    {rowBooks.map((book, bookIndex) => {
+              <div
+                className="flex gap-5 pb-4"
+                style={{ overflowX: 'auto', overflowY: 'visible', scrollbarWidth: 'none' }}
+              >
+                {/* Always-visible "Add New" card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  onClick={() => setIsOpen(true)}
+                  className="cursor-pointer group flex-shrink-0"
+                  style={{ width: 180 }}
+                >
+                  <div
+                    className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 border border-dashed transition-all duration-300"
+                    style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.12)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                  >
+                    <div className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center group-hover:border-white/30 transition-colors">
+                      <Plus className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
+                    </div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/20 group-hover:text-white/40 transition-colors">New Project</p>
+                  </div>
+                  <div className="mt-2.5 px-0.5 h-7" />
+                </motion.div>
+
+                {books.map((book, bookIndex) => {
                       const langInfo = getBookLangInfo(book.language || "en");
                       const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];
                       const titleLen = book.title.length;
@@ -700,7 +703,8 @@ export default function Home() {
                           initial={{ opacity: 0, y: 24, scale: 0.96 }}
                           whileInView={{ opacity: 1, y: 0, scale: 1 }}
                           viewport={{ once: true, margin: "-50px" }}
-                          transition={{ duration: 0.5, delay: (bookIndex % BOOKS_PER_SHELF) * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                          transition={{ duration: 0.5, delay: bookIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                          style={{ flexShrink: 0, width: 180 }}
                         >
                           <Link href={book.contentType === "article" ? `/articles/${book.id}` : `/books/${book.id}`} className="block">
 
@@ -805,8 +809,6 @@ export default function Home() {
                         </motion.div>
                       );
                     })}
-                  </div>
-                ))}
               </div>
               )}
             </div>
