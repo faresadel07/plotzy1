@@ -804,105 +804,208 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               const goal = (book as any).wordGoal || 0;
               const goalPct = goal > 0 ? Math.min(100, Math.round((totalWords / goal) * 100)) : 0;
 
-              const PAGE_SECTIONS = [
-                { key: "copyright", label: "Copyright", icon: FileText, placeholder: `© ${new Date().getFullYear()} ${book.authorName || "Your Name"}. All rights reserved.\n\nPublished by Plotzy.\n\nNo part of this publication may be reproduced without permission.`, desc: "Auto-included in every PDF export. Edit to customize." },
-                { key: "dedication", label: "Dedication", icon: Quote, placeholder: "For everyone who believed in this story before I did.", desc: "A personal note at the start of your book." },
-                { key: "epigraph", label: "Epigraph", icon: Quote, placeholder: "\"The beginning is always today.\"\n— Mary Shelley", desc: "An opening quote or phrase that sets the tone." },
-                { key: "aboutAuthor", label: "About the Author", icon: User, placeholder: `${book.authorName || "Your name"} is a writer based in...`, desc: "Placed at the back of your book when exported." },
+              const FRONT_MATTER = [
+                {
+                  key: "copyright",
+                  label: lang === "ar" ? "حقوق النشر" : "Copyright",
+                  icon: FileText,
+                  placeholder: `© ${new Date().getFullYear()} ${book.authorName || "Your Name"}. All rights reserved.\n\nPublished by Plotzy.\n\nNo part of this publication may be reproduced without permission.`,
+                  desc: lang === "ar" ? "تُضاف تلقائياً في كل PDF تصدره" : "Auto-added to every PDF export",
+                  hint: lang === "ar" ? "تظهر مباشرة بعد صفحة الغلاف" : "Appears right after the cover page",
+                },
+                {
+                  key: "dedication",
+                  label: lang === "ar" ? "الإهداء" : "Dedication",
+                  icon: Quote,
+                  placeholder: lang === "ar" ? "إلى كل من آمن بهذه القصة قبلي..." : "For everyone who believed in this story before I did.",
+                  desc: lang === "ar" ? "كلمة شكر أو إهداء شخصي" : "A personal note or dedication",
+                  hint: lang === "ar" ? "تظهر قبل الفصل الأول" : "Appears before Chapter 1",
+                },
+                {
+                  key: "epigraph",
+                  label: lang === "ar" ? "الاقتباس الافتتاحي" : "Epigraph",
+                  icon: BookMarked,
+                  placeholder: lang === "ar" ? "\"البداية دائماً اليوم.\"\n— ماري شيلي" : "\"The beginning is always today.\"\n— Mary Shelley",
+                  desc: lang === "ar" ? "اقتباس يحدد نبرة الكتاب" : "A quote that sets the tone of your book",
+                  hint: lang === "ar" ? "تظهر قبل الفصل الأول" : "Appears before Chapter 1",
+                },
               ] as const;
 
+              const BACK_MATTER = [
+                {
+                  key: "aboutAuthor",
+                  label: lang === "ar" ? "نبذة عن الكاتب" : "About the Author",
+                  icon: User,
+                  placeholder: lang === "ar" ? `${book.authorName || "اسمك"} كاتب يقيم في...` : `${book.authorName || "Your name"} is a writer based in...`,
+                  desc: lang === "ar" ? "نبذة مختصرة عنك كمؤلف" : "A short bio about you as an author",
+                  hint: lang === "ar" ? "تظهر في نهاية الكتاب" : "Appears at the end of the book",
+                },
+              ] as const;
+
+              const renderSection = (sections: typeof FRONT_MATTER | typeof BACK_MATTER) =>
+                sections.map(({ key, label, icon: Icon, placeholder, desc, hint }) => {
+                  const content = pages[key as keyof BookPages] || "";
+                  const isEditing = editingSection === key;
+                  const filled = !!content;
+                  return (
+                    <div key={key} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      {/* Header */}
+                      <div className="flex items-start justify-between px-5 pt-4 pb-3">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 rounded-lg p-2" style={{ background: filled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)" }}>
+                            <Icon className="w-4 h-4" style={{ color: filled ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)" }} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm">{label}</span>
+                              {filled && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
+                                  {lang === "ar" ? "مكتمل" : "Added"}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
+                            <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                              <BookOpen className="w-3 h-3" />{hint}
+                            </p>
+                          </div>
+                        </div>
+                        {!isEditing ? (
+                          <Button
+                            size="sm"
+                            variant={filled ? "outline" : "default"}
+                            className="h-8 rounded-xl text-xs px-4 shrink-0"
+                            style={filled ? {} : { background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.85)" }}
+                            onClick={() => { setEditingSection(key); setSectionDraft(content || placeholder); }}
+                          >
+                            {filled ? (lang === "ar" ? "تعديل" : "Edit") : (lang === "ar" ? "+ إضافة" : "+ Add")}
+                          </Button>
+                        ) : (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Button size="sm" className="h-8 rounded-xl text-xs px-3 text-[#111] border-0" style={{ background: "#EFEFEF" }} onClick={() => {
+                              const updated = { ...pages, [key]: sectionDraft };
+                              updateBook.mutate({ id: bookId, bookPages: updated } as any);
+                              setEditingSection(null);
+                              toast({ title: lang === "ar" ? "تم الحفظ" : "Saved!" });
+                            }}>
+                              <Check className="w-3 h-3 mr-1" />{lang === "ar" ? "حفظ" : "Save"}
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs px-2" onClick={() => setEditingSection(null)}>
+                              {lang === "ar" ? "إلغاء" : "Cancel"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content area */}
+                      <div className="px-5 pb-4">
+                        {isEditing ? (
+                          <Textarea
+                            autoFocus
+                            value={sectionDraft}
+                            onChange={e => setSectionDraft(e.target.value)}
+                            className="min-h-[110px] resize-none text-sm rounded-xl"
+                            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
+                            dir={isRTL ? "rtl" : "ltr"}
+                          />
+                        ) : filled ? (
+                          <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.55)" }}>{content}</p>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl px-4 py-3 border border-dashed" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                            <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.2)" }}>{placeholder}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+
               return (
-                <div className="space-y-4">
-                  {/* Writing Goal card */}
-                  <div className="rounded-xl bg-foreground/[0.03] p-5">
+                <div className="space-y-6">
+                  {/* Writing Goal */}
+                  <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-foreground" />
-                        <span className="font-semibold text-sm">{lang === "ar" ? "هدف الكتابة" : "Writing Goal"}</span>
+                      <div className="flex items-center gap-2.5">
+                        <div className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.06)" }}>
+                          <Target className="w-4 h-4" style={{ color: "rgba(255,255,255,0.7)" }} />
+                        </div>
+                        <div>
+                          <span className="font-semibold text-sm block">{lang === "ar" ? "هدف الكتابة" : "Writing Goal"}</span>
+                          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{lang === "ar" ? "حدد عدد الكلمات الذي تريد الوصول إليه" : "Set a word count target to track your progress"}</span>
+                        </div>
                       </div>
                       {!editingGoal && (
-                        <button onClick={() => { setEditingGoal(true); setGoalDraft(String(goal || "")); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        <button onClick={() => { setEditingGoal(true); setGoalDraft(String(goal || "")); }} className="text-xs transition-colors rounded-lg p-2 hover:bg-foreground/5" style={{ color: "rgba(255,255,255,0.4)" }}>
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
                     {editingGoal ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          autoFocus
-                          value={goalDraft}
-                          onChange={e => setGoalDraft(e.target.value)}
-                          placeholder={lang === "ar" ? "مثال: 80000" : "e.g. 80000"}
-                          className="h-8 text-sm rounded-lg"
-                        />
-                        <Button size="sm" className="h-8 rounded-lg text-[#111111] border-0 px-3" style={{ background: "#EFEFEF" }} onClick={() => {
-                          updateBook.mutate({ id: bookId, wordGoal: parseInt(goalDraft) || 0 } as any);
-                          setEditingGoal(false);
-                        }}><Check className="w-3.5 h-3.5" /></Button>
-                        <Button size="sm" variant="ghost" className="h-8 rounded-lg px-2" onClick={() => setEditingGoal(false)}>✕</Button>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Input type="number" autoFocus value={goalDraft} onChange={e => setGoalDraft(e.target.value)} placeholder={lang === "ar" ? "مثال: 80000" : "e.g. 80000"} className="h-9 text-sm rounded-xl" />
+                        <Button size="sm" className="h-9 rounded-xl px-4 text-[#111] border-0" style={{ background: "#EFEFEF" }} onClick={() => { updateBook.mutate({ id: bookId, wordGoal: parseInt(goalDraft) || 0 } as any); setEditingGoal(false); }}>
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-9 rounded-xl px-3" onClick={() => setEditingGoal(false)}>✕</Button>
                       </div>
                     ) : goal > 0 ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{totalWords.toLocaleString()} {lang === "ar" ? "كلمة" : "words written"}</span>
-                          <span>{goalPct}% — {lang === "ar" ? "الهدف:" : "Goal:"} {goal.toLocaleString()}</span>
+                      <div className="space-y-2 mt-2">
+                        <div className="flex items-center justify-between text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+                          <span>{totalWords.toLocaleString()} {lang === "ar" ? "كلمة مكتوبة" : "words written"}</span>
+                          <span>{goalPct}% {lang === "ar" ? `من ${goal.toLocaleString()}` : `of ${goal.toLocaleString()}`}</span>
                         </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full transition-all" style={{ width: `${goalPct}%`, background: "hsl(var(--foreground))" }} />
+                        <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+                          <div className="h-full rounded-full transition-all" style={{ width: `${goalPct}%`, background: goalPct >= 100 ? "#4ade80" : "rgba(255,255,255,0.7)" }} />
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground">{lang === "ar" ? "لم يُحدد هدف بعد. اضغط ✎ لتعيين هدف الكلمات." : "No goal set yet. Click ✎ to set a word count target."}</p>
+                      <button onClick={() => { setEditingGoal(true); setGoalDraft(""); }} className="mt-2 w-full rounded-xl py-2.5 text-sm border border-dashed transition-colors hover:border-foreground/20 text-left px-4" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.35)" }}>
+                        {lang === "ar" ? "اضغط لتعيين هدف الكلمات..." : "Click to set a word count goal..."}
+                      </button>
                     )}
                   </div>
 
-                  {/* Page sections */}
-                  {PAGE_SECTIONS.map(({ key, label, icon: Icon, placeholder, desc }) => {
-                    const content = pages[key as keyof BookPages] || "";
-                    const isEditing = editingSection === key;
-                    return (
-                      <div key={key} className="rounded-xl bg-foreground/[0.03] overflow-hidden">
-                        <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06]">
-                          <div className="flex items-center gap-2.5">
-                            <Icon className="w-4 h-4 text-foreground" />
-                            <span className="font-semibold text-sm">{label}</span>
-                            <span className="text-xs text-muted-foreground hidden sm:block">— {desc}</span>
-                          </div>
-                          {!isEditing ? (
-                            <Button size="sm" variant="outline" className="h-7 rounded-lg text-xs px-3" onClick={() => { setEditingSection(key); setSectionDraft(content || placeholder); }}>
-                              <Edit3 className="w-3 h-3 mr-1" />{content ? (lang === "ar" ? "تعديل" : "Edit") : (lang === "ar" ? "إضافة" : "Add")}
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-1.5">
-                              <Button size="sm" className="h-7 rounded-lg text-xs px-3 text-[#111111] border-0" style={{ background: "#EFEFEF" }} onClick={() => {
-                                const updated = { ...pages, [key]: sectionDraft };
-                                updateBook.mutate({ id: bookId, bookPages: updated } as any);
-                                setEditingSection(null);
-                                toast({ title: lang === "ar" ? "تم الحفظ" : "Saved!" });
-                              }}><Check className="w-3 h-3 mr-1" />{lang === "ar" ? "حفظ" : "Save"}</Button>
-                              <Button size="sm" variant="ghost" className="h-7 rounded-lg text-xs px-2" onClick={() => setEditingSection(null)}>{lang === "ar" ? "إلغاء" : "Cancel"}</Button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="px-5 py-4">
-                          {isEditing ? (
-                            <Textarea
-                              autoFocus
-                              value={sectionDraft}
-                              onChange={e => setSectionDraft(e.target.value)}
-                              className="min-h-[120px] resize-none text-sm rounded-lg border-border"
-                              dir={isRTL ? "rtl" : "ltr"}
-                            />
-                          ) : content ? (
-                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap line-clamp-3">{content}</p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground/60 italic leading-relaxed line-clamp-2">{placeholder}</p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {/* Book flow visual */}
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      {lang === "ar" ? "ترتيب صفحات الكتاب" : "Book Structure"}
+                    </p>
+                    <div className="flex items-center gap-1 flex-wrap text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      {[
+                        { label: lang === "ar" ? "الغلاف" : "Cover", filled: true },
+                        { label: lang === "ar" ? "حقوق النشر" : "Copyright", filled: !!pages.copyright },
+                        { label: lang === "ar" ? "الإهداء" : "Dedication", filled: !!pages.dedication },
+                        { label: lang === "ar" ? "الاقتباس" : "Epigraph", filled: !!pages.epigraph },
+                        { label: lang === "ar" ? "الفصول" : "Chapters", filled: true },
+                        { label: lang === "ar" ? "نبذة الكاتب" : "About Author", filled: !!pages.aboutAuthor },
+                      ].map((step, i, arr) => (
+                        <span key={step.label} className="flex items-center gap-1">
+                          <span className="px-2 py-1 rounded-lg" style={{ background: step.filled ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)", color: step.filled ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)", border: step.filled ? "1px solid rgba(255,255,255,0.12)" : "1px dashed rgba(255,255,255,0.1)" }}>
+                            {step.label}
+                          </span>
+                          {i < arr.length - 1 && <span style={{ color: "rgba(255,255,255,0.2)" }}>›</span>}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Front matter */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      {lang === "ar" ? "الصفحات الأمامية" : "Front Matter"}
+                    </p>
+                    {renderSection(FRONT_MATTER)}
+                  </div>
+
+                  {/* Back matter */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      {lang === "ar" ? "الصفحات الخلفية" : "Back Matter"}
+                    </p>
+                    {renderSection(BACK_MATTER)}
+                  </div>
                 </div>
               );
             })()}
