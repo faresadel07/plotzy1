@@ -1859,11 +1859,12 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // GET /api/gutenberg/books?search=&topic=&page=&lang=
   app.get("/api/gutenberg/books", async (req: any, res: any) => {
     try {
-      const { search = "", topic = "", page = "1", lang = "en" } = req.query as Record<string, string>;
+      const { search = "", topic = "", page = "1", lang = "en", sort = "" } = req.query as Record<string, string>;
       const params = new URLSearchParams({ page });
       if (search) params.set("search", search);
       if (topic) params.set("topic", topic);
       if (lang) params.set("languages", lang);
+      if (sort === "ascending") params.set("sort", "ascending");
 
       const resp = await fetch(`${GUTENDEX}?${params}`);
       if (!resp.ok) throw new Error(`Gutendex error: ${resp.status}`);

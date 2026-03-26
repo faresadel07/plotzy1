@@ -104,6 +104,17 @@ Database layer using Drizzle ORM.
 
 Shared route type definitions and achievement constants used by both frontend and backend.
 
+## Gutenberg Public-Domain Library
+
+Routes: `/discover` (grid browser) → `/discover/:id` (immersive reader)
+
+- **Discover page** (`src/pages/discover.tsx`): Hero search, recently-read shelf (localStorage), genre pill filters, collapsible Filters panel (language + sort), Gutendex API-backed results
+- **Reader** (`src/pages/gutenberg-reader.tsx`): Full-screen Kindle-style reader, ~245 words/page pagination, slide transitions, keyboard/swipe navigation, localStorage position persistence, TOC drawer, font/line-height controls, dark/light toggle, .txt download
+- **API routes** (in `routes.ts` `registerRoutes`): `GET /api/gutenberg/search`, `GET /api/gutenberg/books/:id`, `GET /api/gutenberg/books/:id/content` (fetches + DB-caches plaintext from Gutenberg servers, strips boilerplate)
+- **Critical**: `App.tsx` Router skips `page-turn-enter` animation class for `/discover/:id` routes because `perspective()/rotateY()` CSS transforms on ancestor elements cause `position: fixed` descendants to be positioned relative to the transformed element (not the viewport), making the full-screen reader invisible
+- **Parsing**: `parseParagraphs()` normalizes `\r\n` Windows line endings before splitting on `\n{2,}`. Filters lines under 12 chars and `[Illustration]` markers
+- **localStorage keys**: `plotzy_rpos_{gutId}` (page position), `plotzy_recently_read` (array of up to 24 recently-read entries)
+
 ## Environment Variables Needed
 
 - `DATABASE_URL` — PostgreSQL connection string (auto-provided by Replit)

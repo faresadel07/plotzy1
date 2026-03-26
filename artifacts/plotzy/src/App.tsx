@@ -60,9 +60,10 @@ function OAuthCallbackHandler() {
 
 function Router() {
   const [location] = useLocation();
+  const isFullscreen = location.startsWith("/discover/");
 
   return (
-    <div key={location} className="page-turn-enter">
+    <div key={location} className={isFullscreen ? "" : "page-turn-enter"}>
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/trash" component={Trash} />
