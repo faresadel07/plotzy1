@@ -724,11 +724,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   {...provided.draggableProps}
                                   className="group relative flex items-center gap-0 transition-colors"
                                   style={{
+                                    ...provided.draggableProps.style,
                                     background: snapshot.isDragging ? 'rgba(255,255,255,0.055)' : 'transparent',
                                     borderBottom: index < sortedChapters.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
                                   }}
-                                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+                                  onMouseEnter={e => { if (!snapshot.isDragging) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                                  onMouseLeave={e => { if (!snapshot.isDragging) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
                                   data-testid={`card-chapter-${chapter.id}`}
                                 >
                                   {/* Large faded chapter number */}
