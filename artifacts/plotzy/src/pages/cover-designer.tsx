@@ -146,9 +146,16 @@ export default function CoverDesigner() {
     pushHistory(els);
   };
 
-  /* ─── Init default elements ─── */
+  /* ─── Init elements — restore saved design or use defaults ─── */
   useEffect(() => {
     if (!book) return;
+    const saved = (book as any).coverData as { elements?: CoverElement[]; settings?: CoverSettings } | null | undefined;
+    if (saved?.elements && saved.elements.length > 0) {
+      setElements(saved.elements);
+      setHistory([saved.elements]);
+      if (saved.settings) setCoverSettings(saved.settings);
+      return;
+    }
     const initialEls: CoverElement[] = [
       { id: nanoid(), type: "text", face: "front", x: 20, y: 280, width: 260, height: 80, zIndex: 10, visible: true, locked: false, content: book.title || "Book Title", fontSize: 32, fontFamily: "Playfair Display", fontWeight: "bold", color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 },
       { id: nanoid(), type: "text", face: "front", x: 20, y: 380, width: 260, height: 40, zIndex: 11, visible: true, locked: false, content: book.authorName || "Author Name", fontSize: 16, fontFamily: "Inter", fontWeight: "normal", color: "rgba(255,255,255,0.75)", textAlign: "center", lineHeight: 1.4, letterSpacing: 2 },
@@ -356,7 +363,11 @@ export default function CoverDesigner() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateBook.mutateAsync({ id: bookId, spineColor: coverSettings.spine.background });
+      await updateBook.mutateAsync({
+        id: bookId,
+        spineColor: coverSettings.spine.background,
+        coverData: { elements, settings: coverSettings },
+      } as any);
       toast({ title: "Design saved!" });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });

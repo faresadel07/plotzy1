@@ -60,6 +60,7 @@ function AddDialog({ bookId, onClose, ar }: AddDialogProps) {
     onClose();
   };
 
+  if (typeof document === "undefined" || !document.body) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />

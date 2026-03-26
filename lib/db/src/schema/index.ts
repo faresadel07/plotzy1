@@ -40,6 +40,7 @@ export const books = pgTable("books", {
   coverImage: text("cover_image"),
   backCoverImage: text("back_cover_image"),
   spineColor: text("spine_color").default("#7c3aed"),
+  coverData: jsonb("cover_data"),
   summary: text("summary"),
   authorName: text("author_name"),
   bookPreferences: jsonb("book_preferences").$type<BookPreferences>(),
