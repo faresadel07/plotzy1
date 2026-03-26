@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useResearchItems, useCreateResearchItem, useDeleteResearchItem, useUpdateResearchItem, fetchUrlPreview } from "@/hooks/use-research";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
@@ -59,7 +60,7 @@ function AddDialog({ bookId, onClose, ar }: AddDialogProps) {
     onClose();
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
       <div
@@ -160,7 +161,8 @@ function AddDialog({ bookId, onClose, ar }: AddDialogProps) {
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
