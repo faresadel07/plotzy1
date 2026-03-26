@@ -570,7 +570,12 @@ export default function CoverDesigner() {
         {/* Spine text is rotated */}
         {faceElements.map((el) =>
           face === "spine" ? (
-            <div key={el.id} style={{ position: "absolute", left: el.x, top: el.y, width: el.width, height: el.height, zIndex: el.zIndex, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div
+              key={el.id}
+              style={{ position: "absolute", left: el.x, top: el.y, width: el.width, height: el.height, zIndex: el.zIndex, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", outline: selectedId === el.id ? "2px solid #3b82f6" : "none", outlineOffset: 1, boxSizing: "border-box" }}
+              onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {el.type === "text" && (
                 <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", color: el.color, fontSize: el.fontSize, fontFamily: el.fontFamily, fontWeight: el.fontWeight, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", letterSpacing: `${el.letterSpacing || 0}px` }}>
                   {el.content}
@@ -792,8 +797,24 @@ export default function CoverDesigner() {
   /* ─── Properties panel (right) ─── */
   const renderProperties = () => {
     if (!selected) return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <p className="text-xs text-white/25 text-center leading-relaxed">Click an element<br />to see its properties</p>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Face background color */}
+        <div>
+          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2 capitalize">{activeFace} Background</p>
+          <input
+            type="color"
+            className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
+            value={coverSettings[activeFace].background.startsWith("#") ? coverSettings[activeFace].background : "#7c3aed"}
+            onChange={(e) => setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: e.target.value } }))}
+          />
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {["#7c3aed","#1e1b4b","#0f172a","#111827","#1a1a2e","#3b0764","#164e63","#14532d","#7f1d1d","#ffffff","#000000","#f8fafc"].map((c) => (
+              <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform"
+                onClick={() => setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: c } }))} />
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-white/20 text-center pt-2">Click an element<br />to edit its properties</p>
       </div>
     );
 
