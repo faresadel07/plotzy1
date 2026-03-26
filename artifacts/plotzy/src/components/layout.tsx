@@ -300,7 +300,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
                 <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
               </a>
               <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.35)', maxWidth: 260, margin: 0 }}>
-                The modern platform for writers — write, publish, and share your stories with the world.
+                The modern platform for writers. Write, publish, and share your stories with the world.
               </p>
               {/* Tagline quote */}
               <p style={{ fontSize: 11.5, fontStyle: 'italic', color: 'rgba(255,255,255,0.18)', margin: 0, paddingTop: 4, borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: 10 }}>
