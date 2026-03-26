@@ -261,11 +261,78 @@ export function Layout({ children, isLanding, isFullDark, lightNav }: { children
         {children}
       </main>
 
-      <footer style={{ background: '#080808', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="py-8">
-          <div className="max-w-6xl mx-auto px-4 text-center space-y-1">
-            <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>{t("appName")} &copy; {new Date().getFullYear()}</p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>{t("tagline")} &mdash; made with <span style={{ color: 'rgba(255,255,255,0.4)' }}>♥</span></p>
+      <footer style={{ background: '#080808', borderTop: '1px solid rgba(255,255,255,0.07)', fontFamily: SF }}>
+        {/* Main footer grid */}
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '52px 24px 40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '40px 32px' }}>
+
+            {/* Brand column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6, filter: 'invert(1)' }} />
+                <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.04em', color: '#fff' }}>PLOTZY</span>
+              </a>
+              <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.38)', maxWidth: 240 }}>
+                The modern platform for writers — write, publish, and share your stories with the world.
+              </p>
+            </div>
+
+            {/* Product column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Product</p>
+              {[
+                { label: 'Home', href: '/' },
+                { label: 'Writing Guide', href: '/writing-guide' },
+                { label: 'Marketplace', href: '/marketplace' },
+                { label: 'Pricing', href: '/pricing' },
+              ].map(({ label, href }) => (
+                <a key={href} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                >{label}</a>
+              ))}
+            </div>
+
+            {/* Community column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Community</p>
+              {[
+                { label: 'Community Library', href: '/library' },
+                { label: 'Support', href: '/support' },
+              ].map(({ label, href }) => (
+                <a key={href} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                >{label}</a>
+              ))}
+            </div>
+
+            {/* Legal column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Legal</p>
+              {[
+                { label: 'Privacy Policy', href: '#' },
+                { label: 'Terms of Service', href: '#' },
+              ].map(({ label, href }) => (
+                <a key={label} href={href} style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                >{label}</a>
+              ))}
+            </div>
+
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ maxWidth: 1152, margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
+              &copy; {new Date().getFullYear()} Plotzy. All rights reserved.
+            </p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
+              Made with <span style={{ color: 'rgba(255,255,255,0.45)' }}>♥</span> for writers worldwide
+            </p>
           </div>
         </div>
       </footer>
