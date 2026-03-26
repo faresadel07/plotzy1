@@ -502,6 +502,7 @@ export default function CoverDesigner() {
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleDoubleClick}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Content */}
         {el.type === "text" && (
