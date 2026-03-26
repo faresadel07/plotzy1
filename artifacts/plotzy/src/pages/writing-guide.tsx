@@ -25,10 +25,10 @@ const fadeUp = {
 const genres = [
   {
     icon: Heart, name: "Romance", accent: "#e05c7e",
-    description: "Stories driven by love, longing, and emotional connection. The central promise: two people will find happiness together — even if the journey is painful.",
+    description: "Stories driven by love, longing, and emotional connection. The central promise: two people will find happiness together: even if the journey is painful.",
     subgenres: ["Contemporary", "Historical", "Paranormal", "Romantic Suspense"],
     conventions: ["Happily Ever After (HEA) or Happy For Now (HFN) ending", "Emotional tension between leads", "Obstacles keeping them apart"],
-    tip: "The push-pull dynamic is everything. Give readers reasons to root for the couple — then give the couple reasons to push each other away.",
+    tip: "The push-pull dynamic is everything. Give readers reasons to root for the couple: then give the couple reasons to push each other away.",
     examples: ["Pride and Prejudice", "The Notebook", "Outlander"],
   },
   {
@@ -36,7 +36,7 @@ const genres = [
     description: "Suspenseful stories built around a crime, hidden truth, or race against time. Readers are hooked by unanswered questions and the promise of resolution.",
     subgenres: ["Cozy Mystery", "Psychological Thriller", "Legal Thriller", "Crime Noir"],
     conventions: ["A central question (whodunit?)", "Clues planted early", "Escalating stakes and reveals"],
-    tip: "Plant your clues fairly — the reader should be able to solve it, but not too easily. Every red herring must still feel meaningful in hindsight.",
+    tip: "Plant your clues fairly: the reader should be able to solve it, but not too easily. Every red herring must still feel meaningful in hindsight.",
     examples: ["Gone Girl", "The Girl with the Dragon Tattoo", "Big Little Lies"],
   },
   {
@@ -52,15 +52,15 @@ const genres = [
     description: "Speculative stories exploring future technology, space, AI, and the human condition in a changed world. The best sci-fi uses technology to illuminate human nature.",
     subgenres: ["Space Opera", "Dystopian", "Cyberpunk", "Hard Sci-Fi"],
     conventions: ["A 'what if?' premise grounded in science", "Technology with social consequences", "Big ideas wrapped in personal stories"],
-    tip: "The technology is never the real story — the human response to it is. Ask: how does this change what people want, fear, and love?",
+    tip: "The technology is never the real story: the human response to it is. Ask: how does this change what people want, fear, and love?",
     examples: ["Dune", "The Martian", "Ender's Game"],
   },
   {
     icon: Ghost, name: "Horror", accent: "#f87171",
-    description: "Stories designed to frighten and unsettle. Horror explores our deepest fears — from supernatural threats to the terror of losing one's mind.",
+    description: "Stories designed to frighten and unsettle. Horror explores our deepest fears: from supernatural threats to the terror of losing one's mind.",
     subgenres: ["Supernatural Horror", "Psychological Horror", "Body Horror", "Gothic"],
     conventions: ["A slow build of dread", "Characters in genuine danger", "Something truly threatening at the core"],
-    tip: "The scariest thing is what the reader imagines. Describe enough to set the scene — then let their imagination fill the gaps with their own worst fears.",
+    tip: "The scariest thing is what the reader imagines. Describe enough to set the scene: then let their imagination fill the gaps with their own worst fears.",
     examples: ["It", "The Shining", "Dracula"],
   },
   {
@@ -68,7 +68,7 @@ const genres = [
     description: "Fast-paced stories where heroes face physical danger, impossible odds, and exciting quests. Every page should feel like it's moving.",
     subgenres: ["Espionage", "Survival", "Heist", "Quest"],
     conventions: ["High physical stakes", "Constant forward momentum", "A hero who acts rather than waits"],
-    tip: "Vary your action sequences. A relentless sprint is exhausting — alternate intense action scenes with quieter moments of character development or planning.",
+    tip: "Vary your action sequences. A relentless sprint is exhausting: alternate intense action scenes with quieter moments of character development or planning.",
     examples: ["Indiana Jones", "The Hunger Games", "Robinson Crusoe"],
   },
   {
@@ -76,7 +76,7 @@ const genres = [
     description: "Character-driven stories exploring the full range of human experience. Less about plot events, more about inner lives, relationships, and what it means to be human.",
     subgenres: ["Domestic Drama", "Coming-of-Age", "Social Commentary", "Memoir-Style"],
     conventions: ["Deep interiority and character psychology", "Prose that rewards re-reading", "Ambiguous or earned endings"],
-    tip: "Let your characters be contradictory. Real people contain multitudes — a character who is always consistent feels flat. Let their choices surprise even you.",
+    tip: "Let your characters be contradictory. Real people contain multitudes: a character who is always consistent feels flat. Let their choices surprise even you.",
     examples: ["The Kite Runner", "A Little Life", "Normal People"],
   },
   {
@@ -84,7 +84,7 @@ const genres = [
     description: "Stories set in real historical periods, blending fictional characters with authentic settings, events, and atmosphere. The past becomes a living world.",
     subgenres: ["War Fiction", "Ancient World", "Victorian Era", "20th Century"],
     conventions: ["Authentic historical detail", "The tension between historical constraints and modern sensibilities", "Real events as backdrop"],
-    tip: "Research until the era lives in your bones — then stop showing it off. Great historical fiction feels lived-in, not like a textbook with characters inserted.",
+    tip: "Research until the era lives in your bones: then stop showing it off. Great historical fiction feels lived-in, not like a textbook with characters inserted.",
     examples: ["The Bronze Horseman", "All the Light We Cannot See", "Wolf Hall"],
   },
 ];
@@ -99,16 +99,16 @@ const structures = [
     description: "The oldest and most widely used story framework. Every successful Hollywood film and the majority of published novels follow some version of this structure. It divides your story into three distinct acts with clear turning points.",
     acts: [
       {
-        label: "Act I — Setup (25%)",
-        points: ["Introduce your protagonist in their ordinary world", "Establish what they want and what's at stake", "The Inciting Incident — an event that disrupts everything", "End with the protagonist committing to a new direction"],
+        label: "Act I: Setup (25%)",
+        points: ["Introduce your protagonist in their ordinary world", "Establish what they want and what's at stake", "The Inciting Incident: an event that disrupts everything", "End with the protagonist committing to a new direction"],
       },
       {
-        label: "Act II — Confrontation (50%)",
-        points: ["Protagonist pursues their goal but faces escalating obstacles", "Midpoint twist changes direction or raises the stakes dramatically", "All seems lost — the darkest moment before the climax", "Protagonist discovers what they truly need (vs. what they wanted)"],
+        label: "Act II: Confrontation (50%)",
+        points: ["Protagonist pursues their goal but faces escalating obstacles", "Midpoint twist changes direction or raises the stakes dramatically", "All seems lost: the darkest moment before the climax", "Protagonist discovers what they truly need (vs. what they wanted)"],
       },
       {
-        label: "Act III — Resolution (25%)",
-        points: ["The climax — the ultimate confrontation or challenge", "The protagonist applies everything they've learned", "Resolution — the new equilibrium after the conflict", "Show how the character (and world) has changed"],
+        label: "Act III: Resolution (25%)",
+        points: ["The climax: the ultimate confrontation or challenge", "The protagonist applies everything they've learned", "Resolution: the new equilibrium after the conflict", "Show how the character (and world) has changed"],
       },
     ],
   },
@@ -122,15 +122,15 @@ const structures = [
     acts: [
       {
         label: "Departure (The Beginning)",
-        points: ["Ordinary World — hero's life before the adventure", "Call to Adventure — something disrupts the status quo", "Refusal of the Call — hero hesitates (shows stakes)", "Crossing the Threshold — hero commits and enters the new world"],
+        points: ["Ordinary World: hero's life before the adventure", "Call to Adventure: something disrupts the status quo", "Refusal of the Call: hero hesitates (shows stakes)", "Crossing the Threshold: hero commits and enters the new world"],
       },
       {
         label: "Initiation (The Middle)",
-        points: ["Tests, Allies, Enemies — the new world challenges the hero", "The Ordeal — a major crisis, the hero faces death (literal or symbolic)", "The Reward — hero gains something valuable from surviving", "The Road Back — hero must return, often pursued by consequences"],
+        points: ["Tests, Allies, Enemies: the new world challenges the hero", "The Ordeal: a major crisis, the hero faces death (literal or symbolic)", "The Reward: hero gains something valuable from surviving", "The Road Back: hero must return, often pursued by consequences"],
       },
       {
         label: "Return (The End)",
-        points: ["The Resurrection — one final, greatest test using all lessons learned", "Return with the Elixir — hero comes home changed, bringing something of value"],
+        points: ["The Resurrection: one final, greatest test using all lessons learned", "Return with the Elixir: hero comes home changed, bringing something of value"],
       },
     ],
   },
@@ -140,19 +140,19 @@ const structures = [
     tag: "Most Detailed",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10 border-emerald-500/20",
-    description: "Created by screenwriter Blake Snyder, this 15-beat framework gives you a precise structural map. It's highly prescriptive — ideal for beginners who want exact targets for when things should happen.",
+    description: "Created by screenwriter Blake Snyder, this 15-beat framework gives you a precise structural map. It's highly prescriptive: ideal for beginners who want exact targets for when things should happen.",
     acts: [
       {
         label: "Opening through Break into Two",
-        points: ["Opening Image — a snapshot of the hero's flawed world", "Theme Stated — someone states what the story is really about", "Set-Up — establish the status quo and introduce key characters", "Catalyst (p.12/10%) — the inciting incident", "Debate (p.12–25%) — hero wrestles with the decision", "Break into Two (p.25%) — hero enters the upside-down world"],
+        points: ["Opening Image: a snapshot of the hero's flawed world", "Theme Stated: someone states what the story is really about", "Set-Up: establish the status quo and introduce key characters", "Catalyst (p.12/10%): the inciting incident", "Debate (p.12–25%): hero wrestles with the decision", "Break into Two (p.25%): hero enters the upside-down world"],
       },
       {
         label: "Fun and Games through Dark Night",
-        points: ["B Story (p.30%) — introduce the relationship that carries the theme", "Fun and Games (p.30–55%) — the promise of the premise is delivered", "Midpoint (p.55%) — a false victory or false defeat", "Bad Guys Close In (p.55–75%) — pressure mounts", "All Is Lost (p.75%) — the hero's lowest point", "Dark Night of the Soul (p.75–85%) — reflection, despair"],
+        points: ["B Story (p.30%): introduce the relationship that carries the theme", "Fun and Games (p.30–55%): the promise of the premise is delivered", "Midpoint (p.55%): a false victory or false defeat", "Bad Guys Close In (p.55–75%): pressure mounts", "All Is Lost (p.75%): the hero's lowest point", "Dark Night of the Soul (p.75–85%): reflection, despair"],
       },
       {
         label: "Break into Three through Final Image",
-        points: ["Break into Three (p.85%) — hero finds the solution using A+B stories", "Finale (p.85–99%) — execute the new plan, defeat antagonist", "Final Image (p.99%) — mirror of the Opening Image, shows transformation"],
+        points: ["Break into Three (p.85%): hero finds the solution using A+B stories", "Finale (p.85–99%): execute the new plan, defeat antagonist", "Final Image (p.99%): mirror of the Opening Image, shows transformation"],
       },
     ],
   },
@@ -164,7 +164,7 @@ const characterPillars = [
     title: "The Goal (Want)",
     color: "text-blue-400",
     bg: "bg-blue-500/10 border-blue-500/20",
-    description: "What does your character consciously want? This is their external goal — the thing they're actively chasing throughout the story.",
+    description: "What does your character consciously want? This is their external goal: the thing they're actively chasing throughout the story.",
     examples: ["Solve the murder", "Win the championship", "Get home safely", "Find true love"],
   },
   {
@@ -172,7 +172,7 @@ const characterPillars = [
     title: "The Need",
     color: "text-rose-400",
     bg: "bg-rose-500/10 border-rose-500/20",
-    description: "What does your character actually need — the internal truth they must accept to grow? The tension between want and need is what creates a character arc.",
+    description: "What does your character actually need: the internal truth they must accept to grow? The tension between want and need is what creates a character arc.",
     examples: ["Learn to trust others", "Accept their past", "Forgive themselves", "Choose love over ambition"],
   },
   {
@@ -180,7 +180,7 @@ const characterPillars = [
     title: "The Wound",
     color: "text-purple-400",
     bg: "bg-purple-500/10 border-purple-500/20",
-    description: "A defining trauma or formative experience from the past. The wound explains why the character behaves the way they do — and creates the gap between want and need.",
+    description: "A defining trauma or formative experience from the past. The wound explains why the character behaves the way they do: and creates the gap between want and need.",
     examples: ["Abandoned as a child", "Failed publicly and catastrophically", "Lost someone they loved", "Betrayed by someone they trusted"],
   },
   {
@@ -188,7 +188,7 @@ const characterPillars = [
     title: "The Flaw",
     color: "text-amber-400",
     bg: "bg-amber-500/10 border-amber-500/20",
-    description: "A genuine weakness that creates problems. Not a 'cute' flaw — a real one that costs them something. The flaw is how the wound manifests in behavior.",
+    description: "A genuine weakness that creates problems. Not a 'cute' flaw: a real one that costs them something. The flaw is how the wound manifests in behavior.",
     examples: ["Arrogance that alienates allies", "Fear of vulnerability", "Obsessive need for control", "Inability to ask for help"],
   },
   {
@@ -196,7 +196,7 @@ const characterPillars = [
     title: "The Strength",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10 border-emerald-500/20",
-    description: "What makes readers root for your character? They need genuine qualities worth admiring — courage, wit, loyalty, compassion. This is what lets them ultimately overcome.",
+    description: "What makes readers root for your character? They need genuine qualities worth admiring: courage, wit, loyalty, compassion. This is what lets them ultimately overcome.",
     examples: ["Unstoppable resilience", "Brilliant problem-solving", "Deep empathy for others", "Fierce protective instinct"],
   },
   {
@@ -215,21 +215,21 @@ const arcTypes = [
     description: "The character starts with a flawed worldview (the Lie) and, through the story's events, overcomes it to embrace the Truth. The most common arc in fiction.",
     icon: TrendingUp,
     color: "text-emerald-400",
-    example: "Ebenezer Scrooge (A Christmas Carol) — goes from miserly and bitter to generous and joyful.",
+    example: "Ebenezer Scrooge (A Christmas Carol): goes from miserly and bitter to generous and joyful.",
   },
   {
     name: "The Negative Arc",
     description: "The character starts with potential for growth but ultimately fails to overcome their flaw, descending into corruption, tragedy, or death.",
     icon: Mountain,
     color: "text-rose-400",
-    example: "Walter White (Breaking Bad) — starts as sympathetic, ends as villain. Macbeth. Anakin Skywalker.",
+    example: "Walter White (Breaking Bad): starts as sympathetic, ends as villain. Macbeth. Anakin Skywalker.",
   },
   {
     name: "The Flat Arc",
-    description: "The character doesn't change — they already hold the Truth, and they use it to change the world around them. Common in action/adventure and thrillers.",
+    description: "The character doesn't change: they already hold the Truth, and they use it to change the world around them. Common in action/adventure and thrillers.",
     icon: ArrowRight,
     color: "text-blue-400",
-    example: "James Bond, Sherlock Holmes, Atticus Finch — their unshakeable principles reshape everyone around them.",
+    example: "James Bond, Sherlock Holmes, Atticus Finch: their unshakeable principles reshape everyone around them.",
   },
 ];
 
@@ -272,13 +272,13 @@ const writingProcess = [
     color: "text-amber-400",
     border: "border-amber-500/30",
     bg: "bg-amber-500/5",
-    description: "Before you write a word of your actual book, spend time developing the core idea. Most abandoned books die here — not from lack of talent, but from starting before the idea was strong enough.",
+    description: "Before you write a word of your actual book, spend time developing the core idea. Most abandoned books die here: not from lack of talent, but from starting before the idea was strong enough.",
     actions: [
       "Write your premise in one sentence: 'A [protagonist] must [goal] before [stakes] happen'",
       "Answer: what is this story really about? (the theme)",
-      "Know your ending before you begin — or at least the emotional destination",
+      "Know your ending before you begin: or at least the emotional destination",
       "Research any unfamiliar settings, time periods, or subjects you'll need",
-      "Let the idea breathe for a week — see if you're still excited",
+      "Let the idea breathe for a week: see if you're still excited",
     ],
   },
   {
@@ -288,7 +288,7 @@ const writingProcess = [
     color: "text-blue-400",
     border: "border-blue-500/30",
     bg: "bg-blue-500/5",
-    description: "You don't need a detailed outline — but you need something. Even a rough roadmap of major turning points will prevent the most common cause of stalled manuscripts: not knowing what happens next.",
+    description: "You don't need a detailed outline: but you need something. Even a rough roadmap of major turning points will prevent the most common cause of stalled manuscripts: not knowing what happens next.",
     actions: [
       "Choose your story structure framework (3-Act, Hero's Journey, etc.)",
       "Write a one-paragraph description of each major act",
@@ -304,13 +304,13 @@ const writingProcess = [
     color: "text-purple-400",
     border: "border-purple-500/30",
     bg: "bg-purple-500/5",
-    description: "The first draft's only job is to exist. It will be messy, inconsistent, and full of placeholder scenes. That's not a failure — that's exactly how first drafts are supposed to work.",
+    description: "The first draft's only job is to exist. It will be messy, inconsistent, and full of placeholder scenes. That's not a failure: that's exactly how first drafts are supposed to work.",
     actions: [
-      "Write forward, never backward — resist the urge to edit as you go",
+      "Write forward, never backward: resist the urge to edit as you go",
       "Set a daily word count goal (500–1,500 words is realistic for most people)",
       "Leave [PLACEHOLDER] notes for research you need to do later",
       "If you're stuck, skip ahead to a scene you're excited to write",
-      "Finish the draft — a finished imperfect draft beats a perfect abandoned one",
+      "Finish the draft: a finished imperfect draft beats a perfect abandoned one",
     ],
   },
   {
@@ -323,10 +323,10 @@ const writingProcess = [
     description: "Writing is rewriting. Most published authors do 3–7 full revision passes before a manuscript is ready. Each pass focuses on a different layer of the story.",
     actions: [
       "Let the first draft sit for at least 2 weeks before re-reading",
-      "Pass 1: Big picture — does the structure work? Does the character arc land?",
-      "Pass 2: Scene-level — does every scene earn its place? Cut anything that doesn't serve the story",
-      "Pass 3: Line-level — sharpen prose, vary sentence rhythm, cut redundancy",
-      "Pass 4: Dialogue — read every line aloud. If it sounds unnatural, fix it",
+      "Pass 1: Big picture: does the structure work? Does the character arc land?",
+      "Pass 2: Scene-level: does every scene earn its place? Cut anything that doesn't serve the story",
+      "Pass 3: Line-level: sharpen prose, vary sentence rhythm, cut redundancy",
+      "Pass 4: Dialogue: read every line aloud. If it sounds unnatural, fix it",
     ],
   },
   {
@@ -336,13 +336,13 @@ const writingProcess = [
     color: "text-cyan-400",
     border: "border-cyan-500/30",
     bg: "bg-cyan-500/5",
-    description: "You cannot objectively read your own work. You know what you intended — not what you actually wrote. Beta readers reveal the gap between your intention and the reader's experience.",
+    description: "You cannot objectively read your own work. You know what you intended: not what you actually wrote. Beta readers reveal the gap between your intention and the reader's experience.",
     actions: [
       "Find 3–5 readers who are honest (not just supportive)",
       "Choose beta readers who read in your genre",
       "Ask specific questions: 'Where did you put the book down?' 'What confused you?' 'Which character felt flat?'",
-      "Look for patterns — if one reader mentions something, consider it. If three do, fix it",
-      "Don't defend your work — just listen, take notes, and decide later",
+      "Look for patterns: if one reader mentions something, consider it. If three do, fix it",
+      "Don't defend your work: just listen, take notes, and decide later",
     ],
   },
   {
@@ -352,7 +352,7 @@ const writingProcess = [
     color: "text-rose-400",
     border: "border-rose-500/30",
     bg: "bg-rose-500/5",
-    description: "Once your manuscript is polished, you have two main publishing paths. Each has real advantages — and neither is the 'wrong' choice.",
+    description: "Once your manuscript is polished, you have two main publishing paths. Each has real advantages: and neither is the 'wrong' choice.",
     actions: [
       "Traditional: Submit to literary agents → publisher deal → editorial team, distribution, prestige",
       "Self-publishing: Full creative control, higher royalties, faster to market, you handle marketing",
@@ -364,21 +364,21 @@ const writingProcess = [
 ];
 
 const selfEditingChecklist = [
-  { category: "Structure", icon: Layers, color: "text-blue-400", items: ["Every scene has a clear beginning, middle, and end", "Each scene changes something — status, knowledge, or relationship", "The three-act turning points land at approximately the right story positions", "The midpoint raises stakes or changes direction meaningfully", "The climax is the largest, most emotionally charged event"] },
+  { category: "Structure", icon: Layers, color: "text-blue-400", items: ["Every scene has a clear beginning, middle, and end", "Each scene changes something: status, knowledge, or relationship", "The three-act turning points land at approximately the right story positions", "The midpoint raises stakes or changes direction meaningfully", "The climax is the largest, most emotionally charged event"] },
   { category: "Characters", icon: Users, color: "text-purple-400", items: ["The protagonist has a clear goal, flaw, and arc", "The antagonist has understandable (even if wrong) motivations", "Supporting characters each have a distinct voice and purpose", "Characters behave consistently with their established traits", "Reactions to events feel emotionally true"] },
-  { category: "Prose", icon: Feather, color: "text-emerald-400", items: ["Sentences vary in length and rhythm — not monotonous", "Show the character's experience, not just the facts", "Cut words that add length without adding meaning", "Use active verbs rather than passive constructions", "Sensory details anchor the reader in each scene"] },
-  { category: "Pacing", icon: Zap, color: "text-amber-400", items: ["Action/tension scenes use shorter sentences and paragraphs", "Reflective moments use longer, slower prose", "No scene drags — every paragraph earns its place", "Chapter endings create enough momentum to turn the page", "The story never stops moving for more than necessary"] },
+  { category: "Prose", icon: Feather, color: "text-emerald-400", items: ["Sentences vary in length and rhythm: not monotonous", "Show the character's experience, not just the facts", "Cut words that add length without adding meaning", "Use active verbs rather than passive constructions", "Sensory details anchor the reader in each scene"] },
+  { category: "Pacing", icon: Zap, color: "text-amber-400", items: ["Action/tension scenes use shorter sentences and paragraphs", "Reflective moments use longer, slower prose", "No scene drags: every paragraph earns its place", "Chapter endings create enough momentum to turn the page", "The story never stops moving for more than necessary"] },
 ];
 
 const beginnerMistakes = [
-  { mistake: "Starting too early", fix: "Most first chapters begin 10–15 pages before the story actually starts. Find where the tension begins — start there.", icon: "01" },
+  { mistake: "Starting too early", fix: "Most first chapters begin 10–15 pages before the story actually starts. Find where the tension begins: start there.", icon: "01" },
   { mistake: "Telling instead of showing", fix: "Don't tell us a character is angry. Show us clenched fists, clipped sentences, a door closed too hard. Trust the reader.", icon: "02" },
-  { mistake: "Passive characters", fix: "Your protagonist should drive the story — not react to it. At every turning point, they should make a choice that has consequences.", icon: "03" },
+  { mistake: "Passive characters", fix: "Your protagonist should drive the story: not react to it. At every turning point, they should make a choice that has consequences.", icon: "03" },
   { mistake: "Over-explaining and over-describing", fix: "Readers don't need to know everything. Give them enough to anchor in the scene and let their imagination do the rest.", icon: "04" },
   { mistake: "Skipping the conflict in dialogue", fix: "Characters who agree, share information politely, and never misunderstand each other create zero tension. Let them talk past each other.", icon: "05" },
   { mistake: "The perfect protagonist", fix: "Likeable ≠ perfect. We root for flawed people who try anyway. Give your hero real weaknesses that cost them real things.", icon: "06" },
   { mistake: "Ending too quickly", fix: "The climax should feel earned by everything before it. If your ending doesn't feel inevitable in retrospect, the groundwork wasn't laid.", icon: "07" },
-  { mistake: "Stopping the first draft to revise", fix: "You cannot edit a blank page. Finish the draft. Every page — even bad ones — is momentum. Revision is a separate phase.", icon: "08" },
+  { mistake: "Stopping the first draft to revise", fix: "You cannot edit a blank page. Finish the draft. Every page: even bad ones: is momentum. Revision is a separate phase.", icon: "08" },
 ];
 
 const sections = [
@@ -504,9 +504,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="genres" className="scroll-mt-20">
         <SectionHeader
-          icon={BookOpen} label="Section 01 — Genres"
+          icon={BookOpen} label="Section 01: Genres"
           title="Understanding Book Genres"
-          subtitle="Every story belongs to a genre — a category that tells readers what kind of experience to expect. Choosing your genre is one of the most important decisions you'll make as a writer."
+          subtitle="Every story belongs to a genre: a category that tells readers what kind of experience to expect. Choosing your genre is one of the most important decisions you'll make as a writer."
         />
 
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -591,9 +591,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="structure" className="scroll-mt-20">
         <SectionHeader
-          icon={Layers} label="Section 02 — Structure"
+          icon={Layers} label="Section 02: Structure"
           title="Three Proven Story Structures"
-          subtitle="Professional authors don't write randomly — they follow proven frameworks that readers are unconsciously wired to find satisfying. Learn all three, then choose what fits your story."
+          subtitle="Professional authors don't write randomly: they follow proven frameworks that readers are unconsciously wired to find satisfying. Learn all three, then choose what fits your story."
         />
 
         {/* Structure tabs */}
@@ -680,9 +680,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="characters" className="scroll-mt-20">
         <SectionHeader
-          icon={Users} label="Section 03 — Characters"
+          icon={Users} label="Section 03: Characters"
           title="Building Unforgettable Characters"
-          subtitle="Plot is what happens. Character is why we care. The most memorable stories are remembered through the people in them — their flaws, their growth, and their choices under pressure."
+          subtitle="Plot is what happens. Character is why we care. The most memorable stories are remembered through the people in them: their flaws, their growth, and their choices under pressure."
         />
 
         <div className="mb-12">
@@ -720,7 +720,7 @@ export default function WritingGuide() {
 
         <div>
           <h3 className="text-lg font-bold text-foreground mb-2">The Three Character Arc Types</h3>
-          <p className="text-muted-foreground text-sm mb-6">A character arc is the internal journey your protagonist takes alongside the external story. Choose your arc type before you write — it shapes every scene.</p>
+          <p className="text-muted-foreground text-sm mb-6">A character arc is the internal journey your protagonist takes alongside the external story. Choose your arc type before you write: it shapes every scene.</p>
 
           <div className="space-y-4">
             {arcTypes.map((arc, i) => {
@@ -752,9 +752,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="dialogue" className="scroll-mt-20">
         <SectionHeader
-          icon={Mic2} label="Section 04 — Dialogue"
+          icon={Mic2} label="Section 04: Dialogue"
           title="Writing Dialogue That Feels Real"
-          subtitle="Dialogue is one of the fastest ways to reveal character, create conflict, and advance the plot — all at once. These principles separate amateur dialogue from professional-grade conversation."
+          subtitle="Dialogue is one of the fastest ways to reveal character, create conflict, and advance the plot: all at once. These principles separate amateur dialogue from professional-grade conversation."
         />
 
         <div className="space-y-5">
@@ -800,9 +800,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="process" className="scroll-mt-20">
         <SectionHeader
-          icon={Map} label="Section 05 — The Process"
+          icon={Map} label="Section 05: The Process"
           title="The Complete Writing Process"
-          subtitle="Writing a book is a multi-phase project. Understanding what phase you're in — and what that phase demands of you — is the key to staying productive and finishing what you start."
+          subtitle="Writing a book is a multi-phase project. Understanding what phase you're in: and what that phase demands of you: is the key to staying productive and finishing what you start."
         />
 
         <div className="space-y-4">
@@ -846,7 +846,7 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="editing" className="scroll-mt-20">
         <SectionHeader
-          icon={Scissors} label="Section 06 — Editing"
+          icon={Scissors} label="Section 06: Editing"
           title="The Self-Editing Checklist"
           subtitle="Professional authors revise 3–7 times before submitting. Each pass focuses on a different layer. Use this checklist to systematically strengthen your manuscript."
         />
@@ -895,9 +895,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="mistakes" className="scroll-mt-20 pb-20">
         <SectionHeader
-          icon={Lightbulb} label="Section 07 — Common Mistakes"
+          icon={Lightbulb} label="Section 07: Common Mistakes"
           title="8 Mistakes Every Beginner Makes"
-          subtitle="These are the most predictable traps new writers fall into — and the most straightforward to fix once you know to look for them."
+          subtitle="These are the most predictable traps new writers fall into: and the most straightforward to fix once you know to look for them."
         />
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -935,7 +935,7 @@ export default function WritingGuide() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {[
               {
-                quote: "It is impossible to live without failing at something, unless you live so cautiously that you might as well not have lived at all — in which case, you fail by default.",
+                quote: "It is impossible to live without failing at something, unless you live so cautiously that you might as well not have lived at all: in which case, you fail by default.",
                 author: "J.K. Rowling",
                 work: "Harvard Commencement Speech, 2008",
                 tip: "Embrace failure as part of the creative process. Every rejected manuscript, every abandoned draft, is a step toward your finished book.",
@@ -962,7 +962,7 @@ export default function WritingGuide() {
                 quote: "There is no greater agony than bearing an untold story inside you.",
                 author: "Maya Angelou",
                 work: "I Know Why the Caged Bird Sings",
-                tip: "The story already exists inside you. Your job as a writer is not to invent it — it is to find the courage to tell it honestly.",
+                tip: "The story already exists inside you. Your job as a writer is not to invent it: it is to find the courage to tell it honestly.",
                 accent: "#fb923c",
                 initials: "MA",
               },
@@ -978,7 +978,7 @@ export default function WritingGuide() {
                 quote: "The first draft is just you telling yourself the story.",
                 author: "Terry Pratchett",
                 work: "Advice on Writing",
-                tip: "Give yourself permission to write badly at first. The magic of writing happens in revision — but only if there is a first draft to revise.",
+                tip: "Give yourself permission to write badly at first. The magic of writing happens in revision: but only if there is a first draft to revise.",
                 accent: "#facc15",
                 initials: "TP",
               },
@@ -1045,7 +1045,7 @@ export default function WritingGuide() {
             Every framework, tip, and checklist in this guide is secondary to one irreplaceable activity: sitting down and writing. Knowledge without practice is just theory. The writers who finish books are the ones who show up, imperfectly, every day.
           </p>
           <p className="text-sm font-semibold text-foreground/50 italic">
-            "The first draft of anything is garbage." — Ernest Hemingway
+            "The first draft of anything is garbage.": Ernest Hemingway
           </p>
         </motion.div>
       </section>
