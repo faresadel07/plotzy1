@@ -56,27 +56,81 @@ function parseParagraphs(text: string): string[] {
     .filter(p => p.length > 12 && !p.startsWith("[Illustration"));
 }
 
-function wordCount(s: string) {
-  return s.split(/\s+/).filter(Boolean).length;
-}
+/**
+ * Measures actual paragraph heights in DOM and builds pages that never overflow.
+ * Each page contains only whole paragraphs, so sentences are never cut mid-line.
+ */
+function useMeasuredPages(
+  paragraphs: string[],
+  pageW: number,
+  pageH: number,
+  fontSize: number,
+  lineHeight: number,
+  twoPage: boolean,
+): { pages: string[][]; measuring: boolean } {
+  const [pages, setPages] = useState<string[][]>([[""]]);
+  const [measuring, setMeasuring] = useState(false);
+  const depsKey = `${paragraphs.length}|${pageW.toFixed(0)}|${pageH.toFixed(0)}|${fontSize}|${lineHeight}|${twoPage}`;
+  const prevKey = useRef("");
 
-function buildPages(paragraphs: string[], wpp: number): string[][] {
-  const pages: string[][] = [];
-  let current: string[] = [];
-  let count = 0;
-  for (const para of paragraphs) {
-    const wc = wordCount(para);
-    if (count > 0 && count + wc > wpp) {
-      pages.push(current);
-      current = [para];
-      count = wc;
-    } else {
-      current.push(para);
-      count += wc;
-    }
-  }
-  if (current.length) pages.push(current);
-  return pages.length ? pages : [[""]];
+  useEffect(() => {
+    if (!paragraphs.length || pageW < 80 || pageH < 80) return;
+    if (depsKey === prevKey.current) return;
+    prevKey.current = depsKey;
+    setMeasuring(true);
+
+    requestAnimationFrame(() => {
+      const padSide = twoPage ? 34 : 48;
+      const padTop = twoPage ? 32 : 40;
+      const footerH = 40;
+      const paraMarginPx = fontSize * lineHeight * 0.8;
+      const usableH = pageH - padTop - footerH - 4;
+      const textW = Math.max(80, pageW - padSide * 2);
+
+      const container = document.createElement("div");
+      container.style.cssText = [
+        "position:fixed", "visibility:hidden", "pointer-events:none",
+        "z-index:-9999", "top:0", "left:0",
+        `width:${textW}px`,
+        `font-family:Georgia,'Times New Roman',serif`,
+        `font-size:${fontSize}px`,
+        `line-height:${lineHeight}`,
+        "text-align:justify",
+        "-webkit-hyphens:auto", "hyphens:auto",
+        "word-break:normal", "margin:0", "padding:0",
+      ].join(";");
+      document.body.appendChild(container);
+
+      const newPages: string[][] = [];
+      let current: string[] = [];
+      let currentH = 0;
+
+      for (const para of paragraphs) {
+        const el = document.createElement("p");
+        el.style.cssText = `margin:0;padding:0;text-indent:${Math.round(fontSize * 1.5)}px`;
+        el.textContent = para;
+        container.appendChild(el);
+        const pHeight = el.offsetHeight + paraMarginPx;
+        container.removeChild(el);
+
+        if (currentH > 0 && currentH + pHeight > usableH) {
+          newPages.push(current);
+          current = [para];
+          currentH = pHeight;
+        } else {
+          current.push(para);
+          currentH += pHeight;
+        }
+      }
+      if (current.length) newPages.push(current);
+
+      document.body.removeChild(container);
+      setPages(newPages.length ? newPages : [[""]]);
+      setMeasuring(false);
+    });
+  }, [depsKey, paragraphs]);
+
+  return { pages, measuring };
 }
 
 function detectChapters(paras: string[]): { title: string; paraIdx: number }[] {
@@ -109,24 +163,6 @@ function downloadText(text: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-/** Estimate words per page given page pixel dimensions and font settings */
-function estimateWpp(
-  pageW: number, pageH: number,
-  fSize: number, lHeight: number,
-  twoPage: boolean,
-): number {
-  const padH = twoPage ? 72 : 96;   // left+right padding (px)
-  const padV = 90;                   // top + footer (px)
-  const textW = Math.max(1, pageW - padH);
-  const textH = Math.max(1, pageH - padV);
-  // Georgia at 16px: ~0.52 em per char average
-  const charsPerLine = Math.floor(textW / (fSize * 0.50));
-  const wordsPerLine = Math.max(1, charsPerLine / 5.2);
-  const lineHeightPx = fSize * lHeight;
-  const linesPerPage = Math.max(4, Math.floor(textH / lineHeightPx));
-  // Apply a safety factor so we never overflow the card
-  return Math.max(60, Math.floor(wordsPerLine * linesPerPage * 0.88));
-}
 
 export default function GutenbergReader() {
   const [, params] = useRoute("/discover/:id");
@@ -180,15 +216,9 @@ export default function GutenbergReader() {
     : Math.min(560, maxSpreadW);
   const SPINE_W = twoPage ? 8 : 0;
 
-  // ── Dynamic words-per-page ────────────────────────────────────────────────
-  const wordsPerPage = useMemo(
-    () => estimateWpp(PAGE_W, PAGE_H, fontSize, lineHeight, twoPage),
-    [PAGE_W, PAGE_H, fontSize, lineHeight, twoPage],
-  );
-
   // ── Derived data ──────────────────────────────────────────────────────────
   const paragraphs = useMemo(() => rawText ? parseParagraphs(rawText) : [], [rawText]);
-  const pages = useMemo(() => buildPages(paragraphs, wordsPerPage), [paragraphs, wordsPerPage]);
+  const { pages, measuring } = useMeasuredPages(paragraphs, PAGE_W, PAGE_H, fontSize, lineHeight, twoPage);
   const chapters = useMemo(() => detectChapters(paragraphs), [paragraphs]);
 
   const totalPages = pages.length;
@@ -322,7 +352,14 @@ export default function GutenbergReader() {
   const pageRPad = twoPage ? "32px 36px 0 32px" : pagePad;
 
   // ── Loading ───────────────────────────────────────────────────────────────
-  if (loadingMeta || loadingContent) {
+  const isLoading = loadingMeta || loadingContent || (measuring && pages.length <= 1);
+  const loadingMsg = loadingContent
+    ? (ar ? "جارٍ تحميل النص…" : "Fetching text…")
+    : measuring
+      ? (ar ? "جارٍ تهيئة الصفحات…" : "Laying out pages…")
+      : (ar ? "جارٍ التحميل…" : "Loading…");
+
+  if (isLoading) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-5" style={{ background: dark ? "#07060d" : "#b8b3aa" }}>
         <div className="relative">
@@ -331,9 +368,7 @@ export default function GutenbergReader() {
         </div>
         <div className="text-center">
           <p className="font-semibold text-base mb-1" style={{ color: "#1c1610" }}>{title || "Loading…"}</p>
-          <p className="text-sm" style={{ color: "rgba(28,22,16,0.45)" }}>
-            {loadingContent ? (ar ? "جارٍ تحميل النص…" : "Fetching text…") : (ar ? "جارٍ التحميل…" : "Loading…")}
-          </p>
+          <p className="text-sm" style={{ color: "rgba(28,22,16,0.45)" }}>{loadingMsg}</p>
         </div>
       </div>
     );
