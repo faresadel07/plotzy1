@@ -81,8 +81,12 @@ export async function registerRoutes(
   // ─── Books ─────────────────────────────────────────────────────────────────
 
   app.get(api.books.list.path, async (req, res) => {
-    const books = await storage.getBooks();
-    res.json(books);
+    if (req.isAuthenticated() && req.user) {
+      const userId = (req.user as any).id;
+      const books = await storage.getUserBooks(userId);
+      return res.json(books);
+    }
+    res.json([]);
   });
 
   app.get(api.books.trashList.path, async (req, res) => {
@@ -154,7 +158,9 @@ export async function registerRoutes(
     const book = await storage.getBook(bookId);
     if (!book) return res.status(404).json({ message: "Book not found" });
     const userId = (req.user as any).id;
-    if (book.userId !== userId) return res.status(403).json({ message: "Forbidden" });
+    if (book.userId !== null && book.userId !== userId) return res.status(403).json({ message: "Forbidden" });
+    // Assign ownership if book was created before user authenticated
+    if (book.userId === null) await storage.updateBook(bookId, { userId } as any);
     const { publish } = req.body as { publish: boolean };
     const updated = await storage.publishBook(bookId, !!publish);
 

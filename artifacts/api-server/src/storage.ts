@@ -28,6 +28,7 @@ type UpdateUser = Partial<InsertUser> & {
 
 export interface IStorage {
   getBooks(): Promise<Book[]>;
+  getUserBooks(userId: number): Promise<Book[]>;
   getDeletedBooks(): Promise<Book[]>;
   getBook(id: number): Promise<Book | undefined>;
   createBook(book: InsertBook): Promise<Book>;
@@ -93,6 +94,12 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getBooks(): Promise<Book[]> {
     return await db.select().from(books).where(eq(books.isDeleted, false));
+  }
+
+  async getUserBooks(userId: number): Promise<Book[]> {
+    return await db.select().from(books).where(
+      and(eq(books.isDeleted, false), eq(books.userId, userId))
+    );
   }
 
   async getDeletedBooks(): Promise<Book[]> {
