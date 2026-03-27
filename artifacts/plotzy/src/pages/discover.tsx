@@ -150,7 +150,7 @@ function RecentCard({ book }: { book: RecentBook }) {
           )}
           {/* Progress bar */}
           <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "rgba(0,0,0,0.4)" }}>
-            <div className="h-full" style={{ width: `${pct}%`, background: "rgba(212,172,100,0.85)" }} />
+            <div className="h-full" style={{ width: `${pct}%`, background: "rgba(255,255,255,0.60)" }} />
           </div>
           {/* Resume overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
@@ -172,9 +172,9 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
     <button onClick={onClick}
       className="text-xs px-3 py-1.5 rounded-xl font-medium transition-all whitespace-nowrap"
       style={{
-        background: active ? "rgba(212,172,100,0.15)" : "rgba(255,255,255,0.04)",
-        border: `1px solid ${active ? "rgba(212,172,100,0.4)" : "rgba(255,255,255,0.07)"}`,
-        color: active ? "rgba(212,172,100,0.95)" : "rgba(255,255,255,0.45)",
+        background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${active ? "rgba(255,255,255,0.30)" : "rgba(255,255,255,0.07)"}`,
+        color: active ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)",
       }}>
       {children}
     </button>
@@ -205,9 +205,9 @@ function Dropdown({ label, value, options, onChange }: {
       <button onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition-all"
         style={{
-          background: value ? "rgba(212,172,100,0.12)" : "rgba(255,255,255,0.05)",
-          border: `1px solid ${value ? "rgba(212,172,100,0.3)" : "rgba(255,255,255,0.08)"}`,
-          color: value ? "rgba(212,172,100,0.9)" : "rgba(255,255,255,0.55)",
+          background: value ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)",
+          border: `1px solid ${value ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
+          color: value ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.55)",
         }}>
         {current}
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -218,7 +218,7 @@ function Dropdown({ label, value, options, onChange }: {
           {options.map(o => (
             <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
               className="block w-full text-left px-4 py-2 text-xs transition-all hover:opacity-70"
-              style={{ color: o.value === value ? "rgba(212,172,100,0.9)" : "rgba(255,255,255,0.65)" }}>
+              style={{ color: o.value === value ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.65)" }}>
               {o.label}
             </button>
           ))}
@@ -282,13 +282,13 @@ export default function DiscoverPage() {
         <div className="relative pt-16 pb-12 px-6 text-center overflow-hidden">
           {/* Glow background */}
           <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,172,100,0.10) 0%, transparent 65%)" }} />
+            style={{ background: "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255,255,255,0.05) 0%, transparent 65%)" }} />
 
           {/* Label pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
-            style={{ background: "rgba(212,172,100,0.08)", border: "1px solid rgba(212,172,100,0.18)" }}>
-            <BookMarked className="w-3.5 h-3.5" style={{ color: "rgba(212,172,100,0.75)" }} />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(212,172,100,0.75)" }}>
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+            <BookMarked className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.45)" }} />
+            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.45)" }}>
               {ar ? "مكتبة الأدب العالمي" : "World Literature Library"}
             </span>
           </div>
@@ -316,7 +316,7 @@ export default function DiscoverPage() {
                 color: "rgba(255,255,255,0.90)",
                 boxShadow: "0 0 0 0 transparent",
               }}
-              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(212,172,100,0.35)")}
+              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.28)")}
               onBlur={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)")}
             />
             {search && (
@@ -362,9 +362,9 @@ export default function DiscoverPage() {
                 onClick={() => setShowFilters(v => !v)}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition-all ml-auto shrink-0"
                 style={{
-                  background: showFilters || hasActiveFilters ? "rgba(212,172,100,0.12)" : "rgba(255,255,255,0.05)",
-                  border: `1px solid ${showFilters || hasActiveFilters ? "rgba(212,172,100,0.3)" : "rgba(255,255,255,0.08)"}`,
-                  color: showFilters || hasActiveFilters ? "rgba(212,172,100,0.9)" : "rgba(255,255,255,0.55)",
+                  background: showFilters || hasActiveFilters ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${showFilters || hasActiveFilters ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
+                  color: showFilters || hasActiveFilters ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.55)",
                 }}>
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 {ar ? "فلاتر" : "Filters"}
@@ -431,7 +431,7 @@ export default function DiscoverPage() {
           {/* Loading */}
           {loading && (
             <div className="flex items-center justify-center py-28">
-              <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(212,172,100,0.5)" }} />
+              <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(255,255,255,0.40)" }} />
             </div>
           )}
 
