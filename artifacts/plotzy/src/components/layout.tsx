@@ -149,7 +149,11 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         credentials: "include",
         body: JSON.stringify({ avatarUrl: dataUrl }),
       });
-      if (res.ok) refetchAuth();
+      if (res.ok) {
+        refetchAuth();
+      } else if (res.status === 401) {
+        setAuthModalOpen(true);
+      }
     } finally {
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
@@ -278,7 +282,9 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={uploadingAvatar}
-                    onClick={() => avatarInputRef.current?.click()}
+                    onSelect={() => {
+                      setTimeout(() => avatarInputRef.current?.click(), 150);
+                    }}
                     className="gap-2 cursor-pointer"
                   >
                     <Camera className="w-4 h-4" />
