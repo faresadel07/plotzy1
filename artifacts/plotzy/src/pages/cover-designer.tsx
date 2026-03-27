@@ -408,7 +408,7 @@ export default function CoverDesigner() {
     setAiCoverLoading(true);
     try {
       const result = await generateCover.mutateAsync({ id: bookId, prompt: aiCoverPrompt, side: aiCoverSide });
-      const imgUrl = aiCoverSide === "front" ? (result as any).coverImage : (result as any).backCoverImage;
+      const imgUrl = (result as any).url;
       if (imgUrl) {
         const el: CoverElement = {
           id: nanoid(), type: "image", face: aiCoverSide,
