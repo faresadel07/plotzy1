@@ -7,7 +7,7 @@ import { AIAssistant } from "@/components/ai-assistant";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, Clock, PanelRight, BookMarked, ChevronDown } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid } from "lucide-react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { playTypewriterSound } from "@/hooks/use-audio";
@@ -224,6 +224,10 @@ export default function ChapterEditor() {
   const [suggestionPageIdx, setSuggestionPageIdx] = useState<number>(-1);
   const suggestionDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggestionAbortRef = useRef<AbortController | null>(null);
+
+  // ── Pages Thumbnail Panel ─────────────────────────────────────────────────
+  const [showPagePanel, setShowPagePanel] = useState(false);
+  const pageElsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // ── Show Don't Tell ───────────────────────────────────────────────────────
   type SDTFinding = { original: string; suggestion: string; type: string };
@@ -988,6 +992,10 @@ export default function ChapterEditor() {
               </Button>
             )}
 
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"}>
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+
             <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowStoryBible(true)} title={ar ? "الكتاب المقدس للقصة" : "Story Bible"}>
               <BookOpen className="w-4 h-4" />
             </Button>
@@ -1110,6 +1118,70 @@ export default function ChapterEditor() {
       {/* Body: editor + reference panel side by side */}
       <div className="flex flex-1 overflow-hidden relative z-10">
 
+      {/* ── Pages Thumbnail Sidebar ── */}
+      {showPagePanel && !isPrintView && (
+        <div
+          className="flex-shrink-0 overflow-y-auto flex flex-col items-center gap-2 py-3 px-2 border-r"
+          style={{
+            width: '92px',
+            background: 'rgba(0,0,0,0.7)',
+            borderColor: 'rgba(255,255,255,0.07)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <span className="text-[9px] font-semibold tracking-widest uppercase mb-1 opacity-30" style={{ color: '#fff' }}>
+            {ar ? "الصفحات" : "Pages"}
+          </span>
+          {pages.map((pageContent, index) => {
+            const pageText = getPageText(pageContent);
+            const isActive = activePageIndex === index;
+            const pageBg = isFocusMode ? '#18181b' : (effectivePrefs.bgColor || '#ffffff');
+            const pageColor = isFocusMode ? '#a1a1aa' : (effectivePrefs.textColor || '#18181b');
+            return (
+              <button
+                key={index}
+                onClick={() => {
+                  setActivePageIndex(index);
+                  pageElsRef.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+                className="w-full flex-shrink-0 rounded-sm overflow-hidden transition-all duration-150 relative"
+                style={{
+                  height: '100px',
+                  background: pageBg,
+                  outline: isActive ? '2px solid rgba(99,102,241,0.8)' : '1px solid rgba(255,255,255,0.08)',
+                  outlineOffset: isActive ? '1px' : '0px',
+                  opacity: isActive ? 1 : 0.55,
+                  transform: isActive ? 'scale(1.02)' : 'scale(1)',
+                }}
+              >
+                {/* Mini text preview */}
+                <div
+                  className="absolute inset-0 p-1.5 overflow-hidden text-left"
+                  style={{
+                    fontSize: '4px',
+                    lineHeight: '6px',
+                    color: pageColor,
+                    fontFamily: FONT_STYLE_MAP[prefs.fontFamily || '']?.fontFamily || 'serif',
+                    userSelect: 'none',
+                  }}
+                >
+                  {pageText.slice(0, 200)}
+                </div>
+                {/* Page number badge */}
+                <div
+                  className="absolute bottom-0 inset-x-0 flex items-center justify-center py-0.5"
+                  style={{ background: isActive ? 'rgba(99,102,241,0.6)' : 'rgba(0,0,0,0.35)' }}
+                >
+                  <span className="text-[8px] font-semibold" style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' }}>
+                    {index + 1}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Editor Canvas — book-desk background */}
       <main
         className="flex-1 overflow-y-auto relative py-10 md:py-14 transition-colors duration-700"
@@ -1144,7 +1216,7 @@ export default function ChapterEditor() {
             const pageWords = countWords(pageText);
 
             return (
-              <div key={index} className="relative group w-full max-w-[595px]">
+              <div key={index} className="relative group w-full max-w-[595px]" ref={el => { pageElsRef.current[index] = el; }}>
 
                 {/* Book Page Card */}
                 <div
