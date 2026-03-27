@@ -130,7 +130,9 @@ export function usePublishBook() {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Failed to update publish status");
+        const error: any = new Error(err.message || "Failed to update publish status");
+        error.status = res.status;
+        throw error;
       }
       return res.json();
     },

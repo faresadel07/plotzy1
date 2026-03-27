@@ -125,7 +125,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
   const { data: book, isLoading: isLoadingBook, error: bookError } = useBook(bookId);
   const { data: chapters, isLoading: isLoadingChapters, error: chaptersError } = useChapters(bookId);
-  const { user } = useAuth();
+  const { user, refetch: refetchAuth } = useAuth();
   const publishBook = usePublishBook();
 
   const generateCover = useGenerateCover();
@@ -594,25 +594,39 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     style={{ background: "#ffffff", color: "#111111" }}
                     disabled={publishBook.isPending}
                     data-testid="button-confirm-publish"
-                    onClick={() => publishBook.mutate({ id: bookId, publish: true }, {
-                      onSuccess: () => {
+                    onClick={() => {
+                      if (!user) {
                         setIsPublishConfirmOpen(false);
-                        toast({
-                          title: lang === "ar" ? "🎉 تم النشر!" : "🎉 Published!",
-                          description: lang === "ar"
-                            ? "كتابك الآن متاح في المكتبة المجتمعية."
-                            : "Your book is now live in the Plotzy Community Library.",
-                        });
-                        navigate("/library");
-                      },
-                      onError: (err: any) => {
-                        toast({
-                          title: lang === "ar" ? "فشل النشر" : "Publish failed",
-                          description: err?.message || (lang === "ar" ? "حدث خطأ ما، حاول مجدداً." : "Something went wrong, please try again."),
-                          variant: "destructive",
-                        });
-                      },
-                    })}
+                        setIsAuthModalOpen(true);
+                        return;
+                      }
+                      publishBook.mutate({ id: bookId, publish: true }, {
+                        onSuccess: () => {
+                          setIsPublishConfirmOpen(false);
+                          toast({
+                            title: lang === "ar" ? "🎉 تم النشر!" : "🎉 Published!",
+                            description: lang === "ar"
+                              ? "كتابك الآن متاح في المكتبة المجتمعية."
+                              : "Your book is now live in the Plotzy Community Library.",
+                          });
+                          navigate("/library");
+                        },
+                        onError: (err: any) => {
+                          const status = (err as any)?.status;
+                          if (status === 401) {
+                            setIsPublishConfirmOpen(false);
+                            refetchAuth();
+                            setIsAuthModalOpen(true);
+                            return;
+                          }
+                          toast({
+                            title: lang === "ar" ? "فشل النشر" : "Publish failed",
+                            description: err?.message || (lang === "ar" ? "حدث خطأ ما، حاول مجدداً." : "Something went wrong, please try again."),
+                            variant: "destructive",
+                          });
+                        },
+                      });
+                    }}
                   >
                     {publishBook.isPending
                       ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{lang === "ar" ? "جارٍ النشر..." : "Publishing..."}</>
