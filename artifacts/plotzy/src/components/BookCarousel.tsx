@@ -1,6 +1,8 @@
 /* ROW1: original Project Gutenberg covers (confirmed working)
    ROW2: Open Library by ISBN, with blank-image detection (OL returns 1×1 gif for missing covers) */
 
+import { Link } from "wouter";
+
 const gutCover = (id: number) =>
   `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`;
 
@@ -150,9 +152,39 @@ export function BookCarousel() {
       <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#f8f8f8,transparent)", zIndex: 2, pointerEvents: "none" }} />
       <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#f1f1f1,transparent)", zIndex: 2, pointerEvents: "none" }} />
 
-      <p style={{ textAlign: "center", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", color: "#000", fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif", fontWeight: 600, marginBottom: 20 }}>
-        Write your first book and become an author like them
-      </p>
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <Link href="/discover">
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif",
+            fontWeight: 600,
+            color: "#7a5c28",
+            cursor: "pointer",
+            borderBottom: "1.5px solid rgba(122,92,40,0.35)",
+            paddingBottom: 2,
+            transition: "color 0.2s, border-color 0.2s",
+          }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = "#5a3e10";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(90,62,16,0.7)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = "#7a5c28";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(122,92,40,0.35)";
+            }}
+          >
+            Explore our free classics library — 70,000+ books, read instantly
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </Link>
+      </div>
 
       <Track books={ROW1} />
       <div style={{ height: 14 }} />
