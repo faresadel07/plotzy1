@@ -283,7 +283,7 @@ export function ResearchBoard({ bookId }: { bookId: number }) {
         </div>
         <Button
           onClick={() => setShowAdd(true)}
-          className="rounded-xl gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+          className="rounded-xl gap-2 bg-white text-black hover:bg-white/90 transition-all"
           size="sm"
         >
           <Plus className="w-4 h-4" />
@@ -317,8 +317,8 @@ export function ResearchBoard({ bookId }: { bookId: number }) {
       {/* Empty State */}
       {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-            <StickyNote className="w-8 h-8 text-amber-500/60" />
+          <div className="w-16 h-16 rounded-2xl bg-white/8 flex items-center justify-center">
+            <StickyNote className="w-8 h-8 text-white/40" />
           </div>
           <div>
             <p className="font-semibold text-foreground/70">
