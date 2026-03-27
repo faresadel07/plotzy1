@@ -1325,6 +1325,149 @@ Rules:
     }
   });
 
+  // ─── AI Analysis Tools ─────────────────────────────────────────────────────
+
+  // Helper: build manuscript text from all chapters (max 6000 chars per chapter, up to 10 chapters)
+  async function buildManuscript(bookId: number): Promise<{ manuscript: string; chapterTitles: string[] }> {
+    const chapters = await storage.getChapters(bookId);
+    const chapterTitles = chapters.map(c => c.title || `Chapter ${chapters.indexOf(c) + 1}`);
+    const manuscript = chapters
+      .slice(0, 10)
+      .map((c, i) => `=== ${chapterTitles[i]} ===\n${getChapterText(c.content).slice(0, 6000)}`)
+      .join("\n\n");
+    return { manuscript, chapterTitles };
+  }
+
+  // Plot Hole Detector
+  app.post("/api/books/:bookId/ai/plot-holes", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+      const { manuscript } = await buildManuscript(bookId);
+      if (!manuscript.trim()) return res.json({ issues: [] });
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a literary editor specializing in plot consistency. Analyze the manuscript for logical inconsistencies, timeline errors, character contradictions, and unresolved plot threads. Return JSON in this exact shape:
+{"issues": [{"severity": "high"|"medium"|"low", "title": "short title", "description": "detailed explanation"}]}
+Return an empty array if no issues found. Focus on real narrative problems, not style issues.`,
+          },
+          { role: "user", content: `Book: "${book.title}"\n\n${manuscript}` },
+        ],
+      });
+
+      const data = JSON.parse(response.choices[0]?.message?.content || "{}");
+      res.json({ issues: data.issues ?? [] });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Analysis failed" });
+    }
+  });
+
+  // Dialogue Coach
+  app.post("/api/books/:bookId/ai/dialogue-coach", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+      const { manuscript } = await buildManuscript(bookId);
+      if (!manuscript.trim()) return res.json({ score: 0, feedback: "No content to analyze.", suggestions: [] });
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a dialogue coach and literary editor. Analyze the dialogue in the manuscript for naturalness, character voice differentiation, and authenticity. Return JSON in this exact shape:
+{"score": 0-100, "feedback": "overall feedback paragraph", "suggestions": [{"issue": "what is wrong", "example": "direct quote from text showing the problem", "fix": "rewritten version that fixes it"}]}
+Provide 2-4 specific suggestions with real examples from the text.`,
+          },
+          { role: "user", content: `Book: "${book.title}"\n\n${manuscript}` },
+        ],
+      });
+
+      const data = JSON.parse(response.choices[0]?.message?.content || "{}");
+      res.json({ score: data.score ?? 50, feedback: data.feedback ?? "", suggestions: data.suggestions ?? [] });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Analysis failed" });
+    }
+  });
+
+  // Pacing Analyzer
+  app.post("/api/books/:bookId/ai/pacing", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+      const { manuscript, chapterTitles } = await buildManuscript(bookId);
+      if (!manuscript.trim()) return res.json({ overallPacing: "N/A", score: 0, summary: "No content.", chapters: [], recommendations: [] });
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a pacing analyst for fiction manuscripts. Evaluate the story's rhythm: action scenes, slow introspective passages, transitions, and chapter lengths. Return JSON in this exact shape:
+{"overallPacing": "Fast"|"Medium"|"Slow", "score": 0-100, "summary": "1-2 sentence summary", "chapters": [{"title": "chapter title", "pacing": "Fast"|"Medium"|"Slow", "note": "brief note"}], "recommendations": ["actionable recommendation 1", "actionable recommendation 2"]}
+Cover all chapters. Give 2-3 recommendations.`,
+          },
+          { role: "user", content: `Book: "${book.title}"\nChapters: ${chapterTitles.join(", ")}\n\n${manuscript}` },
+        ],
+      });
+
+      const data = JSON.parse(response.choices[0]?.message?.content || "{}");
+      res.json({
+        overallPacing: data.overallPacing ?? "Medium",
+        score: data.score ?? 50,
+        summary: data.summary ?? "",
+        chapters: data.chapters ?? [],
+        recommendations: data.recommendations ?? [],
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Analysis failed" });
+    }
+  });
+
+  // Character Voice Consistency
+  app.post("/api/books/:bookId/ai/voice-consistency", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.bookId);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+      const { manuscript } = await buildManuscript(bookId);
+      if (!manuscript.trim()) return res.json({ score: 0, characters: [], recommendation: "No content to analyze." });
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are a character voice analyst. Identify the main characters and evaluate whether each one speaks and behaves consistently throughout the manuscript. Return JSON in this exact shape:
+{"score": 0-100, "characters": [{"name": "character name", "consistencyScore": 0-100, "issues": ["specific inconsistency description"]}], "recommendation": "overall actionable recommendation"}
+List 2-5 main characters. Issues array can be empty if consistent.`,
+          },
+          { role: "user", content: `Book: "${book.title}"\n\n${manuscript}` },
+        ],
+      });
+
+      const data = JSON.parse(response.choices[0]?.message?.content || "{}");
+      res.json({ score: data.score ?? 50, characters: data.characters ?? [], recommendation: data.recommendation ?? "" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Analysis failed" });
+    }
+  });
+
   // ─── Publisher Proposal ────────────────────────────────────────────────────
 
   app.post("/api/books/:bookId/generate-proposal", largeBodyParser, async (req, res) => {
