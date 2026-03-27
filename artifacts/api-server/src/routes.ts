@@ -81,10 +81,23 @@ export async function registerRoutes(
   // ─── Books ─────────────────────────────────────────────────────────────────
 
   app.get(api.books.list.path, async (req, res) => {
+    const sess = req.session as any;
     if (req.isAuthenticated() && req.user) {
       const userId = (req.user as any).id;
-      const books = await storage.getUserBooks(userId);
-      return res.json(books);
+      // Claim any guest books created in this session before the user logged in
+      const guestIds: number[] = sess.guestBookIds || [];
+      if (guestIds.length > 0) {
+        await storage.claimGuestBooks(guestIds, userId);
+        sess.guestBookIds = [];
+      }
+      const userBooks = await storage.getUserBooks(userId);
+      return res.json(userBooks);
+    }
+    // Not authenticated — return guest books tracked in session
+    const guestIds: number[] = sess.guestBookIds || [];
+    if (guestIds.length > 0) {
+      const guestBooks = await storage.getBooksByIds(guestIds);
+      return res.json(guestBooks);
     }
     res.json([]);
   });
@@ -105,6 +118,12 @@ export async function registerRoutes(
       const input = api.books.create.input.parse(req.body);
       if (req.user) input.userId = (req.user as any).id;
       const book = await storage.createBook(input);
+      // Track guest books in session so they can be claimed on login
+      if (!req.user) {
+        const sess = req.session as any;
+        if (!sess.guestBookIds) sess.guestBookIds = [];
+        if (!sess.guestBookIds.includes(book.id)) sess.guestBookIds.push(book.id);
+      }
       res.status(201).json(book);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
@@ -1478,9 +1497,19 @@ Write the query letter specifically tailored to this publisher, mentioning why t
         displayName: displayName || email.split("@")[0],
       });
 
+      // Capture guest book IDs before the session may change
+      const guestIds: number[] = (req.session as any).guestBookIds || [];
+
       await new Promise<void>((resolve, reject) =>
         req.login(user, (err) => (err ? reject(err) : resolve()))
       );
+
+      // Claim any books the user created as a guest before registering
+      if (guestIds.length > 0) {
+        await storage.claimGuestBooks(guestIds, user.id);
+        (req.session as any).guestBookIds = [];
+      }
+
       const { id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
       return res.status(201).json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
     } catch (err: any) {
@@ -1502,9 +1531,19 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) return res.status(401).json({ message: "Invalid email or password." });
 
+      // Capture guest book IDs before the session may change
+      const guestIds: number[] = (req.session as any).guestBookIds || [];
+
       await new Promise<void>((resolve, reject) =>
         req.login(user, (err) => (err ? reject(err) : resolve()))
       );
+
+      // Claim any books the user created as a guest in this session
+      if (guestIds.length > 0) {
+        await storage.claimGuestBooks(guestIds, user.id);
+        (req.session as any).guestBookIds = [];
+      }
+
       const { id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
       return res.json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
     } catch (err: any) {

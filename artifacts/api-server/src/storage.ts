@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, or, count, desc, sql, sum, and } from "drizzle-orm";
+import { eq, or, count, desc, sql, sum, and, inArray, isNull } from "drizzle-orm";
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements,
@@ -29,6 +29,8 @@ type UpdateUser = Partial<InsertUser> & {
 export interface IStorage {
   getBooks(): Promise<Book[]>;
   getUserBooks(userId: number): Promise<Book[]>;
+  getBooksByIds(ids: number[]): Promise<Book[]>;
+  claimGuestBooks(bookIds: number[], userId: number): Promise<void>;
   getDeletedBooks(): Promise<Book[]>;
   getBook(id: number): Promise<Book | undefined>;
   createBook(book: InsertBook): Promise<Book>;
@@ -100,6 +102,20 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(books).where(
       and(eq(books.isDeleted, false), eq(books.userId, userId))
     );
+  }
+
+  async getBooksByIds(ids: number[]): Promise<Book[]> {
+    if (ids.length === 0) return [];
+    return await db.select().from(books).where(
+      and(eq(books.isDeleted, false), inArray(books.id, ids))
+    );
+  }
+
+  async claimGuestBooks(bookIds: number[], userId: number): Promise<void> {
+    if (bookIds.length === 0) return;
+    await db.update(books)
+      .set({ userId } as any)
+      .where(and(inArray(books.id, bookIds), isNull(books.userId)));
   }
 
   async getDeletedBooks(): Promise<Book[]> {
