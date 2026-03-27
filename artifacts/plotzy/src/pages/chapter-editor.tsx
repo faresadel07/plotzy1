@@ -225,6 +225,15 @@ export default function ChapterEditor() {
   const suggestionDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggestionAbortRef = useRef<AbortController | null>(null);
 
+  // ── Show Don't Tell ───────────────────────────────────────────────────────
+  type SDTFinding = { original: string; suggestion: string; type: string };
+  const [sdtFindings, setSdtFindings] = useState<SDTFinding[]>([]);
+  const [sdtIndex, setSdtIndex] = useState(0);
+  const [sdtLoading, setSdtLoading] = useState(false);
+  const [sdtPageIdx, setSdtPageIdx] = useState<number>(-1);
+  const sdtDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sdtAbortRef = useRef<AbortController | null>(null);
+
   const toggleTypewriterMode = () => {
     setIsTypewriterMode(v => {
       const next = !v;
@@ -425,7 +434,7 @@ export default function ChapterEditor() {
         const data = await res.json();
         const raw: string = data.continuedText || "";
         // Take up to first ~12 words as the inline hint
-        const words = raw.trim().split(/\s+/).slice(0, 12).join(" ");
+        const words = raw.trim().split(/\s+/).slice(0, 24).join(" ");
         if (words) {
           setInlineSuggestion(words);
           setSuggestionPageIdx(activePageIndex);
@@ -439,6 +448,51 @@ export default function ChapterEditor() {
 
     return () => {
       if (suggestionDebounceRef.current) clearTimeout(suggestionDebounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages[activePageIndex], activePageIndex]);
+
+  // ── Show Don't Tell: debounce → AI → highlight ───────────────────────────
+  useEffect(() => {
+    setSdtFindings([]);
+    setSdtIndex(0);
+    setSdtPageIdx(-1);
+
+    const currentText = getPageText(pages[activePageIndex] ?? "").trim();
+    if (currentText.split(/\s+/).filter(Boolean).length < 20) return;
+
+    if (sdtDebounceRef.current) clearTimeout(sdtDebounceRef.current);
+
+    sdtDebounceRef.current = setTimeout(async () => {
+      if (sdtAbortRef.current) sdtAbortRef.current.abort();
+      sdtAbortRef.current = new AbortController();
+
+      setSdtLoading(true);
+      try {
+        const res = await fetch("/api/show-dont-tell", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: currentText, language: lang }),
+          credentials: "include",
+          signal: sdtAbortRef.current.signal,
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const findings: SDTFinding[] = data.findings || [];
+        if (findings.length > 0) {
+          setSdtFindings(findings);
+          setSdtIndex(0);
+          setSdtPageIdx(activePageIndex);
+        }
+      } catch {
+        // aborted or network error — ignore
+      } finally {
+        setSdtLoading(false);
+      }
+    }, 4000);
+
+    return () => {
+      if (sdtDebounceRef.current) clearTimeout(sdtDebounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages[activePageIndex], activePageIndex]);
@@ -1202,10 +1256,14 @@ export default function ChapterEditor() {
                             return;
                           }
                           if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter" || e.key === " ") {
-                            // Any typing dismisses current suggestion
+                            // Any typing dismisses current suggestion and SDT findings
                             if (inlineSuggestion) {
                               setInlineSuggestion("");
                               setSuggestionPageIdx(-1);
+                            }
+                            if (sdtFindings.length > 0) {
+                              setSdtFindings([]);
+                              setSdtPageIdx(-1);
                             }
                             playTypewriterSound(isFocusMode);
                             if (isTypewriterMode) scrollToCursorCenter(e.currentTarget as HTMLTextAreaElement);
@@ -1319,45 +1377,136 @@ export default function ChapterEditor() {
                       })()
                     )}
 
-                  {/* ── Inline AI suggestion chip ── */}
+                  {/* ── Ghost Text suggestion chip ── */}
                   {activePageIndex === index && (inlineSuggestion || suggestionLoading) && (
                     <div
-                      className="flex items-start gap-2 px-1 pb-2 animate-in fade-in duration-200"
+                      className="flex items-start gap-2 px-2 pb-2 animate-in fade-in duration-200"
                       style={{ direction: textDir }}
                     >
                       {suggestionLoading && !inlineSuggestion ? (
-                        <div className="flex items-center gap-1.5 opacity-30">
+                        <div className="flex items-center gap-1.5 opacity-30 py-1">
                           <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
                           <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
                           <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
                         </div>
                       ) : inlineSuggestion ? (
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div
+                          className="w-full rounded-xl px-3 py-2.5 flex items-start gap-2.5"
+                          style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}
+                        >
+                          <span style={{ fontSize: '13px', color: 'rgba(99,102,241,0.5)', flexShrink: 0, marginTop: '1px' }}>✦</span>
                           <span
-                            className="text-sm leading-relaxed opacity-30 italic select-none"
+                            className="flex-1 text-[13px] leading-relaxed italic select-none"
                             style={{
                               ...(FONT_STYLE_MAP[prefs.fontFamily || ''] || {}),
-                              color: isFocusMode ? '#e4e4e7' : (effectivePrefs.textColor || undefined),
+                              color: isFocusMode ? 'rgba(200,200,220,0.5)' : 'rgba(120,120,160,0.7)',
                             }}
                           >
                             {inlineSuggestion}
                           </span>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <kbd className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium opacity-40 border border-current">
+                          <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+                            <kbd className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(99,102,241,0.15)', color: 'rgba(99,102,241,0.8)', border: '1px solid rgba(99,102,241,0.25)' }}>
                               Tab
                             </kbd>
-                            <span className="text-[10px] opacity-25">
-                              {ar ? "للقبول" : "to accept"}
+                            <span className="text-[10px]" style={{ color: 'rgba(99,102,241,0.4)' }}>
+                              {ar ? "قبول" : "accept"}
                             </span>
                             <button
                               onClick={() => { setInlineSuggestion(""); setSuggestionPageIdx(-1); }}
-                              className="text-[10px] opacity-20 hover:opacity-50 transition-opacity ml-1"
+                              className="transition-opacity hover:opacity-80"
+                              style={{ color: 'rgba(99,102,241,0.35)', fontSize: '11px', marginLeft: '2px' }}
                             >
                               ✕
                             </button>
                           </div>
                         </div>
                       ) : null}
+                    </div>
+                  )}
+
+                  {/* ── Show Don't Tell panel ── */}
+                  {activePageIndex === index && sdtPageIdx === index && sdtFindings.length > 0 && (() => {
+                    const finding = sdtFindings[sdtIndex];
+                    if (!finding) return null;
+                    const applySDT = () => {
+                      const current = getPageText(pageContent);
+                      if (current.includes(finding.original)) {
+                        const updated = current.replace(finding.original, finding.suggestion);
+                        handlePageChange(index, updated);
+                      }
+                      if (sdtFindings.length > 1) {
+                        setSdtIndex(i => (i + 1) % sdtFindings.length);
+                      } else {
+                        setSdtFindings([]);
+                        setSdtPageIdx(-1);
+                      }
+                    };
+                    const dismissSDT = () => {
+                      if (sdtFindings.length > 1) {
+                        setSdtIndex(i => (i + 1) % sdtFindings.length);
+                      } else {
+                        setSdtFindings([]);
+                        setSdtPageIdx(-1);
+                      }
+                    };
+                    return (
+                      <div
+                        className="mx-2 mb-2 rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300"
+                        style={{ border: '1px solid rgba(251,191,36,0.25)', background: 'rgba(251,191,36,0.05)' }}
+                      >
+                        <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
+                          <span style={{ fontSize: '13px' }}>✍️</span>
+                          <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: 'rgba(251,191,36,0.7)' }}>
+                            {ar ? "أظهر لا تخبر" : "Show, Don't Tell"}
+                          </span>
+                          {sdtFindings.length > 1 && (
+                            <span className="text-[9px] ml-auto" style={{ color: 'rgba(251,191,36,0.4)' }}>
+                              {sdtIndex + 1}/{sdtFindings.length}
+                            </span>
+                          )}
+                          <button onClick={() => { setSdtFindings([]); setSdtPageIdx(-1); }} className="hover:opacity-80 transition-opacity ml-auto" style={{ color: 'rgba(251,191,36,0.35)', fontSize: '11px' }}>✕</button>
+                        </div>
+                        <div className="px-3 pb-1">
+                          <div className="flex items-start gap-1.5 mb-1.5">
+                            <span className="text-[10px] mt-0.5 shrink-0" style={{ color: 'rgba(239,68,68,0.6)' }}>→</span>
+                            <span className="text-[12px] line-through" style={{ color: 'rgba(239,68,68,0.55)', ...(FONT_STYLE_MAP[prefs.fontFamily || ''] || {}) }}>
+                              {finding.original}
+                            </span>
+                          </div>
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-[10px] mt-0.5 shrink-0" style={{ color: 'rgba(74,222,128,0.6)' }}>✓</span>
+                            <span className="text-[12px] italic" style={{ color: 'rgba(74,222,128,0.8)', ...(FONT_STYLE_MAP[prefs.fontFamily || ''] || {}) }}>
+                              {finding.suggestion}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 px-3 pb-3 pt-2">
+                          <button
+                            onClick={applySDT}
+                            className="flex-1 rounded-lg py-1.5 text-[11px] font-medium transition-all hover:opacity-90"
+                            style={{ background: 'rgba(74,222,128,0.15)', color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.2)' }}
+                          >
+                            {ar ? "تطبيق" : "Apply"}
+                          </button>
+                          <button
+                            onClick={dismissSDT}
+                            className="px-4 rounded-lg py-1.5 text-[11px] transition-all hover:opacity-80"
+                            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.08)' }}
+                          >
+                            {ar ? "تخطّ" : "Skip"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* SDT loading indicator */}
+                  {activePageIndex === index && sdtLoading && sdtFindings.length === 0 && !inlineSuggestion && !suggestionLoading && (
+                    <div className="flex items-center gap-1.5 px-3 pb-2 opacity-20" style={{ direction: textDir }}>
+                      <span style={{ fontSize: '11px' }}>✍️</span>
+                      <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   )}
                   </div>

@@ -1234,6 +1234,54 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
+  app.post(api.ai.showDontTell.path, largeBodyParser, async (req, res) => {
+    try {
+      const { text, language } = api.ai.showDontTell.input.parse(req.body);
+      const langCode = language || "en";
+      const arabic = langCode === "ar";
+
+      const systemPrompt = arabic
+        ? `أنت محرر أدبي محترف متخصص في قاعدة "أظهر لا تخبر". حلّل النص وابحث عن جمل تخبر القارئ بالمشاعر أو الحالات بدلاً من إظهارها.
+
+أعد بالضبط JSON بالشكل التالي (لا شيء غيره):
+{"findings":[{"original":"الجملة المكتوبة بأسلوب الإخبار","suggestion":"بديل يُظهر نفس المعنى بشكل حي وحسّي","type":"عاطفة أو وصف أو طابع"}]}
+
+قواعد:
+- استخرج من 1 إلى 3 نتائج فقط (الأهم)
+- "original" يجب أن يكون نصاً موجوداً حرفياً في النص المُدخل
+- "suggestion" يجب أن يكون بديلاً أكثر حيوية وحسية من 10 إلى 20 كلمة
+- إذا لم تجد أي شيء يستحق التغيير، أعد: {"findings":[]}`
+        : `You are a professional literary editor specializing in "Show, Don't Tell" writing technique. Analyze the text and identify sentences that tell the reader about emotions or states instead of showing them.
+
+Return ONLY valid JSON in this exact format (nothing else):
+{"findings":[{"original":"the telling phrase as it appears in the text","suggestion":"a vivid showing alternative (10-20 words)","type":"emotion or description or character"}]}
+
+Rules:
+- Extract 1 to 3 findings only (the most impactful)
+- "original" must be a phrase that appears verbatim in the input text
+- "suggestion" must be a more vivid, sensory alternative
+- If the text is already showing well, return: {"findings":[]}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: text }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 600,
+      });
+
+      const raw = response.choices[0]?.message?.content || '{"findings":[]}';
+      let parsed: { findings: { original: string; suggestion: string; type: string }[] };
+      try { parsed = JSON.parse(raw); } catch { parsed = { findings: [] }; }
+      res.json(parsed);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ findings: [] });
+    }
+  });
+
   app.post(api.ai.translate.path, largeBodyParser, async (req, res) => {
     try {
       const { text, targetLanguage, bookId } = api.ai.translate.input.parse(req.body);

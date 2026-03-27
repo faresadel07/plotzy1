@@ -267,6 +267,20 @@ export const api = {
         200: z.object({ continuedText: z.string() }),
       }
     },
+    showDontTell: {
+      method: 'POST' as const,
+      path: '/api/show-dont-tell' as const,
+      input: z.object({ text: z.string(), language: z.string().optional() }),
+      responses: {
+        200: z.object({
+          findings: z.array(z.object({
+            original: z.string(),
+            suggestion: z.string(),
+            type: z.string(),
+          }))
+        }),
+      }
+    },
     translate: {
       method: 'POST' as const,
       path: '/api/translate-text' as const,
