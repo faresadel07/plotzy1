@@ -313,6 +313,90 @@ function BookPages() {
   );
 }
 
+const MARKETPLACE_SERVICES = [
+  { label: "AI Developmental Editor", tag: "Most Used", dot: "#aaa" },
+  { label: "AI Copy Editor", tag: "Grammar & Style", dot: "#bbb" },
+  { label: "AI Cover Generator", tag: "Design", dot: "#ccc" },
+  { label: "AI Book Blurb Writer", tag: "Marketing", dot: "#999" },
+];
+
+function MarketplaceMockup() {
+  const [activeRow, setActiveRow] = useState(0);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    const cycle = () => {
+      setAnalyzing(true);
+      setTimeout(() => {
+        setAnalyzing(false);
+        setActiveRow(prev => (prev + 1) % MARKETPLACE_SERVICES.length);
+      }, 900);
+    };
+    const id = setInterval(cycle, 2200);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 shadow-2xl p-6">
+      {/* Top bar */}
+      <div className="flex items-center gap-2 mb-5">
+        <div className="flex gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-white/10" />
+          <div className="w-3 h-3 rounded-full bg-white/10" />
+          <div className="w-3 h-3 rounded-full bg-white/10" />
+        </div>
+        <div className="flex-1 bg-white/5 rounded-md px-3 py-1 text-[10px] text-white/30 font-mono">plotzy.app/marketplace</div>
+      </div>
+
+      {/* Services list */}
+      {MARKETPLACE_SERVICES.map((svc, i) => {
+        const isActive = i === activeRow;
+        return (
+          <div
+            key={svc.label}
+            className="flex items-center justify-between gap-3 mb-3 p-3 rounded-xl border transition-all duration-500"
+            style={{
+              background: isActive ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.03)",
+              borderColor: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)",
+            }}
+          >
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-2 h-2 rounded-full flex-shrink-0 transition-all duration-300"
+                style={{
+                  background: isActive ? "#fff" : svc.dot,
+                  boxShadow: isActive ? "0 0 6px rgba(255,255,255,0.6)" : "none",
+                }}
+              />
+              <span className="text-xs font-medium transition-colors duration-300" style={{ color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.5)" }}>
+                {svc.label}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 text-white/30">{svc.tag}</span>
+            </div>
+            <div
+              className="text-[10px] px-2.5 py-1 rounded-lg font-bold flex-shrink-0 transition-all duration-300"
+              style={{
+                background: isActive ? (analyzing ? "rgba(255,255,255,0.15)" : "#fff") : "rgba(255,255,255,0.07)",
+                color: isActive ? (analyzing ? "rgba(255,255,255,0.6)" : "#111") : "rgba(255,255,255,0.25)",
+              }}
+            >
+              {isActive && analyzing ? "Running…" : "Analyze"}
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="mt-4 pt-4 border-t border-white/8 flex items-center justify-between">
+        <span className="text-white/30 text-xs">9 services available</span>
+        <div className="flex items-center gap-1.5 text-white/40 text-xs font-semibold">
+          <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse" />
+          Ready to publish
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
   const { data: books, isLoading } = useBooks();
@@ -1045,7 +1129,7 @@ export default function Home() {
                 transition={{ duration: 0.9, ease: 'easeOut' }}
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold">3</div>
+                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">3</div>
                   <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Publish</span>
                 </div>
                 <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
@@ -1053,7 +1137,7 @@ export default function Home() {
                 </h2>
                 <p className="text-lg text-[#555] leading-[1.75] mb-8">
                   When your story is ready, Plotzy's professional publishing tools take it to the
-                  finish line — cover design, formatting, ISBN registration and distribution.
+                  finish line. Cover design, formatting, ISBN registration and distribution.
                 </p>
                 <motion.ul
                   className="space-y-3"
@@ -1073,8 +1157,8 @@ export default function Home() {
                       variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
                       className="flex items-start gap-3 text-[#444] text-sm font-medium"
                     >
-                      <span className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </motion.li>
@@ -1090,47 +1174,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
               >
-                <div className="relative rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 shadow-2xl p-6">
-                  {/* Top bar */}
-                  <div className="flex items-center gap-2 mb-5">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-white/10" />
-                      <div className="w-3 h-3 rounded-full bg-white/10" />
-                      <div className="w-3 h-3 rounded-full bg-white/10" />
-                    </div>
-                    <div className="flex-1 bg-white/5 rounded-md px-3 py-1 text-[10px] text-white/30 font-mono">plotzy.app/marketplace</div>
-                  </div>
-                  {/* Services list */}
-                  {[
-                    { label: "AI Developmental Editor", tag: "Most Used", color: "#a78bfa" },
-                    { label: "AI Copy Editor", tag: "Grammar & Style", color: "#34d399" },
-                    { label: "AI Cover Generator", tag: "Design", color: "#fb923c" },
-                    { label: "AI Book Blurb Writer", tag: "Marketing", color: "#38bdf8" },
-                  ].map((svc, i) => (
-                    <motion.div
-                      key={svc.label}
-                      className="flex items-center justify-between gap-3 mb-3 p-3 rounded-xl bg-white/4 border border-white/6"
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: svc.color }} />
-                        <span className="text-white/80 text-xs font-medium">{svc.label}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 text-white/35">{svc.tag}</span>
-                      </div>
-                      <div className="text-[10px] px-2.5 py-1 rounded-lg bg-white text-[#111] font-bold flex-shrink-0">Analyze</div>
-                    </motion.div>
-                  ))}
-                  <div className="mt-4 pt-4 border-t border-white/8 flex items-center justify-between">
-                    <span className="text-white/30 text-xs">9 services available</span>
-                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Ready to publish
-                    </div>
-                  </div>
-                </div>
+                <MarketplaceMockup />
               </motion.div>
             </div>
 
