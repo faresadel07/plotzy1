@@ -950,27 +950,26 @@ export default function Home() {
         <section className="bg-white overflow-hidden border-b border-[#f0f0f0]">
 
           {/* Section intro */}
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-20 pb-10 text-center">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-12 pb-6 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
+              <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-4">
                 The first platform built<br className="hidden sm:block" /> for the full author journey
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
                 From your first idea to a published, distributed book — Plotzy is the only platform that handles every step in one unified workspace, in Arabic and English.
               </p>
             </motion.div>
-
           </div>
 
           {/* Divider line */}
           <div className="w-full h-px bg-gradient-to-r from-transparent via-[#e8e8e8] to-transparent" />
 
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-12 pb-14">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-10 pb-12">
 
             {/* Step 1 */}
             <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
