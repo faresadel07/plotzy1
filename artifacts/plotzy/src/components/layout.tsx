@@ -340,44 +340,6 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         {/* Subtle radial glow */}
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 320, background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.022) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        {/* Public Domain Banner */}
-        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 0', position: 'relative' }}>
-          <a href="/discover" style={{ textDecoration: 'none', display: 'block' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.028) 100%)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              borderRadius: 16, padding: '22px 28px',
-              transition: 'border-color 0.2s, background 0.2s',
-            }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.18)'; (e.currentTarget as HTMLDivElement).style.background = 'linear-gradient(135deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.04) 100%)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.09)'; (e.currentTarget as HTMLDivElement).style.background = 'linear-gradient(135deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.028) 100%)'; }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 22 }}>📚</span>
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-                    Free Public Domain Books — Read Anything, Anytime
-                  </p>
-                  <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>
-                    Browse 70,000+ classic works by Shakespeare, Austen, Tolstoy and more. Zero cost, forever free.
-                  </p>
-                </div>
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-                background: '#fff', color: '#111', borderRadius: 20,
-                padding: '8px 18px', fontSize: 12.5, fontWeight: 700, letterSpacing: '-0.01em',
-              }}>
-                Browse Library
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l3.5 3.5L7.5 10" stroke="#111" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </div>
-            </div>
-          </a>
-        </div>
-
         {/* Main content */}
         <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 48px', position: 'relative' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '32px 40px', alignItems: 'start' }}>
