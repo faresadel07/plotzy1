@@ -29,6 +29,7 @@ type UpdateUser = Partial<InsertUser> & {
 export interface IStorage {
   getBooks(): Promise<Book[]>;
   getUserBooks(userId: number): Promise<Book[]>;
+  getGuestBooks(): Promise<Book[]>;
   getBooksByIds(ids: number[]): Promise<Book[]>;
   claimGuestBooks(bookIds: number[], userId: number): Promise<void>;
   getDeletedBooks(): Promise<Book[]>;
@@ -101,6 +102,12 @@ export class DatabaseStorage implements IStorage {
   async getUserBooks(userId: number): Promise<Book[]> {
     return await db.select().from(books).where(
       and(eq(books.isDeleted, false), eq(books.userId, userId))
+    );
+  }
+
+  async getGuestBooks(): Promise<Book[]> {
+    return await db.select().from(books).where(
+      and(eq(books.isDeleted, false), isNull(books.userId))
     );
   }
 

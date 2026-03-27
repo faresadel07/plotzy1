@@ -3,14 +3,59 @@ import { api, buildUrl } from "@/shared/routes";
 import { type InsertBook } from "@/shared/schema";
 import { parseWithLogging } from "./use-zod-logger";
 
+// ── Guest book localStorage persistence ─────────────────────────────────────
+const LS_KEY = "plotzy_guest_book_ids";
+
+function getGuestBookIds(): number[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id: unknown) => typeof id === "number" && id > 0);
+  } catch {
+    return [];
+  }
+}
+
+function addGuestBookId(id: number): void {
+  const ids = getGuestBookIds();
+  if (!ids.includes(id)) {
+    localStorage.setItem(LS_KEY, JSON.stringify([...ids, id]));
+  }
+}
+
+function removeGuestBookId(id: number): void {
+  const ids = getGuestBookIds().filter((i) => i !== id);
+  localStorage.setItem(LS_KEY, JSON.stringify(ids));
+}
+
+function seedGuestBookIds(books: { id: number }[]): void {
+  const existing = getGuestBookIds();
+  const merged = [...new Set([...existing, ...books.map((b) => b.id)])];
+  localStorage.setItem(LS_KEY, JSON.stringify(merged));
+}
+
+// ── Hooks ────────────────────────────────────────────────────────────────────
+
 export function useBooks() {
   return useQuery({
     queryKey: [api.books.list.path],
     queryFn: async () => {
-      const res = await fetch(api.books.list.path, { credentials: "include" });
+      const guestIds = getGuestBookIds();
+      const url =
+        guestIds.length > 0
+          ? `${api.books.list.path}?guestIds=${guestIds.join(",")}`
+          : api.books.list.path;
+      const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch books");
       const data = await res.json();
-      return parseWithLogging(api.books.list.responses?.[200], data, "books.list");
+      const parsed = parseWithLogging(api.books.list.responses?.[200], data, "books.list");
+      // Seed localStorage with any books returned (handles first-visit bootstrap)
+      if (parsed && parsed.length > 0) {
+        seedGuestBookIds(parsed);
+      }
+      return parsed;
     },
   });
 }
@@ -64,7 +109,9 @@ export function useCreateBook() {
       const data = await res.json();
       return parseWithLogging(api.books.create.responses?.[201], data, "books.create");
     },
-    onSuccess: () => {
+    onSuccess: (book) => {
+      // Always persist to localStorage so the book survives page reloads
+      addGuestBookId(book.id);
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
     },
   });
@@ -107,6 +154,7 @@ export function useTrashBook() {
       return parseWithLogging(api.books.trash.responses?.[200], data, "books.trash");
     },
     onSuccess: (_, id) => {
+      removeGuestBookId(id);
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.books.trashList.path] });
       queryClient.invalidateQueries({ queryKey: [api.books.get.path, id] });
@@ -128,7 +176,8 @@ export function useRestoreBook() {
       const data = await res.json();
       return parseWithLogging(api.books.restore.responses?.[200], data, "books.restore");
     },
-    onSuccess: (_, id) => {
+    onSuccess: (book, id) => {
+      addGuestBookId(id);
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.books.trashList.path] });
       queryClient.invalidateQueries({ queryKey: [api.books.get.path, id] });
@@ -148,6 +197,7 @@ export function useDeleteBook() {
       if (!res.ok) throw new Error("Failed to delete book");
     },
     onSuccess: (_, id) => {
+      removeGuestBookId(id);
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
       queryClient.invalidateQueries({ queryKey: [api.books.trashList.path] });
       queryClient.removeQueries({ queryKey: [api.books.get.path, id] });
@@ -166,7 +216,8 @@ export function useDuplicateBook() {
       if (!res.ok) throw new Error("Failed to duplicate book");
       return res.json() as Promise<import("@/shared/schema").Book>;
     },
-    onSuccess: () => {
+    onSuccess: (book) => {
+      addGuestBookId(book.id);
       queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
     },
   });

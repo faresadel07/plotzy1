@@ -82,24 +82,35 @@ export async function registerRoutes(
 
   app.get(api.books.list.path, async (req, res) => {
     const sess = req.session as any;
+    // Parse guestIds from query param (sent by localStorage on the client)
+    const rawGuestIds = (req.query.guestIds as string) || "";
+    const queryGuestIds: number[] = rawGuestIds.split(",").filter(Boolean).map(Number).filter(n => !isNaN(n) && n > 0);
+
     if (req.isAuthenticated() && req.user) {
       const userId = (req.user as any).id;
-      // Claim any guest books created in this session before the user logged in
-      const guestIds: number[] = sess.guestBookIds || [];
-      if (guestIds.length > 0) {
-        await storage.claimGuestBooks(guestIds, userId);
+      // Claim guest books from session AND from localStorage (query param)
+      const sessionGuestIds: number[] = sess.guestBookIds || [];
+      const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
+      if (allGuestIds.length > 0) {
+        await storage.claimGuestBooks(allGuestIds, userId);
         sess.guestBookIds = [];
       }
       const userBooks = await storage.getUserBooks(userId);
       return res.json(userBooks);
     }
-    // Not authenticated — return guest books tracked in session
-    const guestIds: number[] = sess.guestBookIds || [];
-    if (guestIds.length > 0) {
-      const guestBooks = await storage.getBooksByIds(guestIds);
+
+    // Not authenticated: use localStorage IDs from query + session IDs
+    const sessionGuestIds: number[] = sess.guestBookIds || [];
+    const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
+
+    if (allGuestIds.length > 0) {
+      const guestBooks = await storage.getBooksByIds(allGuestIds);
       return res.json(guestBooks);
     }
-    res.json([]);
+
+    // First visit with no IDs — return all null-user books as bootstrap
+    const allGuestBooks = await storage.getGuestBooks();
+    return res.json(allGuestBooks);
   });
 
   app.get(api.books.trashList.path, async (req, res) => {
