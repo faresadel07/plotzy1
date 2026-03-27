@@ -833,7 +833,7 @@ export default function Home() {
                           transition={{ duration: 0.5, delay: bookIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
                           style={{ flexShrink: 0, width: 180 }}
                         >
-                          <Link href={book.contentType === "article" ? `/articles/${book.id}` : `/books/${book.id}`} className="block">
+                          <Link href={book.contentType === "article" ? `/articles/${book.id}` : `/books/${book.id}`} className="block outline-none focus:outline-none">
 
                             {/* ── 3D Perspective Book ── */}
                             <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
@@ -864,10 +864,6 @@ export default function Home() {
                                 className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20"
                                 style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}
                               >
-                                <div
-                                  className="w-full h-px mb-2"
-                                  style={{ background: coverPalette.accent, opacity: 0.7 }}
-                                />
                                 <h3
                                   className="text-white font-bold leading-tight line-clamp-2"
                                   style={{
