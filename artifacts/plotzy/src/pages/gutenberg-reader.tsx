@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-const WORDS_PER_PAGE = 245;
+const WORDS_PER_PAGE = 220;
 const LS_POS = (id: number) => `plotzy_rpos_${id}`;
 const LS_RECENT = "plotzy_recently_read";
 
@@ -33,11 +33,9 @@ function formatAuthor(a: { name: string }): string {
   return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
 }
 
-/** Save to recently read list in localStorage */
 function saveRecent(book: BookMeta, page: number) {
   try {
-    const key = LS_RECENT;
-    const list: RecentBook[] = JSON.parse(localStorage.getItem(key) || "[]");
+    const list: RecentBook[] = JSON.parse(localStorage.getItem(LS_RECENT) || "[]");
     const filtered = list.filter(b => b.id !== book.id);
     const entry: RecentBook = {
       id: book.id,
@@ -48,13 +46,11 @@ function saveRecent(book: BookMeta, page: number) {
       ts: Date.now(),
     };
     filtered.unshift(entry);
-    localStorage.setItem(key, JSON.stringify(filtered.slice(0, 24)));
+    localStorage.setItem(LS_RECENT, JSON.stringify(filtered.slice(0, 24)));
   } catch { /* noop */ }
 }
 
-/** Parse raw text → paragraphs (arrays of strings) */
 function parseParagraphs(text: string): string[] {
-  // Normalize Windows/Mac line endings, then split on blank lines
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   return normalized
     .split(/\n{2,}/)
@@ -62,12 +58,10 @@ function parseParagraphs(text: string): string[] {
     .filter(p => p.length > 12 && !p.startsWith("[Illustration"));
 }
 
-/** Count words in a string */
 function wordCount(s: string) {
   return s.split(/\s+/).filter(Boolean).length;
 }
 
-/** Split paragraphs into pages of ~WORDS_PER_PAGE words */
 function buildPages(paragraphs: string[]): string[][] {
   const pages: string[][] = [];
   let current: string[] = [];
@@ -87,7 +81,6 @@ function buildPages(paragraphs: string[]): string[][] {
   return pages.length ? pages : [[""]];
 }
 
-/** Detect chapter headings and their starting paragraph index */
 function detectChapters(paras: string[]): { title: string; paraIdx: number }[] {
   const re = /^(chapter\s+[ivxlcdm\d]+[\.\:]?.*|part\s+[ivxlcdm\d]+[\.\:]?.*|book\s+[ivxlcdm\d]+[\.\:]?.*)$/i;
   const chapters: { title: string; paraIdx: number }[] = [];
@@ -99,7 +92,6 @@ function detectChapters(paras: string[]): { title: string; paraIdx: number }[] {
   return chapters;
 }
 
-/** Figure out which page contains paragraph at paraIdx */
 function findPageForPara(pages: string[][], paraIdx: number): number {
   let total = 0;
   for (let p = 0; p < pages.length; p++) {
@@ -109,7 +101,6 @@ function findPageForPara(pages: string[][], paraIdx: number): number {
   return 0;
 }
 
-/** Download text as a file */
 function downloadText(text: string, filename: string) {
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -134,16 +125,25 @@ export default function GutenbergReader() {
 
   // Reading settings
   const [dark, setDark] = useState(false);
-  const [fontSize, setFontSize] = useState(18);
-  const [lineHeight, setLineHeight] = useState(1.85);
+  const [fontSize, setFontSize] = useState(16);
+  const [lineHeight, setLineHeight] = useState(1.82);
   const [showSettings, setShowSettings] = useState(false);
   const [showToc, setShowToc] = useState(false);
 
-  // Pagination state
-  const [pageIdx, setPageIdx] = useState(0);
+  // Spread-based pagination (one spread = two pages side by side)
+  const [spreadIdx, setSpreadIdx] = useState(0);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [animating, setAnimating] = useState(false);
   const [visible, setVisible] = useState(true);
+
+  // Detect if we can show two pages (wide enough screen)
+  const [twoPage, setTwoPage] = useState(true);
+  useEffect(() => {
+    const check = () => setTwoPage(window.innerWidth >= 760);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -153,17 +153,27 @@ export default function GutenbergReader() {
   const chapters = useMemo(() => detectChapters(paragraphs), [paragraphs]);
 
   const totalPages = pages.length;
-  const clampedPage = Math.min(pageIdx, totalPages - 1);
-  const currentParas = pages[clampedPage] || [];
+  // In two-page mode, we navigate by spreads; in single-page mode by single pages
+  const totalSpreads = twoPage ? Math.ceil(totalPages / 2) : totalPages;
+  const clampedSpread = Math.min(spreadIdx, Math.max(0, totalSpreads - 1));
+
+  // Compute actual page indices for left (and right) page
+  const leftPageIdx = twoPage ? clampedSpread * 2 : clampedSpread;
+  const rightPageIdx = twoPage ? clampedSpread * 2 + 1 : -1;
+  const leftParas = pages[leftPageIdx] || [];
+  const rightParas = (twoPage && rightPageIdx < totalPages) ? (pages[rightPageIdx] || null) : null;
 
   // ── Colours ───────────────────────────────────────────────────────────────
-  const bg = dark ? "#06050a" : "#d4cfc5";
+  const bg = dark ? "#07060d" : "#cac5bb";
   const pageBg = dark ? "#16141f" : "#fdf9f2";
   const fg = dark ? "rgba(230,220,200,0.93)" : "#1c1610";
-  const fgMuted = dark ? "rgba(230,220,200,0.35)" : "rgba(28,22,16,0.45)";
-  const barBg = dark ? "rgba(6,5,10,0.97)" : "rgba(212,207,196,0.97)";
-  const border = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
+  const fgMuted = dark ? "rgba(230,220,200,0.35)" : "rgba(28,22,16,0.42)";
+  const barBg = dark ? "rgba(7,6,13,0.97)" : "rgba(202,197,187,0.97)";
+  const border = dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.11)";
   const accent = dark ? "rgba(218,178,106,0.95)" : "rgba(140,100,40,0.9)";
+  const spineBg = dark
+    ? "linear-gradient(to right, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.10) 35%, rgba(0,0,0,0.10) 65%, rgba(0,0,0,0.40) 100%)"
+    : "linear-gradient(to right, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.05) 35%, rgba(0,0,0,0.05) 65%, rgba(0,0,0,0.22) 100%)";
 
   // ── Load metadata ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -193,7 +203,10 @@ export default function GutenbergReader() {
       const saved = localStorage.getItem(LS_POS(gutId));
       if (saved) {
         const p = parseInt(saved);
-        if (!isNaN(p) && p < pages.length) setPageIdx(p);
+        if (!isNaN(p) && p >= 0) {
+          // Convert saved page number to spread index
+          setSpreadIdx(twoPage ? Math.floor(p / 2) : p);
+        }
       }
     } catch { /* noop */ }
   }, [gutId, pages.length]);
@@ -201,43 +214,43 @@ export default function GutenbergReader() {
   // ── Persist position + recently read ─────────────────────────────────────
   useEffect(() => {
     if (!gutId || !pages.length) return;
-    try { localStorage.setItem(LS_POS(gutId), String(clampedPage)); } catch { /* noop */ }
-    if (meta) saveRecent(meta, clampedPage);
-  }, [gutId, clampedPage, pages.length, meta]);
+    try { localStorage.setItem(LS_POS(gutId), String(leftPageIdx)); } catch { /* noop */ }
+    if (meta) saveRecent(meta, leftPageIdx);
+  }, [gutId, leftPageIdx, pages.length, meta]);
 
-  // ── Page flip animation ───────────────────────────────────────────────────
-  const goToPage = useCallback((next: number, dir: "forward" | "backward") => {
-    if (animating || next < 0 || next >= totalPages) return;
+  // ── Spread flip animation ─────────────────────────────────────────────────
+  const goToSpread = useCallback((next: number, dir: "forward" | "backward") => {
+    if (animating || next < 0 || next >= totalSpreads) return;
     setDirection(dir);
     setAnimating(true);
     setVisible(false);
     setTimeout(() => {
-      setPageIdx(next);
+      setSpreadIdx(next);
       setVisible(true);
-      setTimeout(() => setAnimating(false), 320);
+      setTimeout(() => setAnimating(false), 300);
     }, 200);
-  }, [animating, totalPages]);
+  }, [animating, totalSpreads]);
 
-  const nextPage = () => goToPage(clampedPage + 1, "forward");
-  const prevPage = () => goToPage(clampedPage - 1, "backward");
+  const nextSpread = () => goToSpread(clampedSpread + 1, "forward");
+  const prevSpread = () => goToSpread(clampedSpread - 1, "backward");
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (showToc || showSettings) return;
-      if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") { e.preventDefault(); nextPage(); }
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); prevPage(); }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") { e.preventDefault(); nextSpread(); }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); prevSpread(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showToc, showSettings, clampedPage, animating, totalPages]);
+  }, [showToc, showSettings, clampedSpread, animating, totalSpreads]);
 
   // ── Touch/swipe ───────────────────────────────────────────────────────────
   const touchStartX = useRef(0);
   const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e: React.TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(dx) > 50) { dx < 0 ? nextPage() : prevPage(); }
+    if (Math.abs(dx) > 50) { dx < 0 ? nextSpread() : prevSpread(); }
   };
 
   // ── Download ──────────────────────────────────────────────────────────────
@@ -251,17 +264,21 @@ export default function GutenbergReader() {
   const title = meta?.title || (loadingMeta ? "" : "Unknown Book");
   const author = meta?.authors[0] ? formatAuthor(meta.authors[0]) : "";
 
-  // ── Chapter name for current page ────────────────────────────────────────
+  // ── Chapter name for current spread ──────────────────────────────────────
   const currentChapterName = useMemo(() => {
     if (!chapters.length || !pages.length) return "";
     let parasSoFar = 0;
-    for (let p = 0; p <= clampedPage; p++) parasSoFar += pages[p]?.length || 0;
+    for (let p = 0; p <= leftPageIdx; p++) parasSoFar += pages[p]?.length || 0;
     let name = "";
     for (const ch of chapters) {
       if (ch.paraIdx < parasSoFar) name = ch.title;
     }
     return name;
-  }, [chapters, clampedPage, pages]);
+  }, [chapters, leftPageIdx, pages]);
+
+  // ── Progress ─────────────────────────────────────────────────────────────
+  const progress = totalPages > 1 ? (leftPageIdx / (totalPages - 1)) * 100 : 100;
+  const slideFrom = direction === "forward" ? "28px" : "-28px";
 
   // ── Loading screen ────────────────────────────────────────────────────────
   if (loadingMeta || loadingContent) {
@@ -299,8 +316,10 @@ export default function GutenbergReader() {
     );
   }
 
-  const progress = totalPages > 1 ? (clampedPage / (totalPages - 1)) * 100 : 100;
-  const slideFrom = direction === "forward" ? "30px" : "-30px";
+  // ── Page counter display ──────────────────────────────────────────────────
+  const pageLabel = twoPage && rightPageIdx < totalPages
+    ? `${leftPageIdx + 1}–${rightPageIdx + 1} / ${totalPages}`
+    : `${leftPageIdx + 1} / ${totalPages}`;
 
   return (
     <div
@@ -314,7 +333,6 @@ export default function GutenbergReader() {
       <div className="flex items-center justify-between px-4 py-2.5 shrink-0 z-40"
         style={{ background: barBg, borderBottom: `1px solid ${border}`, backdropFilter: "blur(16px)" }}>
 
-        {/* Left: back + title */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Link href="/discover">
             <button className="flex items-center gap-1.5 shrink-0 rounded-xl px-2 py-1.5 transition-all hover:opacity-70"
@@ -325,14 +343,13 @@ export default function GutenbergReader() {
           </Link>
           <div className="w-px h-4 shrink-0" style={{ background: border }} />
           <div className="min-w-0">
-            <p className="text-sm font-semibold truncate leading-tight" style={{ color: fg, maxWidth: 240 }}>{title}</p>
+            <p className="text-sm font-semibold truncate leading-tight" style={{ color: fg, maxWidth: 260 }}>{title}</p>
             {currentChapterName && (
               <p className="text-xs truncate leading-tight mt-0.5" style={{ color: fgMuted }}>{currentChapterName}</p>
             )}
           </div>
         </div>
 
-        {/* Right: controls */}
         <div className="flex items-center gap-0.5 shrink-0">
           <IconBtn onClick={handleDownload} title="Download .txt" color={fgMuted}><Download className="w-4 h-4" /></IconBtn>
           {chapters.length > 0 && (
@@ -351,54 +368,118 @@ export default function GutenbergReader() {
       </div>
 
       {/* ══ READING AREA ═════════════════════════════════════════════════════ */}
-      <div className="flex-1 overflow-hidden relative flex flex-col items-center px-4 py-6">
+      <div className="flex-1 overflow-hidden relative flex flex-col items-center px-10 py-4">
 
-        {/* Prev area click zone */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 z-20 cursor-pointer flex items-center justify-start pl-2"
-          onClick={prevPage}>
-          {clampedPage > 0 && (
-            <ChevronLeft className="w-6 h-6 opacity-0 hover:opacity-40 transition-opacity" style={{ color: fg }} />
+        {/* Left click zone */}
+        <div className="absolute left-0 top-0 bottom-0 w-12 z-20 cursor-pointer flex items-center justify-center"
+          onClick={prevSpread}>
+          {clampedSpread > 0 && (
+            <ChevronLeft className="w-5 h-5 opacity-20 hover:opacity-60 transition-opacity" style={{ color: fg }} />
           )}
         </div>
 
-        {/* Page */}
+        {/* Book spread */}
         <div
-          className="flex-1 w-full max-w-[720px] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+          className="flex-1 w-full self-stretch flex"
           style={{
-            background: pageBg,
-            border: `1px solid ${border}`,
-            transition: `opacity 200ms ease, transform 200ms ease`,
+            maxWidth: twoPage ? 1040 : 700,
+            transition: "opacity 200ms ease, transform 200ms ease",
             opacity: visible ? 1 : 0,
             transform: visible ? "translateX(0)" : `translateX(${slideFrom})`,
           }}
         >
-          {/* Page inner scroll (shouldn't scroll ideally, but safety valve) */}
-          <div className="flex-1 px-10 py-10 overflow-hidden flex flex-col justify-start"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif", fontSize, lineHeight, color: fg }}>
-            {currentParas.map((para, i) => (
-              <p key={i} className="mb-4 last:mb-0 text-justify hyphens-auto" style={{ textIndent: "1.6em" }}>
-                {para}
-              </p>
-            ))}
+          {/* ── Left page ── */}
+          <div className="flex-1 flex flex-col overflow-hidden"
+            style={{
+              background: pageBg,
+              border: `1px solid ${border}`,
+              borderRight: twoPage ? "none" : undefined,
+              borderRadius: twoPage ? "14px 0 0 14px" : "14px",
+              boxShadow: twoPage
+                ? "4px 0 12px rgba(0,0,0,0.18), -4px 4px 18px rgba(0,0,0,0.12)"
+                : "-4px 4px 24px rgba(0,0,0,0.15), 4px 4px 24px rgba(0,0,0,0.10)",
+            }}>
+            <div
+              className="flex-1 overflow-hidden flex flex-col justify-start"
+              style={{
+                padding: twoPage ? "36px 36px 0 40px" : "40px 52px 0 52px",
+                fontFamily: "'Georgia', 'Times New Roman', serif",
+                fontSize,
+                lineHeight,
+                color: fg,
+              }}
+            >
+              {leftParas.map((para, i) => (
+                <p key={i} className="mb-[0.82em] last:mb-0 text-justify hyphens-auto" style={{ textIndent: "1.5em" }}>
+                  {para}
+                </p>
+              ))}
+            </div>
+            <div className="px-8 py-2.5 flex items-center justify-between shrink-0"
+              style={{ borderTop: `1px solid ${border}` }}>
+              <span className="text-[11px]" style={{ color: fgMuted, fontFamily: "Georgia, serif" }}>{author}</span>
+              <span className="text-[11px]" style={{ color: fgMuted }}>{leftPageIdx + 1}</span>
+            </div>
           </div>
 
-          {/* Page footer */}
-          <div className="px-10 py-3 flex items-center justify-between shrink-0"
-            style={{ borderTop: `1px solid ${border}` }}>
-            <span className="text-xs" style={{ color: fgMuted, fontFamily: "Georgia, serif" }}>
-              {author}
-            </span>
-            <span className="text-xs" style={{ color: fgMuted }}>
-              {clampedPage + 1} / {totalPages}
-            </span>
-          </div>
+          {/* ── Spine ── */}
+          {twoPage && (
+            <div className="w-4 shrink-0 self-stretch" style={{ background: spineBg }} />
+          )}
+
+          {/* ── Right page ── */}
+          {twoPage && (
+            rightParas ? (
+              <div className="flex-1 flex flex-col overflow-hidden"
+                style={{
+                  background: pageBg,
+                  border: `1px solid ${border}`,
+                  borderLeft: "none",
+                  borderRadius: "0 14px 14px 0",
+                  boxShadow: "4px 4px 18px rgba(0,0,0,0.12), -2px 0 8px rgba(0,0,0,0.10)",
+                }}>
+                <div
+                  className="flex-1 overflow-hidden flex flex-col justify-start"
+                  style={{
+                    padding: "36px 40px 0 36px",
+                    fontFamily: "'Georgia', 'Times New Roman', serif",
+                    fontSize,
+                    lineHeight,
+                    color: fg,
+                  }}
+                >
+                  {rightParas.map((para, i) => (
+                    <p key={i} className="mb-[0.82em] last:mb-0 text-justify hyphens-auto" style={{ textIndent: "1.5em" }}>
+                      {para}
+                    </p>
+                  ))}
+                </div>
+                <div className="px-8 py-2.5 flex items-center justify-between shrink-0"
+                  style={{ borderTop: `1px solid ${border}` }}>
+                  <span className="text-[11px] truncate max-w-[60%]" style={{ color: fgMuted, fontFamily: "Georgia, serif" }}>
+                    {title.length > 36 ? title.slice(0, 36) + "…" : title}
+                  </span>
+                  <span className="text-[11px]" style={{ color: fgMuted }}>{rightPageIdx + 1}</span>
+                </div>
+              </div>
+            ) : (
+              /* Blank right page when on last odd page */
+              <div className="flex-1 flex flex-col overflow-hidden"
+                style={{
+                  background: dark ? "rgba(22,20,31,0.45)" : "rgba(242,238,230,0.6)",
+                  border: `1px solid ${border}`,
+                  borderLeft: "none",
+                  borderRadius: "0 14px 14px 0",
+                }} />
+            )
+          )}
         </div>
 
-        {/* Next area click zone */}
-        <div className="absolute right-0 top-0 bottom-0 w-16 z-20 cursor-pointer flex items-center justify-end pr-2"
-          onClick={nextPage}>
-          {clampedPage < totalPages - 1 && (
-            <ChevronRight className="w-6 h-6 opacity-0 hover:opacity-40 transition-opacity" style={{ color: fg }} />
+        {/* Right click zone */}
+        <div className="absolute right-0 top-0 bottom-0 w-12 z-20 cursor-pointer flex items-center justify-center"
+          onClick={nextSpread}>
+          {clampedSpread < totalSpreads - 1 && (
+            <ChevronRight className="w-5 h-5 opacity-20 hover:opacity-60 transition-opacity" style={{ color: fg }} />
           )}
         </div>
       </div>
@@ -406,19 +487,22 @@ export default function GutenbergReader() {
       {/* ══ BOTTOM NAV BAR ═══════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between px-6 py-3 shrink-0"
         style={{ background: barBg, borderTop: `1px solid ${border}` }}>
+
         <button
-          onClick={prevPage}
-          disabled={clampedPage === 0}
+          onClick={prevSpread}
+          disabled={clampedSpread === 0}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-25"
-          style={{ color: fg, background: clampedPage > 0 ? "rgba(255,255,255,0.06)" : "transparent" }}
+          style={{ color: fg, background: clampedSpread > 0 ? "rgba(255,255,255,0.06)" : "transparent" }}
         >
           <ChevronLeft className="w-4 h-4" />
           {ar ? "السابق" : "Previous"}
         </button>
 
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-0.5">
           <span className="text-xs font-mono" style={{ color: fgMuted }}>
-            {ar ? `${clampedPage + 1} من ${totalPages}` : `${clampedPage + 1} of ${totalPages}`}
+            {ar
+              ? `${pageLabel.replace("–", "–").split("/").reverse().join(" من ")}`
+              : pageLabel}
           </span>
           {totalPages > 0 && (
             <span className="text-xs" style={{ color: fgMuted }}>
@@ -428,10 +512,10 @@ export default function GutenbergReader() {
         </div>
 
         <button
-          onClick={nextPage}
-          disabled={clampedPage >= totalPages - 1}
+          onClick={nextSpread}
+          disabled={clampedSpread >= totalSpreads - 1}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-25"
-          style={{ color: fg, background: clampedPage < totalPages - 1 ? "rgba(255,255,255,0.06)" : "transparent" }}
+          style={{ color: fg, background: clampedSpread < totalSpreads - 1 ? "rgba(255,255,255,0.06)" : "transparent" }}
         >
           {ar ? "التالي" : "Next"}
           <ChevronRight className="w-4 h-4" />
@@ -450,10 +534,14 @@ export default function GutenbergReader() {
             <div className="overflow-y-auto flex-1 py-3">
               {chapters.map((ch, i) => {
                 const chPage = findPageForPara(pages, ch.paraIdx);
-                const active = chPage === clampedPage;
+                const chSpread = twoPage ? Math.floor(chPage / 2) : chPage;
+                const active = chSpread === clampedSpread;
                 return (
                   <button key={i}
-                    onClick={() => { goToPage(chPage, chPage > clampedPage ? "forward" : "backward"); setShowToc(false); }}
+                    onClick={() => {
+                      goToSpread(chSpread, chSpread > clampedSpread ? "forward" : "backward");
+                      setShowToc(false);
+                    }}
                     className="w-full text-left px-6 py-3 text-sm transition-all flex items-start gap-3"
                     style={{
                       color: active ? accent : fgMuted,
@@ -481,16 +569,14 @@ export default function GutenbergReader() {
               <button onClick={() => setShowSettings(false)} style={{ color: fgMuted }}><X className="w-4 h-4" /></button>
             </div>
 
-            {/* Font size */}
             <SettingRow label={ar ? "حجم الخط" : "Font Size"} icon={<span className="text-xs font-mono" style={{ color: fgMuted }}>Aa</span>}>
               <div className="flex items-center gap-3">
-                <StepBtn onClick={() => setFontSize(f => Math.max(13, f - 1))} color={fgMuted}><Minus className="w-3.5 h-3.5" /></StepBtn>
+                <StepBtn onClick={() => setFontSize(f => Math.max(12, f - 1))} color={fgMuted}><Minus className="w-3.5 h-3.5" /></StepBtn>
                 <span className="text-sm w-7 text-center font-mono" style={{ color: fg }}>{fontSize}</span>
-                <StepBtn onClick={() => setFontSize(f => Math.min(28, f + 1))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
+                <StepBtn onClick={() => setFontSize(f => Math.min(26, f + 1))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
               </div>
             </SettingRow>
 
-            {/* Line spacing */}
             <SettingRow label={ar ? "تباعد الأسطر" : "Line Spacing"} icon={<AlignJustify className="w-4 h-4" style={{ color: fgMuted }} />}>
               <div className="flex items-center gap-3">
                 <StepBtn onClick={() => setLineHeight(l => Math.max(1.3, parseFloat((l - 0.1).toFixed(1))))} color={fgMuted}><Minus className="w-3.5 h-3.5" /></StepBtn>
@@ -499,7 +585,6 @@ export default function GutenbergReader() {
               </div>
             </SettingRow>
 
-            {/* Download */}
             <button
               onClick={() => { handleDownload(); setShowSettings(false); }}
               className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl mt-2 text-sm font-medium transition-all"
