@@ -289,6 +289,7 @@ export default function ChapterEditor() {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const printScrollRef = useRef<HTMLDivElement>(null);
+  const restoredPositionRef = useRef(false);
 
   /* ── Print View derived state (must be before useEffects that reference maxSpread) ── */
   const printPages = pages
@@ -406,6 +407,37 @@ export default function ChapterEditor() {
     window.addEventListener('mouseup', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [resizingDrawing]);
+
+  // ── Last-read position: save & restore per chapter ─────────────────────
+  const lastPageStorageKey = (id: number) => `plotzy_last_page_${id}`;
+
+  // Reset restored flag whenever we switch chapters
+  useEffect(() => {
+    restoredPositionRef.current = false;
+    setActivePageIndex(0);
+  }, [chapterId]);
+
+  // After pages are loaded, scroll to the last-visited page
+  useEffect(() => {
+    if (!chapterId || pages.length === 0 || restoredPositionRef.current) return;
+    restoredPositionRef.current = true;
+    const saved = localStorage.getItem(lastPageStorageKey(chapterId));
+    if (!saved) return;
+    const idx = parseInt(saved, 10);
+    if (isNaN(idx) || idx <= 0 || idx >= pages.length) return;
+    setActivePageIndex(idx);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        pageElsRef.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    });
+  }, [chapterId, pages.length]);
+
+  // Save current page whenever the active page changes (only after restore is done)
+  useEffect(() => {
+    if (!chapterId || !restoredPositionRef.current) return;
+    localStorage.setItem(lastPageStorageKey(chapterId), String(activePageIndex));
+  }, [chapterId, activePageIndex]);
 
   // ── Inline ghost-text suggestion: debounce → AI → show ─────────────────
   useEffect(() => {
