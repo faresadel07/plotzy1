@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/language-context";
 import {
   ArrowLeft, BookOpen, Loader2, Sun, Moon, Minus, Plus,
   List, X, Download, Settings, ChevronLeft, ChevronRight,
-  AlignJustify,
+  AlignJustify, Copy, Search,
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -82,9 +82,10 @@ function useMeasuredPages(
     requestAnimationFrame(() => {
       const padSide = twoPage ? 34 : 48;
       const padTop = twoPage ? 32 : 40;
-      const footerH = 40;
-      const paraMarginPx = fontSize * lineHeight * 0.8;
-      const usableH = pageH - padTop - footerH - 4;
+      const padBottom = twoPage ? 20 : 24;
+      const footerH = 34;
+      const paraMarginPx = Math.round(fontSize * 0.78);
+      const usableH = pageH - padTop - padBottom - footerH - 8;
       const textW = Math.max(80, pageW - padSide * 2);
 
       const container = document.createElement("div");
@@ -188,6 +189,10 @@ export default function GutenbergReader() {
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [animating, setAnimating] = useState(false);
   const [visible, setVisible] = useState(true);
+
+  // Text selection bubble
+  const [selBubble, setSelBubble] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [copiedSel, setCopiedSel] = useState(false);
 
   // Layout measurements
   const readingRef = useRef<HTMLDivElement>(null);
@@ -311,6 +316,34 @@ export default function GutenbergReader() {
     return () => window.removeEventListener("keydown", handler);
   }, [showToc, showSettings, nextSpread, prevSpread]);
 
+  // ── Clear selection bubble on page turn ──────────────────────────────────
+  useEffect(() => { setSelBubble(null); }, [leftPageIdx]);
+
+  // ── Text selection bubble ────────────────────────────────────────────────
+  const handlePageMouseUp = useCallback((e: React.MouseEvent) => {
+    const sel = window.getSelection();
+    const text = sel?.toString().trim() || "";
+    if (text.length < 2) { setSelBubble(null); return; }
+    const range = sel!.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    setSelBubble({ text, x: rect.left + rect.width / 2, y: rect.top - 8 });
+    setCopiedSel(false);
+  }, []);
+
+  function handleCopySel() {
+    if (!selBubble) return;
+    navigator.clipboard.writeText(selBubble.text).then(() => {
+      setCopiedSel(true);
+      setTimeout(() => { setCopiedSel(false); setSelBubble(null); }, 1500);
+    });
+  }
+
+  function handleSearchSel() {
+    if (!selBubble) return;
+    window.open(`https://www.merriam-webster.com/dictionary/${encodeURIComponent(selBubble.text.split(/\s+/)[0])}`, "_blank");
+    setSelBubble(null);
+  }
+
   // ── Touch / swipe ─────────────────────────────────────────────────────────
   const touchStartX = useRef(0);
   const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
@@ -348,8 +381,8 @@ export default function GutenbergReader() {
     : `${leftPageIdx + 1} / ${totalPages}`;
 
   // ── Page card inner padding ───────────────────────────────────────────────
-  const pagePad = twoPage ? "32px 32px 0 36px" : "40px 48px 0 48px";
-  const pageRPad = twoPage ? "32px 36px 0 32px" : pagePad;
+  const pagePad = twoPage ? "32px 32px 20px 36px" : "40px 48px 24px 48px";
+  const pageRPad = twoPage ? "32px 36px 20px 32px" : pagePad;
 
   // ── Loading ───────────────────────────────────────────────────────────────
   const isLoading = loadingMeta || loadingContent || (measuring && pages.length <= 1);
@@ -391,13 +424,17 @@ export default function GutenbergReader() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col select-none"
+      className="fixed inset-0 flex flex-col"
       style={{ background: bg }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onMouseDown={e => {
+        const sel = window.getSelection();
+        if (sel && sel.toString().trim() === "") setSelBubble(null);
+      }}
     >
       {/* ══ TOP BAR ══════════════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-2.5 shrink-0 z-40"
+      <div className="flex items-center justify-between px-4 py-2.5 shrink-0 z-40 select-none"
         style={{ background: barBg, borderBottom: `1px solid ${border}`, backdropFilter: "blur(16px)" }}>
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Link href="/discover">
@@ -477,6 +514,7 @@ export default function GutenbergReader() {
             }}
           >
             <div
+              onMouseUp={handlePageMouseUp}
               style={{
                 flex: 1,
                 padding: pagePad,
@@ -485,6 +523,7 @@ export default function GutenbergReader() {
                 lineHeight,
                 color: fg,
                 overflow: "hidden",
+                cursor: "text",
               }}
             >
               {leftParas.map((para, i) => (
@@ -494,7 +533,7 @@ export default function GutenbergReader() {
               ))}
             </div>
             {/* Footer */}
-            <div style={{ padding: "8px 28px", borderTop: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+            <div style={{ padding: "6px 28px", borderTop: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               <span style={{ fontSize: 11, color: fgMuted, fontFamily: "Georgia,serif" }}>{author}</span>
               <span style={{ fontSize: 11, color: fgMuted }}>{leftPageIdx + 1}</span>
             </div>
@@ -523,6 +562,7 @@ export default function GutenbergReader() {
                 }}
               >
                 <div
+                  onMouseUp={handlePageMouseUp}
                   style={{
                     flex: 1,
                     padding: pageRPad,
@@ -531,6 +571,7 @@ export default function GutenbergReader() {
                     lineHeight,
                     color: fg,
                     overflow: "hidden",
+                    cursor: "text",
                   }}
                 >
                   {rightParas.map((para, i) => (
@@ -539,7 +580,7 @@ export default function GutenbergReader() {
                     </p>
                   ))}
                 </div>
-                <div style={{ padding: "8px 28px", borderTop: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+                <div style={{ padding: "6px 28px", borderTop: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: 11, color: fgMuted, fontFamily: "Georgia,serif", maxWidth: "60%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {title}
                   </span>
@@ -576,7 +617,7 @@ export default function GutenbergReader() {
       </div>
 
       {/* ══ BOTTOM NAV BAR ═══════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-between px-6 py-3 shrink-0"
+      <div className="flex items-center justify-between px-6 py-3 shrink-0 select-none"
         style={{ background: barBg, borderTop: `1px solid ${border}` }}>
         <button
           onClick={prevSpread}
@@ -605,6 +646,87 @@ export default function GutenbergReader() {
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
+
+      {/* ══ SELECTION BUBBLE ═════════════════════════════════════════════════ */}
+      {selBubble && (
+        <div
+          style={{
+            position: "fixed",
+            left: Math.max(60, Math.min(selBubble.x, window.innerWidth - 60)),
+            top: Math.max(60, selBubble.y),
+            transform: "translate(-50%, -100%)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            background: dark ? "#1e1c2a" : "#1c1a26",
+            border: `1px solid ${dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)"}`,
+            borderRadius: 10,
+            padding: "5px 6px",
+            boxShadow: "0 6px 24px rgba(0,0,0,0.45)",
+            pointerEvents: "auto",
+          }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          {/* Copy */}
+          <button
+            onClick={handleCopySel}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "5px 10px", borderRadius: 7,
+              background: copiedSel ? "rgba(110,231,183,0.15)" : "transparent",
+              border: "none", cursor: "pointer",
+              color: copiedSel ? "#6ee7b7" : "#e8e4dc",
+              fontSize: 12, fontWeight: 600,
+              transition: "all .15s",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Copy style={{ width: 12, height: 12 }} />
+            {copiedSel ? "Copied!" : "Copy"}
+          </button>
+          {/* Divider */}
+          <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.12)", flexShrink: 0 }} />
+          {/* Define (only for single words) */}
+          <button
+            onClick={handleSearchSel}
+            title="Look up in dictionary"
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "5px 10px", borderRadius: 7,
+              background: "transparent", border: "none", cursor: "pointer",
+              color: "#b8b4cc", fontSize: 12, fontWeight: 500,
+              transition: "all .15s",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Search style={{ width: 12, height: 12 }} />
+            Define
+          </button>
+          {/* Close */}
+          <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.12)", flexShrink: 0 }} />
+          <button
+            onClick={() => { setSelBubble(null); window.getSelection()?.removeAllRanges(); }}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 26, height: 26, borderRadius: 6,
+              background: "transparent", border: "none", cursor: "pointer",
+              color: "#666",
+            }}
+          >
+            <X style={{ width: 11, height: 11 }} />
+          </button>
+          {/* Small arrow pointing down */}
+          <div style={{
+            position: "absolute", bottom: -5, left: "50%",
+            width: 8, height: 8,
+            background: dark ? "#1e1c2a" : "#1c1a26",
+            borderRight: `1px solid ${dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)"}`,
+            borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)"}`,
+            transform: "translateX(-50%) rotate(45deg)",
+          }} />
+        </div>
+      )}
 
       {/* ══ TOC DRAWER ═══════════════════════════════════════════════════════ */}
       {showToc && (
