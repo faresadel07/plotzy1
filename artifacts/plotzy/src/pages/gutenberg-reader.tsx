@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { useLanguage } from "@/contexts/language-context";
 import {
@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-const WORDS_PER_PAGE = 220;
 const LS_POS = (id: number) => `plotzy_rpos_${id}`;
 const LS_RECENT = "plotzy_recently_read";
 
@@ -37,15 +36,14 @@ function saveRecent(book: BookMeta, page: number) {
   try {
     const list: RecentBook[] = JSON.parse(localStorage.getItem(LS_RECENT) || "[]");
     const filtered = list.filter(b => b.id !== book.id);
-    const entry: RecentBook = {
+    filtered.unshift({
       id: book.id,
       title: book.title,
       author: book.authors[0] ? formatAuthor(book.authors[0]) : "",
       coverUrl: book.coverUrl,
       page,
       ts: Date.now(),
-    };
-    filtered.unshift(entry);
+    });
     localStorage.setItem(LS_RECENT, JSON.stringify(filtered.slice(0, 24)));
   } catch { /* noop */ }
 }
@@ -62,13 +60,13 @@ function wordCount(s: string) {
   return s.split(/\s+/).filter(Boolean).length;
 }
 
-function buildPages(paragraphs: string[]): string[][] {
+function buildPages(paragraphs: string[], wpp: number): string[][] {
   const pages: string[][] = [];
   let current: string[] = [];
   let count = 0;
   for (const para of paragraphs) {
     const wc = wordCount(para);
-    if (count > 0 && count + wc > WORDS_PER_PAGE) {
+    if (count > 0 && count + wc > wpp) {
       pages.push(current);
       current = [para];
       count = wc;
@@ -111,6 +109,25 @@ function downloadText(text: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+/** Estimate words per page given page pixel dimensions and font settings */
+function estimateWpp(
+  pageW: number, pageH: number,
+  fSize: number, lHeight: number,
+  twoPage: boolean,
+): number {
+  const padH = twoPage ? 72 : 96;   // left+right padding (px)
+  const padV = 90;                   // top + footer (px)
+  const textW = Math.max(1, pageW - padH);
+  const textH = Math.max(1, pageH - padV);
+  // Georgia at 16px: ~0.52 em per char average
+  const charsPerLine = Math.floor(textW / (fSize * 0.50));
+  const wordsPerLine = Math.max(1, charsPerLine / 5.2);
+  const lineHeightPx = fSize * lHeight;
+  const linesPerPage = Math.max(4, Math.floor(textH / lineHeightPx));
+  // Apply a safety factor so we never overflow the card
+  return Math.max(60, Math.floor(wordsPerLine * linesPerPage * 0.88));
+}
+
 export default function GutenbergReader() {
   const [, params] = useRoute("/discover/:id");
   const gutId = params?.id ? parseInt(params.id) : 0;
@@ -130,50 +147,70 @@ export default function GutenbergReader() {
   const [showSettings, setShowSettings] = useState(false);
   const [showToc, setShowToc] = useState(false);
 
-  // Spread-based pagination (one spread = two pages side by side)
+  // Spread-based pagination
   const [spreadIdx, setSpreadIdx] = useState(0);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [animating, setAnimating] = useState(false);
   const [visible, setVisible] = useState(true);
 
-  // Detect if we can show two pages (wide enough screen)
+  // Layout measurements
+  const readingRef = useRef<HTMLDivElement>(null);
+  const [readingSize, setReadingSize] = useState({ w: 900, h: 600 });
   const [twoPage, setTwoPage] = useState(true);
-  useEffect(() => {
-    const check = () => setTwoPage(window.innerWidth >= 760);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+
+  useLayoutEffect(() => {
+    const el = readingRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setReadingSize({ w: width, h: height });
+      setTwoPage(width >= 700);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // ── Compute portrait page dimensions (like a real book) ──────────────────
+  // A real book: width ≈ 2/3 of height (portrait)
+  const PAGE_H = Math.max(380, readingSize.h - 20);
+  const PAGE_W_IDEAL = Math.round(PAGE_H * (5 / 7.5)); // ~6×9 inch book ratio
+  const maxSpreadW = readingSize.w - 80; // leave room for nav arrows
+  const PAGE_W = twoPage
+    ? Math.min(PAGE_W_IDEAL, Math.floor((maxSpreadW - 8) / 2)) // 8 = spine
+    : Math.min(560, maxSpreadW);
+  const SPINE_W = twoPage ? 8 : 0;
+
+  // ── Dynamic words-per-page ────────────────────────────────────────────────
+  const wordsPerPage = useMemo(
+    () => estimateWpp(PAGE_W, PAGE_H, fontSize, lineHeight, twoPage),
+    [PAGE_W, PAGE_H, fontSize, lineHeight, twoPage],
+  );
 
   // ── Derived data ──────────────────────────────────────────────────────────
   const paragraphs = useMemo(() => rawText ? parseParagraphs(rawText) : [], [rawText]);
-  const pages = useMemo(() => buildPages(paragraphs), [paragraphs]);
+  const pages = useMemo(() => buildPages(paragraphs, wordsPerPage), [paragraphs, wordsPerPage]);
   const chapters = useMemo(() => detectChapters(paragraphs), [paragraphs]);
 
   const totalPages = pages.length;
-  // In two-page mode, we navigate by spreads; in single-page mode by single pages
   const totalSpreads = twoPage ? Math.ceil(totalPages / 2) : totalPages;
   const clampedSpread = Math.min(spreadIdx, Math.max(0, totalSpreads - 1));
 
-  // Compute actual page indices for left (and right) page
   const leftPageIdx = twoPage ? clampedSpread * 2 : clampedSpread;
   const rightPageIdx = twoPage ? clampedSpread * 2 + 1 : -1;
   const leftParas = pages[leftPageIdx] || [];
   const rightParas = (twoPage && rightPageIdx < totalPages) ? (pages[rightPageIdx] || null) : null;
 
   // ── Colours ───────────────────────────────────────────────────────────────
-  const bg = dark ? "#07060d" : "#cac5bb";
+  const bg = dark ? "#07060d" : "#b8b3aa";
   const pageBg = dark ? "#16141f" : "#fdf9f2";
   const fg = dark ? "rgba(230,220,200,0.93)" : "#1c1610";
   const fgMuted = dark ? "rgba(230,220,200,0.35)" : "rgba(28,22,16,0.42)";
-  const barBg = dark ? "rgba(7,6,13,0.97)" : "rgba(202,197,187,0.97)";
-  const border = dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.11)";
+  const barBg = dark ? "rgba(7,6,13,0.97)" : "rgba(184,179,170,0.97)";
+  const border = dark ? "rgba(255,255,255,0.11)" : "rgba(0,0,0,0.13)";
   const accent = dark ? "rgba(218,178,106,0.95)" : "rgba(140,100,40,0.9)";
   const spineBg = dark
-    ? "linear-gradient(to right, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.10) 35%, rgba(0,0,0,0.10) 65%, rgba(0,0,0,0.40) 100%)"
-    : "linear-gradient(to right, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.05) 35%, rgba(0,0,0,0.05) 65%, rgba(0,0,0,0.22) 100%)";
+    ? "linear-gradient(to right,rgba(0,0,0,0.55)0%,rgba(0,0,0,0.12)40%,rgba(0,0,0,0.12)60%,rgba(0,0,0,0.55)100%)"
+    : "linear-gradient(to right,rgba(0,0,0,0.28)0%,rgba(0,0,0,0.06)40%,rgba(0,0,0,0.06)60%,rgba(0,0,0,0.28)100%)";
 
   // ── Load metadata ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -204,21 +241,20 @@ export default function GutenbergReader() {
       if (saved) {
         const p = parseInt(saved);
         if (!isNaN(p) && p >= 0) {
-          // Convert saved page number to spread index
           setSpreadIdx(twoPage ? Math.floor(p / 2) : p);
         }
       }
     } catch { /* noop */ }
   }, [gutId, pages.length]);
 
-  // ── Persist position + recently read ─────────────────────────────────────
+  // ── Persist position ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!gutId || !pages.length) return;
     try { localStorage.setItem(LS_POS(gutId), String(leftPageIdx)); } catch { /* noop */ }
     if (meta) saveRecent(meta, leftPageIdx);
   }, [gutId, leftPageIdx, pages.length, meta]);
 
-  // ── Spread flip animation ─────────────────────────────────────────────────
+  // ── Spread navigation ─────────────────────────────────────────────────────
   const goToSpread = useCallback((next: number, dir: "forward" | "backward") => {
     if (animating || next < 0 || next >= totalSpreads) return;
     setDirection(dir);
@@ -227,12 +263,12 @@ export default function GutenbergReader() {
     setTimeout(() => {
       setSpreadIdx(next);
       setVisible(true);
-      setTimeout(() => setAnimating(false), 300);
-    }, 200);
+      setTimeout(() => setAnimating(false), 280);
+    }, 180);
   }, [animating, totalSpreads]);
 
-  const nextSpread = () => goToSpread(clampedSpread + 1, "forward");
-  const prevSpread = () => goToSpread(clampedSpread - 1, "backward");
+  const nextSpread = useCallback(() => goToSpread(clampedSpread + 1, "forward"), [goToSpread, clampedSpread]);
+  const prevSpread = useCallback(() => goToSpread(clampedSpread - 1, "backward"), [goToSpread, clampedSpread]);
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {
@@ -243,9 +279,9 @@ export default function GutenbergReader() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showToc, showSettings, clampedSpread, animating, totalSpreads]);
+  }, [showToc, showSettings, nextSpread, prevSpread]);
 
-  // ── Touch/swipe ───────────────────────────────────────────────────────────
+  // ── Touch / swipe ─────────────────────────────────────────────────────────
   const touchStartX = useRef(0);
   const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -256,8 +292,7 @@ export default function GutenbergReader() {
   // ── Download ──────────────────────────────────────────────────────────────
   const handleDownload = () => {
     if (!rawText || !meta) return;
-    const filename = meta.title.replace(/[^a-z0-9]/gi, "_").slice(0, 60) + ".txt";
-    downloadText(rawText, filename);
+    downloadText(rawText, meta.title.replace(/[^a-z0-9]/gi, "_").slice(0, 60) + ".txt");
   };
 
   // ── Title / Author ────────────────────────────────────────────────────────
@@ -270,32 +305,35 @@ export default function GutenbergReader() {
     let parasSoFar = 0;
     for (let p = 0; p <= leftPageIdx; p++) parasSoFar += pages[p]?.length || 0;
     let name = "";
-    for (const ch of chapters) {
-      if (ch.paraIdx < parasSoFar) name = ch.title;
-    }
+    for (const ch of chapters) { if (ch.paraIdx < parasSoFar) name = ch.title; }
     return name;
   }, [chapters, leftPageIdx, pages]);
 
-  // ── Progress ─────────────────────────────────────────────────────────────
   const progress = totalPages > 1 ? (leftPageIdx / (totalPages - 1)) * 100 : 100;
-  const slideFrom = direction === "forward" ? "28px" : "-28px";
+  const slideFrom = direction === "forward" ? "24px" : "-24px";
 
-  // ── Loading screen ────────────────────────────────────────────────────────
+  // ── Page label ────────────────────────────────────────────────────────────
+  const pageLabel = twoPage && rightPageIdx < totalPages
+    ? `${leftPageIdx + 1}–${rightPageIdx + 1} / ${totalPages}`
+    : `${leftPageIdx + 1} / ${totalPages}`;
+
+  // ── Page card inner padding ───────────────────────────────────────────────
+  const pagePad = twoPage ? "32px 32px 0 36px" : "40px 48px 0 48px";
+  const pageRPad = twoPage ? "32px 36px 0 32px" : pagePad;
+
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (loadingMeta || loadingContent) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-5" style={{ background: bg }}>
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-5" style={{ background: dark ? "#07060d" : "#b8b3aa" }}>
         <div className="relative">
-          <BookOpen className="w-12 h-12" style={{ color: fgMuted }} />
-          <Loader2 className="w-5 h-5 animate-spin absolute -bottom-1 -right-1" style={{ color: accent }} />
+          <BookOpen className="w-12 h-12" style={{ color: "rgba(140,100,40,0.4)" }} />
+          <Loader2 className="w-5 h-5 animate-spin absolute -bottom-1 -right-1" style={{ color: "rgba(218,178,106,0.9)" }} />
         </div>
         <div className="text-center">
-          <p className="font-semibold text-base mb-1" style={{ color: fg }}>{title || "Loading…"}</p>
-          <p className="text-sm" style={{ color: fgMuted }}>
-            {loadingContent ? (ar ? "جارٍ تحميل النص وحفظه…" : "Fetching and caching text…") : (ar ? "جارٍ التحميل…" : "Loading…")}
+          <p className="font-semibold text-base mb-1" style={{ color: "#1c1610" }}>{title || "Loading…"}</p>
+          <p className="text-sm" style={{ color: "rgba(28,22,16,0.45)" }}>
+            {loadingContent ? (ar ? "جارٍ تحميل النص…" : "Fetching text…") : (ar ? "جارٍ التحميل…" : "Loading…")}
           </p>
-        </div>
-        <div className="w-48 h-1 rounded-full overflow-hidden" style={{ background: border }}>
-          <div className="h-full rounded-full animate-pulse" style={{ background: accent, width: "60%" }} />
         </div>
       </div>
     );
@@ -303,12 +341,12 @@ export default function GutenbergReader() {
 
   if (error && !rawText) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4" style={{ background: bg }}>
-        <BookOpen className="w-12 h-12" style={{ color: fgMuted }} />
-        <p className="text-base text-center max-w-sm px-6" style={{ color: fg }}>{error}</p>
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4" style={{ background: dark ? "#07060d" : "#b8b3aa" }}>
+        <BookOpen className="w-12 h-12" style={{ color: "rgba(28,22,16,0.3)" }} />
+        <p className="text-base text-center max-w-sm px-6" style={{ color: "#1c1610" }}>{error}</p>
         <Link href="/discover">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all"
-            style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${border}`, color: fg }}>
+          <button className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium"
+            style={{ background: "rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.15)", color: "#1c1610" }}>
             <ArrowLeft className="w-4 h-4" /> Back to Library
           </button>
         </Link>
@@ -316,14 +354,8 @@ export default function GutenbergReader() {
     );
   }
 
-  // ── Page counter display ──────────────────────────────────────────────────
-  const pageLabel = twoPage && rightPageIdx < totalPages
-    ? `${leftPageIdx + 1}–${rightPageIdx + 1} / ${totalPages}`
-    : `${leftPageIdx + 1} / ${totalPages}`;
-
   return (
     <div
-      ref={containerRef}
       className="fixed inset-0 flex flex-col select-none"
       style={{ background: bg }}
       onTouchStart={handleTouchStart}
@@ -332,7 +364,6 @@ export default function GutenbergReader() {
       {/* ══ TOP BAR ══════════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between px-4 py-2.5 shrink-0 z-40"
         style={{ background: barBg, borderBottom: `1px solid ${border}`, backdropFilter: "blur(16px)" }}>
-
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Link href="/discover">
             <button className="flex items-center gap-1.5 shrink-0 rounded-xl px-2 py-1.5 transition-all hover:opacity-70"
@@ -349,14 +380,13 @@ export default function GutenbergReader() {
             )}
           </div>
         </div>
-
         <div className="flex items-center gap-0.5 shrink-0">
-          <IconBtn onClick={handleDownload} title="Download .txt" color={fgMuted}><Download className="w-4 h-4" /></IconBtn>
+          <IconBtn onClick={handleDownload} title="Download" color={fgMuted}><Download className="w-4 h-4" /></IconBtn>
           {chapters.length > 0 && (
             <IconBtn onClick={() => setShowToc(v => !v)} title="Contents" color={fgMuted}><List className="w-4 h-4" /></IconBtn>
           )}
           <IconBtn onClick={() => setShowSettings(v => !v)} title="Settings" color={fgMuted}><Settings className="w-4 h-4" /></IconBtn>
-          <IconBtn onClick={() => setDark(d => !d)} title={dark ? "Light mode" : "Dark mode"} color={fgMuted}>
+          <IconBtn onClick={() => setDark(d => !d)} title={dark ? "Light" : "Dark"} color={fgMuted}>
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </IconBtn>
         </div>
@@ -368,154 +398,173 @@ export default function GutenbergReader() {
       </div>
 
       {/* ══ READING AREA ═════════════════════════════════════════════════════ */}
-      <div className="flex-1 overflow-hidden relative flex flex-col items-center px-10 py-4">
+      <div
+        ref={readingRef}
+        className="flex-1 overflow-hidden relative flex items-center justify-center"
+      >
+        {/* Left arrow */}
+        <button
+          onClick={prevSpread}
+          disabled={clampedSpread === 0}
+          className="absolute left-2 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
+          style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.10)", color: fg }}
+          aria-label="Previous"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-        {/* Left click zone */}
-        <div className="absolute left-0 top-0 bottom-0 w-12 z-20 cursor-pointer flex items-center justify-center"
-          onClick={prevSpread}>
-          {clampedSpread > 0 && (
-            <ChevronLeft className="w-5 h-5 opacity-20 hover:opacity-60 transition-opacity" style={{ color: fg }} />
-          )}
-        </div>
-
-        {/* Book spread */}
+        {/* ── Book spread ── */}
         <div
-          className="flex-1 w-full self-stretch flex"
           style={{
-            maxWidth: twoPage ? 1040 : 700,
-            transition: "opacity 200ms ease, transform 200ms ease",
+            display: "flex",
+            width: PAGE_W * (twoPage ? 2 : 1) + SPINE_W,
+            height: PAGE_H,
+            transition: "opacity 180ms ease, transform 180ms ease",
             opacity: visible ? 1 : 0,
             transform: visible ? "translateX(0)" : `translateX(${slideFrom})`,
+            boxShadow: "0 8px 48px rgba(0,0,0,0.35)",
+            borderRadius: 14,
           }}
         >
-          {/* ── Left page ── */}
-          <div className="flex-1 flex flex-col overflow-hidden"
+          {/* Left page */}
+          <div
             style={{
+              width: PAGE_W,
+              height: PAGE_H,
+              display: "flex",
+              flexDirection: "column",
+              flexShrink: 0,
               background: pageBg,
               border: `1px solid ${border}`,
               borderRight: twoPage ? "none" : undefined,
               borderRadius: twoPage ? "14px 0 0 14px" : "14px",
-              boxShadow: twoPage
-                ? "4px 0 12px rgba(0,0,0,0.18), -4px 4px 18px rgba(0,0,0,0.12)"
-                : "-4px 4px 24px rgba(0,0,0,0.15), 4px 4px 24px rgba(0,0,0,0.10)",
-            }}>
+              overflow: "hidden",
+            }}
+          >
             <div
-              className="flex-1 overflow-hidden flex flex-col justify-start"
               style={{
-                padding: twoPage ? "36px 36px 0 40px" : "40px 52px 0 52px",
-                fontFamily: "'Georgia', 'Times New Roman', serif",
+                flex: 1,
+                padding: pagePad,
+                fontFamily: "'Georgia','Times New Roman',serif",
                 fontSize,
                 lineHeight,
                 color: fg,
+                overflow: "hidden",
               }}
             >
               {leftParas.map((para, i) => (
-                <p key={i} className="mb-[0.82em] last:mb-0 text-justify hyphens-auto" style={{ textIndent: "1.5em" }}>
+                <p key={i} style={{ marginBottom: "0.78em", textAlign: "justify", textIndent: "1.5em", hyphens: "auto" } as React.CSSProperties}>
                   {para}
                 </p>
               ))}
             </div>
-            <div className="px-8 py-2.5 flex items-center justify-between shrink-0"
-              style={{ borderTop: `1px solid ${border}` }}>
-              <span className="text-[11px]" style={{ color: fgMuted, fontFamily: "Georgia, serif" }}>{author}</span>
-              <span className="text-[11px]" style={{ color: fgMuted }}>{leftPageIdx + 1}</span>
+            {/* Footer */}
+            <div style={{ padding: "8px 28px", borderTop: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+              <span style={{ fontSize: 11, color: fgMuted, fontFamily: "Georgia,serif" }}>{author}</span>
+              <span style={{ fontSize: 11, color: fgMuted }}>{leftPageIdx + 1}</span>
             </div>
           </div>
 
-          {/* ── Spine ── */}
+          {/* Spine */}
           {twoPage && (
-            <div className="w-4 shrink-0 self-stretch" style={{ background: spineBg }} />
+            <div style={{ width: SPINE_W, flexShrink: 0, alignSelf: "stretch", background: spineBg }} />
           )}
 
-          {/* ── Right page ── */}
+          {/* Right page */}
           {twoPage && (
             rightParas ? (
-              <div className="flex-1 flex flex-col overflow-hidden"
+              <div
                 style={{
+                  width: PAGE_W,
+                  height: PAGE_H,
+                  display: "flex",
+                  flexDirection: "column",
+                  flexShrink: 0,
                   background: pageBg,
                   border: `1px solid ${border}`,
                   borderLeft: "none",
                   borderRadius: "0 14px 14px 0",
-                  boxShadow: "4px 4px 18px rgba(0,0,0,0.12), -2px 0 8px rgba(0,0,0,0.10)",
-                }}>
+                  overflow: "hidden",
+                }}
+              >
                 <div
-                  className="flex-1 overflow-hidden flex flex-col justify-start"
                   style={{
-                    padding: "36px 40px 0 36px",
-                    fontFamily: "'Georgia', 'Times New Roman', serif",
+                    flex: 1,
+                    padding: pageRPad,
+                    fontFamily: "'Georgia','Times New Roman',serif",
                     fontSize,
                     lineHeight,
                     color: fg,
+                    overflow: "hidden",
                   }}
                 >
                   {rightParas.map((para, i) => (
-                    <p key={i} className="mb-[0.82em] last:mb-0 text-justify hyphens-auto" style={{ textIndent: "1.5em" }}>
+                    <p key={i} style={{ marginBottom: "0.78em", textAlign: "justify", textIndent: "1.5em", hyphens: "auto" } as React.CSSProperties}>
                       {para}
                     </p>
                   ))}
                 </div>
-                <div className="px-8 py-2.5 flex items-center justify-between shrink-0"
-                  style={{ borderTop: `1px solid ${border}` }}>
-                  <span className="text-[11px] truncate max-w-[60%]" style={{ color: fgMuted, fontFamily: "Georgia, serif" }}>
-                    {title.length > 36 ? title.slice(0, 36) + "…" : title}
+                <div style={{ padding: "8px 28px", borderTop: `1px solid ${border}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: fgMuted, fontFamily: "Georgia,serif", maxWidth: "60%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {title}
                   </span>
-                  <span className="text-[11px]" style={{ color: fgMuted }}>{rightPageIdx + 1}</span>
+                  <span style={{ fontSize: 11, color: fgMuted }}>{rightPageIdx + 1}</span>
                 </div>
               </div>
             ) : (
-              /* Blank right page when on last odd page */
-              <div className="flex-1 flex flex-col overflow-hidden"
+              /* Blank right page (last odd page) */
+              <div
                 style={{
-                  background: dark ? "rgba(22,20,31,0.45)" : "rgba(242,238,230,0.6)",
+                  width: PAGE_W,
+                  height: PAGE_H,
+                  flexShrink: 0,
+                  background: dark ? "rgba(18,16,26,0.7)" : "rgba(240,236,228,0.7)",
                   border: `1px solid ${border}`,
                   borderLeft: "none",
                   borderRadius: "0 14px 14px 0",
-                }} />
+                }}
+              />
             )
           )}
         </div>
 
-        {/* Right click zone */}
-        <div className="absolute right-0 top-0 bottom-0 w-12 z-20 cursor-pointer flex items-center justify-center"
-          onClick={nextSpread}>
-          {clampedSpread < totalSpreads - 1 && (
-            <ChevronRight className="w-5 h-5 opacity-20 hover:opacity-60 transition-opacity" style={{ color: fg }} />
-          )}
-        </div>
+        {/* Right arrow */}
+        <button
+          onClick={nextSpread}
+          disabled={clampedSpread >= totalSpreads - 1}
+          className="absolute right-2 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
+          style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.10)", color: fg }}
+          aria-label="Next"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
 
       {/* ══ BOTTOM NAV BAR ═══════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between px-6 py-3 shrink-0"
         style={{ background: barBg, borderTop: `1px solid ${border}` }}>
-
         <button
           onClick={prevSpread}
           disabled={clampedSpread === 0}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-25"
-          style={{ color: fg, background: clampedSpread > 0 ? "rgba(255,255,255,0.06)" : "transparent" }}
+          style={{ color: fg, background: clampedSpread > 0 ? "rgba(128,128,128,0.12)" : "transparent" }}
         >
           <ChevronLeft className="w-4 h-4" />
           {ar ? "السابق" : "Previous"}
         </button>
 
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-xs font-mono" style={{ color: fgMuted }}>
-            {ar
-              ? `${pageLabel.replace("–", "–").split("/").reverse().join(" من ")}`
-              : pageLabel}
+          <span className="text-xs font-mono" style={{ color: fgMuted }}>{pageLabel}</span>
+          <span className="text-xs" style={{ color: fgMuted }}>
+            {Math.round(progress)}% {ar ? "مكتمل" : "complete"}
           </span>
-          {totalPages > 0 && (
-            <span className="text-xs" style={{ color: fgMuted }}>
-              {Math.round(progress)}% {ar ? "مكتمل" : "complete"}
-            </span>
-          )}
         </div>
 
         <button
           onClick={nextSpread}
           disabled={clampedSpread >= totalSpreads - 1}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-25"
-          style={{ color: fg, background: clampedSpread < totalSpreads - 1 ? "rgba(255,255,255,0.06)" : "transparent" }}
+          style={{ color: fg, background: clampedSpread < totalSpreads - 1 ? "rgba(128,128,128,0.12)" : "transparent" }}
         >
           {ar ? "التالي" : "Next"}
           <ChevronRight className="w-4 h-4" />
@@ -526,7 +575,8 @@ export default function GutenbergReader() {
       {showToc && (
         <div className="fixed inset-0 z-50 flex">
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowToc(false)} />
-          <div className="relative ml-auto w-80 h-full flex flex-col" style={{ background: dark ? "#0f0e0d" : "#faf8f4", borderLeft: `1px solid ${border}` }}>
+          <div className="relative ml-auto w-80 h-full flex flex-col"
+            style={{ background: dark ? "#0f0e0d" : "#faf8f4", borderLeft: `1px solid ${border}` }}>
             <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ borderBottom: `1px solid ${border}` }}>
               <span className="font-semibold" style={{ color: fg }}>{ar ? "الفهرس" : "Table of Contents"}</span>
               <button onClick={() => setShowToc(false)} style={{ color: fgMuted }}><X className="w-4 h-4" /></button>
@@ -538,10 +588,7 @@ export default function GutenbergReader() {
                 const active = chSpread === clampedSpread;
                 return (
                   <button key={i}
-                    onClick={() => {
-                      goToSpread(chSpread, chSpread > clampedSpread ? "forward" : "backward");
-                      setShowToc(false);
-                    }}
+                    onClick={() => { goToSpread(chSpread, chSpread > clampedSpread ? "forward" : "backward"); setShowToc(false); }}
                     className="w-full text-left px-6 py-3 text-sm transition-all flex items-start gap-3"
                     style={{
                       color: active ? accent : fgMuted,
@@ -568,15 +615,13 @@ export default function GutenbergReader() {
               <span className="font-semibold" style={{ color: fg }}>{ar ? "إعدادات القراءة" : "Reading Settings"}</span>
               <button onClick={() => setShowSettings(false)} style={{ color: fgMuted }}><X className="w-4 h-4" /></button>
             </div>
-
             <SettingRow label={ar ? "حجم الخط" : "Font Size"} icon={<span className="text-xs font-mono" style={{ color: fgMuted }}>Aa</span>}>
               <div className="flex items-center gap-3">
                 <StepBtn onClick={() => setFontSize(f => Math.max(12, f - 1))} color={fgMuted}><Minus className="w-3.5 h-3.5" /></StepBtn>
                 <span className="text-sm w-7 text-center font-mono" style={{ color: fg }}>{fontSize}</span>
-                <StepBtn onClick={() => setFontSize(f => Math.min(26, f + 1))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
+                <StepBtn onClick={() => setFontSize(f => Math.min(24, f + 1))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
               </div>
             </SettingRow>
-
             <SettingRow label={ar ? "تباعد الأسطر" : "Line Spacing"} icon={<AlignJustify className="w-4 h-4" style={{ color: fgMuted }} />}>
               <div className="flex items-center gap-3">
                 <StepBtn onClick={() => setLineHeight(l => Math.max(1.3, parseFloat((l - 0.1).toFixed(1))))} color={fgMuted}><Minus className="w-3.5 h-3.5" /></StepBtn>
@@ -584,11 +629,10 @@ export default function GutenbergReader() {
                 <StepBtn onClick={() => setLineHeight(l => Math.min(2.5, parseFloat((l + 0.1).toFixed(1))))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
               </div>
             </SettingRow>
-
             <button
               onClick={() => { handleDownload(); setShowSettings(false); }}
-              className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl mt-2 text-sm font-medium transition-all"
-              style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${border}`, color: fg }}
+              className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl mt-2 text-sm font-medium"
+              style={{ background: "rgba(128,128,128,0.10)", border: `1px solid ${border}`, color: fg }}
             >
               <Download className="w-4 h-4" style={{ color: accent }} />
               {ar ? "تحميل كملف نصي (.txt)" : "Download as plain text (.txt)"}
@@ -599,8 +643,6 @@ export default function GutenbergReader() {
     </div>
   );
 }
-
-/* ── Small reusable sub-components ───────────────────────────────────────── */
 
 function IconBtn({ children, onClick, title, color }: {
   children: React.ReactNode; onClick: () => void; title?: string; color: string;
@@ -618,7 +660,7 @@ function StepBtn({ children, onClick, color }: { children: React.ReactNode; onCl
   return (
     <button onClick={onClick}
       className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-60"
-      style={{ color, background: "rgba(255,255,255,0.06)", border: `1px solid ${color.replace(")", ",0.2)")}` }}>
+      style={{ color, background: "rgba(128,128,128,0.10)", border: `1px solid rgba(128,128,128,0.2)` }}>
       {children}
     </button>
   );
@@ -626,10 +668,10 @@ function StepBtn({ children, onClick, color }: { children: React.ReactNode; onCl
 
 function SettingRow({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-3.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+    <div className="flex items-center justify-between py-3.5" style={{ borderBottom: "1px solid rgba(128,128,128,0.15)" }}>
       <div className="flex items-center gap-2.5">
         {icon}
-        <span className="text-sm" style={{ color: "rgba(240,232,218,0.7)" }}>{label}</span>
+        <span className="text-sm" style={{ color: "rgba(100,90,70,0.85)" }}>{label}</span>
       </div>
       {children}
     </div>
