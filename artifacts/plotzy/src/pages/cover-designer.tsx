@@ -94,7 +94,7 @@ export default function CoverDesigner() {
   const dragRef = useRef<DragState>(null);
   const resizeRef = useRef<ResizeState>(null);
   const savedAppliedRef = useRef<number | null>(null);   // book ID for which saved data was applied
-  const defaultAppliedRef = useRef<number | null>(null); // book ID for which defaults were applied
+  const defaultAppliedRef = useRef<string | null>(null); // "bookId:imgKey" for which defaults were applied
 
   const [elements, setElements] = useState<CoverElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -154,28 +154,50 @@ export default function CoverDesigner() {
     const saved = (book as any).coverData as { elements?: CoverElement[]; settings?: CoverSettings } | null | undefined;
 
     if (saved?.elements && saved.elements.length > 0) {
-      // Saved data found — apply it once (overrides any previously shown defaults)
+      // Saved data found — apply it once
       if (savedAppliedRef.current === book.id) return;
       savedAppliedRef.current = book.id;
-      defaultAppliedRef.current = book.id; // also mark defaults as done
+      defaultAppliedRef.current = `${book.id}:saved`;
       setElements(saved.elements);
       setHistory([saved.elements]);
       if (saved.settings) setCoverSettings(saved.settings);
       return;
     }
 
-    // No saved data — show defaults once per book
-    if (defaultAppliedRef.current === book.id) return;
-    defaultAppliedRef.current = book.id;
+    // No saved coverData — build defaults, including any AI-generated images already on the book
+    const frontImg = (book as any).coverImage as string | null | undefined;
+    const backImg = (book as any).backCoverImage as string | null | undefined;
+    const imgKey = `${frontImg ? "f" : ""}${backImg ? "b" : ""}`;
+    const stateKey = `${book.id}:${imgKey}`;
+    if (defaultAppliedRef.current === stateKey) return;
+    defaultAppliedRef.current = stateKey;
+
     const initialEls: CoverElement[] = [
+      // Front cover AI image (if previously generated)
+      ...(frontImg ? [{
+        id: nanoid(), type: "image" as const, face: "front" as const,
+        x: 0, y: 0, width: FACE_W.front, height: FACE_H,
+        zIndex: 1, visible: true, locked: false,
+        src: frontImg, objectFit: "cover" as const, opacity: 1, borderRadius: 0,
+      }] : []),
+      // Back cover AI image (if previously generated)
+      ...(backImg ? [{
+        id: nanoid(), type: "image" as const, face: "back" as const,
+        x: 0, y: 0, width: FACE_W.back, height: FACE_H,
+        zIndex: 1, visible: true, locked: false,
+        src: backImg, objectFit: "cover" as const, opacity: 1, borderRadius: 0,
+      }] : []),
+      // Title text on front
       { id: nanoid(), type: "text", face: "front", x: 20, y: 280, width: 260, height: 80, zIndex: 10, visible: true, locked: false, content: book.title || "Book Title", fontSize: 32, fontFamily: "Playfair Display", fontWeight: "bold", color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 },
+      // Author text on front
       { id: nanoid(), type: "text", face: "front", x: 20, y: 380, width: 260, height: 40, zIndex: 11, visible: true, locked: false, content: book.authorName || "Author Name", fontSize: 16, fontFamily: "Inter", fontWeight: "normal", color: "rgba(255,255,255,0.75)", textAlign: "center", lineHeight: 1.4, letterSpacing: 2 },
+      // Spine title
       { id: nanoid(), type: "text", face: "spine", x: 4, y: 30, width: 40, height: 390, zIndex: 10, visible: true, locked: false, content: book.title || "Book Title", fontSize: 13, fontFamily: "Playfair Display", fontWeight: "bold", color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 },
     ];
     setElements(initialEls);
     setHistory([initialEls]);
-  // depend on book ID + whether coverData exists (not entire book object)
-  }, [book?.id, !!(book as any)?.coverData]);
+  // re-run when book ID, saved data status, or AI-generated images change
+  }, [book?.id, !!(book as any)?.coverData, (book as any)?.coverImage, (book as any)?.backCoverImage]);
 
   /* ─── Mouse handlers for drag/resize ─── */
   const getRelativePos = (e: React.MouseEvent, face: Face): { x: number; y: number } => {
@@ -416,9 +438,17 @@ export default function CoverDesigner() {
           zIndex: 1, visible: true, locked: false,
           src: imgUrl, objectFit: "cover", opacity: 1, borderRadius: 0,
         };
-        updateElements([...elements, el]);
+        const newEls = [...elements, el];
+        updateElements(newEls);
         setSelectedId(el.id);
         setActiveFace(aiCoverSide);
+        // Auto-save coverData so the design persists on next open
+        try {
+          await updateBook.mutateAsync({
+            id: bookId,
+            coverData: { elements: newEls, settings: coverSettings },
+          } as any);
+        } catch { /* auto-save failure is non-fatal */ }
         toast({ title: `✨ ${aiCoverSide === "front" ? "Front" : "Back"} cover generated!` });
       } else {
         toast({ title: "Cover generated — refresh to see the image" });
