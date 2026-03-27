@@ -7,7 +7,7 @@ import { AIAssistant } from "@/components/ai-assistant";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid } from "lucide-react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { playTypewriterSound } from "@/hooks/use-audio";
@@ -1011,6 +1011,26 @@ export default function ChapterEditor() {
 
           {/* ── Center: tool icons ── */}
           <div className="flex items-center gap-0.5 flex-1 justify-center">
+
+            {/* Undo / Redo */}
+            <Button
+              variant="ghost" size="icon"
+              className="w-8 h-8 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+              title={ar ? "تراجع (Ctrl+Z)" : "Undo (Ctrl+Z)"}
+              onMouseDown={(e) => { e.preventDefault(); document.execCommand("undo"); }}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost" size="icon"
+              className="w-8 h-8 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+              title={ar ? "إعادة (Ctrl+Y)" : "Redo (Ctrl+Y)"}
+              onMouseDown={(e) => { e.preventDefault(); document.execCommand("redo"); }}
+            >
+              <RotateCw className="w-4 h-4" />
+            </Button>
+
+            <div className="w-px h-5 bg-border/40 mx-1" />
 
             {/* Voice */}
             {isTranscribing ? (
