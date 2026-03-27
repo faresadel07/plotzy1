@@ -332,54 +332,95 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
       </main>
 
       {!noScroll && (
-      <footer style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #050505 100%)', fontFamily: SF, position: 'relative', overflow: 'hidden' }}>
+      <footer style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #030303 100%)', fontFamily: SF_FONT, position: 'relative', overflow: 'hidden' }}>
 
         {/* Accent top border */}
         <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.12) 70%, transparent 100%)' }} />
 
-        {/* Subtle radial glow in background */}
-        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 300, background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.025) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        {/* Subtle radial glow */}
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 320, background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.022) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        {/* Public Domain Banner */}
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 0', position: 'relative' }}>
+          <a href="/discover" style={{ textDecoration: 'none', display: 'block' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.028) 100%)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 16, padding: '22px 28px',
+              transition: 'border-color 0.2s, background 0.2s',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.18)'; (e.currentTarget as HTMLDivElement).style.background = 'linear-gradient(135deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.04) 100%)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.09)'; (e.currentTarget as HTMLDivElement).style.background = 'linear-gradient(135deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.028) 100%)'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 22 }}>📚</span>
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
+                    Free Public Domain Books — Read Anything, Anytime
+                  </p>
+                  <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>
+                    Browse 70,000+ classic works by Shakespeare, Austen, Tolstoy and more. Zero cost, forever free.
+                  </p>
+                </div>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                background: '#fff', color: '#111', borderRadius: 20,
+                padding: '8px 18px', fontSize: 12.5, fontWeight: 700, letterSpacing: '-0.01em',
+              }}>
+                Browse Library
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M7.5 3l3.5 3.5L7.5 10" stroke="#111" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+            </div>
+          </a>
+        </div>
 
         {/* Main content */}
-        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '64px 32px 48px', position: 'relative' }}>
-
-          {/* Top section: brand + quote */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1fr 1fr 1fr', gap: '40px 48px', alignItems: 'start' }}>
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 48px', position: 'relative' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '32px 40px', alignItems: 'start' }}>
 
             {/* Brand */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
-                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: 7, filter: 'invert(1)' }} />
-                <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
+                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 7, filter: 'invert(1)' }} />
+                <span style={{ fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
               </a>
-              <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(255,255,255,0.35)', maxWidth: 260, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.75, color: 'rgba(255,255,255,0.32)', maxWidth: 240, margin: 0 }}>
                 The modern platform for writers. Write, publish, and share your stories with the world.
               </p>
-              {/* Tagline quote */}
-              <p style={{ fontSize: 11.5, fontStyle: 'italic', color: 'rgba(255,255,255,0.18)', margin: 0, paddingTop: 4, borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: 10 }}>
+              <p style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)', margin: 0, paddingTop: 2, borderLeft: '2px solid rgba(255,255,255,0.08)', paddingLeft: 10 }}>
                 "Every great story begins with a blank page."
               </p>
             </div>
 
-            {/* Product */}
-            <FooterCol title="Product" links={[
-              { label: 'Home', href: '/' },
+            {/* Write */}
+            <FooterCol title="Write" links={[
+              { label: 'Dashboard', href: '/' },
               { label: 'Writing Guide', href: '/writing-guide' },
-              { label: 'Discover Library', href: '/discover' },
               { label: 'Marketplace', href: '/marketplace' },
               { label: 'Pricing', href: '/pricing' },
             ]} />
 
-            {/* Community */}
-            <FooterCol title="Community" links={[
+            {/* Read & Explore */}
+            <FooterCol title="Read & Explore" links={[
+              { label: 'Public Domain Books', href: '/discover' },
               { label: 'Community Library', href: '/library' },
-              { label: 'Support', href: '/support' },
+              { label: 'Browse Authors', href: '/library' },
+            ]} />
+
+            {/* Resources */}
+            <FooterCol title="Resources" links={[
+              { label: 'Support Center', href: '/support' },
+              { label: 'Writing Guide', href: '/writing-guide' },
             ]} />
 
             {/* Legal */}
             <FooterCol title="Legal" links={[
-              { label: 'Privacy Policy', href: '#' },
-              { label: 'Terms of Service', href: '#' },
+              { label: 'Privacy Policy', href: '/privacy' },
+              { label: 'Terms of Service', href: '/terms' },
             ]} />
 
           </div>
@@ -387,12 +428,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
         {/* Bottom bar */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ maxWidth: 1152, margin: '0 auto', padding: '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.22)', margin: 0 }}>
-              &copy; {new Date().getFullYear()} Plotzy. All rights reserved.
+          <div style={{ maxWidth: 1152, margin: '0 auto', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+              &copy; {new Date().getFullYear()} Plotzy, Inc. All rights reserved.
             </p>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.18)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Made with <span style={{ color: '#e05', fontSize: 13 }}>♥</span> for writers worldwide
+            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.15)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+              Made with <span style={{ color: '#cc2244', fontSize: 12 }}>♥</span> for writers worldwide
             </p>
           </div>
         </div>

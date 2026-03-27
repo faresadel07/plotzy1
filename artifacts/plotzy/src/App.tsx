@@ -29,6 +29,8 @@ import AuthorProfile from "@/pages/author-profile";
 import SupportPage from "@/pages/support";
 import DiscoverPage from "@/pages/discover";
 import GutenbergReader from "@/pages/gutenberg-reader";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfService from "@/pages/terms-of-service";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -83,6 +85,8 @@ function Router() {
         <Route path="/discover/:id" component={GutenbergReader} />
         <Route path="/authors/:userId" component={AuthorProfile} />
         <Route path="/support" component={SupportPage} />
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/terms" component={TermsOfService} />
         <Route component={NotFound} />
       </Switch>
     </div>
