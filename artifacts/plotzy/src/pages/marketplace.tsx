@@ -7,8 +7,69 @@ import {
   BookOpen, Pen, CheckCircle, Palette, Megaphone, Brain,
   Zap, Clock, FileText, MessageSquare, Globe, Search, X,
   ArrowLeft, Upload, ChevronRight, ChevronLeft, Sparkles, Check, ArrowRight, Library,
+  Copy, AlertCircle,
 } from "lucide-react";
 import { useBooks } from "@/hooks/use-books";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+/** Read a text file as a string */
+async function readFileText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
+/** Fetch all chapters for a book and return their text joined together */
+async function fetchBookText(bookId: number): Promise<string> {
+  const res = await fetch(`${BASE}/api/books/${bookId}/chapters`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to fetch chapters");
+  const chapters: { title: string; content: string; order: number }[] = await res.json();
+  const sorted = [...chapters].sort((a, b) => a.order - b.order);
+  return sorted.map(c => `# ${c.title || "Untitled Chapter"}\n\n${c.content || ""}`).join("\n\n---\n\n");
+}
+
+/** Very simple markdown → styled JSX renderer (no dependency needed) */
+function SimpleMarkdown({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.startsWith("## ")) {
+      elements.push(<h2 key={i} style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: "20px 0 8px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 6 }}>{line.slice(3)}</h2>);
+    } else if (line.startsWith("# ")) {
+      elements.push(<h1 key={i} style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "12px 0 10px" }}>{line.slice(2)}</h1>);
+    } else if (line.startsWith("### ")) {
+      elements.push(<h3 key={i} style={{ fontSize: 14, fontWeight: 600, color: "#ddd", margin: "14px 0 6px" }}>{line.slice(4)}</h3>);
+    } else if (line.startsWith("> ")) {
+      elements.push(<blockquote key={i} style={{ borderLeft: "3px solid rgba(255,255,255,0.2)", paddingLeft: 12, margin: "8px 0", color: "#888", fontStyle: "italic", fontSize: 13 }}>{line.slice(2)}</blockquote>);
+    } else if (/^[-*] /.test(line)) {
+      elements.push(<div key={i} style={{ display: "flex", gap: 8, marginBottom: 4 }}><span style={{ color: "#666", flexShrink: 0 }}>•</span><span style={{ fontSize: 13, color: "#aaa", lineHeight: 1.6 }}>{applyInline(line.slice(2))}</span></div>);
+    } else if (/^\d+\. /.test(line)) {
+      const num = line.match(/^(\d+)\. /)?.[1];
+      elements.push(<div key={i} style={{ display: "flex", gap: 8, marginBottom: 4 }}><span style={{ color: "#666", flexShrink: 0, minWidth: 18 }}>{num}.</span><span style={{ fontSize: 13, color: "#aaa", lineHeight: 1.6 }}>{applyInline(line.replace(/^\d+\. /, ""))}</span></div>);
+    } else if (line.trim() === "" || line === "---") {
+      elements.push(<div key={i} style={{ height: 8 }} />);
+    } else {
+      elements.push(<p key={i} style={{ fontSize: 13, color: "#aaa", lineHeight: 1.7, margin: "4px 0" }}>{applyInline(line)}</p>);
+    }
+    i++;
+  }
+  return <div>{elements}</div>;
+}
+
+function applyInline(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) =>
+    p.startsWith("**") && p.endsWith("**")
+      ? <strong key={i} style={{ color: "#ddd", fontWeight: 600 }}>{p.slice(2, -2)}</strong>
+      : p
+  );
+}
 
 /* ─── Types & static data ─────────────────────────────────── */
 
@@ -136,6 +197,9 @@ function LaunchModal({
   const [dragging, setDragging] = useState(false);
   const [sourceTab, setSourceTab] = useState<"upload" | "book" | "paste">("upload");
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
+  const [reportText, setReportText] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: myBooks } = useBooks();
 
@@ -151,9 +215,60 @@ function LaunchModal({
     (sourceTab === "book" && selectedBookId !== null) ||
     (sourceTab === "paste" && text.trim().length > 30);
 
-  function runService() {
+  async function runService() {
+    if (!service) return;
+    setApiError(null);
+    setReportText(null);
     setStep("processing");
-    setTimeout(() => setStep("done"), 3500);
+    try {
+      let manuscriptText = "";
+      if (sourceTab === "upload" && file) {
+        if (file.type === "application/pdf" || file.name.endsWith(".docx") || file.name.endsWith(".doc")) {
+          setApiError("PDF and DOCX parsing isn't supported yet — please use the 'Paste Text' tab or a .txt file instead.");
+          setStep("upload");
+          return;
+        }
+        manuscriptText = await readFileText(file);
+      } else if (sourceTab === "book" && selectedBookId !== null) {
+        manuscriptText = await fetchBookText(selectedBookId);
+      } else if (sourceTab === "paste") {
+        manuscriptText = text;
+      }
+
+      if (manuscriptText.trim().length < 30) {
+        setApiError("Not enough content to analyze. Please provide more text.");
+        setStep("upload");
+        return;
+      }
+
+      const res = await fetch(`${BASE}/api/marketplace/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ serviceId: service.id, text: manuscriptText }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Analysis failed" }));
+        throw new Error(err.message || "Analysis failed");
+      }
+
+      const { report } = await res.json();
+      setReportText(report);
+      setStep("done");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setApiError(msg);
+      setStep("upload");
+    }
+  }
+
+  function handleCopyReport() {
+    if (!reportText) return;
+    navigator.clipboard.writeText(reportText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   const STEP_FLOW: ModalStep[] = initialService
@@ -546,6 +661,19 @@ function LaunchModal({
                   />
                 )}
 
+                {/* Error banner */}
+                {apiError && (
+                  <div style={{
+                    display: "flex", alignItems: "flex-start", gap: 10,
+                    padding: "12px 14px", borderRadius: 10,
+                    background: "rgba(239,68,68,0.10)",
+                    border: "1px solid rgba(239,68,68,0.25)",
+                  }}>
+                    <AlertCircle style={{ width: 15, height: 15, color: "#f87171", flexShrink: 0, marginTop: 1 }} />
+                    <p style={{ fontSize: 12, color: "#f87171", margin: 0, lineHeight: 1.5 }}>{apiError}</p>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div style={{ display: "flex", gap: 10, paddingTop: 4 }}>
                   {!initialService && (
@@ -634,42 +762,61 @@ function LaunchModal({
               </motion.div>
             )}
 
-            {/* Step: Done */}
+            {/* Step: Done — report viewer */}
             {step === "done" && (
               <motion.div
                 key="done"
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                style={{
-                  padding: "60px 24px",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 20,
-                  textAlign: "center",
-                }}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ display: "flex", flexDirection: "column" }}
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-                  style={{
-                    width: 60, height: 60, borderRadius: "50%",
-                    background: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.18)",
+                {/* Report header bar */}
+                <div style={{
+                  padding: "18px 24px 14px",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  display: "flex", alignItems: "center", gap: 12,
+                }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-                >
-                  <Check style={{ width: 26, height: 26, color: "#fff" }} />
-                </motion.div>
-                <div>
-                  <p style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Analysis complete!</p>
-                  <p style={{ fontSize: 13, color: "#555", lineHeight: 1.7, maxWidth: 340, margin: "0 auto" }}>
-                    Your <strong style={{ color: "#ccc" }}>{service?.name}</strong> report is ready.
-                    Full results will appear in your dashboard shortly.
-                  </p>
+                  }}>
+                    <Check style={{ width: 14, height: 14, color: "#fff" }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: 0 }}>{service?.name} Report</p>
+                    <p style={{ fontSize: 11, color: "#555", margin: "2px 0 0" }}>Analysis complete</p>
+                  </div>
+                  <button
+                    onClick={handleCopyReport}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "6px 12px", borderRadius: 8,
+                      background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)",
+                      color: copied ? "#6ee7b7" : "#888", fontSize: 11, fontWeight: 500, cursor: "pointer",
+                      transition: "color .2s",
+                    }}
+                  >
+                    <Copy style={{ width: 11, height: 11 }} />
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
                 </div>
-                <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+
+                {/* Report content */}
+                <div style={{ padding: "20px 24px" }}>
+                  {reportText
+                    ? <SimpleMarkdown text={reportText} />
+                    : <p style={{ fontSize: 13, color: "#555" }}>No report content.</p>}
+                </div>
+
+                {/* Actions */}
+                <div style={{
+                  padding: "0 24px 24px",
+                  display: "flex", gap: 10,
+                }}>
                   <button
                     onClick={onClose}
                     style={{
-                      padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                      padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 500, cursor: "pointer",
                       background: "rgba(255,255,255,0.06)", color: "#888",
                       border: "1px solid rgba(255,255,255,0.09)",
                     }}
@@ -677,10 +824,15 @@ function LaunchModal({
                     Close
                   </button>
                   <button
-                    onClick={() => { setStep(initialService ? "upload" : "service"); setFile(null); setText(""); if (!initialService) setService(null); }}
+                    onClick={() => {
+                      setStep(initialService ? "upload" : "service");
+                      setFile(null); setText(""); setReportText(null); setApiError(null);
+                      if (!initialService) setService(null);
+                    }}
                     style={{
-                      display: "flex", alignItems: "center", gap: 6,
-                      padding: "11px 22px", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                      flex: 1,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                      padding: "10px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
                       background: "#fff", color: "#111", border: "none",
                     }}
                   >

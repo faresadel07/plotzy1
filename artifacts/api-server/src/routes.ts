@@ -298,6 +298,77 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Marketplace AI Analysis ────────────────────────────────────────────────
+
+  app.post("/api/marketplace/analyze", async (req, res) => {
+    try {
+      const { serviceId, text } = req.body as { serviceId: string; text: string };
+      if (!text || text.trim().length < 30) {
+        return res.status(400).json({ message: "Text is too short for analysis" });
+      }
+
+      const truncated = text.slice(0, 50000);
+
+      type PromptDef = { system: string; user: string };
+      const prompts: Record<string, PromptDef> = {
+        "dev-editor": {
+          system: "You are a senior developmental editor with 20 years of publishing experience. Write detailed, actionable reports using markdown formatting.",
+          user: `Provide a professional developmental editing report for this manuscript. Use markdown headers. Cover:\n## 1. Story Structure & Arc\n## 2. Pacing Analysis\n## 3. Character Development\n## 4. Plot Holes & Inconsistencies\n## 5. Dialogue & Voice\n## 6. Top Recommendations\n\nManuscript:\n${truncated}`,
+        },
+        "copy-editor": {
+          system: "You are a professional copy editor. Write detailed reports using markdown formatting.",
+          user: `Provide a copy editing report. Use markdown headers. Cover:\n## 1. Grammar & Punctuation Issues (with quoted examples)\n## 2. Style Consistency\n## 3. Voice & Tone\n## 4. Repetition & Redundancy\n## 5. Top 10 Specific Fixes\n\nText:\n${truncated}`,
+        },
+        "proofreader": {
+          system: "You are a meticulous proofreader. Format reports clearly in markdown.",
+          user: `Provide a proofreading report. Use markdown headers. Cover:\n## 1. Spelling Errors\n## 2. Punctuation Issues\n## 3. Typos & Formatting\n## 4. Overall Quality Assessment\n\nText:\n${truncated}`,
+        },
+        "blurb-writer": {
+          system: "You are a bestselling book marketing copywriter specializing in back-cover copy.",
+          user: `Write 3 compelling book blurbs based on this manuscript:\n\n## Short Blurb (50 words)\n\n## Standard Back-Cover Blurb (150 words)\n\n## Amazon Description (300 words)\n\nManuscript:\n${truncated}`,
+        },
+        "query-letter": {
+          system: "You are a literary consultant who writes winning query letters for literary agents.",
+          user: `Write a professional query letter based on this manuscript. Include:\n## Hook Paragraph\n## Synopsis\n## Comp Titles\n## Bio Section\n\nManuscript:\n${truncated}`,
+        },
+        "beta-reader": {
+          system: "You simulate diverse reader personas giving honest beta reader feedback.",
+          user: `Simulate 5 reader perspectives on this manuscript:\n\n## 🎯 The Genre Fan\n## 📖 The Casual Reader\n## 🔍 The Critical Analyst\n## 💖 The Emotional Reader\n## 🧩 The Plot Addict\n\nEach gives 3-5 sentences of honest, specific feedback.\n\nManuscript:\n${truncated}`,
+        },
+        "social-kit": {
+          system: "You are a social media marketing expert specializing in book launches.",
+          user: `Create a social media launch kit for this book:\n\n## 📸 5 Instagram Captions\n## 🐦 3 Twitter/X Threads\n## 🎵 5 BookTok Hooks\n## 📧 Launch Email\n\nManuscript:\n${truncated}`,
+        },
+        "sensitivity-reader": {
+          system: "You are a professional sensitivity reader and inclusion consultant.",
+          user: `Review this manuscript for representation and sensitivity. Report:\n\n## Cultural Representation Assessment\n## Flagged Passages (quote + context + suggestion)\n## Stereotype Patterns\n## Representation Score (1-10 with justification)\n## Recommendations\n\nManuscript:\n${truncated}`,
+        },
+      };
+
+      const prompt = prompts[serviceId] || prompts["dev-editor"];
+
+      if (isMockOpenAI) {
+        const demoReport = `# Demo Report — ${serviceId.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}\n\n> **Note:** This is a demo result. Connect a real OpenAI API key for full analysis.\n\n## Overview\n\nYour manuscript has been reviewed. Here are the key findings from the initial scan.\n\n## Strengths\n\n- Strong narrative voice throughout the text\n- Compelling opening that draws readers in\n- Well-paced middle section\n\n## Areas for Improvement\n\n- Consider deepening character motivations in chapter 2\n- A few pacing issues in the third act\n- Some dialogue could be more natural\n\n## Recommendations\n\n1. Revisit the opening chapter hook\n2. Strengthen secondary character arcs\n3. Tighten dialogue in action sequences\n\n## Conclusion\n\nOverall, this is a promising manuscript with clear commercial potential.`;
+        return res.json({ report: demoReport });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: prompt.system },
+          { role: "user", content: prompt.user },
+        ],
+        max_tokens: 2500,
+      });
+
+      const report = response.choices[0]?.message?.content || "No analysis returned.";
+      res.json({ report });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Analysis failed" });
+    }
+  });
+
   // ─── Generate Book Blurb (multi-language) ──────────────────────────────────
 
   app.post(api.books.generateBlurb.path, async (req, res) => {
