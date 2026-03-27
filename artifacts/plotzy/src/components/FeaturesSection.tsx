@@ -660,11 +660,11 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 ════════════════════════════════════════ */
 export function FeaturesSection() {
   return (
-    <section className="bg-[#080808] py-20 px-6 sm:px-8" style={{ fontFamily: SF }}>
+    <section className="bg-[#080808] pt-10 pb-16 px-6 sm:px-8" style={{ fontFamily: SF }}>
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <motion.div className="text-center mb-20"
+        <motion.div className="text-center mb-10"
           initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }} transition={{ duration: 0.8 }}>
           <h2 className="text-[clamp(2.2rem,4.5vw,3.8rem)] font-bold text-white leading-[1.06] mb-5 tracking-tight" style={{ fontFamily: SF }}>
