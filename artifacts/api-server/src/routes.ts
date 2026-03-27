@@ -16,7 +16,7 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import bcrypt from "bcryptjs";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks, arcRecipients } from "../../../lib/db/src/schema";
 import { db } from "./db";
 import { eq, or, ilike, sql } from "drizzle-orm";
 
@@ -2158,6 +2158,69 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       res.status(204).send();
     } catch {
       res.status(500).json({ message: "Failed to delete research item" });
+    }
+  });
+
+  // ─── ISBN ──────────────────────────────────────────────────────────────────
+
+  app.patch("/api/books/:bookId/isbn", async (req: any, res: any) => {
+    const bookId = parseInt(req.params.bookId);
+    if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
+    const { isbn } = req.body as { isbn?: string };
+    try {
+      const book = await storage.updateBook(bookId, { isbn: isbn ?? null } as any);
+      res.json(book);
+    } catch {
+      res.status(500).json({ message: "Failed to update ISBN" });
+    }
+  });
+
+  // ─── ARC Recipients ────────────────────────────────────────────────────────
+
+  app.get("/api/books/:bookId/arc", async (req: any, res: any) => {
+    const bookId = parseInt(req.params.bookId);
+    if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
+    try {
+      const rows = await db.select().from(arcRecipients).where(eq(arcRecipients.bookId, bookId));
+      res.json(rows);
+    } catch {
+      res.status(500).json({ message: "Failed to fetch ARC recipients" });
+    }
+  });
+
+  app.post("/api/books/:bookId/arc", async (req: any, res: any) => {
+    const bookId = parseInt(req.params.bookId);
+    if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
+    const { name, email, note } = req.body as { name: string; email: string; note?: string };
+    if (!name || !email) return res.status(400).json({ message: "name and email required" });
+    try {
+      const [row] = await db.insert(arcRecipients).values({ bookId, name, email, note: note ?? null, status: "sent" }).returning();
+      res.status(201).json(row);
+    } catch {
+      res.status(500).json({ message: "Failed to add ARC recipient" });
+    }
+  });
+
+  app.patch("/api/books/:bookId/arc/:id", async (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+    const { status } = req.body as { status?: string };
+    try {
+      const [row] = await db.update(arcRecipients).set({ status: status ?? "sent" }).where(eq(arcRecipients.id, id)).returning();
+      res.json(row);
+    } catch {
+      res.status(500).json({ message: "Failed to update ARC recipient" });
+    }
+  });
+
+  app.delete("/api/books/:bookId/arc/:id", async (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+    try {
+      await db.delete(arcRecipients).where(eq(arcRecipients.id, id));
+      res.status(204).send();
+    } catch {
+      res.status(500).json({ message: "Failed to delete ARC recipient" });
     }
   });
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -202,6 +202,14 @@ function LaunchModal({
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: myBooks } = useBooks();
+
+  // Auto-select first book when books load so the user can run immediately
+  useEffect(() => {
+    if (myBooks && myBooks.length > 0 && selectedBookId === null) {
+      setSourceTab("book");
+      setSelectedBookId(myBooks[0].id);
+    }
+  }, [myBooks]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -939,25 +947,17 @@ function ServiceCard({
             onClick={() => onLaunch(s)}
             style={{
               display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 14px", borderRadius: 10, fontSize: 12, fontWeight: 700,
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.10)",
-              color: "#ddd", cursor: "pointer",
-              transition: "background .15s, color .15s",
+              padding: "8px 16px", borderRadius: 10, fontSize: 12, fontWeight: 700,
+              background: "#ffffff",
+              border: "none",
+              color: "#111111", cursor: "pointer",
+              transition: "opacity .15s",
             }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(255,255,255,0.15)";
-              el.style.color = "#fff";
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(255,255,255,0.07)";
-              el.style.color = "#ddd";
-            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
           >
-            Launch
-            <ArrowRight style={{ width: 12, height: 12 }} />
+            <Zap style={{ width: 11, height: 11 }} />
+            Analyze
           </button>
         </div>
       </div>

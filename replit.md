@@ -104,6 +104,35 @@ Database layer using Drizzle ORM.
 
 Shared route type definitions and achievement constants used by both frontend and backend.
 
+## Book Tools (Tools Tab in Book Editor)
+
+### AI Analysis Tools (`src/components/ai-analysis-tools.tsx`)
+4 AI-powered analysis tools, each calls a POST endpoint and renders a markdown report:
+- **Plot Hole Detector** → `POST /api/books/:id/ai/plot-holes`
+- **Dialogue Coach** → `POST /api/books/:id/ai/dialogue-coach`
+- **Pacing Analyzer** → `POST /api/books/:id/ai/pacing`
+- **Character Voice** → `POST /api/books/:id/ai/voice-consistency`
+
+All use `gpt-4.1-mini` with JSON response format. `buildManuscript()` helper fetches up to 10 chapters (6000 chars each).
+
+### Publishing Tools (`src/components/book-publishing-tools.tsx`)
+- **Print Layout Preview** — opens printable view
+- **ISBN** → `PATCH /api/books/:id/isbn` — stores ISBN in `books.isbn` column
+- **ARC Distribution** → `GET/POST /api/books/:id/arc`, `PATCH/DELETE /api/books/:id/arc/:recipientId` — uses `arc_recipients` table
+- **KDP Guide** — collapsible step-by-step guide with KDP link
+
+## Marketplace (`/marketplace`)
+
+9 AI publishing services. Each card has an "Analyze" button that opens `LaunchModal`.
+
+`LaunchModal` flow:
+1. Auto-selects the user's first book (via `useEffect` on `myBooks` load)
+2. User can switch to Upload/Paste tabs for custom text
+3. Clicking "Run Service" calls `POST /api/marketplace/analyze` with `{ serviceId, text }`
+4. Result markdown is rendered inline
+
+Service IDs: `dev-editor`, `copy-editor`, `proofreader`, `cover-generator`, `blurb-writer`, `query-letter`, `marketing-plan`, `sensitivity-reader`, `translation`
+
 ## Gutenberg Public-Domain Library
 
 Routes: `/discover` (grid browser) → `/discover/:id` (immersive reader)
