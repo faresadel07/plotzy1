@@ -824,7 +824,7 @@ export default function Home() {
                                     duplicateBook.mutate(book.id);
                                   }}
                                   disabled={duplicateBook.isPending}
-                                  className="text-violet-300/80 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-violet-400/20 bg-violet-500/10 hover:bg-violet-500/25 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
+                                  className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
                                 >
                                   {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
                                 </button>
@@ -918,7 +918,7 @@ export default function Home() {
                   {[
                     'Chapter-by-chapter organisation with drag-to-reorder',
                     'Auto-save, version history and snapshots',
-                    'Full RTL support — write natively in Arabic',
+                    'Full RTL support, write natively in Arabic',
                     'Ghost text AI suggestions as you type',
                   ].map((item) => (
                     <motion.li
@@ -961,7 +961,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ delay: 0.8, duration: 0.5 }}
                 >
-                  <span className="text-violet-400">✦</span>
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
                   Arabic &amp; English
                 </motion.div>
               </motion.div>
@@ -977,7 +977,7 @@ export default function Home() {
                 transition={{ duration: 0.9, ease: 'easeOut' }}
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold">2</div>
+                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">2</div>
                   <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Refine</span>
                 </div>
                 <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
@@ -1005,8 +1005,8 @@ export default function Home() {
                       variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
                       className="flex items-start gap-3 text-[#444] text-sm font-medium"
                     >
-                      <span className="w-5 h-5 rounded-full bg-violet-50 border border-violet-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </motion.li>
@@ -1023,13 +1023,13 @@ export default function Home() {
               >
                 <AIAssistantAnimation />
                 <motion.div
-                  className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-violet-200 shadow-lg text-xs font-semibold text-violet-700"
+                  className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.7, duration: 0.5 }}
                 >
-                  <span className="text-violet-500">⚡</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   Context-aware AI
                 </motion.div>
               </motion.div>

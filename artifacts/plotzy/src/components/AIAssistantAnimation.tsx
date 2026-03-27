@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const USER_MSG   = "Continue the scene where Elena discovers the letter. Keep the melancholic tone from chapter 2.";
-const AI_RESPONSE = "Elena's fingers trembled as she unfolded the paper, the ink faded but the words unmistakable — a name she had spent three years trying to forget.";
+const AI_RESPONSE = "Elena's fingers trembled as she unfolded the paper, the ink faded but the words unmistakable, a name she had spent three years trying to forget.";
 
 type Phase = "idle" | "user-typing" | "user-done" | "ai-thinking" | "ai-typing" | "ai-done" | "fading";
 
