@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import ConnectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
@@ -75,15 +76,23 @@ app.use(express.json({ limit: "10mb", verify: (req, _res, buf) => { req.rawBody 
 app.use(express.urlencoded({ extended: false }));
 
 setupPassport();
+const PgSession = ConnectPgSimple(session);
 app.use(
   session({
+    store: process.env.DATABASE_URL
+      ? new PgSession({
+          conString: process.env.DATABASE_URL,
+          tableName: "user_sessions",
+          createTableIfMissing: true,
+        })
+      : undefined,
     secret: process.env.SESSION_SECRET || "plotzy-dev-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   })
