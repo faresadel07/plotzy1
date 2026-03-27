@@ -228,7 +228,9 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads }: Boo
     function measure() {
       if (!wrapperRef.current || !innerRef.current) return;
       const w = wrapperRef.current.clientWidth;
-      const h = wrapperRef.current.clientHeight;
+      /* Each page is half the spread width; book ratio is 2:3 (w:h per page) */
+      const pageW = (w - SPINE_W) / 2;
+      const h = Math.round(pageW * 1.5);
       setContainerW(w);
       setContainerH(h);
 
@@ -531,7 +533,7 @@ export default function ReadBook() {
       </AnimatePresence>
 
       {/* ── Reading area ── */}
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "28px 16px 0" }}>
+      <div style={{ maxWidth: 980, margin: "0 auto", padding: "28px 16px 0" }}>
 
         {!sortedChapters.length ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#555" }}>
