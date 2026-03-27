@@ -961,7 +961,7 @@ export default function Home() {
                 The first platform built<br className="hidden sm:block" /> for the full author journey
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
-                From your first idea to a published, distributed book — Plotzy is the only platform that handles every step in one unified workspace, in Arabic and English.
+                From your first idea to a published, distributed book. Plotzy is the only platform that handles every step in one unified workspace, in Arabic and English.
               </p>
             </motion.div>
           </div>
