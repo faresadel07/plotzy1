@@ -590,20 +590,25 @@ export default function ReadBook() {
               )}
             </div>
 
-            {/* Rating & Comments */}
-            {spreadIndex === totalSpreads - 1 && (
-              <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.5 }}
-                style={{ maxWidth: 700, margin: "0 auto", paddingBottom: 64 }}
-              >
-                <div style={{ background: "#1a1815", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "36px 40px", textAlign: "center", marginBottom: 32 }}>
-                  <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 10, fontFamily: "Georgia, serif" }}>You've reached the end</p>
-                  <h3 style={{ fontSize: 22, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 8 }}>Did you enjoy this story?</h3>
-                  <p style={{ fontSize: 13, color: "#555", marginBottom: 28, fontFamily: "Georgia, serif" }}>Your rating helps other readers discover great books</p>
-                  <StarRating bookId={bookId} currentAvg={ratingStats?.avg ?? 0} count={ratingStats?.count ?? 0} />
-                </div>
-                <CommentsSection bookId={bookId} />
-              </motion.div>
-            )}
+            {/* Rating & Comments — always visible */}
+            <div style={{ maxWidth: 700, margin: "8px auto 0", paddingBottom: 64 }}>
+              {/* Rating card */}
+              <div style={{ background: "#1a1815", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 32px", textAlign: "center", marginBottom: 28 }}>
+                {spreadIndex === totalSpreads - 1 ? (
+                  <>
+                    <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>You've reached the end</p>
+                    <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>Did you enjoy this story?</h3>
+                    <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>Your rating helps other readers discover great books</p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#888", fontFamily: "Georgia, serif", marginBottom: 16 }}>Rate this book</p>
+                  </>
+                )}
+                <StarRating bookId={bookId} currentAvg={ratingStats?.avg ?? 0} count={ratingStats?.count ?? 0} />
+              </div>
+              <CommentsSection bookId={bookId} />
+            </div>
           </>
         )}
       </div>
