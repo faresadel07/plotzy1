@@ -163,19 +163,19 @@ export function BookCarousel() {
             textTransform: "uppercase",
             fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif",
             fontWeight: 600,
-            color: "#7a5c28",
+            color: "#000",
             cursor: "pointer",
-            borderBottom: "1.5px solid rgba(122,92,40,0.35)",
+            borderBottom: "1.5px solid rgba(0,0,0,0.25)",
             paddingBottom: 2,
             transition: "color 0.2s, border-color 0.2s",
           }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = "#5a3e10";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(90,62,16,0.7)";
+              (e.currentTarget as HTMLElement).style.color = "#333";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.55)";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = "#7a5c28";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(122,92,40,0.35)";
+              (e.currentTarget as HTMLElement).style.color = "#000";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.25)";
             }}
           >
             Explore our free classics library — 70,000+ books, read instantly
