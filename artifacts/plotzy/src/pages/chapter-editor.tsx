@@ -414,7 +414,7 @@ export default function ChapterEditor() {
     setSuggestionPageIdx(-1);
 
     const currentText = getPageText(pages[activePageIndex] ?? "").trim();
-    if (currentText.split(/\s+/).filter(Boolean).length < 8) return; // need ≥8 words
+    if (currentText.split(/\s+/).filter(Boolean).length < 5) return; // need ≥5 words
 
     // Cancel previous debounce
     if (suggestionDebounceRef.current) clearTimeout(suggestionDebounceRef.current);
