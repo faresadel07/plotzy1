@@ -1590,6 +1590,16 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     });
   });
 
+  app.patch("/api/auth/avatar", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const { avatarUrl } = z.object({ avatarUrl: z.string().max(500_000) }).parse(req.body);
+    const updated = await storage.updateUser(req.user.id, { avatarUrl });
+    const { passwordHash: _ph, ...safe } = updated as any;
+    return res.json(safe);
+  });
+
   app.patch("/api/auth/display-name", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });

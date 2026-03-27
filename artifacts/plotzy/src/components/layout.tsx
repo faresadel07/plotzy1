@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, LogOut, User, Trash2, GraduationCap, Zap, Store, Library, Globe } from "lucide-react";
+import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -116,10 +116,45 @@ function FooterCol({ title, links }: { title: string; links: { label: string; hr
 export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, darkNav }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean; noScroll?: boolean; darkNav?: boolean }) {
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logout, refetch: refetchAuth } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showDisplayName, setShowDisplayName] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const canvas = document.createElement("canvas");
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      await new Promise<void>((res, rej) => {
+        img.onload = () => res();
+        img.onerror = rej;
+        img.src = url;
+      });
+      const size = 256;
+      const ratio = Math.min(size / img.width, size / img.height);
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      const res = await fetch("/api/auth/avatar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ avatarUrl: dataUrl }),
+      });
+      if (res.ok) refetchAuth();
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -241,9 +276,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                     <User className="w-4 h-4" />
                     {t("changeDisplayName")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/trash")} className="gap-2 cursor-pointer">
-                    <Trash2 className="w-4 h-4" />
-                    Trash
+                  <DropdownMenuItem
+                    disabled={uploadingAvatar}
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                    {uploadingAvatar ? "Uploading..." : "Change profile picture"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer text-destructive focus:text-destructive" data-testid="menuitem-logout">
@@ -354,6 +393,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
       </footer>
       )}
 
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleAvatarChange}
+      />
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
       <DisplayNameModal
         open={showDisplayName}
