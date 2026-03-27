@@ -866,17 +866,13 @@ export default function Home() {
         <section className="bg-white overflow-hidden border-b border-[#f0f0f0]">
 
           {/* Section intro */}
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-20 pb-16 text-center">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-20 pb-10 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f4f0ff] border border-violet-200 mb-6">
-                <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
-                <span className="text-xs font-semibold text-violet-700 tracking-wide uppercase">The Complete Author Platform</span>
-              </div>
               <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
                 The first platform built<br className="hidden sm:block" /> for the full author journey
               </h2>
@@ -887,7 +883,7 @@ export default function Home() {
 
             {/* Unique differentiators strip */}
             <motion.div
-              className="flex flex-wrap items-center justify-center gap-3 mt-10"
+              className="flex flex-wrap items-center justify-center gap-3 mt-8"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -915,7 +911,7 @@ export default function Home() {
           {/* Divider line */}
           <div className="w-full h-px bg-gradient-to-r from-transparent via-[#e8e8e8] to-transparent" />
 
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-20 pb-14">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-12 pb-14">
 
             {/* Step 1 */}
             <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
