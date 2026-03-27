@@ -30,7 +30,6 @@ function getInitials(name?: string | null, email?: string | null): string {
 const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/",              key: "myLibrary" },
   { href: "/writing-guide", key: "navGuide" },
-  { href: "/discover",      key: "navDiscover" },
   { href: "/marketplace",   key: "navMarketplace" },
   { href: "/library",       key: "navCommunity" },
   { href: "/pricing",       key: "navPro" },
