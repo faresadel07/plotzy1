@@ -881,31 +881,6 @@ export default function Home() {
               </p>
             </motion.div>
 
-            {/* Unique differentiators strip */}
-            <motion.div
-              className="flex flex-wrap items-center justify-center gap-3 mt-8"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={{ visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } }}
-            >
-              {[
-                { icon: "✦", label: "Bilingual — Arabic & English" },
-                { icon: "⬡", label: "AI that adapts to your voice" },
-                { icon: "◈", label: "Write, publish, distribute in one place" },
-                { icon: "◎", label: "Professional editorial tools built in" },
-                { icon: "⧫", label: "No writing experience required" },
-              ].map(({ icon, label }) => (
-                <motion.div
-                  key={label}
-                  variants={{ hidden: { opacity: 0, scale: 0.88 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } } }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#f8f8f8] border border-[#e8e8e8] text-sm text-[#333] font-medium hover:border-[#ccc] transition-colors"
-                >
-                  <span className="text-violet-500 text-xs">{icon}</span>
-                  {label}
-                </motion.div>
-              ))}
-            </motion.div>
           </div>
 
           {/* Divider line */}
