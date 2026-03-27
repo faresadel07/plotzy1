@@ -32,7 +32,6 @@ import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { BookCoverShader } from "@/components/ui/book-cover-shader";
 import { PerspectiveBook } from "@/components/ui/perspective-book";
 import { ConfirmModal } from "@/components/confirm-modal";
-import { WritingCalendar } from "@/components/writing-calendar";
 
 
 const BOOKS_PER_SHELF = 4;
@@ -859,18 +858,6 @@ export default function Home() {
           </section>
         )}
 
-        {/* ===== WRITING HABIT CALENDAR ===== */}
-        {user && books && books.length > 0 && (
-          <section className="bg-[#0a0a0a] border-b border-white/5 py-12 px-4 sm:px-8">
-            <div className="max-w-5xl mx-auto">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-1.5 h-5 rounded-full bg-violet-500" />
-                <h2 className="text-white/80 text-sm font-bold uppercase tracking-wider">Writing Activity</h2>
-              </div>
-              <WritingCalendar />
-            </div>
-          </section>
-        )}
 
 
 
