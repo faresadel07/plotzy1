@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/shared/routes";
+import { getGuestBookIds } from "@/hooks/use-books";
 
 export type PublishedBook = {
   id: number;
@@ -122,10 +123,11 @@ export function usePublishBook() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, publish }: { id: number; publish: boolean }) => {
+      const guestIds = getGuestBookIds();
       const res = await fetch(`/api/books/${id}/publish`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ publish }),
+        body: JSON.stringify({ publish, guestIds }),
         credentials: "include",
       });
       if (!res.ok) {

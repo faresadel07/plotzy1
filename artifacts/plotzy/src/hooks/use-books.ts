@@ -6,7 +6,7 @@ import { parseWithLogging } from "./use-zod-logger";
 // ── Guest book localStorage persistence ─────────────────────────────────────
 const LS_KEY = "plotzy_guest_book_ids";
 
-function getGuestBookIds(): number[] {
+export function getGuestBookIds(): number[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return [];
