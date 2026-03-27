@@ -550,7 +550,13 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                       style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent' }}
                       disabled={publishBook.isPending}
-                      onClick={() => publishBook.mutate({ id: bookId, publish: false }, { onSuccess: () => toast({ title: lang === "ar" ? "تم إلغاء النشر" : "Unpublished" }) })}
+                      onClick={() => publishBook.mutate(
+                        { id: bookId, publish: false },
+                        {
+                          onSuccess: () => toast({ title: lang === "ar" ? "تم إلغاء النشر" : "Book removed from Community Library" }),
+                          onError: (err: any) => toast({ title: lang === "ar" ? "فشل إلغاء النشر" : "Failed to unpublish", description: err?.message || "Please make sure you're signed in.", variant: "destructive" }),
+                        }
+                      )}
                     >
                       <EyeOff className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">{publishBook.isPending ? "..." : (lang === "ar" ? "إلغاء النشر" : "Unpublish")}</span>
