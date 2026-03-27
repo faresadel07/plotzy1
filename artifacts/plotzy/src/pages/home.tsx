@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
+import { AuthModal } from "@/components/auth-modal";
 import { FeatureVideo } from "@/components/FeatureVideo";
 import { WritingAnimation } from "@/components/WritingAnimation";
 import { AIAssistantAnimation } from "@/components/AIAssistantAnimation";
@@ -403,6 +404,12 @@ export default function Home() {
 
   const { user } = useAuth();
   const firstName = user?.displayName ? user.displayName.trim().split(/\s+/)[0] : null;
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const openCreateBook = () => {
+    if (!user) { setShowAuthModal(true); return; }
+    setIsOpen(true);
+  };
 
   const shelfRows = books ? Array.from({ length: Math.ceil(books.length / BOOKS_PER_SHELF) }, (_, i) => books.slice(i * BOOKS_PER_SHELF, (i + 1) * BOOKS_PER_SHELF)) : [];
   const getBookLangInfo = (code: string) => BOOK_LANGUAGES.find(l => l.code === code);
@@ -645,7 +652,7 @@ export default function Home() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  onClick={() => setIsOpen(true)}
+                  onClick={openCreateBook}
                   className="cursor-pointer mx-auto group"
                   style={{ maxWidth: 260 }}
                 >
@@ -711,7 +718,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  onClick={() => setIsOpen(true)}
+                  onClick={openCreateBook}
                   className="cursor-pointer group flex-shrink-0"
                   style={{ width: 180 }}
                 >
@@ -1076,7 +1083,7 @@ export default function Home() {
 
             <div className="flex flex-wrap items-center justify-center gap-4">
               <button
-                onClick={() => setIsOpen(true)}
+                onClick={openCreateBook}
                 className="group inline-flex items-center gap-2.5 px-8 py-3 rounded-full font-bold text-sm tracking-wide transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
                 style={{ background: '#EFEFEF', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', color: '#111111' }}
               >
@@ -1104,6 +1111,7 @@ export default function Home() {
       </Layout>
 
       <OnboardingWizard open={showWizard} onClose={() => setShowWizard(false)} onCreateBook={handleCreateWizardBook} />
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </>
   );
 }
