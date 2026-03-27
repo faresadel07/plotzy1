@@ -420,16 +420,26 @@ export default function ChapterEditor() {
   // After pages are loaded, scroll to the last-visited page
   useEffect(() => {
     if (!chapterId || pages.length === 0 || restoredPositionRef.current) return;
-    restoredPositionRef.current = true;
     const saved = localStorage.getItem(lastPageStorageKey(chapterId));
-    if (!saved) return;
+    if (!saved) {
+      // No saved position — mark done so save-effect can begin
+      restoredPositionRef.current = true;
+      return;
+    }
     const idx = parseInt(saved, 10);
-    if (isNaN(idx) || idx <= 0 || idx >= pages.length) return;
+    if (isNaN(idx) || idx <= 0) {
+      restoredPositionRef.current = true;
+      return;
+    }
+    // Pages haven't fully loaded yet — wait for next pages.length change
+    if (idx >= pages.length) return;
+    // Pages loaded and idx is valid — restore position
+    restoredPositionRef.current = true;
     setActivePageIndex(idx);
     requestAnimationFrame(() => {
       setTimeout(() => {
         pageElsRef.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 150);
+      }, 200);
     });
   }, [chapterId, pages.length]);
 
