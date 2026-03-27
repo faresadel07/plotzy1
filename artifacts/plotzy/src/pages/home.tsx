@@ -862,13 +862,63 @@ export default function Home() {
 
 
 
-        {/* ===== HOW IT WORKS — REEDSY-STYLE ALTERNATING SECTIONS ===== */}
-        <section className="bg-white pt-20 pb-14 px-6 sm:px-8 border-b border-[#f0f0f0]">
-          <div className="max-w-7xl mx-auto">
+        {/* ===== HOW IT WORKS ===== */}
+        <section className="bg-white overflow-hidden border-b border-[#f0f0f0]">
 
-            {/* — Step 1 — */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-32">
-              {/* Text left */}
+          {/* Section intro */}
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-20 pb-16 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f4f0ff] border border-violet-200 mb-6">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+                <span className="text-xs font-semibold text-violet-700 tracking-wide uppercase">The Complete Author Platform</span>
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
+                The first platform built<br className="hidden sm:block" /> for the full author journey
+              </h2>
+              <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
+                From your first idea to a published, distributed book — Plotzy is the only platform that handles every step in one unified workspace, in Arabic and English.
+              </p>
+            </motion.div>
+
+            {/* Unique differentiators strip */}
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-3 mt-10"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={{ visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } }}
+            >
+              {[
+                { icon: "✦", label: "Bilingual — Arabic & English" },
+                { icon: "⬡", label: "AI that adapts to your voice" },
+                { icon: "◈", label: "Write, publish, distribute in one place" },
+                { icon: "◎", label: "Professional editorial tools built in" },
+                { icon: "⧫", label: "No writing experience required" },
+              ].map(({ icon, label }) => (
+                <motion.div
+                  key={label}
+                  variants={{ hidden: { opacity: 0, scale: 0.88 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } } }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#f8f8f8] border border-[#e8e8e8] text-sm text-[#333] font-medium hover:border-[#ccc] transition-colors"
+                >
+                  <span className="text-violet-500 text-xs">{icon}</span>
+                  {label}
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Divider line */}
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#e8e8e8] to-transparent" />
+
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-20 pb-14">
+
+            {/* Step 1 */}
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
               <motion.div
                 className="flex-1 max-w-[500px]"
                 initial={{ opacity: 0, x: -40 }}
@@ -876,13 +926,16 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.9, ease: 'easeOut' }}
               >
-                <div className="text-xs font-bold uppercase tracking-[0.25em] text-foreground/40 mb-4">Step 1</div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">1</div>
+                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Write</span>
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
                   Write your story,<br/>your way
                 </h2>
                 <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  A distraction-free editor built for authors. Outline your chapters,
-                  structure your plot, and pour your ideas onto the page — all in one focused workspace.
+                  A distraction-free editor built for serious authors. Outline your chapters,
+                  structure your plot, and pour your ideas onto the page in one focused workspace.
                 </p>
                 <motion.ul
                   className="space-y-3"
@@ -891,13 +944,18 @@ export default function Home() {
                   viewport={{ once: true }}
                   variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
                 >
-                  {['Chapter-by-chapter organisation','Auto-save & version history','Full RTL & multi-language support'].map((item) => (
+                  {[
+                    'Chapter-by-chapter organisation with drag-to-reorder',
+                    'Auto-save, version history and snapshots',
+                    'Full RTL support — write natively in Arabic',
+                    'Ghost text AI suggestions as you type',
+                  ].map((item) => (
                     <motion.li
                       key={item}
                       variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-center gap-3 text-[#444] text-sm font-medium"
+                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
                     >
-                      <span className="w-5 h-5 rounded-full bg-black/8 border border-black/15 flex items-center justify-center flex-shrink-0">
+                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
@@ -906,21 +964,40 @@ export default function Home() {
                 </motion.ul>
               </motion.div>
 
-              {/* Editor mockup right */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full"
+                className="flex-1 max-w-[560px] w-full relative"
                 initial={{ opacity: 0, x: 40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
               >
                 <WritingAnimation />
+                {/* Floating badge */}
+                <motion.div
+                  className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Auto-saved just now
+                </motion.div>
+                <motion.div
+                  className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 bg-[#111] rounded-xl shadow-lg text-xs font-semibold text-white"
+                  initial={{ opacity: 0, y: -12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                >
+                  <span className="text-violet-400">✦</span>
+                  Arabic &amp; English
+                </motion.div>
               </motion.div>
             </div>
 
-            {/* — Step 2 — */}
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24">
-              {/* Text right */}
+            {/* Step 2 */}
+            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24 mb-28">
               <motion.div
                 className="flex-1 max-w-[500px]"
                 initial={{ opacity: 0, x: 40 }}
@@ -928,13 +1005,16 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.9, ease: 'easeOut' }}
               >
-                <div className="text-xs font-bold uppercase tracking-[0.25em] text-foreground/40 mb-4">Step 2</div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-6">
-                  AI that writes<br/>alongside you
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold">2</div>
+                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Refine</span>
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
+                  AI that knows<br/>your story
                 </h2>
                 <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  Stuck on a scene? Just ask. Plotzy's AI reads your story's context and
-                  suggests continuations, rewrites, and ideas that sound like you — not a machine.
+                  Stuck on a scene? Plotzy's AI reads your entire manuscript and suggests continuations,
+                  rewrites, and ideas that match your unique voice and style.
                 </p>
                 <motion.ul
                   className="space-y-3"
@@ -943,14 +1023,19 @@ export default function Home() {
                   viewport={{ once: true }}
                   variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
                 >
-                  {['Context-aware chapter suggestions','Tone & style matching','Expand, rewrite, or brainstorm on demand'].map((item) => (
+                  {[
+                    'Reads context from all your chapters, not just the current one',
+                    'Matches your tone, vocabulary and narrative style',
+                    'Plot hole detection and pacing analysis',
+                    'Dialogue coaching and character voice consistency',
+                  ].map((item) => (
                     <motion.li
                       key={item}
                       variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-center gap-3 text-[#444] text-sm font-medium"
+                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
                     >
-                      <span className="w-5 h-5 rounded-full bg-black/8 border border-black/15 flex items-center justify-center flex-shrink-0">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-5 h-5 rounded-full bg-violet-50 border border-violet-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </motion.li>
@@ -958,15 +1043,123 @@ export default function Home() {
                 </motion.ul>
               </motion.div>
 
-              {/* AI chat mockup left */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full"
+                className="flex-1 max-w-[560px] w-full relative"
                 initial={{ opacity: 0, x: -40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
               >
                 <AIAssistantAnimation />
+                <motion.div
+                  className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-violet-200 shadow-lg text-xs font-semibold text-violet-700"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                >
+                  <span className="text-violet-500">⚡</span>
+                  Context-aware AI
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+              <motion.div
+                className="flex-1 max-w-[500px]"
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold">3</div>
+                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Publish</span>
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
+                  From manuscript<br/>to published book
+                </h2>
+                <p className="text-lg text-[#555] leading-[1.75] mb-8">
+                  When your story is ready, Plotzy's professional publishing tools take it to the
+                  finish line — cover design, formatting, ISBN registration and distribution.
+                </p>
+                <motion.ul
+                  className="space-y-3"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
+                >
+                  {[
+                    'AI-generated professional book covers',
+                    'One-click export to PDF and ebook formats',
+                    'Direct publishing guide to Amazon KDP',
+                    '9 AI editorial services in the marketplace',
+                  ].map((item) => (
+                    <motion.li
+                      key={item}
+                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
+                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      {item}
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </motion.div>
+
+              {/* Publishing mockup */}
+              <motion.div
+                className="flex-1 max-w-[560px] w-full"
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+              >
+                <div className="relative rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 shadow-2xl p-6">
+                  {/* Top bar */}
+                  <div className="flex items-center gap-2 mb-5">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-white/10" />
+                      <div className="w-3 h-3 rounded-full bg-white/10" />
+                      <div className="w-3 h-3 rounded-full bg-white/10" />
+                    </div>
+                    <div className="flex-1 bg-white/5 rounded-md px-3 py-1 text-[10px] text-white/30 font-mono">plotzy.app/marketplace</div>
+                  </div>
+                  {/* Services list */}
+                  {[
+                    { label: "AI Developmental Editor", tag: "Most Used", color: "#a78bfa" },
+                    { label: "AI Copy Editor", tag: "Grammar & Style", color: "#34d399" },
+                    { label: "AI Cover Generator", tag: "Design", color: "#fb923c" },
+                    { label: "AI Book Blurb Writer", tag: "Marketing", color: "#38bdf8" },
+                  ].map((svc, i) => (
+                    <motion.div
+                      key={svc.label}
+                      className="flex items-center justify-between gap-3 mb-3 p-3 rounded-xl bg-white/4 border border-white/6"
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: svc.color }} />
+                        <span className="text-white/80 text-xs font-medium">{svc.label}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 text-white/35">{svc.tag}</span>
+                      </div>
+                      <div className="text-[10px] px-2.5 py-1 rounded-lg bg-white text-[#111] font-bold flex-shrink-0">Analyze</div>
+                    </motion.div>
+                  ))}
+                  <div className="mt-4 pt-4 border-t border-white/8 flex items-center justify-between">
+                    <span className="text-white/30 text-xs">9 services available</span>
+                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Ready to publish
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </div>
 
