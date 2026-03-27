@@ -90,7 +90,7 @@ export function AIAssistant({ bookId, currentContent, onApply, onClose }: AIAssi
   const ar = lang === "ar";
 
   const [mode, setMode] = useState<Mode>("polish");
-  const [inputText, setInputText] = useState(currentContent);
+  const [inputText, setInputText] = useState("");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -101,15 +101,11 @@ export function AIAssistant({ bookId, currentContent, onApply, onClose }: AIAssi
 
   const needsInput = mode === "expand";
 
-  /* ─── When mode changes, pre-fill or clear input ─── */
+  /* ─── When mode changes, clear input and output ─── */
   useEffect(() => {
-    if (mode === "expand") {
-      setInputText("");
-    } else {
-      setInputText(currentContent);
-    }
+    setInputText("");
     setOutput("");
-  }, [mode, currentContent]);
+  }, [mode]);
 
   /* ─── Generate ─── */
   const generate = async () => {
