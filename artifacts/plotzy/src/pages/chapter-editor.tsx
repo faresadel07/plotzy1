@@ -8,7 +8,7 @@ import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil } from "lucide-react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { playTypewriterSound } from "@/hooks/use-audio";
@@ -1822,19 +1822,36 @@ export default function ChapterEditor() {
                         ? effectivePrefs.footerText
                         : `${pageWords} ${ar ? "كلمة" : "w"}`}
                     </span>
-                    {/* Centered page number */}
+                    {/* Centered page number — click pencil to style */}
                     {(effectivePrefs.showPageNumbers !== false) && (
-                      <span
-                        style={{
-                          fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
-                          fontFamily: effectivePrefs.pageNumFont || "inherit",
-                          color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
-                          letterSpacing: "0.2em",
-                          fontWeight: 500,
-                          opacity: effectivePrefs.pageNumColor ? 0.75 : 0.3,
-                        }}
-                      >
-                        — {index + 1} —
+                      <span className="group/pgnum relative inline-flex items-center gap-1">
+                        <span
+                          style={{
+                            fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
+                            fontFamily: effectivePrefs.pageNumFont || "inherit",
+                            color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
+                            letterSpacing: "0.2em",
+                            fontWeight: 500,
+                            opacity: effectivePrefs.pageNumColor ? 0.75 : 0.3,
+                          }}
+                        >
+                          — {index + 1} —
+                        </span>
+                        {/* Hover edit button */}
+                        <button
+                          onClick={e => { e.stopPropagation(); setShowPageSetup(true); }}
+                          title={ar ? "تخصيص رقم الصفحة" : "Customize page number"}
+                          className="opacity-0 group-hover/pgnum:opacity-100 transition-opacity"
+                          style={{
+                            width: 16, height: 16, borderRadius: 4,
+                            background: "hsl(var(--primary))",
+                            border: "none", cursor: "pointer",
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0, marginLeft: 2,
+                          }}
+                        >
+                          <Pencil style={{ width: 8, height: 8, color: "#fff" }} />
+                        </button>
                       </span>
                     )}
                   </div>
