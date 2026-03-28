@@ -72,13 +72,34 @@ function fmtMin(min: number) {
 
 // ── Mini audio player component ───────────────────────────────────────────────
 
-function MiniPlayer({ src, mimeType, isMock }: { src: string; mimeType: string; isMock?: boolean }) {
+function MiniPlayer({
+  src, mimeType, isMock, text, speed = 1, voiceGender = "Neutral",
+}: {
+  src: string; mimeType: string; isMock?: boolean;
+  text?: string; speed?: number; voiceGender?: "Male" | "Female" | "Neutral";
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [muted, setMuted] = useState(false);
+  // For speechSynthesis progress simulation
+  const ttsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ttsStartRef = useRef<number>(0);
+  const ttsDurRef = useRef<number>(0);
 
+  // Stop any TTS on unmount
   useEffect(() => {
+    return () => {
+      if (isMock) {
+        window.speechSynthesis?.cancel();
+        if (ttsTimerRef.current) clearInterval(ttsTimerRef.current);
+      }
+    };
+  }, [isMock]);
+
+  // Real audio events
+  useEffect(() => {
+    if (isMock) return;
     const el = audioRef.current;
     if (!el) return;
     const onEnded = () => setPlaying(false);
@@ -86,20 +107,87 @@ function MiniPlayer({ src, mimeType, isMock }: { src: string; mimeType: string; 
     el.addEventListener("ended", onEnded);
     el.addEventListener("timeupdate", onTime);
     return () => { el.removeEventListener("ended", onEnded); el.removeEventListener("timeupdate", onTime); };
-  }, []);
+  }, [isMock]);
 
-  const toggle = () => {
+  const startTtsProgress = (durationMs: number) => {
+    ttsStartRef.current = Date.now();
+    ttsDurRef.current = durationMs;
+    setProgress(0);
+    if (ttsTimerRef.current) clearInterval(ttsTimerRef.current);
+    ttsTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - ttsStartRef.current;
+      const pct = Math.min(100, (elapsed / ttsDurRef.current) * 100);
+      setProgress(pct);
+      if (pct >= 100) {
+        clearInterval(ttsTimerRef.current!);
+        ttsTimerRef.current = null;
+        setPlaying(false);
+      }
+    }, 200);
+  };
+
+  const toggleTts = () => {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    if (playing) {
+      synth.cancel();
+      if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+      setPlaying(false);
+      return;
+    }
+    const fullText = text || "No text available for this chapter.";
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.rate = Math.max(0.5, Math.min(2, speed));
+    utterance.pitch = voiceGender === "Male" ? 0.8 : voiceGender === "Female" ? 1.2 : 1.0;
+
+    // Pick a matching browser voice
+    const voices = synth.getVoices();
+    if (voices.length > 0) {
+      const enVoices = voices.filter(v => v.lang.startsWith("en"));
+      if (voiceGender === "Male") {
+        const mv = enVoices.find(v => /male|man|david|mark|daniel/i.test(v.name));
+        if (mv) utterance.voice = mv;
+      } else if (voiceGender === "Female") {
+        const fv = enVoices.find(v => /female|woman|samantha|victoria|karen|moira/i.test(v.name));
+        if (fv) utterance.voice = fv;
+      } else {
+        if (enVoices[0]) utterance.voice = enVoices[0];
+      }
+    }
+
+    // Estimate duration: ~150 wpm * speed → chars/min ≈ words*5/min
+    const words = fullText.split(/\s+/).length;
+    const estimatedMs = (words / (150 * utterance.rate)) * 60 * 1000;
+
+    utterance.onend = () => {
+      setPlaying(false);
+      setProgress(100);
+      if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+    };
+    utterance.onerror = () => {
+      setPlaying(false);
+      if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+    };
+
+    synth.cancel();
+    synth.speak(utterance);
+    setPlaying(true);
+    startTtsProgress(estimatedMs);
+  };
+
+  const toggleReal = () => {
     const el = audioRef.current;
     if (!el) return;
     if (playing) { el.pause(); setPlaying(false); }
     else { el.play().catch(() => {}); setPlaying(true); }
   };
 
+  const toggle = isMock ? toggleTts : toggleReal;
   const dataUrl = `data:${mimeType};base64,${src}`;
 
   return (
     <div className="flex items-center gap-3 mt-3 p-3 rounded-xl" style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)" }}>
-      <audio ref={audioRef} src={dataUrl} preload="auto" muted={muted} />
+      {!isMock && <audio ref={audioRef} src={dataUrl} preload="auto" muted={muted} />}
       <button
         onClick={toggle}
         className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
@@ -113,17 +201,19 @@ function MiniPlayer({ src, mimeType, isMock }: { src: string; mimeType: string; 
           <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "linear-gradient(90deg, #8b5cf6, #a855f7)" }} />
         </div>
         {isMock && (
-          <p className="text-[10px] mt-1 opacity-50">Demo mode — add an OpenAI key for real audio</p>
+          <p className="text-[10px] mt-1 opacity-40">Browser voice preview · Add OpenAI key for AI voices</p>
         )}
       </div>
 
-      <button
-        onClick={() => { setMuted(m => !m); if (audioRef.current) audioRef.current.muted = !muted; }}
-        className="w-7 h-7 rounded-lg flex items-center justify-center transition-opacity hover:opacity-70"
-        style={{ background: "transparent", border: "none", cursor: "pointer", color: "rgba(139,92,246,0.8)", flexShrink: 0 }}
-      >
-        {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-      </button>
+      {!isMock && (
+        <button
+          onClick={() => { setMuted(m => !m); if (audioRef.current) audioRef.current.muted = !muted; }}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-opacity hover:opacity-70"
+          style={{ background: "transparent", border: "none", cursor: "pointer", color: "rgba(139,92,246,0.8)", flexShrink: 0 }}
+        >
+          {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+        </button>
+      )}
     </div>
   );
 }
@@ -147,7 +237,7 @@ export default function AudiobookStudio() {
   const [selectAll, setSelectAll] = useState(true);
 
   // Preview state: chapterId -> base64 audio
-  const [previews, setPreviews] = useState<Record<number, { audio: string; mimeType: string; isMock?: boolean }>>({});
+  const [previews, setPreviews] = useState<Record<number, { audio: string; mimeType: string; isMock?: boolean; text?: string }>>({});
   const [previewLoading, setPreviewLoading] = useState<Record<number, boolean>>({});
 
   // Export state
@@ -195,7 +285,8 @@ export default function AudiobookStudio() {
       });
       if (!res.ok) throw new Error("Preview failed");
       const data = await res.json() as { audio: string; mimeType: string; isMock?: boolean };
-      setPreviews(p => ({ ...p, [chapterId]: data }));
+      const chapterText = chapterList.find(c => c.id === chapterId)?.text;
+      setPreviews(p => ({ ...p, [chapterId]: { ...data, text: chapterText } }));
       setExpandedChapters(prev => new Set([...prev, chapterId]));
     } catch {
       toast({ title: ar ? "فشل المعاينة" : "Preview failed", description: ar ? "حدث خطأ أثناء توليد الصوت" : "Could not generate audio preview", variant: "destructive" });
@@ -571,7 +662,14 @@ export default function AudiobookStudio() {
                         {/* Expanded audio player */}
                         {isExpanded && preview && (
                           <div className="px-5 pb-4">
-                            <MiniPlayer src={preview.audio} mimeType={preview.mimeType} isMock={preview.isMock} />
+                            <MiniPlayer
+                              src={preview.audio}
+                              mimeType={preview.mimeType}
+                              isMock={preview.isMock}
+                              text={preview.text}
+                              speed={speed}
+                              voiceGender={voice.gender}
+                            />
                           </div>
                         )}
                       </div>
