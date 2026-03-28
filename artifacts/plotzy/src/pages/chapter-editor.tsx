@@ -2052,210 +2052,218 @@ export default function ChapterEditor() {
 
       {/* ── Page Setup Modal ─────────────────────────────────────────────────── */}
       {showPageSetup && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
           <div
-            className="rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200"
-            style={{ background: isDark ? "#1a1a1f" : "#ffffff", color: isDark ? "#e4e4e7" : "#18181b", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}` }}
+            className="rounded-2xl shadow-2xl w-full animate-in fade-in zoom-in-95 duration-200"
+            style={{ background: isDark ? "#1a1a1f" : "#ffffff", color: isDark ? "#e4e4e7" : "#18181b", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`, maxWidth: 900 }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
               <h2 className="text-base font-semibold">{ar ? "إعداد الصفحة" : "Page Setup"}</h2>
-              <button onClick={() => setShowPageSetup(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-current/10" style={{ border: "none", background: "transparent", cursor: "pointer", color: isDark ? "#a1a1aa" : "#71717a" }}>
+              <button onClick={() => setShowPageSetup(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ border: "none", background: "transparent", cursor: "pointer", color: isDark ? "#a1a1aa" : "#71717a" }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
-              {/* Paper Size */}
-              <div>
-                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "حجم الورق" : "Paper Size"}</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {Object.entries(PAPER_SIZES).map(([id, ps]) => (
-                    <button
-                      key={id}
-                      onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
-                      className="py-2 px-1 rounded-xl text-xs font-medium transition-all"
-                      style={{
-                        background: (prefs.paperSize || "a4") === id ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                        color: (prefs.paperSize || "a4") === id ? "#fff" : undefined,
-                        border: "none", cursor: "pointer",
-                      }}
-                    >
-                      {ar ? ps.labelAr : ps.label}
-                    </button>
-                  ))}
+            {/* ── 3-column body ── */}
+            <div className="grid grid-cols-3 gap-0">
+
+              {/* ── Col 1: Paper + Margins ── */}
+              <div className="p-6 space-y-5" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "الورق والهوامش" : "Paper & Margins"}</p>
+
+                {/* Paper Size */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "حجم الورق" : "Paper Size"}</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Object.entries(PAPER_SIZES).map(([id, ps]) => (
+                      <button
+                        key={id}
+                        onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
+                        className="py-2 px-1 rounded-xl text-xs font-medium transition-all"
+                        style={{
+                          background: (prefs.paperSize || "a4") === id ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                          color: (prefs.paperSize || "a4") === id ? "#fff" : undefined,
+                          border: "none", cursor: "pointer",
+                        }}
+                      >
+                        {ar ? ps.labelAr : ps.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Margins */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الهوامش (بكسل)" : "Margins (px)"}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(["marginTop", "marginBottom", "marginLeft", "marginRight"] as const).map(field => {
+                      const labels: Record<string, { en: string; ar: string }> = {
+                        marginTop: { en: "Top", ar: "أعلى" },
+                        marginBottom: { en: "Bottom", ar: "أسفل" },
+                        marginLeft: { en: "Left", ar: "يسار" },
+                        marginRight: { en: "Right", ar: "يمين" },
+                      };
+                      return (
+                        <div key={field}>
+                          <label className="block text-[11px] opacity-50 mb-1">{ar ? labels[field].ar : labels[field].en}</label>
+                          <input
+                            type="number"
+                            min={20} max={200} step={4}
+                            value={prefs[field] ?? DEFAULT_MARGIN}
+                            onChange={e => { const np = { ...prefs, [field]: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                            className="w-full rounded-lg px-3 py-1.5 text-sm"
+                            style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
-              {/* Margins */}
-              <div>
-                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الهوامش (بكسل)" : "Margins (px)"}</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["marginTop", "marginBottom", "marginLeft", "marginRight"] as const).map(field => {
-                    const labels: Record<string, { en: string; ar: string }> = {
-                      marginTop: { en: "Top", ar: "أعلى" },
-                      marginBottom: { en: "Bottom", ar: "أسفل" },
-                      marginLeft: { en: "Left", ar: "يسار" },
-                      marginRight: { en: "Right", ar: "يمين" },
-                    };
-                    return (
-                      <div key={field}>
-                        <label className="block text-[11px] opacity-50 mb-1">{ar ? labels[field].ar : labels[field].en}</label>
-                        <input
-                          type="number"
-                          min={20} max={200} step={4}
-                          value={prefs[field] ?? DEFAULT_MARGIN}
-                          onChange={e => { const np = { ...prefs, [field]: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
-                          className="w-full rounded-lg px-3 py-1.5 text-sm"
-                          style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* ── Col 2: Header / Footer / Page Numbers toggle ── */}
+              <div className="p-6 space-y-5" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "الرأس والتذييل" : "Header & Footer"}</p>
 
-              {/* Header Text */}
-              <div>
-                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص الرأس" : "Header Text"}</label>
-                <input
-                  type="text"
-                  placeholder={ar ? "مثال: اسم الكتاب..." : "e.g. Book Title…"}
-                  value={prefs.headerText || ""}
-                  onChange={e => { const np = { ...prefs, headerText: e.target.value }; setPrefs(np); }}
-                  onBlur={e => handleSavePrefs({ ...prefs, headerText: e.target.value })}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
-                />
-              </div>
-
-              {/* Footer Text */}
-              <div>
-                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص التذييل" : "Footer Text"}</label>
-                <input
-                  type="text"
-                  placeholder={ar ? "يظهر بدلاً من عدد الكلمات..." : "Replaces word count display…"}
-                  value={prefs.footerText || ""}
-                  onChange={e => { const np = { ...prefs, footerText: e.target.value }; setPrefs(np); }}
-                  onBlur={e => handleSavePrefs({ ...prefs, footerText: e.target.value })}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
-                />
-              </div>
-
-              {/* Page Numbers */}
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">{ar ? "إظهار أرقام الصفحات" : "Show Page Numbers"}</label>
-                <button
-                  onClick={() => { const np = { ...prefs, showPageNumbers: !(prefs.showPageNumbers !== false) }; setPrefs(np); handleSavePrefs(np); }}
-                  className="w-11 h-6 rounded-full transition-colors relative"
-                  style={{
-                    background: (prefs.showPageNumbers !== false) ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
-                    border: "none", cursor: "pointer",
-                  }}
-                >
-                  <span
-                    className="absolute top-0.5 rounded-full transition-transform"
-                    style={{
-                      width: 20, height: 20, background: "#fff",
-                      left: (prefs.showPageNumbers !== false) ? "calc(100% - 22px)" : 2,
-                      transition: "left 0.2s",
-                    }}
+                {/* Header Text */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص الرأس" : "Header Text"}</label>
+                  <input
+                    type="text"
+                    placeholder={ar ? "مثال: اسم الكتاب..." : "e.g. Book Title…"}
+                    value={prefs.headerText || ""}
+                    onChange={e => { const np = { ...prefs, headerText: e.target.value }; setPrefs(np); }}
+                    onBlur={e => handleSavePrefs({ ...prefs, headerText: e.target.value })}
+                    className="w-full rounded-lg px-3 py-2 text-sm"
+                    style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
                   />
-                </button>
+                </div>
+
+                {/* Footer Text */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص التذييل" : "Footer Text"}</label>
+                  <input
+                    type="text"
+                    placeholder={ar ? "يظهر بدلاً من عدد الكلمات..." : "Replaces word count display…"}
+                    value={prefs.footerText || ""}
+                    onChange={e => { const np = { ...prefs, footerText: e.target.value }; setPrefs(np); }}
+                    onBlur={e => handleSavePrefs({ ...prefs, footerText: e.target.value })}
+                    className="w-full rounded-lg px-3 py-2 text-sm"
+                    style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                  />
+                </div>
+
+                {/* Show Page Numbers toggle */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="text-sm font-medium">{ar ? "إظهار أرقام الصفحات" : "Show Page Numbers"}</label>
+                  <button
+                    onClick={() => { const np = { ...prefs, showPageNumbers: !(prefs.showPageNumbers !== false) }; setPrefs(np); handleSavePrefs(np); }}
+                    className="w-11 h-6 rounded-full transition-colors relative flex-shrink-0"
+                    style={{
+                      background: (prefs.showPageNumbers !== false) ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                      border: "none", cursor: "pointer",
+                    }}
+                  >
+                    <span className="absolute top-0.5 rounded-full" style={{ width: 20, height: 20, background: "#fff", left: (prefs.showPageNumbers !== false) ? "calc(100% - 22px)" : 2, transition: "left 0.2s" }} />
+                  </button>
+                </div>
               </div>
 
-              {/* Page Number Style — font, size, color */}
-              {(prefs.showPageNumbers !== false) && (
-                <div className="rounded-xl p-4 space-y-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}` }}>
-                  <p className="text-xs font-semibold uppercase tracking-wider opacity-50">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
+              {/* ── Col 3: Page Number Style ── */}
+              <div className="p-6 space-y-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
 
-                  {/* Font family */}
-                  <div>
-                    <label className="block text-xs font-medium mb-1.5 opacity-60">{ar ? "نوع الخط" : "Font"}</label>
-                    <select
-                      value={prefs.pageNumFont || ""}
-                      onChange={e => { const np = { ...prefs, pageNumFont: e.target.value || undefined }; setPrefs(np); handleSavePrefs(np); }}
-                      className="w-full rounded-lg px-3 py-1.5 text-sm"
-                      style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
-                    >
-                      <option value="">{ar ? "افتراضي (من نص الكتاب)" : "Same as body"}</option>
-                      <option value="'EB Garamond', serif" style={{ fontFamily: "'EB Garamond', serif" }}>EB Garamond</option>
-                      <option value="'Playfair Display', serif" style={{ fontFamily: "'Playfair Display', serif" }}>Playfair Display</option>
-                      <option value="'Lora', serif" style={{ fontFamily: "'Lora', serif" }}>Lora</option>
-                      <option value="'Merriweather', serif" style={{ fontFamily: "'Merriweather', serif" }}>Merriweather</option>
-                      <option value="'Libre Baskerville', serif" style={{ fontFamily: "'Libre Baskerville', serif" }}>Libre Baskerville</option>
-                      <option value="'Cormorant Garamond', serif" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Cormorant Garamond</option>
-                      <option value="Georgia, serif" style={{ fontFamily: "Georgia, serif" }}>Georgia</option>
-                      <option value="'Times New Roman', serif" style={{ fontFamily: "'Times New Roman', serif" }}>Times New Roman</option>
-                      <option value="Arial, sans-serif" style={{ fontFamily: "Arial, sans-serif" }}>Arial</option>
-                      <option value="'Courier New', monospace" style={{ fontFamily: "'Courier New', monospace" }}>Courier New</option>
-                    </select>
+                {(prefs.showPageNumbers !== false) ? (
+                  <>
                     {/* Live preview */}
-                    <p className="mt-1.5 text-center opacity-50" style={{ fontFamily: prefs.pageNumFont || "inherit", fontSize: `${prefs.pageNumSize || 11}px`, color: prefs.pageNumColor || "inherit", letterSpacing: "0.2em" }}>
-                      — 1 —
-                    </p>
-                  </div>
-
-                  {/* Size */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-medium opacity-60">{ar ? "الحجم" : "Size"}</label>
-                      <span className="text-xs opacity-50">{prefs.pageNumSize || 11}px</span>
+                    <div className="rounded-xl flex items-center justify-center py-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}` }}>
+                      <span style={{ fontFamily: prefs.pageNumFont || "inherit", fontSize: `${prefs.pageNumSize || 11}px`, color: prefs.pageNumColor || (isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"), letterSpacing: "0.2em", fontWeight: 500 }}>
+                        — 1 —
+                      </span>
                     </div>
-                    <input
-                      type="range" min={7} max={20} step={1}
-                      value={prefs.pageNumSize || 11}
-                      onChange={e => { const np = { ...prefs, pageNumSize: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
-                      className="w-full"
-                      style={{ accentColor: "hsl(var(--primary))" }}
-                    />
-                    <div className="flex justify-between text-[10px] opacity-30 mt-0.5">
-                      <span>7</span><span>20</span>
-                    </div>
-                  </div>
 
-                  {/* Color */}
-                  <div>
-                    <label className="block text-xs font-medium mb-1.5 opacity-60">{ar ? "اللون" : "Color"}</label>
-                    <div className="flex items-center gap-3">
+                    {/* Font */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الخط" : "Font"}</label>
+                      <select
+                        value={prefs.pageNumFont || ""}
+                        onChange={e => { const np = { ...prefs, pageNumFont: e.target.value || undefined }; setPrefs(np); handleSavePrefs(np); }}
+                        className="w-full rounded-lg px-3 py-1.5 text-sm"
+                        style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                      >
+                        <option value="">{ar ? "مثل نص الكتاب" : "Same as body"}</option>
+                        <option value="'EB Garamond', serif">EB Garamond</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'Lora', serif">Lora</option>
+                        <option value="'Merriweather', serif">Merriweather</option>
+                        <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+                        <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                      </select>
+                    </div>
+
+                    {/* Size */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "الحجم" : "Size"}</label>
+                        <span className="text-xs font-mono opacity-50">{prefs.pageNumSize || 11}px</span>
+                      </div>
                       <input
-                        type="color"
-                        value={prefs.pageNumColor || (isDark ? "#ffffff" : "#000000")}
-                        onChange={e => { const np = { ...prefs, pageNumColor: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
-                        style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`, padding: 2, background: "transparent", cursor: "pointer" }}
+                        type="range" min={7} max={20} step={1}
+                        value={prefs.pageNumSize || 11}
+                        onChange={e => { const np = { ...prefs, pageNumSize: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                        className="w-full"
+                        style={{ accentColor: "hsl(var(--primary))" }}
                       />
-                      <div className="flex-1 flex flex-wrap gap-1.5">
-                        {["#000000", "#444444", "#888888", "#bbbbbb", "#ffffff", "#8b0000", "#1a237e", "#1b5e20", "#4a148c", "#e65100"].map(c => (
+                      <div className="flex justify-between text-[10px] opacity-30 mt-0.5"><span>7</span><span>20</span></div>
+                    </div>
+
+                    {/* Color */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "اللون" : "Color"}</label>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input
+                          type="color"
+                          value={prefs.pageNumColor || (isDark ? "#ffffff" : "#000000")}
+                          onChange={e => { const np = { ...prefs, pageNumColor: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
+                          style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`, padding: 2, background: "transparent", cursor: "pointer" }}
+                        />
+                        {prefs.pageNumColor && (
+                          <button onClick={() => { const np = { ...prefs, pageNumColor: undefined }; setPrefs(np); handleSavePrefs(np); }}
+                            className="text-[10px] opacity-40 hover:opacity-70 transition-opacity"
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "inherit" }}>
+                            {ar ? "إعادة" : "Reset"}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {["#000000", "#333333", "#666666", "#999999", "#cccccc", "#ffffff", "#8b0000", "#1a237e", "#1b5e20", "#4a148c", "#e65100", "#bf360c"].map(c => (
                           <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
                             title={c}
-                            style={{
-                              width: 22, height: 22, borderRadius: 5, background: c, border: `2px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`,
-                              cursor: "pointer", outline: "none",
-                            }}
+                            style={{ width: 22, height: 22, borderRadius: 5, background: c, border: `2px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`, cursor: "pointer", outline: "none" }}
                           />
                         ))}
                       </div>
-                      {prefs.pageNumColor && (
-                        <button
-                          onClick={() => { const np = { ...prefs, pageNumColor: undefined }; setPrefs(np); handleSavePrefs(np); }}
-                          className="text-[10px] opacity-40 hover:opacity-70 transition-opacity"
-                          style={{ background: "none", border: "none", cursor: "pointer", color: "inherit" }}
-                        >
-                          {ar ? "إعادة" : "Reset"}
-                        </button>
-                      )}
                     </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-40 opacity-30 gap-2">
+                    <span className="text-3xl">—</span>
+                    <p className="text-xs text-center">{ar ? "فعّل أرقام الصفحات من العمود الأوسط" : "Enable page numbers in the middle column"}</p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Footer */}
-            <div className="px-6 pb-5">
+            <div className="px-6 pb-5 pt-4 border-t flex justify-end" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
               <button
                 onClick={() => setShowPageSetup(false)}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                className="px-8 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{ background: "hsl(var(--primary))", color: "#fff", border: "none", cursor: "pointer" }}
               >
                 {ar ? "تم" : "Done"}
