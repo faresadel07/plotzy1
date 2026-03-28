@@ -2095,24 +2095,30 @@ export default function ChapterEditor() {
 
       {/* ── Page Setup Modal ─────────────────────────────────────────────────── */}
       {showPageSetup && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
           <div
-            className="rounded-2xl shadow-2xl w-full animate-in fade-in zoom-in-95 duration-200"
-            style={{ background: isDark ? "#1a1a1f" : "#ffffff", color: isDark ? "#e4e4e7" : "#18181b", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`, maxWidth: 1160 }}
+            className="rounded-2xl shadow-2xl w-full animate-in fade-in zoom-in-95 duration-200 flex flex-col"
+            style={{
+              background: isDark ? "#1a1a1f" : "#ffffff",
+              color: isDark ? "#e4e4e7" : "#18181b",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
+              maxWidth: 1160,
+              maxHeight: "calc(100vh - 32px)",
+            }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
+            {/* Header — fixed */}
+            <div className="flex items-center justify-between px-6 py-3.5 border-b shrink-0" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
               <h2 className="text-base font-semibold">{ar ? "إعداد الصفحة" : "Page Setup"}</h2>
               <button onClick={() => setShowPageSetup(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ border: "none", background: "transparent", cursor: "pointer", color: isDark ? "#a1a1aa" : "#71717a" }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* ── 3-column body ── */}
-            <div className="grid grid-cols-3 gap-0">
+            {/* ── 3-column body — each column scrolls independently ── */}
+            <div className="grid grid-cols-3 gap-0 flex-1 min-h-0">
 
               {/* ── Col 1: Paper + Margins ── */}
-              <div className="p-6 space-y-5" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
+              <div className="p-6 space-y-5 overflow-y-auto" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "الورق والهوامش" : "Paper & Margins"}</p>
 
                 {/* Paper Size */}
@@ -2166,7 +2172,7 @@ export default function ChapterEditor() {
               </div>
 
               {/* ── Col 2: Header / Footer / Page Numbers toggle ── */}
-              <div className="p-6 space-y-5" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
+              <div className="p-6 space-y-5 overflow-y-auto" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "الرأس والتذييل" : "Header & Footer"}</p>
 
                 {/* Header Text */}
@@ -2214,7 +2220,7 @@ export default function ChapterEditor() {
               </div>
 
               {/* ── Col 3: Page Number Style ── */}
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 overflow-y-auto">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
 
                 {(prefs.showPageNumbers !== false) ? (
@@ -2443,8 +2449,8 @@ export default function ChapterEditor() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-6 pb-5 pt-4 border-t flex justify-end" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
+            {/* Footer — always visible */}
+            <div className="px-6 pb-4 pt-3.5 border-t flex justify-end shrink-0" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
               <button
                 onClick={() => setShowPageSetup(false)}
                 className="px-8 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
