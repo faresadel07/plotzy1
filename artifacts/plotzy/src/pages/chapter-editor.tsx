@@ -6,6 +6,7 @@ import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion
 import { AIAssistant } from "@/components/ai-assistant";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
+import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid } from "lucide-react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
@@ -103,13 +104,37 @@ function serializePages(pages: PageBlock[]): string {
   return JSON.stringify(pages);
 }
 
-// ── Fixed Page Dimensions (true A4 at 72 dpi) ────────────────────────────────
-// Page card is 595px wide (A4 = 595pt wide at 72dpi — same as PDF standard).
-// Horizontal margin: 76px each side → content width = 595 - 152 = 443px.
-// True A4 at 72 dpi: 595 × 842 px.
-// Strip heights (header + footer) ≈ 185px → content height = 842 - 185 = 657px.
-const PAGE_CONTENT_HEIGHT = 657; // px — textarea height (A4 at 72dpi)
-const PAGE_CONTENT_WIDTH  = 443; // px — content area inside page card (595 - 2×76)
+// ── Paper Size Definitions ────────────────────────────────────────────────────
+const PAPER_SIZES: Record<string, { width: number; height: number; label: string; labelAr: string }> = {
+  "a4":     { width: 595, height: 842, label: "A4",     labelAr: "A4" },
+  "a5":     { width: 420, height: 595, label: "A5",     labelAr: "A5" },
+  "letter": { width: 612, height: 792, label: "Letter", labelAr: "Letter (US)" },
+  "b5":     { width: 499, height: 708, label: "B5",     labelAr: "B5" },
+};
+
+const DEFAULT_MARGIN = 72; // px — ≈1 inch / 25.4mm at 72dpi
+
+function getPageDimensions(prefs: { paperSize?: string; marginTop?: number; marginBottom?: number; marginLeft?: number; marginRight?: number }) {
+  const paper = PAPER_SIZES[prefs.paperSize || "a4"];
+  const ml = prefs.marginLeft  ?? DEFAULT_MARGIN;
+  const mr = prefs.marginRight ?? DEFAULT_MARGIN;
+  const mt = prefs.marginTop   ?? DEFAULT_MARGIN;
+  const mb = prefs.marginBottom ?? DEFAULT_MARGIN;
+  return {
+    pageWidth:    paper.width,
+    pageHeight:   paper.height,
+    contentWidth: Math.max(180, paper.width  - ml - mr),
+    contentHeight: Math.max(200, paper.height - mt - mb),
+    marginLeft:   ml,
+    marginRight:  mr,
+    marginTop:    mt,
+    marginBottom: mb,
+  };
+}
+
+// Legacy fallbacks (used in measurement div until effectivePrefs are loaded)
+const PAGE_CONTENT_HEIGHT = 698; // px — A4 at 72dpi with 72px margins
+const PAGE_CONTENT_WIDTH  = 451; // px — 595 - 144
 
 function getPageText(block: PageBlock): string {
   if (typeof block === "string") return block;
@@ -205,6 +230,10 @@ export default function ChapterEditor() {
   const [previewPrefs, setPreviewPrefs] = useState<BookPreferences | null>(null);
   // effectivePrefs — uses live preview while customizer is open, real prefs otherwise
   const effectivePrefs = previewPrefs ?? prefs;
+
+  // ── Dynamic page dimensions (computed early so useLayoutEffect can use them) ──
+  const dynDimsForHook = getPageDimensions(effectivePrefs);
+
   const [deletingPage, setDeletingPage] = useState<number | null>(null);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -217,6 +246,15 @@ export default function ChapterEditor() {
   const [showRefPanel, setShowRefPanel] = useState(false);
   const [refChapterId, setRefChapterId] = useState<number | null>(null);
   const [refDropdownOpen, setRefDropdownOpen] = useState(false);
+
+  // ── New: Page Setup modal + Zoom ─────────────────────────────────────────
+  const [showPageSetup, setShowPageSetup] = useState(false);
+  const [zoom, setZoom] = useState<number>(100);
+
+  // Sync zoom from prefs when book loads
+  useEffect(() => {
+    if (prefs.zoom !== undefined) setZoom(prefs.zoom);
+  }, [prefs.zoom]);
 
   // ── Inline AI Ghost-Text Suggestion ──────────────────────────────────────
   const [inlineSuggestion, setInlineSuggestion] = useState<string>("");
@@ -334,8 +372,9 @@ export default function ChapterEditor() {
           if (fontFamily) measureEl.style.fontFamily = fontFamily;
 
           measureEl.textContent = text;
-          if (measureEl.offsetHeight > PAGE_CONTENT_HEIGHT) {
-            const chunks = splitIntoPages(text, measureEl, PAGE_CONTENT_HEIGHT);
+          const maxH = dynDimsForHook.contentHeight;
+          if (measureEl.offsetHeight > maxH) {
+            const chunks = splitIntoPages(text, measureEl, maxH);
             for (const chunk of chunks) {
               result.push({ type: 'text', content: chunk, fontFamily: fontId || undefined } as PageBlock);
             }
@@ -547,10 +586,11 @@ export default function ChapterEditor() {
   // Overflow is handled by the pagination system (handlePageChange), not by
   // letting the textarea grow. Keeping a fixed height preserves the page metaphor.
   useLayoutEffect(() => {
+    const h = dynDimsForHook.contentHeight;
     document.querySelectorAll<HTMLTextAreaElement>('[data-page-textarea]').forEach(ta => {
-      ta.style.height = `${PAGE_CONTENT_HEIGHT}px`;
+      ta.style.height = `${h}px`;
     });
-  }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing]);
+  }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing, dynDimsForHook.contentHeight]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -596,7 +636,8 @@ export default function ChapterEditor() {
     measureEl.textContent = value;
     const textHeight = measureEl.offsetHeight;
 
-    if (textHeight <= PAGE_CONTENT_HEIGHT) {
+    const currentPageContentH = dynDimsForHook.contentHeight;
+    if (textHeight <= currentPageContentH) {
       setPages(prev => {
         const next = [...prev];
         next[index] = stampBlock(next[index], value);
@@ -623,7 +664,7 @@ export default function ChapterEditor() {
       const allText = allParts.join('\n');
 
       // Re-split the combined text
-      const chunks = splitIntoPages(allText, measureEl, PAGE_CONTENT_HEIGHT);
+      const chunks = splitIntoPages(allText, measureEl, currentPageContentH);
 
       // Distribute chunks starting from the current page
       for (let i = 0; i < chunks.length; i++) {
@@ -760,6 +801,14 @@ export default function ChapterEditor() {
     setPrefs(newPrefs);
     setIsDirty(true);
     await updateBook.mutateAsync({ id: bookId, bookPreferences: newPrefs });
+  };
+
+  const handleZoomChange = (z: number) => {
+    const clamped = Math.max(50, Math.min(200, z));
+    setZoom(clamped);
+    const np = { ...prefs, zoom: clamped };
+    setPrefs(np);
+    handleSavePrefs(np);
   };
 
   // ── Voice dictation ──────────────────────────────────────────────────────
@@ -911,12 +960,33 @@ export default function ChapterEditor() {
   const textDir = (isArabicFont || ar) ? "rtl" : "ltr";
   const isDark = resolvedTheme === "dark";
 
+  // ── Dynamic page dimensions ────────────────────────────────────────────────
+  const pageDims = getPageDimensions(effectivePrefs);
+  const dynPageW = pageDims.pageWidth;
+  const dynContentH = pageDims.contentHeight;
+  const dynContentW = pageDims.contentWidth;
+  const dynMarginL = pageDims.marginLeft;
+  const dynMarginR = pageDims.marginRight;
+  const dynMarginT = pageDims.marginTop;
+  const dynMarginB = pageDims.marginBottom;
+  const clampedZoom = zoom / 100;
+
+  // ── Page theme color resolution ───────────────────────────────────────────
+  // pageTheme overrides bgColor/textColor unless user explicitly set bgColor
+  const pageThemeDef = PAGE_THEMES.find(t => t.id === (effectivePrefs.pageTheme || "white"));
+
   // Page style background pattern (from saved preference)
   const activePageStyleDef = PAGE_STYLES.find(s => s.id === (effectivePrefs.pageStyle || "blank"));
   const bgPatternCSS = activePageStyleDef ? activePageStyleDef.background(isDark) : {};
 
   // Manuscript uses its own background color unless user has set a custom one
-  const resolvedBgColor = effectivePrefs.bgColor || (bgPatternCSS as any).backgroundColor;
+  // pageTheme takes precedence when set
+  const resolvedBgColor = effectivePrefs.bgColor
+    || pageThemeDef?.bg
+    || (bgPatternCSS as any).backgroundColor;
+  const resolvedTextColor = effectivePrefs.textColor
+    || pageThemeDef?.text
+    || undefined;
 
   const editorOuterStyle: React.CSSProperties = {
     backgroundColor: resolvedBgColor || "hsl(var(--background))",
@@ -1177,6 +1247,22 @@ export default function ChapterEditor() {
         </div>
       </header>
 
+      {/* ── Writing Toolbar ── */}
+      {!isPrintView && (
+        <WritingToolbar
+          prefs={prefs}
+          effectivePrefs={effectivePrefs}
+          onPrefsChange={(p) => setPreviewPrefs(p)}
+          onSavePrefs={handleSavePrefs}
+          isFocusMode={isFocusMode}
+          ar={ar}
+          isRTL={isRTL}
+          onOpenPageSetup={() => setShowPageSetup(true)}
+          zoom={zoom}
+          onZoomChange={handleZoomChange}
+        />
+      )}
+
       {/* Body: editor + reference panel side by side */}
       <div className="flex flex-1 overflow-hidden relative z-10">
 
@@ -1246,14 +1332,74 @@ export default function ChapterEditor() {
 
       {/* Editor Canvas — book-desk background */}
       <main
-        className="flex-1 overflow-y-auto relative py-10 md:py-14 transition-colors duration-700"
+        className="flex-1 overflow-y-auto relative transition-colors duration-700"
         style={{
           background: "transparent",
-          paddingBottom: isTypewriterMode ? "50vh" : undefined,
+          paddingTop: effectivePrefs.showRuler ? 0 : 40,
+          paddingBottom: isTypewriterMode ? "50vh" : 40,
         }}
       >
+        {/* ── Visual Ruler ── */}
+        {effectivePrefs.showRuler && !isPrintView && (
+          <div
+            className="sticky top-0 z-30 flex items-center"
+            style={{
+              height: 24,
+              background: isDark ? "rgba(30,30,35,0.97)" : "rgba(248,248,250,0.97)",
+              borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <div
+              className="mx-auto relative"
+              style={{ width: dynPageW * clampedZoom, userSelect: "none" }}
+            >
+              {/* Ruler body */}
+              <div className="relative w-full h-full" style={{ fontSize: 8, color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)", lineHeight: 1 }}>
+                {Array.from({ length: Math.floor(dynPageW / 10) + 1 }, (_, i) => {
+                  const xPct = (i * 10 / dynPageW) * 100;
+                  const isMajor = i % 5 === 0;
+                  const inLeftMargin = i * 10 < dynMarginL;
+                  const inRightMargin = i * 10 > dynPageW - dynMarginR;
+                  return (
+                    <div key={i} className="absolute top-0 flex flex-col items-center" style={{ left: `${xPct}%` }}>
+                      <div style={{
+                        width: 1, height: isMajor ? 12 : 6,
+                        background: inLeftMargin || inRightMargin
+                          ? "rgba(99,102,241,0.35)"
+                          : (isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)"),
+                        marginTop: isMajor ? 0 : 6,
+                      }} />
+                      {isMajor && <span style={{ marginTop: 1, fontSize: 7, lineHeight: 1, whiteSpace: "nowrap" }}>{i * 10}</span>}
+                    </div>
+                  );
+                })}
+                {/* Left margin indicator */}
+                <div className="absolute top-0 bottom-0" style={{
+                  left: `${(dynMarginL / dynPageW) * 100}%`,
+                  width: 1, background: "rgba(99,102,241,0.55)",
+                }} />
+                {/* Right margin indicator */}
+                <div className="absolute top-0 bottom-0" style={{
+                  left: `${((dynPageW - dynMarginR) / dynPageW) * 100}%`,
+                  width: 1, background: "rgba(99,102,241,0.55)",
+                }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Zoom wrapper */}
+        <div
+          style={{
+            transform: `scale(${clampedZoom})`,
+            transformOrigin: "top center",
+            transition: "transform 0.2s ease",
+          }}
+        >
+
         {/* Chapter Title — above all pages */}
-        <div className="max-w-[595px] mx-auto px-4 mb-8">
+        <div className="mx-auto px-4 mb-8" style={{ maxWidth: dynPageW }}>
           <input
             type="text"
             value={title}
@@ -1272,13 +1418,13 @@ export default function ChapterEditor() {
         </div>
 
         {/* Pages — each rendered as a fixed-size book page card */}
-        <div className="flex flex-col items-center gap-10 px-4" onClick={() => setSelectedDrawingIdx(null)}>
+        <div className="flex flex-col items-center gap-10 px-4 pb-24" onClick={() => setSelectedDrawingIdx(null)}>
           {pages.map((pageContent, index) => {
             const pageText = getPageText(pageContent);
             const pageWords = countWords(pageText);
 
             return (
-              <div key={index} className="relative group w-full max-w-[595px]" ref={el => { pageElsRef.current[index] = el; }}>
+              <div key={index} className="relative group" style={{ width: dynPageW }} ref={el => { pageElsRef.current[index] = el; }}>
 
                 {/* Book Page Card */}
                 <div
@@ -1298,12 +1444,24 @@ export default function ChapterEditor() {
                   }}
                   onClick={() => setActivePageIndex(index)}
                 >
-                  {/* Page top strip — chapter label + delete button */}
-                  <div className="flex items-center justify-between px-[76px] pt-6 pb-2 select-none" dir="ltr">
-                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: effectivePrefs.textColor || undefined }}>
-                      {ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`}
-                    </span>
-                    <div className="flex items-center gap-2">
+                  {/* Page top margin area — header text + chapter label */}
+                  <div
+                    className="flex items-end justify-between select-none"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.4), paddingBottom: 8 }}
+                    dir="ltr"
+                  >
+                    <div className="flex-1 min-w-0">
+                      {effectivePrefs.headerText ? (
+                        <span className="text-[10px] font-medium opacity-40 truncate block" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                          {effectivePrefs.headerText}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                          {ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {activePageIndex === index && isRecording && (
                         <span className="text-red-400 text-[10px] font-medium animate-pulse">● REC</span>
                       )}
@@ -1321,11 +1479,11 @@ export default function ChapterEditor() {
                   </div>
 
                   {/* Thin decorative line under header */}
-                  <div className="mx-[76px] h-px opacity-8" style={{ background: effectivePrefs.textColor || "currentColor" }} />
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.12, background: resolvedTextColor || effectivePrefs.textColor || "currentColor" }} />
 
                   {/* Page Content Area */}
                   <div
-                    className="px-[76px] py-10 cursor-text"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.5), paddingBottom: Math.max(16, dynMarginB * 0.5), cursor: "text" }}
                     onClick={(e) => {
                       const ta = (e.currentTarget as HTMLElement).querySelector<HTMLTextAreaElement>('[data-page-textarea]');
                       if (ta && e.target === e.currentTarget) {
@@ -1350,7 +1508,7 @@ export default function ChapterEditor() {
                           // Immediately resize to show all content (prevents hidden text)
                           const ta = e.currentTarget;
                           ta.style.height = '1px';
-                          ta.style.height = `${Math.max(PAGE_CONTENT_HEIGHT, ta.scrollHeight)}px`;
+                          ta.style.height = `${Math.max(dynContentH, ta.scrollHeight)}px`;
                           handlePageChange(index, e.target.value);
                         }}
                         onFocus={() => setActivePageIndex(index)}
@@ -1360,13 +1518,20 @@ export default function ChapterEditor() {
                         className={`w-full bg-transparent outline-none resize-none ${effectivePrefs.fontSize || "text-lg"} placeholder:opacity-20 focus:ring-0 transition-colors duration-700 ${blockFontClass}`}
                         style={{
                           ...blockFontStyle,
-                          color: isFocusMode ? '#e4e4e7' : effectivePrefs.textColor || undefined,
+                          color: isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined,
+                          backgroundColor: effectivePrefs.highlightColor && effectivePrefs.highlightColor !== "#fef08a"
+                            ? `${effectivePrefs.highlightColor}18` : "transparent",
                           direction: textDir,
-                          minHeight: `${PAGE_CONTENT_HEIGHT}px`,
-                          height: `${PAGE_CONTENT_HEIGHT}px`,
+                          minHeight: `${dynContentH}px`,
+                          height: `${dynContentH}px`,
                           overflow: "hidden",
                           lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
                           letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
+                          fontWeight: effectivePrefs.isBold ? 700 : undefined,
+                          fontStyle: effectivePrefs.isItalic ? "italic" : undefined,
+                          textDecoration: effectivePrefs.isUnderline ? "underline" : undefined,
+                          textAlign: (effectivePrefs.textAlign as React.CSSProperties["textAlign"]) || undefined,
+                          width: dynContentW,
                         } as React.CSSProperties}
                         dir={textDir}
                         data-page-textarea
@@ -1645,20 +1810,27 @@ export default function ChapterEditor() {
                   )}
                   </div>
 
-                  {/* Page bottom — decorative rule + centered page number */}
-                  <div className="mx-[76px] h-px opacity-8 mt-2" style={{ background: effectivePrefs.textColor || "currentColor" }} />
-                  <div className="relative flex items-center justify-center px-[76px] pb-6 pt-3 select-none">
-                    {/* Word count — left edge */}
-                    <span className="absolute left-[76px] text-[9px] opacity-15 tabular-nums" style={{ color: effectivePrefs.textColor || undefined }}>
-                      {pageWords} {ar ? "كلمة" : "words"}
+                  {/* Page bottom — decorative rule + footer */}
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
+                  <div
+                    className="relative flex items-center justify-center select-none"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}
+                  >
+                    {/* Footer text — left edge */}
+                    <span className="absolute text-[9px] opacity-25 truncate" style={{ [isRTL ? "right" : "left"]: dynMarginL, color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                      {effectivePrefs.footerText
+                        ? effectivePrefs.footerText
+                        : `${pageWords} ${ar ? "كلمة" : "w"}`}
                     </span>
-                    {/* Centered page number — book style */}
-                    <span
-                      className="text-[11px] font-medium tracking-widest opacity-30"
-                      style={{ color: effectivePrefs.textColor || undefined, letterSpacing: "0.2em" }}
-                    >
-                      — {index + 1} —
-                    </span>
+                    {/* Centered page number */}
+                    {(effectivePrefs.showPageNumbers !== false) && (
+                      <span
+                        className="text-[11px] font-medium tracking-widest opacity-30"
+                        style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined, letterSpacing: "0.2em" }}
+                      >
+                        — {index + 1} —
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1670,7 +1842,7 @@ export default function ChapterEditor() {
           })}
 
           {/* Add Page Button */}
-          <div className="flex flex-col items-center gap-3 pb-24 mt-2 w-full max-w-[595px]">
+          <div className="flex flex-col items-center gap-3 mt-2" style={{ width: dynPageW }}>
             <Button
               variant="ghost"
               onClick={handleAddPage}
@@ -1683,6 +1855,8 @@ export default function ChapterEditor() {
           </div>
         </div>
 
+        </div>{/* end zoom wrapper */}
+
         {/* Hidden measurement div — mirrors textarea styling for height measurement */}
         <div
           ref={measureRef}
@@ -1693,7 +1867,7 @@ export default function ChapterEditor() {
             pointerEvents: "none",
             top: "-9999px",
             left: "-9999px",
-            width: `${PAGE_CONTENT_WIDTH}px`,
+            width: `${dynContentW}px`,
             fontSize: effectivePrefs.fontSize === "text-sm" ? "14px" : effectivePrefs.fontSize === "text-base" ? "16px" : effectivePrefs.fontSize === "text-xl" ? "20px" : effectivePrefs.fontSize === "text-2xl" ? "24px" : "18px",
             lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
             letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
@@ -1869,6 +2043,136 @@ export default function ChapterEditor() {
       </div>
 
       </div>{/* end body flex row */}
+
+      {/* ── Page Setup Modal ─────────────────────────────────────────────────── */}
+      {showPageSetup && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
+          <div
+            className="rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200"
+            style={{ background: isDark ? "#1a1a1f" : "#ffffff", color: isDark ? "#e4e4e7" : "#18181b", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}` }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
+              <h2 className="text-base font-semibold">{ar ? "إعداد الصفحة" : "Page Setup"}</h2>
+              <button onClick={() => setShowPageSetup(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-current/10" style={{ border: "none", background: "transparent", cursor: "pointer", color: isDark ? "#a1a1aa" : "#71717a" }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Paper Size */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "حجم الورق" : "Paper Size"}</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {Object.entries(PAPER_SIZES).map(([id, ps]) => (
+                    <button
+                      key={id}
+                      onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
+                      className="py-2 px-1 rounded-xl text-xs font-medium transition-all"
+                      style={{
+                        background: (prefs.paperSize || "a4") === id ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                        color: (prefs.paperSize || "a4") === id ? "#fff" : undefined,
+                        border: "none", cursor: "pointer",
+                      }}
+                    >
+                      {ar ? ps.labelAr : ps.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Margins */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الهوامش (بكسل)" : "Margins (px)"}</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["marginTop", "marginBottom", "marginLeft", "marginRight"] as const).map(field => {
+                    const labels: Record<string, { en: string; ar: string }> = {
+                      marginTop: { en: "Top", ar: "أعلى" },
+                      marginBottom: { en: "Bottom", ar: "أسفل" },
+                      marginLeft: { en: "Left", ar: "يسار" },
+                      marginRight: { en: "Right", ar: "يمين" },
+                    };
+                    return (
+                      <div key={field}>
+                        <label className="block text-[11px] opacity-50 mb-1">{ar ? labels[field].ar : labels[field].en}</label>
+                        <input
+                          type="number"
+                          min={20} max={200} step={4}
+                          value={prefs[field] ?? DEFAULT_MARGIN}
+                          onChange={e => { const np = { ...prefs, [field]: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                          className="w-full rounded-lg px-3 py-1.5 text-sm"
+                          style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Header Text */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص الرأس" : "Header Text"}</label>
+                <input
+                  type="text"
+                  placeholder={ar ? "مثال: اسم الكتاب..." : "e.g. Book Title…"}
+                  value={prefs.headerText || ""}
+                  onChange={e => { const np = { ...prefs, headerText: e.target.value }; setPrefs(np); }}
+                  onBlur={e => handleSavePrefs({ ...prefs, headerText: e.target.value })}
+                  className="w-full rounded-lg px-3 py-2 text-sm"
+                  style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                />
+              </div>
+
+              {/* Footer Text */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص التذييل" : "Footer Text"}</label>
+                <input
+                  type="text"
+                  placeholder={ar ? "يظهر بدلاً من عدد الكلمات..." : "Replaces word count display…"}
+                  value={prefs.footerText || ""}
+                  onChange={e => { const np = { ...prefs, footerText: e.target.value }; setPrefs(np); }}
+                  onBlur={e => handleSavePrefs({ ...prefs, footerText: e.target.value })}
+                  className="w-full rounded-lg px-3 py-2 text-sm"
+                  style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                />
+              </div>
+
+              {/* Page Numbers */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">{ar ? "إظهار أرقام الصفحات" : "Show Page Numbers"}</label>
+                <button
+                  onClick={() => { const np = { ...prefs, showPageNumbers: !(prefs.showPageNumbers !== false) }; setPrefs(np); handleSavePrefs(np); }}
+                  className="w-11 h-6 rounded-full transition-colors relative"
+                  style={{
+                    background: (prefs.showPageNumbers !== false) ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                    border: "none", cursor: "pointer",
+                  }}
+                >
+                  <span
+                    className="absolute top-0.5 rounded-full transition-transform"
+                    style={{
+                      width: 20, height: 20, background: "#fff",
+                      left: (prefs.showPageNumbers !== false) ? "calc(100% - 22px)" : 2,
+                      transition: "left 0.2s",
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => setShowPageSetup(false)}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                style={{ background: "hsl(var(--primary))", color: "#fff", border: "none", cursor: "pointer" }}
+              >
+                {ar ? "تم" : "Done"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAI && (
         <AIAssistant

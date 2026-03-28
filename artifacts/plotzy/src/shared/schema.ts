@@ -20,6 +20,22 @@ export type BookPreferences = {
   textAlign?: string;
   theme?: string;
   chapterHeadingStyle?: string;
+  paperSize?: string;
+  marginTop?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginRight?: number;
+  headerText?: string;
+  footerText?: string;
+  showPageNumbers?: boolean;
+  pageNumberPosition?: string;
+  zoom?: number;
+  pageTheme?: string;
+  showRuler?: boolean;
+  isBold?: boolean;
+  isItalic?: boolean;
+  isUnderline?: boolean;
+  highlightColor?: string;
 };
 
 export type User = {

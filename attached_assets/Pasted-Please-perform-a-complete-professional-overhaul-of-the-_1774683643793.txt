@@ -1,0 +1,25 @@
+Please perform a complete professional overhaul of the Writing Editor to transform it into a "High-End Word Processor" similar to Google Docs and Microsoft Word, but tailored for authors. Implement the following features with a focus on absolute user control:
+
+1. Fixed Page Architecture:
+   - Implement a real "Paper View" with fixed dimensions (Default: A5 for books, or A4).
+   - Pages must have constant height and width; they should NOT expand.
+   - Auto-Pagination: When text reaches the bottom, it should seamlessly flow into a new Page 2, Page 3, etc.
+
+2. Advanced Layout & Page Control (Google Docs Style):
+   - Page Setup Menu: Add controls for Margins (Top, Bottom, Left, Right), Orientation (Portrait/Landscape), and Paper Size.
+   - Header & Footer: Allow users to add custom text or automatic Page Numbers (Top/Bottom, Left/Center/Right).
+   - Visual Ruler: Add a horizontal ruler at the top of the page to show margins and indentations.
+
+3. Professional Formatting Toolbar:
+   - A sticky/floating toolbar with: Font Family (Google Fonts like Amiri, Cairo), Font Size, Bold/Italic/Underline, Text/Highlight Color, and Line Spacing (1.0, 1.15, 1.5, 2.0).
+   - Text Alignment: Left, Center, Right, and Full Justify (very important for book printing).
+
+4. Visual Customization & Focus:
+   - Page Themes: Options to change the paper background color (White, Ivory, Sepia for eye comfort, or Dark Mode).
+   - Interactive Zoom: A slider or buttons to zoom the entire page view from 50% to 200%.
+   - Page Separation: Clear visual gaps or shadows between pages to make it look like a real physical book.
+
+5. Reference Mode (Split View):
+   - Add a side panel that allows the author to open and read any previous chapter in "Read-Only" mode for inspiration while they continue writing in the main editor.
+
+Make the UI clean, distraction-free, and ensure the performance is smooth even with long manuscripts. This page is the heart of Plotzy—make it feel like the most powerful writing tool in the world.
