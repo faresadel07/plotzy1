@@ -1685,7 +1685,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
-      const chapters = await storage.getChaptersByBook(bookId);
+      const chapters = await storage.getChapters(bookId);
       const chapter = chapters.find(c => c.id === chapterId);
       if (!chapter) return res.status(404).json({ message: "Chapter not found" });
 
@@ -1736,7 +1736,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
-      const allChapters = await storage.getChaptersByBook(bookId);
+      const allChapters = await storage.getChapters(bookId);
       const chaptersToExport = chapterIds && chapterIds.length > 0
         ? allChapters.filter(c => chapterIds.includes(c.id)).sort((a, b) => a.order - b.order)
         : allChapters.sort((a, b) => a.order - b.order);
