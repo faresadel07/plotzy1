@@ -29,6 +29,9 @@ export type BookPreferences = {
   footerText?: string;
   showPageNumbers?: boolean;
   pageNumberPosition?: string;
+  pageNumFont?: string;
+  pageNumColor?: string;
+  pageNumSize?: number;
   zoom?: number;
   pageTheme?: string;
   showRuler?: boolean;

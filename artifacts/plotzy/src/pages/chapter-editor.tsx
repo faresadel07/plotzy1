@@ -1825,8 +1825,14 @@ export default function ChapterEditor() {
                     {/* Centered page number */}
                     {(effectivePrefs.showPageNumbers !== false) && (
                       <span
-                        className="text-[11px] font-medium tracking-widest opacity-30"
-                        style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined, letterSpacing: "0.2em" }}
+                        style={{
+                          fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
+                          fontFamily: effectivePrefs.pageNumFont || "inherit",
+                          color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
+                          letterSpacing: "0.2em",
+                          fontWeight: 500,
+                          opacity: effectivePrefs.pageNumColor ? 0.75 : 0.3,
+                        }}
                       >
                         — {index + 1} —
                       </span>
@@ -2158,6 +2164,91 @@ export default function ChapterEditor() {
                   />
                 </button>
               </div>
+
+              {/* Page Number Style — font, size, color */}
+              {(prefs.showPageNumbers !== false) && (
+                <div className="rounded-xl p-4 space-y-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}` }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider opacity-50">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
+
+                  {/* Font family */}
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5 opacity-60">{ar ? "نوع الخط" : "Font"}</label>
+                    <select
+                      value={prefs.pageNumFont || ""}
+                      onChange={e => { const np = { ...prefs, pageNumFont: e.target.value || undefined }; setPrefs(np); handleSavePrefs(np); }}
+                      className="w-full rounded-lg px-3 py-1.5 text-sm"
+                      style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                    >
+                      <option value="">{ar ? "افتراضي (من نص الكتاب)" : "Same as body"}</option>
+                      <option value="'EB Garamond', serif" style={{ fontFamily: "'EB Garamond', serif" }}>EB Garamond</option>
+                      <option value="'Playfair Display', serif" style={{ fontFamily: "'Playfair Display', serif" }}>Playfair Display</option>
+                      <option value="'Lora', serif" style={{ fontFamily: "'Lora', serif" }}>Lora</option>
+                      <option value="'Merriweather', serif" style={{ fontFamily: "'Merriweather', serif" }}>Merriweather</option>
+                      <option value="'Libre Baskerville', serif" style={{ fontFamily: "'Libre Baskerville', serif" }}>Libre Baskerville</option>
+                      <option value="'Cormorant Garamond', serif" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Cormorant Garamond</option>
+                      <option value="Georgia, serif" style={{ fontFamily: "Georgia, serif" }}>Georgia</option>
+                      <option value="'Times New Roman', serif" style={{ fontFamily: "'Times New Roman', serif" }}>Times New Roman</option>
+                      <option value="Arial, sans-serif" style={{ fontFamily: "Arial, sans-serif" }}>Arial</option>
+                      <option value="'Courier New', monospace" style={{ fontFamily: "'Courier New', monospace" }}>Courier New</option>
+                    </select>
+                    {/* Live preview */}
+                    <p className="mt-1.5 text-center opacity-50" style={{ fontFamily: prefs.pageNumFont || "inherit", fontSize: `${prefs.pageNumSize || 11}px`, color: prefs.pageNumColor || "inherit", letterSpacing: "0.2em" }}>
+                      — 1 —
+                    </p>
+                  </div>
+
+                  {/* Size */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-medium opacity-60">{ar ? "الحجم" : "Size"}</label>
+                      <span className="text-xs opacity-50">{prefs.pageNumSize || 11}px</span>
+                    </div>
+                    <input
+                      type="range" min={7} max={20} step={1}
+                      value={prefs.pageNumSize || 11}
+                      onChange={e => { const np = { ...prefs, pageNumSize: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                      className="w-full"
+                      style={{ accentColor: "hsl(var(--primary))" }}
+                    />
+                    <div className="flex justify-between text-[10px] opacity-30 mt-0.5">
+                      <span>7</span><span>20</span>
+                    </div>
+                  </div>
+
+                  {/* Color */}
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5 opacity-60">{ar ? "اللون" : "Color"}</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={prefs.pageNumColor || (isDark ? "#ffffff" : "#000000")}
+                        onChange={e => { const np = { ...prefs, pageNumColor: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
+                        style={{ width: 36, height: 36, borderRadius: 8, border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`, padding: 2, background: "transparent", cursor: "pointer" }}
+                      />
+                      <div className="flex-1 flex flex-wrap gap-1.5">
+                        {["#000000", "#444444", "#888888", "#bbbbbb", "#ffffff", "#8b0000", "#1a237e", "#1b5e20", "#4a148c", "#e65100"].map(c => (
+                          <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
+                            title={c}
+                            style={{
+                              width: 22, height: 22, borderRadius: 5, background: c, border: `2px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`,
+                              cursor: "pointer", outline: "none",
+                            }}
+                          />
+                        ))}
+                      </div>
+                      {prefs.pageNumColor && (
+                        <button
+                          onClick={() => { const np = { ...prefs, pageNumColor: undefined }; setPrefs(np); handleSavePrefs(np); }}
+                          className="text-[10px] opacity-40 hover:opacity-70 transition-opacity"
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "inherit" }}
+                        >
+                          {ar ? "إعادة" : "Reset"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
