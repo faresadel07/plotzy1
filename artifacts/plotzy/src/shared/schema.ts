@@ -32,6 +32,12 @@ export type BookPreferences = {
   pageNumFont?: string;
   pageNumColor?: string;
   pageNumSize?: number;
+  pageNumFormat?: string;   // "dashes" | "dots" | "plain" | "brackets" | "word" | "slash"
+  pageNumPosition?: string; // "center" | "left" | "right" | "outer"
+  pageNumOpacity?: number;  // 0.1 – 1.0
+  pageNumBold?: boolean;
+  pageNumItalic?: boolean;
+  pageNumSmallCaps?: boolean;
   zoom?: number;
   pageTheme?: string;
   showRuler?: boolean;

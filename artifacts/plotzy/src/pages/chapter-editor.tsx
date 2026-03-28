@@ -1812,49 +1812,75 @@ export default function ChapterEditor() {
 
                   {/* Page bottom — decorative rule + footer */}
                   <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
-                  <div
-                    className="relative flex items-center justify-center select-none"
-                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}
-                  >
-                    {/* Footer text — left edge */}
-                    <span className="absolute text-[9px] opacity-25 truncate" style={{ [isRTL ? "right" : "left"]: dynMarginL, color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
-                      {effectivePrefs.footerText
-                        ? effectivePrefs.footerText
-                        : `${pageWords} ${ar ? "كلمة" : "w"}`}
-                    </span>
-                    {/* Centered page number — click pencil to style */}
-                    {(effectivePrefs.showPageNumbers !== false) && (
-                      <span className="group/pgnum relative inline-flex items-center gap-1">
+                  {(() => {
+                    const pgPos = effectivePrefs.pageNumPosition || "center";
+                    const isOuter = pgPos === "outer";
+                    // outer: odd pages (1,3,5…) → left; even → right
+                    const resolvedPos = isOuter ? ((index % 2 === 0) ? "left" : "right") : pgPos;
+                    const justifyClass = resolvedPos === "left" ? "justify-start" : resolvedPos === "right" ? "justify-end" : "justify-center";
+                    const pgFmt = effectivePrefs.pageNumFormat || "dashes";
+                    const pgN = index + 1;
+                    const pgLabel =
+                      pgFmt === "plain"    ? `${pgN}` :
+                      pgFmt === "dots"     ? `· ${pgN} ·` :
+                      pgFmt === "brackets" ? `[ ${pgN} ]` :
+                      pgFmt === "word"     ? `Page ${pgN}` :
+                      pgFmt === "slash"    ? `${pgN} / ${pages.length}` :
+                      `— ${pgN} —`;
+                    const pgOpacity = effectivePrefs.pageNumOpacity ?? (effectivePrefs.pageNumColor ? 0.75 : 0.3);
+                    return (
+                      <div
+                        className={`relative flex items-center ${justifyClass} select-none`}
+                        style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}
+                      >
+                        {/* Footer text — opposite side from page number */}
                         <span
+                          className="absolute text-[9px] opacity-25 truncate"
                           style={{
-                            fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
-                            fontFamily: effectivePrefs.pageNumFont || "inherit",
-                            color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
-                            letterSpacing: "0.2em",
-                            fontWeight: 500,
-                            opacity: effectivePrefs.pageNumColor ? 0.75 : 0.3,
+                            [isRTL ? "right" : "left"]: resolvedPos === "right" ? undefined : dynMarginL,
+                            [isRTL ? "left" : "right"]: resolvedPos === "right" ? dynMarginR : undefined,
+                            color: resolvedTextColor || effectivePrefs.textColor || undefined,
                           }}
                         >
-                          — {index + 1} —
+                          {effectivePrefs.footerText ? effectivePrefs.footerText : `${pageWords} ${ar ? "كلمة" : "w"}`}
                         </span>
-                        {/* Hover edit button */}
-                        <button
-                          onClick={e => { e.stopPropagation(); setShowPageSetup(true); }}
-                          title={ar ? "تخصيص رقم الصفحة" : "Customize page number"}
-                          className="opacity-0 group-hover/pgnum:opacity-100 transition-opacity"
-                          style={{
-                            width: 16, height: 16, borderRadius: 4,
-                            background: "hsl(var(--primary))",
-                            border: "none", cursor: "pointer",
-                            display: "inline-flex", alignItems: "center", justifyContent: "center",
-                            flexShrink: 0, marginLeft: 2,
-                          }}
-                        >
-                          <Pencil style={{ width: 8, height: 8, color: "#fff" }} />
-                        </button>
-                      </span>
-                    )}
-                  </div>
+                        {/* Page number */}
+                        {(effectivePrefs.showPageNumbers !== false) && (
+                          <span className="group/pgnum relative inline-flex items-center gap-1">
+                            <span
+                              style={{
+                                fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
+                                fontFamily: effectivePrefs.pageNumFont || "inherit",
+                                color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
+                                letterSpacing: "0.2em",
+                                fontWeight: effectivePrefs.pageNumBold ? 700 : 400,
+                                fontStyle: effectivePrefs.pageNumItalic ? "italic" : "normal",
+                                fontVariant: effectivePrefs.pageNumSmallCaps ? "small-caps" : "normal",
+                                opacity: pgOpacity,
+                              }}
+                            >
+                              {pgLabel}
+                            </span>
+                            {/* Hover edit button */}
+                            <button
+                              onClick={e => { e.stopPropagation(); setShowPageSetup(true); }}
+                              title={ar ? "تخصيص رقم الصفحة" : "Customize page number"}
+                              className="opacity-0 group-hover/pgnum:opacity-100 transition-opacity"
+                              style={{
+                                width: 16, height: 16, borderRadius: 4,
+                                background: "hsl(var(--primary))",
+                                border: "none", cursor: "pointer",
+                                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, marginLeft: 2,
+                              }}
+                            >
+                              <Pencil style={{ width: 8, height: 8, color: "#fff" }} />
+                            </button>
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Page shadow/curl effect */}
@@ -2188,21 +2214,104 @@ export default function ChapterEditor() {
               </div>
 
               {/* ── Col 3: Page Number Style ── */}
-              <div className="p-6 space-y-5">
+              <div className="p-5 space-y-4 overflow-y-auto" style={{ maxHeight: 540 }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
 
                 {(prefs.showPageNumbers !== false) ? (
                   <>
-                    {/* Live preview */}
-                    <div className="rounded-xl flex items-center justify-center py-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}` }}>
-                      <span style={{ fontFamily: prefs.pageNumFont || "inherit", fontSize: `${prefs.pageNumSize || 11}px`, color: prefs.pageNumColor || (isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"), letterSpacing: "0.2em", fontWeight: 500 }}>
-                        — 1 —
-                      </span>
+                    {/* ── Live preview ── */}
+                    {(() => {
+                      const fmt = prefs.pageNumFormat || "dashes";
+                      const previewLabel =
+                        fmt === "plain"    ? "1" :
+                        fmt === "dots"     ? "· 1 ·" :
+                        fmt === "brackets" ? "[ 1 ]" :
+                        fmt === "word"     ? "Page 1" :
+                        fmt === "slash"    ? "1 / 12" :
+                        "— 1 —";
+                      const pos = prefs.pageNumPosition || "center";
+                      const justifyPreview = pos === "left" || pos === "outer" ? "flex-start" : pos === "right" ? "flex-end" : "center";
+                      return (
+                        <div className="rounded-xl px-4 py-3" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}` }}>
+                          <div style={{ display: "flex", justifyContent: justifyPreview }}>
+                            <span style={{
+                              fontFamily: prefs.pageNumFont || "inherit",
+                              fontSize: `${prefs.pageNumSize || 11}px`,
+                              color: prefs.pageNumColor || (isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)"),
+                              letterSpacing: "0.2em",
+                              fontWeight: prefs.pageNumBold ? 700 : 400,
+                              fontStyle: prefs.pageNumItalic ? "italic" : "normal",
+                              fontVariant: prefs.pageNumSmallCaps ? "small-caps" : "normal",
+                              opacity: prefs.pageNumOpacity ?? 1,
+                            }}>
+                              {previewLabel}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* ── Format ── */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "صيغة الرقم" : "Format"}</label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { v: "dashes",   label: "— 1 —" },
+                          { v: "dots",     label: "· 1 ·" },
+                          { v: "plain",    label: "1" },
+                          { v: "brackets", label: "[ 1 ]" },
+                          { v: "word",     label: "Page 1" },
+                          { v: "slash",    label: "1 / n" },
+                        ].map(({ v, label }) => {
+                          const active = (prefs.pageNumFormat || "dashes") === v;
+                          return (
+                            <button key={v} onClick={() => { const np = { ...prefs, pageNumFormat: v }; setPrefs(np); handleSavePrefs(np); }}
+                              className="py-1.5 px-1 rounded-lg text-xs font-mono transition-all"
+                              style={{
+                                background: active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                                border: `1px solid ${active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                color: active ? "#fff" : "inherit",
+                                cursor: "pointer",
+                              }}>
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Font */}
+                    {/* ── Position ── */}
                     <div>
-                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الخط" : "Font"}</label>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الموقع" : "Position"}</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { v: "center", label: ar ? "وسط" : "Center", icon: "⊙" },
+                          { v: "left",   label: ar ? "يسار" : "Left",   icon: "⊢" },
+                          { v: "right",  label: ar ? "يمين" : "Right",  icon: "⊣" },
+                          { v: "outer",  label: ar ? "خارجي" : "Outer", icon: "⊣⊢" },
+                        ].map(({ v, label, icon }) => {
+                          const active = (prefs.pageNumPosition || "center") === v;
+                          return (
+                            <button key={v} onClick={() => { const np = { ...prefs, pageNumPosition: v }; setPrefs(np); handleSavePrefs(np); }}
+                              className="flex items-center gap-1.5 py-1.5 px-2 rounded-lg text-xs transition-all"
+                              style={{
+                                background: active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                                border: `1px solid ${active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                color: active ? "#fff" : "inherit",
+                                cursor: "pointer",
+                              }}>
+                              <span className="font-mono text-[10px] opacity-60">{icon}</span>
+                              <span>{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] opacity-30 mt-1">{ar ? "الخارجي: فردي يسار، زوجي يمين (كالكتب الحقيقية)" : "Outer: odd pages left, even right — book-style"}</p>
+                    </div>
+
+                    {/* ── Font ── */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5 opacity-60 uppercase tracking-wider">{ar ? "الخط" : "Font"}</label>
                       <select
                         value={prefs.pageNumFont || ""}
                         onChange={e => { const np = { ...prefs, pageNumFont: e.target.value || undefined }; setPrefs(np); handleSavePrefs(np); }}
@@ -2214,7 +2323,6 @@ export default function ChapterEditor() {
                         <option value="'Playfair Display', serif">Playfair Display</option>
                         <option value="'Lora', serif">Lora</option>
                         <option value="'Merriweather', serif">Merriweather</option>
-                        <option value="'Libre Baskerville', serif">Libre Baskerville</option>
                         <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
                         <option value="Georgia, serif">Georgia</option>
                         <option value="'Times New Roman', serif">Times New Roman</option>
@@ -2223,46 +2331,102 @@ export default function ChapterEditor() {
                       </select>
                     </div>
 
-                    {/* Size */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "الحجم" : "Size"}</label>
-                        <span className="text-xs font-mono opacity-50">{prefs.pageNumSize || 11}px</span>
+                    {/* ── Size + Opacity row ── */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "الحجم" : "Size"}</label>
+                          <span className="text-[10px] font-mono opacity-40">{prefs.pageNumSize || 11}px</span>
+                        </div>
+                        <input type="range" min={7} max={22} step={1}
+                          value={prefs.pageNumSize || 11}
+                          onChange={e => { const np = { ...prefs, pageNumSize: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                          className="w-full" style={{ accentColor: "hsl(var(--primary))" }} />
+                        <div className="flex justify-between text-[9px] opacity-25 mt-0.5"><span>7</span><span>22</span></div>
                       </div>
-                      <input
-                        type="range" min={7} max={20} step={1}
-                        value={prefs.pageNumSize || 11}
-                        onChange={e => { const np = { ...prefs, pageNumSize: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
-                        className="w-full"
-                        style={{ accentColor: "hsl(var(--primary))" }}
-                      />
-                      <div className="flex justify-between text-[10px] opacity-30 mt-0.5"><span>7</span><span>20</span></div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "الشفافية" : "Opacity"}</label>
+                          <span className="text-[10px] font-mono opacity-40">{Math.round((prefs.pageNumOpacity ?? 0.55) * 100)}%</span>
+                        </div>
+                        <input type="range" min={10} max={100} step={5}
+                          value={Math.round((prefs.pageNumOpacity ?? 0.55) * 100)}
+                          onChange={e => { const np = { ...prefs, pageNumOpacity: Number(e.target.value) / 100 }; setPrefs(np); handleSavePrefs(np); }}
+                          className="w-full" style={{ accentColor: "hsl(var(--primary))" }} />
+                        <div className="flex justify-between text-[9px] opacity-25 mt-0.5"><span>10%</span><span>100%</span></div>
+                      </div>
                     </div>
 
-                    {/* Color */}
+                    {/* ── Style toggles ── */}
                     <div>
-                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "اللون" : "Color"}</label>
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="color"
-                          value={prefs.pageNumColor || (isDark ? "#ffffff" : "#000000")}
-                          onChange={e => { const np = { ...prefs, pageNumColor: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
-                          style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`, padding: 2, background: "transparent", cursor: "pointer" }}
-                        />
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "النمط" : "Style"}</label>
+                      <div className="flex gap-2">
+                        {[
+                          { key: "pageNumBold",      label: "B",  title: ar ? "عريض" : "Bold",        style: { fontWeight: 700 } },
+                          { key: "pageNumItalic",    label: "I",  title: ar ? "مائل" : "Italic",       style: { fontStyle: "italic" } },
+                          { key: "pageNumSmallCaps", label: "SC", title: ar ? "كابيتال صغير" : "Small Caps", style: { fontVariant: "small-caps", fontSize: 10 } },
+                        ].map(({ key, label, title, style: btnStyle }) => {
+                          const active = !!(prefs as any)[key];
+                          return (
+                            <button key={key}
+                              title={title}
+                              onClick={() => { const np = { ...prefs, [key]: !active }; setPrefs(np); handleSavePrefs(np); }}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center text-xs transition-all"
+                              style={{
+                                ...(btnStyle as any),
+                                background: active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                                border: `1.5px solid ${active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"}`,
+                                color: active ? "#fff" : "inherit",
+                                cursor: "pointer",
+                              }}>
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ── Color ── */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "اللون" : "Color"}</label>
                         {prefs.pageNumColor && (
                           <button onClick={() => { const np = { ...prefs, pageNumColor: undefined }; setPrefs(np); handleSavePrefs(np); }}
                             className="text-[10px] opacity-40 hover:opacity-70 transition-opacity"
                             style={{ background: "none", border: "none", cursor: "pointer", color: "inherit" }}>
-                            {ar ? "إعادة" : "Reset"}
+                            {ar ? "إعادة تعيين" : "Reset"}
                           </button>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {["#000000", "#333333", "#666666", "#999999", "#cccccc", "#ffffff", "#8b0000", "#1a237e", "#1b5e20", "#4a148c", "#e65100", "#bf360c"].map(c => (
-                          <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
-                            title={c}
-                            style={{ width: 22, height: 22, borderRadius: 5, background: c, border: `2px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`, cursor: "pointer", outline: "none" }}
-                          />
+                      <div className="flex items-center gap-2 mb-2">
+                        <input type="color"
+                          value={prefs.pageNumColor || (isDark ? "#ffffff" : "#000000")}
+                          onChange={e => { const np = { ...prefs, pageNumColor: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
+                          style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`, padding: 2, background: "transparent", cursor: "pointer" }}
+                        />
+                        <span className="text-xs opacity-40 font-mono">{prefs.pageNumColor || (ar ? "تلقائي" : "auto")}</span>
+                      </div>
+                      {/* Color swatches — rich palette */}
+                      <div className="space-y-1.5">
+                        {[
+                          ["#000000", "#1a1a1a", "#333333", "#555555", "#777777", "#999999", "#bbbbbb", "#dddddd", "#ffffff"],
+                          ["#8b0000", "#c62828", "#e53935", "#ef9a9a", "#1a237e", "#283593", "#3949ab", "#9fa8da"],
+                          ["#1b5e20", "#2e7d32", "#43a047", "#a5d6a7", "#4a148c", "#6a1b9a", "#8e24aa", "#ce93d8"],
+                          ["#e65100", "#ef6c00", "#f57c00", "#ffcc02", "#006064", "#00838f", "#00acc1", "#80deea"],
+                        ].map((row, ri) => (
+                          <div key={ri} className="flex gap-1.5">
+                            {row.map(c => (
+                              <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
+                                title={c}
+                                style={{
+                                  width: 20, height: 20, borderRadius: 5, background: c, flexShrink: 0,
+                                  border: `2.5px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`,
+                                  cursor: "pointer", outline: "none",
+                                  boxShadow: c === "#ffffff" ? `inset 0 0 0 1px ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.2)"}` : "none",
+                                }}
+                              />
+                            ))}
+                          </div>
                         ))}
                       </div>
                     </div>
