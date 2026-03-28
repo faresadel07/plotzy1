@@ -16,6 +16,7 @@ import BookDetails from "@/pages/book-details";
 import ChapterEditor from "@/pages/chapter-editor";
 import CoverDesigner from "@/pages/cover-designer";
 import PublishBook from "@/pages/publish-book";
+import AudiobookStudio from "@/pages/audiobook-studio";
 import ArticleEditor from "@/pages/article-editor";
 import QuickDropNotepad from "@/components/QuickDropNotepad";
 import Trash from "@/pages/trash";
@@ -75,6 +76,7 @@ function Router() {
         <Route path="/books/:bookId/chapters/:chapterId" component={ChapterEditor} />
         <Route path="/books/:id/cover-designer" component={CoverDesigner} />
         <Route path="/books/:id/find-publishers" component={PublishBook} />
+        <Route path="/books/:id/audiobook" component={AudiobookStudio} />
         <Route path="/writing-guide" component={WritingGuide} />
         <Route path="/pricing" component={Pricing} />
         <Route path="/subscription/success" component={SubscriptionSuccess} />

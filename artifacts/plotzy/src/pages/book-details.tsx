@@ -461,6 +461,29 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             </Link>
           </div>
 
+          {/* Audiobook Studio */}
+          <Link href={`/books/${bookId}/audiobook`} className="block" data-testid="button-audiobook-studio">
+            <div
+              className="group rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
+              style={{ border: '1px solid rgba(139,92,246,0.25)', background: 'rgba(139,92,246,0.06)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.1)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.06)')}
+            >
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(139,92,246,0.2)' }}>
+                <span className="text-base">🎙️</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  {lang === "ar" ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}
+                </p>
+                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(139,92,246,0.7)' }}>
+                  {lang === "ar" ? "تحويل الكتاب إلى ملف صوتي بالذكاء الاصطناعي" : "Export your book as an AI-voiced MP3"}
+                </p>
+              </div>
+              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(139,92,246,0.4)' }} />
+            </div>
+          </Link>
+
           {/* Find Publisher */}
           <Link href={`/books/${bookId}/find-publishers`} className="block" data-testid="button-find-publishers">
             <div

@@ -1638,6 +1638,174 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // ─── Audiobook Studio ───────────────────────────────────────────────────────
+
+  // Helper: extract plain text from a chapter's content (PageBlock[] JSON)
+  function extractChapterPlainText(content: string): string {
+    if (!content) return "";
+    try {
+      const blocks = JSON.parse(content);
+      if (Array.isArray(blocks)) {
+        return blocks.map((b: unknown) => {
+          if (typeof b === "string") return b;
+          if (b && typeof b === "object" && "content" in b) return (b as { content: string }).content;
+          return "";
+        }).join("\n\n").trim();
+      }
+    } catch { }
+    return content.trim();
+  }
+
+  // Generate a minimal WAV mock for demo mode (1 sec of silence)
+  function makeMockWav(): Buffer {
+    const sampleRate = 22050;
+    const numSamples = sampleRate; // 1 second
+    const numChannels = 1;
+    const bitsPerSample = 16;
+    const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+    const blockAlign = numChannels * (bitsPerSample / 8);
+    const dataSize = numSamples * blockAlign;
+    const buf = Buffer.alloc(44 + dataSize, 0);
+    buf.write("RIFF", 0); buf.writeUInt32LE(36 + dataSize, 4); buf.write("WAVE", 8);
+    buf.write("fmt ", 12); buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20);
+    buf.writeUInt16LE(numChannels, 22); buf.writeUInt32LE(sampleRate, 24);
+    buf.writeUInt32LE(byteRate, 28); buf.writeUInt16LE(blockAlign, 32);
+    buf.writeUInt16LE(bitsPerSample, 34); buf.write("data", 36); buf.writeUInt32LE(dataSize, 40);
+    return buf;
+  }
+
+  // Preview: synthesize first ~500 chars of a chapter
+  app.post("/api/books/:id/audiobook/preview", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.id);
+      const { chapterId, voice = "nova", speed = 1.0, model = "tts-1" } = req.body as {
+        chapterId: number; voice?: string; speed?: number; model?: string;
+      };
+
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      const chapters = await storage.getChaptersByBook(bookId);
+      const chapter = chapters.find(c => c.id === chapterId);
+      if (!chapter) return res.status(404).json({ message: "Chapter not found" });
+
+      const fullText = extractChapterPlainText(chapter.content || "");
+      // Limit preview to first 500 characters (~60-90 seconds of audio)
+      const previewText = fullText.slice(0, 500) || `Preview of ${chapter.title || "Chapter"}`;
+
+      if (isMockOpenAI) {
+        const wav = makeMockWav();
+        return res.json({
+          audio: wav.toString("base64"),
+          mimeType: "audio/wav",
+          chapterId,
+          isMock: true,
+        });
+      }
+
+      const validVoices = ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer"];
+      const safeVoice = validVoices.includes(voice) ? voice : "nova";
+      const safeSpeed = Math.max(0.25, Math.min(4.0, Number(speed) || 1.0));
+      const safeModel = model === "tts-1-hd" ? "tts-1-hd" : "tts-1";
+
+      const mp3Res = await openai.audio.speech.create({
+        model: safeModel,
+        voice: safeVoice as "alloy" | "ash" | "ballad" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
+        input: previewText,
+        speed: safeSpeed,
+        response_format: "mp3",
+      });
+
+      const arrayBuffer = await mp3Res.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      res.json({ audio: buffer.toString("base64"), mimeType: "audio/mpeg", chapterId });
+    } catch (err) {
+      console.error("Audiobook preview error:", err);
+      res.status(500).json({ message: "Failed to generate audio preview" });
+    }
+  });
+
+  // Export: synthesize all (or selected) chapters, merge, return as single MP3 download
+  app.post("/api/books/:id/audiobook/export", async (req, res) => {
+    try {
+      const bookId = parseInt(req.params.id);
+      const { voice = "nova", speed = 1.0, model = "tts-1", chapterIds } = req.body as {
+        voice?: string; speed?: number; model?: string; chapterIds?: number[];
+      };
+
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      const allChapters = await storage.getChaptersByBook(bookId);
+      const chaptersToExport = chapterIds && chapterIds.length > 0
+        ? allChapters.filter(c => chapterIds.includes(c.id)).sort((a, b) => a.order - b.order)
+        : allChapters.sort((a, b) => a.order - b.order);
+
+      if (chaptersToExport.length === 0) {
+        return res.status(400).json({ message: "No chapters to export" });
+      }
+
+      if (isMockOpenAI) {
+        const wav = makeMockWav();
+        const safeTitle = (book.title || "audiobook").replace(/[^a-z0-9]/gi, "_").slice(0, 50);
+        res.setHeader("Content-Type", "audio/wav");
+        res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.wav"`);
+        return res.send(wav);
+      }
+
+      const validVoices = ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer"];
+      const safeVoice = validVoices.includes(voice) ? voice : "nova";
+      const safeSpeed = Math.max(0.25, Math.min(4.0, Number(speed) || 1.0));
+      const safeModel = model === "tts-1-hd" ? "tts-1-hd" : "tts-1";
+
+      const audioChunks: Buffer[] = [];
+
+      for (const chapter of chaptersToExport) {
+        const text = extractChapterPlainText(chapter.content || "");
+        if (!text) continue;
+
+        // OpenAI TTS has a 4096-char input limit per call; split into segments
+        const MAX_SEGMENT = 4000;
+        const segments: string[] = [];
+        let remaining = text;
+        while (remaining.length > 0) {
+          if (remaining.length <= MAX_SEGMENT) {
+            segments.push(remaining);
+            break;
+          }
+          // Find a sentence boundary near MAX_SEGMENT
+          let splitAt = remaining.lastIndexOf(". ", MAX_SEGMENT);
+          if (splitAt < MAX_SEGMENT / 2) splitAt = MAX_SEGMENT;
+          segments.push(remaining.slice(0, splitAt + 1).trim());
+          remaining = remaining.slice(splitAt + 1).trim();
+        }
+
+        for (const segment of segments) {
+          if (!segment) continue;
+          const segRes = await openai.audio.speech.create({
+            model: safeModel,
+            voice: safeVoice as "alloy" | "ash" | "ballad" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
+            input: segment,
+            speed: safeSpeed,
+            response_format: "mp3",
+          });
+          const ab = await segRes.arrayBuffer();
+          audioChunks.push(Buffer.from(ab));
+        }
+      }
+
+      const merged = Buffer.concat(audioChunks);
+      const safeTitle = (book.title || "audiobook").replace(/[^a-z0-9]/gi, "_").slice(0, 50);
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}_audiobook.mp3"`);
+      res.setHeader("Content-Length", merged.length);
+      res.send(merged);
+    } catch (err) {
+      console.error("Audiobook export error:", err);
+      res.status(500).json({ message: "Failed to export audiobook" });
+    }
+  });
+
   // ─── Auth Routes ────────────────────────────────────────────────────────────
 
   app.get("/api/auth/providers", (_req, res) => {

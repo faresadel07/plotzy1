@@ -17,7 +17,7 @@ Full-stack book writing and publishing platform. pnpm monorepo with React+Vite f
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **Auth**: Passport.js (Google OAuth + email/password)
 - **Payments**: Stripe (subscriptions)
-- **AI**: OpenAI API (writing assistance)
+- **AI**: OpenAI API (writing assistance + TTS for audiobook export)
 - **File uploads**: multer
 - **WebSockets**: ws
 
