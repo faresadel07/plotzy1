@@ -2098,7 +2098,7 @@ export default function ChapterEditor() {
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-6" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
           <div
             className="rounded-2xl shadow-2xl w-full animate-in fade-in zoom-in-95 duration-200"
-            style={{ background: isDark ? "#1a1a1f" : "#ffffff", color: isDark ? "#e4e4e7" : "#18181b", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`, maxWidth: 900 }}
+            style={{ background: isDark ? "#1a1a1f" : "#ffffff", color: isDark ? "#e4e4e7" : "#18181b", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`, maxWidth: 1160 }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
@@ -2214,7 +2214,7 @@ export default function ChapterEditor() {
               </div>
 
               {/* ── Col 3: Page Number Style ── */}
-              <div className="p-5 space-y-4 overflow-y-auto" style={{ maxHeight: 540 }}>
+              <div className="p-6 space-y-4">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
 
                 {(prefs.showPageNumbers !== false) ? (
@@ -2407,26 +2407,29 @@ export default function ChapterEditor() {
                         <span className="text-xs opacity-40 font-mono">{prefs.pageNumColor || (ar ? "تلقائي" : "auto")}</span>
                       </div>
                       {/* Color swatches — rich palette */}
-                      <div className="space-y-1.5">
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(26px, 1fr))", gap: 6 }}>
                         {[
-                          ["#000000", "#1a1a1a", "#333333", "#555555", "#777777", "#999999", "#bbbbbb", "#dddddd", "#ffffff"],
-                          ["#8b0000", "#c62828", "#e53935", "#ef9a9a", "#1a237e", "#283593", "#3949ab", "#9fa8da"],
-                          ["#1b5e20", "#2e7d32", "#43a047", "#a5d6a7", "#4a148c", "#6a1b9a", "#8e24aa", "#ce93d8"],
-                          ["#e65100", "#ef6c00", "#f57c00", "#ffcc02", "#006064", "#00838f", "#00acc1", "#80deea"],
-                        ].map((row, ri) => (
-                          <div key={ri} className="flex gap-1.5">
-                            {row.map(c => (
-                              <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
-                                title={c}
-                                style={{
-                                  width: 20, height: 20, borderRadius: 5, background: c, flexShrink: 0,
-                                  border: `2.5px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`,
-                                  cursor: "pointer", outline: "none",
-                                  boxShadow: c === "#ffffff" ? `inset 0 0 0 1px ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.2)"}` : "none",
-                                }}
-                              />
-                            ))}
-                          </div>
+                          "#000000", "#1a1a1a", "#333333", "#555555", "#777777", "#999999", "#bbbbbb", "#dddddd", "#ffffff",
+                          "#8b0000", "#c62828", "#e53935", "#ef9a9a",
+                          "#1a237e", "#283593", "#3949ab", "#9fa8da",
+                          "#1b5e20", "#2e7d32", "#43a047", "#a5d6a7",
+                          "#4a148c", "#6a1b9a", "#8e24aa", "#ce93d8",
+                          "#e65100", "#ef6c00", "#f57c00", "#ffcc02",
+                          "#006064", "#00838f", "#00acc1", "#80deea",
+                          "#795548", "#a1887f", "#bf360c", "#6d4c41",
+                        ].map(c => (
+                          <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
+                            title={c}
+                            style={{
+                              width: 26, height: 26, borderRadius: 7, background: c,
+                              border: `2.5px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`,
+                              cursor: "pointer", outline: "none",
+                              boxShadow: c === "#ffffff" ? `inset 0 0 0 1px ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}` : "none",
+                              transition: "transform 0.1s",
+                            }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.2)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+                          />
                         ))}
                       </div>
                     </div>
