@@ -320,6 +320,175 @@ const MARKETPLACE_SERVICES = [
   { label: "AI Book Blurb Writer", tag: "Marketing", dot: "#999" },
 ];
 
+const VOICES = [
+  { id: "nova", label: "Nova", color: "#a78bfa" },
+  { id: "shimmer", label: "Shimmer", color: "#f472b6" },
+  { id: "onyx", label: "Onyx", color: "#60a5fa" },
+  { id: "sage", label: "Sage", color: "#34d399" },
+];
+
+function AudiobookMockup() {
+  const [activeVoice, setActiveVoice] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(18);
+  const bars = Array.from({ length: 28 });
+
+  // Cycle voices
+  useEffect(() => {
+    const id = setInterval(() => setActiveVoice(v => (v + 1) % VOICES.length), 2400);
+    return () => clearInterval(id);
+  }, []);
+
+  // Advance progress bar
+  useEffect(() => {
+    if (!isPlaying) return;
+    const id = setInterval(() => setProgress(p => p >= 92 ? 18 : p + 0.3), 80);
+    return () => clearInterval(id);
+  }, [isPlaying]);
+
+  const voice = VOICES[activeVoice];
+
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden shadow-2xl select-none"
+      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.1)" }}
+    >
+      {/* Top bar */}
+      <div className="flex items-center gap-2 px-5 pt-4 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+          <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+          <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        </div>
+        <div className="flex-1 text-center text-[10px] font-mono text-white/25">Audiobook Studio</div>
+      </div>
+
+      <div className="p-5">
+        {/* Book header */}
+        <div className="flex items-center gap-4 mb-5">
+          {/* Tiny cover */}
+          <div
+            className="w-12 h-16 rounded-lg flex-shrink-0 flex items-center justify-center"
+            style={{ background: "linear-gradient(150deg,#1a0040,#4c1d95,#7c3aed)" }}
+          >
+            <div className="w-1 h-7 rounded-full bg-white/30 mx-0.5" />
+            <div className="w-1 h-10 rounded-full bg-white/20 mx-0.5" />
+            <div className="w-1 h-6 rounded-full bg-white/25 mx-0.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold truncate">The Last Letter</p>
+            <p className="text-white/35 text-[11px] mt-0.5">Chapter 3 · 8 min 42 sec</p>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: voice.color }}
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              />
+              <motion.span
+                key={voice.id}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                className="text-[11px] font-semibold"
+                style={{ color: voice.color }}
+              >
+                {voice.label}
+              </motion.span>
+            </div>
+          </div>
+        </div>
+
+        {/* Waveform */}
+        <div className="flex items-center justify-center gap-[3px] h-14 mb-4">
+          {bars.map((_, i) => {
+            const center = bars.length / 2;
+            const dist = Math.abs(i - center) / center;
+            const baseH = Math.sin((i / bars.length) * Math.PI * 3 + 0.8) * 0.5 + 0.5;
+            const h = Math.max(0.12, baseH * (1 - dist * 0.5));
+            const isPast = i / bars.length < progress / 100;
+            return (
+              <motion.div
+                key={i}
+                className="rounded-full w-[3px] flex-shrink-0"
+                style={{ background: isPast ? voice.color : "rgba(255,255,255,0.12)" }}
+                animate={isPlaying ? {
+                  height: [`${h * 44 + 4}px`, `${h * 28 + 4}px`, `${h * 44 + 4}px`],
+                } : { height: `${h * 20 + 4}px` }}
+                transition={{
+                  duration: 0.6 + (i % 5) * 0.08,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.02,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Progress */}
+        <div className="mb-4">
+          <div className="h-1 rounded-full w-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: voice.color, width: `${progress}%` }}
+              transition={{ type: "spring", stiffness: 80, damping: 20 }}
+            />
+          </div>
+          <div className="flex justify-between mt-1.5">
+            <span className="text-[10px] text-white/25 font-mono">
+              {Math.floor((progress / 100) * 522 / 60)}:{String(Math.floor((progress / 100) * 522) % 60).padStart(2, "0")}
+            </span>
+            <span className="text-[10px] text-white/25 font-mono">8:42</span>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center justify-center gap-4 mb-5">
+          <button className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white/60 transition-colors">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          </button>
+          <motion.button
+            onClick={() => setIsPlaying(p => !p)}
+            className="w-12 h-12 rounded-full flex items-center justify-center transition-all"
+            style={{ background: voice.color }}
+            whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.06 }}
+          >
+            {isPlaying ? (
+              <svg width="18" height="18" fill="#000" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            ) : (
+              <svg width="18" height="18" fill="#000" viewBox="0 0 24 24" style={{ marginLeft: 2 }}><path d="M8 5v14l11-7z"/></svg>
+            )}
+          </motion.button>
+          <button className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white/60 transition-colors">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-8.3 4.77 2.3-4.77 2.3V9.7zM16 6h2v12h-2z"/></svg>
+          </button>
+        </div>
+
+        {/* Voice selector pills */}
+        <div className="flex gap-2 flex-wrap justify-center">
+          {VOICES.map((v, i) => (
+            <motion.button
+              key={v.id}
+              onClick={() => setActiveVoice(i)}
+              className="px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-300"
+              style={{
+                background: activeVoice === i ? `${v.color}22` : "rgba(255,255,255,0.05)",
+                border: `1px solid ${activeVoice === i ? v.color : "rgba(255,255,255,0.08)"}`,
+                color: activeVoice === i ? v.color : "rgba(255,255,255,0.35)",
+              }}
+              whileTap={{ scale: 0.94 }}
+            >
+              {v.label}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MarketplaceMockup() {
   const [activeRow, setActiveRow] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
@@ -1115,7 +1284,7 @@ export default function Home() {
             </div>
 
             {/* Step 3 */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
               <motion.div
                 className="flex-1 max-w-[500px]"
                 initial={{ opacity: 0, x: -40 }}
@@ -1170,6 +1339,85 @@ export default function Home() {
                 transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
               >
                 <MarketplaceMockup />
+              </motion.div>
+            </div>
+
+            {/* Step 4 — Audiobook Studio */}
+            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24 mt-28">
+              <motion.div
+                className="flex-1 max-w-[500px]"
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">4</div>
+                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Listen</span>
+                </div>
+                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
+                  Turn your book<br/>into an audiobook
+                </h2>
+                <p className="text-lg text-[#555] leading-[1.75] mb-8">
+                  With one click, Plotzy's AI narrates your entire book in a lifelike voice.
+                  Choose from multiple distinct voices, preview each chapter, and export
+                  a professional-grade audiobook ready for distribution.
+                </p>
+                <motion.ul
+                  className="space-y-3"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
+                >
+                  {[
+                    '10 distinct AI voices with unique pitch & tone',
+                    'Chapter-by-chapter narration with live preview',
+                    'Real-time animated waveform while listening',
+                    'Export as professional-grade audio file',
+                  ].map((item) => (
+                    <motion.li
+                      key={item}
+                      variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
+                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      {item}
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </motion.div>
+
+              <motion.div
+                className="flex-1 max-w-[500px] w-full relative"
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+              >
+                <AudiobookMockup />
+                <motion.div
+                  className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+                  AI narration · 10 voices
+                </motion.div>
+                <motion.div
+                  className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 bg-[#111] rounded-xl shadow-lg text-xs font-semibold text-white"
+                  initial={{ opacity: 0, y: -12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.9, duration: 0.5 }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" />
+                  Export-ready audio
+                </motion.div>
               </motion.div>
             </div>
 
