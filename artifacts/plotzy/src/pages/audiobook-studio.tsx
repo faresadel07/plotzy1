@@ -355,6 +355,19 @@ export default function AudiobookStudio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voice: selectedVoice, speed, model: quality, chapterIds: [chapterId] }),
       });
+      if (res.status === 402) {
+        const data = await res.json();
+        if (data.isMock) {
+          toast({
+            title: ar ? "مفتاح OpenAI مطلوب" : "OpenAI API key required",
+            description: ar
+              ? "أضف OPENAI_API_KEY في الإعدادات لتفعيل تنزيل الكتب الصوتية"
+              : "Add your OPENAI_API_KEY in secrets to enable audiobook downloads",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -389,6 +402,19 @@ export default function AudiobookStudio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voice: selectedVoice, speed, model: quality, chapterIds: chapIds }),
       });
+      if (res.status === 402) {
+        const data = await res.json();
+        if (data.isMock) {
+          toast({
+            title: ar ? "مفتاح OpenAI مطلوب" : "OpenAI API key required",
+            description: ar
+              ? "أضف OPENAI_API_KEY في الإعدادات لتفعيل تصدير الكتب الصوتية"
+              : "Add your OPENAI_API_KEY in secrets to enable audiobook export",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

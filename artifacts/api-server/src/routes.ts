@@ -1746,11 +1746,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       }
 
       if (isMockOpenAI) {
-        const wav = makeMockWav();
-        const safeTitle = (book.title || "audiobook").replace(/[^a-z0-9]/gi, "_").slice(0, 50);
-        res.setHeader("Content-Type", "audio/wav");
-        res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.wav"`);
-        return res.send(wav);
+        return res.status(402).json({
+          isMock: true,
+          message: "OpenAI API key required to generate real audio. Add OPENAI_API_KEY to enable audiobook export.",
+        });
       }
 
       const validVoices = ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer"];
