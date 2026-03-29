@@ -555,7 +555,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              style={{ textAlign: "center", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 700, letterSpacing: "-0.02em", color: "#ffffff", marginBottom: 56, lineHeight: 1.3 }}
+              style={{ textAlign: "center", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif', fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 700, letterSpacing: "-0.02em", color: "#ffffff", marginBottom: 56, lineHeight: 1.3 }}
             >
               The world's first platform built to help you write your first book, even if you've never written a word before.
             </motion.p>
