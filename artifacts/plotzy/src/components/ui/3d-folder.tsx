@@ -84,9 +84,9 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
             {/* Headline */}
             <p style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "9px",
+              fontSize: "11px",
               fontWeight: 700,
-              color: PARCH_TEXT,
+              color: "#3a2e1e",
               lineHeight: 1.3,
               letterSpacing: "0.01em",
               margin: 0,
@@ -100,8 +100,8 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
             {/* Body text */}
             <p style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "6.8px",
-              color: PARCH_FAINT,
+              fontSize: "8px",
+              color: "#6b5c45",
               lineHeight: 1.6,
               margin: 0,
               overflow: "hidden",
@@ -109,7 +109,7 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
               WebkitLineClamp: 12,
               WebkitBoxOrient: "vertical",
             }}>
-              {card.sub}
+              {card.sub.replace(/\s*—\s*/g, ". ")}
             </p>
           </div>
         </div>
