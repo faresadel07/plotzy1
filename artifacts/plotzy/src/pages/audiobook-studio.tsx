@@ -92,13 +92,27 @@ function WaveformBars({ playing }: { playing: boolean }) {
   );
 }
 
+// ── Per-voice TTS settings (pitch + rate offset) for mock/browser mode ────────
+const VOICE_TTS_SETTINGS: Record<string, { pitch: number; rateOffset: number; preferName?: string }> = {
+  nova:    { pitch: 1.20, rateOffset:  0.00 },                         // warm, upbeat
+  shimmer: { pitch: 1.45, rateOffset: -0.08 },                         // light, breathy
+  coral:   { pitch: 1.15, rateOffset:  0.05 },                         // clear, warm
+  alloy:   { pitch: 1.00, rateOffset:  0.00 },                         // neutral baseline
+  ash:     { pitch: 0.95, rateOffset:  0.05 },                         // calm, warm
+  ballad:  { pitch: 1.10, rateOffset: -0.15, preferName: "samantha" }, // expressive, musical
+  fable:   { pitch: 1.05, rateOffset: -0.10, preferName: "daniel" },   // storytelling, British
+  sage:    { pitch: 0.88, rateOffset: -0.05 },                         // thoughtful, slow
+  onyx:    { pitch: 0.68, rateOffset: -0.08, preferName: "david" },    // deep, authoritative
+  echo:    { pitch: 0.85, rateOffset:  0.05, preferName: "mark" },     // resonant, clear
+};
+
 // ── Mini audio player component ───────────────────────────────────────────────
 
 function MiniPlayer({
-  src, mimeType, isMock, text, speed = 1, voiceGender = "Neutral",
+  src, mimeType, isMock, text, speed = 1, voiceGender = "Neutral", voiceId = "alloy",
 }: {
   src: string; mimeType: string; isMock?: boolean;
-  text?: string; speed?: number; voiceGender?: "Male" | "Female" | "Neutral";
+  text?: string; speed?: number; voiceGender?: "Male" | "Female" | "Neutral"; voiceId?: string;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -156,21 +170,40 @@ function MiniPlayer({
     }
     const fullText = text || "No text available for this chapter.";
     const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.rate = Math.max(0.5, Math.min(2, speed));
-    utterance.pitch = voiceGender === "Male" ? 0.8 : voiceGender === "Female" ? 1.2 : 1.0;
-    const voices = synth.getVoices();
-    if (voices.length > 0) {
-      const enVoices = voices.filter(v => v.lang.startsWith("en"));
-      if (voiceGender === "Male") {
-        const mv = enVoices.find(v => /male|man|david|mark|daniel/i.test(v.name));
-        if (mv) utterance.voice = mv;
-      } else if (voiceGender === "Female") {
-        const fv = enVoices.find(v => /female|woman|samantha|victoria|karen|moira/i.test(v.name));
-        if (fv) utterance.voice = fv;
-      } else {
-        if (enVoices[0]) utterance.voice = enVoices[0];
+
+    // Use per-voice settings so every voice sounds distinctly different
+    const vtts = VOICE_TTS_SETTINGS[voiceId] ?? { pitch: 1.0, rateOffset: 0 };
+    utterance.pitch = vtts.pitch;
+    utterance.rate = Math.max(0.25, Math.min(2, speed + vtts.rateOffset));
+
+    // Try to pick a browser voice that matches
+    const doAssign = () => {
+      const browserVoices = synth.getVoices();
+      if (browserVoices.length === 0) return;
+      const en = browserVoices.filter(v => v.lang.startsWith("en"));
+      // 1. Try preferred name (e.g. "david", "samantha")
+      if (vtts.preferName) {
+        const pref = en.find(v => v.name.toLowerCase().includes(vtts.preferName!));
+        if (pref) { utterance.voice = pref; return; }
       }
+      // 2. Fall back to gender match
+      if (voiceGender === "Male") {
+        const mv = en.find(v => /male|man|david|mark|daniel/i.test(v.name));
+        if (mv) { utterance.voice = mv; return; }
+      } else if (voiceGender === "Female") {
+        const fv = en.find(v => /female|woman|samantha|victoria|karen|moira/i.test(v.name));
+        if (fv) { utterance.voice = fv; return; }
+      }
+      if (en[0]) utterance.voice = en[0];
+    };
+
+    // Chrome loads voices async
+    if (synth.getVoices().length > 0) {
+      doAssign();
+    } else {
+      synth.onvoiceschanged = () => { doAssign(); synth.onvoiceschanged = null; };
     }
+
     const words = fullText.split(/\s+/).length;
     const estimatedMs = (words / (150 * utterance.rate)) * 60 * 1000;
     utterance.onend = () => { setPlaying(false); setProgress(100); if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; } };
@@ -786,6 +819,7 @@ export default function AudiobookStudio() {
                                 text={preview.text}
                                 speed={speed}
                                 voiceGender={voice.gender}
+                                voiceId={selectedVoice}
                               />
                             </div>
                           )}
