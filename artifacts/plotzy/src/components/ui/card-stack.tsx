@@ -251,7 +251,7 @@ function DefaultCard({ item, active }: { item: CardStackItem; active: boolean })
         {item.tag && (
           <p style={{
             fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em",
-            color: "rgba(255,255,255,0.3)", textTransform: "uppercase",
+            color: "#ffffff", textTransform: "uppercase",
             marginBottom: 14, fontFamily: '-apple-system, "SF Pro Display", sans-serif',
           }}>
             {item.tag}
