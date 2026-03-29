@@ -7,6 +7,7 @@ import { WritingAnimation } from "@/components/WritingAnimation";
 import { AIAssistantAnimation } from "@/components/AIAssistantAnimation";
 import { MarketplaceMockup } from "@/components/MarketplaceMockup";
 import { AudiobookMockup } from "@/components/AudiobookMockup";
+import { AnimatedFolder } from "@/components/ui/3d-folder";
 import { CardStack } from "@/components/ui/card-stack";
 import { BookCarousel } from "@/components/BookCarousel";
 import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
@@ -546,47 +547,59 @@ export default function Home() {
           </ContainerScroll>
         </div>
 
-        {/* ===== FEATURE PHRASES ===== */}
-        <div style={{ background: "#080808", overflow: "hidden", padding: "14px 6%", marginTop: "-60px" }}>
-          <div style={{
-            maxWidth: 1280,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            columnGap: "6%",
-            rowGap: "0",
-          }}>
-            {[
-              "The world's first platform of its kind.",
-              "A powerful community that reads, rates, and elevates your book.",
-              "A proven guide to start writing, crafted with real authors.",
-              "An AI-powered marketplace that perfects every detail of your book.",
-              "Access hundreds of thousands of free books to spark your creativity.",
-              "From your first word to your cover, we've got everything covered.",
-            ].map((phrase, i) => {
-              const fromLeft = i % 2 === 0;
-              return (
-                <motion.p
-                  key={i}
-                  initial={{ opacity: 0, x: fromLeft ? -60 : 60 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.5 }}
-                  transition={{ duration: 0.6, delay: Math.floor(i / 2) * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
-                  style={{
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
-                    fontSize: "clamp(1.1rem, 1.9vw, 1.45rem)",
-                    fontWeight: 400,
-                    color: "rgba(255,255,255,0.88)",
-                    lineHeight: 1.5,
-                    letterSpacing: "-0.01em",
-                    padding: "18px 0",
-                  }}
+        {/* ===== 3D FEATURE FOLDERS ===== */}
+        <div style={{ background: "#060606", overflow: "hidden", padding: "80px 6% 100px", marginTop: "-40px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              style={{ textAlign: "center", fontFamily: "-apple-system, sans-serif", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginBottom: 56 }}
+            >
+              Everything you need — in one place
+            </motion.p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
+              {[
+                {
+                  title: "Write & Refine",
+                  subtitle: "3 features · hover to explore",
+                  cards: [
+                    { id: "w1", icon: "✦", headline: "The world's first platform of its kind", sub: "Plotzy is uniquely built for authors — a distraction-free editor that combines manuscript management, AI tools, and publishing all in one workspace." },
+                    { id: "w2", icon: "📖", headline: "A proven guide to start writing", sub: "Crafted with real authors, our step-by-step writing guide helps you outline, draft, and refine your story from first chapter to last." },
+                    { id: "w3", icon: "🤖", headline: "AI Writing Assistant that knows your story", sub: "Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice — not just the current paragraph." },
+                  ],
+                },
+                {
+                  title: "Publish & Distribute",
+                  subtitle: "3 features · hover to explore",
+                  cards: [
+                    { id: "p1", icon: "🚀", headline: "An AI-powered marketplace that perfects your book", sub: "From developmental editing to cover design and blurb writing — 9 AI services available on demand, each completed in minutes with no waitlists." },
+                    { id: "p2", icon: "🌍", headline: "From your first word to your cover", sub: "Generate professional AI book covers, format your manuscript for every platform, and distribute to every major digital and print retailer with one click." },
+                    { id: "p3", icon: "📊", headline: "World Publish — distribute everywhere", sub: "Your manuscript reaches every major platform while Plotzy handles formatting, rights management, and royalty tracking automatically." },
+                  ],
+                },
+                {
+                  title: "Listen & Discover",
+                  subtitle: "3 features · hover to explore",
+                  cards: [
+                    { id: "l1", icon: "🎙️", headline: "AI Audiobook Studio — 10 distinct voices", sub: "With one click, Plotzy's AI narrates your entire book in your chosen voice. Preview each chapter, adjust quality, and export HD audio instantly." },
+                    { id: "l2", icon: "🌐", headline: "A powerful community of readers", sub: "Connect with readers who rate, review, and elevate your book. Build a following before your book is even finished." },
+                    { id: "l3", icon: "📚", headline: "Access hundreds of thousands of free books", sub: "Browse a vast library of free books across every genre to spark your creativity, study the craft, and find your writing style." },
+                  ],
+                },
+              ].map((folder, i) => (
+                <motion.div
+                  key={folder.title}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <span style={{ color: "rgba(255,255,255,0.3)", marginRight: "10px", fontSize: "0.8em" }}>●</span>
-                  {phrase}
-                </motion.p>
-              );
-            })}
+                  <AnimatedFolder folder={folder} className="w-full" />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
 
