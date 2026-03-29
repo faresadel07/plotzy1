@@ -548,7 +548,7 @@ export default function Home() {
         </div>
 
         {/* ===== 3D FEATURE FOLDERS ===== */}
-        <div style={{ background: "#060606", overflow: "hidden", padding: "80px 6% 100px", marginTop: "-40px" }}>
+        <div style={{ background: "#060606", overflow: "hidden", padding: "40px 6% 48px", marginTop: "-40px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <motion.p
               initial={{ opacity: 0, y: 20 }}

@@ -235,7 +235,7 @@ export const AnimatedFolder: React.FC<AnimatedFolderProps> = ({ folder, classNam
       <div
         className={cn("relative flex flex-col items-center justify-center cursor-pointer", className)}
         style={{
-          padding: "40px 16px 24px",
+          padding: "16px 16px 20px",
           perspective: "1200px",
           transform: hovered ? "scale(1.06) translateY(-6px)" : "scale(1) translateY(0)",
           transition: "transform 700ms cubic-bezier(0.16,1,0.3,1)",
@@ -259,8 +259,8 @@ export const AnimatedFolder: React.FC<AnimatedFolderProps> = ({ folder, classNam
 
         {/* ── Folder body ── */}
         <div
-          className="relative flex items-center justify-center mb-8"
-          style={{ height: FH + 120, width: FW + 40 }}
+          className="relative flex items-center justify-center mb-2"
+          style={{ height: FH + 60, width: FW + 40 }}
         >
           {/* Tab */}
           <div
