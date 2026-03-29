@@ -555,9 +555,9 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              style={{ textAlign: "center", fontFamily: "-apple-system, sans-serif", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginBottom: 56 }}
+              style={{ textAlign: "center", fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 700, letterSpacing: "-0.02em", color: "#ffffff", marginBottom: 56, lineHeight: 1.3 }}
             >
-              Everything you need — in one place
+              The world's first platform built to help you write your first book, even if you've never written a word before.
             </motion.p>
             <div style={{ display: "flex", justifyContent: "center", gap: 0 }}>
               {[
