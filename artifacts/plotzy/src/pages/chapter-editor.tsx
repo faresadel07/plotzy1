@@ -108,17 +108,19 @@ function serializePages(pages: PageBlock[]): string {
 }
 
 // ── Paper Size Definitions ────────────────────────────────────────────────────
+// All sizes in CSS pixels at 96 dpi (1 inch = 96 px)
 const PAPER_SIZES: Record<string, { width: number; height: number; label: string; labelAr: string }> = {
-  "a4":     { width: 595, height: 842, label: "A4",     labelAr: "A4" },
-  "a5":     { width: 420, height: 595, label: "A5",     labelAr: "A5" },
-  "letter": { width: 612, height: 792, label: "Letter", labelAr: "Letter (US)" },
-  "b5":     { width: 499, height: 708, label: "B5",     labelAr: "B5" },
+  "trade":  { width: 576,  height: 864,  label: "Trade (6×9\")",  labelAr: "Trade 6×9" },  // standard novel
+  "a4":     { width: 794,  height: 1123, label: "A4",             labelAr: "A4" },
+  "a5":     { width: 559,  height: 794,  label: "A5",             labelAr: "A5" },
+  "letter": { width: 816,  height: 1056, label: "Letter (US)",    labelAr: "Letter (US)" },
+  "b5":     { width: 665,  height: 944,  label: "B5",             labelAr: "B5" },
 };
 
-const DEFAULT_MARGIN = 72; // px — ≈1 inch / 25.4mm at 72dpi
+const DEFAULT_MARGIN = 72; // px — 0.75 inch at 96 dpi
 
 function getPageDimensions(prefs: { paperSize?: string; marginTop?: number; marginBottom?: number; marginLeft?: number; marginRight?: number }) {
-  const paper = PAPER_SIZES[prefs.paperSize || "a4"];
+  const paper = PAPER_SIZES[prefs.paperSize || "trade"];
   const ml = prefs.marginLeft  ?? DEFAULT_MARGIN;
   const mr = prefs.marginRight ?? DEFAULT_MARGIN;
   const mt = prefs.marginTop   ?? DEFAULT_MARGIN;
@@ -136,8 +138,26 @@ function getPageDimensions(prefs: { paperSize?: string; marginTop?: number; marg
 }
 
 // Legacy fallbacks (used in measurement div until effectivePrefs are loaded)
-const PAGE_CONTENT_HEIGHT = 698; // px — A4 at 72dpi with 72px margins
-const PAGE_CONTENT_WIDTH  = 451; // px — 595 - 144
+const PAGE_CONTENT_HEIGHT = 720; // px — Trade 6×9 with 72px margins (864-144)
+const PAGE_CONTENT_WIDTH  = 432; // px — 576 - 144
+
+/**
+ * Calculate the ideal words per page.
+ * contentH = TipTap's total height (fixedHeight). TipTap subtracts 48px top/bottom padding internally.
+ * contentW = the text area width (pageWidth − left/right margins = TipTap text area).
+ */
+function calcWordsPerPage(contentH: number, contentW: number, fontSize: number): number {
+  const tiptapPaddingV = 96;  // 48px top + 48px bottom (TipTap CSS padding)
+  const lineHeightPx   = fontSize * 1.85;
+  // textH: usable vertical space inside TipTap after its own top/bottom padding
+  const textH          = Math.max(100, contentH - tiptapPaddingV);
+  // textW: contentW already equals the TipTap text area width (page width − page margins)
+  const textW          = Math.max(100, contentW);
+  const linesPerPage   = Math.floor(textH / lineHeightPx);
+  const charsPerLine   = textW / (fontSize * 0.52); // 0.52 ≈ avg char-width ratio for EB Garamond
+  const wordsPerLine   = charsPerLine / 5.5;         // ~5.5 chars per word average
+  return Math.max(80, Math.floor(linesPerPage * wordsPerLine * 0.90));
+}
 
 function getPageText(block: PageBlock): string {
   if (typeof block === "string") return block;
@@ -401,7 +421,9 @@ export default function ChapterEditor() {
       setPages(parsed);
       const html = pagesToHtml(parsed);
       setRichHtml(html);
-      setRichPages(splitHtmlIntoPages(html));
+      const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 18;
+      const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+      setRichPages(splitHtmlIntoPages(html, wpp));
     }
   }, [chapter, isDirty]);
 
@@ -1021,6 +1043,7 @@ export default function ChapterEditor() {
   // ── Dynamic page dimensions ────────────────────────────────────────────────
   const pageDims = getPageDimensions(effectivePrefs);
   const dynPageW = pageDims.pageWidth;
+  const dynPageH = pageDims.pageHeight;
   const dynContentH = pageDims.contentHeight;
   const dynContentW = pageDims.contentWidth;
   const dynMarginL = pageDims.marginLeft;
@@ -1491,12 +1514,15 @@ export default function ChapterEditor() {
                   className="relative rounded-sm overflow-hidden"
                   style={{
                     width: "100%",
+                    height: dynPageH,
                     backgroundColor: pageCardBg,
                     backgroundImage: isFocusMode ? undefined : (bgPatternCSS as any).backgroundImage,
                     backgroundSize: isFocusMode ? undefined : (bgPatternCSS as any).backgroundSize,
                     backgroundAttachment: "local",
                     boxShadow: pageBoxShadow,
                     transition: "box-shadow 0.2s ease",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                 >
                   {/* Page header */}
@@ -1560,7 +1586,7 @@ export default function ChapterEditor() {
                     placeholder={index === 0
                       ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
                       : (ar ? "تابع قصتك..." : "Continue your story...")}
-                    minHeight={dynContentH}
+                    fixedHeight={dynContentH}
                     zoom={100}
                   />
 
@@ -2293,8 +2319,8 @@ export default function ChapterEditor() {
                         onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
                         className="py-2 px-1 rounded-xl text-xs font-medium transition-all"
                         style={{
-                          background: (prefs.paperSize || "a4") === id ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                          color: (prefs.paperSize || "a4") === id ? "#fff" : undefined,
+                          background: (prefs.paperSize || "trade") === id ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                          color: (prefs.paperSize || "trade") === id ? "#fff" : undefined,
                           border: "none", cursor: "pointer",
                         }}
                       >

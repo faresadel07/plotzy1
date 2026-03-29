@@ -55,6 +55,7 @@ interface RichChapterEditorProps {
   direction?: "ltr" | "rtl";
   placeholder?: string;
   minHeight?: number;
+  fixedHeight?: number;
   zoom?: number;
 }
 
@@ -92,6 +93,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   direction = "ltr",
   placeholder,
   minHeight = 800,
+  fixedHeight,
   zoom = 100,
 }, ref) => {
   const resolvedFont = FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif";
@@ -173,10 +175,14 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           background: ${bgColor || "transparent"};
           text-align: ${textAlign};
           direction: ${direction};
-          min-height: ${minHeight}px;
+          ${fixedHeight
+            ? `height: ${fixedHeight}px; overflow-y: auto;`
+            : `min-height: ${minHeight}px;`
+          }
           padding: 48px 72px;
           outline: none;
           caret-color: currentColor;
+          box-sizing: border-box;
         }
         .tiptap-editor p {
           margin: 0 0 0.6em;
