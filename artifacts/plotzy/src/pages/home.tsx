@@ -5,6 +5,7 @@ import { AuthModal } from "@/components/auth-modal";
 import { FeatureVideo } from "@/components/FeatureVideo";
 import { WritingAnimation } from "@/components/WritingAnimation";
 import { AIAssistantAnimation } from "@/components/AIAssistantAnimation";
+import { MarketplaceMockup } from "@/components/MarketplaceMockup";
 import { CardStack } from "@/components/ui/card-stack";
 import { BookCarousel } from "@/components/BookCarousel";
 import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
@@ -313,12 +314,6 @@ function BookPages() {
   );
 }
 
-const MARKETPLACE_SERVICES = [
-  { label: "AI Developmental Editor", tag: "Most Used", dot: "#aaa" },
-  { label: "AI Copy Editor", tag: "Grammar & Style", dot: "#bbb" },
-  { label: "AI Cover Generator", tag: "Design", dot: "#ccc" },
-  { label: "AI Book Blurb Writer", tag: "Marketing", dot: "#999" },
-];
 
 const VOICES = [
   { id: "nova", label: "Nova", color: "#a78bfa" },
@@ -500,82 +495,6 @@ function AudiobookMockup() {
   );
 }
 
-function MarketplaceMockup() {
-  const [activeRow, setActiveRow] = useState(0);
-  const [analyzing, setAnalyzing] = useState(false);
-
-  useEffect(() => {
-    const cycle = () => {
-      setAnalyzing(true);
-      setTimeout(() => {
-        setAnalyzing(false);
-        setActiveRow(prev => (prev + 1) % MARKETPLACE_SERVICES.length);
-      }, 900);
-    };
-    const id = setInterval(cycle, 2200);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <div className="relative rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 shadow-2xl p-6">
-      {/* Top bar */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-white/10" />
-          <div className="w-3 h-3 rounded-full bg-white/10" />
-          <div className="w-3 h-3 rounded-full bg-white/10" />
-        </div>
-        <div className="flex-1 bg-white/5 rounded-md px-3 py-1 text-[10px] text-white/30 font-mono">plotzy.app/marketplace</div>
-      </div>
-
-      {/* Services list */}
-      {MARKETPLACE_SERVICES.map((svc, i) => {
-        const isActive = i === activeRow;
-        return (
-          <div
-            key={svc.label}
-            className="flex items-center justify-between gap-3 mb-3 p-3 rounded-xl border transition-all duration-500"
-            style={{
-              background: isActive ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.03)",
-              borderColor: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)",
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-2 h-2 rounded-full flex-shrink-0 transition-all duration-300"
-                style={{
-                  background: isActive ? "#fff" : svc.dot,
-                  boxShadow: isActive ? "0 0 6px rgba(255,255,255,0.6)" : "none",
-                }}
-              />
-              <span className="text-xs font-medium transition-colors duration-300" style={{ color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.5)" }}>
-                {svc.label}
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 text-white/30">{svc.tag}</span>
-            </div>
-            <div
-              className="text-[10px] px-2.5 py-1 rounded-lg font-bold flex-shrink-0 transition-all duration-300"
-              style={{
-                background: isActive ? (analyzing ? "rgba(255,255,255,0.15)" : "#fff") : "rgba(255,255,255,0.07)",
-                color: isActive ? (analyzing ? "rgba(255,255,255,0.6)" : "#111") : "rgba(255,255,255,0.25)",
-              }}
-            >
-              {isActive && analyzing ? "Running…" : "Analyze"}
-            </div>
-          </div>
-        );
-      })}
-
-      <div className="mt-4 pt-4 border-t border-white/8 flex items-center justify-between">
-        <span className="text-white/30 text-xs">9 services available</span>
-        <div className="flex items-center gap-1.5 text-white/40 text-xs font-semibold">
-          <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse" />
-          Ready to publish
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const [, setLocation] = useLocation();
