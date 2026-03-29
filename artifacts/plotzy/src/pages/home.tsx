@@ -1115,312 +1115,163 @@ export default function Home() {
         <section className="bg-white overflow-hidden border-b border-[#f0f0f0]">
 
           {/* Section intro */}
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-12 pb-6 text-center">
+          <div className="max-w-6xl mx-auto px-6 sm:px-8 pt-16 pb-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#bbb] mb-4">How it works</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-4">
                 The first platform built<br className="hidden sm:block" /> for the full author journey
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
-                From your first idea to a published, distributed book. Plotzy is the only platform that handles every step in one unified workspace, in Arabic and English.
+                From your first idea to a published, distributed book — every step in one unified workspace.
               </p>
             </motion.div>
           </div>
 
-          {/* Divider line */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#e8e8e8] to-transparent" />
+          <div className="max-w-6xl mx-auto px-6 sm:px-8 pb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-10 pb-12">
-
-            {/* Step 1 */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
+              {/* ── Card 1: Write ── */}
               <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">1</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Write</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">1</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Write</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">Write your story, your way</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    A distraction-free editor for serious authors. Outline chapters, structure your plot, and write in Arabic or English with full RTL support.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  Write your story,<br/>your way
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  A distraction-free editor built for serious authors. Outline your chapters,
-                  structure your plot, and pour your ideas onto the page in one focused workspace.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    'Chapter-by-chapter organisation with drag-to-reorder',
-                    'Auto-save, version history and snapshots',
-                    'Full RTL support, write natively in Arabic',
-                    'Ghost text AI suggestions as you type',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <WritingAnimation />
+                </div>
+                <ul className="space-y-2">
+                  {['Chapter-by-chapter with drag-to-reorder', 'Auto-save & version history', 'Ghost text AI as you type'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
+              {/* ── Card 2: Refine ── */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full relative"
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <WritingAnimation />
-                {/* Floating badge */}
-                <motion.div
-                  className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.6, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Auto-saved just now
-                </motion.div>
-                <motion.div
-                  className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 bg-[#111] rounded-xl shadow-lg text-xs font-semibold text-white"
-                  initial={{ opacity: 0, y: -12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.8, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                  Arabic &amp; English
-                </motion.div>
-              </motion.div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24 mb-28">
-              <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">2</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Refine</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">2</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Refine</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">AI that knows your story</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  AI that knows<br/>your story
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  Stuck on a scene? Plotzy's AI reads your entire manuscript and suggests continuations,
-                  rewrites, and ideas that match your unique voice and style.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    'Reads context from all your chapters, not just the current one',
-                    'Matches your tone, vocabulary and narrative style',
-                    'Plot hole detection and pacing analysis',
-                    'Dialogue coaching and character voice consistency',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <AIAssistantAnimation />
+                </div>
+                <ul className="space-y-2">
+                  {['Context from all chapters, not just the current one', 'Plot hole detection & pacing analysis', 'Dialogue coaching & voice consistency'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
+              {/* ── Card 3: Publish ── */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full relative"
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <AIAssistantAnimation />
-                <motion.div
-                  className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.7, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Context-aware AI
-                </motion.div>
-              </motion.div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
-              <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">3</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Publish</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">3</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Publish</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">From manuscript to published book</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    Cover design, formatting, and distribution — Plotzy's professional tools take your story to the finish line.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  From manuscript<br/>to published book
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  When your story is ready, Plotzy's professional publishing tools take it to the
-                  finish line. Cover design, formatting, ISBN registration and distribution.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    'AI-generated professional book covers',
-                    'One-click export to PDF and ebook formats',
-                    'Direct publishing guide to Amazon KDP',
-                    '9 AI editorial services in the marketplace',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <MarketplaceMockup />
+                </div>
+                <ul className="space-y-2">
+                  {['AI-generated professional book covers', 'One-click export to PDF & EPUB', '9 AI editorial services in the marketplace'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
-              {/* Publishing mockup */}
+              {/* ── Card 4: Audiobook ── */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full"
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: 0.22 }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <MarketplaceMockup />
-              </motion.div>
-            </div>
-
-            {/* Step 4 — Audiobook Studio */}
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24 mt-28">
-              <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">4</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Listen</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">4</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Listen</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">Turn your book into an audiobook</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    With one click, Plotzy's AI narrates your entire book. Choose from 10 distinct voices, preview each chapter, and export.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  Turn your book<br/>into an audiobook
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  With one click, Plotzy's AI narrates your entire book in a lifelike voice.
-                  Choose from multiple distinct voices, preview each chapter, and export
-                  a professional-grade audiobook ready for distribution.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    '10 distinct AI voices with unique pitch & tone',
-                    'Chapter-by-chapter narration with live preview',
-                    'Real-time animated waveform while listening',
-                    'Export as professional-grade audio file',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <AudiobookMockup />
+                </div>
+                <ul className="space-y-2">
+                  {['10 distinct AI voices with unique pitch & tone', 'Chapter-by-chapter narration with live preview', 'Real-time waveform & export-ready audio'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
-              <motion.div
-                className="flex-1 max-w-[500px] w-full relative"
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
-              >
-                <AudiobookMockup />
-                <motion.div
-                  className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.7, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                  AI narration · 10 voices
-                </motion.div>
-                <motion.div
-                  className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 bg-[#111] rounded-xl shadow-lg text-xs font-semibold text-white"
-                  initial={{ opacity: 0, y: -12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.9, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" />
-                  Export-ready audio
-                </motion.div>
-              </motion.div>
             </div>
-
           </div>
         </section>
 
