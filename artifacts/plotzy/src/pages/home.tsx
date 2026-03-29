@@ -892,7 +892,7 @@ export default function Home() {
                 The first platform built<br className="hidden sm:block" /> for the full author journey
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
-                From your first idea to a published, distributed book — every step in one unified workspace.
+                From your first idea to a published, distributed book, every step is covered in one unified workspace.
               </p>
             </motion.div>
           </div>
@@ -984,7 +984,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">From manuscript to published book</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
-                    Cover design, formatting, and distribution — Plotzy's professional tools take your story to the finish line.
+                    Cover design, formatting, and distribution: Plotzy's professional tools take your story to the finish line.
                   </p>
                 </div>
                 <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
@@ -1080,7 +1080,7 @@ export default function Home() {
                   id: 2,
                   tag: "AI",
                   title: "An AI that reads as you write, never as you wait",
-                  description: "Stronger verbs, passive-voice flags, alternative phrasings — offered quietly, so your voice stays yours. Think of it as an invisible co-author.",
+                  description: "Stronger verbs, passive-voice flags, alternative phrasings offered quietly, so your voice stays yours. Think of it as an invisible co-author.",
                   accent: "linear-gradient(90deg,#a78bfa 0%,#7c3aed 100%)",
                 },
                 {
@@ -1094,7 +1094,7 @@ export default function Home() {
                   id: 4,
                   tag: "Cover Design",
                   title: "Professional covers generated in seconds",
-                  description: "Describe your story's tone, era, and feeling. Plotzy generates gallery-quality artwork ready for the shelf — no design skills required.",
+                  description: "Describe your story's tone, era, and feeling. Plotzy generates gallery-quality artwork ready for the shelf, no design skills required.",
                   accent: "linear-gradient(90deg,#fb923c 0%,#ea580c 100%)",
                 },
                 {
