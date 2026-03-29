@@ -184,6 +184,7 @@ export function RichWritingToolbar({
           backdropFilter: "blur(12px)",
           opacity: isFocusMode ? 0.08 : 1,
         }}
+        onMouseDown={e => e.preventDefault()}
         onMouseEnter={e => { if (isFocusMode) (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
         onMouseLeave={e => { if (isFocusMode) (e.currentTarget as HTMLDivElement).style.opacity = "0.08"; }}
       >
