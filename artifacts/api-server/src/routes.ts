@@ -2584,6 +2584,109 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // ─── PayPal ─────────────────────────────────────────────────────────────────
+
+  const PAYPAL_BASE = process.env.PAYPAL_SANDBOX === "true"
+    ? "https://api-m.sandbox.paypal.com"
+    : "https://api-m.paypal.com";
+
+  async function getPayPalToken(): Promise<string> {
+    const clientId = process.env.PAYPAL_CLIENT_ID;
+    const secret = process.env.PAYPAL_SECRET;
+    if (!clientId || !secret) throw new Error("PayPal not configured");
+    const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${clientId}:${secret}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "grant_type=client_credentials",
+    });
+    if (!res.ok) throw new Error("PayPal token fetch failed");
+    const data = await res.json() as { access_token: string };
+    return data.access_token;
+  }
+
+  // Return PayPal client ID to the frontend (public)
+  app.get("/api/paypal/config", (_req, res) => {
+    const clientId = process.env.PAYPAL_CLIENT_ID;
+    if (!clientId) return res.status(503).json({ enabled: false });
+    return res.json({ enabled: true, clientId });
+  });
+
+  // Create a PayPal order for a subscription plan
+  app.post("/api/paypal/create-order", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { plan } = req.body as { plan: "monthly" | "yearly" };
+    const amount = plan === "yearly"
+      ? (SUBSCRIPTION_YEARLY_CENTS / 100).toFixed(2)
+      : (SUBSCRIPTION_MONTHLY_CENTS / 100).toFixed(2);
+    const description = plan === "yearly"
+      ? "Plotzy Pro — Yearly Plan"
+      : "Plotzy Pro — Monthly Plan";
+    try {
+      const token = await getPayPalToken();
+      const orderRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intent: "CAPTURE",
+          purchase_units: [{ description, amount: { currency_code: "USD", value: amount } }],
+        }),
+      });
+      if (!orderRes.ok) {
+        const err = await orderRes.text();
+        console.error("PayPal create-order error:", err);
+        return res.status(502).json({ message: "Failed to create PayPal order" });
+      }
+      const order = await orderRes.json() as { id: string };
+      return res.json({ orderId: order.id });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "PayPal error" });
+    }
+  });
+
+  // Capture the approved PayPal order and activate subscription
+  app.post("/api/paypal/capture-order", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { orderId, plan } = req.body as { orderId: string; plan: "monthly" | "yearly" };
+    try {
+      const token = await getPayPalToken();
+      const captureRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!captureRes.ok) {
+        const err = await captureRes.text();
+        console.error("PayPal capture error:", err);
+        return res.status(502).json({ message: "Failed to capture PayPal order" });
+      }
+      const capture = await captureRes.json() as { status: string };
+      if (capture.status !== "COMPLETED") {
+        return res.status(400).json({ message: "Payment not completed" });
+      }
+      // Activate subscription in DB
+      const userId = (req.user as any).id;
+      const endDate = new Date();
+      if (plan === "yearly") {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      } else {
+        endDate.setMonth(endDate.getMonth() + 1);
+      }
+      await storage.updateUser(userId, {
+        subscriptionStatus: "active",
+        subscriptionPlan: plan,
+        subscriptionEndDate: endDate,
+        paymentMethod: "paypal",
+      });
+      return res.json({ success: true });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "PayPal capture error" });
+    }
+  });
+
   return httpServer;
 }
 

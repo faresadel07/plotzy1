@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { createCheckoutSession } from "@/hooks/use-subscription";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
+import { PayPalCheckout } from "@/components/paypal-button";
 
 const MONTHLY_PRICE = 12.99;
 const YEARLY_PRICE = 9.99;
@@ -37,7 +38,7 @@ const FEATURES_PAID = [
 
 const FAQ = [
   ["Can I cancel anytime?", "Yes — cancel from your account settings or billing portal at any time. You keep access until the end of your billing period."],
-  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and Google Pay are all supported via Stripe's secure checkout."],
+  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and Google Pay via Stripe — and PayPal is also accepted."],
   ["What happens to my work if I cancel?", "Your books and chapters are always yours. After cancellation you move back to the free plan, but your content is never deleted."],
   ["Is there a student or team discount?", "Reach out to us — we're happy to discuss educational and team pricing."],
 ];
@@ -233,11 +234,32 @@ export default function Pricing() {
                 ) : (
                   <Zap className="w-4 h-4" fill="currentColor" />
                 )}
-                {loading === billingCycle ? "Redirecting…" : "Get started"}
+                {loading === billingCycle ? "Redirecting…" : "Pay with card"}
               </button>
 
+              {/* PayPal button — shown only when PayPal is configured */}
+              <div className="mt-3">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+                  <span className="text-xs text-zinc-600">or</span>
+                  <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+                </div>
+                {user ? (
+                  <PayPalCheckout plan={billingCycle} onSuccess={() => navigate("/")} />
+                ) : (
+                  <button
+                    onClick={() => navigate("/?auth=required")}
+                    className="w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90"
+                    style={{ background: "#FFC439", color: "#003087" }}
+                  >
+                    <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" className="h-4 object-contain" />
+                    Pay with PayPal
+                  </button>
+                )}
+              </div>
+
               <p className="text-center text-zinc-600 text-xs mt-3">
-                Cancel anytime · Secure checkout via Stripe
+                Cancel anytime · Secure checkout
               </p>
             </motion.div>
           </div>
