@@ -63,7 +63,7 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
           left: -CARD_W / 2, top: -CARD_H / 2,
           zIndex: 10 + index,
           transform: isVisible
-            ? `translateY(calc(-${CARD_H}px + ${txY}px)) translateX(${txX}px) rotate(${rotation}deg) scale(1)`
+            ? `translateY(calc(-${Math.round(CARD_H * 0.62)}px + ${txY}px)) translateX(${txX}px) rotate(${rotation}deg) scale(1)`
             : "translateY(0) translateX(0) rotate(0deg) scale(0.35)",
           opacity: isSelected ? 0 : isVisible ? 1 : 0,
           transition: `all 700ms cubic-bezier(0.16, 1, 0.3, 1) ${index * 65}ms`,
