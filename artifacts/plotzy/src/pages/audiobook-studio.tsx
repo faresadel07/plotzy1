@@ -80,7 +80,7 @@ function WaveformBars({ playing }: { playing: boolean }) {
           style={{
             width: 3,
             borderRadius: 2,
-            background: "#111",
+            background: "#e0e0e0",
             height: playing ? `${h * 100}%` : "30%",
             animation: playing ? `waveBar 0.8s ease-in-out ${i * 0.08}s infinite alternate` : "none",
             transition: "height 0.3s ease",
@@ -192,21 +192,21 @@ function MiniPlayer({
   const dataUrl = `data:${mimeType};base64,${src}`;
 
   return (
-    <div className="flex items-center gap-3 mt-2 p-3 rounded-xl" style={{ background: "#f5f5f5", border: "1px solid #e5e5e5" }}>
+    <div className="flex items-center gap-3 mt-2 p-3 rounded-xl" style={{ background: "#1a1a1a", border: "1px solid #252525" }}>
       {!isMock && <audio ref={audioRef} src={dataUrl} preload="auto" muted={muted} />}
       <button
         onClick={toggle}
         className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
-        style={{ background: "#111", border: "none", cursor: "pointer", flexShrink: 0 }}
+        style={{ background: "#fff", border: "none", cursor: "pointer", flexShrink: 0 }}
       >
-        {playing ? <Pause className="w-3.5 h-3.5 text-white" /> : <Play className="w-3.5 h-3.5 text-white" style={{ marginLeft: 1 }} />}
+        {playing ? <Pause className="w-3.5 h-3.5 text-black" /> : <Play className="w-3.5 h-3.5 text-black" style={{ marginLeft: 1 }} />}
       </button>
 
       <WaveformBars playing={playing} />
 
       <div className="flex-1 min-w-0">
-        <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: "#e0e0e0" }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "#111" }} />
+        <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: "#2a2a2a" }}>
+          <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "#fff" }} />
         </div>
         {isMock && (
           <p className="text-[10px] mt-1 text-gray-400">Browser preview · Add OpenAI key for AI voices</p>
@@ -217,7 +217,7 @@ function MiniPlayer({
         <button
           onClick={() => { setMuted(m => !m); if (audioRef.current) audioRef.current.muted = !muted; }}
           className="w-7 h-7 rounded-lg flex items-center justify-center transition-opacity hover:opacity-50"
-          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#555", flexShrink: 0 }}
+          style={{ background: "transparent", border: "none", cursor: "pointer", color: "#888", flexShrink: 0 }}
         >
           {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
         </button>
@@ -409,10 +409,10 @@ export default function AudiobookStudio() {
         .anim-fade-up-2 { animation: fadeUp 0.5s 0.10s ease both; }
         .anim-fade-up-3 { animation: fadeUp 0.5s 0.15s ease both; }
         .anim-fade-up-4 { animation: fadeUp 0.5s 0.20s ease both; }
-        .chapter-row:hover { background: #f7f7f7 !important; }
+        .chapter-row:hover { background: #222 !important; }
       `}</style>
 
-      <div className="min-h-screen" style={{ background: "#ffffff", color: "#111111" }}>
+      <div className="min-h-screen" style={{ background: "#0a0a0a", color: "#f5f5f5" }}>
 
         {/* ── Floating dots background ── */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
@@ -422,7 +422,7 @@ export default function AudiobookStudio() {
               width: 6 + (i % 4) * 4,
               height: 6 + (i % 4) * 4,
               borderRadius: "50%",
-              background: "#111",
+              background: "rgba(255,255,255,0.12)",
               left: `${(i * 7.3) % 100}%`,
               top: `${(i * 13.1) % 100}%`,
               animation: `floatDot ${3 + (i % 3)}s ${i * 0.4}s ease-in-out infinite`,
@@ -431,20 +431,20 @@ export default function AudiobookStudio() {
         </div>
 
         {/* ── Header ── */}
-        <div className="sticky top-0 z-30 backdrop-blur-xl" style={{ borderBottom: "1px solid #e5e5e5", background: "rgba(255,255,255,0.92)" }}>
+        <div className="sticky top-0 z-30 backdrop-blur-xl" style={{ borderBottom: "1px solid #252525", background: "rgba(10,10,10,0.92)" }}>
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
             <Link href={`/books/${bookId}`}>
-              <button className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-50 font-medium" style={{ background: "none", border: "none", cursor: "pointer", color: "#555" }}>
+              <button className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-50 font-medium" style={{ background: "none", border: "none", cursor: "pointer", color: "#888" }}>
                 <ArrowLeft className="w-4 h-4" />
                 {ar ? "العودة للكتاب" : "Back to Book"}
               </button>
             </Link>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#111" }}>
-                <Headphones className="w-3.5 h-3.5 text-white" />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#fff" }}>
+                <Headphones className="w-3.5 h-3.5 text-black" />
               </div>
-              <span className="font-bold text-sm" style={{ color: "#111" }}>{ar ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}</span>
+              <span className="font-bold text-sm" style={{ color: "#fff" }}>{ar ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}</span>
             </div>
             <div className="flex-1" />
           </div>
@@ -455,12 +455,12 @@ export default function AudiobookStudio() {
           {/* ── Hero ── */}
           <div className="text-center mb-12 anim-fade-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 text-[11px] font-bold tracking-widest uppercase"
-              style={{ background: "#f0f0f0", border: "1px solid #e0e0e0", color: "#555" }}>
+              style={{ background: "#222222", border: "1px solid #222", color: "#888" }}>
               <Sparkles className="w-3 h-3" />
               {ar ? "مدعوم بالذكاء الاصطناعي" : "AI-Powered"}
             </div>
             <h1 className="text-4xl sm:text-5xl font-black mb-3 leading-tight" style={{
-              background: "linear-gradient(90deg, #111 0%, #555 40%, #111 60%, #000 100%)",
+              background: "linear-gradient(90deg, #fff 0%, #aaa 35%, #fff 60%, #ccc 100%)",
               backgroundSize: "200% auto",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -469,26 +469,26 @@ export default function AudiobookStudio() {
             }}>
               {ar ? `${book?.title || "..."} — استوديو` : `${book?.title || "Your Book"} — Audiobook`}
             </h1>
-            <p className="text-sm max-w-xl mx-auto" style={{ color: "#888" }}>
+            <p className="text-sm max-w-xl mx-auto" style={{ color: "#666" }}>
               {ar
                 ? "حوّل مخطوطتك إلى كتاب صوتي احترافي باستخدام أصوات ذكاء اصطناعي عالية الجودة"
                 : "Transform your manuscript into a professional audiobook with high-quality AI voices"}
             </p>
 
             {/* Stats */}
-            <div className="inline-flex items-center gap-6 mt-6 px-6 py-3 rounded-2xl" style={{ background: "#f5f5f5", border: "1px solid #e5e5e5" }}>
+            <div className="inline-flex items-center gap-6 mt-6 px-6 py-3 rounded-2xl" style={{ background: "#1a1a1a", border: "1px solid #252525" }}>
               <div className="text-center">
-                <p className="text-2xl font-black" style={{ color: "#111" }}>{chapters.length}</p>
+                <p className="text-2xl font-black" style={{ color: "#fff" }}>{chapters.length}</p>
                 <p className="text-[11px] text-gray-400">{ar ? "فصل" : "Chapters"}</p>
               </div>
-              <div className="w-px h-8" style={{ background: "#e0e0e0" }} />
+              <div className="w-px h-8" style={{ background: "#2a2a2a" }} />
               <div className="text-center">
-                <p className="text-2xl font-black" style={{ color: "#111" }}>{totalWords.toLocaleString()}</p>
+                <p className="text-2xl font-black" style={{ color: "#fff" }}>{totalWords.toLocaleString()}</p>
                 <p className="text-[11px] text-gray-400">{ar ? "كلمة" : "Words"}</p>
               </div>
-              <div className="w-px h-8" style={{ background: "#e0e0e0" }} />
+              <div className="w-px h-8" style={{ background: "#2a2a2a" }} />
               <div className="text-center">
-                <p className="text-2xl font-black" style={{ color: "#111" }}>{fmtMin(estMinutes)}</p>
+                <p className="text-2xl font-black" style={{ color: "#fff" }}>{fmtMin(estMinutes)}</p>
                 <p className="text-[11px] text-gray-400">{ar ? "مدة تقديرية" : "Est. Duration"}</p>
               </div>
             </div>
@@ -500,22 +500,22 @@ export default function AudiobookStudio() {
             <div className="lg:col-span-2 space-y-4">
 
               {/* Voice Selection */}
-              <div className="rounded-2xl p-5 anim-fade-up-1" style={{ background: "#fafafa", border: "1px solid #e5e5e5" }}>
+              <div className="rounded-2xl p-5 anim-fade-up-1" style={{ background: "#111111", border: "1px solid #252525" }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Mic2 className="w-4 h-4" style={{ color: "#111" }} />
+                  <Mic2 className="w-4 h-4" style={{ color: "#fff" }} />
                   <h3 className="text-sm font-bold">{ar ? "اختر الصوت" : "Choose Voice"}</h3>
                 </div>
 
                 {/* Gender filter tabs */}
-                <div className="flex gap-1 mb-3 p-1 rounded-xl" style={{ background: "#efefef" }}>
+                <div className="flex gap-1 mb-3 p-1 rounded-xl" style={{ background: "#1c1c1c" }}>
                   {(["all", "female", "male", "neutral"] as const).map(tab => {
                     const labels: Record<string, string> = { all: ar ? "الكل" : "All", female: ar ? "أنثى" : "Female", male: ar ? "ذكر" : "Male", neutral: ar ? "محايد" : "Neutral" };
                     return (
                       <button key={tab} onClick={() => setVoiceTab(tab)}
                         className="flex-1 py-1 rounded-lg text-xs font-semibold transition-all"
                         style={{
-                          background: voiceTab === tab ? "#111" : "transparent",
-                          color: voiceTab === tab ? "#fff" : "#888",
+                          background: voiceTab === tab ? "#fff" : "transparent",
+                          color: voiceTab === tab ? "#111" : "#666",
                           border: "none", cursor: "pointer",
                         }}>
                         {labels[tab]}
@@ -532,17 +532,17 @@ export default function AudiobookStudio() {
                       <button key={v.id} onClick={() => handleVoiceChange(v.id)}
                         className="p-3 rounded-xl text-left transition-all hover:scale-[1.02]"
                         style={{
-                          background: isSelected ? "#111" : "#fff",
-                          border: isSelected ? "1.5px solid #111" : "1.5px solid #e5e5e5",
+                          background: isSelected ? "#fff" : "#1a1a1a",
+                          border: isSelected ? "1.5px solid #fff" : "1.5px solid #252525",
                           cursor: "pointer",
-                          boxShadow: isSelected ? "0 4px 16px rgba(0,0,0,0.15)" : "none",
+                          boxShadow: isSelected ? "0 4px 20px rgba(255,255,255,0.15)" : "none",
                         }}>
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-sm">{v.emoji}</span>
-                          <span className="text-xs font-bold" style={{ color: isSelected ? "#fff" : "#111" }}>{ar ? v.nameAr : v.name}</span>
-                          {isSelected && <CheckCircle2 className="w-3 h-3 ml-auto text-white" style={{ flexShrink: 0 }} />}
+                          <span className="text-xs font-bold" style={{ color: isSelected ? "#111" : "#ccc" }}>{ar ? v.nameAr : v.name}</span>
+                          {isSelected && <CheckCircle2 className="w-3 h-3 ml-auto text-black" style={{ flexShrink: 0 }} />}
                         </div>
-                        <p className="text-[10px] leading-tight" style={{ color: isSelected ? "rgba(255,255,255,0.55)" : "#aaa" }}>
+                        <p className="text-[10px] leading-tight" style={{ color: isSelected ? "rgba(0,0,0,0.5)" : "#555" }}>
                           {ar ? v.accentAr : v.accent} · {ar ? v.toneAr : v.tone}
                         </p>
                       </button>
@@ -551,17 +551,17 @@ export default function AudiobookStudio() {
                 </div>
 
                 {/* Selected voice badge */}
-                <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "#f0f0f0", border: "1px solid #e0e0e0" }}>
+                <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "#1a1a1a", border: "1px solid #2a2a2a" }}>
                   <Radio className="w-3 h-3 text-gray-500" />
-                  <span className="text-xs font-semibold text-gray-700">{ar ? voice.nameAr : voice.name}</span>
-                  <span className="text-[10px] text-gray-400 ml-auto">{ar ? voice.toneAr : voice.tone}</span>
+                  <span className="text-xs font-semibold text-gray-200">{ar ? voice.nameAr : voice.name}</span>
+                  <span className="text-[10px] text-gray-500 ml-auto">{ar ? voice.toneAr : voice.tone}</span>
                 </div>
               </div>
 
               {/* Quality & Speed */}
-              <div className="rounded-2xl p-5 anim-fade-up-2" style={{ background: "#fafafa", border: "1px solid #e5e5e5" }}>
+              <div className="rounded-2xl p-5 anim-fade-up-2" style={{ background: "#111111", border: "1px solid #252525" }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Gauge className="w-4 h-4 text-gray-700" />
+                  <Gauge className="w-4 h-4 text-gray-300" />
                   <h3 className="text-sm font-bold">{ar ? "الجودة والسرعة" : "Quality & Speed"}</h3>
                 </div>
 
@@ -572,9 +572,9 @@ export default function AudiobookStudio() {
                       <button key={q} onClick={() => setQuality(q)}
                         className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
                         style={{
-                          background: quality === q ? "#111" : "#fff",
-                          color: quality === q ? "#fff" : "#888",
-                          border: quality === q ? "1px solid #111" : "1px solid #e5e5e5",
+                          background: quality === q ? "#fff" : "#1a1a1a",
+                          color: quality === q ? "#111" : "#666",
+                          border: quality === q ? "1px solid #fff" : "1px solid #252525",
                           cursor: "pointer",
                         }}>
                         {q === "tts-1" ? (ar ? "⚡ قياسي" : "⚡ Standard") : (ar ? "💎 HD" : "💎 HD")}
@@ -602,9 +602,9 @@ export default function AudiobookStudio() {
               </div>
 
               {/* Export button */}
-              <div className="rounded-2xl p-5 anim-fade-up-3" style={{ background: "#fafafa", border: "1px solid #e5e5e5" }}>
+              <div className="rounded-2xl p-5 anim-fade-up-3" style={{ background: "#111111", border: "1px solid #252525" }}>
                 <div className="flex items-center gap-2 mb-3">
-                  <Music2 className="w-4 h-4 text-gray-700" />
+                  <Music2 className="w-4 h-4 text-gray-300" />
                   <h3 className="text-sm font-bold">{ar ? "التصدير النهائي" : "Final Export"}</h3>
                 </div>
 
@@ -622,8 +622,8 @@ export default function AudiobookStudio() {
                       <span>{ar ? "جاري المعالجة..." : "Processing..."}</span>
                       <span>{exportProgress.done}/{exportProgress.total}</span>
                     </div>
-                    <div className="w-full rounded-full overflow-hidden" style={{ height: 5, background: "#e5e5e5" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${exportProgress.total > 0 ? (exportProgress.done / exportProgress.total) * 100 : 10}%`, background: "#111", animation: "pulse 1.5s ease-in-out infinite" }} />
+                    <div className="w-full rounded-full overflow-hidden" style={{ height: 5, background: "#222" }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${exportProgress.total > 0 ? (exportProgress.done / exportProgress.total) * 100 : 10}%`, background: "#fff", animation: "pulse 1.5s ease-in-out infinite" }} />
                     </div>
                   </div>
                 )}
@@ -633,10 +633,10 @@ export default function AudiobookStudio() {
                   disabled={isExporting || activeChapters.length === 0}
                   className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:opacity-85"
                   style={{
-                    background: isExporting ? "#e5e5e5" : "#111",
-                    color: isExporting ? "#999" : "#fff",
+                    background: isExporting ? "#333" : "#fff",
+                    color: isExporting ? "#777" : "#111",
                     border: "none", cursor: isExporting ? "not-allowed" : "pointer",
-                    boxShadow: isExporting ? "none" : "0 4px 20px rgba(0,0,0,0.2)",
+                    boxShadow: isExporting ? "none" : "0 4px 24px rgba(255,255,255,0.15)",
                   }}
                 >
                   {isExporting
@@ -651,19 +651,19 @@ export default function AudiobookStudio() {
 
             {/* ── Right: Chapter List ── */}
             <div className="lg:col-span-3 anim-fade-up-4">
-              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e5e5e5" }}>
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #252525" }}>
                 {/* Header */}
-                <div className="flex items-center gap-3 px-5 py-3.5" style={{ background: "#fafafa", borderBottom: "1px solid #e5e5e5" }}>
+                <div className="flex items-center gap-3 px-5 py-3.5" style={{ background: "#111111", borderBottom: "1px solid #252525" }}>
                   <Layers className="w-4 h-4 text-gray-500" />
-                  <h3 className="text-sm font-bold text-gray-800">{ar ? "الفصول" : "Chapters"}</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: "#f0f0f0", color: "#555" }}>{chapters.length}</span>
+                  <h3 className="text-sm font-bold text-gray-100">{ar ? "الفصول" : "Chapters"}</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: "#222222", color: "#888" }}>{chapters.length}</span>
                   <div className="flex-1" />
                   <button
                     onClick={handleSelectAll}
                     className="text-xs px-3 py-1.5 rounded-lg transition-all font-semibold"
                     style={{
-                      background: selectAll ? "#111" : "#f0f0f0",
-                      color: selectAll ? "#fff" : "#555",
+                      background: selectAll ? "#fff" : "#222",
+                      color: selectAll ? "#111" : "#777",
                       border: "none", cursor: "pointer",
                     }}
                   >
@@ -690,10 +690,10 @@ export default function AudiobookStudio() {
                       const stale = preview && preview.voice !== selectedVoice;
 
                       return (
-                        <div key={chapter.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                        <div key={chapter.id} style={{ borderBottom: "1px solid #1e1e1e" }}>
                           <div
                             className="chapter-row flex items-center gap-3 px-5 py-3.5 transition-colors"
-                            style={{ background: isSelected ? "#fafafa" : "#fff" }}
+                            style={{ background: isSelected ? "#181818" : "#111111" }}
                           >
                             {/* Checkbox */}
                             <button
@@ -702,19 +702,19 @@ export default function AudiobookStudio() {
                               style={{ background: "none", border: "none", cursor: "pointer" }}
                             >
                               {isSelected
-                                ? <CheckCircle2 className="w-5 h-5" style={{ color: "#111" }} />
+                                ? <CheckCircle2 className="w-5 h-5" style={{ color: "#fff" }} />
                                 : <Circle className="w-5 h-5 text-gray-300" />}
                             </button>
 
                             {/* Index */}
                             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                              style={{ background: isSelected ? "#111" : "#f0f0f0", color: isSelected ? "#fff" : "#888" }}>
+                              style={{ background: isSelected ? "#fff" : "#2a2a2a", color: isSelected ? "#111" : "#666" }}>
                               {idx + 1}
                             </div>
 
                             {/* Title + meta */}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate" style={{ color: isSelected ? "#111" : "#aaa" }}>
+                              <p className="text-sm font-semibold truncate" style={{ color: isSelected ? "#f5f5f5" : "#555" }}>
                                 {chapter.title || `Chapter ${idx + 1}`}
                               </p>
                               <p className="text-[11px] mt-0.5 text-gray-400">
@@ -728,9 +728,9 @@ export default function AudiobookStudio() {
                               disabled={isLoadingPreview}
                               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0"
                               style={{
-                                background: stale ? "#fff8e5" : preview ? "#f0f0f0" : "#f5f5f5",
-                                color: stale ? "#c97c00" : preview ? "#111" : "#888",
-                                border: stale ? "1px solid #f0c040" : preview ? "1px solid #ddd" : "1px solid #e5e5e5",
+                                background: stale ? "#2a2000" : preview ? "#1a1a1a" : "#1a1a1a",
+                                color: stale ? "#e6b800" : preview ? "#ddd" : "#666",
+                                border: stale ? "1px solid #7a5c00" : preview ? "1px solid #333" : "1px solid #2a2a2a",
                                 cursor: isLoadingPreview ? "not-allowed" : "pointer",
                               }}
                               title={stale ? (ar ? "الصوت تغير، أعد المعاينة" : "Voice changed — regenerate preview") : undefined}
@@ -746,12 +746,12 @@ export default function AudiobookStudio() {
                             <button
                               onClick={() => handleDownloadChapter(chapter.id, chapter.title || `Chapter ${idx + 1}`)}
                               disabled={isDownloading}
-                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all hover:bg-gray-100"
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all hover:bg-gray-800"
                               style={{
                                 background: "transparent",
-                                border: "1px solid #e5e5e5",
+                                border: "1px solid #252525",
                                 cursor: isDownloading ? "not-allowed" : "pointer",
-                                color: "#555",
+                                color: "#888",
                               }}
                               title={ar ? `تحميل "${chapter.title || `الفصل ${idx + 1}`}"` : `Download "${chapter.title || `Chapter ${idx + 1}`}"`}
                             >
@@ -768,8 +768,8 @@ export default function AudiobookStudio() {
                                   if (next.has(chapter.id)) next.delete(chapter.id); else next.add(chapter.id);
                                   return next;
                                 })}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all hover:bg-gray-100"
-                                style={{ background: "transparent", border: "1px solid #e5e5e5", cursor: "pointer", color: "#888" }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all hover:bg-gray-800"
+                                style={{ background: "transparent", border: "1px solid #252525", cursor: "pointer", color: "#666" }}
                               >
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                               </button>
@@ -803,7 +803,7 @@ export default function AudiobookStudio() {
                   { icon: "⬇️", title: ar ? "تحميل فصل بفصل" : "Chapter Downloads", desc: ar ? "شارك فصلاً واحداً مستقلاً" : "Share any single chapter" },
                   { icon: "💾", title: ar ? "تصدير MP3" : "MP3 Export",             desc: ar ? "جودة عالية مع بيانات وصفية" : "High quality with metadata" },
                 ].map(tip => (
-                  <div key={tip.title} className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: "#fafafa", border: "1px solid #e5e5e5" }}>
+                  <div key={tip.title} className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: "#111111", border: "1px solid #252525" }}>
                     <span className="text-xl">{tip.icon}</span>
                     <p className="text-xs font-bold mt-2 text-gray-800">{tip.title}</p>
                     <p className="text-[11px] mt-0.5 text-gray-400">{tip.desc}</p>
