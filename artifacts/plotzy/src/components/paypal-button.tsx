@@ -1,24 +1,27 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
+import { useLocation } from "wouter";
 
 interface PayPalCheckoutProps {
   plan: "monthly" | "yearly";
   onSuccess?: () => void;
 }
 
-function PayPalButtonInner({ plan, onSuccess }: PayPalCheckoutProps) {
+function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
   const { toast } = useToast();
-  const { refetch } = useAuth();
+  const { refetch, user } = useAuth();
+  const [, navigate] = useLocation();
 
   const createOrder = async () => {
+    if (!user) { navigate("/?auth=required"); throw new Error("Not authenticated"); }
     const res = await fetch("/api/paypal/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan }),
     });
-    if (!res.ok) throw new Error("Failed to create PayPal order");
+    if (!res.ok) throw new Error("Failed to create order");
     const data = await res.json();
     return data.orderId as string;
   };
@@ -31,25 +34,42 @@ function PayPalButtonInner({ plan, onSuccess }: PayPalCheckoutProps) {
         body: JSON.stringify({ orderId: data.orderID, plan }),
       });
       if (!res.ok) throw new Error("Capture failed");
-      toast({ title: "Payment successful!", description: "Your Plotzy Pro subscription is now active." });
+      toast({ title: "🎉 Welcome to Plotzy Pro!", description: "Your subscription is now active." });
       refetch();
       onSuccess?.();
     } catch {
-      toast({ title: "Payment error", description: "Something went wrong capturing the payment.", variant: "destructive" });
+      toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
     }
   };
 
   const onError = () => {
-    toast({ title: "PayPal error", description: "Payment was cancelled or failed.", variant: "destructive" });
+    toast({ title: "Payment cancelled", description: "You can try again anytime.", variant: "destructive" });
   };
 
   return (
-    <PayPalButtons
-      style={{ layout: "horizontal", color: "gold", shape: "rect", label: "pay", height: 44 }}
-      createOrder={createOrder}
-      onApprove={onApprove}
-      onError={onError}
-    />
+    <div className="space-y-2">
+      <PayPalButtons
+        fundingSource="applepay"
+        style={{ layout: "horizontal", height: 48, shape: "rect" }}
+        createOrder={createOrder}
+        onApprove={onApprove}
+        onError={onError}
+      />
+      <PayPalButtons
+        fundingSource="card"
+        style={{ layout: "horizontal", height: 48, shape: "rect" }}
+        createOrder={createOrder}
+        onApprove={onApprove}
+        onError={onError}
+      />
+      <PayPalButtons
+        fundingSource="paypal"
+        style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
+        createOrder={createOrder}
+        onApprove={onApprove}
+        onError={onError}
+      />
+    </div>
   );
 }
 
@@ -67,11 +87,25 @@ export function PayPalCheckout({ plan, onSuccess }: PayPalCheckoutProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading || !clientId) return null;
+  if (loading) {
+    return (
+      <div className="flex justify-center py-4">
+        <div className="w-5 h-5 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!clientId) return null;
 
   return (
-    <PayPalScriptProvider options={{ clientId, currency: "USD", intent: "capture" }}>
-      <PayPalButtonInner plan={plan} onSuccess={onSuccess} />
+    <PayPalScriptProvider options={{
+      clientId,
+      currency: "USD",
+      intent: "capture",
+      components: "buttons",
+      enableFunding: "card,applepay,googlepay",
+    }}>
+      <PayPalButtonsInner plan={plan} onSuccess={onSuccess} />
     </PayPalScriptProvider>
   );
 }

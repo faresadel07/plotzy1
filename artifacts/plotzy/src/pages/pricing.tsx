@@ -4,7 +4,7 @@ import { Check, Star } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
-import { CheckoutModal } from "@/components/checkout-modal";
+import { PayPalCheckout } from "@/components/paypal-button";
 
 const MONTHLY_PRICE = 12.99;
 const YEARLY_PRICE = 9.99;
@@ -44,17 +44,8 @@ const FAQ = [
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
-  const [showCheckout, setShowCheckout] = useState(false);
   const { user } = useAuth();
   const [, navigate] = useLocation();
-
-  function handleGetStarted() {
-    if (!user) {
-      navigate("/?auth=required");
-      return;
-    }
-    setShowCheckout(true);
-  }
 
   return (
     <Layout isLanding>
@@ -198,30 +189,18 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {/* Payment method icons */}
-              <div className="flex items-center gap-2 mb-4 justify-center">
-                {/* Apple Pay */}
-                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
-                   Apple Pay
-                </div>
-                {/* Card */}
-                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
-                  💳 Card
-                </div>
-                {/* PayPal */}
-                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
-                  PayPal
-                </div>
-              </div>
-
-              {/* CTA button */}
-              <button
-                onClick={handleGetStarted}
-                className="w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90 text-sm"
-                style={{ background: "#EFEFEF", color: "#111111" }}
-              >
-                Get started
-              </button>
+              {/* Direct payment buttons */}
+              {user ? (
+                <PayPalCheckout plan={billingCycle} onSuccess={() => navigate("/")} />
+              ) : (
+                <button
+                  onClick={() => navigate("/?auth=required")}
+                  className="w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90 text-sm"
+                  style={{ background: "#EFEFEF", color: "#111111" }}
+                >
+                  Get started
+                </button>
+              )}
 
               <p className="text-center text-zinc-600 text-xs mt-3">
                 Cancel anytime · Secure checkout
@@ -256,10 +235,6 @@ export default function Pricing() {
         </div>
       </div>
 
-      {/* Checkout modal */}
-      {showCheckout && (
-        <CheckoutModal plan={billingCycle} onClose={() => setShowCheckout(false)} />
-      )}
     </Layout>
   );
 }
