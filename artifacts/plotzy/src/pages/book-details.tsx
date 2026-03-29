@@ -364,7 +364,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto px-6 pt-6 pb-10" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
           {/* Cover Card */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
 
             {/* Cover with hover */}
             <div className="relative group cursor-pointer">
@@ -465,22 +465,22 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           <Link href={`/books/${bookId}/audiobook`} className="block" data-testid="button-audiobook-studio">
             <div
               className="group rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
-              style={{ border: '1px solid rgba(139,92,246,0.25)', background: 'rgba(139,92,246,0.06)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.1)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(139,92,246,0.06)')}
+              style={{ border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.04)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
             >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(139,92,246,0.2)' }}>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
                 <span className="text-base">🎙️</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
                   {lang === "ar" ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}
                 </p>
-                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(139,92,246,0.7)' }}>
+                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(255,255,255,0.38)' }}>
                   {lang === "ar" ? "تحويل الكتاب إلى ملف صوتي بالذكاء الاصطناعي" : "Export your book as an AI-voiced MP3"}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(139,92,246,0.4)' }} />
+              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(255,255,255,0.25)' }} />
             </div>
           </Link>
 
