@@ -559,7 +559,7 @@ export default function Home() {
             >
               Everything you need — in one place
             </motion.p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 0 }}>
               {[
                 {
                   title: "Write & Refine",

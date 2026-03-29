@@ -33,8 +33,8 @@ const PARCH_BORDER = "rgba(110,96,72,0.22)";
 
 // ─── Text mini card (fanned inside folder) ────────────────────────────────
 
-const CARD_W = 126;
-const CARD_H = 163;
+const CARD_W = 148;
+const CARD_H = 192;
 
 interface MiniCardProps {
   card: FeatureCard;
@@ -49,9 +49,9 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
   ({ card, index, total, isVisible, isSelected, onClick }, ref) => {
     const mid      = (total - 1) / 2;
     const factor   = total > 1 ? (index - mid) / mid : 0;
-    const rotation = factor * 22;
-    const txX      = factor * 108;
-    const txY      = Math.abs(factor) * 14;
+    const rotation = factor * 20;
+    const txX      = factor * 72;
+    const txY      = Math.abs(factor) * 10;
 
     return (
       <div
@@ -80,11 +80,11 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(140deg, rgba(255,255,255,0.32) 0%, transparent 52%)" }} />
 
           {/* Content */}
-          <div style={{ position: "absolute", inset: 0, padding: "12px 10px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ position: "absolute", inset: 0, padding: "14px 12px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
             {/* Headline */}
             <p style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "7.5px",
+              fontSize: "9px",
               fontWeight: 700,
               color: PARCH_TEXT,
               lineHeight: 1.3,
@@ -100,13 +100,13 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
             {/* Body text */}
             <p style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
-              fontSize: "5.8px",
+              fontSize: "6.8px",
               color: PARCH_FAINT,
-              lineHeight: 1.55,
+              lineHeight: 1.6,
               margin: 0,
               overflow: "hidden",
               display: "-webkit-box",
-              WebkitLineClamp: 9,
+              WebkitLineClamp: 12,
               WebkitBoxOrient: "vertical",
             }}>
               {card.sub}
@@ -235,7 +235,7 @@ export const AnimatedFolder: React.FC<AnimatedFolderProps> = ({ folder, classNam
       <div
         className={cn("relative flex flex-col items-center justify-center cursor-pointer", className)}
         style={{
-          padding: "48px 32px 32px",
+          padding: "40px 16px 24px",
           perspective: "1200px",
           transform: hovered ? "scale(1.06) translateY(-6px)" : "scale(1) translateY(0)",
           transition: "transform 700ms cubic-bezier(0.16,1,0.3,1)",
@@ -260,7 +260,7 @@ export const AnimatedFolder: React.FC<AnimatedFolderProps> = ({ folder, classNam
         {/* ── Folder body ── */}
         <div
           className="relative flex items-center justify-center mb-8"
-          style={{ height: FH + 120, width: FW + 140 }}
+          style={{ height: FH + 120, width: FW + 40 }}
         >
           {/* Tab */}
           <div
