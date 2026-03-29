@@ -31,7 +31,10 @@ const PARCH_FAINT  = "#9e8f79";
 const PARCH_LINE   = "rgba(90,78,58,0.18)";
 const PARCH_BORDER = "rgba(110,96,72,0.22)";
 
-// ─── Text-lines mini card (fanned inside folder) ───────────────────────────
+// ─── Text mini card (fanned inside folder) ────────────────────────────────
+
+const CARD_W = 126;
+const CARD_H = 163;
 
 interface MiniCardProps {
   card: FeatureCard;
@@ -42,25 +45,13 @@ interface MiniCardProps {
   onClick: () => void;
 }
 
-// Widths for each text line row — simulates written text on parchment
-const LINE_ROWS = [
-  [72],           // title line (full)
-  [40, 26],       // two words
-  [55, 18],
-  [30, 42],
-  [62],
-  [20, 46],
-  [38, 30],
-  [50],
-];
-
 const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
   ({ card, index, total, isVisible, isSelected, onClick }, ref) => {
     const mid      = (total - 1) / 2;
     const factor   = total > 1 ? (index - mid) / mid : 0;
-    const rotation = factor * 24;
-    const txX      = factor * 90;
-    const txY      = Math.abs(factor) * 12;
+    const rotation = factor * 22;
+    const txX      = factor * 108;
+    const txY      = Math.abs(factor) * 14;
 
     return (
       <div
@@ -68,47 +59,58 @@ const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         className="absolute cursor-pointer group/mini"
         style={{
-          width: 88, height: 114,
-          left: -44, top: -57,
+          width: CARD_W, height: CARD_H,
+          left: -CARD_W / 2, top: -CARD_H / 2,
           zIndex: 10 + index,
           transform: isVisible
-            ? `translateY(calc(-114px + ${txY}px)) translateX(${txX}px) rotate(${rotation}deg) scale(1)`
-            : "translateY(0) translateX(0) rotate(0deg) scale(0.4)",
+            ? `translateY(calc(-${CARD_H}px + ${txY}px)) translateX(${txX}px) rotate(${rotation}deg) scale(1)`
+            : "translateY(0) translateX(0) rotate(0deg) scale(0.35)",
           opacity: isSelected ? 0 : isVisible ? 1 : 0,
-          transition: `all 700ms cubic-bezier(0.16, 1, 0.3, 1) ${index * 60}ms`,
+          transition: `all 700ms cubic-bezier(0.16, 1, 0.3, 1) ${index * 65}ms`,
         }}
       >
-        {/* Card face */}
         <div
-          className="w-full h-full rounded-lg shadow-lg border relative overflow-hidden transition-all duration-500 group-hover/mini:-translate-y-5 group-hover/mini:shadow-2xl group-hover/mini:scale-[1.2] group-hover/mini:ring-2"
+          className="w-full h-full rounded-xl shadow-xl border relative overflow-hidden transition-all duration-500 group-hover/mini:-translate-y-6 group-hover/mini:shadow-2xl group-hover/mini:scale-[1.18]"
           style={{
             background: `linear-gradient(160deg, ${PARCH_FRONT} 0%, ${PARCH_BACK} 100%)`,
             borderColor: PARCH_BORDER,
           }}
         >
-          {/* Top gloss */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 55%)" }} />
+          {/* Gloss */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(140deg, rgba(255,255,255,0.32) 0%, transparent 52%)" }} />
 
-          {/* Ruled lines area */}
-          <div className="absolute inset-0 flex flex-col justify-start px-[8px] pt-[10px] gap-[5px]">
-            {LINE_ROWS.map((segs, row) => (
-              <div key={row} className="flex gap-[4px] items-center">
-                {segs.map((pct, s) => (
-                  <div
-                    key={s}
-                    style={{
-                      height: row === 0 ? 4 : 2.5,
-                      width: `${pct}%`,
-                      borderRadius: 2,
-                      background: row === 0
-                        ? PARCH_TEXT + "bb"
-                        : PARCH_LINE,
-                      flexShrink: 0,
-                    }}
-                  />
-                ))}
-              </div>
-            ))}
+          {/* Content */}
+          <div style={{ position: "absolute", inset: 0, padding: "12px 10px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+            {/* Headline */}
+            <p style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: "7.5px",
+              fontWeight: 700,
+              color: PARCH_TEXT,
+              lineHeight: 1.3,
+              letterSpacing: "0.01em",
+              margin: 0,
+            }}>
+              {card.headline}
+            </p>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: PARCH_LINE, flexShrink: 0, borderRadius: 1 }} />
+
+            {/* Body text */}
+            <p style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: "5.8px",
+              color: PARCH_FAINT,
+              lineHeight: 1.55,
+              margin: 0,
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 9,
+              WebkitBoxOrient: "vertical",
+            }}>
+              {card.sub}
+            </p>
           </div>
         </div>
       </div>
@@ -221,11 +223,11 @@ export const AnimatedFolder: React.FC<AnimatedFolderProps> = ({ folder, classNam
     setHiddenId(folder.cards[i].id);
   }, [folder.cards]);
 
-  // Folder panel dimensions — larger than before
-  const FW = 200; // front/back width  (px)
-  const FH = 154; // front/back height (px)
-  const tabW = 70;
-  const tabH = 22;
+  // Folder panel dimensions
+  const FW = 268; // front/back width  (px)
+  const FH = 200; // front/back height (px)
+  const tabW = 88;
+  const tabH = 26;
 
   return (
     <>
@@ -258,7 +260,7 @@ export const AnimatedFolder: React.FC<AnimatedFolderProps> = ({ folder, classNam
         {/* ── Folder body ── */}
         <div
           className="relative flex items-center justify-center mb-8"
-          style={{ height: FH + 60, width: FW + 80 }}
+          style={{ height: FH + 120, width: FW + 140 }}
         >
           {/* Tab */}
           <div
