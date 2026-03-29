@@ -163,6 +163,36 @@ function countWords(text: string): number {
 }
 
 /**
+ * Split an HTML string into page-sized chunks (~250 words each).
+ * Preserves paragraph integrity — never splits inside a tag.
+ */
+function splitHtmlIntoPages(html: string, wordsPerPage = 250): string[] {
+  if (!html || html.replace(/<[^>]*>/g, '').trim() === '') return ['<p></p>'];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<body>${html}</body>`, 'text/html');
+  const blocks = Array.from(doc.body.children);
+  if (blocks.length === 0) return [html || '<p></p>'];
+
+  const pages: string[] = [];
+  let cur: string[] = [];
+  let curWords = 0;
+
+  for (const block of blocks) {
+    const words = (block.textContent || '').trim().split(/\s+/).filter(Boolean).length;
+    if (curWords + words > wordsPerPage && cur.length > 0) {
+      pages.push(cur.join(''));
+      cur = [block.outerHTML];
+      curWords = words;
+    } else {
+      cur.push(block.outerHTML);
+      curWords += words;
+    }
+  }
+  if (cur.length > 0) pages.push(cur.join(''));
+  return pages.length > 0 ? pages : ['<p></p>'];
+}
+
+/**
  * Binary-search for the character index where text height ≤ maxHeight.
  * Returns a position snapped to the nearest word/paragraph boundary.
  */
@@ -237,8 +267,11 @@ export default function ChapterEditor() {
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState<PageBlock[]>([""]);
   const [richHtml, setRichHtml] = useState<string>('<p></p>');
+  const [richPages, setRichPages] = useState<string[]>(['<p></p>']);
   const tiptapEditorRef = useRef<Editor | null>(null);
   const [tiptapReady, setTiptapReady] = useState(false);
+  // Tracks the currently focused page editor so the toolbar always reflects the active page
+  const [activeToolbarEditor, setActiveToolbarEditor] = useState<Editor | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [showAI, setShowAI] = useState(false);
@@ -366,7 +399,9 @@ export default function ChapterEditor() {
       setTitle(chapter.title);
       const parsed = parsePages(chapter.content);
       setPages(parsed);
-      setRichHtml(pagesToHtml(parsed));
+      const html = pagesToHtml(parsed);
+      setRichHtml(html);
+      setRichPages(splitHtmlIntoPages(html));
     }
   }, [chapter, isDirty]);
 
@@ -745,8 +780,8 @@ export default function ChapterEditor() {
 
   const handleSave = async () => {
     try {
-      // Use TipTap HTML content if editor is active, otherwise fall back to pages
-      const htmlContent = tiptapEditorRef.current?.getHTML() || richHtml;
+      // Join all rich pages into a single HTML string
+      const htmlContent = richPages.join('') || richHtml;
       const currentContent = JSON.stringify([{ type: 'text', content: htmlContent }]);
 
       // Calculate word count difference for daily tracking
@@ -755,7 +790,7 @@ export default function ChapterEditor() {
       const previousText = previousPages.map(p => typeof p === 'string' ? p : p.type === 'text' ? p.content : '').join(" ").trim();
       const previousWords = previousText ? previousText.split(/\s+/).length : 0;
 
-      const newText = (tiptapEditorRef.current?.getText() || richHtml.replace(/<[^>]*>/g, ' ')).trim();
+      const newText = richPages.join('').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       const newWords = newText ? newText.split(/\s+/).filter(Boolean).length : 0;
 
       const wordsAdded = newWords - previousWords;
@@ -1022,7 +1057,7 @@ export default function ChapterEditor() {
     color: effectivePrefs.textColor || undefined,
     ...fontStyle,
   };
-  const totalWords = (tiptapEditorRef.current?.getText() || pages.map(getPageText).join(" ")).split(/\s+/).filter(Boolean).length;
+  const totalWords = richPages.join('').replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
 
   /* ── Reference Panel ── */
   const otherChapters = chapters?.filter(c => c.id !== chapterId) ?? [];
@@ -1272,7 +1307,7 @@ export default function ChapterEditor() {
       {/* ── Rich Writing Toolbar (Google Docs style) ── */}
       {!isPrintView && (
         <RichWritingToolbar
-          editor={tiptapReady ? tiptapEditorRef.current : null}
+          editor={activeToolbarEditor || (tiptapReady ? tiptapEditorRef.current : null)}
           zoom={zoom}
           onZoomChange={handleZoomChange}
           onPrint={() => setIsPrintView(true)}
@@ -1435,79 +1470,114 @@ export default function ChapterEditor() {
           />
         </div>
 
-        {/* TipTap Rich Editor — single scrolling document */}
-        <div className="flex flex-col items-center gap-0 px-4 pb-24" onClick={() => setSelectedDrawingIdx(null)}>
-          {/* ── TipTap Rich Editor ── */}
-          <div
-            className="relative w-full"
-            style={{ maxWidth: dynPageW }}
-            ref={el => { pageElsRef.current[0] = el; }}
-          >
-            <div
-              className="relative rounded-sm overflow-hidden"
-              style={{
-                width: "100%",
-                backgroundColor: isFocusMode
-                  ? "rgba(18,18,22,0.96)"
-                  : resolvedBgColor || (isDark ? "#1c1c1e" : "#fefefe"),
-                backgroundImage: isFocusMode ? undefined : (bgPatternCSS as any).backgroundImage,
-                backgroundSize: isFocusMode ? undefined : (bgPatternCSS as any).backgroundSize,
-                backgroundAttachment: "local",
-                boxShadow: "0 2px 4px -1px rgba(0,0,0,0.06), 0 12px 40px -8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)",
-              }}
-            >
-              {/* Page header */}
+        {/* ── TipTap Rich Editor — multi-page layout ── */}
+        <div className="flex flex-col items-center gap-6 px-4 pb-24" onClick={() => setSelectedDrawingIdx(null)}>
+          {richPages.map((pageHtml, index) => {
+            const pageCardBg = isFocusMode
+              ? "rgba(18,18,22,0.96)"
+              : resolvedBgColor || (isDark ? "#1c1c1e" : "#fefefe");
+            const pageBoxShadow = activePageIndex === index
+              ? "0 4px 6px -1px rgba(0,0,0,0.08), 0 20px 60px -10px rgba(0,0,0,0.18), 0 0 0 1.5px hsl(var(--primary)/30%)"
+              : "0 2px 4px -1px rgba(0,0,0,0.06), 0 12px 40px -8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)";
+            return (
               <div
-                className="flex items-end justify-between select-none"
-                style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.4), paddingBottom: 8 }}
-                dir="ltr"
+                key={`${chapterId}-page-${index}`}
+                className="relative w-full group"
+                style={{ maxWidth: dynPageW }}
+                ref={el => { pageElsRef.current[index] = el; }}
+                onClick={() => setActivePageIndex(index)}
               >
-                <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
-                  {effectivePrefs.headerText || (ar ? "فصل · صفحة 1" : "Chapter · Page 1")}
-                </span>
-              </div>
-              <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.12, background: resolvedTextColor || effectivePrefs.textColor || "currentColor" }} />
+                <div
+                  className="relative rounded-sm overflow-hidden"
+                  style={{
+                    width: "100%",
+                    backgroundColor: pageCardBg,
+                    backgroundImage: isFocusMode ? undefined : (bgPatternCSS as any).backgroundImage,
+                    backgroundSize: isFocusMode ? undefined : (bgPatternCSS as any).backgroundSize,
+                    backgroundAttachment: "local",
+                    boxShadow: pageBoxShadow,
+                    transition: "box-shadow 0.2s ease",
+                  }}
+                >
+                  {/* Page header */}
+                  <div
+                    className="flex items-end justify-between select-none"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.4), paddingBottom: 8 }}
+                    dir="ltr"
+                  >
+                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                      {effectivePrefs.headerText || (ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`)}
+                    </span>
+                    {richPages.length > 1 && (
+                      <button
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={(e) => { e.stopPropagation(); setRichPages(prev => prev.filter((_, i) => i !== index)); setIsDirty(true); }}
+                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        title={ar ? "حذف الصفحة" : "Delete page"}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.12, background: resolvedTextColor || effectivePrefs.textColor || "currentColor" }} />
 
-              {/* TipTap content */}
-              <RichChapterEditor
-                initialContent={richHtml}
-                onUpdate={(html) => {
-                  setRichHtml(html);
-                  setIsDirty(true);
-                }}
-                onEditorReady={(editor) => {
-                  tiptapEditorRef.current = editor;
-                  setTiptapReady(true);
-                }}
-                fontFamily={effectivePrefs.fontFamily || 'eb-garamond'}
-                fontSize={
-                  effectivePrefs.fontSize === "text-sm" ? 14 :
-                  effectivePrefs.fontSize === "text-base" ? 16 :
-                  effectivePrefs.fontSize === "text-xl" ? 20 :
-                  effectivePrefs.fontSize === "text-2xl" ? 24 : 18
-                }
-                lineHeight={LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85"}
-                textColor={isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined}
-                bgColor="transparent"
-                textAlign={(effectivePrefs.textAlign as string) || "left"}
-                direction={textDir}
-                placeholder={ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here..."}
-                minHeight={dynContentH}
-                zoom={100}
-              />
+                  {/* TipTap editor for this page */}
+                  <RichChapterEditor
+                    key={`${chapterId}-tiptap-${index}`}
+                    initialContent={pageHtml}
+                    onUpdate={(html) => {
+                      setRichPages(prev => {
+                        const next = [...prev];
+                        next[index] = html;
+                        return next;
+                      });
+                      // keep tiptapEditorRef pointing to first page for toolbar
+                      setIsDirty(true);
+                    }}
+                    onEditorReady={(editor) => {
+                      tiptapEditorRef.current = editor;
+                      if (index === 0) {
+                        setTiptapReady(true);
+                        setActiveToolbarEditor(editor);
+                      }
+                    }}
+                    onFocus={(editor) => {
+                      tiptapEditorRef.current = editor;
+                      setActiveToolbarEditor(editor);
+                    }}
+                    fontFamily={effectivePrefs.fontFamily || 'eb-garamond'}
+                    fontSize={
+                      effectivePrefs.fontSize === "text-sm" ? 14 :
+                      effectivePrefs.fontSize === "text-base" ? 16 :
+                      effectivePrefs.fontSize === "text-xl" ? 20 :
+                      effectivePrefs.fontSize === "text-2xl" ? 24 : 18
+                    }
+                    lineHeight={LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85"}
+                    textColor={isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined}
+                    bgColor="transparent"
+                    textAlign={(effectivePrefs.textAlign as string) || "left"}
+                    direction={textDir}
+                    placeholder={index === 0
+                      ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
+                      : (ar ? "تابع قصتك..." : "Continue your story...")}
+                    minHeight={dynContentH}
+                    zoom={100}
+                  />
 
-              {/* Page footer */}
-              <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
-              <div className="flex items-center justify-center select-none" style={{ paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}>
-                {(effectivePrefs.showPageNumbers !== false) && (
-                  <span className="text-[10px] opacity-30" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
-                    {`— 1 —`}
-                  </span>
-                )}
+                  {/* Page footer */}
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
+                  <div className="flex items-center justify-center select-none" style={{ paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}>
+                    {(effectivePrefs.showPageNumbers !== false) && (
+                      <span className="text-[10px] opacity-30" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                        {`— ${index + 1} —`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 left-2 right-2 h-3 rounded-b-sm opacity-[0.07] blur-sm" style={{ background: "black" }} />
               </div>
-            </div>
-            <div className="absolute -bottom-1 left-2 right-2 h-3 rounded-b-sm opacity-[0.07] blur-sm" style={{ background: "black" }} />
-          </div>
+            );
+          })}
 
           {/* ─────────────────────────────────────────────────── */}
           {/* LEGACY pages.map() — hidden, kept for SDT/sidebar ref */}
@@ -1982,20 +2052,18 @@ export default function ChapterEditor() {
             );
           })}
 
-          {/* Add Page Button — hidden in rich editor mode */}
-          {false && (
-          <div className="flex flex-col items-center gap-3 mt-2" style={{ width: dynPageW }}>
+          {/* Add Page Button */}
+          <div className="flex flex-col items-center gap-3 mt-2 w-full" style={{ maxWidth: dynPageW }}>
             <Button
               variant="ghost"
-              onClick={handleAddPage}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { setRichPages(prev => [...prev, '<p></p>']); setIsDirty(true); }}
               className="w-full rounded-sm border border-dashed border-border/30 hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all py-5 text-sm font-medium gap-2"
-              data-testid="button-add-page"
             >
               <PlusCircle className="w-4 h-4" />
               {ar ? "إضافة صفحة جديدة" : "Add new page"}
             </Button>
           </div>
-          )}
         </div>
 
         </div>{/* end zoom wrapper */}

@@ -45,6 +45,7 @@ interface RichChapterEditorProps {
   initialContent: string;
   onUpdate: (html: string) => void;
   onEditorReady?: (editor: Editor) => void;
+  onFocus?: (editor: Editor) => void;
   fontFamily?: string;
   fontSize?: number;
   lineHeight?: string;
@@ -81,6 +82,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   initialContent,
   onUpdate,
   onEditorReady,
+  onFocus,
   fontFamily = "eb-garamond",
   fontSize = 18,
   lineHeight = "1.85",
@@ -116,6 +118,9 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
     content: initialContent || "<p></p>",
     onUpdate: ({ editor }) => {
       onUpdate(editor.getHTML());
+    },
+    onFocus: ({ editor }) => {
+      if (onFocus) onFocus(editor);
     },
     editorProps: {
       attributes: {
