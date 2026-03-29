@@ -349,6 +349,7 @@ function AudiobookMockup() {
   const voice = VOICES[activeVoice];
 
   return (
+    <div className="relative">
     <div
       className="relative rounded-2xl overflow-hidden shadow-2xl select-none"
       style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -485,6 +486,42 @@ function AudiobookMockup() {
           ))}
         </div>
       </div>
+    </div>
+
+    {/* ── PiP: small Audiobook badge bottom-right ── */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: 8 }}
+      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.6, duration: 0.45, ease: "easeOut" }}
+      className="absolute -bottom-4 -right-4 z-20 flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl select-none"
+      style={{
+        background: "rgba(13,13,13,0.92)",
+        border: "1px solid rgba(255,255,255,0.14)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+        backdropFilter: "blur(12px)",
+        minWidth: 148,
+      }}
+    >
+      {/* Mini animated waveform */}
+      <div className="flex items-center gap-[2px] h-6">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="rounded-full w-[2.5px]"
+            style={{ background: voice.color }}
+            animate={{ height: [`${8 + (i % 3) * 5}px`, `${4 + (i % 4) * 4}px`, `${8 + (i % 3) * 5}px`] }}
+            transition={{ duration: 0.5 + i * 0.06, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+      </div>
+      {/* Label */}
+      <div>
+        <p className="text-white text-[11px] font-bold leading-none">Audiobook</p>
+        <p className="text-white/35 text-[9px] mt-0.5 font-medium">Studio</p>
+      </div>
+    </motion.div>
+
     </div>
   );
 }
