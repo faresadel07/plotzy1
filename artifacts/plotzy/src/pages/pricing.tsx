@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Zap, Star, Loader2 } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { useLocation } from "wouter";
-import { createCheckoutSession } from "@/hooks/use-subscription";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
-import { PayPalCheckout } from "@/components/paypal-button";
+import { CheckoutModal } from "@/components/checkout-modal";
 
 const MONTHLY_PRICE = 12.99;
 const YEARLY_PRICE = 9.99;
@@ -37,32 +36,24 @@ const FEATURES_PAID = [
 ];
 
 const FAQ = [
-  ["Can I cancel anytime?", "Yes — cancel from your account settings or billing portal at any time. You keep access until the end of your billing period."],
-  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and Google Pay via Stripe — and PayPal is also accepted."],
+  ["Can I cancel anytime?", "Yes — cancel from your account settings at any time. You keep access until the end of your billing period."],
+  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, Google Pay, and PayPal — all handled securely."],
   ["What happens to my work if I cancel?", "Your books and chapters are always yours. After cancellation you move back to the free plan, but your content is never deleted."],
   ["Is there a student or team discount?", "Reach out to us — we're happy to discuss educational and team pricing."],
 ];
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
-  const [loading, setLoading] = useState<"monthly" | "yearly" | null>(null);
+  const [showCheckout, setShowCheckout] = useState(false);
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  async function handleSubscribe(plan: "monthly" | "yearly") {
+  function handleGetStarted() {
     if (!user) {
       navigate("/?auth=required");
       return;
     }
-    setLoading(plan);
-    try {
-      const url = await createCheckoutSession(plan);
-      if (url) window.location.href = url;
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(null);
-    }
+    setShowCheckout(true);
   }
 
   return (
@@ -96,22 +87,14 @@ export default function Pricing() {
               <button
                 onClick={() => setBillingCycle("monthly")}
                 className="px-5 py-2 rounded-full text-sm font-medium transition-all"
-                style={
-                  billingCycle === "monthly"
-                    ? { background: "#EFEFEF", color: "#111111" }
-                    : { color: "#555" }
-                }
+                style={billingCycle === "monthly" ? { background: "#EFEFEF", color: "#111111" } : { color: "#555" }}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingCycle("yearly")}
                 className="px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2"
-                style={
-                  billingCycle === "yearly"
-                    ? { background: "#EFEFEF", color: "#111111" }
-                    : { color: "#555" }
-                }
+                style={billingCycle === "yearly" ? { background: "#EFEFEF", color: "#111111" } : { color: "#555" }}
               >
                 Yearly
                 <span
@@ -137,10 +120,7 @@ export default function Pricing() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
               className="rounded-2xl p-8 flex flex-col"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
+              style={{ backgroundColor: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
             >
               <div className="mb-6">
                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.18em] mb-3">Free Trial</p>
@@ -149,16 +129,14 @@ export default function Pricing() {
                 </div>
                 <p className="text-zinc-600 text-sm">No credit card needed</p>
               </div>
-
               <ul className="space-y-3 mb-8 flex-1">
-                {FEATURES_FREE.map((f) => (
+                {FEATURES_FREE.map(f => (
                   <li key={f} className="flex items-start gap-3 text-sm text-zinc-500">
                     <Check className="w-4 h-4 text-zinc-600 mt-0.5 shrink-0" />
                     {f}
                   </li>
                 ))}
               </ul>
-
               <button
                 disabled
                 className="w-full py-3 rounded-xl text-sm font-medium cursor-not-allowed"
@@ -191,10 +169,7 @@ export default function Pricing() {
               </div>
 
               <div className="mb-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3 text-zinc-400">
-                  Pro
-                </p>
-
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3 text-zinc-400">Pro</p>
                 {billingCycle === "monthly" ? (
                   <div>
                     <div className="flex items-end gap-1.5 mb-1">
@@ -215,7 +190,7 @@ export default function Pricing() {
               </div>
 
               <ul className="space-y-3 mb-8 flex-1">
-                {FEATURES_PAID.map((f) => (
+                {FEATURES_PAID.map(f => (
                   <li key={f} className="flex items-start gap-3 text-sm text-zinc-200">
                     <Check className="w-4 h-4 mt-0.5 shrink-0 text-white" />
                     {f}
@@ -223,40 +198,30 @@ export default function Pricing() {
                 ))}
               </ul>
 
+              {/* Payment method icons */}
+              <div className="flex items-center gap-2 mb-4 justify-center">
+                {/* Apple Pay */}
+                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                   Apple Pay
+                </div>
+                {/* Card */}
+                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                  💳 Card
+                </div>
+                {/* PayPal */}
+                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                  PayPal
+                </div>
+              </div>
+
+              {/* CTA button */}
               <button
-                onClick={() => handleSubscribe(billingCycle)}
-                disabled={loading !== null}
-                className="w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 text-sm"
+                onClick={handleGetStarted}
+                className="w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90 text-sm"
                 style={{ background: "#EFEFEF", color: "#111111" }}
               >
-                {loading === billingCycle ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Zap className="w-4 h-4" fill="currentColor" />
-                )}
-                {loading === billingCycle ? "Redirecting…" : "Pay with card"}
+                Get started
               </button>
-
-              {/* PayPal button — shown only when PayPal is configured */}
-              <div className="mt-3">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-                  <span className="text-xs text-zinc-600">or</span>
-                  <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-                </div>
-                {user ? (
-                  <PayPalCheckout plan={billingCycle} onSuccess={() => navigate("/")} />
-                ) : (
-                  <button
-                    onClick={() => navigate("/?auth=required")}
-                    className="w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90"
-                    style={{ background: "#FFC439", color: "#003087" }}
-                  >
-                    <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" className="h-4 object-contain" />
-                    Pay with PayPal
-                  </button>
-                )}
-              </div>
 
               <p className="text-center text-zinc-600 text-xs mt-3">
                 Cancel anytime · Secure checkout
@@ -279,10 +244,7 @@ export default function Pricing() {
                 <div
                   key={q}
                   className="rounded-xl p-5"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.025)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
+                  style={{ backgroundColor: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   <p className="font-semibold text-white mb-2 text-sm">{q}</p>
                   <p className="text-zinc-500 text-sm leading-relaxed">{a}</p>
@@ -293,6 +255,11 @@ export default function Pricing() {
 
         </div>
       </div>
+
+      {/* Checkout modal */}
+      {showCheckout && (
+        <CheckoutModal plan={billingCycle} onClose={() => setShowCheckout(false)} />
+      )}
     </Layout>
   );
 }
