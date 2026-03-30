@@ -1335,6 +1335,12 @@ export default function ChapterEditor() {
           onPrint={() => setIsPrintView(true)}
           isFocusMode={isFocusMode}
           isDark={isDark}
+          paperSize={effectivePrefs.paperSize || "trade"}
+          onPaperSizeChange={(id) => {
+            const np = { ...prefs, paperSize: id };
+            setPrefs(np);
+            handleSavePrefs(np);
+          }}
         />
       )}
 

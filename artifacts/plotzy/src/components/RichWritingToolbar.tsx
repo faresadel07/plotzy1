@@ -45,6 +45,13 @@ const TEXT_STYLES = [
 
 const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 42, 48, 60, 72];
 
+const PAGE_SIZE_OPTIONS = [
+  { id: "a5",     label: "Classic Novel",     desc: "14.8 × 21 cm",   icon: "📖" },
+  { id: "pocket", label: "Pocket Book",       desc: "11 × 18 cm",     icon: "✋" },
+  { id: "trade",  label: "Prof. Trade",       desc: "15.2 × 22.9 cm", icon: "📚" },
+  { id: "a4",     label: "Standard A4",       desc: "21 × 29.7 cm",   icon: "📄" },
+];
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface RichWritingToolbarProps {
@@ -54,6 +61,8 @@ interface RichWritingToolbarProps {
   onPrint?: () => void;
   isFocusMode?: boolean;
   isDark?: boolean;
+  paperSize?: string;
+  onPaperSizeChange?: (id: string) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -65,6 +74,8 @@ export function RichWritingToolbar({
   onPrint,
   isFocusMode = false,
   isDark = false,
+  paperSize = "trade",
+  onPaperSizeChange,
 }: RichWritingToolbarProps) {
   // Force re-render on every editor transaction so active states update in real-time
   const [, forceUpdate] = useState(0);
@@ -77,9 +88,11 @@ export function RichWritingToolbar({
 
   const [styleDropOpen, setStyleDropOpen] = useState(false);
   const [fontDropOpen, setFontDropOpen] = useState(false);
+  const [pageSizeDropOpen, setPageSizeDropOpen] = useState(false);
   const [sizeInput, setSizeInput] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const currentPageSize = PAGE_SIZE_OPTIONS.find(p => p.id === paperSize) || PAGE_SIZE_OPTIONS[2];
   const sizeInputRef = useRef<HTMLInputElement>(null);
 
   const toolbarBg = isFocusMode
@@ -213,6 +226,60 @@ export function RichWritingToolbar({
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
               <Printer className="w-3.5 h-3.5" />
             </button>
+          )}
+
+          <Sep />
+
+          {/* ── Page Size ── */}
+          {onPaperSizeChange && (
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setPageSizeDropOpen(v => !v)}
+                className="flex items-center gap-1.5 px-2 h-7 rounded text-xs font-medium whitespace-nowrap"
+                style={{ background: pageSizeDropOpen ? activeBg : "transparent", color: fg, border: "none", cursor: "pointer", minWidth: 110 }}
+                onMouseEnter={e => (e.currentTarget.style.background = pageSizeDropOpen ? activeBg : hoverBg)}
+                onMouseLeave={e => (e.currentTarget.style.background = pageSizeDropOpen ? activeBg : "transparent")}
+                title="Page size"
+              >
+                <span>{currentPageSize.icon}</span>
+                <span style={{ color: fg }}>{currentPageSize.label}</span>
+                <ChevronDown className="w-3 h-3 ml-auto opacity-50" />
+              </button>
+              {pageSizeDropOpen && (
+                <div
+                  className="absolute top-full left-0 mt-1 rounded-xl shadow-xl z-50 overflow-hidden py-1"
+                  style={{ background: dropBg, border: `1px solid ${dropBorder}`, minWidth: 210 }}
+                >
+                  {PAGE_SIZE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.id}
+                      style={{
+                        ...dropItemStyle,
+                        background: paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent",
+                        fontWeight: paperSize === opt.id ? 600 : 400,
+                      }}
+                      onClick={() => { onPaperSizeChange(opt.id); setPageSizeDropOpen(false); }}
+                      onMouseEnter={e => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent")}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span>{opt.icon}</span>
+                        <span className="flex flex-col items-start gap-0.5">
+                          <span style={{ fontSize: 12, color: fgStrong }}>{opt.label}</span>
+                          <span style={{ fontSize: 10, opacity: 0.5 }}>{opt.desc}</span>
+                        </span>
+                        {paperSize === opt.id && (
+                          <span className="ml-auto text-xs opacity-60">✓</span>
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {pageSizeDropOpen && (
+                <div className="fixed inset-0 z-40" onClick={() => setPageSizeDropOpen(false)} />
+              )}
+            </div>
           )}
 
           <Sep />
