@@ -108,13 +108,12 @@ function serializePages(pages: PageBlock[]): string {
 }
 
 // ── Paper Size Definitions ────────────────────────────────────────────────────
-// All sizes in CSS pixels at 96 dpi (1 inch = 96 px)
-const PAPER_SIZES: Record<string, { width: number; height: number; label: string; labelAr: string }> = {
-  "trade":  { width: 576,  height: 864,  label: "Trade (6×9\")",  labelAr: "Trade 6×9" },  // standard novel
-  "a4":     { width: 794,  height: 1123, label: "A4",             labelAr: "A4" },
-  "a5":     { width: 559,  height: 794,  label: "A5",             labelAr: "A5" },
-  "letter": { width: 816,  height: 1056, label: "Letter (US)",    labelAr: "Letter (US)" },
-  "b5":     { width: 665,  height: 944,  label: "B5",             labelAr: "B5" },
+// All sizes in CSS pixels at 96 dpi (1 inch = 96 px; 1 cm = 37.795 px)
+const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
+  "a5":     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",       labelAr: "رواية كلاسيكية",  icon: "📖" },
+  "pocket": { width: 416,  height: 680,  widthCm: 11.0, heightCm: 18.0, label: "Pocket Book",         labelAr: "كتاب جيب",        icon: "✋" },
+  "trade":  { width: 576,  height: 864,  widthCm: 15.2, heightCm: 22.9, label: "Professional Trade",  labelAr: "تجاري احترافي",   icon: "📚" },
+  "a4":     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",         labelAr: "A4 قياسي",        icon: "📄" },
 };
 
 const DEFAULT_MARGIN = 72; // px — 0.75 inch at 96 dpi
@@ -1495,6 +1494,34 @@ export default function ChapterEditor() {
 
         {/* ── TipTap Rich Editor — multi-page layout ── */}
         <div className="flex flex-col items-center gap-6 px-4 pb-24" onClick={() => setSelectedDrawingIdx(null)}>
+
+          {/* ── Page dimension badge ── */}
+          {(() => {
+            const ps = PAPER_SIZES[effectivePrefs.paperSize || "trade"];
+            if (!ps) return null;
+            return (
+              <div
+                className="flex items-center gap-2 select-none"
+                style={{ alignSelf: "center" }}
+              >
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium"
+                  style={{
+                    background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+                    color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                    border: `1px solid ${isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.08)"}`,
+                    letterSpacing: "0.03em",
+                  }}
+                >
+                  <span>{ps.icon}</span>
+                  <span>{ar ? ps.labelAr : ps.label}</span>
+                  <span style={{ opacity: 0.5 }}>·</span>
+                  <span>{ps.widthCm} × {ps.heightCm} cm</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {richPages.map((pageHtml, index) => {
             const pageCardBg = isFocusMode
               ? "rgba(18,18,22,0.96)"
@@ -2331,22 +2358,64 @@ export default function ChapterEditor() {
 
                 {/* Paper Size */}
                 <div>
-                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "حجم الورق" : "Paper Size"}</label>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "حجم الصفحة" : "Page Size"}</label>
+
+                  {/* Dropdown */}
+                  <div className="relative mb-3">
+                    <select
+                      value={prefs.paperSize || "trade"}
+                      onChange={e => { const np = { ...prefs, paperSize: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
+                      className="w-full rounded-xl px-3 py-2.5 text-sm font-medium appearance-none cursor-pointer pr-8"
+                      style={{
+                        background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                        border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"}`,
+                        color: "inherit", outline: "none",
+                      }}
+                    >
+                      {Object.entries(PAPER_SIZES).map(([id, ps]) => (
+                        <option key={id} value={id}>
+                          {ps.icon} {ar ? ps.labelAr : ps.label} — {ps.widthCm} × {ps.heightCm} cm
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-40 text-xs">▾</span>
+                  </div>
+
+                  {/* Visual previews */}
                   <div className="grid grid-cols-4 gap-2">
-                    {Object.entries(PAPER_SIZES).map(([id, ps]) => (
-                      <button
-                        key={id}
-                        onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
-                        className="py-2 px-1 rounded-xl text-xs font-medium transition-all"
-                        style={{
-                          background: (prefs.paperSize || "trade") === id ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                          color: (prefs.paperSize || "trade") === id ? "#fff" : undefined,
-                          border: "none", cursor: "pointer",
-                        }}
-                      >
-                        {ar ? ps.labelAr : ps.label}
-                      </button>
-                    ))}
+                    {Object.entries(PAPER_SIZES).map(([id, ps]) => {
+                      const active = (prefs.paperSize || "trade") === id;
+                      const ratio = ps.widthCm / ps.heightCm;
+                      const previewH = 52;
+                      const previewW = Math.round(previewH * ratio);
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
+                          className="flex flex-col items-center gap-1.5 py-2 rounded-xl transition-all"
+                          style={{
+                            background: active ? "hsl(var(--primary)/10%)" : (isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)"),
+                            border: `1.5px solid ${active ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)")}`,
+                            cursor: "pointer",
+                          }}
+                          title={`${ps.widthCm} × ${ps.heightCm} cm`}
+                        >
+                          {/* Mini page rect */}
+                          <div style={{
+                            width: previewW, height: previewH,
+                            background: isDark ? "rgba(255,255,255,0.12)" : "#fff",
+                            border: `1px solid ${active ? "hsl(var(--primary)/60%)" : "rgba(0,0,0,0.15)"}`,
+                            borderRadius: 2,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                            flexShrink: 0,
+                          }} />
+                          <span className="text-[9px] font-semibold leading-tight text-center opacity-70" style={{ color: active ? "hsl(var(--primary))" : undefined }}>
+                            {ar ? ps.labelAr : ps.label}
+                          </span>
+                          <span className="text-[8px] opacity-40 leading-none">{ps.widthCm}×{ps.heightCm}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
