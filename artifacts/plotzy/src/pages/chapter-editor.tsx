@@ -64,10 +64,10 @@ const FONT_STYLE_MAP: Record<string, React.CSSProperties> = {
 };
 
 const LINE_HEIGHT_MAP: Record<string, string> = {
-  "tight":    "1.55",
-  "normal":   "1.85",
-  "relaxed":  "2.15",
-  "spacious": "2.55",
+  "tight":    "1.30",  // compact, like dense reference books
+  "normal":   "1.45",  // standard published novel (12pt/14pt leading)
+  "relaxed":  "1.65",  // comfortable reading
+  "spacious": "2.00",  // double-spaced manuscript
 };
 
 const LETTER_SPACING_MAP: Record<string, string> = {
@@ -148,7 +148,7 @@ const PAGE_CONTENT_WIDTH  = 432; // px — 576 - 144
  */
 function calcWordsPerPage(contentH: number, contentW: number, fontSize: number): number {
   const tiptapPaddingV = 96;  // 48px top + 48px bottom (TipTap CSS padding)
-  const lineHeightPx   = fontSize * 1.85;
+  const lineHeightPx   = fontSize * 1.45;
   // textH: usable vertical space inside TipTap after its own top/bottom padding
   const textH          = Math.max(100, contentH - tiptapPaddingV);
   // textW: contentW already equals the TipTap text area width (page width − page margins)
@@ -421,7 +421,7 @@ export default function ChapterEditor() {
       setPages(parsed);
       const html = pagesToHtml(parsed);
       setRichHtml(html);
-      const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 18;
+      const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
       const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
       setRichPages(splitHtmlIntoPages(html, wpp));
     }
@@ -1576,9 +1576,9 @@ export default function ChapterEditor() {
                       effectivePrefs.fontSize === "text-sm" ? 14 :
                       effectivePrefs.fontSize === "text-base" ? 16 :
                       effectivePrefs.fontSize === "text-xl" ? 20 :
-                      effectivePrefs.fontSize === "text-2xl" ? 24 : 18
+                      effectivePrefs.fontSize === "text-2xl" ? 24 : 16
                     }
-                    lineHeight={LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85"}
+                    lineHeight={LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45"}
                     textColor={isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined}
                     bgColor="transparent"
                     textAlign={(effectivePrefs.textAlign as string) || "left"}
@@ -1713,7 +1713,7 @@ export default function ChapterEditor() {
                           minHeight: `${dynContentH}px`,
                           height: `${dynContentH}px`,
                           overflow: "hidden",
-                          lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
+                          lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45",
                           letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
                           fontWeight: effectivePrefs.isBold ? 700 : undefined,
                           fontStyle: effectivePrefs.isItalic ? "italic" : undefined,
@@ -2105,8 +2105,8 @@ export default function ChapterEditor() {
             top: "-9999px",
             left: "-9999px",
             width: `${dynContentW}px`,
-            fontSize: effectivePrefs.fontSize === "text-sm" ? "14px" : effectivePrefs.fontSize === "text-base" ? "16px" : effectivePrefs.fontSize === "text-xl" ? "20px" : effectivePrefs.fontSize === "text-2xl" ? "24px" : "18px",
-            lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
+            fontSize: effectivePrefs.fontSize === "text-sm" ? "14px" : effectivePrefs.fontSize === "text-base" ? "16px" : effectivePrefs.fontSize === "text-xl" ? "20px" : effectivePrefs.fontSize === "text-2xl" ? "24px" : "16px",
+            lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45",
             letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
             fontFamily: (FONT_STYLE_MAP[effectivePrefs.fontFamily || ''] || fontStyle).fontFamily || undefined,
             whiteSpace: "pre-wrap",
@@ -2252,7 +2252,7 @@ export default function ChapterEditor() {
               <div
                 style={{
                   fontSize: '14px',
-                  lineHeight: '1.85',
+                  lineHeight: '1.45',
                   color: 'hsl(var(--foreground)/85%)',
                   userSelect: 'text',
                   cursor: 'text',
