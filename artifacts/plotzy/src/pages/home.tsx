@@ -902,10 +902,10 @@ export default function Home() {
 
               {/* ── Card 1: Write ── */}
               <motion.div
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
+                initial={{ opacity: 0, x: -60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
                 className="rounded-3xl p-8 flex flex-col gap-6"
                 style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
@@ -936,10 +936,10 @@ export default function Home() {
 
               {/* ── Card 2: Refine ── */}
               <motion.div
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+                initial={{ opacity: 0, x: 60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
                 className="rounded-3xl p-8 flex flex-col gap-6"
                 style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
@@ -970,10 +970,10 @@ export default function Home() {
 
               {/* ── Card 3: Publish ── */}
               <motion.div
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: "easeOut", delay: 0.15 }}
+                initial={{ opacity: 0, x: -60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
                 className="rounded-3xl p-8 flex flex-col gap-6"
                 style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
@@ -1004,10 +1004,10 @@ export default function Home() {
 
               {/* ── Card 4: Audiobook ── */}
               <motion.div
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: "easeOut", delay: 0.22 }}
+                initial={{ opacity: 0, x: 60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
                 className="rounded-3xl p-8 flex flex-col gap-6"
                 style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
