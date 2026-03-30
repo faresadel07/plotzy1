@@ -204,10 +204,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             src={`${import.meta.env.BASE_URL}plotzy-logo.png`}
             alt="Plotzy"
             style={{
-              height: 32,
-              width: 32,
+              height: 24,
+              width: 24,
               objectFit: "contain",
-              borderRadius: 6,
+              borderRadius: 5,
               filter: "none",
               flexShrink: 0,
             }}
