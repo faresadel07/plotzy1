@@ -321,11 +321,40 @@ export default function ChapterEditor() {
   // ── New: Page Setup modal + Zoom ─────────────────────────────────────────
   const [showPageSetup, setShowPageSetup] = useState(false);
   const [zoom, setZoom] = useState<number>(100);
+  const mainRef = useRef<HTMLElement>(null);
+  const autoZoomApplied = useRef(false);
+
+  // Reset auto-zoom when chapter changes
+  useEffect(() => {
+    autoZoomApplied.current = false;
+  }, [chapterId]);
 
   // Sync zoom from prefs when book loads
   useEffect(() => {
-    if (prefs.zoom !== undefined) setZoom(prefs.zoom);
+    if (prefs.zoom !== undefined) {
+      setZoom(prefs.zoom);
+      autoZoomApplied.current = true;
+    }
   }, [prefs.zoom]);
+
+  // Auto-fit zoom: show the full page height on first load when no saved zoom
+  useEffect(() => {
+    if (autoZoomApplied.current) return;
+    // Use rAF so DOM is ready and clientHeight is accurate
+    const frame = requestAnimationFrame(() => {
+      if (!mainRef.current) return;
+      const containerH = mainRef.current.clientHeight;
+      if (containerH < 100) return;
+      const titleAreaH = 120; // chapter title + gap
+      const pagePaddingV = 80;
+      const available = containerH - titleAreaH - pagePaddingV;
+      const fitPct = Math.floor((available / pageDims.pageHeight) * 100);
+      const optimal = Math.max(55, Math.min(95, fitPct));
+      setZoom(optimal);
+      autoZoomApplied.current = true;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [pageDims.pageHeight]);
 
   // ── Inline AI Ghost-Text Suggestion ──────────────────────────────────────
   const [inlineSuggestion, setInlineSuggestion] = useState<string>("");
@@ -1413,6 +1442,7 @@ export default function ChapterEditor() {
 
       {/* Editor Canvas — book-desk background */}
       <main
+        ref={mainRef}
         className="flex-1 overflow-y-auto relative transition-colors duration-700"
         style={{
           background: "transparent",
@@ -1531,10 +1561,11 @@ export default function ChapterEditor() {
           {richPages.map((pageHtml, index) => {
             const pageCardBg = isFocusMode
               ? "rgba(18,18,22,0.96)"
-              : resolvedBgColor || (isDark ? "#1c1c1e" : "#fefefe");
+              : resolvedBgColor || (isDark ? "#1e1e22" : "#faf9f6");
+            // Layered shadow — simulates paper resting on a desk
             const pageBoxShadow = activePageIndex === index
-              ? "0 4px 6px -1px rgba(0,0,0,0.08), 0 20px 60px -10px rgba(0,0,0,0.18), 0 0 0 1.5px hsl(var(--primary)/30%)"
-              : "0 2px 4px -1px rgba(0,0,0,0.06), 0 12px 40px -8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)";
+              ? `0 1px 1px rgba(0,0,0,0.14), 0 2px 2px rgba(0,0,0,0.12), 0 4px 4px rgba(0,0,0,0.10), 0 8px 8px rgba(0,0,0,0.08), 0 16px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.08), 0 0 0 2px hsl(var(--primary)/25%)`
+              : `0 1px 1px rgba(0,0,0,0.10), 0 2px 2px rgba(0,0,0,0.08), 0 4px 4px rgba(0,0,0,0.07), 0 8px 8px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,${isDark ? "0.20" : "0.07"})`;
             return (
               <div
                 key={`${chapterId}-page-${index}`}
@@ -1544,13 +1575,33 @@ export default function ChapterEditor() {
                 onClick={() => setActivePageIndex(index)}
               >
                 <div
-                  className="relative rounded-sm overflow-hidden"
+                  className="relative overflow-hidden"
                   style={{
                     width: "100%",
                     height: dynPageH,
                     backgroundColor: pageCardBg,
-                    backgroundImage: isFocusMode ? undefined : (bgPatternCSS as any).backgroundImage,
-                    backgroundSize: isFocusMode ? undefined : (bgPatternCSS as any).backgroundSize,
+                    // Layered backgrounds: paper gradient + pattern + grain noise
+                    backgroundImage: isFocusMode
+                      ? undefined
+                      : [
+                          // Paper-light gradient (top to bottom)
+                          !isDark && !resolvedBgColor
+                            ? "linear-gradient(180deg, #fdfcf8 0%, #faf9f4 50%, #f7f5ee 100%)"
+                            : null,
+                          // User-chosen pattern
+                          (bgPatternCSS as any).backgroundImage || null,
+                          // Subtle grain/noise for paper texture feel
+                          !isDark && !resolvedBgColor
+                            ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E")`
+                            : null,
+                        ].filter(Boolean).join(", "),
+                    backgroundSize: isFocusMode
+                      ? undefined
+                      : [
+                          !isDark && !resolvedBgColor ? "100% 100%" : null,
+                          (bgPatternCSS as any).backgroundSize || null,
+                          !isDark && !resolvedBgColor ? "200px 200px" : null,
+                        ].filter(Boolean).join(", "),
                     backgroundAttachment: "local",
                     boxShadow: pageBoxShadow,
                     transition: "box-shadow 0.2s ease",
