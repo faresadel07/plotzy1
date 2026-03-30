@@ -1552,12 +1552,32 @@ export default function ChapterEditor() {
                     key={`${chapterId}-tiptap-${index}`}
                     initialContent={pageHtml}
                     onUpdate={(html) => {
-                      setRichPages(prev => {
-                        const next = [...prev];
-                        next[index] = html;
-                        return next;
-                      });
-                      // keep tiptapEditorRef pointing to first page for toolbar
+                      const currentFontSize =
+                        effectivePrefs.fontSize === "text-sm" ? 14 :
+                        effectivePrefs.fontSize === "text-base" ? 16 :
+                        effectivePrefs.fontSize === "text-xl" ? 20 :
+                        effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+                      const wpp = calcWordsPerPage(dynContentH, dynContentW, currentFontSize);
+                      const wordCount = (html.replace(/<[^>]*>/g, ' ').match(/\S+/g) || []).length;
+
+                      if (wordCount > wpp) {
+                        // Split overflow content into the next page
+                        const splitPages = splitHtmlIntoPages(html, wpp);
+                        setRichPages(prev => {
+                          const next = [...prev];
+                          next[index] = splitPages[0];
+                          if (splitPages.length > 1) {
+                            next.splice(index + 1, 0, ...splitPages.slice(1));
+                          }
+                          return next;
+                        });
+                      } else {
+                        setRichPages(prev => {
+                          const next = [...prev];
+                          next[index] = html;
+                          return next;
+                        });
+                      }
                       setIsDirty(true);
                     }}
                     onEditorReady={(editor) => {

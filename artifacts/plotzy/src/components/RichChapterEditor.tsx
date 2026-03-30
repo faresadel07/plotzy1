@@ -176,7 +176,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           text-align: ${textAlign};
           direction: ${direction};
           ${fixedHeight
-            ? `height: ${fixedHeight}px; overflow-y: auto;`
+            ? `height: ${fixedHeight}px; overflow: hidden;`
             : `min-height: ${minHeight}px;`
           }
           padding: 48px 72px;
