@@ -89,11 +89,13 @@ export function RichWritingToolbar({
   const [styleDropOpen, setStyleDropOpen] = useState(false);
   const [fontDropOpen, setFontDropOpen] = useState(false);
   const [pageSizeDropOpen, setPageSizeDropOpen] = useState(false);
+  const [pageSizeDropRect, setPageSizeDropRect] = useState<{ top: number; left: number } | null>(null);
   const [sizeInput, setSizeInput] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const currentPageSize = PAGE_SIZE_OPTIONS.find(p => p.id === paperSize) || PAGE_SIZE_OPTIONS[2];
   const sizeInputRef = useRef<HTMLInputElement>(null);
+  const pageSizeBtnRef = useRef<HTMLButtonElement>(null);
 
   const toolbarBg = isFocusMode
     ? "rgba(18,18,22,0.97)"
@@ -232,9 +234,21 @@ export function RichWritingToolbar({
 
           {/* ── Page Size ── */}
           {onPaperSizeChange && (
-            <div className="relative flex-shrink-0">
+            <div className="flex-shrink-0">
               <button
-                onClick={() => setPageSizeDropOpen(v => !v)}
+                ref={pageSizeBtnRef}
+                onMouseDown={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (pageSizeDropOpen) {
+                    setPageSizeDropOpen(false);
+                    setPageSizeDropRect(null);
+                  } else {
+                    const rect = pageSizeBtnRef.current?.getBoundingClientRect();
+                    if (rect) setPageSizeDropRect({ top: rect.bottom + 4, left: rect.left });
+                    setPageSizeDropOpen(true);
+                  }
+                }}
                 className="flex items-center gap-1.5 px-2 h-7 rounded text-xs font-medium whitespace-nowrap"
                 style={{ background: pageSizeDropOpen ? activeBg : "transparent", color: fg, border: "none", cursor: "pointer", minWidth: 110 }}
                 onMouseEnter={e => (e.currentTarget.style.background = pageSizeDropOpen ? activeBg : hoverBg)}
@@ -245,40 +259,6 @@ export function RichWritingToolbar({
                 <span style={{ color: fg }}>{currentPageSize.label}</span>
                 <ChevronDown className="w-3 h-3 ml-auto opacity-50" />
               </button>
-              {pageSizeDropOpen && (
-                <div
-                  className="absolute top-full left-0 mt-1 rounded-xl shadow-xl z-50 overflow-hidden py-1"
-                  style={{ background: dropBg, border: `1px solid ${dropBorder}`, minWidth: 210 }}
-                >
-                  {PAGE_SIZE_OPTIONS.map(opt => (
-                    <button
-                      key={opt.id}
-                      style={{
-                        ...dropItemStyle,
-                        background: paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent",
-                        fontWeight: paperSize === opt.id ? 600 : 400,
-                      }}
-                      onClick={() => { onPaperSizeChange(opt.id); setPageSizeDropOpen(false); }}
-                      onMouseEnter={e => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent")}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <span>{opt.icon}</span>
-                        <span className="flex flex-col items-start gap-0.5">
-                          <span style={{ fontSize: 12, color: fgStrong }}>{opt.label}</span>
-                          <span style={{ fontSize: 10, opacity: 0.5 }}>{opt.desc}</span>
-                        </span>
-                        {paperSize === opt.id && (
-                          <span className="ml-auto text-xs opacity-60">✓</span>
-                        )}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {pageSizeDropOpen && (
-                <div className="fixed inset-0 z-40" onClick={() => setPageSizeDropOpen(false)} />
-              )}
             </div>
           )}
 
@@ -588,6 +568,58 @@ export function RichWritingToolbar({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Page Size Dropdown (fixed-position to escape overflow clipping) ── */}
+      {pageSizeDropOpen && pageSizeDropRect && onPaperSizeChange && (
+        <>
+          <div
+            className="fixed inset-0"
+            style={{ zIndex: 9998 }}
+            onMouseDown={() => { setPageSizeDropOpen(false); setPageSizeDropRect(null); }}
+          />
+          <div
+            className="fixed rounded-xl shadow-2xl py-1 overflow-hidden"
+            style={{
+              top: pageSizeDropRect.top,
+              left: pageSizeDropRect.left,
+              zIndex: 9999,
+              background: dropBg,
+              border: `1px solid ${dropBorder}`,
+              minWidth: 220,
+            }}
+          >
+            {PAGE_SIZE_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                style={{
+                  ...dropItemStyle,
+                  background: paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent",
+                  fontWeight: paperSize === opt.id ? 600 : 400,
+                }}
+                onMouseDown={e => {
+                  e.preventDefault();
+                  onPaperSizeChange(opt.id);
+                  setPageSizeDropOpen(false);
+                  setPageSizeDropRect(null);
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)")}
+                onMouseLeave={e => (e.currentTarget.style.background = paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent")}
+              >
+                <span className="flex items-center gap-2.5">
+                  <span>{opt.icon}</span>
+                  <span className="flex flex-col items-start gap-0.5">
+                    <span style={{ fontSize: 12, color: fgStrong }}>{opt.label}</span>
+                    <span style={{ fontSize: 10, opacity: 0.5 }}>{opt.desc}</span>
+                  </span>
+                  {paperSize === opt.id && (
+                    <span className="ml-auto text-xs opacity-60">✓</span>
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </>
   );
