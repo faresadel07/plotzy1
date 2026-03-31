@@ -36,6 +36,41 @@ const FontSize = Extension.create({
   },
 });
 
+// ── Split at the exact paragraph where content overflows the page ───────────
+function splitAtOverflow(
+  proseMirror: HTMLElement,
+  availableHeight: number,
+): { fitsHtml: string; overflowHtml: string } | null {
+  const children = Array.from(proseMirror.children) as HTMLElement[];
+  if (children.length === 0) return null;
+
+  const pmTop = proseMirror.getBoundingClientRect().top;
+  const fitsNodes: string[] = [];
+  const overflowNodes: string[] = [];
+  let overflowStarted = false;
+
+  for (const child of children) {
+    if (overflowStarted) {
+      overflowNodes.push(child.outerHTML);
+      continue;
+    }
+    const childBottom = child.getBoundingClientRect().bottom - pmTop;
+    if (childBottom <= availableHeight + 2) {
+      fitsNodes.push(child.outerHTML);
+    } else {
+      overflowStarted = true;
+      overflowNodes.push(child.outerHTML);
+    }
+  }
+
+  if (overflowNodes.length === 0) return null;
+
+  return {
+    fitsHtml: fitsNodes.length > 0 ? fitsNodes.join("") : "<p></p>",
+    overflowHtml: overflowNodes.join(""),
+  };
+}
+
 // ── Props ────────────────────────────────────────────────────────────────────
 export interface RichEditorRef {
   editor: Editor | null;
@@ -46,6 +81,8 @@ interface RichChapterEditorProps {
   onUpdate: (html: string) => void;
   onEditorReady?: (editor: Editor) => void;
   onFocus?: (editor: Editor) => void;
+  onSplitNeeded?: (fitsHtml: string, overflowHtml: string) => void;
+  onHeightChange?: (scrollHeight: number) => void;
   fontFamily?: string;
   fontSize?: number;
   lineHeight?: string;
@@ -84,6 +121,8 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   onUpdate,
   onEditorReady,
   onFocus,
+  onSplitNeeded,
+  onHeightChange,
   fontFamily = "eb-garamond",
   fontSize = 16,
   lineHeight = "1.45",
@@ -98,13 +137,24 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
 }, ref) => {
   const resolvedFont = FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif";
 
+  // Use refs for callbacks to avoid stale closures in the RAF
+  const onSplitNeededRef = useRef(onSplitNeeded);
+  const onHeightChangeRef = useRef(onHeightChange);
+  const fixedHeightRef = useRef(fixedHeight);
+  useEffect(() => { onSplitNeededRef.current = onSplitNeeded; }, [onSplitNeeded]);
+  useEffect(() => { onHeightChangeRef.current = onHeightChange; }, [onHeightChange]);
+  useEffect(() => { fixedHeightRef.current = fixedHeight; }, [fixedHeight]);
+
+  const overflowRafRef = useRef<number>(0);
+  // Guard: prevent split from firing immediately after we just received new initialContent
+  const suppressOverflowRef = useRef(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
         bulletList: { keepMarks: true },
         orderedList: { keepMarks: true },
-        // Prevent duplication with separately added extensions
         underline: false,
         link: false,
       } as any),
@@ -119,7 +169,30 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
     ],
     content: initialContent || "<p></p>",
     onUpdate: ({ editor }) => {
-      onUpdate(editor.getHTML());
+      const html = editor.getHTML();
+      onUpdate(html);
+
+      // Schedule DOM-height-based overflow check after paint
+      cancelAnimationFrame(overflowRafRef.current);
+      overflowRafRef.current = requestAnimationFrame(() => {
+        if (suppressOverflowRef.current) return;
+        const fh = fixedHeightRef.current;
+        if (!fh) return;
+
+        const proseMirror = editor.view.dom as HTMLElement;
+        // Available text height = fixedHeight minus the 48px top + 48px bottom padding
+        const available = fh - 96;
+        const contentH = proseMirror.scrollHeight;
+
+        onHeightChangeRef.current?.(contentH);
+
+        if (contentH > available + 2) {
+          const split = splitAtOverflow(proseMirror, available);
+          if (split) {
+            onSplitNeededRef.current?.(split.fitsHtml, split.overflowHtml);
+          }
+        }
+      });
     },
     onFocus: ({ editor }) => {
       if (onFocus) onFocus(editor);
@@ -138,18 +211,19 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
     if (editor && onEditorReady) onEditorReady(editor);
   }, [editor]);
 
-  // Sync content only when the chapter changes externally (not on every keystroke)
-  // We track the last initialContent we set to avoid resetting on normal typing
+  // Sync content when initialContent changes externally (e.g. after a split/merge)
   const lastSyncedRef = useRef<string>("");
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    // Only sync if the initialContent changed AND it's different from what we last set
     if (initialContent && initialContent !== lastSyncedRef.current) {
       const current = editor.getHTML();
-      // If current matches what the editor produced natively, skip (it was a local change)
       if (current !== initialContent) {
+        // Suppress overflow check right after a programmatic content change
+        suppressOverflowRef.current = true;
         lastSyncedRef.current = initialContent;
         editor.commands.setContent(initialContent, false);
+        // Re-enable after the next frame
+        requestAnimationFrame(() => { suppressOverflowRef.current = false; });
       } else {
         lastSyncedRef.current = initialContent;
       }

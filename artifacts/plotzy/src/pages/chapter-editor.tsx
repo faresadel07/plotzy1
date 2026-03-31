@@ -412,6 +412,13 @@ export default function ChapterEditor() {
   // Hidden measurement div for height-based auto-pagination
   const measureRef = useRef<HTMLDivElement>(null);
 
+  // Per-page editor refs for cursor management after auto-split
+  const pageEditorRefs = useRef<(Editor | null)[]>([]);
+  // Which page index should receive focus once its editor mounts (after a split)
+  const nextPageFocusRef = useRef<number>(-1);
+  // Debounce timer for the reverse-merge (pull-back) logic
+  const mergeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Rich Media State
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
@@ -1640,39 +1647,97 @@ export default function ChapterEditor() {
                     key={`${chapterId}-tiptap-${index}`}
                     initialContent={pageHtml}
                     onUpdate={(html) => {
-                      const currentFontSize =
-                        effectivePrefs.fontSize === "text-sm" ? 14 :
-                        effectivePrefs.fontSize === "text-base" ? 16 :
-                        effectivePrefs.fontSize === "text-xl" ? 20 :
-                        effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
-                      const wpp = calcWordsPerPage(dynContentH, dynContentW, currentFontSize);
-                      const wordCount = (html.replace(/<[^>]*>/g, ' ').match(/\S+/g) || []).length;
-
-                      if (wordCount > wpp) {
-                        // Split overflow content into the next page
-                        const splitPages = splitHtmlIntoPages(html, wpp);
+                      // Simple state update — overflow is handled by onSplitNeeded below
+                      setRichPages(prev => {
+                        const next = [...prev];
+                        next[index] = html;
+                        return next;
+                      });
+                      setIsDirty(true);
+                    }}
+                    onSplitNeeded={(fitsHtml, overflowHtml) => {
+                      const nextIdx = index + 1;
+                      nextPageFocusRef.current = nextIdx;
+                      setRichPages(prev => {
+                        const next = [...prev];
+                        next[index] = fitsHtml;
+                        if (next[nextIdx] !== undefined) {
+                          // Prepend overflow before existing next-page content
+                          const existing = next[nextIdx];
+                          const existingIsEmpty = existing.replace(/<[^>]*>/g, '').trim() === '';
+                          next[nextIdx] = existingIsEmpty ? overflowHtml : overflowHtml + existing;
+                        } else {
+                          next.push(overflowHtml);
+                        }
+                        return next;
+                      });
+                      setIsDirty(true);
+                      // Try to focus next page immediately (it may already be mounted)
+                      requestAnimationFrame(() => {
+                        const nextEditor = pageEditorRefs.current[nextIdx];
+                        if (nextEditor && !nextEditor.isDestroyed) {
+                          nextEditor.commands.focus('start');
+                          nextPageFocusRef.current = -1;
+                        }
+                        // else: will be handled in onEditorReady
+                      });
+                    }}
+                    onHeightChange={(scrollH) => {
+                      // Debounced reverse-merge: if this page has a lot of free space
+                      // and the next page exists, try to pull one block back
+                      if (mergeDebounceRef.current) clearTimeout(mergeDebounceRef.current);
+                      mergeDebounceRef.current = setTimeout(() => {
+                        const available = dynContentH - 96; // minus 48px*2 padding
+                        const freeSpace = available - scrollH;
+                        // Only attempt merge if there's meaningful free space
+                        if (freeSpace < 60) return;
                         setRichPages(prev => {
+                          const nextPageHtml = prev[index + 1];
+                          if (!nextPageHtml) return prev;
+                          // Parse next page to extract its first block
+                          const parser = new DOMParser();
+                          const doc = parser.parseFromString(`<body>${nextPageHtml}</body>`, 'text/html');
+                          const firstBlock = doc.body.children[0] as HTMLElement | undefined;
+                          if (!firstBlock) return prev;
+                          // Estimate if the first block fits using word count as a proxy
+                          const firstBlockWords = (firstBlock.textContent || '').split(/\s+/).filter(Boolean).length;
+                          const currentWords = (prev[index].replace(/<[^>]*>/g, ' ').match(/\S+/g) || []).length;
+                          const currentFontSize =
+                            effectivePrefs.fontSize === "text-sm" ? 14 :
+                            effectivePrefs.fontSize === "text-base" ? 16 :
+                            effectivePrefs.fontSize === "text-xl" ? 20 :
+                            effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+                          const wpp = calcWordsPerPage(dynContentH, dynContentW, currentFontSize);
+                          // Use a conservative threshold (85% of wpp) to avoid pulling too much
+                          if (currentWords + firstBlockWords > wpp * 0.85) return prev;
                           const next = [...prev];
-                          next[index] = splitPages[0];
-                          if (splitPages.length > 1) {
-                            next.splice(index + 1, 0, ...splitPages.slice(1));
+                          next[index] = prev[index] + firstBlock.outerHTML;
+                          const remaining = Array.from(doc.body.children)
+                            .slice(1)
+                            .map(c => c.outerHTML)
+                            .join('');
+                          if (!remaining || remaining.replace(/<[^>]*>/g, '').trim() === '') {
+                            next.splice(index + 1, 1);
+                          } else {
+                            next[index + 1] = remaining;
                           }
                           return next;
                         });
-                      } else {
-                        setRichPages(prev => {
-                          const next = [...prev];
-                          next[index] = html;
-                          return next;
-                        });
-                      }
-                      setIsDirty(true);
+                      }, 400);
                     }}
                     onEditorReady={(editor) => {
+                      pageEditorRefs.current[index] = editor;
                       tiptapEditorRef.current = editor;
                       if (index === 0) {
                         setTiptapReady(true);
                         setActiveToolbarEditor(editor);
+                      }
+                      // If this page was queued to receive focus after a split
+                      if (nextPageFocusRef.current === index) {
+                        nextPageFocusRef.current = -1;
+                        requestAnimationFrame(() => {
+                          if (!editor.isDestroyed) editor.commands.focus('start');
+                        });
                       }
                     }}
                     onFocus={(editor) => {
