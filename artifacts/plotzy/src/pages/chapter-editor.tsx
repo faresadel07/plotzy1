@@ -40,24 +40,45 @@ const FONT_MAP: Record<string, string> = {
 };
 
 const FONT_STYLE_MAP: Record<string, React.CSSProperties> = {
+  // Serif
   "eb-garamond":       { fontFamily: "'EB Garamond', serif" },
   "cormorant":         { fontFamily: "'Cormorant Garamond', serif" },
-  "libre-baskerville": { fontFamily: "'Libre Baskerville', serif" },
+  "playfair":          { fontFamily: "'Playfair Display', serif" },
   "lora":              { fontFamily: "'Lora', serif" },
   "merriweather":      { fontFamily: "'Merriweather', serif" },
-  "source-serif":      { fontFamily: "'Source Serif 4', serif" },
-  "playfair":          { fontFamily: "'Playfair Display', serif" },
+  "libre-baskerville": { fontFamily: "'Libre Baskerville', serif" },
   "crimson":           { fontFamily: "'Crimson Text', serif" },
+  "source-serif":      { fontFamily: "'Source Serif 4', serif" },
+  "georgia":           { fontFamily: "Georgia, serif" },
+  "times":             { fontFamily: "'Times New Roman', serif" },
+  // Sans-serif
   "inter":             { fontFamily: "'Inter', sans-serif" },
+  "roboto":            { fontFamily: "'Roboto', sans-serif" },
   "open-sans":         { fontFamily: "'Open Sans', sans-serif" },
-  "poppins":           { fontFamily: "'Poppins', sans-serif" },
   "montserrat":        { fontFamily: "'Montserrat', sans-serif" },
+  "poppins":           { fontFamily: "'Poppins', sans-serif" },
+  "nunito":            { fontFamily: "'Nunito', sans-serif" },
+  "oswald":            { fontFamily: "'Oswald', sans-serif" },
+  "lexend":            { fontFamily: "'Lexend', sans-serif" },
+  "raleway":           { fontFamily: "'Raleway', sans-serif" },
+  "dm-sans":           { fontFamily: "'DM Sans', sans-serif" },
   "plus-jakarta":      { fontFamily: "'Plus Jakarta Sans', sans-serif" },
   "space-grotesk":     { fontFamily: "'Space Grotesk', sans-serif" },
-  "courier-prime":     { fontFamily: "'Courier Prime', monospace" },
+  // Display
+  "lobster":           { fontFamily: "'Lobster', cursive" },
+  "pacifico":          { fontFamily: "'Pacifico', cursive" },
+  "comfortaa":         { fontFamily: "'Comfortaa', cursive" },
   "special-elite":     { fontFamily: "'Special Elite', cursive" },
+  // Handwriting
+  "caveat":            { fontFamily: "'Caveat', cursive" },
+  "architects-daughter": { fontFamily: "'Architects Daughter', cursive" },
+  // Monospace
+  "courier-prime":     { fontFamily: "'Courier Prime', monospace" },
+  "courier-new":       { fontFamily: "'Courier New', monospace" },
   "roboto-mono":       { fontFamily: "'Roboto Mono', monospace" },
+  "ibm-plex-mono":     { fontFamily: "'IBM Plex Mono', monospace" },
   "space-mono":        { fontFamily: "'Space Mono', monospace" },
+  // Arabic
   "arabic-sans":       { fontFamily: "'Cairo', sans-serif" },
   "arabic-serif":      { fontFamily: "'Amiri', serif" },
   "arabic-naskh":      { fontFamily: "'Noto Naskh Arabic', serif" },

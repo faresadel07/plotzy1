@@ -16,23 +16,48 @@ function Sep() {
 }
 
 const FONT_OPTIONS = [
-  { id: "eb-garamond",       label: "EB Garamond",       fontFamily: "'EB Garamond', serif" },
-  { id: "cormorant",         label: "Cormorant Garamond", fontFamily: "'Cormorant Garamond', serif" },
-  { id: "playfair",          label: "Playfair Display",   fontFamily: "'Playfair Display', serif" },
-  { id: "lora",              label: "Lora",               fontFamily: "'Lora', serif" },
-  { id: "crimson",           label: "Crimson Text",       fontFamily: "'Crimson Text', serif" },
-  { id: "merriweather",      label: "Merriweather",       fontFamily: "'Merriweather', serif" },
-  { id: "libre-baskerville", label: "Libre Baskerville",  fontFamily: "'Libre Baskerville', serif" },
-  { id: "source-serif",      label: "Source Serif 4",     fontFamily: "'Source Serif 4', serif" },
-  { id: "inter",             label: "Inter",              fontFamily: "'Inter', sans-serif" },
-  { id: "open-sans",         label: "Open Sans",          fontFamily: "'Open Sans', sans-serif" },
-  { id: "poppins",           label: "Poppins",            fontFamily: "'Poppins', sans-serif" },
-  { id: "montserrat",        label: "Montserrat",         fontFamily: "'Montserrat', sans-serif" },
-  { id: "courier-prime",     label: "Courier Prime",      fontFamily: "'Courier Prime', monospace" },
-  { id: "special-elite",     label: "Special Elite",      fontFamily: "'Special Elite', cursive" },
-  { id: "arabic-sans",       label: "Cairo",              fontFamily: "'Cairo', sans-serif" },
-  { id: "arabic-serif",      label: "Amiri",              fontFamily: "'Amiri', serif" },
-  { id: "arabic-naskh",      label: "Noto Naskh Arabic",  fontFamily: "'Noto Naskh Arabic', serif" },
+  // ── Serif ──────────────────────────────────────────────────────────────
+  { id: "eb-garamond",       label: "EB Garamond",         fontFamily: "'EB Garamond', serif",           category: "Serif" },
+  { id: "cormorant",         label: "Cormorant Garamond",  fontFamily: "'Cormorant Garamond', serif",    category: "Serif" },
+  { id: "playfair",          label: "Playfair Display",    fontFamily: "'Playfair Display', serif",      category: "Serif" },
+  { id: "lora",              label: "Lora",                fontFamily: "'Lora', serif",                  category: "Serif" },
+  { id: "merriweather",      label: "Merriweather",        fontFamily: "'Merriweather', serif",          category: "Serif" },
+  { id: "libre-baskerville", label: "Libre Baskerville",   fontFamily: "'Libre Baskerville', serif",     category: "Serif" },
+  { id: "crimson",           label: "Crimson Text",        fontFamily: "'Crimson Text', serif",          category: "Serif" },
+  { id: "source-serif",      label: "Source Serif 4",      fontFamily: "'Source Serif 4', serif",        category: "Serif" },
+  { id: "georgia",           label: "Georgia",             fontFamily: "Georgia, serif",                 category: "Serif" },
+  { id: "times",             label: "Times New Roman",     fontFamily: "'Times New Roman', serif",       category: "Serif" },
+  // ── Sans-serif ─────────────────────────────────────────────────────────
+  { id: "inter",             label: "Inter",               fontFamily: "'Inter', sans-serif",            category: "Sans-serif" },
+  { id: "roboto",            label: "Roboto",              fontFamily: "'Roboto', sans-serif",           category: "Sans-serif" },
+  { id: "open-sans",         label: "Open Sans",           fontFamily: "'Open Sans', sans-serif",        category: "Sans-serif" },
+  { id: "montserrat",        label: "Montserrat",          fontFamily: "'Montserrat', sans-serif",       category: "Sans-serif" },
+  { id: "poppins",           label: "Poppins",             fontFamily: "'Poppins', sans-serif",          category: "Sans-serif" },
+  { id: "nunito",            label: "Nunito",              fontFamily: "'Nunito', sans-serif",           category: "Sans-serif" },
+  { id: "oswald",            label: "Oswald",              fontFamily: "'Oswald', sans-serif",           category: "Sans-serif" },
+  { id: "lexend",            label: "Lexend",              fontFamily: "'Lexend', sans-serif",           category: "Sans-serif" },
+  { id: "raleway",           label: "Raleway",             fontFamily: "'Raleway', sans-serif",          category: "Sans-serif" },
+  { id: "dm-sans",           label: "DM Sans",             fontFamily: "'DM Sans', sans-serif",          category: "Sans-serif" },
+  { id: "plus-jakarta",      label: "Plus Jakarta Sans",   fontFamily: "'Plus Jakarta Sans', sans-serif",category: "Sans-serif" },
+  { id: "space-grotesk",     label: "Space Grotesk",       fontFamily: "'Space Grotesk', sans-serif",    category: "Sans-serif" },
+  // ── Display ────────────────────────────────────────────────────────────
+  { id: "lobster",           label: "Lobster",             fontFamily: "'Lobster', cursive",             category: "Display" },
+  { id: "pacifico",          label: "Pacifico",            fontFamily: "'Pacifico', cursive",            category: "Display" },
+  { id: "comfortaa",         label: "Comfortaa",           fontFamily: "'Comfortaa', cursive",           category: "Display" },
+  { id: "special-elite",     label: "Special Elite",       fontFamily: "'Special Elite', cursive",       category: "Display" },
+  // ── Handwriting ────────────────────────────────────────────────────────
+  { id: "caveat",            label: "Caveat",              fontFamily: "'Caveat', cursive",              category: "Handwriting" },
+  { id: "architects-daughter", label: "Architects Daughter", fontFamily: "'Architects Daughter', cursive", category: "Handwriting" },
+  // ── Monospace ──────────────────────────────────────────────────────────
+  { id: "courier-prime",     label: "Courier Prime",       fontFamily: "'Courier Prime', monospace",     category: "Monospace" },
+  { id: "courier-new",       label: "Courier New",         fontFamily: "'Courier New', monospace",       category: "Monospace" },
+  { id: "roboto-mono",       label: "Roboto Mono",         fontFamily: "'Roboto Mono', monospace",       category: "Monospace" },
+  { id: "ibm-plex-mono",     label: "IBM Plex Mono",       fontFamily: "'IBM Plex Mono', monospace",     category: "Monospace" },
+  { id: "space-mono",        label: "Space Mono",          fontFamily: "'Space Mono', monospace",        category: "Monospace" },
+  // ── Arabic ─────────────────────────────────────────────────────────────
+  { id: "arabic-sans",       label: "Cairo",               fontFamily: "'Cairo', sans-serif",            category: "Arabic" },
+  { id: "arabic-serif",      label: "Amiri",               fontFamily: "'Amiri', serif",                 category: "Arabic" },
+  { id: "arabic-naskh",      label: "Noto Naskh Arabic",   fontFamily: "'Noto Naskh Arabic', serif",     category: "Arabic" },
 ];
 
 const TEXT_STYLES = [
@@ -99,6 +124,7 @@ export function RichWritingToolbar({
   const [styleDropRect, setStyleDropRect] = useState<{ top: number; left: number } | null>(null);
   const [fontDropOpen, setFontDropOpen] = useState(false);
   const [fontDropRect, setFontDropRect] = useState<{ top: number; left: number } | null>(null);
+  const [fontSearch, setFontSearch] = useState("");
   const [pageSizeDropOpen, setPageSizeDropOpen] = useState(false);
   const [pageSizeDropRect, setPageSizeDropRect] = useState<{ top: number; left: number } | null>(null);
   const styleBtnRef = useRef<HTMLButtonElement>(null);
@@ -584,30 +610,70 @@ export function RichWritingToolbar({
       )}
 
       {/* ── Font Family Dropdown (fixed-position) ── */}
-      {fontDropOpen && fontDropRect && (
-        <>
-          <div className="fixed inset-0" style={{ zIndex: 9998 }}
-            onMouseDown={() => { setFontDropOpen(false); setFontDropRect(null); }} />
-          <div className="fixed rounded-xl shadow-2xl overflow-y-auto py-1"
-            style={{ top: fontDropRect.top, left: fontDropRect.left, zIndex: 9999,
-              background: dropBg, border: `1px solid ${dropBorder}`, width: 200, maxHeight: 320 }}>
-            {FONT_OPTIONS.map(f => (
-              <button key={f.id}
-                onMouseDown={e => { e.preventDefault(); applyFont(f); setFontDropRect(null); }}
-                style={{
-                  ...dropItemStyle,
-                  fontFamily: f.fontFamily,
-                  color: isDark || isFocusMode ? "#e4e4e7" : "#18181b",
-                  background: f.id === currentFontObj.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") : "transparent",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-                onMouseLeave={e => (e.currentTarget.style.background = f.id === currentFontObj.id
-                  ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") : "transparent")}
-              >{f.label}</button>
-            ))}
-          </div>
-        </>
-      )}
+      {fontDropOpen && fontDropRect && (() => {
+        const q = fontSearch.trim().toLowerCase();
+        const filtered = q ? FONT_OPTIONS.filter(f => f.label.toLowerCase().includes(q)) : FONT_OPTIONS;
+        const categories = q ? ["Results"] : ["Serif", "Sans-serif", "Display", "Handwriting", "Monospace", "Arabic"];
+        const getGroup = (cat: string) => cat === "Results" ? filtered : filtered.filter(f => f.category === cat);
+        const textCol = isDark || isFocusMode ? "#e4e4e7" : "#18181b";
+        const catCol  = isDark || isFocusMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)";
+        const activeBgFont = isDark || isFocusMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+        return (
+          <>
+            <div className="fixed inset-0" style={{ zIndex: 9998 }}
+              onMouseDown={() => { setFontDropOpen(false); setFontDropRect(null); setFontSearch(""); }} />
+            <div className="fixed rounded-xl shadow-2xl flex flex-col"
+              style={{ top: fontDropRect.top, left: fontDropRect.left, zIndex: 9999,
+                background: dropBg, border: `1px solid ${dropBorder}`, width: 220, maxHeight: 380 }}>
+              {/* Search */}
+              <div style={{ padding: "8px 10px 6px", borderBottom: `1px solid ${dropBorder}`, flexShrink: 0 }}>
+                <input
+                  autoFocus
+                  value={fontSearch}
+                  onChange={e => setFontSearch(e.target.value)}
+                  onMouseDown={e => e.stopPropagation()}
+                  placeholder="Search fonts…"
+                  style={{
+                    width: "100%", padding: "5px 8px", fontSize: "12px", borderRadius: "6px",
+                    border: `1px solid ${dropBorder}`, background: isDark || isFocusMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    color: textCol, outline: "none", boxSizing: "border-box",
+                  }}
+                />
+              </div>
+              {/* List */}
+              <div style={{ overflowY: "auto", flex: 1, padding: "4px 0" }}>
+                {categories.map(cat => {
+                  const group = getGroup(cat);
+                  if (!group.length) return null;
+                  return (
+                    <div key={cat}>
+                      <div style={{ padding: "6px 12px 2px", fontSize: "10px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: catCol, userSelect: "none" }}>
+                        {cat}
+                      </div>
+                      {group.map(f => (
+                        <button key={f.id}
+                          onMouseDown={e => { e.preventDefault(); applyFont(f); setFontDropRect(null); setFontSearch(""); }}
+                          style={{
+                            display: "block", width: "100%", textAlign: "left",
+                            padding: "6px 14px", fontSize: "13px", border: "none", cursor: "pointer",
+                            fontFamily: f.fontFamily, color: textCol,
+                            background: f.id === currentFontObj.id ? activeBgFont : "transparent",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
+                          onMouseLeave={e => (e.currentTarget.style.background = f.id === currentFontObj.id ? activeBgFont : "transparent")}
+                        >{f.label}</button>
+                      ))}
+                    </div>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <div style={{ padding: "16px", textAlign: "center", fontSize: "12px", color: catCol }}>No fonts found</div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* ── Page Size Dropdown (fixed-position to escape overflow clipping) ── */}
       {pageSizeDropOpen && pageSizeDropRect && onPaperSizeChange && (
