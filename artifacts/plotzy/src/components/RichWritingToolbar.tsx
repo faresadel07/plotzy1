@@ -5,7 +5,8 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Link as LinkIcon,
   Minus, Plus, Undo2, Redo2, ChevronDown,
-  Highlighter, Printer, Indent, Outdent, Quote,
+  Highlighter, Indent, Outdent, Quote,
+  BookOpen, Book, Layers, FileText,
 } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -46,11 +47,19 @@ const TEXT_STYLES = [
 const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 42, 48, 60, 72];
 
 const PAGE_SIZE_OPTIONS = [
-  { id: "a5",     label: "Classic Novel",     desc: "14.8 × 21 cm",   icon: "📖" },
-  { id: "pocket", label: "Pocket Book",       desc: "11 × 18 cm",     icon: "✋" },
-  { id: "trade",  label: "Prof. Trade",       desc: "15.2 × 22.9 cm", icon: "📚" },
-  { id: "a4",     label: "Standard A4",       desc: "21 × 29.7 cm",   icon: "📄" },
+  { id: "a5",     label: "Classic Novel",     desc: "14.8 × 21 cm"   },
+  { id: "pocket", label: "Pocket Book",       desc: "11 × 18 cm"     },
+  { id: "trade",  label: "Prof. Trade",       desc: "15.2 × 22.9 cm" },
+  { id: "a4",     label: "Standard A4",       desc: "21 × 29.7 cm"   },
 ];
+
+function PageSizeIcon({ id, size = 14, color = "currentColor" }: { id: string; size?: number; color?: string }) {
+  const p = { width: size, height: size, strokeWidth: 1.6, color };
+  if (id === "pocket") return <Book {...p} />;
+  if (id === "trade")  return <Layers {...p} />;
+  if (id === "a4")     return <FileText {...p} />;
+  return <BookOpen {...p} />;
+}
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -225,15 +234,6 @@ export function RichWritingToolbar({
             <Redo2 className="w-3.5 h-3.5" />
           </button>
 
-          {/* ── Print ── */}
-          {onPrint && (
-            <button onClick={onPrint} style={btn()} title="Print"
-              onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-              <Printer className="w-3.5 h-3.5" />
-            </button>
-          )}
-
           <Sep />
 
           {/* ── Page Size ── */}
@@ -259,7 +259,7 @@ export function RichWritingToolbar({
                 onMouseLeave={e => (e.currentTarget.style.background = pageSizeDropOpen ? activeBg : "transparent")}
                 title="Page size"
               >
-                <span>{currentPageSize.icon}</span>
+                <PageSizeIcon id={currentPageSize.id} size={14} />
                 <span style={{ color: fg }}>{currentPageSize.label}</span>
                 <ChevronDown className="w-3 h-3 ml-auto opacity-50" />
               </button>
@@ -646,7 +646,7 @@ export function RichWritingToolbar({
                 onMouseLeave={e => (e.currentTarget.style.background = paperSize === opt.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : "transparent")}
               >
                 <span className="flex items-center gap-2.5">
-                  <span>{opt.icon}</span>
+                  <PageSizeIcon id={opt.id} size={16} />
                   <span className="flex flex-col items-start gap-0.5">
                     <span style={{ fontSize: 12, color: fgStrong }}>{opt.label}</span>
                     <span style={{ fontSize: 10, opacity: 0.5 }}>{opt.desc}</span>
