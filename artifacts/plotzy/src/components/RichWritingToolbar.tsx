@@ -346,7 +346,9 @@ export function RichWritingToolbar({
 
           {/* ── Font Size ── */}
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <button onClick={() => changeSize(-1)} style={btn()} title="Decrease size"
+            <button
+              onMouseDown={e => { e.preventDefault(); changeSize(-1); }}
+              style={btn()} title="Decrease size"
               onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
               <Minus className="w-3 h-3" />
@@ -365,12 +367,14 @@ export function RichWritingToolbar({
               <span
                 className="w-9 text-center text-xs tabular-nums font-medium cursor-text select-none rounded"
                 style={{ color: fg, height: 22, lineHeight: "22px", display: "block" }}
-                onClick={() => { setSizeInput(String(currentSize)); setTimeout(() => sizeInputRef.current?.select(), 10); }}
+                onMouseDown={e => { e.preventDefault(); setSizeInput(String(currentSize)); setTimeout(() => sizeInputRef.current?.select(), 10); }}
               >
                 {currentSize}
               </span>
             )}
-            <button onClick={() => changeSize(1)} style={btn()} title="Increase size"
+            <button
+              onMouseDown={e => { e.preventDefault(); changeSize(1); }}
+              style={btn()} title="Increase size"
               onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
               <Plus className="w-3 h-3" />
