@@ -17,7 +17,7 @@ Full-stack book writing and publishing platform. pnpm monorepo with React+Vite f
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **Auth**: Passport.js (Google OAuth + email/password)
 - **Payments**: Stripe (subscriptions)
-- **AI**: OpenAI API (writing assistance)
+- **AI**: OpenAI API (writing assistance + TTS for audiobook export)
 - **File uploads**: multer
 - **WebSockets**: ws
 
@@ -103,6 +103,24 @@ Database layer using Drizzle ORM.
 ### `lib/shared` (`@workspace/shared`)
 
 Shared route type definitions and achievement constants used by both frontend and backend.
+
+## Chapter Editor Rich Text
+
+The writing editor uses **TipTap** (ProseMirror-based) for a Google Docs-style rich text experience.
+
+Key files:
+- `src/components/RichChapterEditor.tsx` — TipTap `useEditor` hook with all extensions
+- `src/components/RichWritingToolbar.tsx` — Google Docs-style toolbar (all controls wired to editor)
+- `src/pages/chapter-editor.tsx` — host page; uses `richHtml` state; `pagesToHtml()` converts legacy JSON pages to single HTML string on load; saves as `JSON.stringify([{type:'text', content: html}])`
+
+TipTap extensions used:
+- `StarterKit` (heading, bold, italic, strike, code, lists, etc.) with `underline: false, link: false`
+- `Underline`, `Link`, `TextAlign`, `TextStyle`, `Color`, `FontFamily`, `Highlight`
+- Custom `FontSize` extension (via `mark` on TextStyle)
+
+Toolbar subscribes to `editor.on("transaction")` so active states (bold/italic/etc.) update in real-time as the cursor moves.
+
+**Import note**: `TextStyle` must use named import `{ TextStyle }` — no default export.
 
 ## Book Tools (Tools Tab in Book Editor)
 

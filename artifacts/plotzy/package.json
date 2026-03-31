@@ -88,6 +88,19 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@paypal/react-paypal-js": "^9.1.0",
+    "@tiptap/core": "^3.21.0",
+    "@tiptap/extension-color": "^3.21.0",
+    "@tiptap/extension-font-family": "^3.21.0",
+    "@tiptap/extension-highlight": "^3.21.0",
+    "@tiptap/extension-link": "^3.21.0",
+    "@tiptap/extension-strike": "^3.21.0",
+    "@tiptap/extension-text-align": "^3.21.0",
+    "@tiptap/extension-text-style": "^3.21.0",
+    "@tiptap/extension-typography": "^3.21.0",
+    "@tiptap/extension-underline": "^3.21.0",
+    "@tiptap/react": "^3.21.0",
+    "@tiptap/starter-kit": "^3.21.0",
     "nanoid": "^5.1.7"
   }
 }

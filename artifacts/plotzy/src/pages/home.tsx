@@ -5,6 +5,9 @@ import { AuthModal } from "@/components/auth-modal";
 import { FeatureVideo } from "@/components/FeatureVideo";
 import { WritingAnimation } from "@/components/WritingAnimation";
 import { AIAssistantAnimation } from "@/components/AIAssistantAnimation";
+import { MarketplaceMockup } from "@/components/MarketplaceMockup";
+import { AudiobookMockup } from "@/components/AudiobookMockup";
+import { AnimatedFolder } from "@/components/ui/3d-folder";
 import { CardStack } from "@/components/ui/card-stack";
 import { BookCarousel } from "@/components/BookCarousel";
 import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
@@ -313,89 +316,8 @@ function BookPages() {
   );
 }
 
-const MARKETPLACE_SERVICES = [
-  { label: "AI Developmental Editor", tag: "Most Used", dot: "#aaa" },
-  { label: "AI Copy Editor", tag: "Grammar & Style", dot: "#bbb" },
-  { label: "AI Cover Generator", tag: "Design", dot: "#ccc" },
-  { label: "AI Book Blurb Writer", tag: "Marketing", dot: "#999" },
-];
 
-function MarketplaceMockup() {
-  const [activeRow, setActiveRow] = useState(0);
-  const [analyzing, setAnalyzing] = useState(false);
 
-  useEffect(() => {
-    const cycle = () => {
-      setAnalyzing(true);
-      setTimeout(() => {
-        setAnalyzing(false);
-        setActiveRow(prev => (prev + 1) % MARKETPLACE_SERVICES.length);
-      }, 900);
-    };
-    const id = setInterval(cycle, 2200);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <div className="relative rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/10 shadow-2xl p-6">
-      {/* Top bar */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-white/10" />
-          <div className="w-3 h-3 rounded-full bg-white/10" />
-          <div className="w-3 h-3 rounded-full bg-white/10" />
-        </div>
-        <div className="flex-1 bg-white/5 rounded-md px-3 py-1 text-[10px] text-white/30 font-mono">plotzy.app/marketplace</div>
-      </div>
-
-      {/* Services list */}
-      {MARKETPLACE_SERVICES.map((svc, i) => {
-        const isActive = i === activeRow;
-        return (
-          <div
-            key={svc.label}
-            className="flex items-center justify-between gap-3 mb-3 p-3 rounded-xl border transition-all duration-500"
-            style={{
-              background: isActive ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.03)",
-              borderColor: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)",
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-2 h-2 rounded-full flex-shrink-0 transition-all duration-300"
-                style={{
-                  background: isActive ? "#fff" : svc.dot,
-                  boxShadow: isActive ? "0 0 6px rgba(255,255,255,0.6)" : "none",
-                }}
-              />
-              <span className="text-xs font-medium transition-colors duration-300" style={{ color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.5)" }}>
-                {svc.label}
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 text-white/30">{svc.tag}</span>
-            </div>
-            <div
-              className="text-[10px] px-2.5 py-1 rounded-lg font-bold flex-shrink-0 transition-all duration-300"
-              style={{
-                background: isActive ? (analyzing ? "rgba(255,255,255,0.15)" : "#fff") : "rgba(255,255,255,0.07)",
-                color: isActive ? (analyzing ? "rgba(255,255,255,0.6)" : "#111") : "rgba(255,255,255,0.25)",
-              }}
-            >
-              {isActive && analyzing ? "Running…" : "Analyze"}
-            </div>
-          </div>
-        );
-      })}
-
-      <div className="mt-4 pt-4 border-t border-white/8 flex items-center justify-between">
-        <span className="text-white/30 text-xs">9 services available</span>
-        <div className="flex items-center gap-1.5 text-white/40 text-xs font-semibold">
-          <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse" />
-          Ready to publish
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -625,47 +547,59 @@ export default function Home() {
           </ContainerScroll>
         </div>
 
-        {/* ===== FEATURE PHRASES ===== */}
-        <div style={{ background: "#080808", overflow: "hidden", padding: "14px 6%", marginTop: "-60px" }}>
-          <div style={{
-            maxWidth: 1280,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            columnGap: "6%",
-            rowGap: "0",
-          }}>
-            {[
-              "The world's first platform of its kind.",
-              "A powerful community that reads, rates, and elevates your book.",
-              "A proven guide to start writing, crafted with real authors.",
-              "An AI-powered marketplace that perfects every detail of your book.",
-              "Access hundreds of thousands of free books to spark your creativity.",
-              "From your first word to your cover, we've got everything covered.",
-            ].map((phrase, i) => {
-              const fromLeft = i % 2 === 0;
-              return (
-                <motion.p
-                  key={i}
-                  initial={{ opacity: 0, x: fromLeft ? -60 : 60 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.5 }}
-                  transition={{ duration: 0.6, delay: Math.floor(i / 2) * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
-                  style={{
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
-                    fontSize: "clamp(1.1rem, 1.9vw, 1.45rem)",
-                    fontWeight: 400,
-                    color: "rgba(255,255,255,0.88)",
-                    lineHeight: 1.5,
-                    letterSpacing: "-0.01em",
-                    padding: "18px 0",
-                  }}
+        {/* ===== 3D FEATURE FOLDERS ===== */}
+        <div style={{ background: "#060606", overflow: "visible", padding: "40px 6% 48px", marginTop: "-40px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              style={{ textAlign: "center", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif', fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 400, letterSpacing: "-0.02em", color: "#ffffff", marginBottom: 56, lineHeight: 1.3 }}
+            >
+              The world's first platform built to help you write your first book, even if you've never written a word before.
+            </motion.p>
+            <div style={{ display: "flex", justifyContent: "center", gap: 0 }}>
+              {[
+                {
+                  title: "Write & Refine",
+                  subtitle: "3 features · hover to explore",
+                  cards: [
+                    { id: "w1", icon: "✦", headline: "The world's first platform of its kind", sub: "Plotzy is uniquely built for authors — a distraction-free editor that combines manuscript management, AI tools, and publishing all in one workspace." },
+                    { id: "w2", icon: "📖", headline: "A proven guide to start writing", sub: "Crafted with real authors, our step-by-step writing guide helps you outline, draft, and refine your story from first chapter to last." },
+                    { id: "w3", icon: "🤖", headline: "AI Writing Assistant that knows your story", sub: "Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice — not just the current paragraph." },
+                  ],
+                },
+                {
+                  title: "Publish & Distribute",
+                  subtitle: "3 features · hover to explore",
+                  cards: [
+                    { id: "p1", icon: "🚀", headline: "An AI-powered marketplace that perfects your book", sub: "From developmental editing to cover design and blurb writing — 9 AI services available on demand, each completed in minutes with no waitlists." },
+                    { id: "p2", icon: "🌍", headline: "From your first word to your cover", sub: "Generate professional AI book covers, format your manuscript for every platform, and distribute to every major digital and print retailer with one click." },
+                    { id: "p3", icon: "📊", headline: "World Publish — distribute everywhere", sub: "Your manuscript reaches every major platform while Plotzy handles formatting, rights management, and royalty tracking automatically." },
+                  ],
+                },
+                {
+                  title: "Listen & Discover",
+                  subtitle: "3 features · hover to explore",
+                  cards: [
+                    { id: "l1", icon: "🎙️", headline: "AI Audiobook Studio — 10 distinct voices", sub: "With one click, Plotzy's AI narrates your entire book in your chosen voice. Preview each chapter, adjust quality, and export HD audio instantly." },
+                    { id: "l2", icon: "🌐", headline: "A powerful community of readers", sub: "Connect with readers who rate, review, and elevate your book. Build a following before your book is even finished." },
+                    { id: "l3", icon: "📚", headline: "Access hundreds of thousands of free books", sub: "Browse a vast library of free books across every genre to spark your creativity, study the craft, and find your writing style." },
+                  ],
+                },
+              ].map((folder, i) => (
+                <motion.div
+                  key={folder.title}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <span style={{ color: "rgba(255,255,255,0.3)", marginRight: "10px", fontSize: "0.8em" }}>●</span>
-                  {phrase}
-                </motion.p>
-              );
-            })}
+                  <AnimatedFolder folder={folder} className="w-full" />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -946,233 +880,163 @@ export default function Home() {
         <section className="bg-white overflow-hidden border-b border-[#f0f0f0]">
 
           {/* Section intro */}
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-12 pb-6 text-center">
+          <div className="max-w-6xl mx-auto px-6 sm:px-8 pt-16 pb-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#bbb] mb-4">How it works</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-4">
                 The first platform built<br className="hidden sm:block" /> for the full author journey
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
-                From your first idea to a published, distributed book. Plotzy is the only platform that handles every step in one unified workspace, in Arabic and English.
+                From your first idea to a published, distributed book, every step is covered in one unified workspace.
               </p>
             </motion.div>
           </div>
 
-          {/* Divider line */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-[#e8e8e8] to-transparent" />
+          <div className="max-w-6xl mx-auto px-6 sm:px-8 pb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-10 pb-12">
-
-            {/* Step 1 */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-28">
+              {/* ── Card 1: Write ── */}
               <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: -40 }}
+                initial={{ opacity: 0, x: -60 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">1</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Write</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">1</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Write</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">Write your story, your way</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    A distraction-free editor for serious authors. Outline chapters, structure your plot, and write in Arabic or English with full RTL support.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  Write your story,<br/>your way
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  A distraction-free editor built for serious authors. Outline your chapters,
-                  structure your plot, and pour your ideas onto the page in one focused workspace.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    'Chapter-by-chapter organisation with drag-to-reorder',
-                    'Auto-save, version history and snapshots',
-                    'Full RTL support, write natively in Arabic',
-                    'Ghost text AI suggestions as you type',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <WritingAnimation />
+                </div>
+                <ul className="space-y-2">
+                  {['Chapter-by-chapter with drag-to-reorder', 'Auto-save & version history', 'Ghost text AI as you type'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
+              {/* ── Card 2: Refine ── */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full relative"
-                initial={{ opacity: 0, x: 40 }}
+                initial={{ opacity: 0, x: 60 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <WritingAnimation />
-                {/* Floating badge */}
-                <motion.div
-                  className="absolute -bottom-4 -left-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.6, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Auto-saved just now
-                </motion.div>
-                <motion.div
-                  className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 bg-[#111] rounded-xl shadow-lg text-xs font-semibold text-white"
-                  initial={{ opacity: 0, y: -12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.8, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                  Arabic &amp; English
-                </motion.div>
-              </motion.div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24 mb-28">
-              <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">2</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Refine</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">2</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Refine</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">AI that knows your story</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  AI that knows<br/>your story
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  Stuck on a scene? Plotzy's AI reads your entire manuscript and suggests continuations,
-                  rewrites, and ideas that match your unique voice and style.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    'Reads context from all your chapters, not just the current one',
-                    'Matches your tone, vocabulary and narrative style',
-                    'Plot hole detection and pacing analysis',
-                    'Dialogue coaching and character voice consistency',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: 16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <AIAssistantAnimation />
+                </div>
+                <ul className="space-y-2">
+                  {['Context from all chapters, not just the current one', 'Plot hole detection & pacing analysis', 'Dialogue coaching & voice consistency'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
+              {/* ── Card 3: Publish ── */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full relative"
-                initial={{ opacity: 0, x: -40 }}
+                initial={{ opacity: 0, x: -60 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <AIAssistantAnimation />
-                <motion.div
-                  className="absolute -bottom-4 -right-4 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-[#e8e8e8] shadow-lg text-xs font-semibold text-[#333]"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.7, duration: 0.5 }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Context-aware AI
-                </motion.div>
-              </motion.div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-              <motion.div
-                className="flex-1 max-w-[500px]"
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut' }}
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-7 h-7 rounded-full bg-[#111] flex items-center justify-center text-white text-xs font-bold">3</div>
-                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#999]">Publish</span>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">3</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Publish</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">From manuscript to published book</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    Cover design, formatting, and distribution: Plotzy's professional tools take your story to the finish line.
+                  </p>
                 </div>
-                <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-5">
-                  From manuscript<br/>to published book
-                </h2>
-                <p className="text-lg text-[#555] leading-[1.75] mb-8">
-                  When your story is ready, Plotzy's professional publishing tools take it to the
-                  finish line. Cover design, formatting, ISBN registration and distribution.
-                </p>
-                <motion.ul
-                  className="space-y-3"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } } }}
-                >
-                  {[
-                    'AI-generated professional book covers',
-                    'One-click export to PDF and ebook formats',
-                    'Direct publishing guide to Amazon KDP',
-                    '9 AI editorial services in the marketplace',
-                  ].map((item) => (
-                    <motion.li
-                      key={item}
-                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0, transition: { duration: 0.45, ease: "easeOut" } } }}
-                      className="flex items-start gap-3 text-[#444] text-sm font-medium"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-black/6 border border-black/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <MarketplaceMockup />
+                </div>
+                <ul className="space-y-2">
+                  {['AI-generated professional book covers', 'One-click export to PDF & EPUB', '9 AI editorial services in the marketplace'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
-                    </motion.li>
+                    </li>
                   ))}
-                </motion.ul>
+                </ul>
               </motion.div>
 
-              {/* Publishing mockup */}
+              {/* ── Card 4: Audiobook ── */}
               <motion.div
-                className="flex-1 max-w-[560px] w-full"
-                initial={{ opacity: 0, x: 40 }}
+                initial={{ opacity: 0, x: 60 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.15 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.65, ease: "easeOut" }}
+                className="rounded-3xl p-8 flex flex-col gap-6"
+                style={{ background: "#f7f7f7", border: "1px solid #ececec" }}
               >
-                <MarketplaceMockup />
+                <div>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">4</div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Listen</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">Turn your book into an audiobook</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">
+                    With one click, Plotzy's AI narrates your entire book. Choose from 10 distinct voices, preview each chapter, and export.
+                  </p>
+                </div>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                  <AudiobookMockup />
+                </div>
+                <ul className="space-y-2">
+                  {['10 distinct AI voices with unique pitch & tone', 'Chapter-by-chapter narration with live preview', 'Real-time waveform & export-ready audio'].map(item => (
+                    <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
+                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </motion.div>
-            </div>
 
+            </div>
           </div>
         </section>
 
@@ -1210,35 +1074,42 @@ export default function Home() {
                   tag: "Writing",
                   title: "A distraction-free editor built for long-form writing",
                   description: "Full-screen chapters, live word count, drag-to-reorder, and status labels. The page stays out of your way so the story stays in focus.",
-                  accent: "linear-gradient(90deg,#fff 0%,#aaa 100%)",
+                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 2,
                   tag: "AI",
                   title: "An AI that reads as you write, never as you wait",
-                  description: "Stronger verbs, passive-voice flags, alternative phrasings — offered quietly, so your voice stays yours. Think of it as an invisible co-author.",
-                  accent: "linear-gradient(90deg,#a78bfa 0%,#7c3aed 100%)",
+                  description: "Stronger verbs, passive-voice flags, alternative phrasings offered quietly, so your voice stays yours. Think of it as an invisible co-author.",
+                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 3,
                   tag: "Publishing",
                   title: "One button to reach every major platform",
                   description: "Your manuscript lands on every digital and print platform simultaneously. Formatting, rights management, and royalty tracking handled automatically.",
-                  accent: "linear-gradient(90deg,#34d399 0%,#059669 100%)",
+                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 4,
                   tag: "Cover Design",
                   title: "Professional covers generated in seconds",
-                  description: "Describe your story's tone, era, and feeling. Plotzy generates gallery-quality artwork ready for the shelf — no design skills required.",
-                  accent: "linear-gradient(90deg,#fb923c 0%,#ea580c 100%)",
+                  description: "Describe your story's tone, era, and feeling. Plotzy generates gallery-quality artwork ready for the shelf, no design skills required.",
+                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 5,
                   tag: "Analytics",
                   title: "Know exactly where readers slow down or stop",
                   description: "See where readers accelerate, where they drift, and where they quietly close the book. Revision becomes a precise science rather than a guessing game.",
-                  accent: "linear-gradient(90deg,#38bdf8 0%,#0284c7 100%)",
+                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                },
+                {
+                  id: 6,
+                  tag: "Audiobook Studio",
+                  title: "Turn your book into a full audiobook with one click",
+                  description: "Choose from 10 distinct AI voices, preview each chapter, and export high-quality audio ready for any platform. Your words, narrated exactly the way you imagined.",
+                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
               ]}
             />

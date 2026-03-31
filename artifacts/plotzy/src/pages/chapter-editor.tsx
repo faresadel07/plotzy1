@@ -6,8 +6,12 @@ import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion
 import { AIAssistant } from "@/components/ai-assistant";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
+import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
+import { RichWritingToolbar } from "@/components/RichWritingToolbar";
+import { RichChapterEditor } from "@/components/RichChapterEditor";
+import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil } from "lucide-react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { playTypewriterSound } from "@/hooks/use-audio";
@@ -60,10 +64,10 @@ const FONT_STYLE_MAP: Record<string, React.CSSProperties> = {
 };
 
 const LINE_HEIGHT_MAP: Record<string, string> = {
-  "tight":    "1.55",
-  "normal":   "1.85",
-  "relaxed":  "2.15",
-  "spacious": "2.55",
+  "tight":    "1.30",  // compact, like dense reference books
+  "normal":   "1.45",  // standard published novel (12pt/14pt leading)
+  "relaxed":  "1.65",  // comfortable reading
+  "spacious": "2.00",  // double-spaced manuscript
 };
 
 const LETTER_SPACING_MAP: Record<string, string> = {
@@ -103,22 +107,108 @@ function serializePages(pages: PageBlock[]): string {
   return JSON.stringify(pages);
 }
 
-// ── Fixed Page Dimensions (true A4 at 72 dpi) ────────────────────────────────
-// Page card is 595px wide (A4 = 595pt wide at 72dpi — same as PDF standard).
-// Horizontal margin: 76px each side → content width = 595 - 152 = 443px.
-// True A4 at 72 dpi: 595 × 842 px.
-// Strip heights (header + footer) ≈ 185px → content height = 842 - 185 = 657px.
-const PAGE_CONTENT_HEIGHT = 657; // px — textarea height (A4 at 72dpi)
-const PAGE_CONTENT_WIDTH  = 443; // px — content area inside page card (595 - 2×76)
+// ── Paper Size Definitions ────────────────────────────────────────────────────
+// All sizes in CSS pixels at 96 dpi (1 inch = 96 px; 1 cm = 37.795 px)
+const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
+  "a5":     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",       labelAr: "رواية كلاسيكية",  icon: "📖" },
+  "pocket": { width: 416,  height: 680,  widthCm: 11.0, heightCm: 18.0, label: "Pocket Book",         labelAr: "كتاب جيب",        icon: "✋" },
+  "trade":  { width: 576,  height: 864,  widthCm: 15.2, heightCm: 22.9, label: "Professional Trade",  labelAr: "تجاري احترافي",   icon: "📚" },
+  "a4":     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",         labelAr: "A4 قياسي",        icon: "📄" },
+};
+
+const DEFAULT_MARGIN = 72; // px — 0.75 inch at 96 dpi
+
+function getPageDimensions(prefs: { paperSize?: string; marginTop?: number; marginBottom?: number; marginLeft?: number; marginRight?: number }) {
+  const paper = PAPER_SIZES[prefs.paperSize || "trade"];
+  const ml = prefs.marginLeft  ?? DEFAULT_MARGIN;
+  const mr = prefs.marginRight ?? DEFAULT_MARGIN;
+  const mt = prefs.marginTop   ?? DEFAULT_MARGIN;
+  const mb = prefs.marginBottom ?? DEFAULT_MARGIN;
+  return {
+    pageWidth:    paper.width,
+    pageHeight:   paper.height,
+    contentWidth: Math.max(180, paper.width  - ml - mr),
+    contentHeight: Math.max(200, paper.height - mt - mb),
+    marginLeft:   ml,
+    marginRight:  mr,
+    marginTop:    mt,
+    marginBottom: mb,
+  };
+}
+
+// Legacy fallbacks (used in measurement div until effectivePrefs are loaded)
+const PAGE_CONTENT_HEIGHT = 720; // px — Trade 6×9 with 72px margins (864-144)
+const PAGE_CONTENT_WIDTH  = 432; // px — 576 - 144
+
+/**
+ * Calculate the ideal words per page.
+ * contentH = TipTap's total height (fixedHeight). TipTap subtracts 48px top/bottom padding internally.
+ * contentW = the text area width (pageWidth − left/right margins = TipTap text area).
+ */
+function calcWordsPerPage(contentH: number, contentW: number, fontSize: number): number {
+  const tiptapPaddingV = 96;  // 48px top + 48px bottom (TipTap CSS padding)
+  const lineHeightPx   = fontSize * 1.45;
+  // textH: usable vertical space inside TipTap after its own top/bottom padding
+  const textH          = Math.max(100, contentH - tiptapPaddingV);
+  // textW: contentW already equals the TipTap text area width (page width − page margins)
+  const textW          = Math.max(100, contentW);
+  const linesPerPage   = Math.floor(textH / lineHeightPx);
+  const charsPerLine   = textW / (fontSize * 0.52); // 0.52 ≈ avg char-width ratio for EB Garamond
+  const wordsPerLine   = charsPerLine / 5.5;         // ~5.5 chars per word average
+  return Math.max(80, Math.floor(linesPerPage * wordsPerLine * 0.90));
+}
 
 function getPageText(block: PageBlock): string {
   if (typeof block === "string") return block;
   return block.type === "text" ? block.content : "";
 }
 
+function pagesToHtml(pages: PageBlock[]): string {
+  // Combine all pages' text
+  const combined = pages.map(p => getPageText(p)).filter(t => t.trim()).join('\n\n');
+  if (!combined.trim()) return '<p></p>';
+  // If already HTML (new format), return as-is
+  if (combined.trimStart().startsWith('<')) return combined;
+  // Convert plain text paragraphs to HTML
+  return combined
+    .split(/\n\n+/)
+    .map(para => `<p>${para.replace(/\n/g, '<br/>')}</p>`)
+    .join('\n');
+}
+
 function countWords(text: string): number {
   const t = text.trim();
   return t ? t.split(/\s+/).length : 0;
+}
+
+/**
+ * Split an HTML string into page-sized chunks (~250 words each).
+ * Preserves paragraph integrity — never splits inside a tag.
+ */
+function splitHtmlIntoPages(html: string, wordsPerPage = 250): string[] {
+  if (!html || html.replace(/<[^>]*>/g, '').trim() === '') return ['<p></p>'];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<body>${html}</body>`, 'text/html');
+  const blocks = Array.from(doc.body.children);
+  if (blocks.length === 0) return [html || '<p></p>'];
+
+  const pages: string[] = [];
+  let cur: string[] = [];
+  let curWords = 0;
+
+  for (const block of blocks) {
+    const words = (block.textContent || '').trim().split(/\s+/).filter(Boolean).length;
+    if (curWords + words > wordsPerPage && cur.length > 0) {
+      pages.push(cur.join(''));
+      cur = [block.outerHTML];
+      curWords = words;
+    } else {
+      cur.push(block.outerHTML);
+      curWords += words;
+    }
+  }
+  if (cur.length > 0) pages.push(cur.join(''));
+  return pages.length > 0 ? pages : ['<p></p>'];
 }
 
 /**
@@ -195,6 +285,12 @@ export default function ChapterEditor() {
 
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState<PageBlock[]>([""]);
+  const [richHtml, setRichHtml] = useState<string>('<p></p>');
+  const [richPages, setRichPages] = useState<string[]>(['<p></p>']);
+  const tiptapEditorRef = useRef<Editor | null>(null);
+  const [tiptapReady, setTiptapReady] = useState(false);
+  // Tracks the currently focused page editor so the toolbar always reflects the active page
+  const [activeToolbarEditor, setActiveToolbarEditor] = useState<Editor | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [showAI, setShowAI] = useState(false);
@@ -205,6 +301,10 @@ export default function ChapterEditor() {
   const [previewPrefs, setPreviewPrefs] = useState<BookPreferences | null>(null);
   // effectivePrefs — uses live preview while customizer is open, real prefs otherwise
   const effectivePrefs = previewPrefs ?? prefs;
+
+  // ── Dynamic page dimensions (computed early so useLayoutEffect can use them) ──
+  const dynDimsForHook = getPageDimensions(effectivePrefs);
+
   const [deletingPage, setDeletingPage] = useState<number | null>(null);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -217,6 +317,48 @@ export default function ChapterEditor() {
   const [showRefPanel, setShowRefPanel] = useState(false);
   const [refChapterId, setRefChapterId] = useState<number | null>(null);
   const [refDropdownOpen, setRefDropdownOpen] = useState(false);
+
+  // ── New: Page Setup modal + Zoom ─────────────────────────────────────────
+  const [showPageSetup, setShowPageSetup] = useState(false);
+  const [zoom, setZoom] = useState<number>(100);
+  const mainRef = useRef<HTMLElement>(null);
+  const autoZoomApplied = useRef(false);
+
+  // Reset auto-zoom when chapter changes
+  useEffect(() => {
+    autoZoomApplied.current = false;
+  }, [chapterId]);
+
+  // Sync zoom from prefs when book loads
+  useEffect(() => {
+    if (prefs.zoom !== undefined) {
+      setZoom(prefs.zoom);
+      autoZoomApplied.current = true;
+    }
+  }, [prefs.zoom]);
+
+  // Auto-fit zoom: show the full page height on first load when no saved zoom.
+  // Uses effectivePrefs.paperSize as dep (pageDims is derived from it, but declared later).
+  const paperSizeForZoom = effectivePrefs.paperSize || "trade";
+  useEffect(() => {
+    if (autoZoomApplied.current) return;
+    const frame = requestAnimationFrame(() => {
+      if (!mainRef.current) return;
+      const containerH = mainRef.current.clientHeight;
+      if (containerH < 100) return;
+      // Calculate page height inline (same as getPageDimensions but no dep on pageDims)
+      const PAPER_H: Record<string, number> = { a5: 794, pocket: 680, trade: 864, a4: 1123 };
+      const pageH = PAPER_H[paperSizeForZoom] ?? 864;
+      const titleAreaH = 120;
+      const pagePaddingV = 80;
+      const available = containerH - titleAreaH - pagePaddingV;
+      const fitPct = Math.floor((available / pageH) * 100);
+      const optimal = Math.max(55, Math.min(95, fitPct));
+      setZoom(optimal);
+      autoZoomApplied.current = true;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [paperSizeForZoom]);
 
   // ── Inline AI Ghost-Text Suggestion ──────────────────────────────────────
   const [inlineSuggestion, setInlineSuggestion] = useState<string>("");
@@ -307,7 +449,13 @@ export default function ChapterEditor() {
   useEffect(() => {
     if (chapter && !isDirty) {
       setTitle(chapter.title);
-      setPages(parsePages(chapter.content));
+      const parsed = parsePages(chapter.content);
+      setPages(parsed);
+      const html = pagesToHtml(parsed);
+      setRichHtml(html);
+      const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+      const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+      setRichPages(splitHtmlIntoPages(html, wpp));
     }
   }, [chapter, isDirty]);
 
@@ -334,8 +482,9 @@ export default function ChapterEditor() {
           if (fontFamily) measureEl.style.fontFamily = fontFamily;
 
           measureEl.textContent = text;
-          if (measureEl.offsetHeight > PAGE_CONTENT_HEIGHT) {
-            const chunks = splitIntoPages(text, measureEl, PAGE_CONTENT_HEIGHT);
+          const maxH = dynDimsForHook.contentHeight;
+          if (measureEl.offsetHeight > maxH) {
+            const chunks = splitIntoPages(text, measureEl, maxH);
             for (const chunk of chunks) {
               result.push({ type: 'text', content: chunk, fontFamily: fontId || undefined } as PageBlock);
             }
@@ -547,10 +696,11 @@ export default function ChapterEditor() {
   // Overflow is handled by the pagination system (handlePageChange), not by
   // letting the textarea grow. Keeping a fixed height preserves the page metaphor.
   useLayoutEffect(() => {
+    const h = dynDimsForHook.contentHeight;
     document.querySelectorAll<HTMLTextAreaElement>('[data-page-textarea]').forEach(ta => {
-      ta.style.height = `${PAGE_CONTENT_HEIGHT}px`;
+      ta.style.height = `${h}px`;
     });
-  }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing]);
+  }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing, dynDimsForHook.contentHeight]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -596,7 +746,8 @@ export default function ChapterEditor() {
     measureEl.textContent = value;
     const textHeight = measureEl.offsetHeight;
 
-    if (textHeight <= PAGE_CONTENT_HEIGHT) {
+    const currentPageContentH = dynDimsForHook.contentHeight;
+    if (textHeight <= currentPageContentH) {
       setPages(prev => {
         const next = [...prev];
         next[index] = stampBlock(next[index], value);
@@ -623,7 +774,7 @@ export default function ChapterEditor() {
       const allText = allParts.join('\n');
 
       // Re-split the combined text
-      const chunks = splitIntoPages(allText, measureEl, PAGE_CONTENT_HEIGHT);
+      const chunks = splitIntoPages(allText, measureEl, currentPageContentH);
 
       // Distribute chunks starting from the current page
       for (let i = 0; i < chunks.length; i++) {
@@ -683,16 +834,18 @@ export default function ChapterEditor() {
 
   const handleSave = async () => {
     try {
-      const currentContent = serializePages(pages);
+      // Join all rich pages into a single HTML string
+      const htmlContent = richPages.join('') || richHtml;
+      const currentContent = JSON.stringify([{ type: 'text', content: htmlContent }]);
 
-      // Calculate word count difference for daily tracking (excluding JSON artifacts)
+      // Calculate word count difference for daily tracking
       const previousContent = chapter?.content || "";
       const previousPages = parsePages(previousContent);
       const previousText = previousPages.map(p => typeof p === 'string' ? p : p.type === 'text' ? p.content : '').join(" ").trim();
       const previousWords = previousText ? previousText.split(/\s+/).length : 0;
 
-      const newText = pages.map(p => typeof p === 'string' ? p : p.type === 'text' ? p.content : '').join(" ").trim();
-      const newWords = newText ? newText.split(/\s+/).length : 0;
+      const newText = richPages.join('').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const newWords = newText ? newText.split(/\s+/).filter(Boolean).length : 0;
 
       const wordsAdded = newWords - previousWords;
 
@@ -760,6 +913,14 @@ export default function ChapterEditor() {
     setPrefs(newPrefs);
     setIsDirty(true);
     await updateBook.mutateAsync({ id: bookId, bookPreferences: newPrefs });
+  };
+
+  const handleZoomChange = (z: number) => {
+    const clamped = Math.max(50, Math.min(200, z));
+    setZoom(clamped);
+    const np = { ...prefs, zoom: clamped };
+    setPrefs(np);
+    handleSavePrefs(np);
   };
 
   // ── Voice dictation ──────────────────────────────────────────────────────
@@ -911,12 +1072,34 @@ export default function ChapterEditor() {
   const textDir = (isArabicFont || ar) ? "rtl" : "ltr";
   const isDark = resolvedTheme === "dark";
 
+  // ── Dynamic page dimensions ────────────────────────────────────────────────
+  const pageDims = getPageDimensions(effectivePrefs);
+  const dynPageW = pageDims.pageWidth;
+  const dynPageH = pageDims.pageHeight;
+  const dynContentH = pageDims.contentHeight;
+  const dynContentW = pageDims.contentWidth;
+  const dynMarginL = pageDims.marginLeft;
+  const dynMarginR = pageDims.marginRight;
+  const dynMarginT = pageDims.marginTop;
+  const dynMarginB = pageDims.marginBottom;
+  const clampedZoom = zoom / 100;
+
+  // ── Page theme color resolution ───────────────────────────────────────────
+  // pageTheme overrides bgColor/textColor unless user explicitly set bgColor
+  const pageThemeDef = PAGE_THEMES.find(t => t.id === (effectivePrefs.pageTheme || "white"));
+
   // Page style background pattern (from saved preference)
   const activePageStyleDef = PAGE_STYLES.find(s => s.id === (effectivePrefs.pageStyle || "blank"));
   const bgPatternCSS = activePageStyleDef ? activePageStyleDef.background(isDark) : {};
 
   // Manuscript uses its own background color unless user has set a custom one
-  const resolvedBgColor = effectivePrefs.bgColor || (bgPatternCSS as any).backgroundColor;
+  // pageTheme takes precedence when set
+  const resolvedBgColor = effectivePrefs.bgColor
+    || pageThemeDef?.bg
+    || (bgPatternCSS as any).backgroundColor;
+  const resolvedTextColor = effectivePrefs.textColor
+    || pageThemeDef?.text
+    || undefined;
 
   const editorOuterStyle: React.CSSProperties = {
     backgroundColor: resolvedBgColor || "hsl(var(--background))",
@@ -929,7 +1112,7 @@ export default function ChapterEditor() {
     color: effectivePrefs.textColor || undefined,
     ...fontStyle,
   };
-  const totalWords = pages.map(getPageText).join(" ").split(/\s+/).filter(Boolean).length;
+  const totalWords = richPages.join('').replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
 
   /* ── Reference Panel ── */
   const otherChapters = chapters?.filter(c => c.id !== chapterId) ?? [];
@@ -1004,8 +1187,7 @@ export default function ChapterEditor() {
               <span className="hidden sm:block">{t("backToBook")}</span>
             </Link>
             <span className="text-[10px] text-muted-foreground/40 hidden sm:block whitespace-nowrap">
-              {pages.length} {ar ? (pages.length === 1 ? "صفحة" : "صفحات") : (pages.length === 1 ? "pg" : "pgs")}
-              {" · "}{totalWords} {ar ? "كلمة" : "w"}
+              {totalWords} {ar ? "كلمة" : "w"}
             </span>
           </div>
 
@@ -1177,6 +1359,24 @@ export default function ChapterEditor() {
         </div>
       </header>
 
+      {/* ── Rich Writing Toolbar (Google Docs style) ── */}
+      {!isPrintView && (
+        <RichWritingToolbar
+          editor={activeToolbarEditor || (tiptapReady ? tiptapEditorRef.current : null)}
+          zoom={zoom}
+          onZoomChange={handleZoomChange}
+          onPrint={() => setIsPrintView(true)}
+          isFocusMode={isFocusMode}
+          isDark={isDark}
+          paperSize={effectivePrefs.paperSize || "trade"}
+          onPaperSizeChange={(id) => {
+            const np = { ...prefs, paperSize: id };
+            setPrefs(np);
+            handleSavePrefs(np);
+          }}
+        />
+      )}
+
       {/* Body: editor + reference panel side by side */}
       <div className="flex flex-1 overflow-hidden relative z-10">
 
@@ -1246,14 +1446,75 @@ export default function ChapterEditor() {
 
       {/* Editor Canvas — book-desk background */}
       <main
-        className="flex-1 overflow-y-auto relative py-10 md:py-14 transition-colors duration-700"
+        ref={mainRef}
+        className="flex-1 overflow-y-auto relative transition-colors duration-700"
         style={{
           background: "transparent",
-          paddingBottom: isTypewriterMode ? "50vh" : undefined,
+          paddingTop: effectivePrefs.showRuler ? 0 : 40,
+          paddingBottom: isTypewriterMode ? "50vh" : 40,
         }}
       >
+        {/* ── Visual Ruler ── */}
+        {effectivePrefs.showRuler && !isPrintView && (
+          <div
+            className="sticky top-0 z-30 flex items-center"
+            style={{
+              height: 24,
+              background: isDark ? "rgba(30,30,35,0.97)" : "rgba(248,248,250,0.97)",
+              borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <div
+              className="mx-auto relative"
+              style={{ width: dynPageW * clampedZoom, userSelect: "none" }}
+            >
+              {/* Ruler body */}
+              <div className="relative w-full h-full" style={{ fontSize: 8, color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)", lineHeight: 1 }}>
+                {Array.from({ length: Math.floor(dynPageW / 10) + 1 }, (_, i) => {
+                  const xPct = (i * 10 / dynPageW) * 100;
+                  const isMajor = i % 5 === 0;
+                  const inLeftMargin = i * 10 < dynMarginL;
+                  const inRightMargin = i * 10 > dynPageW - dynMarginR;
+                  return (
+                    <div key={i} className="absolute top-0 flex flex-col items-center" style={{ left: `${xPct}%` }}>
+                      <div style={{
+                        width: 1, height: isMajor ? 12 : 6,
+                        background: inLeftMargin || inRightMargin
+                          ? "rgba(99,102,241,0.35)"
+                          : (isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)"),
+                        marginTop: isMajor ? 0 : 6,
+                      }} />
+                      {isMajor && <span style={{ marginTop: 1, fontSize: 7, lineHeight: 1, whiteSpace: "nowrap" }}>{i * 10}</span>}
+                    </div>
+                  );
+                })}
+                {/* Left margin indicator */}
+                <div className="absolute top-0 bottom-0" style={{
+                  left: `${(dynMarginL / dynPageW) * 100}%`,
+                  width: 1, background: "rgba(99,102,241,0.55)",
+                }} />
+                {/* Right margin indicator */}
+                <div className="absolute top-0 bottom-0" style={{
+                  left: `${((dynPageW - dynMarginR) / dynPageW) * 100}%`,
+                  width: 1, background: "rgba(99,102,241,0.55)",
+                }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Zoom wrapper */}
+        <div
+          style={{
+            transform: `scale(${clampedZoom})`,
+            transformOrigin: "top center",
+            transition: "transform 0.2s ease",
+          }}
+        >
+
         {/* Chapter Title — above all pages */}
-        <div className="max-w-[595px] mx-auto px-4 mb-8">
+        <div className="mx-auto px-4 mb-8" style={{ maxWidth: dynPageW }}>
           <input
             type="text"
             value={title}
@@ -1271,14 +1532,195 @@ export default function ChapterEditor() {
           />
         </div>
 
-        {/* Pages — each rendered as a fixed-size book page card */}
-        <div className="flex flex-col items-center gap-10 px-4" onClick={() => setSelectedDrawingIdx(null)}>
-          {pages.map((pageContent, index) => {
+        {/* ── TipTap Rich Editor — multi-page layout ── */}
+        <div className="flex flex-col items-center gap-6 px-4 pb-24" onClick={() => setSelectedDrawingIdx(null)}>
+
+          {/* ── Page dimension badge ── */}
+          {(() => {
+            const ps = PAPER_SIZES[effectivePrefs.paperSize || "trade"];
+            if (!ps) return null;
+            return (
+              <div
+                className="flex items-center gap-2 select-none"
+                style={{ alignSelf: "center" }}
+              >
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium"
+                  style={{
+                    background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)",
+                    color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                    border: `1px solid ${isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.08)"}`,
+                    letterSpacing: "0.03em",
+                  }}
+                >
+                  <span>{ps.icon}</span>
+                  <span>{ar ? ps.labelAr : ps.label}</span>
+                  <span style={{ opacity: 0.5 }}>·</span>
+                  <span>{ps.widthCm} × {ps.heightCm} cm</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {richPages.map((pageHtml, index) => {
+            const pageCardBg = isFocusMode
+              ? "rgba(18,18,22,0.96)"
+              : resolvedBgColor || (isDark ? "#1e1e22" : "#faf9f6");
+            // Layered shadow — simulates paper resting on a desk
+            const pageBoxShadow = activePageIndex === index
+              ? `0 1px 1px rgba(0,0,0,0.14), 0 2px 2px rgba(0,0,0,0.12), 0 4px 4px rgba(0,0,0,0.10), 0 8px 8px rgba(0,0,0,0.08), 0 16px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.08), 0 0 0 2px hsl(var(--primary)/25%)`
+              : `0 1px 1px rgba(0,0,0,0.10), 0 2px 2px rgba(0,0,0,0.08), 0 4px 4px rgba(0,0,0,0.07), 0 8px 8px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,${isDark ? "0.20" : "0.07"})`;
+            return (
+              <div
+                key={`${chapterId}-page-${index}`}
+                className="relative w-full group"
+                style={{ maxWidth: dynPageW }}
+                ref={el => { pageElsRef.current[index] = el; }}
+                onClick={() => setActivePageIndex(index)}
+              >
+                <div
+                  className="relative overflow-hidden"
+                  style={{
+                    width: "100%",
+                    height: dynPageH,
+                    backgroundColor: pageCardBg,
+                    // Layered backgrounds: paper gradient + pattern + grain noise
+                    backgroundImage: isFocusMode
+                      ? undefined
+                      : [
+                          // Paper-light gradient (top to bottom)
+                          !isDark && !resolvedBgColor
+                            ? "linear-gradient(180deg, #fdfcf8 0%, #faf9f4 50%, #f7f5ee 100%)"
+                            : null,
+                          // User-chosen pattern
+                          (bgPatternCSS as any).backgroundImage || null,
+                          // Subtle grain/noise for paper texture feel
+                          !isDark && !resolvedBgColor
+                            ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E")`
+                            : null,
+                        ].filter(Boolean).join(", "),
+                    backgroundSize: isFocusMode
+                      ? undefined
+                      : [
+                          !isDark && !resolvedBgColor ? "100% 100%" : null,
+                          (bgPatternCSS as any).backgroundSize || null,
+                          !isDark && !resolvedBgColor ? "200px 200px" : null,
+                        ].filter(Boolean).join(", "),
+                    backgroundAttachment: "local",
+                    boxShadow: pageBoxShadow,
+                    transition: "box-shadow 0.2s ease",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  {/* Page header */}
+                  <div
+                    className="flex items-end justify-between select-none"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.4), paddingBottom: 8 }}
+                    dir="ltr"
+                  >
+                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                      {effectivePrefs.headerText || (ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`)}
+                    </span>
+                    {richPages.length > 1 && (
+                      <button
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={(e) => { e.stopPropagation(); setRichPages(prev => prev.filter((_, i) => i !== index)); setIsDirty(true); }}
+                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        title={ar ? "حذف الصفحة" : "Delete page"}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.12, background: resolvedTextColor || effectivePrefs.textColor || "currentColor" }} />
+
+                  {/* TipTap editor for this page */}
+                  <RichChapterEditor
+                    key={`${chapterId}-tiptap-${index}`}
+                    initialContent={pageHtml}
+                    onUpdate={(html) => {
+                      const currentFontSize =
+                        effectivePrefs.fontSize === "text-sm" ? 14 :
+                        effectivePrefs.fontSize === "text-base" ? 16 :
+                        effectivePrefs.fontSize === "text-xl" ? 20 :
+                        effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+                      const wpp = calcWordsPerPage(dynContentH, dynContentW, currentFontSize);
+                      const wordCount = (html.replace(/<[^>]*>/g, ' ').match(/\S+/g) || []).length;
+
+                      if (wordCount > wpp) {
+                        // Split overflow content into the next page
+                        const splitPages = splitHtmlIntoPages(html, wpp);
+                        setRichPages(prev => {
+                          const next = [...prev];
+                          next[index] = splitPages[0];
+                          if (splitPages.length > 1) {
+                            next.splice(index + 1, 0, ...splitPages.slice(1));
+                          }
+                          return next;
+                        });
+                      } else {
+                        setRichPages(prev => {
+                          const next = [...prev];
+                          next[index] = html;
+                          return next;
+                        });
+                      }
+                      setIsDirty(true);
+                    }}
+                    onEditorReady={(editor) => {
+                      tiptapEditorRef.current = editor;
+                      if (index === 0) {
+                        setTiptapReady(true);
+                        setActiveToolbarEditor(editor);
+                      }
+                    }}
+                    onFocus={(editor) => {
+                      tiptapEditorRef.current = editor;
+                      setActiveToolbarEditor(editor);
+                    }}
+                    fontFamily={effectivePrefs.fontFamily || 'eb-garamond'}
+                    fontSize={
+                      effectivePrefs.fontSize === "text-sm" ? 14 :
+                      effectivePrefs.fontSize === "text-base" ? 16 :
+                      effectivePrefs.fontSize === "text-xl" ? 20 :
+                      effectivePrefs.fontSize === "text-2xl" ? 24 : 16
+                    }
+                    lineHeight={LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45"}
+                    textColor={isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined}
+                    bgColor="transparent"
+                    textAlign={(effectivePrefs.textAlign as string) || "left"}
+                    direction={textDir}
+                    placeholder={index === 0
+                      ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
+                      : (ar ? "تابع قصتك..." : "Continue your story...")}
+                    fixedHeight={dynContentH}
+                    zoom={100}
+                  />
+
+                  {/* Page footer */}
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
+                  <div className="flex items-center justify-center select-none" style={{ paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}>
+                    {(effectivePrefs.showPageNumbers !== false) && (
+                      <span className="text-[10px] opacity-30" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                        {`— ${index + 1} —`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 left-2 right-2 h-3 rounded-b-sm opacity-[0.07] blur-sm" style={{ background: "black" }} />
+              </div>
+            );
+          })}
+
+          {/* ─────────────────────────────────────────────────── */}
+          {/* LEGACY pages.map() — hidden, kept for SDT/sidebar ref */}
+          {false && pages.map((pageContent, index) => {
             const pageText = getPageText(pageContent);
             const pageWords = countWords(pageText);
 
             return (
-              <div key={index} className="relative group w-full max-w-[595px]" ref={el => { pageElsRef.current[index] = el; }}>
+              <div key={index} className="relative group" style={{ width: dynPageW }} ref={el => { pageElsRef.current[index] = el; }}>
 
                 {/* Book Page Card */}
                 <div
@@ -1298,12 +1740,24 @@ export default function ChapterEditor() {
                   }}
                   onClick={() => setActivePageIndex(index)}
                 >
-                  {/* Page top strip — chapter label + delete button */}
-                  <div className="flex items-center justify-between px-[76px] pt-6 pb-2 select-none" dir="ltr">
-                    <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: effectivePrefs.textColor || undefined }}>
-                      {ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`}
-                    </span>
-                    <div className="flex items-center gap-2">
+                  {/* Page top margin area — header text + chapter label */}
+                  <div
+                    className="flex items-end justify-between select-none"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.4), paddingBottom: 8 }}
+                    dir="ltr"
+                  >
+                    <div className="flex-1 min-w-0">
+                      {effectivePrefs.headerText ? (
+                        <span className="text-[10px] font-medium opacity-40 truncate block" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                          {effectivePrefs.headerText}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] tracking-[0.18em] uppercase opacity-20 font-semibold" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
+                          {ar ? `فصل · صفحة ${index + 1}` : `Chapter · Page ${index + 1}`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {activePageIndex === index && isRecording && (
                         <span className="text-red-400 text-[10px] font-medium animate-pulse">● REC</span>
                       )}
@@ -1321,11 +1775,11 @@ export default function ChapterEditor() {
                   </div>
 
                   {/* Thin decorative line under header */}
-                  <div className="mx-[76px] h-px opacity-8" style={{ background: effectivePrefs.textColor || "currentColor" }} />
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.12, background: resolvedTextColor || effectivePrefs.textColor || "currentColor" }} />
 
                   {/* Page Content Area */}
                   <div
-                    className="px-[76px] py-10 cursor-text"
+                    style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: Math.max(16, dynMarginT * 0.5), paddingBottom: Math.max(16, dynMarginB * 0.5), cursor: "text" }}
                     onClick={(e) => {
                       const ta = (e.currentTarget as HTMLElement).querySelector<HTMLTextAreaElement>('[data-page-textarea]');
                       if (ta && e.target === e.currentTarget) {
@@ -1350,7 +1804,7 @@ export default function ChapterEditor() {
                           // Immediately resize to show all content (prevents hidden text)
                           const ta = e.currentTarget;
                           ta.style.height = '1px';
-                          ta.style.height = `${Math.max(PAGE_CONTENT_HEIGHT, ta.scrollHeight)}px`;
+                          ta.style.height = `${Math.max(dynContentH, ta.scrollHeight)}px`;
                           handlePageChange(index, e.target.value);
                         }}
                         onFocus={() => setActivePageIndex(index)}
@@ -1360,13 +1814,20 @@ export default function ChapterEditor() {
                         className={`w-full bg-transparent outline-none resize-none ${effectivePrefs.fontSize || "text-lg"} placeholder:opacity-20 focus:ring-0 transition-colors duration-700 ${blockFontClass}`}
                         style={{
                           ...blockFontStyle,
-                          color: isFocusMode ? '#e4e4e7' : effectivePrefs.textColor || undefined,
+                          color: isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined,
+                          backgroundColor: effectivePrefs.highlightColor && effectivePrefs.highlightColor !== "#fef08a"
+                            ? `${effectivePrefs.highlightColor}18` : "transparent",
                           direction: textDir,
-                          minHeight: `${PAGE_CONTENT_HEIGHT}px`,
-                          height: `${PAGE_CONTENT_HEIGHT}px`,
+                          minHeight: `${dynContentH}px`,
+                          height: `${dynContentH}px`,
                           overflow: "hidden",
-                          lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
+                          lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45",
                           letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
+                          fontWeight: effectivePrefs.isBold ? 700 : undefined,
+                          fontStyle: effectivePrefs.isItalic ? "italic" : undefined,
+                          textDecoration: effectivePrefs.isUnderline ? "underline" : undefined,
+                          textAlign: (effectivePrefs.textAlign as React.CSSProperties["textAlign"]) || undefined,
+                          width: dynContentW,
                         } as React.CSSProperties}
                         dir={textDir}
                         data-page-textarea
@@ -1645,21 +2106,77 @@ export default function ChapterEditor() {
                   )}
                   </div>
 
-                  {/* Page bottom — decorative rule + centered page number */}
-                  <div className="mx-[76px] h-px opacity-8 mt-2" style={{ background: effectivePrefs.textColor || "currentColor" }} />
-                  <div className="relative flex items-center justify-center px-[76px] pb-6 pt-3 select-none">
-                    {/* Word count — left edge */}
-                    <span className="absolute left-[76px] text-[9px] opacity-15 tabular-nums" style={{ color: effectivePrefs.textColor || undefined }}>
-                      {pageWords} {ar ? "كلمة" : "words"}
-                    </span>
-                    {/* Centered page number — book style */}
-                    <span
-                      className="text-[11px] font-medium tracking-widest opacity-30"
-                      style={{ color: effectivePrefs.textColor || undefined, letterSpacing: "0.2em" }}
-                    >
-                      — {index + 1} —
-                    </span>
-                  </div>
+                  {/* Page bottom — decorative rule + footer */}
+                  <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
+                  {(() => {
+                    const pgPos = effectivePrefs.pageNumPosition || "center";
+                    const isOuter = pgPos === "outer";
+                    // outer: odd pages (1,3,5…) → left; even → right
+                    const resolvedPos = isOuter ? ((index % 2 === 0) ? "left" : "right") : pgPos;
+                    const justifyClass = resolvedPos === "left" ? "justify-start" : resolvedPos === "right" ? "justify-end" : "justify-center";
+                    const pgFmt = effectivePrefs.pageNumFormat || "dashes";
+                    const pgN = index + 1;
+                    const pgLabel =
+                      pgFmt === "plain"    ? `${pgN}` :
+                      pgFmt === "dots"     ? `· ${pgN} ·` :
+                      pgFmt === "brackets" ? `[ ${pgN} ]` :
+                      pgFmt === "word"     ? `Page ${pgN}` :
+                      pgFmt === "slash"    ? `${pgN} / ${pages.length}` :
+                      `— ${pgN} —`;
+                    const pgOpacity = effectivePrefs.pageNumOpacity ?? (effectivePrefs.pageNumColor ? 0.75 : 0.3);
+                    return (
+                      <div
+                        className={`relative flex items-center ${justifyClass} select-none`}
+                        style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}
+                      >
+                        {/* Footer text — opposite side from page number */}
+                        <span
+                          className="absolute text-[9px] opacity-25 truncate"
+                          style={{
+                            [isRTL ? "right" : "left"]: resolvedPos === "right" ? undefined : dynMarginL,
+                            [isRTL ? "left" : "right"]: resolvedPos === "right" ? dynMarginR : undefined,
+                            color: resolvedTextColor || effectivePrefs.textColor || undefined,
+                          }}
+                        >
+                          {effectivePrefs.footerText ? effectivePrefs.footerText : `${pageWords} ${ar ? "كلمة" : "w"}`}
+                        </span>
+                        {/* Page number */}
+                        {(effectivePrefs.showPageNumbers !== false) && (
+                          <span className="group/pgnum relative inline-flex items-center gap-1">
+                            <span
+                              style={{
+                                fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
+                                fontFamily: effectivePrefs.pageNumFont || "inherit",
+                                color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
+                                letterSpacing: "0.2em",
+                                fontWeight: effectivePrefs.pageNumBold ? 700 : 400,
+                                fontStyle: effectivePrefs.pageNumItalic ? "italic" : "normal",
+                                fontVariant: effectivePrefs.pageNumSmallCaps ? "small-caps" : "normal",
+                                opacity: pgOpacity,
+                              }}
+                            >
+                              {pgLabel}
+                            </span>
+                            {/* Hover edit button */}
+                            <button
+                              onClick={e => { e.stopPropagation(); setShowPageSetup(true); }}
+                              title={ar ? "تخصيص رقم الصفحة" : "Customize page number"}
+                              className="opacity-0 group-hover/pgnum:opacity-100 transition-opacity"
+                              style={{
+                                width: 16, height: 16, borderRadius: 4,
+                                background: "hsl(var(--primary))",
+                                border: "none", cursor: "pointer",
+                                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, marginLeft: 2,
+                              }}
+                            >
+                              <Pencil style={{ width: 8, height: 8, color: "#fff" }} />
+                            </button>
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Page shadow/curl effect */}
@@ -1670,18 +2187,20 @@ export default function ChapterEditor() {
           })}
 
           {/* Add Page Button */}
-          <div className="flex flex-col items-center gap-3 pb-24 mt-2 w-full max-w-[595px]">
+          <div className="flex flex-col items-center gap-3 mt-2 w-full" style={{ maxWidth: dynPageW }}>
             <Button
               variant="ghost"
-              onClick={handleAddPage}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { setRichPages(prev => [...prev, '<p></p>']); setIsDirty(true); }}
               className="w-full rounded-sm border border-dashed border-border/30 hover:border-primary/40 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all py-5 text-sm font-medium gap-2"
-              data-testid="button-add-page"
             >
               <PlusCircle className="w-4 h-4" />
               {ar ? "إضافة صفحة جديدة" : "Add new page"}
             </Button>
           </div>
         </div>
+
+        </div>{/* end zoom wrapper */}
 
         {/* Hidden measurement div — mirrors textarea styling for height measurement */}
         <div
@@ -1693,9 +2212,9 @@ export default function ChapterEditor() {
             pointerEvents: "none",
             top: "-9999px",
             left: "-9999px",
-            width: `${PAGE_CONTENT_WIDTH}px`,
-            fontSize: effectivePrefs.fontSize === "text-sm" ? "14px" : effectivePrefs.fontSize === "text-base" ? "16px" : effectivePrefs.fontSize === "text-xl" ? "20px" : effectivePrefs.fontSize === "text-2xl" ? "24px" : "18px",
-            lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.85",
+            width: `${dynContentW}px`,
+            fontSize: effectivePrefs.fontSize === "text-sm" ? "14px" : effectivePrefs.fontSize === "text-base" ? "16px" : effectivePrefs.fontSize === "text-xl" ? "20px" : effectivePrefs.fontSize === "text-2xl" ? "24px" : "16px",
+            lineHeight: LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45",
             letterSpacing: LETTER_SPACING_MAP[effectivePrefs.letterSpacing || "normal"] || "0em",
             fontFamily: (FONT_STYLE_MAP[effectivePrefs.fontFamily || ''] || fontStyle).fontFamily || undefined,
             whiteSpace: "pre-wrap",
@@ -1841,7 +2360,7 @@ export default function ChapterEditor() {
               <div
                 style={{
                   fontSize: '14px',
-                  lineHeight: '1.85',
+                  lineHeight: '1.45',
                   color: 'hsl(var(--foreground)/85%)',
                   userSelect: 'text',
                   cursor: 'text',
@@ -1869,6 +2388,418 @@ export default function ChapterEditor() {
       </div>
 
       </div>{/* end body flex row */}
+
+      {/* ── Page Setup Modal ─────────────────────────────────────────────────── */}
+      {showPageSetup && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
+          <div
+            className="rounded-2xl shadow-2xl w-full animate-in fade-in zoom-in-95 duration-200 flex flex-col"
+            style={{
+              background: isDark ? "#1a1a1f" : "#ffffff",
+              color: isDark ? "#e4e4e7" : "#18181b",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
+              maxWidth: 1160,
+              maxHeight: "calc(100vh - 32px)",
+            }}
+          >
+            {/* Header — fixed */}
+            <div className="flex items-center justify-between px-6 py-3.5 border-b shrink-0" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
+              <h2 className="text-base font-semibold">{ar ? "إعداد الصفحة" : "Page Setup"}</h2>
+              <button onClick={() => setShowPageSetup(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ border: "none", background: "transparent", cursor: "pointer", color: isDark ? "#a1a1aa" : "#71717a" }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* ── 3-column body — each column scrolls independently ── */}
+            <div className="grid grid-cols-3 gap-0 flex-1 min-h-0">
+
+              {/* ── Col 1: Paper + Margins ── */}
+              <div className="p-6 space-y-5 overflow-y-auto" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "الورق والهوامش" : "Paper & Margins"}</p>
+
+                {/* Paper Size */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "حجم الصفحة" : "Page Size"}</label>
+
+                  {/* Dropdown */}
+                  <div className="relative mb-3">
+                    <select
+                      value={prefs.paperSize || "trade"}
+                      onChange={e => { const np = { ...prefs, paperSize: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
+                      className="w-full rounded-xl px-3 py-2.5 text-sm font-medium appearance-none cursor-pointer pr-8"
+                      style={{
+                        background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                        border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"}`,
+                        color: "inherit", outline: "none",
+                      }}
+                    >
+                      {Object.entries(PAPER_SIZES).map(([id, ps]) => (
+                        <option key={id} value={id}>
+                          {ps.icon} {ar ? ps.labelAr : ps.label} — {ps.widthCm} × {ps.heightCm} cm
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-40 text-xs">▾</span>
+                  </div>
+
+                  {/* Visual previews */}
+                  <div className="grid grid-cols-4 gap-2">
+                    {Object.entries(PAPER_SIZES).map(([id, ps]) => {
+                      const active = (prefs.paperSize || "trade") === id;
+                      const ratio = ps.widthCm / ps.heightCm;
+                      const previewH = 52;
+                      const previewW = Math.round(previewH * ratio);
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => { const np = { ...prefs, paperSize: id }; setPrefs(np); handleSavePrefs(np); }}
+                          className="flex flex-col items-center gap-1.5 py-2 rounded-xl transition-all"
+                          style={{
+                            background: active ? "hsl(var(--primary)/10%)" : (isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)"),
+                            border: `1.5px solid ${active ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)")}`,
+                            cursor: "pointer",
+                          }}
+                          title={`${ps.widthCm} × ${ps.heightCm} cm`}
+                        >
+                          {/* Mini page rect */}
+                          <div style={{
+                            width: previewW, height: previewH,
+                            background: isDark ? "rgba(255,255,255,0.12)" : "#fff",
+                            border: `1px solid ${active ? "hsl(var(--primary)/60%)" : "rgba(0,0,0,0.15)"}`,
+                            borderRadius: 2,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                            flexShrink: 0,
+                          }} />
+                          <span className="text-[9px] font-semibold leading-tight text-center opacity-70" style={{ color: active ? "hsl(var(--primary))" : undefined }}>
+                            {ar ? ps.labelAr : ps.label}
+                          </span>
+                          <span className="text-[8px] opacity-40 leading-none">{ps.widthCm}×{ps.heightCm}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Margins */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الهوامش (بكسل)" : "Margins (px)"}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(["marginTop", "marginBottom", "marginLeft", "marginRight"] as const).map(field => {
+                      const labels: Record<string, { en: string; ar: string }> = {
+                        marginTop: { en: "Top", ar: "أعلى" },
+                        marginBottom: { en: "Bottom", ar: "أسفل" },
+                        marginLeft: { en: "Left", ar: "يسار" },
+                        marginRight: { en: "Right", ar: "يمين" },
+                      };
+                      return (
+                        <div key={field}>
+                          <label className="block text-[11px] opacity-50 mb-1">{ar ? labels[field].ar : labels[field].en}</label>
+                          <input
+                            type="number"
+                            min={20} max={200} step={4}
+                            value={prefs[field] ?? DEFAULT_MARGIN}
+                            onChange={e => { const np = { ...prefs, [field]: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                            className="w-full rounded-lg px-3 py-1.5 text-sm"
+                            style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Col 2: Header / Footer / Page Numbers toggle ── */}
+              <div className="p-6 space-y-5 overflow-y-auto" style={{ borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}` }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "الرأس والتذييل" : "Header & Footer"}</p>
+
+                {/* Header Text */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص الرأس" : "Header Text"}</label>
+                  <input
+                    type="text"
+                    placeholder={ar ? "مثال: اسم الكتاب..." : "e.g. Book Title…"}
+                    value={prefs.headerText || ""}
+                    onChange={e => { const np = { ...prefs, headerText: e.target.value }; setPrefs(np); }}
+                    onBlur={e => handleSavePrefs({ ...prefs, headerText: e.target.value })}
+                    className="w-full rounded-lg px-3 py-2 text-sm"
+                    style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                  />
+                </div>
+
+                {/* Footer Text */}
+                <div>
+                  <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "نص التذييل" : "Footer Text"}</label>
+                  <input
+                    type="text"
+                    placeholder={ar ? "يظهر بدلاً من عدد الكلمات..." : "Replaces word count display…"}
+                    value={prefs.footerText || ""}
+                    onChange={e => { const np = { ...prefs, footerText: e.target.value }; setPrefs(np); }}
+                    onBlur={e => handleSavePrefs({ ...prefs, footerText: e.target.value })}
+                    className="w-full rounded-lg px-3 py-2 text-sm"
+                    style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                  />
+                </div>
+
+                {/* Show Page Numbers toggle */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="text-sm font-medium">{ar ? "إظهار أرقام الصفحات" : "Show Page Numbers"}</label>
+                  <button
+                    onClick={() => { const np = { ...prefs, showPageNumbers: !(prefs.showPageNumbers !== false) }; setPrefs(np); handleSavePrefs(np); }}
+                    className="w-11 h-6 rounded-full transition-colors relative flex-shrink-0"
+                    style={{
+                      background: (prefs.showPageNumbers !== false) ? "hsl(var(--primary))" : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                      border: "none", cursor: "pointer",
+                    }}
+                  >
+                    <span className="absolute top-0.5 rounded-full" style={{ width: 20, height: 20, background: "#fff", left: (prefs.showPageNumbers !== false) ? "calc(100% - 22px)" : 2, transition: "left 0.2s" }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Col 3: Page Number Style ── */}
+              <div className="p-6 space-y-4 overflow-y-auto">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{ar ? "مظهر رقم الصفحة" : "Page Number Style"}</p>
+
+                {(prefs.showPageNumbers !== false) ? (
+                  <>
+                    {/* ── Live preview ── */}
+                    {(() => {
+                      const fmt = prefs.pageNumFormat || "dashes";
+                      const previewLabel =
+                        fmt === "plain"    ? "1" :
+                        fmt === "dots"     ? "· 1 ·" :
+                        fmt === "brackets" ? "[ 1 ]" :
+                        fmt === "word"     ? "Page 1" :
+                        fmt === "slash"    ? "1 / 12" :
+                        "— 1 —";
+                      const pos = prefs.pageNumPosition || "center";
+                      const justifyPreview = pos === "left" || pos === "outer" ? "flex-start" : pos === "right" ? "flex-end" : "center";
+                      return (
+                        <div className="rounded-xl px-4 py-3" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}` }}>
+                          <div style={{ display: "flex", justifyContent: justifyPreview }}>
+                            <span style={{
+                              fontFamily: prefs.pageNumFont || "inherit",
+                              fontSize: `${prefs.pageNumSize || 11}px`,
+                              color: prefs.pageNumColor || (isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)"),
+                              letterSpacing: "0.2em",
+                              fontWeight: prefs.pageNumBold ? 700 : 400,
+                              fontStyle: prefs.pageNumItalic ? "italic" : "normal",
+                              fontVariant: prefs.pageNumSmallCaps ? "small-caps" : "normal",
+                              opacity: prefs.pageNumOpacity ?? 1,
+                            }}>
+                              {previewLabel}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* ── Format ── */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "صيغة الرقم" : "Format"}</label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { v: "dashes",   label: "— 1 —" },
+                          { v: "dots",     label: "· 1 ·" },
+                          { v: "plain",    label: "1" },
+                          { v: "brackets", label: "[ 1 ]" },
+                          { v: "word",     label: "Page 1" },
+                          { v: "slash",    label: "1 / n" },
+                        ].map(({ v, label }) => {
+                          const active = (prefs.pageNumFormat || "dashes") === v;
+                          return (
+                            <button key={v} onClick={() => { const np = { ...prefs, pageNumFormat: v }; setPrefs(np); handleSavePrefs(np); }}
+                              className="py-1.5 px-1 rounded-lg text-xs font-mono transition-all"
+                              style={{
+                                background: active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                                border: `1px solid ${active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                color: active ? "#fff" : "inherit",
+                                cursor: "pointer",
+                              }}>
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ── Position ── */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "الموقع" : "Position"}</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { v: "center", label: ar ? "وسط" : "Center", icon: "⊙" },
+                          { v: "left",   label: ar ? "يسار" : "Left",   icon: "⊢" },
+                          { v: "right",  label: ar ? "يمين" : "Right",  icon: "⊣" },
+                          { v: "outer",  label: ar ? "خارجي" : "Outer", icon: "⊣⊢" },
+                        ].map(({ v, label, icon }) => {
+                          const active = (prefs.pageNumPosition || "center") === v;
+                          return (
+                            <button key={v} onClick={() => { const np = { ...prefs, pageNumPosition: v }; setPrefs(np); handleSavePrefs(np); }}
+                              className="flex items-center gap-1.5 py-1.5 px-2 rounded-lg text-xs transition-all"
+                              style={{
+                                background: active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                                border: `1px solid ${active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                color: active ? "#fff" : "inherit",
+                                cursor: "pointer",
+                              }}>
+                              <span className="font-mono text-[10px] opacity-60">{icon}</span>
+                              <span>{label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] opacity-30 mt-1">{ar ? "الخارجي: فردي يسار، زوجي يمين (كالكتب الحقيقية)" : "Outer: odd pages left, even right — book-style"}</p>
+                    </div>
+
+                    {/* ── Font ── */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-1.5 opacity-60 uppercase tracking-wider">{ar ? "الخط" : "Font"}</label>
+                      <select
+                        value={prefs.pageNumFont || ""}
+                        onChange={e => { const np = { ...prefs, pageNumFont: e.target.value || undefined }; setPrefs(np); handleSavePrefs(np); }}
+                        className="w-full rounded-lg px-3 py-1.5 text-sm"
+                        style={{ background: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: "inherit", outline: "none" }}
+                      >
+                        <option value="">{ar ? "مثل نص الكتاب" : "Same as body"}</option>
+                        <option value="'EB Garamond', serif">EB Garamond</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'Lora', serif">Lora</option>
+                        <option value="'Merriweather', serif">Merriweather</option>
+                        <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                      </select>
+                    </div>
+
+                    {/* ── Size + Opacity row ── */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "الحجم" : "Size"}</label>
+                          <span className="text-[10px] font-mono opacity-40">{prefs.pageNumSize || 11}px</span>
+                        </div>
+                        <input type="range" min={7} max={22} step={1}
+                          value={prefs.pageNumSize || 11}
+                          onChange={e => { const np = { ...prefs, pageNumSize: Number(e.target.value) }; setPrefs(np); handleSavePrefs(np); }}
+                          className="w-full" style={{ accentColor: "hsl(var(--primary))" }} />
+                        <div className="flex justify-between text-[9px] opacity-25 mt-0.5"><span>7</span><span>22</span></div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "الشفافية" : "Opacity"}</label>
+                          <span className="text-[10px] font-mono opacity-40">{Math.round((prefs.pageNumOpacity ?? 0.55) * 100)}%</span>
+                        </div>
+                        <input type="range" min={10} max={100} step={5}
+                          value={Math.round((prefs.pageNumOpacity ?? 0.55) * 100)}
+                          onChange={e => { const np = { ...prefs, pageNumOpacity: Number(e.target.value) / 100 }; setPrefs(np); handleSavePrefs(np); }}
+                          className="w-full" style={{ accentColor: "hsl(var(--primary))" }} />
+                        <div className="flex justify-between text-[9px] opacity-25 mt-0.5"><span>10%</span><span>100%</span></div>
+                      </div>
+                    </div>
+
+                    {/* ── Style toggles ── */}
+                    <div>
+                      <label className="block text-xs font-semibold mb-2 opacity-60 uppercase tracking-wider">{ar ? "النمط" : "Style"}</label>
+                      <div className="flex gap-2">
+                        {[
+                          { key: "pageNumBold",      label: "B",  title: ar ? "عريض" : "Bold",        style: { fontWeight: 700 } },
+                          { key: "pageNumItalic",    label: "I",  title: ar ? "مائل" : "Italic",       style: { fontStyle: "italic" } },
+                          { key: "pageNumSmallCaps", label: "SC", title: ar ? "كابيتال صغير" : "Small Caps", style: { fontVariant: "small-caps", fontSize: 10 } },
+                        ].map(({ key, label, title, style: btnStyle }) => {
+                          const active = !!(prefs as any)[key];
+                          return (
+                            <button key={key}
+                              title={title}
+                              onClick={() => { const np = { ...prefs, [key]: !active }; setPrefs(np); handleSavePrefs(np); }}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center text-xs transition-all"
+                              style={{
+                                ...(btnStyle as any),
+                                background: active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                                border: `1.5px solid ${active ? "hsl(var(--primary))" : isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"}`,
+                                color: active ? "#fff" : "inherit",
+                                cursor: "pointer",
+                              }}>
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* ── Color ── */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-semibold opacity-60 uppercase tracking-wider">{ar ? "اللون" : "Color"}</label>
+                        {prefs.pageNumColor && (
+                          <button onClick={() => { const np = { ...prefs, pageNumColor: undefined }; setPrefs(np); handleSavePrefs(np); }}
+                            className="text-[10px] opacity-40 hover:opacity-70 transition-opacity"
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "inherit" }}>
+                            {ar ? "إعادة تعيين" : "Reset"}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input type="color"
+                          value={prefs.pageNumColor || (isDark ? "#ffffff" : "#000000")}
+                          onChange={e => { const np = { ...prefs, pageNumColor: e.target.value }; setPrefs(np); handleSavePrefs(np); }}
+                          style={{ width: 34, height: 34, borderRadius: 8, border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`, padding: 2, background: "transparent", cursor: "pointer" }}
+                        />
+                        <span className="text-xs opacity-40 font-mono">{prefs.pageNumColor || (ar ? "تلقائي" : "auto")}</span>
+                      </div>
+                      {/* Color swatches — rich palette */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(26px, 1fr))", gap: 6 }}>
+                        {[
+                          "#000000", "#1a1a1a", "#333333", "#555555", "#777777", "#999999", "#bbbbbb", "#dddddd", "#ffffff",
+                          "#8b0000", "#c62828", "#e53935", "#ef9a9a",
+                          "#1a237e", "#283593", "#3949ab", "#9fa8da",
+                          "#1b5e20", "#2e7d32", "#43a047", "#a5d6a7",
+                          "#4a148c", "#6a1b9a", "#8e24aa", "#ce93d8",
+                          "#e65100", "#ef6c00", "#f57c00", "#ffcc02",
+                          "#006064", "#00838f", "#00acc1", "#80deea",
+                          "#795548", "#a1887f", "#bf360c", "#6d4c41",
+                        ].map(c => (
+                          <button key={c} onClick={() => { const np = { ...prefs, pageNumColor: c }; setPrefs(np); handleSavePrefs(np); }}
+                            title={c}
+                            style={{
+                              width: 26, height: 26, borderRadius: 7, background: c,
+                              border: `2.5px solid ${prefs.pageNumColor === c ? "hsl(var(--primary))" : "transparent"}`,
+                              cursor: "pointer", outline: "none",
+                              boxShadow: c === "#ffffff" ? `inset 0 0 0 1px ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}` : "none",
+                              transition: "transform 0.1s",
+                            }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.2)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-40 opacity-30 gap-2">
+                    <span className="text-3xl">—</span>
+                    <p className="text-xs text-center">{ar ? "فعّل أرقام الصفحات من العمود الأوسط" : "Enable page numbers in the middle column"}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer — always visible */}
+            <div className="px-6 pb-4 pt-3.5 border-t flex justify-end shrink-0" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
+              <button
+                onClick={() => setShowPageSetup(false)}
+                className="px-8 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                style={{ background: "hsl(var(--primary))", color: "#fff", border: "none", cursor: "pointer" }}
+              >
+                {ar ? "تم" : "Done"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAI && (
         <AIAssistant

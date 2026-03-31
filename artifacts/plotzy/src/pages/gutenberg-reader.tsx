@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/language-context";
 import {
   ArrowLeft, BookOpen, Loader2, Sun, Moon, Minus, Plus,
   List, X, Download, Settings, ChevronLeft, ChevronRight,
-  AlignJustify, Copy, Search,
+  AlignJustify, Copy, Search, LayoutGrid,
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -183,6 +183,8 @@ export default function GutenbergReader() {
   const [lineHeight, setLineHeight] = useState(1.82);
   const [showSettings, setShowSettings] = useState(false);
   const [showToc, setShowToc] = useState(false);
+  const [showPagePanel, setShowPagePanel] = useState(false);
+  const [panelJumpInput, setPanelJumpInput] = useState("");
 
   // Spread-based pagination
   const [spreadIdx, setSpreadIdx] = useState(0);
@@ -308,13 +310,13 @@ export default function GutenbergReader() {
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (showToc || showSettings) return;
+      if (showToc || showSettings || showPagePanel) return;
       if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") { e.preventDefault(); nextSpread(); }
       if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); prevSpread(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showToc, showSettings, nextSpread, prevSpread]);
+  }, [showToc, showSettings, showPagePanel, nextSpread, prevSpread]);
 
   // ── Clear selection bubble on page turn ──────────────────────────────────
   useEffect(() => { setSelBubble(null); }, [leftPageIdx]);
@@ -457,6 +459,13 @@ export default function GutenbergReader() {
           {chapters.length > 0 && (
             <IconBtn onClick={() => setShowToc(v => !v)} title="Contents" color={fgMuted}><List className="w-4 h-4" /></IconBtn>
           )}
+          <IconBtn
+            onClick={() => setShowPagePanel(v => !v)}
+            title={ar ? "كل الصفحات" : "All pages"}
+            color={showPagePanel ? accent : fgMuted}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </IconBtn>
           <IconBtn onClick={() => setShowSettings(v => !v)} title="Settings" color={fgMuted}><Settings className="w-4 h-4" /></IconBtn>
           <IconBtn onClick={() => setDark(d => !d)} title={dark ? "Light" : "Dark"} color={fgMuted}>
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -725,6 +734,117 @@ export default function GutenbergReader() {
             borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)"}`,
             transform: "translateX(-50%) rotate(45deg)",
           }} />
+        </div>
+      )}
+
+      {/* ══ PAGE PANEL SIDEBAR ═══════════════════════════════════════════════ */}
+      {showPagePanel && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.55)" }} onClick={() => setShowPagePanel(false)} />
+
+          {/* Sidebar */}
+          <div className="relative flex flex-col w-72 h-full shrink-0 z-10"
+            style={{ background: dark ? "#0d0c14" : "#f5f2ec", borderRight: `1px solid ${border}` }}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 shrink-0" style={{ borderBottom: `1px solid ${border}` }}>
+              <span className="text-sm font-semibold" style={{ color: fg }}>
+                {ar ? "كل الصفحات" : "All Pages"}
+                <span className="ml-2 text-xs font-normal opacity-40">{totalSpreads}</span>
+              </span>
+              {/* Jump-to-page input */}
+              <form onSubmit={e => {
+                e.preventDefault();
+                const n = parseInt(panelJumpInput.trim(), 10);
+                if (!isNaN(n) && n >= 1 && n <= totalPages) {
+                  const spread = twoPage ? Math.floor((n - 1) / 2) : n - 1;
+                  goToSpread(Math.min(totalSpreads - 1, Math.max(0, spread)), spread > clampedSpread ? "forward" : "backward");
+                  setShowPagePanel(false);
+                }
+                setPanelJumpInput("");
+              }} className="flex items-center gap-1.5">
+                <input
+                  type="number" min={1} max={totalPages}
+                  placeholder={ar ? "صفحة" : "p."}
+                  value={panelJumpInput}
+                  onChange={e => setPanelJumpInput(e.target.value)}
+                  style={{
+                    width: 54, padding: "3px 8px", borderRadius: 8, fontSize: 12, textAlign: "center",
+                    background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)",
+                    border: `1px solid ${border}`, color: fg, outline: "none",
+                  }}
+                />
+                <button type="submit" style={{ fontSize: 11, color: accent, background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                  {ar ? "انتقل" : "Go"}
+                </button>
+              </form>
+              <button onClick={() => setShowPagePanel(false)} style={{ color: fgMuted, background: "none", border: "none", cursor: "pointer" }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable page grid */}
+            <div className="flex-1 overflow-y-auto p-3">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {Array.from({ length: totalSpreads }).map((_, i) => {
+                  const lp = twoPage ? i * 2 + 1 : i + 1;
+                  const rp = twoPage ? i * 2 + 2 : null;
+                  const isActive = i === clampedSpread;
+                  const firstWords = pages[twoPage ? i * 2 : i]?.[0]?.slice(0, 60) || "";
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        goToSpread(i, i > clampedSpread ? "forward" : "backward");
+                        setShowPagePanel(false);
+                      }}
+                      style={{
+                        display: "flex", flexDirection: "column", alignItems: "stretch",
+                        border: `1.5px solid ${isActive ? accent : border}`,
+                        borderRadius: 10, overflow: "hidden", cursor: "pointer",
+                        background: isActive
+                          ? (dark ? "rgba(218,178,106,0.08)" : "rgba(140,100,40,0.07)")
+                          : (dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"),
+                        transition: "all 0.12s",
+                        padding: 0,
+                      }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.borderColor = dark ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.22)"; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.borderColor = border; }}
+                    >
+                      {/* Mini page preview area */}
+                      <div style={{
+                        padding: "8px 8px 4px",
+                        fontFamily: "Georgia,serif", fontSize: 8,
+                        lineHeight: 1.4, color: fgMuted,
+                        overflow: "hidden", height: 52,
+                        textAlign: "left",
+                      }}>
+                        {firstWords || "…"}
+                      </div>
+                      {/* Footer with page number */}
+                      <div style={{
+                        padding: "3px 8px 5px", borderTop: `1px solid ${border}`,
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                        background: isActive
+                          ? (dark ? "rgba(218,178,106,0.12)" : "rgba(140,100,40,0.09)")
+                          : "transparent",
+                      }}>
+                        <span style={{ fontSize: 9, color: isActive ? accent : fgMuted, fontWeight: isActive ? 700 : 400, fontFamily: "Georgia,serif" }}>
+                          {lp}{rp && rp <= totalPages ? `–${rp}` : ""}
+                        </span>
+                        {isActive && (
+                          <span style={{ fontSize: 7, color: accent, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                            {ar ? "هنا" : "here"}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

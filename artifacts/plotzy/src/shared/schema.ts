@@ -20,6 +20,31 @@ export type BookPreferences = {
   textAlign?: string;
   theme?: string;
   chapterHeadingStyle?: string;
+  paperSize?: string;
+  marginTop?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginRight?: number;
+  headerText?: string;
+  footerText?: string;
+  showPageNumbers?: boolean;
+  pageNumberPosition?: string;
+  pageNumFont?: string;
+  pageNumColor?: string;
+  pageNumSize?: number;
+  pageNumFormat?: string;   // "dashes" | "dots" | "plain" | "brackets" | "word" | "slash"
+  pageNumPosition?: string; // "center" | "left" | "right" | "outer"
+  pageNumOpacity?: number;  // 0.1 – 1.0
+  pageNumBold?: boolean;
+  pageNumItalic?: boolean;
+  pageNumSmallCaps?: boolean;
+  zoom?: number;
+  pageTheme?: string;
+  showRuler?: boolean;
+  isBold?: boolean;
+  isItalic?: boolean;
+  isUnderline?: boolean;
+  highlightColor?: string;
 };
 
 export type User = {

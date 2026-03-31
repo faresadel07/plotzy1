@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
   BookOpen, ChevronLeft, ChevronRight, ArrowLeft, Eye,
-  Loader2, Star, MessageSquare, Send, List, X,
+  Loader2, Star, MessageSquare, Send, List, X, BookMarked,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -381,6 +381,10 @@ export default function ReadBook() {
   const [totalSpreads, setTotalSpreads] = useState(1);
   const [showToc, setShowToc] = useState(false);
   const [viewCounted, setViewCounted] = useState(false);
+  const [showPageNav, setShowPageNav] = useState(false);
+  const [jumpInput, setJumpInput] = useState("");
+  const [jumpEditing, setJumpEditing] = useState(false);
+  const scrubberRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (book && !viewCounted) { incrementView.mutate(bookId); setViewCounted(true); }
@@ -401,12 +405,37 @@ export default function ReadBook() {
   /* Keyboard navigation */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (jumpEditing) return;
       if (e.key === "ArrowRight") goSpread(spreadIndex + 1);
       if (e.key === "ArrowLeft") goSpread(spreadIndex - 1);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [spreadIndex, goSpread]);
+  }, [spreadIndex, goSpread, jumpEditing]);
+
+  /* Scrubber click handler */
+  const handleScrubberClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    goSpread(Math.round(ratio * (totalSpreads - 1)));
+  }, [totalSpreads, goSpread]);
+
+  /* Jump to page handler */
+  const handleJumpSubmit = useCallback((val: string) => {
+    const n = parseInt(val.trim(), 10);
+    if (!isNaN(n)) {
+      // Convert 1-based page number to spread index (each spread = 2 pages)
+      const spread = Math.max(0, Math.min(totalSpreads - 1, Math.ceil(n / 2) - 1));
+      goSpread(spread);
+    }
+    setJumpEditing(false);
+    setJumpInput("");
+  }, [totalSpreads, goSpread]);
+
+  const leftPage = spreadIndex * 2 + 1;
+  const rightPage = spreadIndex * 2 + 2;
+  const totalPages = totalSpreads * 2;
+  const pct = totalSpreads > 1 ? Math.round((spreadIndex / (totalSpreads - 1)) * 100) : 100;
 
   if (bookLoading || chaptersLoading) {
     return (
@@ -550,45 +579,8 @@ export default function ReadBook() {
               onTotalSpreads={setTotalSpreads}
             />
 
-            {/* ── Navigation ── */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24, padding: "0 4px", paddingBottom: 40 }}>
-              {spreadIndex > 0 ? (
-                <button onClick={() => goSpread(spreadIndex - 1)}
-                  style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "10px 20px", cursor: "pointer", color: "#777", fontSize: 13, fontFamily: "Georgia, serif", transition: "all 0.15s" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#ccc"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = "#777"; }}
-                >
-                  <ChevronLeft style={{ width: 15, height: 15 }} />
-                  Previous
-                </button>
-              ) : <div />}
-
-              {/* Dots */}
-              <div style={{ display: "flex", gap: 5 }}>
-                {Array.from({ length: Math.min(totalSpreads, 12) }).map((_, i) => {
-                  const dotIndex = totalSpreads <= 12 ? i : Math.round(i * (totalSpreads - 1) / 11);
-                  const isActive = totalSpreads <= 12 ? i === spreadIndex : Math.abs(dotIndex - spreadIndex) <= Math.round(totalSpreads / 24);
-                  return (
-                    <button key={i} onClick={() => goSpread(totalSpreads <= 12 ? i : dotIndex)}
-                      style={{ width: isActive ? 18 : 5, height: 5, borderRadius: 3, background: isActive ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.12)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.2s" }}
-                    />
-                  );
-                })}
-              </div>
-
-              {spreadIndex < totalSpreads - 1 ? (
-                <button onClick={() => goSpread(spreadIndex + 1)}
-                  style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "10px 20px", cursor: "pointer", color: "#777", fontSize: 13, fontFamily: "Georgia, serif", transition: "all 0.15s" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#ccc"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = "#777"; }}
-                >
-                  Next
-                  <ChevronRight style={{ width: 15, height: 15 }} />
-                </button>
-              ) : (
-                <div style={{ fontSize: 12, color: "#444", fontFamily: "Georgia, serif", letterSpacing: "0.08em" }}>End of Book</div>
-              )}
-            </div>
+            {/* ── Inline spacer so content doesn't hide behind sticky nav ── */}
+            <div style={{ height: 80 }} />
 
             {/* Rating & Comments — always visible */}
             <div style={{ maxWidth: 700, margin: "8px auto 0", paddingBottom: 64 }}>
@@ -613,8 +605,165 @@ export default function ReadBook() {
         )}
       </div>
 
+      {/* ── Sticky Page Navigator Bar ── */}
+      {sortedChapters.length > 0 && totalSpreads > 1 && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+          background: "rgba(18,16,14,0.97)", backdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+        }}>
+          {/* Page grid panel */}
+          <AnimatePresence>
+            {showPageNav && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22 }}
+                style={{ overflow: "hidden", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div style={{ padding: "14px 20px 10px", maxWidth: 980, margin: "0 auto" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <p style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#555", fontFamily: "Georgia, serif" }}>
+                      Jump to page
+                    </p>
+                    {/* Jump-to-page input */}
+                    <form onSubmit={e => { e.preventDefault(); handleJumpSubmit(jumpInput); }}
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 11, color: "#555" }}>Go to page</span>
+                      <input
+                        type="number" min={1} max={totalPages} value={jumpInput}
+                        onChange={e => setJumpInput(e.target.value)}
+                        onFocus={() => setJumpEditing(true)}
+                        onBlur={() => { handleJumpSubmit(jumpInput); }}
+                        placeholder={String(leftPage)}
+                        style={{
+                          width: 60, padding: "3px 8px", borderRadius: 6, fontSize: 12, textAlign: "center",
+                          background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+                          color: "#ccc", outline: "none",
+                        }}
+                      />
+                      <span style={{ fontSize: 11, color: "#444" }}>/ {totalPages}</span>
+                    </form>
+                  </div>
+                  {/* Page tile grid */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {Array.from({ length: totalSpreads }).map((_, i) => {
+                      const isActive = i === spreadIndex;
+                      const lp = i * 2 + 1;
+                      const rp = i * 2 + 2;
+                      return (
+                        <button key={i} onClick={() => { goSpread(i); setShowPageNav(false); }}
+                          title={`Pages ${lp}–${rp}`}
+                          style={{
+                            width: 36, height: 26, borderRadius: 5, fontSize: 9, border: "none",
+                            cursor: "pointer", transition: "all 0.15s", fontFamily: "Georgia, serif",
+                            background: isActive ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.07)",
+                            color: isActive ? "#fff" : "#555",
+                            fontWeight: isActive ? 700 : 400,
+                          }}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.14)"; }}
+                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)"; }}
+                        >
+                          {lp}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Main nav row */}
+          <div style={{ maxWidth: 980, margin: "0 auto", padding: "0 16px", height: 56, display: "flex", alignItems: "center", gap: 12 }}>
+
+            {/* Previous button */}
+            <button
+              onClick={() => goSpread(spreadIndex - 1)}
+              disabled={spreadIndex === 0}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "none", border: "none", cursor: spreadIndex === 0 ? "default" : "pointer",
+                color: spreadIndex === 0 ? "#333" : "#888", fontSize: 13, fontFamily: "Georgia, serif",
+                padding: "6px 10px", borderRadius: 8, transition: "color 0.15s", flexShrink: 0,
+              }}
+              onMouseEnter={e => { if (spreadIndex > 0) (e.currentTarget as HTMLButtonElement).style.color = "#ddd"; }}
+              onMouseLeave={e => { if (spreadIndex > 0) (e.currentTarget as HTMLButtonElement).style.color = "#888"; }}
+            >
+              <ChevronLeft style={{ width: 16, height: 16 }} />
+              <span>Previous</span>
+            </button>
+
+            {/* Scrubber + page info */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+              {/* Scrubber track */}
+              <div
+                ref={scrubberRef}
+                onClick={handleScrubberClick}
+                style={{ width: "100%", height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", cursor: "pointer", position: "relative", flexShrink: 0 }}
+              >
+                <div style={{
+                  position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 3,
+                  background: "linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))",
+                  width: `${pct}%`, transition: "width 0.25s",
+                }} />
+                {/* Thumb */}
+                <div style={{
+                  position: "absolute", top: "50%", transform: "translate(-50%, -50%)",
+                  left: `${pct}%`, width: 14, height: 14, borderRadius: "50%",
+                  background: "#e8e0d4", boxShadow: "0 1px 6px rgba(0,0,0,0.6)",
+                  transition: "left 0.25s",
+                }} />
+              </div>
+
+              {/* Page numbers + % */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <button
+                  onClick={() => { setShowPageNav(p => !p); setJumpInput(""); }}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 6,
+                    fontFamily: "Georgia, serif",
+                  }}
+                >
+                  <span style={{ fontSize: 12, color: "#999", letterSpacing: "0.04em" }}>
+                    {leftPage}–{rightPage}
+                    <span style={{ color: "#444" }}> / {totalPages}</span>
+                  </span>
+                  <span style={{ fontSize: 10, color: "#444", padding: "1px 6px", borderRadius: 4, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    {pct}% complete
+                  </span>
+                  <BookMarked style={{ width: 11, height: 11, color: showPageNav ? "#bbb" : "#444", transition: "color 0.15s" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Next button */}
+            {spreadIndex < totalSpreads - 1 ? (
+              <button
+                onClick={() => goSpread(spreadIndex + 1)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#888", fontSize: 13, fontFamily: "Georgia, serif",
+                  padding: "6px 10px", borderRadius: 8, transition: "color 0.15s", flexShrink: 0,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#ddd"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#888"; }}
+              >
+                <span>Next</span>
+                <ChevronRight style={{ width: 16, height: 16 }} />
+              </button>
+            ) : (
+              <span style={{ fontSize: 12, color: "#383430", fontFamily: "Georgia, serif", flexShrink: 0, padding: "6px 10px" }}>End</span>
+            )}
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
       `}</style>
     </div>
   );
