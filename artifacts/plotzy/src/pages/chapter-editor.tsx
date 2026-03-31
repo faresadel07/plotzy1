@@ -3196,7 +3196,12 @@ export default function ChapterEditor() {
         const ps = PAPER_SIZES[effectivePrefs.paperSize || "trade"];
         const MAX_SPREAD_W = Math.min(window.innerWidth - 48, 1200);
         const spreadRawW = ps.width * 2 + 6;
-        const pvScale = Math.min(1, MAX_SPREAD_W / spreadRawW);
+        const pvScaleW = Math.min(1, MAX_SPREAD_W / spreadRawW);
+        // Also constrain by height so spread fits without scrolling
+        // Available height = viewport − topbar(56) − progressbar(2) − paddingV(64) − nav(96)
+        const MAX_SPREAD_H = Math.max(280, window.innerHeight - 56 - 2 - 64 - 96);
+        const pvScaleH = Math.min(1, MAX_SPREAD_H / ps.height);
+        const pvScale = Math.min(pvScaleW, pvScaleH);
         const pvPageW = Math.round(ps.width * pvScale);
         const pvPageH = Math.round(ps.height * pvScale);
         const pvFontSz = Math.max(11, Math.round(14 * pvScale));
@@ -3276,7 +3281,7 @@ export default function ChapterEditor() {
             </div>
 
             {/* ── Scrollable Book Area ── */}
-            <div ref={printScrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '3rem 1.5rem' }}>
+            <div ref={printScrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1.5rem' }}>
 
               {printPages.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', color: 'rgba(255,255,255,0.20)', fontFamily: pageFont, fontStyle: 'italic' }}>
@@ -3284,7 +3289,7 @@ export default function ChapterEditor() {
                   <p style={{ fontSize: '16px' }}>{ar ? 'لا يوجد محتوى بعد. ابدأ الكتابة!' : 'No content yet. Start writing!'}</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '36px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
 
                   {/* ── Two-Page Spread ── */}
                   <div style={{
@@ -3360,23 +3365,23 @@ export default function ChapterEditor() {
                   </div>
 
                   {/* ── Navigation ── */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <button
                       onClick={() => setCurrentSpread(s => Math.max(0, s - 1))}
                       disabled={currentSpread === 0}
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 22px', borderRadius: '100px', border: `1px solid ${currentSpread === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'}`, background: 'transparent', color: currentSpread === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)', fontSize: '12px', cursor: currentSpread === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.2s', letterSpacing: '0.04em' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '100px', border: `1px solid ${currentSpread === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'}`, background: 'transparent', color: currentSpread === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)', fontSize: '11px', cursor: currentSpread === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.2s', letterSpacing: '0.03em' }}
                     >
-                      <ChevronLeft style={{ width: '14px', height: '14px' }} />
-                      {ar ? 'السابق' : 'Previous'}
+                      <ChevronLeft style={{ width: '12px', height: '12px' }} />
+                      {ar ? 'السابق' : 'Prev'}
                     </button>
 
                     {/* Spread dots */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                       {Array.from({ length: maxSpread + 1 }).map((_, i) => (
                         <button
                           key={i}
                           onClick={() => setCurrentSpread(i)}
-                          style={{ width: i === currentSpread ? '20px' : '6px', height: '6px', borderRadius: '100px', background: i === currentSpread ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', transition: 'all 0.25s ease', padding: 0 }}
+                          style={{ width: i === currentSpread ? '16px' : '5px', height: '5px', borderRadius: '100px', background: i === currentSpread ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer', transition: 'all 0.25s ease', padding: 0 }}
                         />
                       ))}
                     </div>
@@ -3384,17 +3389,16 @@ export default function ChapterEditor() {
                     <button
                       onClick={() => setCurrentSpread(s => Math.min(maxSpread, s + 1))}
                       disabled={currentSpread >= maxSpread}
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 22px', borderRadius: '100px', border: `1px solid ${currentSpread >= maxSpread ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'}`, background: 'transparent', color: currentSpread >= maxSpread ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)', fontSize: '12px', cursor: currentSpread >= maxSpread ? 'not-allowed' : 'pointer', transition: 'all 0.2s', letterSpacing: '0.04em' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '100px', border: `1px solid ${currentSpread >= maxSpread ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'}`, background: 'transparent', color: currentSpread >= maxSpread ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)', fontSize: '11px', cursor: currentSpread >= maxSpread ? 'not-allowed' : 'pointer', transition: 'all 0.2s', letterSpacing: '0.03em' }}
                     >
                       {ar ? 'التالي' : 'Next'}
-                      <ChevronRight style={{ width: '14px', height: '14px' }} />
+                      <ChevronRight style={{ width: '12px', height: '12px' }} />
                     </button>
-                  </div>
 
-                  {/* Keyboard hint */}
-                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.15)', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'system-ui' }}>
-                    {ar ? '← → للتنقل  ·  Esc للإغلاق' : '← → to navigate  ·  Esc to close'}
-                  </p>
+                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.12)', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'system-ui', marginLeft: '4px' }}>
+                      {ar ? '← →  ·  Esc' : '← →  ·  Esc'}
+                    </span>
+                  </div>
 
                 </div>
               )}
