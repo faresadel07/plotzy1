@@ -1131,31 +1131,17 @@ export default function ChapterEditor() {
     .join('\n\n');
   const refWordCount = refFullText.split(/\s+/).filter(Boolean).length;
 
-  const renderPageContent = (text: string, isFirstPage: boolean) => {
-    const paragraphs = text.split(/\n+/).filter(p => p.trim());
-    if (!paragraphs.length) return <p style={{ color: 'rgba(17,17,17,0.25)', fontStyle: 'italic' }}>Empty page…</p>;
-    return paragraphs.map((para, i) => {
-      if (isFirstPage && i === 0 && para.length > 0) {
-        return (
-          <p key={i} style={{ marginBottom: '1.1em', lineHeight: '1.72' }}>
-            <span style={{
-              float: 'left', fontSize: '4.8em', lineHeight: '0.72',
-              paddingRight: '0.09em', paddingTop: '0.07em',
-              fontFamily: "Georgia, 'Times New Roman', serif",
-              fontWeight: 700, color: '#111111',
-            }}>
-              {para.charAt(0)}
-            </span>
-            {para.slice(1)}
-          </p>
-        );
-      }
-      return (
-        <p key={i} style={{ textIndent: i === 0 ? 0 : '1.5em', marginBottom: '0.85em', lineHeight: '1.72' }}>
-          {para}
-        </p>
-      );
-    });
+  const renderPageContent = (html: string, isFirstPage: boolean) => {
+    if (!html || !html.trim()) {
+      return <p style={{ color: 'rgba(17,17,17,0.25)', fontStyle: 'italic' }}>Empty page…</p>;
+    }
+    return (
+      <div
+        className={isFirstPage ? 'pv-page-first' : 'pv-page'}
+        dangerouslySetInnerHTML={{ __html: html }}
+        style={{ fontFamily: fontStyle.fontFamily || "Georgia, 'Times New Roman', serif" }}
+      />
+    );
   };
 
   return (
@@ -3280,8 +3266,35 @@ export default function ChapterEditor() {
         const pageColor = prefs.textColor || '#111111';
         const pageBg = resolvedBgColor || '#FFFEF8';
 
+        const ps = PAPER_SIZES[effectivePrefs.paperSize || "trade"];
+        const MAX_SPREAD_W = Math.min(window.innerWidth - 48, 1200);
+        const spreadRawW = ps.width * 2 + 6;
+        const pvScale = Math.min(1, MAX_SPREAD_W / spreadRawW);
+        const pvPageW = Math.round(ps.width * pvScale);
+        const pvPageH = Math.round(ps.height * pvScale);
+        const pvFontSz = Math.max(11, Math.round(14 * pvScale));
+        const pvLineh = '1.72';
+
         return (
           <div className="fixed inset-0 z-[200] flex flex-col select-none" style={{ background: '#0d0d0f' }}>
+          <style>{`
+            .pv-page p, .pv-page-first p { margin: 0 0 0.75em 0; line-height: ${pvLineh}; }
+            .pv-page p + p { text-indent: 1.5em; }
+            .pv-page-first p:first-child::first-letter {
+              float: left; font-size: 4.5em; line-height: 0.72;
+              padding-right: 0.08em; padding-top: 0.06em;
+              font-weight: 700; color: ${pageColor};
+            }
+            .pv-page strong, .pv-page-first strong { font-weight: 700; }
+            .pv-page em, .pv-page-first em { font-style: italic; }
+            .pv-page u, .pv-page-first u { text-decoration: underline; }
+            .pv-page h1, .pv-page-first h1 { font-size: 1.4em; font-weight: 700; margin: 0.5em 0 0.8em; }
+            .pv-page h2, .pv-page-first h2 { font-size: 1.2em; font-weight: 700; margin: 0.5em 0 0.6em; }
+            .pv-page h3, .pv-page-first h3 { font-size: 1.05em; font-weight: 600; margin: 0.4em 0 0.5em; }
+            .pv-page [style*="text-align: center"], .pv-page-first [style*="text-align: center"] { text-align: center; }
+            .pv-page [style*="text-align: right"], .pv-page-first [style*="text-align: right"] { text-align: right; }
+            .pv-page [style*="text-align: justify"], .pv-page-first [style*="text-align: justify"] { text-align: justify; }
+          `}</style>
 
             {/* ── Top Bar ── */}
             <div style={{ height: '56px', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', flexShrink: 0 }}>
@@ -3344,38 +3357,39 @@ export default function ChapterEditor() {
                   <p style={{ fontSize: '16px' }}>{ar ? 'لا يوجد محتوى بعد. ابدأ الكتابة!' : 'No content yet. Start writing!'}</p>
                 </div>
               ) : (
-                <div style={{ width: '100%', maxWidth: '1060px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '36px' }}>
 
                   {/* ── Two-Page Spread ── */}
                   <div style={{
-                    width: '100%',
                     display: 'flex',
-                    minHeight: '680px',
-                    boxShadow: '0 40px 100px rgba(0,0,0,0.80), 0 12px 32px rgba(0,0,0,0.50)',
+                    width: pvPageW * 2 + 6,
+                    height: pvPageH,
+                    flexShrink: 0,
+                    boxShadow: '0 48px 120px rgba(0,0,0,0.85), 0 16px 40px rgba(0,0,0,0.55)',
                     borderRadius: '2px',
                     overflow: 'hidden',
                   }}>
 
                     {/* Left Page */}
-                    <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', background: pageBg, padding: '3.8rem 3rem 4.2rem 3.8rem', boxShadow: 'inset -14px 0 28px rgba(0,0,0,0.08)' }}>
+                    <div style={{ width: pvPageW, height: pvPageH, flexShrink: 0, position: 'relative', display: 'flex', flexDirection: 'column', background: pageBg, padding: `${Math.round(pvPageH * 0.075)}px ${Math.round(pvPageW * 0.09)}px ${Math.round(pvPageH * 0.07)}px ${Math.round(pvPageW * 0.10)}px`, boxShadow: 'inset -18px 0 36px rgba(0,0,0,0.10), inset -2px 0 8px rgba(0,0,0,0.06)', boxSizing: 'border-box' }}>
                       {/* Running header */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: '11px', marginBottom: '3rem' }}>
-                        <span style={{ fontSize: '8px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: '8px', marginBottom: `${Math.round(pvPageH * 0.055)}px`, flexShrink: 0 }}>
+                        <span style={{ fontSize: '7px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
                           {book?.title || ''}
                         </span>
-                        <span style={{ fontSize: '8px', color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
+                        <span style={{ fontSize: '7px', color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
                       </div>
 
                       {/* Content */}
-                      <div style={{ fontFamily: pageFont, fontSize: '16px', color: pageColor, flex: 1, overflow: 'hidden', lineHeight: '1.75' }}>
+                      <div style={{ fontFamily: pageFont, fontSize: `${pvFontSz}px`, color: pageColor, flex: 1, overflow: 'hidden' }}>
                         {printPages[currentSpread * 2] !== undefined
                           ? renderPageContent(printPages[currentSpread * 2], currentSpread === 0)
                           : null}
                       </div>
 
                       {/* Footer: page number */}
-                      <div style={{ marginTop: '2rem', borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '11px', display: 'flex', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
+                      <div style={{ flexShrink: 0, marginTop: '1.2rem', borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '8px', display: 'flex', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '9px', color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
                           — {currentSpread * 2 + 1} —
                         </span>
                       </div>
@@ -3384,36 +3398,37 @@ export default function ChapterEditor() {
                     {/* Binding */}
                     <div style={{
                       width: '6px',
+                      height: pvPageH,
                       flexShrink: 0,
-                      background: 'linear-gradient(to right, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.10) 40%, rgba(0,0,0,0.04) 70%, rgba(0,0,0,0.12) 100%)',
-                      boxShadow: 'inset 2px 0 6px rgba(0,0,0,0.15), inset -2px 0 6px rgba(0,0,0,0.08)',
+                      background: 'linear-gradient(to right, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.05) 70%, rgba(0,0,0,0.14) 100%)',
+                      boxShadow: 'inset 2px 0 8px rgba(0,0,0,0.18), inset -2px 0 8px rgba(0,0,0,0.10)',
                     }} />
 
                     {/* Right Page */}
                     {printPages[currentSpread * 2 + 1] !== undefined ? (
-                      <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', background: pageBg, padding: '3.8rem 3.8rem 4.2rem 3rem', boxShadow: 'inset 14px 0 28px rgba(0,0,0,0.04)' }}>
+                      <div style={{ width: pvPageW, height: pvPageH, flexShrink: 0, position: 'relative', display: 'flex', flexDirection: 'column', background: pageBg, padding: `${Math.round(pvPageH * 0.075)}px ${Math.round(pvPageW * 0.10)}px ${Math.round(pvPageH * 0.07)}px ${Math.round(pvPageW * 0.09)}px`, boxShadow: 'inset 18px 0 36px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
                         {/* Running header */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: '11px', marginBottom: '3rem' }}>
-                          <span style={{ fontSize: '8px', color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
-                          <span style={{ fontSize: '8px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: '8px', marginBottom: `${Math.round(pvPageH * 0.055)}px`, flexShrink: 0 }}>
+                          <span style={{ fontSize: '7px', color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
+                          <span style={{ fontSize: '7px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
                             {title || (ar ? 'فصل' : 'Chapter')}
                           </span>
                         </div>
 
                         {/* Content */}
-                        <div style={{ fontFamily: pageFont, fontSize: '16px', color: pageColor, flex: 1, overflow: 'hidden', lineHeight: '1.75' }}>
+                        <div style={{ fontFamily: pageFont, fontSize: `${pvFontSz}px`, color: pageColor, flex: 1, overflow: 'hidden' }}>
                           {renderPageContent(printPages[currentSpread * 2 + 1], false)}
                         </div>
 
                         {/* Footer */}
-                        <div style={{ marginTop: '2rem', borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '11px', display: 'flex', justifyContent: 'center' }}>
-                          <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
+                        <div style={{ flexShrink: 0, marginTop: '1.2rem', borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '8px', display: 'flex', justifyContent: 'center' }}>
+                          <span style={{ fontSize: '9px', color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
                             — {currentSpread * 2 + 2} —
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <div style={{ flex: 1, background: pageBg, boxShadow: 'inset 14px 0 28px rgba(0,0,0,0.03)', opacity: 0.6 }} />
+                      <div style={{ width: pvPageW, height: pvPageH, flexShrink: 0, background: pageBg, boxShadow: 'inset 18px 0 36px rgba(0,0,0,0.03)', opacity: 0.6, boxSizing: 'border-box' }} />
                     )}
                   </div>
 
