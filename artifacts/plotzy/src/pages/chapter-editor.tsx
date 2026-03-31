@@ -337,24 +337,28 @@ export default function ChapterEditor() {
     }
   }, [prefs.zoom]);
 
-  // Auto-fit zoom: show the full page height on first load when no saved zoom
+  // Auto-fit zoom: show the full page height on first load when no saved zoom.
+  // Uses effectivePrefs.paperSize as dep (pageDims is derived from it, but declared later).
+  const paperSizeForZoom = effectivePrefs.paperSize || "trade";
   useEffect(() => {
     if (autoZoomApplied.current) return;
-    // Use rAF so DOM is ready and clientHeight is accurate
     const frame = requestAnimationFrame(() => {
       if (!mainRef.current) return;
       const containerH = mainRef.current.clientHeight;
       if (containerH < 100) return;
-      const titleAreaH = 120; // chapter title + gap
+      // Calculate page height inline (same as getPageDimensions but no dep on pageDims)
+      const PAPER_H: Record<string, number> = { a5: 794, pocket: 680, trade: 864, a4: 1123 };
+      const pageH = PAPER_H[paperSizeForZoom] ?? 864;
+      const titleAreaH = 120;
       const pagePaddingV = 80;
       const available = containerH - titleAreaH - pagePaddingV;
-      const fitPct = Math.floor((available / pageDims.pageHeight) * 100);
+      const fitPct = Math.floor((available / pageH) * 100);
       const optimal = Math.max(55, Math.min(95, fitPct));
       setZoom(optimal);
       autoZoomApplied.current = true;
     });
     return () => cancelAnimationFrame(frame);
-  }, [pageDims.pageHeight]);
+  }, [paperSizeForZoom]);
 
   // ── Inline AI Ghost-Text Suggestion ──────────────────────────────────────
   const [inlineSuggestion, setInlineSuggestion] = useState<string>("");
