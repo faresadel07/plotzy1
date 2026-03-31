@@ -496,7 +496,7 @@ export async function registerRoutes(
           lines.push("");
           getChapterPages(ch.content).forEach((page, pi) => {
             if (pi > 0) { lines.push(""); lines.push(`— Page ${pi + 1} —`); lines.push(""); }
-            lines.push(page);
+            lines.push(isHtmlContent(page) ? stripHtml(page) : page);
           });
           lines.push("");
           lines.push("─".repeat(50));
@@ -564,7 +564,12 @@ export async function registerRoutes(
 
         const chaptersHtml = chapters.map((ch, i) => {
           const pageBlocks = getChapterPages(ch.content)
-            .map((pg, pi) => `<div class="page-block">${pi > 0 ? `<div class="page-break-label">— Page ${pi + 1} —</div>` : ""}${escapeHtml(pg).replace(/\n/g, "<br>")}</div>`)
+            .map((pg, pi) => {
+              const rendered = isHtmlContent(pg)
+                ? pg
+                : escapeHtml(pg).replace(/\n/g, "<br>");
+              return `<div class="page-block">${pi > 0 ? `<div class="page-break-label">— Page ${pi + 1} —</div>` : ""}${rendered}</div>`;
+            })
             .join("");
           return `
           <div class="chapter">
@@ -711,10 +716,12 @@ export async function registerRoutes(
         chapters.forEach((ch, i) => {
           const pageHtml = getChapterPages(ch.content)
             .map((pg, pi) => {
-              const pgHtml = escapeHtml(pg).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>");
+              const pgHtml = isHtmlContent(pg)
+                ? pg
+                : escapeHtml(pg).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>");
               return pi > 0
-                ? `<hr/><p><em>— Page ${pi + 1} —</em></p><p>${pgHtml}</p>`
-                : `<p>${pgHtml}</p>`;
+                ? `<hr/><p><em>— Page ${pi + 1} —</em></p>${isHtmlContent(pg) ? pgHtml : `<p>${pgHtml}</p>`}`
+                : (isHtmlContent(pg) ? pgHtml : `<p>${pgHtml}</p>`);
             })
             .join("");
           doc.addSection(ch.title, `<h2>Chapter ${i + 1}: ${escapeHtml(ch.title)}</h2><div class="chapter-content">${pageHtml}</div>`);
@@ -2770,7 +2777,33 @@ function getChapterPages(content: string): string[] {
   if (!content) return [""];
   try {
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => {
+        if (typeof item === "string") return item;
+        // New TipTap format: { type: 'text', content: '<p>...</p>' }
+        if (item && typeof item.content === "string") return item.content;
+        return "";
+      }).filter((s: string) => s.length > 0);
+    }
   } catch { }
   return [content];
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function isHtmlContent(s: string): boolean {
+  return /<[a-zA-Z]/.test(s);
 }
