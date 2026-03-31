@@ -3003,256 +3003,183 @@ export default function ChapterEditor() {
       )}
 
       {showCanvas && (
-        <div className="fixed inset-0 z-[100] flex flex-col animate-in fade-in duration-200" style={{ background: '#0e0e10' }}>
+        <div
+          className="fixed z-[100] animate-in fade-in duration-150"
+          style={{
+            top: 96, left: 0, right: 0, bottom: 0,
+            background: resolvedBgColor ? `${resolvedBgColor}e8` : isDark ? 'rgba(18,18,22,0.93)' : 'rgba(250,249,246,0.93)',
+            backdropFilter: 'blur(2px)',
+          }}
+        >
+          {/* ── Floating Tools Sidebar ── */}
+          <div
+            className="absolute flex flex-col gap-2 p-2 rounded-2xl shadow-2xl z-10"
+            style={{
+              top: '50%', transform: 'translateY(-50%)',
+              left: '16px',
+              background: isDark ? 'rgba(28,28,32,0.97)' : 'rgba(255,255,255,0.97)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              width: '52px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            }}
+          >
+            {/* Pen */}
+            <button
+              onClick={() => setIsEraser(false)}
+              title={ar ? "قلم" : "Pen"}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+              style={{
+                background: !isEraser ? 'hsl(var(--primary))' : 'transparent',
+                color: !isEraser ? '#fff' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+              }}
+            >
+              <PenTool className="w-4 h-4" />
+            </button>
 
-          {/* ── Top Bar ── */}
-          <div className="shrink-0 h-12 flex items-center justify-between px-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
-            <div className="flex items-center gap-2.5">
-              <PenTool className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
-              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                {ar ? "لوحة الرسم" : "Sketch Canvas"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
+            {/* Eraser */}
+            <button
+              onClick={() => setIsEraser(true)}
+              title={ar ? "ممحاة" : "Eraser"}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all text-base"
+              style={{
+                background: isEraser ? 'hsl(var(--primary))' : 'transparent',
+                color: isEraser ? '#fff' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+              }}
+            >
+              ⊘
+            </button>
+
+            {/* Divider */}
+            <div style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '2px 4px' }} />
+
+            {/* Color swatches */}
+            {["#000000", "#ffffff", "#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280"].map(c => (
               <button
-                onClick={() => canvasRef.current?.undo()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                style={{ color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.06)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
-              >
-                <RotateCcw className="w-3 h-3" />
-                {ar ? "تراجع" : "Undo"}
-              </button>
-              <button
-                onClick={() => canvasRef.current?.clearCanvas()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                style={{ color: 'rgba(239,68,68,0.65)', background: 'rgba(239,68,68,0.08)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,1)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.65)')}
-              >
-                <Trash2 className="w-3 h-3" />
-                {ar ? "مسح الكل" : "Clear"}
-              </button>
-              <div className="w-px h-5 mx-1" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              <button
-                onClick={() => { setShowCanvas(false); setIsEraser(false); }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+                key={c}
+                onClick={() => { setCanvasColor(c); setIsEraser(false); }}
+                title={c}
+                className="w-7 h-7 rounded-full self-center transition-all hover:scale-110"
+                style={{
+                  background: c,
+                  outline: canvasColor === c && !isEraser ? '2px solid hsl(var(--primary))' : '2px solid transparent',
+                  outlineOffset: '2px',
+                  boxShadow: c === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.2)' : undefined,
+                }}
+              />
+            ))}
 
-          {/* ── Main: sidebar + canvas ── */}
-          <div className="flex flex-1 min-h-0">
-
-            {/* Left Sidebar — Tools */}
-            <div className="shrink-0 w-48 flex flex-col border-r overflow-y-auto" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-
-              {/* ── Tools (Pen / Eraser) ── */}
-              <div className="p-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <p className="text-[9px] uppercase tracking-[0.18em] mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                  {ar ? "الأداة" : "Tool"}
-                </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => setIsEraser(false)}
-                    className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-medium transition-all"
-                    style={{
-                      background: !isEraser ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
-                      color: !isEraser ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.38)',
-                      border: `1px solid ${!isEraser ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                    }}
-                  >
-                    <PenTool className="w-4 h-4" />
-                    {ar ? "قلم" : "Pen"}
-                  </button>
-                  <button
-                    onClick={() => setIsEraser(true)}
-                    className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-medium transition-all"
-                    style={{
-                      background: isEraser ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
-                      color: isEraser ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.38)',
-                      border: `1px solid ${isEraser ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                    }}
-                  >
-                    <span className="text-base leading-none">⊘</span>
-                    {ar ? "ممحاة" : "Eraser"}
-                  </button>
-                </div>
-              </div>
-
-              {/* ── Colors ── */}
-              <div className="p-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <p className="text-[9px] uppercase tracking-[0.18em] mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                  {ar ? "اللون" : "Color"}
-                </p>
-                <div className="grid grid-cols-5 gap-1.5 mb-2">
-                  {["#000000","#ffffff","#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#8b5cf6","#ec4899","#6b7280"].map(c => (
-                    <button
-                      key={c}
-                      onClick={() => { setCanvasColor(c); setIsEraser(false); }}
-                      className="w-7 h-7 rounded-full transition-all hover:scale-110"
-                      style={{
-                        background: c,
-                        outline: canvasColor === c && !isEraser ? '2px solid rgba(255,255,255,0.9)' : '2px solid transparent',
-                        outlineOffset: '2px',
-                        boxShadow: c === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.2)' : undefined,
-                        transform: canvasColor === c && !isEraser ? 'scale(1.15)' : undefined,
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div
-                    className="w-7 h-7 rounded-full flex-shrink-0"
-                    style={{
-                      background: canvasColor,
-                      outline: !isEraser ? '2px solid rgba(255,255,255,0.5)' : '2px solid transparent',
-                      outlineOffset: '2px',
-                      boxShadow: canvasColor === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.2)' : undefined,
-                    }}
-                  />
-                  <input
-                    type="color"
-                    value={canvasColor}
-                    onChange={e => { setCanvasColor(e.target.value); setIsEraser(false); }}
-                    className="flex-1 h-7 rounded-lg cursor-pointer border-0 bg-transparent"
-                    title={ar ? "لون مخصص" : "Custom color"}
-                  />
-                </div>
-              </div>
-
-              {/* ── Brush Size ── */}
-              <div className="p-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <p className="text-[9px] uppercase tracking-[0.18em] mb-2 font-semibold flex items-center justify-between" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                  <span>{ar ? "الحجم" : "Size"}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>{canvasStroke}px</span>
-                </p>
-                {/* Quick size presets */}
-                <div className="grid grid-cols-4 gap-1 mb-2.5">
-                  {[2, 5, 10, 20].map(sz => (
-                    <button
-                      key={sz}
-                      onClick={() => setCanvasStroke(sz)}
-                      className="flex items-center justify-center h-7 rounded-lg text-[10px] font-semibold transition-all"
-                      style={{
-                        background: canvasStroke === sz ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
-                        color: canvasStroke === sz ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
-                        border: `1px solid ${canvasStroke === sz ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                      }}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="range" min="1" max="40"
-                  value={canvasStroke}
-                  onChange={e => setCanvasStroke(parseInt(e.target.value))}
-                  className="w-full accent-white"
-                />
-                {/* Live brush preview */}
-                <div className="mt-2 flex items-center justify-center" style={{ height: '32px' }}>
-                  <div
-                    className="rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(isEraser ? canvasStroke * 2.5 : canvasStroke, 32)}px`,
-                      height: `${Math.min(isEraser ? canvasStroke * 2.5 : canvasStroke, 32)}px`,
-                      background: isEraser ? 'rgba(255,255,255,0.1)' : canvasColor,
-                      border: isEraser ? '2px dashed rgba(255,255,255,0.35)' : 'none',
-                      boxShadow: !isEraser && canvasColor !== '#000000' ? `0 0 8px ${canvasColor}55` : undefined,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* ── Insert Size ── */}
-              <div className="p-3">
-                <p className="text-[9px] uppercase tracking-[0.18em] mb-2 font-semibold" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                  {ar ? "حجم الإدراج" : "Insert Size"}
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {([
-                    { id: 'small',  label: ar ? 'صغير'   : 'Small',  hint: '42%',  bar: 42  },
-                    { id: 'medium', label: ar ? 'متوسط'  : 'Medium', hint: '64%',  bar: 64  },
-                    { id: 'large',  label: ar ? 'كبير'   : 'Large',  hint: '86%',  bar: 86  },
-                    { id: 'full',   label: ar ? 'كامل'   : 'Full',   hint: '100%', bar: 100 },
-                  ] as { id: DrawingSize, label: string, hint: string, bar: number }[]).map(opt => {
-                    const isActive = drawingSize === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        onClick={() => setDrawingSize(opt.id)}
-                        className="w-full rounded-xl overflow-hidden transition-all text-left"
-                        style={{
-                          background: isActive ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.06)'}`,
-                          padding: '7px 10px',
-                        }}
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] font-semibold" style={{ color: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)' }}>
-                            {opt.label}
-                          </span>
-                          <span className="text-[9px]" style={{ color: isActive ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)' }}>
-                            {opt.hint}
-                          </span>
-                        </div>
-                        {/* Width bar visualizer */}
-                        <div className="w-full rounded-full overflow-hidden" style={{ height: '3px', background: 'rgba(255,255,255,0.06)' }}>
-                          <div
-                            className="h-full rounded-full transition-all duration-300"
-                            style={{
-                              width: `${opt.bar}%`,
-                              background: isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.18)',
-                            }}
-                          />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Canvas Area */}
-            <div className="flex-1 relative min-w-0" style={{ background: '#ffffff', cursor: isEraser ? 'cell' : 'crosshair' }}>
-              <ReactSketchCanvas
-                ref={canvasRef}
-                strokeWidth={isEraser ? Math.max(canvasStroke * 2.5, 12) : canvasStroke}
-                strokeColor={canvasColor}
-                className="w-full h-full border-none"
-                canvasColor="white"
+            {/* Custom color */}
+            <div className="relative self-center" title={ar ? "لون مخصص" : "Custom color"}>
+              <div
+                className="w-7 h-7 rounded-full border-2"
+                style={{
+                  background: canvasColor,
+                  borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)',
+                }}
+              />
+              <input
+                type="color"
+                value={canvasColor}
+                onChange={e => { setCanvasColor(e.target.value); setIsEraser(false); }}
+                className="absolute inset-0 opacity-0 cursor-pointer rounded-full"
               />
             </div>
+
+            {/* Divider */}
+            <div style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '2px 4px' }} />
+
+            {/* Brush size presets */}
+            {[2, 5, 12, 24].map(sz => (
+              <button
+                key={sz}
+                onClick={() => setCanvasStroke(sz)}
+                title={`${sz}px`}
+                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                style={{
+                  background: canvasStroke === sz ? 'hsl(var(--primary) / 0.12)' : 'transparent',
+                }}
+              >
+                <div
+                  className="rounded-full"
+                  style={{
+                    width: Math.min(sz + 4, 24),
+                    height: Math.min(sz + 4, 24),
+                    background: isEraser ? (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)') : canvasColor,
+                    border: isEraser ? '1.5px dashed rgba(150,150,150,0.6)' : 'none',
+                  }}
+                />
+              </button>
+            ))}
+
+            {/* Divider */}
+            <div style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '2px 4px' }} />
+
+            {/* Undo */}
+            <button
+              onClick={() => canvasRef.current?.undo()}
+              title={ar ? "تراجع" : "Undo"}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+              style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = isDark ? '#fff' : '#000')}
+              onMouseLeave={e => (e.currentTarget.style.color = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)')}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+
+            {/* Clear */}
+            <button
+              onClick={() => canvasRef.current?.clearCanvas()}
+              title={ar ? "مسح" : "Clear"}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+              style={{ color: 'rgba(239,68,68,0.6)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,1)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.6)')}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* ── Bottom Bar — action buttons only ── */}
-          <div className="shrink-0 flex items-center justify-end gap-3 px-4 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.025)' }}>
+          {/* ── Action Buttons (top-right) ── */}
+          <div className="absolute top-3 right-4 flex items-center gap-2 z-10">
             <button
               onClick={() => { setShowCanvas(false); setIsEraser(false); }}
-              className="px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-              style={{ color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+              className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              }}
             >
               {ar ? "إلغاء" : "Cancel"}
             </button>
             <button
               onClick={handleSaveDrawing}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'rgba(255,255,255,0.94)', color: '#0e0e10' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#ffffff')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.94)')}
+              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg"
+              style={{ background: 'hsl(var(--primary))', color: '#fff' }}
             >
               <CheckCircle2 className="w-4 h-4" />
-              {ar ? "إدراج في الكتاب" : "Insert into Book"}
+              {ar ? "إدراج في الصفحة" : "Insert into Page"}
             </button>
+          </div>
+
+          {/* ── Label (top-center) ── */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10 pointer-events-none">
+            <PenTool className="w-3.5 h-3.5" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)' }} />
+            <span className="text-xs font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)' }}>
+              {ar ? "ارسم على الصفحة" : "Draw on page"}
+            </span>
+          </div>
+
+          {/* ── Full-area Drawing Canvas ── */}
+          <div className="absolute inset-0" style={{ cursor: isEraser ? 'cell' : 'crosshair' }}>
+            <ReactSketchCanvas
+              ref={canvasRef}
+              strokeWidth={isEraser ? Math.max(canvasStroke * 2.5, 12) : canvasStroke}
+              strokeColor={canvasColor}
+              className="w-full h-full border-none"
+              canvasColor="transparent"
+              style={{ background: 'transparent' }}
+            />
           </div>
         </div>
       )}
