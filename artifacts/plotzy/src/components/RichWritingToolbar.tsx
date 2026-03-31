@@ -129,6 +129,7 @@ export function RichWritingToolbar({
   const [pageSizeDropRect, setPageSizeDropRect] = useState<{ top: number; left: number } | null>(null);
   const styleBtnRef = useRef<HTMLButtonElement>(null);
   const fontBtnRef = useRef<HTMLButtonElement>(null);
+  const savedSelectionRef = useRef<{ from: number; to: number } | null>(null);
   const [sizeInput, setSizeInput] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -173,23 +174,29 @@ export function RichWritingToolbar({
     return "Normal text";
   };
 
+  const restoreSelection = () => {
+    const saved = savedSelectionRef.current;
+    savedSelectionRef.current = null;
+    if (!editor || !saved) return editor?.chain().focus();
+    return editor.chain().focus().setTextSelection({ from: saved.from, to: saved.to });
+  };
+
   const applyTextStyle = (value: string) => {
     if (!editor) return;
     setStyleDropOpen(false);
-    const anchor = editor.state.selection.anchor;
+    const chain = restoreSelection()!;
     if (value === "paragraph" || value === "title") {
-      editor.chain().focus().setTextSelection(anchor).setParagraph().run();
-      if (value === "title") editor.chain().focus().setTextSelection(anchor).setMark("textStyle", { fontSize: 28 }).toggleBold().run();
-    } else if (value === "h1") editor.chain().focus().setTextSelection(anchor).toggleHeading({ level: 1 }).run();
-    else if (value === "h2") editor.chain().focus().setTextSelection(anchor).toggleHeading({ level: 2 }).run();
-    else if (value === "h3") editor.chain().focus().setTextSelection(anchor).toggleHeading({ level: 3 }).run();
-    else if (value === "blockquote") editor.chain().focus().setTextSelection(anchor).toggleBlockquote().run();
+      chain.setParagraph().run();
+      if (value === "title") editor.chain().focus().setMark("textStyle", { fontSize: 28 }).toggleBold().run();
+    } else if (value === "h1") chain.toggleHeading({ level: 1 }).run();
+    else if (value === "h2") chain.toggleHeading({ level: 2 }).run();
+    else if (value === "h3") chain.toggleHeading({ level: 3 }).run();
+    else if (value === "blockquote") chain.toggleBlockquote().run();
   };
 
   const applyFont = (font: typeof FONT_OPTIONS[number]) => {
     if (!editor) return;
-    const anchor = editor.state.selection.anchor;
-    editor.chain().focus().setTextSelection(anchor).setFontFamily(font.fontFamily).run();
+    restoreSelection()!.setFontFamily(font.fontFamily).run();
     setFontDropOpen(false);
   };
 
@@ -327,6 +334,7 @@ export function RichWritingToolbar({
                 e.preventDefault(); e.stopPropagation();
                 if (styleDropOpen) { setStyleDropOpen(false); setStyleDropRect(null); }
                 else {
+                  if (editor) savedSelectionRef.current = { from: editor.state.selection.from, to: editor.state.selection.to };
                   const r = styleBtnRef.current?.getBoundingClientRect();
                   if (r) setStyleDropRect({ top: r.bottom + 4, left: r.left });
                   setStyleDropOpen(true);
@@ -353,6 +361,7 @@ export function RichWritingToolbar({
                 e.preventDefault(); e.stopPropagation();
                 if (fontDropOpen) { setFontDropOpen(false); setFontDropRect(null); }
                 else {
+                  if (editor) savedSelectionRef.current = { from: editor.state.selection.from, to: editor.state.selection.to };
                   const r = fontBtnRef.current?.getBoundingClientRect();
                   if (r) setFontDropRect({ top: r.bottom + 4, left: r.left });
                   setFontDropOpen(true);
@@ -631,7 +640,6 @@ export function RichWritingToolbar({
               {/* Search */}
               <div style={{ padding: "8px 10px 6px", borderBottom: `1px solid ${dropBorder}`, flexShrink: 0 }}>
                 <input
-                  autoFocus
                   value={fontSearch}
                   onChange={e => setFontSearch(e.target.value)}
                   onMouseDown={e => e.stopPropagation()}
