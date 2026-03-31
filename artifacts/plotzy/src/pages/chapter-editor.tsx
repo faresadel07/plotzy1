@@ -1687,8 +1687,10 @@ export default function ChapterEditor() {
                       // and the next page exists, try to pull one block back
                       if (mergeDebounceRef.current) clearTimeout(mergeDebounceRef.current);
                       mergeDebounceRef.current = setTimeout(() => {
-                        const available = dynContentH - 96; // minus 48px*2 padding
-                        const freeSpace = available - scrollH;
+                        // freeSpace = how many px scrollHeight can grow before real
+                        // overflow.  scrollH already includes top+bottom padding,
+                        // so comparing directly to dynContentH is correct.
+                        const freeSpace = dynContentH - scrollH;
                         // Only attempt merge if there's meaningful free space
                         if (freeSpace < 60) return;
                         setRichPages(prev => {

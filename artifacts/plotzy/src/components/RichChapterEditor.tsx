@@ -252,13 +252,27 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         if (!fh) return;
 
         const proseMirror = editor.view.dom as HTMLElement;
-        // Available text height = fixedHeight minus the 48px top + 48px bottom padding
-        const available = fh - 96;
+
+        // Read padding values live from computed style so the calculation stays
+        // correct no matter what CSS changes (font size, page size, zoom, etc.)
+        const cs = window.getComputedStyle(proseMirror);
+        const paddingBottom = parseFloat(cs.paddingBottom) || 0;
+
+        // scrollHeight includes top-padding + content + bottom-padding.
+        // Real overflow only occurs when scrollHeight exceeds the element's
+        // rendered height (= fixedHeight when box-sizing:border-box).
         const contentH = proseMirror.scrollHeight;
 
         onHeightChangeRef.current?.(contentH);
 
-        if (contentH > available + 2) {
+        // Trigger a split only when there is genuine overflow (> 2px buffer for
+        // sub-pixel rounding).  Using fh directly (not fh-96) avoids the
+        // 44-px-too-early split that caused visible blank space at the bottom.
+        if (contentH > fh + 2) {
+          // Children's offsetTop is measured from ProseMirror's border edge,
+          // which includes the top padding.  A child "fits" if its bottom edge
+          // is still above the bottom padding boundary  (fh - paddingBottom).
+          const available = fh - paddingBottom;
           const split = splitAtOverflow(proseMirror, available);
           if (split) {
             onSplitNeededRef.current?.(split.fitsHtml, split.overflowHtml);
