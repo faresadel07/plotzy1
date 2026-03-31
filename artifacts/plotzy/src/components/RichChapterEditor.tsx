@@ -36,6 +36,50 @@ const FontSize = Extension.create({
   },
 });
 
+// ── Word-level binary search split for a single oversized block ──────────────
+// When one paragraph is taller than the whole page, we split its text at the
+// word boundary that fills the page exactly, inserting a temporary clone into
+// the DOM to measure rendered height without affecting the real content.
+function splitBlockAtWords(
+  proseMirror: HTMLElement,
+  child: HTMLElement,
+  availableHeight: number,
+): { fitsHtml: string; overflowHtml: string } | null {
+  const words = (child.textContent || "").split(/(\s+)/);
+  if (words.length < 2) return null;
+
+  // Temporary sibling for measurement — invisible but participates in layout
+  const probe = child.cloneNode(false) as HTMLElement;
+  probe.style.visibility = "hidden";
+  probe.style.position = "absolute";
+  probe.style.width = `${child.offsetWidth}px`;
+  proseMirror.insertBefore(probe, child);
+
+  let lo = 0;
+  let hi = words.length;
+  while (lo < hi - 1) {
+    const mid = Math.floor((lo + hi) / 2);
+    probe.textContent = words.slice(0, mid).join("");
+    if (probe.offsetHeight <= availableHeight) lo = mid;
+    else hi = mid;
+  }
+
+  proseMirror.removeChild(probe);
+
+  if (lo === 0) return null; // Can't fit even one word — leave block as-is
+
+  const fitsText = words.slice(0, lo).join("");
+  const overflowText = words.slice(lo).join("").trim();
+  if (!overflowText) return null;
+
+  const fitsEl = child.cloneNode(false) as HTMLElement;
+  fitsEl.textContent = fitsText;
+  const overflowEl = child.cloneNode(false) as HTMLElement;
+  overflowEl.textContent = overflowText;
+
+  return { fitsHtml: fitsEl.outerHTML, overflowHtml: overflowEl.outerHTML };
+}
+
 // ── Split at the exact paragraph where content overflows the page ───────────
 // NOTE: We use offsetTop/offsetHeight instead of getBoundingClientRect()
 // because getBoundingClientRect() returns scaled viewport pixels when the
@@ -71,8 +115,30 @@ function splitAtOverflow(
 
   if (overflowNodes.length === 0) return null;
 
+  // ── Special case: the very first block is already taller than the page ──
+  // This happens when pasting a long text without paragraph breaks, or when
+  // a single paragraph grows very tall. Don't leave the page blank.
+  if (fitsNodes.length === 0) {
+    const firstChild = children[0];
+
+    // Case A: multiple children — keep the first on the page, overflow the rest
+    if (children.length > 1) {
+      fitsNodes.push(firstChild.outerHTML);
+      overflowNodes.shift(); // remove firstChild from overflow
+      if (overflowNodes.length === 0) return null;
+      return { fitsHtml: fitsNodes.join(""), overflowHtml: overflowNodes.join("") };
+    }
+
+    // Case B: single child — try to split at word boundary so the page fills
+    const wordSplit = splitBlockAtWords(proseMirror, firstChild, availableHeight);
+    if (wordSplit) return wordSplit;
+
+    // Case C: can't split (e.g. single very long word) — don't change the page
+    return null;
+  }
+
   return {
-    fitsHtml: fitsNodes.length > 0 ? fitsNodes.join("") : "<p></p>",
+    fitsHtml: fitsNodes.join(""),
     overflowHtml: overflowNodes.join(""),
   };
 }
