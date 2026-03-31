@@ -3,7 +3,6 @@ import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import { createServer } from "http";
-import { request as httpRequest } from "http";
 import { registerRoutes } from "./routes";
 import { WebhookHandlers } from "./webhook-handlers";
 import { setupPassport } from "./auth";
@@ -124,50 +123,6 @@ app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
 export async function setupApp() {
   initStripe();
   await registerRoutes(httpServer, app);
-
-  if (process.env.NODE_ENV === "development") {
-    const VITE_PORT = 5173;
-
-    app.use((req: Request, res: Response) => {
-      const options = {
-        hostname: "127.0.0.1",
-        port: VITE_PORT,
-        path: req.url,
-        method: req.method,
-        headers: { ...req.headers, host: `localhost:${VITE_PORT}` },
-      };
-      const proxy = httpRequest(options, (proxyRes) => {
-        res.writeHead(proxyRes.statusCode ?? 200, proxyRes.headers);
-        proxyRes.pipe(res, { end: true });
-      });
-      proxy.on("error", () => res.status(502).send("Frontend not ready"));
-      req.pipe(proxy, { end: true });
-    });
-
-    httpServer.on("upgrade", (req, socket, head) => {
-      const target = httpRequest({
-        hostname: "127.0.0.1",
-        port: VITE_PORT,
-        path: req.url,
-        method: req.method,
-        headers: req.headers,
-      });
-      target.on("error", () => socket.destroy());
-      target.on("response", () => socket.destroy());
-      target.on("upgrade", (_res, targetSocket, upgradeHead) => {
-        let reply = "HTTP/1.1 101 Switching Protocols\r\n";
-        for (const [k, v] of Object.entries(_res.headers)) {
-          reply += `${k}: ${v}\r\n`;
-        }
-        reply += "\r\n";
-        socket.write(reply);
-        targetSocket.write(upgradeHead);
-        targetSocket.pipe(socket, { end: true });
-        socket.pipe(targetSocket, { end: true });
-      });
-      target.end();
-    });
-  }
 }
 
 export default app;
