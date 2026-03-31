@@ -37,6 +37,10 @@ const FontSize = Extension.create({
 });
 
 // ── Split at the exact paragraph where content overflows the page ───────────
+// NOTE: We use offsetTop/offsetHeight instead of getBoundingClientRect()
+// because getBoundingClientRect() returns scaled viewport pixels when the
+// page is zoomed with CSS transform:scale(), while offsetTop/offsetHeight
+// always return unscaled CSS pixels — matching availableHeight correctly.
 function splitAtOverflow(
   proseMirror: HTMLElement,
   availableHeight: number,
@@ -44,7 +48,6 @@ function splitAtOverflow(
   const children = Array.from(proseMirror.children) as HTMLElement[];
   if (children.length === 0) return null;
 
-  const pmTop = proseMirror.getBoundingClientRect().top;
   const fitsNodes: string[] = [];
   const overflowNodes: string[] = [];
   let overflowStarted = false;
@@ -54,8 +57,11 @@ function splitAtOverflow(
       overflowNodes.push(child.outerHTML);
       continue;
     }
-    const childBottom = child.getBoundingClientRect().bottom - pmTop;
-    if (childBottom <= availableHeight + 2) {
+    // offsetTop is relative to the element's offsetParent.
+    // Since ProseMirror has position:relative (set below in CSS), offsetTop
+    // of every child is relative to ProseMirror's top — exactly what we need.
+    const childBottom = child.offsetTop + child.offsetHeight;
+    if (childBottom <= availableHeight + 4) {
       fitsNodes.push(child.outerHTML);
     } else {
       overflowStarted = true;
@@ -316,6 +322,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           height: 0;
         }
         .tiptap-editor:focus { outline: none; }
+        .tiptap-editor .ProseMirror { position: relative; }
       `}</style>
       <EditorContent
         editor={editor}
