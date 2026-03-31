@@ -87,9 +87,13 @@ export function RichWritingToolbar({
   }, [editor]);
 
   const [styleDropOpen, setStyleDropOpen] = useState(false);
+  const [styleDropRect, setStyleDropRect] = useState<{ top: number; left: number } | null>(null);
   const [fontDropOpen, setFontDropOpen] = useState(false);
+  const [fontDropRect, setFontDropRect] = useState<{ top: number; left: number } | null>(null);
   const [pageSizeDropOpen, setPageSizeDropOpen] = useState(false);
   const [pageSizeDropRect, setPageSizeDropRect] = useState<{ top: number; left: number } | null>(null);
+  const styleBtnRef = useRef<HTMLButtonElement>(null);
+  const fontBtnRef = useRef<HTMLButtonElement>(null);
   const [sizeInput, setSizeInput] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -287,9 +291,19 @@ export function RichWritingToolbar({
           <Sep />
 
           {/* ── Text Style ── */}
-          <div className="relative flex-shrink-0">
+          <div className="flex-shrink-0">
             <button
-              onClick={() => { setStyleDropOpen(v => !v); setFontDropOpen(false); }}
+              ref={styleBtnRef}
+              onMouseDown={e => {
+                e.preventDefault(); e.stopPropagation();
+                if (styleDropOpen) { setStyleDropOpen(false); setStyleDropRect(null); }
+                else {
+                  const r = styleBtnRef.current?.getBoundingClientRect();
+                  if (r) setStyleDropRect({ top: r.bottom + 4, left: r.left });
+                  setStyleDropOpen(true);
+                  setFontDropOpen(false); setFontDropRect(null);
+                }
+              }}
               className="flex items-center gap-1 px-2 h-7 rounded text-xs font-medium whitespace-nowrap"
               style={{ background: styleDropOpen ? activeBg : "transparent", color: fg, border: "none", cursor: "pointer", minWidth: 100 }}
               onMouseEnter={e => (e.currentTarget.style.background = styleDropOpen ? activeBg : hoverBg)}
@@ -298,35 +312,24 @@ export function RichWritingToolbar({
               <span style={{ flex: 1 }}>{getActiveStyle()}</span>
               <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
             </button>
-            {styleDropOpen && (
-              <div className="absolute top-full left-0 mt-1 rounded-xl shadow-2xl z-50 overflow-hidden"
-                style={{ minWidth: 180, background: dropBg, border: `1px solid ${dropBorder}` }}>
-                {TEXT_STYLES.map(s => (
-                  <button
-                    key={s.value}
-                    onClick={() => applyTextStyle(s.value)}
-                    style={{
-                      ...dropItemStyle,
-                      fontWeight: s.value.startsWith("h") || s.value === "title" ? 700 : 400,
-                      fontSize: s.value === "h1" ? 20 : s.value === "h2" ? 16 : s.value === "title" ? 22 : 13,
-                      color: isDark || isFocusMode ? "#e4e4e7" : "#18181b",
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <Sep />
 
           {/* ── Font Family ── */}
-          <div className="relative flex-shrink-0">
+          <div className="flex-shrink-0">
             <button
-              onClick={() => { setFontDropOpen(v => !v); setStyleDropOpen(false); }}
+              ref={fontBtnRef}
+              onMouseDown={e => {
+                e.preventDefault(); e.stopPropagation();
+                if (fontDropOpen) { setFontDropOpen(false); setFontDropRect(null); }
+                else {
+                  const r = fontBtnRef.current?.getBoundingClientRect();
+                  if (r) setFontDropRect({ top: r.bottom + 4, left: r.left });
+                  setFontDropOpen(true);
+                  setStyleDropOpen(false); setStyleDropRect(null);
+                }
+              }}
               className="flex items-center gap-1 px-2 h-7 rounded text-xs font-medium"
               style={{ background: fontDropOpen ? activeBg : "transparent", color: fg, border: "none", cursor: "pointer", maxWidth: 140, minWidth: 110 }}
               onMouseEnter={e => (e.currentTarget.style.background = fontDropOpen ? activeBg : hoverBg)}
@@ -337,25 +340,6 @@ export function RichWritingToolbar({
               </span>
               <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
             </button>
-            {fontDropOpen && (
-              <div className="absolute top-full left-0 mt-1 rounded-xl shadow-2xl z-50 overflow-y-auto"
-                style={{ width: 200, maxHeight: 320, background: dropBg, border: `1px solid ${dropBorder}` }}>
-                {FONT_OPTIONS.map(f => (
-                  <button key={f.id} onClick={() => applyFont(f)}
-                    style={{
-                      ...dropItemStyle,
-                      fontFamily: f.fontFamily,
-                      color: isDark || isFocusMode ? "#e4e4e7" : "#18181b",
-                      background: f.id === currentFontObj.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") : "transparent",
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-                    onMouseLeave={e => (e.currentTarget.style.background = f.id === currentFontObj.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") : "transparent")}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <Sep />
@@ -568,6 +552,57 @@ export function RichWritingToolbar({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Text Style Dropdown (fixed-position) ── */}
+      {styleDropOpen && styleDropRect && (
+        <>
+          <div className="fixed inset-0" style={{ zIndex: 9998 }}
+            onMouseDown={() => { setStyleDropOpen(false); setStyleDropRect(null); }} />
+          <div className="fixed rounded-xl shadow-2xl overflow-hidden py-1"
+            style={{ top: styleDropRect.top, left: styleDropRect.left, zIndex: 9999,
+              background: dropBg, border: `1px solid ${dropBorder}`, minWidth: 180 }}>
+            {TEXT_STYLES.map(s => (
+              <button key={s.value}
+                onMouseDown={e => { e.preventDefault(); applyTextStyle(s.value); setStyleDropRect(null); }}
+                style={{
+                  ...dropItemStyle,
+                  fontWeight: s.value.startsWith("h") || s.value === "title" ? 700 : 400,
+                  fontSize: s.value === "h1" ? 20 : s.value === "h2" ? 16 : s.value === "title" ? 22 : 13,
+                  color: isDark || isFocusMode ? "#e4e4e7" : "#18181b",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >{s.label}</button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── Font Family Dropdown (fixed-position) ── */}
+      {fontDropOpen && fontDropRect && (
+        <>
+          <div className="fixed inset-0" style={{ zIndex: 9998 }}
+            onMouseDown={() => { setFontDropOpen(false); setFontDropRect(null); }} />
+          <div className="fixed rounded-xl shadow-2xl overflow-y-auto py-1"
+            style={{ top: fontDropRect.top, left: fontDropRect.left, zIndex: 9999,
+              background: dropBg, border: `1px solid ${dropBorder}`, width: 200, maxHeight: 320 }}>
+            {FONT_OPTIONS.map(f => (
+              <button key={f.id}
+                onMouseDown={e => { e.preventDefault(); applyFont(f); setFontDropRect(null); }}
+                style={{
+                  ...dropItemStyle,
+                  fontFamily: f.fontFamily,
+                  color: isDark || isFocusMode ? "#e4e4e7" : "#18181b",
+                  background: f.id === currentFontObj.id ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") : "transparent",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
+                onMouseLeave={e => (e.currentTarget.style.background = f.id === currentFontObj.id
+                  ? (isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") : "transparent")}
+              >{f.label}</button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* ── Page Size Dropdown (fixed-position to escape overflow clipping) ── */}
