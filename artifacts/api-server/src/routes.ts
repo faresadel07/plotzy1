@@ -514,31 +514,98 @@ export async function registerRoutes(
         const template = (req.query.template as string) || "classic";
         const bookPages = (book as any).bookPages || {};
 
-        // ── Template themes ────────────────────────────────────────────────
-        const TEMPLATES: Record<string, { fontImport: string; bodyFont: string; headingFont: string; accentColor: string; chapterBorder: string; dropCap: boolean }> = {
+        // ── Read book editor preferences ───────────────────────────────────
+        const prefs = ((book as any).bookPreferences as Record<string, any>) || {};
+        const prefFontKey   = prefs.fontFamily  || "eb-garamond";
+        const prefFontSize  = parseFloat(prefs.fontSize  || "16") || 16;
+        const prefLineHeight = prefs.lineHeight || "1.45";
+        const prefPaperSize = prefs.paperSize   || "a5";
+        const prefMT = prefs.marginTop    ?? 72;
+        const prefMB = prefs.marginBottom ?? 72;
+        const prefML = prefs.marginLeft   ?? 72;
+        const prefMR = prefs.marginRight  ?? 72;
+
+        // Paper sizes in cm (matching editor's px @ 96dpi exactly)
+        const PAPER_CM: Record<string, { w: string; h: string }> = {
+          "a5":     { w: "14.8cm", h: "21.0cm" },
+          "pocket": { w: "11.0cm", h: "18.0cm" },
+          "trade":  { w: "15.24cm", h: "22.86cm" },
+          "a4":     { w: "21.0cm",  h: "29.7cm"  },
+        };
+        const paperCm = PAPER_CM[prefPaperSize] || PAPER_CM["a5"];
+        const pxToCm = (px: number) => ((px / 96) * 2.54).toFixed(3) + "cm";
+
+        // Font CSS values
+        const FONT_CSS: Record<string, string> = {
+          "eb-garamond":       "'EB Garamond', Georgia, serif",
+          "cormorant":         "'Cormorant Garamond', Georgia, serif",
+          "libre-baskerville": "'Libre Baskerville', Georgia, serif",
+          "lora":              "'Lora', Georgia, serif",
+          "merriweather":      "'Merriweather', Georgia, serif",
+          "source-serif":      "'Source Serif 4', Georgia, serif",
+          "playfair":          "'Playfair Display', Georgia, serif",
+          "crimson":           "'Crimson Text', Georgia, serif",
+          "georgia":           "Georgia, serif",
+          "times":             "'Times New Roman', Times, serif",
+          "inter":             "'Inter', system-ui, sans-serif",
+          "roboto":            "'Roboto', system-ui, sans-serif",
+          "open-sans":         "'Open Sans', system-ui, sans-serif",
+          "poppins":           "'Poppins', system-ui, sans-serif",
+          "montserrat":        "'Montserrat', system-ui, sans-serif",
+          "nunito":            "'Nunito', system-ui, sans-serif",
+          "oswald":            "'Oswald', system-ui, sans-serif",
+          "lexend":            "'Lexend', system-ui, sans-serif",
+          "raleway":           "'Raleway', system-ui, sans-serif",
+          "courier-prime":     "'Courier Prime', 'Courier New', monospace",
+          "special-elite":     "'Special Elite', cursive",
+          "arabic-sans":       "'Cairo', system-ui, sans-serif",
+          "arabic-serif":      "'Amiri', Georgia, serif",
+          "arabic-naskh":      "'Noto Naskh Arabic', Georgia, serif",
+        };
+        const FONT_IMPORT: Record<string, string> = {
+          "eb-garamond":       "https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap",
+          "cormorant":         "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap",
+          "libre-baskerville": "https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap",
+          "lora":              "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&display=swap",
+          "merriweather":      "https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap",
+          "source-serif":      "https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap",
+          "playfair":          "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap",
+          "crimson":           "https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap",
+          "inter":             "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
+          "roboto":            "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,400&display=swap",
+          "open-sans":         "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;1,400&display=swap",
+          "poppins":           "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap",
+          "montserrat":        "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;1,400&display=swap",
+          "nunito":            "https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;1,400&display=swap",
+          "oswald":            "https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap",
+          "lexend":            "https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap",
+          "raleway":           "https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,400;0,600;1,400&display=swap",
+          "courier-prime":     "https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap",
+          "special-elite":     "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap",
+          "arabic-sans":       "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap",
+          "arabic-serif":      "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap",
+          "arabic-naskh":      "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap",
+        };
+
+        const bodyFont    = FONT_CSS[prefFontKey]    || "'EB Garamond', Georgia, serif";
+        const fontImportUrl = FONT_IMPORT[prefFontKey] || FONT_IMPORT["eb-garamond"];
+
+        // ── Template themes (decorative only — accent colors + borders) ────
+        const TEMPLATES: Record<string, { headingFont: string; accentColor: string; chapterBorder: string }> = {
           classic: {
-            fontImport: "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&display=swap",
-            bodyFont: "'Lora', Georgia, serif",
-            headingFont: "'Lora', Georgia, serif",
-            accentColor: "#8B6914",
+            headingFont:   bodyFont,
+            accentColor:   "#8B6914",
             chapterBorder: "2px solid #D4AF37",
-            dropCap: true,
           },
           modern: {
-            fontImport: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@700&display=swap",
-            bodyFont: "'Inter', system-ui, sans-serif",
-            headingFont: "'Playfair Display', Georgia, serif",
-            accentColor: "#1a1a1a",
+            headingFont:   "'Playfair Display', Georgia, serif",
+            accentColor:   "#1a1a1a",
             chapterBorder: "3px solid #111",
-            dropCap: false,
           },
           romance: {
-            fontImport: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap",
-            bodyFont: "'Cormorant Garamond', Georgia, serif",
-            headingFont: "'Cormorant Garamond', Georgia, serif",
-            accentColor: "#7a3535",
+            headingFont:   bodyFont,
+            accentColor:   "#7a3535",
             chapterBorder: "1px solid #c9a0a0",
-            dropCap: true,
           },
         };
         const theme = TEMPLATES[template] || TEMPLATES.classic;
@@ -599,12 +666,12 @@ export async function registerRoutes(
   <meta charset="UTF-8">
   <title>${escapeHtml(book.title)}</title>
   <style>
-    @import url('${theme.fontImport}');
+    @import url('${fontImportUrl}');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: ${theme.bodyFont};
-      font-size: 12pt;
-      line-height: 1.85;
+      font-family: ${bodyFont};
+      font-size: ${prefFontSize}px;
+      line-height: ${prefLineHeight};
       color: #222;
       background: white;
       padding: 0;
@@ -626,14 +693,14 @@ export async function registerRoutes(
     .cover-image-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
     .cover-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
     .cover-text { position: relative; z-index: 2; padding: 40px; background: rgba(0,0,0,0.45); border-radius: 8px; }
-    .cover-text h1 { font-size: 36pt; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 12px; }
-    .cover-text .author { font-size: 14pt; color: rgba(255,255,255,0.85); font-style: italic; }
-    .cover-page h1 { font-family: ${theme.headingFont}; font-size: 32pt; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
-    .cover-page .author { font-size: 14pt; color: #666; font-style: italic; margin-bottom: 32px; }
-    .cover-page .summary { font-size: 11pt; color: #444; max-width: 500px; line-height: 1.7; margin: 0 auto; padding: 0 40px; }
+    .cover-text h1 { font-size: 2.2em; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 12px; }
+    .cover-text .author { font-size: 1.1em; color: rgba(255,255,255,0.85); font-style: italic; }
+    .cover-page h1 { font-family: ${theme.headingFont}; font-size: 2em; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
+    .cover-page .author { font-size: 1.1em; color: #666; font-style: italic; margin-bottom: 32px; }
+    .cover-page .summary { color: #444; max-width: 500px; line-height: 1.7; margin: 0 auto; padding: 0 40px; }
     /* Matter pages (copyright, dedication, epigraph, about author) */
     .matter-page {
-      padding: 60px 40px;
+      padding: 10% 0;
       page-break-after: always;
       min-height: 60vh;
       display: flex;
@@ -641,18 +708,26 @@ export async function registerRoutes(
       justify-content: center;
     }
     .matter-center { align-items: center; text-align: center; }
-    .matter-text { font-size: 11pt; line-height: 1.9; color: #444; }
-    .matter-text.dedication { font-style: italic; font-size: 13pt; color: #333; }
-    .epigraph { font-style: italic; font-size: 12pt; color: #555; border-left: 3px solid ${theme.accentColor}; padding-left: 20px; max-width: 400px; text-align: left; }
-    .matter-page h2 { font-family: ${theme.headingFont}; font-size: 18pt; margin-bottom: 20px; color: ${theme.accentColor}; border-bottom: ${theme.chapterBorder}; padding-bottom: 10px; }
-    /* Chapters */
-    .chapter { padding: 40px; page-break-before: always; }
-    .chapter h2 { font-family: ${theme.headingFont}; font-size: 18pt; margin-bottom: 28px; color: ${theme.accentColor}; border-bottom: ${theme.chapterBorder}; padding-bottom: 12px; }
-    .chapter-content { text-align: justify; text-indent: 1.5em; }
-    ${theme.dropCap ? `.chapter-content p:first-of-type::first-letter { font-size: 3.5em; font-weight: 700; float: left; line-height: 0.8; margin: 4px 6px 0 0; color: ${theme.accentColor}; }` : ""}
+    .matter-text { line-height: 1.9; color: #444; }
+    .matter-text.dedication { font-style: italic; color: #333; }
+    .epigraph { font-style: italic; color: #555; border-left: 3px solid ${theme.accentColor}; padding-left: 20px; max-width: 400px; text-align: left; }
+    .matter-page h2 { font-family: ${theme.headingFont}; font-size: 1.4em; margin-bottom: 20px; color: ${theme.accentColor}; border-bottom: ${theme.chapterBorder}; padding-bottom: 10px; }
+    /* Chapters — no extra padding; @page margins handle whitespace */
+    .chapter { padding: 0; page-break-before: always; }
+    .chapter h2 { font-family: ${theme.headingFont}; font-size: 1.4em; margin-bottom: 1.5em; color: ${theme.accentColor}; border-bottom: ${theme.chapterBorder}; padding-bottom: 0.6em; }
+    /* Preserve user's inline alignment/indent from TipTap — no overrides */
+    .chapter-content p { margin: 0 0 0.6em; }
+    .chapter-content h1 { font-size: 2em; font-weight: 700; margin: 0.8em 0 0.4em; }
+    .chapter-content h2 { font-size: 1.5em; font-weight: 700; margin: 0.75em 0 0.35em; }
+    .chapter-content h3 { font-size: 1.25em; font-weight: 600; margin: 0.7em 0 0.3em; }
+    .chapter-content ul, .chapter-content ol { padding-left: 1.5em; margin: 0.5em 0; }
+    .chapter-content li { margin: 0.2em 0; }
+    .page-break-label { color: #999; font-size: 0.85em; text-align: center; margin: 1em 0; border-top: 1px dashed #ddd; padding-top: 0.5em; }
     @media print {
-      @page { margin: 2.5cm; size: A4; }
-      body { font-size: 11pt; }
+      @page {
+        size: ${paperCm.w} ${paperCm.h};
+        margin: ${pxToCm(prefMT)} ${pxToCm(prefMR)} ${pxToCm(prefMB)} ${pxToCm(prefML)};
+      }
     }
   </style>
 </head>
