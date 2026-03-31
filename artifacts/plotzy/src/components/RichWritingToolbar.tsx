@@ -176,17 +176,20 @@ export function RichWritingToolbar({
   const applyTextStyle = (value: string) => {
     if (!editor) return;
     setStyleDropOpen(false);
+    const anchor = editor.state.selection.anchor;
     if (value === "paragraph" || value === "title") {
-      editor.chain().focus().setParagraph().run();
-      if (value === "title") editor.chain().focus().setMark("textStyle", { fontSize: 28 }).toggleBold().run();
-    } else if (value === "h1") editor.chain().focus().toggleHeading({ level: 1 }).run();
-    else if (value === "h2") editor.chain().focus().toggleHeading({ level: 2 }).run();
-    else if (value === "h3") editor.chain().focus().toggleHeading({ level: 3 }).run();
-    else if (value === "blockquote") editor.chain().focus().toggleBlockquote().run();
+      editor.chain().focus().setTextSelection(anchor).setParagraph().run();
+      if (value === "title") editor.chain().focus().setTextSelection(anchor).setMark("textStyle", { fontSize: 28 }).toggleBold().run();
+    } else if (value === "h1") editor.chain().focus().setTextSelection(anchor).toggleHeading({ level: 1 }).run();
+    else if (value === "h2") editor.chain().focus().setTextSelection(anchor).toggleHeading({ level: 2 }).run();
+    else if (value === "h3") editor.chain().focus().setTextSelection(anchor).toggleHeading({ level: 3 }).run();
+    else if (value === "blockquote") editor.chain().focus().setTextSelection(anchor).toggleBlockquote().run();
   };
 
   const applyFont = (font: typeof FONT_OPTIONS[number]) => {
-    editor?.chain().focus().setFontFamily(font.fontFamily).run();
+    if (!editor) return;
+    const anchor = editor.state.selection.anchor;
+    editor.chain().focus().setTextSelection(anchor).setFontFamily(font.fontFamily).run();
     setFontDropOpen(false);
   };
 
