@@ -3204,7 +3204,7 @@ export default function ChapterEditor() {
         const pvScale = Math.min(pvScaleW, pvScaleH);
         const pvPageW = Math.round(ps.width * pvScale);
         const pvPageH = Math.round(ps.height * pvScale);
-        const pvFontSz = Math.max(11, Math.round(14 * pvScale));
+        const pvFontSz = Math.round(14 * pvScale);
         const pvLineh = '1.72';
 
         return (
@@ -3305,11 +3305,11 @@ export default function ChapterEditor() {
                     {/* Left Page */}
                     <div style={{ width: pvPageW, height: pvPageH, flexShrink: 0, position: 'relative', display: 'flex', flexDirection: 'column', background: pageBg, padding: `${Math.round(pvPageH * 0.075)}px ${Math.round(pvPageW * 0.09)}px ${Math.round(pvPageH * 0.07)}px ${Math.round(pvPageW * 0.10)}px`, boxShadow: 'inset -18px 0 36px rgba(0,0,0,0.10), inset -2px 0 8px rgba(0,0,0,0.06)', boxSizing: 'border-box' }}>
                       {/* Running header */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: '8px', marginBottom: `${Math.round(pvPageH * 0.055)}px`, flexShrink: 0 }}>
-                        <span style={{ fontSize: '7px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: `${Math.round(5 * pvScale)}px`, marginBottom: `${Math.round(pvPageH * 0.055)}px`, flexShrink: 0 }}>
+                        <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
                           {book?.title || ''}
                         </span>
-                        <span style={{ fontSize: '7px', color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
+                        <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
                       </div>
 
                       {/* Content */}
@@ -3320,8 +3320,8 @@ export default function ChapterEditor() {
                       </div>
 
                       {/* Footer: page number */}
-                      <div style={{ flexShrink: 0, marginTop: '1.2rem', borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '8px', display: 'flex', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '9px', color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
+                      <div style={{ flexShrink: 0, marginTop: `${Math.round(pvPageH * 0.025)}px`, borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: `${Math.round(5 * pvScale)}px`, display: 'flex', justifyContent: 'center' }}>
+                        <span style={{ fontSize: `${Math.round(9 * pvScale)}px`, color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
                           — {currentSpread * 2 + 1} —
                         </span>
                       </div>
@@ -3340,9 +3340,9 @@ export default function ChapterEditor() {
                     {printPages[currentSpread * 2 + 1] !== undefined ? (
                       <div style={{ width: pvPageW, height: pvPageH, flexShrink: 0, position: 'relative', display: 'flex', flexDirection: 'column', background: pageBg, padding: `${Math.round(pvPageH * 0.075)}px ${Math.round(pvPageW * 0.10)}px ${Math.round(pvPageH * 0.07)}px ${Math.round(pvPageW * 0.09)}px`, boxShadow: 'inset 18px 0 36px rgba(0,0,0,0.05)', boxSizing: 'border-box' }}>
                         {/* Running header */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: '8px', marginBottom: `${Math.round(pvPageH * 0.055)}px`, flexShrink: 0 }}>
-                          <span style={{ fontSize: '7px', color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
-                          <span style={{ fontSize: '7px', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '0.5px solid rgba(0,0,0,0.10)', paddingBottom: `${Math.round(5 * pvScale)}px`, marginBottom: `${Math.round(pvPageH * 0.055)}px`, flexShrink: 0 }}>
+                          <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, color: 'rgba(0,0,0,0.15)', fontFamily: 'system-ui' }}>❧</span>
+                          <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.20)', fontFamily: 'system-ui' }}>
                             {title || (ar ? 'فصل' : 'Chapter')}
                           </span>
                         </div>
@@ -3353,8 +3353,8 @@ export default function ChapterEditor() {
                         </div>
 
                         {/* Footer */}
-                        <div style={{ flexShrink: 0, marginTop: '1.2rem', borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '8px', display: 'flex', justifyContent: 'center' }}>
-                          <span style={{ fontSize: '9px', color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
+                        <div style={{ flexShrink: 0, marginTop: `${Math.round(pvPageH * 0.025)}px`, borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: `${Math.round(5 * pvScale)}px`, display: 'flex', justifyContent: 'center' }}>
+                          <span style={{ fontSize: `${Math.round(9 * pvScale)}px`, color: 'rgba(0,0,0,0.22)', fontFamily: pageFont, letterSpacing: '0.15em' }}>
                             — {currentSpread * 2 + 2} —
                           </span>
                         </div>
