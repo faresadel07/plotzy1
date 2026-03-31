@@ -630,18 +630,15 @@ export async function registerRoutes(
         }
 
         const chaptersHtml = chapters.map((ch, i) => {
-          const pageBlocks = getChapterPages(ch.content)
-            .map((pg, pi) => {
-              const rendered = isHtmlContent(pg)
-                ? pg
-                : escapeHtml(pg).replace(/\n/g, "<br>");
-              return `<div class="page-block">${pi > 0 ? `<div class="page-break-label">— Page ${pi + 1} —</div>` : ""}${rendered}</div>`;
-            })
+          // Merge all editor pages into one continuous flow — no artificial separators.
+          // The @page CSS handles pagination when printing.
+          const contentHtml = getChapterPages(ch.content)
+            .map(pg => isHtmlContent(pg) ? pg : escapeHtml(pg).replace(/\n/g, "<br>"))
             .join("");
           return `
           <div class="chapter">
             <h2>Chapter ${i + 1}: ${escapeHtml(ch.title)}</h2>
-            <div class="chapter-content">${pageBlocks}</div>
+            <div class="chapter-content">${contentHtml}</div>
           </div>`;
         }).join("");
 
@@ -722,7 +719,6 @@ export async function registerRoutes(
     .chapter-content h3 { font-size: 1.25em; font-weight: 600; margin: 0.7em 0 0.3em; }
     .chapter-content ul, .chapter-content ol { padding-left: 1.5em; margin: 0.5em 0; }
     .chapter-content li { margin: 0.2em 0; }
-    .page-break-label { color: #999; font-size: 0.85em; text-align: center; margin: 1em 0; border-top: 1px dashed #ddd; padding-top: 0.5em; }
     @media print {
       @page {
         size: ${paperCm.w} ${paperCm.h};
@@ -789,15 +785,11 @@ export async function registerRoutes(
         }
 
         chapters.forEach((ch, i) => {
+          // Merge all editor pages into one continuous flow
           const pageHtml = getChapterPages(ch.content)
-            .map((pg, pi) => {
-              const pgHtml = isHtmlContent(pg)
-                ? pg
-                : escapeHtml(pg).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>");
-              return pi > 0
-                ? `<hr/><p><em>— Page ${pi + 1} —</em></p>${isHtmlContent(pg) ? pgHtml : `<p>${pgHtml}</p>`}`
-                : (isHtmlContent(pg) ? pgHtml : `<p>${pgHtml}</p>`);
-            })
+            .map(pg => isHtmlContent(pg)
+              ? pg
+              : `<p>${escapeHtml(pg).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>")}</p>`)
             .join("");
           doc.addSection(ch.title, `<h2>Chapter ${i + 1}: ${escapeHtml(ch.title)}</h2><div class="chapter-content">${pageHtml}</div>`);
         });
