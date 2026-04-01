@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
 import { X, Check, ShieldCheck, CreditCard } from "lucide-react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
-import { PayPalPlan } from "@/components/paypal-button";
+import { PayPalCheckout, PayPalPlan } from "@/components/paypal-button";
 
 const KEY_FEATURES = [
   "Unlimited books & chapters",
@@ -16,92 +13,6 @@ const KEY_FEATURES = [
 interface CheckoutModalProps {
   plan: "monthly" | "yearly";
   onClose: () => void;
-}
-
-function PayPalSection({ plan, onClose }: { plan: PayPalPlan; onClose: () => void }) {
-  const { toast } = useToast();
-  const { refetch } = useAuth();
-  const [, navigate] = useLocation();
-  const [clientId, setClientId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/paypal/config")
-      .then(r => r.json())
-      .then((d: { enabled: boolean; clientId?: string }) => {
-        if (d.enabled && d.clientId) setClientId(d.clientId);
-      })
-      .catch(() => {});
-  }, []);
-
-  const createOrder = async () => {
-    const res = await fetch("/api/paypal/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
-    });
-    if (!res.ok) throw new Error("Failed to create order");
-    const data = await res.json();
-    return data.orderId as string;
-  };
-
-  const onApprove = async (data: { orderID: string }) => {
-    try {
-      const res = await fetch("/api/paypal/capture-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: data.orderID, plan }),
-      });
-      if (!res.ok) throw new Error("Capture failed");
-      toast({
-        title: "🎉 Welcome to Plotzy Pro!",
-        description: "Your subscription is now active. Start writing without limits.",
-      });
-      refetch();
-      onClose();
-      navigate("/");
-    } catch {
-      toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
-    }
-  };
-
-  if (!clientId) {
-    return (
-      <div className="flex items-center justify-center py-6">
-        <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  return (
-    <PayPalScriptProvider options={{
-      clientId,
-      currency: "USD",
-      intent: "capture",
-      components: "buttons,applepay",
-      enableFunding: "card",
-    }}>
-      <div className="space-y-2.5">
-        <PayPalButtons
-          fundingSource="paypal"
-          style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
-          createOrder={createOrder}
-          onApprove={onApprove}
-        />
-        <PayPalButtons
-          fundingSource="card"
-          style={{ layout: "horizontal", height: 48, shape: "rect" }}
-          createOrder={createOrder}
-          onApprove={onApprove}
-        />
-        <PayPalButtons
-          fundingSource="applepay"
-          style={{ layout: "horizontal", height: 48, shape: "rect" }}
-          createOrder={createOrder}
-          onApprove={onApprove}
-        />
-      </div>
-    </PayPalScriptProvider>
-  );
 }
 
 export function CheckoutModal({ plan, onClose }: CheckoutModalProps) {
@@ -173,7 +84,7 @@ export function CheckoutModal({ plan, onClose }: CheckoutModalProps) {
               <CreditCard className="w-3.5 h-3.5" />
               Choose payment method
             </p>
-            <PayPalSection plan={paypalPlan} onClose={onClose} />
+            <PayPalCheckout plan={paypalPlan} onSuccess={onClose} />
           </div>
 
           {/* Trust badge */}
