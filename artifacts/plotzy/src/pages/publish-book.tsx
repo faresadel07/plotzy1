@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRoute, Link } from "wouter";
 import { useBook } from "@/hooks/use-books";
 import { useChapters } from "@/hooks/use-chapters";
@@ -608,14 +609,14 @@ export default function PublishBook() {
         </div>
       </div>
 
-      {/* ── Publisher Detail Modal (centered popup) ─────────────────── */}
-      {selectedPublisher && (
+      {/* ── Publisher Detail Modal (centered popup via portal) ───────── */}
+      {selectedPublisher && createPortal(
         <div
           onClick={e => { if (e.target === e.currentTarget) closeDetail(); }}
           style={{
-            position: "fixed", inset: 0, zIndex: 100,
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
             display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(0,0,0,0.55)", padding: "20px",
+            background: "rgba(0,0,0,0.65)", padding: "20px",
           }}
         >
           <div
@@ -794,7 +795,7 @@ export default function PublishBook() {
             )}
           </div>
         </div>
-      )}
+      , document.body)}
     </Layout>
   );
 }
