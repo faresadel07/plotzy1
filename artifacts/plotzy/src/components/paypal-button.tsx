@@ -8,6 +8,7 @@ import {
   PayPalCVVField,
   PayPalNameField,
   usePayPalCardFields,
+  usePayPalScriptReducer,
 } from "@paypal/react-paypal-js";
 import { CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +22,7 @@ interface PayPalCheckoutProps {
   onSuccess?: () => void;
 }
 
-// ─── Shared field container style ──────────────────────────────────────────
+// ─── Shared helpers ────────────────────────────────────────────────────────
 const fieldBox: React.CSSProperties = {
   background: "#1a1a1a",
   border: "1px solid rgba(255,255,255,0.1)",
@@ -32,7 +33,46 @@ const fieldBox: React.CSSProperties = {
   alignItems: "center",
 };
 
-// ─── Submit button (must be inside PayPalCardFieldsProvider) ───────────────
+function useOrderHandlers(plan: PayPalPlan, onSuccess?: () => void) {
+  const { toast } = useToast();
+  const { refetch, user } = useAuth();
+  const [, navigate] = useLocation();
+
+  const createOrder = async () => {
+    if (!user) { navigate("/?auth=required"); throw new Error("Not authenticated"); }
+    const res = await fetch("/api/paypal/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan }),
+    });
+    if (!res.ok) throw new Error("Failed to create order");
+    return (await res.json()).orderId as string;
+  };
+
+  const onApprove = async (data: { orderID: string }) => {
+    try {
+      const res = await fetch("/api/paypal/capture-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: data.orderID, plan }),
+      });
+      if (!res.ok) throw new Error("Capture failed");
+      toast({ title: "🎉 Welcome to Plotzy Pro!", description: "Your subscription is now active." });
+      refetch();
+      onSuccess?.();
+    } catch {
+      toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
+    }
+  };
+
+  const onError = () => {
+    toast({ title: "Payment failed", description: "Please check your details and try again.", variant: "destructive" });
+  };
+
+  return { createOrder, onApprove, onError };
+}
+
+// ─── Submit button (must live inside PayPalCardFieldsProvider) ──────────────
 function CardSubmitButton({ submitting, setSubmitting }: {
   submitting: boolean;
   setSubmitting: (v: boolean) => void;
@@ -61,46 +101,10 @@ function CardSubmitButton({ submitting, setSubmitting }: {
   );
 }
 
-// ─── Dark card form ────────────────────────────────────────────────────────
+// ─── Full dark card form (when PayPal Card Fields are eligible) ─────────────
 function DarkCardForm({ plan, onSuccess }: PayPalCheckoutProps) {
-  const { toast } = useToast();
-  const { refetch, user } = useAuth();
-  const [, navigate] = useLocation();
   const [submitting, setSubmitting] = useState(false);
-
-  const createOrder = async () => {
-    if (!user) { navigate("/?auth=required"); throw new Error("Not authenticated"); }
-    const res = await fetch("/api/paypal/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
-    });
-    if (!res.ok) throw new Error("Failed to create order");
-    return (await res.json()).orderId as string;
-  };
-
-  const onApprove = async (data: { orderID: string }) => {
-    try {
-      const res = await fetch("/api/paypal/capture-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: data.orderID, plan }),
-      });
-      if (!res.ok) throw new Error("Capture failed");
-      toast({ title: "🎉 Welcome to Plotzy Pro!", description: "Your subscription is now active." });
-      refetch();
-      onSuccess?.();
-    } catch {
-      toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const onError = () => {
-    toast({ title: "Card declined", description: "Please check your card details and try again.", variant: "destructive" });
-    setSubmitting(false);
-  };
+  const { createOrder, onApprove, onError } = useOrderHandlers(plan, onSuccess);
 
   return (
     <div
@@ -111,7 +115,6 @@ function DarkCardForm({ plan, onSuccess }: PayPalCheckoutProps) {
         <CreditCard className="w-3.5 h-3.5" />
         Debit or Credit Card
       </p>
-
       <PayPalCardFieldsProvider
         createOrder={createOrder}
         onApprove={onApprove}
@@ -124,7 +127,7 @@ function DarkCardForm({ plan, onSuccess }: PayPalCheckoutProps) {
           },
           ".valid": { color: "#ffffff" },
           ".invalid": { color: "#ef4444" },
-          "::placeholder": { color: "#666" },
+          "::placeholder": { color: "#555" },
         }}
       >
         <div className="space-y-2">
@@ -149,42 +152,42 @@ function DarkCardForm({ plan, onSuccess }: PayPalCheckoutProps) {
   );
 }
 
+// ─── Fallback standard card button (when Card Fields not eligible) ──────────
+function StandardCardButton({ plan, onSuccess }: PayPalCheckoutProps) {
+  const { createOrder, onApprove, onError } = useOrderHandlers(plan, onSuccess);
+  return (
+    <PayPalButtons
+      fundingSource="card"
+      style={{ layout: "horizontal", height: 48, shape: "rect" }}
+      createOrder={createOrder}
+      onApprove={onApprove}
+      onError={onError}
+    />
+  );
+}
+
+// ─── Eligibility-aware card section ────────────────────────────────────────
+function CardSection({ plan, onSuccess }: PayPalCheckoutProps) {
+  const [{ isResolved }] = usePayPalScriptReducer();
+  const [eligible, setEligible] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!isResolved) return;
+    // Check if PayPal Card Fields API loaded for this merchant account
+    const isEligible = !!(window as any).paypal?.CardFields;
+    setEligible(isEligible);
+  }, [isResolved]);
+
+  if (!isResolved || eligible === null) return null;
+
+  return eligible
+    ? <DarkCardForm plan={plan} onSuccess={onSuccess} />
+    : <StandardCardButton plan={plan} onSuccess={onSuccess} />;
+}
+
 // ─── PayPal + Apple Pay buttons ────────────────────────────────────────────
 function PayPalButtonsSection({ plan, onSuccess }: PayPalCheckoutProps) {
-  const { toast } = useToast();
-  const { refetch, user } = useAuth();
-  const [, navigate] = useLocation();
-
-  const createOrder = async () => {
-    if (!user) { navigate("/?auth=required"); throw new Error("Not authenticated"); }
-    const res = await fetch("/api/paypal/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
-    });
-    if (!res.ok) throw new Error("Failed to create order");
-    return (await res.json()).orderId as string;
-  };
-
-  const onApprove = async (data: { orderID: string }) => {
-    try {
-      const res = await fetch("/api/paypal/capture-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: data.orderID, plan }),
-      });
-      if (!res.ok) throw new Error("Capture failed");
-      toast({ title: "🎉 Welcome to Plotzy Pro!", description: "Your subscription is now active." });
-      refetch();
-      onSuccess?.();
-    } catch {
-      toast({ title: "Payment error", description: "Something went wrong.", variant: "destructive" });
-    }
-  };
-
-  const onError = () => {
-    toast({ title: "Payment cancelled", description: "You can try again anytime.", variant: "destructive" });
-  };
+  const { createOrder, onApprove, onError } = useOrderHandlers(plan, onSuccess);
 
   return (
     <div className="space-y-2">
@@ -242,14 +245,13 @@ export function PayPalCheckout({ plan, onSuccess }: PayPalCheckoutProps) {
       <div className="space-y-3">
         <PayPalButtonsSection plan={plan} onSuccess={onSuccess} />
 
-        {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
           <span className="text-zinc-600 text-xs">or</span>
           <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
         </div>
 
-        <DarkCardForm plan={plan} onSuccess={onSuccess} />
+        <CardSection plan={plan} onSuccess={onSuccess} />
       </div>
     </PayPalScriptProvider>
   );
