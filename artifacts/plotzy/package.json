@@ -88,6 +88,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@number-flow/react": "^0.6.0",
     "@paypal/react-paypal-js": "^9.1.0",
     "@tiptap/core": "^3.21.0",
     "@tiptap/extension-color": "^3.21.0",

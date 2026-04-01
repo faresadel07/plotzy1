@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, Star } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
 import { PayPalCheckout, PayPalPlan } from "@/components/paypal-button";
+import NumberFlow from "@number-flow/react";
 
 const FEATURES_FREE = [
   "1 chapter to start writing",
@@ -52,6 +53,14 @@ export default function Pricing() {
       : yearlyBilling === "annual"
         ? "yearly_annual"
         : "yearly_monthly";
+
+  const proPrice = billingCycle === "monthly" ? 13 : 10;
+  const billingLabel =
+    billingCycle === "monthly"
+      ? "Billed $13 every month"
+      : yearlyBilling === "monthly"
+        ? "Billed $10/month · Cancel anytime"
+        : "Billed $99.99 once · Full year access";
 
   return (
     <Layout isLanding>
@@ -108,7 +117,7 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* Plan cards */}
+          {/* Cards */}
           <div className="grid md:grid-cols-2 gap-5">
 
             {/* Free Trial */}
@@ -116,31 +125,42 @@ export default function Pricing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="rounded-2xl p-8 flex flex-col"
+              className="rounded-2xl flex flex-col overflow-hidden"
               style={{ backgroundColor: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
             >
-              <div className="mb-6">
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.18em] mb-3">Free Trial</p>
+              {/* Top section */}
+              <div className="p-6 md:p-8 flex flex-col">
+                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.18em] mb-4">Free Trial</p>
                 <div className="flex items-end gap-1.5 mb-1">
-                  <span className="text-5xl font-bold text-white">$0</span>
+                  <span className="text-5xl font-bold text-white tabular-nums">$0</span>
                 </div>
-                <p className="text-zinc-600 text-sm">No credit card needed</p>
+                <p className="text-zinc-600 text-sm mt-1 mb-5">No credit card needed</p>
+
+                <button
+                  disabled
+                  className="w-full py-3 rounded-xl text-sm font-medium cursor-not-allowed"
+                  style={{ backgroundColor: "rgba(255,255,255,0.03)", color: "#3a3a3a", border: "1px solid rgba(255,255,255,0.05)" }}
+                >
+                  Current plan
+                </button>
+
+                {/* Spacer for alignment */}
+                <div className="h-7" />
               </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {FEATURES_FREE.map(f => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-zinc-500">
-                    <Check className="w-4 h-4 text-zinc-600 mt-0.5 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                disabled
-                className="w-full py-3 rounded-xl text-sm font-medium cursor-not-allowed"
-                style={{ backgroundColor: "rgba(255,255,255,0.03)", color: "#3a3a3a", border: "1px solid rgba(255,255,255,0.05)" }}
+
+              {/* Features */}
+              <div
+                className="flex flex-col px-6 md:px-8 pb-7 pt-4 flex-1 gap-2"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
               >
-                Current plan
-              </button>
+                <span className="text-sm text-zinc-500 mb-1">Includes:</span>
+                {FEATURES_FREE.map((f) => (
+                  <div key={f} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-zinc-600 mt-0.5 shrink-0" />
+                    <span className="text-sm text-zinc-500">{f}</span>
+                  </div>
+                ))}
+              </div>
             </motion.div>
 
             {/* Pro Plan */}
@@ -148,14 +168,15 @@ export default function Pricing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
-              className="relative rounded-2xl p-8 flex flex-col"
+              className="relative rounded-2xl flex flex-col overflow-hidden"
               style={{
                 background: "rgba(255,255,255,0.05)",
                 border: "1px solid rgba(255,255,255,0.16)",
                 boxShadow: "0 0 60px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.08)",
               }}
             >
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+              {/* Most Popular badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
                 <span
                   className="text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap"
                   style={{ background: "#EFEFEF", color: "#111111" }}
@@ -165,27 +186,32 @@ export default function Pricing() {
                 </span>
               </div>
 
-              <div className="mb-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3 text-zinc-400">Pro</p>
+              {/* Top section */}
+              <div className="p-6 md:p-8 pt-10 flex flex-col">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-4 text-zinc-400">Pro</p>
 
-                {billingCycle === "monthly" ? (
-                  <div>
-                    <div className="flex items-end gap-1.5 mb-1">
-                      <span className="text-5xl font-bold text-white">$13</span>
-                      <span className="text-zinc-500 mb-1.5 text-sm">/month</span>
-                    </div>
-                    <p className="text-zinc-600 text-sm">Billed $13 every month</p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-end gap-1.5 mb-1">
-                      <span className="text-5xl font-bold text-white">$10</span>
-                      <span className="text-zinc-500 mb-1.5 text-sm">/month</span>
-                    </div>
+                {/* Animated price */}
+                <div className="flex items-end gap-1.5 mb-1">
+                  <NumberFlow
+                    value={proPrice}
+                    prefix="$"
+                    suffix="/mo"
+                    className="text-5xl font-bold text-white tabular-nums"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                    format={{ minimumFractionDigits: 0, maximumFractionDigits: 0 }}
+                  />
+                </div>
 
-                    {/* Yearly billing sub-toggle */}
+                {/* Yearly sub-toggle */}
+                {billingCycle === "yearly" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 mb-1 overflow-hidden"
+                  >
                     <div
-                      className="flex rounded-xl overflow-hidden mt-3 mb-1"
+                      className="flex rounded-xl overflow-hidden"
                       style={{ border: "1px solid rgba(255,255,255,0.1)" }}
                     >
                       <button
@@ -220,42 +246,56 @@ export default function Pricing() {
                         </span>
                       </button>
                     </div>
-
-                    <p className="text-zinc-600 text-xs mt-2">
-                      {yearlyBilling === "monthly"
-                        ? "Charged $10 every month · Cancel anytime"
-                        : "Charged $99.99 once · Full year access"}
-                    </p>
-                  </div>
+                  </motion.div>
                 )}
+
+                {/* CTA button */}
+                <div className="mt-4">
+                  {user ? (
+                    <PayPalCheckout plan={activePlan} onSuccess={() => navigate("/")} />
+                  ) : (
+                    <button
+                      onClick={() => navigate("/?auth=required")}
+                      className="w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90 text-sm"
+                      style={{ background: "#EFEFEF", color: "#111111" }}
+                    >
+                      Get started
+                    </button>
+                  )}
+                </div>
+
+                {/* Animated billing label */}
+                <div className="h-7 overflow-hidden mt-1">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={billingLabel}
+                      initial={{ y: 16, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -16, opacity: 0 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      className="text-center text-zinc-600 text-xs mt-1"
+                    >
+                      {billingLabel}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
               </div>
 
-              <ul className="space-y-3 mb-6 flex-1">
-                {FEATURES_PAID.map(f => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-zinc-200">
-                    <Check className="w-4 h-4 mt-0.5 shrink-0 text-white" />
-                    {f}
-                  </li>
+              {/* Features */}
+              <div
+                className="flex flex-col px-6 md:px-8 pb-7 pt-4 flex-1 gap-2"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <span className="text-sm text-zinc-400 mb-1">Includes:</span>
+                {FEATURES_PAID.map((f) => (
+                  <div key={f} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-white mt-0.5 shrink-0" />
+                    <span className="text-sm text-zinc-200">{f}</span>
+                  </div>
                 ))}
-              </ul>
-
-              {/* Payment buttons */}
-              {user ? (
-                <PayPalCheckout plan={activePlan} onSuccess={() => navigate("/")} />
-              ) : (
-                <button
-                  onClick={() => navigate("/?auth=required")}
-                  className="w-full py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover:opacity-90 text-sm"
-                  style={{ background: "#EFEFEF", color: "#111111" }}
-                >
-                  Get started
-                </button>
-              )}
-
-              <p className="text-center text-zinc-600 text-xs mt-3">
-                Secure checkout · Cancel anytime
-              </p>
+              </div>
             </motion.div>
+
           </div>
 
           {/* FAQ */}
