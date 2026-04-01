@@ -1567,7 +1567,6 @@ export default function ChapterEditor() {
                     letterSpacing: "0.03em",
                   }}
                 >
-                  <span>{ps.icon}</span>
                   <span>{ar ? ps.labelAr : ps.label}</span>
                   <span style={{ opacity: 0.5 }}>·</span>
                   <span>{ps.widthCm} × {ps.heightCm} cm</span>
