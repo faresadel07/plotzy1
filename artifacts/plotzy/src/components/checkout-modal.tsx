@@ -81,13 +81,13 @@ function PayPalSection({ plan, onClose }: { plan: "monthly" | "yearly"; onClose:
       currency: "USD",
       intent: "capture",
       components: "buttons",
-      enableFunding: "card,applepay,googlepay",
+      enableFunding: "card",
     }}>
       <div className="space-y-2.5">
-        {/* Apple Pay */}
+        {/* PayPal */}
         <PayPalButtons
-          fundingSource="applepay"
-          style={{ layout: "horizontal", height: 48, shape: "rect" }}
+          fundingSource="paypal"
+          style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
           createOrder={createOrder}
           onApprove={onApprove}
         />
@@ -95,13 +95,6 @@ function PayPalSection({ plan, onClose }: { plan: "monthly" | "yearly"; onClose:
         <PayPalButtons
           fundingSource="card"
           style={{ layout: "horizontal", height: 48, shape: "rect" }}
-          createOrder={createOrder}
-          onApprove={onApprove}
-        />
-        {/* PayPal */}
-        <PayPalButtons
-          fundingSource="paypal"
-          style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
           createOrder={createOrder}
           onApprove={onApprove}
         />

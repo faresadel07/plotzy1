@@ -49,8 +49,8 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
   return (
     <div className="space-y-2">
       <PayPalButtons
-        fundingSource="applepay"
-        style={{ layout: "horizontal", height: 48, shape: "rect" }}
+        fundingSource="paypal"
+        style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
         createOrder={createOrder}
         onApprove={onApprove}
         onError={onError}
@@ -58,13 +58,6 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
       <PayPalButtons
         fundingSource="card"
         style={{ layout: "horizontal", height: 48, shape: "rect" }}
-        createOrder={createOrder}
-        onApprove={onApprove}
-        onError={onError}
-      />
-      <PayPalButtons
-        fundingSource="paypal"
-        style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
         createOrder={createOrder}
         onApprove={onApprove}
         onError={onError}
@@ -103,7 +96,7 @@ export function PayPalCheckout({ plan, onSuccess }: PayPalCheckoutProps) {
       currency: "USD",
       intent: "capture",
       components: "buttons",
-      enableFunding: "card,applepay,googlepay",
+      enableFunding: "card",
     }}>
       <PayPalButtonsInner plan={plan} onSuccess={onSuccess} />
     </PayPalScriptProvider>
