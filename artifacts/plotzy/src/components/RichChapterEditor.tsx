@@ -229,6 +229,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         orderedList: { keepMarks: true },
         underline: false,
         link: false,
+        gapcursor: false,
       } as any),
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
