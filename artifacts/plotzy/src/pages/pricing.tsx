@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, Star, ChevronDown } from "lucide-react";
+import { Check, X, ChevronDown, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
@@ -15,7 +15,7 @@ const FEATURES_FREE = [
   "45+ languages & RTL support",
 ];
 
-const FEATURES_PAID_VISIBLE = [
+const FEATURES_PRO_TOP = [
   "Unlimited books & chapters",
   "Unlimited words & pages",
   "Full AI suite: Polish, Expand, Continue & Rewrite",
@@ -25,16 +25,15 @@ const FEATURES_PAID_VISIBLE = [
   "Story Bible: characters, world & plot notes",
 ];
 
-const FEATURES_PAID_EXTRA = [
+const FEATURES_PRO_MORE = [
   "Writing streaks, calendar & analytics",
   "PDF & EPUB professional export",
   "AI Marketplace: editing, proofreading & marketing kits",
   "Community library publishing & ARC distribution",
-  "45+ languages & full RTL support",
   "Priority support",
 ];
 
-const LOCKED_ON_FREE = [
+const LOCKED_FREE = [
   "Unlimited books & chapters",
   "Full AI suite",
   "Version history",
@@ -43,7 +42,7 @@ const LOCKED_ON_FREE = [
 const FAQ = [
   ["Can I cancel anytime?", "Yes — cancel from your account settings at any time. You keep access until the end of your billing period."],
   ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and PayPal — all handled securely."],
-  ["What happens to my work if I cancel?", "Your books and chapters are always yours. After cancellation you move back to the free plan, but your content is never deleted."],
+  ["What happens to my work if I cancel?", "Your books are always yours. After cancellation you move back to the free plan, but your content is never deleted."],
   ["Is there a student or team discount?", "Reach out to us — we're happy to discuss educational and team pricing."],
 ];
 
@@ -53,7 +52,7 @@ type YearlyBilling = "monthly" | "annual";
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
   const [yearlyBilling, setYearlyBilling] = useState<YearlyBilling>("monthly");
-  const [showExtra, setShowExtra] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -71,82 +70,111 @@ export default function Pricing() {
       ? "Billed $13 every month"
       : yearlyBilling === "monthly"
         ? "Billed $10/month · Cancel anytime"
-        : "Billed $99.99 once · Full year access";
+        : "Billed $99.99 once · Full year";
 
   return (
     <Layout isLanding>
-      <div className="text-white" style={{ backgroundColor: "#0A0A0A", minHeight: "100vh" }}>
-        <div className="max-w-4xl mx-auto px-4" style={{ paddingTop: 32, paddingBottom: 40 }}>
+      <div style={{ backgroundColor: "#080808", minHeight: "100vh", color: "#fff" }}>
+        <div className="max-w-4xl mx-auto px-5" style={{ paddingTop: 40, paddingBottom: 48 }}>
 
-          {/* Header */}
+          {/* ── Header ── */}
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-7"
+            transition={{ duration: 0.5 }}
+            className="text-center"
+            style={{ marginBottom: 28 }}
           >
-            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.22em] mb-2">Plotzy Pro</p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-2 text-white tracking-tight">
+            <div
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-4"
+              style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}
+            >
+              <Zap className="w-3 h-3" style={{ color: "#a3a3a3" }} />
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#717171", textTransform: "uppercase" }}>
+                Plotzy Pro
+              </span>
+            </div>
+            <h1
+              className="font-bold tracking-tight"
+              style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", lineHeight: 1.1, marginBottom: 10 }}
+            >
               Simple, honest pricing
             </h1>
-            <p className="text-zinc-500 text-sm max-w-sm mx-auto leading-relaxed">
+            <p style={{ color: "#555", fontSize: 14, maxWidth: 340, margin: "0 auto" }}>
               Start free. Upgrade when you're ready to write without limits.
             </p>
           </motion.div>
 
-          {/* Billing toggle */}
-          <div className="flex justify-center mb-6">
-            <div
-              className="rounded-full p-1 flex gap-1"
-              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}
+          {/* ── Billing toggle ── */}
+          <div className="flex justify-center" style={{ marginBottom: 28 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex p-1 rounded-full gap-1"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
             >
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className="px-5 py-1.5 rounded-full text-sm font-medium transition-all"
-                style={billingCycle === "monthly" ? { background: "#EFEFEF", color: "#111" } : { color: "#555" }}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className="px-5 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2"
-                style={billingCycle === "yearly" ? { background: "#EFEFEF", color: "#111" } : { color: "#555" }}
-              >
-                Yearly
-                <span
-                  className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={
-                    billingCycle === "yearly"
-                      ? { backgroundColor: "rgba(0,0,0,0.12)", color: "#111" }
-                      : { backgroundColor: "rgba(255,255,255,0.07)", color: "#ccc", border: "1px solid rgba(255,255,255,0.12)" }
-                  }
+              {(["monthly", "yearly"] as BillingCycle[]).map(cycle => (
+                <button
+                  key={cycle}
+                  onClick={() => setBillingCycle(cycle)}
+                  className="relative px-5 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2"
+                  style={{ color: billingCycle === cycle ? "#111" : "#4a4a4a" }}
                 >
-                  Save 23%
-                </span>
-              </button>
-            </div>
+                  {billingCycle === cycle && (
+                    <motion.div
+                      layoutId="billing-pill"
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: "#efefef" }}
+                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10 capitalize">{cycle}</span>
+                  {cycle === "yearly" && (
+                    <span
+                      className="relative z-10 text-[10px] px-2 py-0.5 rounded-full font-bold"
+                      style={{
+                        background: billingCycle === "yearly" ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.06)",
+                        color: billingCycle === "yearly" ? "#333" : "#444",
+                        border: billingCycle === "yearly" ? "none" : "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    >
+                      Save 23%
+                    </span>
+                  )}
+                </button>
+              ))}
+            </motion.div>
           </div>
 
-          {/* Cards */}
+          {/* ── Cards ── */}
           <div className="grid md:grid-cols-2 gap-4 items-start">
 
-            {/* Free Trial */}
+            {/* Free */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.06 }}
-              className="rounded-2xl flex flex-col overflow-hidden"
-              style={{ backgroundColor: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
+              transition={{ delay: 0.15 }}
+              className="rounded-2xl overflow-hidden flex flex-col"
+              style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
             >
-              <div className="p-6">
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.18em] mb-3">Free Trial</p>
-                <div className="flex items-end gap-1.5 mb-1">
-                  <span className="text-5xl font-bold text-white">$0</span>
-                </div>
-                <p className="text-zinc-600 text-sm mb-5">No credit card needed</p>
+              <div style={{ padding: "24px 24px 20px" }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#444", textTransform: "uppercase", marginBottom: 14 }}>
+                  Free Trial
+                </p>
+                <p className="font-bold" style={{ fontSize: 48, lineHeight: 1, marginBottom: 4, color: "#fff" }}>$0</p>
+                <p style={{ fontSize: 13, color: "#3d3d3d", marginBottom: 20 }}>No credit card needed</p>
                 <button
                   disabled
-                  className="w-full py-2.5 rounded-xl text-sm font-medium cursor-not-allowed"
-                  style={{ backgroundColor: "rgba(255,255,255,0.03)", color: "#3a3a3a", border: "1px solid rgba(255,255,255,0.05)" }}
+                  className="w-full rounded-xl font-medium"
+                  style={{
+                    padding: "10px 0",
+                    fontSize: 13,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    color: "#2e2e2e",
+                    cursor: "not-allowed",
+                  }}
                 >
                   Current plan
                 </button>
@@ -154,200 +182,243 @@ export default function Pricing() {
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
 
-              <div className="p-6 flex flex-col gap-2.5">
-                <p className="text-xs text-zinc-500 font-medium mb-1">What's included:</p>
-                {FEATURES_FREE.map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(255,255,255,0.06)" }}>
-                      <Check className="w-3 h-3 text-zinc-400" />
+              <div style={{ padding: "20px 24px 24px" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "#3a3a3a", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                  Included
+                </p>
+                <div className="flex flex-col" style={{ gap: 10 }}>
+                  {FEATURES_FREE.map(f => (
+                    <div key={f} className="flex items-center" style={{ gap: 10 }}>
+                      <div className="flex items-center justify-center rounded-full shrink-0"
+                        style={{ width: 20, height: 20, background: "rgba(255,255,255,0.06)" }}>
+                        <Check style={{ width: 11, height: 11, color: "#555" }} />
+                      </div>
+                      <span style={{ fontSize: 13, color: "#4a4a4a" }}>{f}</span>
                     </div>
-                    <span className="text-sm text-zinc-400">{f}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
 
-                <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "4px 0" }} />
-                <p className="text-xs text-zinc-600 font-medium mb-1">Not included:</p>
-                {LOCKED_ON_FREE.map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(255,0,0,0.06)" }}>
-                      <X className="w-3 h-3 text-zinc-700" />
+                <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "16px 0" }} />
+
+                <p style={{ fontSize: 11, fontWeight: 600, color: "#2a2a2a", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                  Not included
+                </p>
+                <div className="flex flex-col" style={{ gap: 10 }}>
+                  {LOCKED_FREE.map(f => (
+                    <div key={f} className="flex items-center" style={{ gap: 10 }}>
+                      <div className="flex items-center justify-center rounded-full shrink-0"
+                        style={{ width: 20, height: 20, background: "rgba(255,255,255,0.03)" }}>
+                        <X style={{ width: 11, height: 11, color: "#2d2d2d" }} />
+                      </div>
+                      <span style={{ fontSize: 13, color: "#2d2d2d" }}>{f}</span>
                     </div>
-                    <span className="text-sm text-zinc-700">{f}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </motion.div>
 
-            {/* Pro Plan */}
+            {/* Pro — gradient border wrapper */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12 }}
-              className="relative rounded-2xl flex flex-col overflow-hidden"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.14)",
-              }}
+              transition={{ delay: 0.22 }}
+              className="relative"
+              style={{ borderRadius: 18, padding: 1.5, background: "linear-gradient(145deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.10) 100%)" }}
             >
-              {/* Glow */}
+              {/* inner card */}
               <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.06) 0%, transparent 65%)",
-                  zIndex: 0,
-                }}
-              />
+                className="relative flex flex-col overflow-hidden"
+                style={{ borderRadius: 17, background: "#111111" }}
+              >
+                {/* Radial glow */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(ellipse at 60% -10%, rgba(255,255,255,0.06) 0%, transparent 60%)",
+                  }}
+                />
 
-              {/* Most Popular */}
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
-                <span
-                  className="text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap"
-                  style={{ background: "#EFEFEF", color: "#111" }}
-                >
-                  <Star className="w-3 h-3" fill="currentColor" />
-                  Most Popular
-                </span>
-              </div>
-
-              <div className="p-6 pt-9 relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3 text-zinc-400">Pro</p>
-
-                <div className="flex items-end gap-1.5 mb-1">
-                  <NumberFlow
-                    value={proPrice}
-                    prefix="$"
-                    suffix="/mo"
-                    className="text-5xl font-bold text-white"
-                    format={{ minimumFractionDigits: 0, maximumFractionDigits: 0 }}
-                  />
-                </div>
-
-                {/* Yearly sub-toggle */}
-                <AnimatePresence>
-                  {billingCycle === "yearly" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden mt-3"
+                <div className="relative" style={{ padding: "24px 24px 20px" }}>
+                  {/* Header row: label + badge */}
+                  <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#666", textTransform: "uppercase" }}>
+                      Pro
+                    </p>
+                    <span
+                      className="flex items-center"
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.06em",
+                        color: "#111",
+                        background: "#efefef",
+                        padding: "4px 10px",
+                        borderRadius: 100,
+                        gap: 5,
+                      }}
                     >
-                      <div className="flex rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
-                        <button
-                          onClick={() => setYearlyBilling("monthly")}
-                          className="flex-1 py-2 text-xs font-semibold transition-all"
-                          style={yearlyBilling === "monthly"
-                            ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
-                            : { background: "transparent", color: "#666" }}
-                        >Pay $10/month</button>
-                        <button
-                          onClick={() => setYearlyBilling("annual")}
-                          className="flex-1 py-2 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
-                          style={yearlyBilling === "annual"
-                            ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
-                            : { background: "transparent", color: "#666" }}
-                        >
-                          Pay $99.99/year
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
-                            style={{
-                              background: yearlyBilling === "annual" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.06)",
-                              color: yearlyBilling === "annual" ? "#fff" : "#555",
-                            }}>Save $20</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="mt-4">
-                  {user ? (
-                    <PayPalCheckout plan={activePlan} onSuccess={() => navigate("/")} />
-                  ) : (
-                    <button
-                      onClick={() => navigate("/?auth=required")}
-                      className="w-full py-3 rounded-xl font-semibold transition-all hover:opacity-90 text-sm"
-                      style={{ background: "#EFEFEF", color: "#111" }}
-                    >
-                      Get started
-                    </button>
-                  )}
-                </div>
-
-                <div className="h-5 overflow-hidden mt-1.5">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={billingLabel}
-                      initial={{ y: 12, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -12, opacity: 0 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="text-center text-zinc-600 text-xs"
-                    >
-                      {billingLabel}
-                    </motion.p>
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <div style={{ height: 1, background: "rgba(255,255,255,0.08)", position: "relative", zIndex: 10 }} />
-
-              <div className="p-6 relative z-10 flex flex-col gap-2.5">
-                <p className="text-xs text-zinc-400 font-medium mb-1">Everything in Free, plus:</p>
-                {FEATURES_PAID_VISIBLE.map(f => (
-                  <div key={f} className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(255,255,255,0.1)" }}>
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm text-zinc-200">{f}</span>
+                      ✦ Most Popular
+                    </span>
                   </div>
-                ))}
 
-                {/* Expandable extra features */}
-                <AnimatePresence>
-                  {showExtra && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden flex flex-col gap-2.5"
-                    >
-                      {FEATURES_PAID_EXTRA.map(f => (
-                        <div key={f} className="flex items-center gap-2.5">
-                          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                            style={{ background: "rgba(255,255,255,0.1)" }}>
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                          <span className="text-sm text-zinc-200">{f}</span>
+                  {/* Price */}
+                  <div className="flex items-end" style={{ gap: 4, marginBottom: 4 }}>
+                    <NumberFlow
+                      value={proPrice}
+                      prefix="$"
+                      suffix="/mo"
+                      className="font-bold"
+                      style={{ fontSize: 48, lineHeight: 1, color: "#fff" }}
+                      format={{ minimumFractionDigits: 0, maximumFractionDigits: 0 }}
+                    />
+                  </div>
+
+                  {/* Yearly billing sub-toggle */}
+                  <AnimatePresence>
+                    {billingCycle === "yearly" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                        style={{ marginTop: 12 }}
+                      >
+                        <div
+                          className="flex overflow-hidden"
+                          style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.09)" }}
+                        >
+                          {(["monthly", "annual"] as YearlyBilling[]).map(yb => (
+                            <button
+                              key={yb}
+                              onClick={() => setYearlyBilling(yb)}
+                              className="flex-1 flex items-center justify-center transition-all"
+                              style={{
+                                padding: "9px 4px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                gap: 6,
+                                background: yearlyBilling === yb ? "rgba(255,255,255,0.1)" : "transparent",
+                                color: yearlyBilling === yb ? "#fff" : "#444",
+                              }}
+                            >
+                              {yb === "monthly" ? "Pay $10/month" : "Pay $99.99/year"}
+                              {yb === "annual" && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99,
+                                  background: yearlyBilling === "annual" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
+                                  color: yearlyBilling === "annual" ? "#fff" : "#3a3a3a",
+                                }}>Save $20</span>
+                              )}
+                            </button>
+                          ))}
                         </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <button
-                  onClick={() => setShowExtra(v => !v)}
-                  className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-1 w-fit"
-                >
-                  <motion.div animate={{ rotate: showExtra ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </motion.div>
-                  {showExtra ? "Show less" : `+${FEATURES_PAID_EXTRA.length} more features`}
-                </button>
+                  {/* CTA */}
+                  <div style={{ marginTop: 16 }}>
+                    {user ? (
+                      <PayPalCheckout plan={activePlan} onSuccess={() => navigate("/")} />
+                    ) : (
+                      <button
+                        onClick={() => navigate("/?auth=required")}
+                        className="w-full rounded-xl font-semibold transition-opacity hover:opacity-90"
+                        style={{ padding: "12px 0", fontSize: 14, background: "#efefef", color: "#111" }}
+                      >
+                        Get started
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Billing label */}
+                  <div style={{ height: 20, overflow: "hidden", marginTop: 8 }}>
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={billingLabel}
+                        initial={{ y: 12, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -12, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        style={{ textAlign: "center", fontSize: 12, color: "#3a3a3a" }}
+                      >
+                        {billingLabel}
+                      </motion.p>
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                <div style={{ height: 1, background: "rgba(255,255,255,0.07)" }} />
+
+                <div className="relative" style={{ padding: "20px 24px 24px" }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                    Everything in Free, plus
+                  </p>
+                  <div className="flex flex-col" style={{ gap: 10 }}>
+                    {FEATURES_PRO_TOP.map(f => (
+                      <div key={f} className="flex items-center" style={{ gap: 10 }}>
+                        <div className="flex items-center justify-center rounded-full shrink-0"
+                          style={{ width: 20, height: 20, background: "rgba(255,255,255,0.09)" }}>
+                          <Check style={{ width: 11, height: 11, color: "#ccc" }} />
+                        </div>
+                        <span style={{ fontSize: 13, color: "#ccc" }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Expandable extras */}
+                  <AnimatePresence>
+                    {showMore && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col" style={{ gap: 10, marginTop: 10 }}>
+                          {FEATURES_PRO_MORE.map(f => (
+                            <div key={f} className="flex items-center" style={{ gap: 10 }}>
+                              <div className="flex items-center justify-center rounded-full shrink-0"
+                                style={{ width: 20, height: 20, background: "rgba(255,255,255,0.09)" }}>
+                                <Check style={{ width: 11, height: 11, color: "#ccc" }} />
+                              </div>
+                              <span style={{ fontSize: 13, color: "#ccc" }}>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <button
+                    onClick={() => setShowMore(v => !v)}
+                    className="flex items-center transition-colors"
+                    style={{ gap: 5, marginTop: 14, fontSize: 12, color: "#444", cursor: "pointer" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "#888")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "#444")}
+                  >
+                    <motion.div animate={{ rotate: showMore ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronDown style={{ width: 13, height: 13 }} />
+                    </motion.div>
+                    {showMore ? "Show less" : `+${FEATURES_PRO_MORE.length} more features`}
+                  </button>
+                </div>
               </div>
             </motion.div>
 
           </div>
 
-          {/* FAQ */}
-          <div className="mt-6 text-center">
+          {/* ── FAQ ── */}
+          <div className="text-center" style={{ marginTop: 28 }}>
             <button
               onClick={() => setShowFaq(v => !v)}
-              className="flex items-center gap-1.5 text-zinc-500 text-xs hover:text-zinc-300 transition-colors mx-auto"
+              className="inline-flex items-center transition-colors"
+              style={{ gap: 5, fontSize: 12, color: "#333", cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#666")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#333")}
             >
               <motion.div animate={{ rotate: showFaq ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                <ChevronDown className="w-3.5 h-3.5" />
+                <ChevronDown style={{ width: 13, height: 13 }} />
               </motion.div>
               Common questions
             </button>
@@ -361,12 +432,15 @@ export default function Pricing() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="grid md:grid-cols-2 gap-3 mt-4">
+                <div className="grid md:grid-cols-2 gap-3" style={{ marginTop: 16 }}>
                   {FAQ.map(([q, a]) => (
-                    <div key={q} className="rounded-xl p-4"
-                      style={{ backgroundColor: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <p className="font-semibold text-white mb-1.5 text-sm">{q}</p>
-                      <p className="text-zinc-500 text-xs leading-relaxed">{a}</p>
+                    <div key={q} style={{
+                      borderRadius: 14, padding: "16px 18px",
+                      background: "rgba(255,255,255,0.025)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}>
+                      <p style={{ fontWeight: 600, color: "#ccc", marginBottom: 6, fontSize: 13 }}>{q}</p>
+                      <p style={{ color: "#444", fontSize: 12, lineHeight: 1.7 }}>{a}</p>
                     </div>
                   ))}
                 </div>
