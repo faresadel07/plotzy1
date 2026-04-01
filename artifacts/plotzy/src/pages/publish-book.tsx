@@ -608,21 +608,27 @@ export default function PublishBook() {
         </div>
       </div>
 
-      {/* ── Publisher Detail Panel (right side, no overlay) ────────── */}
+      {/* ── Publisher Detail Modal (centered popup) ─────────────────── */}
       {selectedPublisher && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) closeDetail(); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 100,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.55)", padding: "20px",
+          }}
+        >
           <div
             ref={detailRef}
             dir={isRTL ? "rtl" : "ltr"}
             style={{
-              position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 100,
-              width: 440, maxWidth: "92vw", overflowY: "auto",
-              background: "#111", borderLeft: isRTL ? "none" : `1px solid ${BORDER}`,
-              borderRight: isRTL ? `1px solid ${BORDER}` : "none",
+              width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto",
+              background: "#111", border: `1px solid ${BORDER}`, borderRadius: 18,
               fontFamily: SF, padding: "24px 22px", boxSizing: "border-box",
-              animation: "slideInRight 0.25s ease",
+              animation: "popIn 0.2s ease",
             }}
           >
-            <style>{`@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+            <style>{`@keyframes popIn{from{transform:scale(0.95);opacity:0}to{transform:scale(1);opacity:1}}`}</style>
 
             {/* Close */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -786,6 +792,7 @@ export default function PublishBook() {
               </div>
             )}
           </div>
+        </div>
       )}
     </Layout>
   );
