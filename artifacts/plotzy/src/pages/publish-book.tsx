@@ -612,7 +612,7 @@ export default function PublishBook() {
       {selectedPublisher && (
         <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }} onClick={e => { if (e.target === e.currentTarget) closeDetail(); }}>
           {/* backdrop */}
-          <div style={{ flex: 1, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={closeDetail} />
+          <div style={{ flex: 1, background: "rgba(0,0,0,0.25)" }} onClick={closeDetail} />
 
           {/* panel */}
           <div
