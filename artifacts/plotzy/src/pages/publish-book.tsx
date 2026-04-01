@@ -623,7 +623,8 @@ export default function PublishBook() {
             dir={isRTL ? "rtl" : "ltr"}
             style={{
               width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto",
-              background: "#111", border: `1px solid ${BORDER}`, borderRadius: 18,
+              background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 18,
+              boxShadow: "0 24px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08)",
               fontFamily: SF, padding: "24px 22px", boxSizing: "border-box",
               animation: "popIn 0.2s ease",
             }}
