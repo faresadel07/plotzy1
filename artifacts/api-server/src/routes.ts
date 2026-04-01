@@ -16,7 +16,7 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import bcrypt from "bcryptjs";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks, arcRecipients } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_ANNUAL_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks, arcRecipients } from "../../../lib/db/src/schema";
 import { db } from "./db";
 import { eq, or, ilike, sql } from "drizzle-orm";
 
@@ -2047,7 +2047,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
       const priceData = plan === "monthly"
         ? { unit_amount: SUBSCRIPTION_MONTHLY_CENTS, recurring: { interval: "month" as const } }
-        : { unit_amount: SUBSCRIPTION_YEARLY_CENTS, recurring: { interval: "year" as const } };
+        : { unit_amount: SUBSCRIPTION_YEARLY_ANNUAL_CENTS, recurring: { interval: "year" as const } };
 
       const sessionParams: any = {
         payment_method_types: ["card"],
@@ -2688,16 +2688,24 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     return res.json({ enabled: true, clientId });
   });
 
+  type PayPalPlan = "monthly" | "yearly_monthly" | "yearly_annual";
+
+  function paypalPlanAmount(plan: PayPalPlan): string {
+    if (plan === "monthly")        return (SUBSCRIPTION_MONTHLY_CENTS / 100).toFixed(2);
+    if (plan === "yearly_monthly") return (SUBSCRIPTION_YEARLY_MONTHLY_CENTS / 100).toFixed(2);
+    return (SUBSCRIPTION_YEARLY_ANNUAL_CENTS / 100).toFixed(2);
+  }
+
+  function paypalPlanDescription(plan: PayPalPlan): string {
+    if (plan === "monthly")        return "Plotzy Pro — Monthly Plan ($13/mo)";
+    if (plan === "yearly_monthly") return "Plotzy Pro — Yearly Plan, Monthly Billing ($10/mo)";
+    return "Plotzy Pro — Yearly Plan, Annual Billing ($99.99/yr)";
+  }
+
   // Create a PayPal order for a subscription plan
   app.post("/api/paypal/create-order", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-    const { plan } = req.body as { plan: "monthly" | "yearly" };
-    const amount = plan === "yearly"
-      ? (SUBSCRIPTION_YEARLY_CENTS / 100).toFixed(2)
-      : (SUBSCRIPTION_MONTHLY_CENTS / 100).toFixed(2);
-    const description = plan === "yearly"
-      ? "Plotzy Pro — Yearly Plan"
-      : "Plotzy Pro — Monthly Plan";
+    const { plan } = req.body as { plan: PayPalPlan };
     try {
       const token = await getPayPalToken();
       const orderRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
@@ -2705,7 +2713,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           intent: "CAPTURE",
-          purchase_units: [{ description, amount: { currency_code: "USD", value: amount } }],
+          purchase_units: [{
+            description: paypalPlanDescription(plan),
+            amount: { currency_code: "USD", value: paypalPlanAmount(plan) },
+          }],
         }),
       });
       if (!orderRes.ok) {
@@ -2724,7 +2735,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // Capture the approved PayPal order and activate subscription
   app.post("/api/paypal/capture-order", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-    const { orderId, plan } = req.body as { orderId: string; plan: "monthly" | "yearly" };
+    const { orderId, plan } = req.body as { orderId: string; plan: PayPalPlan };
     try {
       const token = await getPayPalToken();
       const captureRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
@@ -2740,17 +2751,18 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       if (capture.status !== "COMPLETED") {
         return res.status(400).json({ message: "Payment not completed" });
       }
-      // Activate subscription in DB
+      // Activate subscription in DB — yearly_annual gives 1 year, others give 1 month
       const userId = (req.user as any).id;
       const endDate = new Date();
-      if (plan === "yearly") {
+      if (plan === "yearly_annual") {
         endDate.setFullYear(endDate.getFullYear() + 1);
       } else {
         endDate.setMonth(endDate.getMonth() + 1);
       }
+      const subscriptionPlan = plan === "monthly" ? "monthly" : "yearly";
       await storage.updateUser(userId, {
         subscriptionStatus: "active",
-        subscriptionPlan: plan,
+        subscriptionPlan,
         subscriptionEndDate: endDate,
         paymentMethod: "paypal",
       });

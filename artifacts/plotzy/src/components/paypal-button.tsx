@@ -4,8 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
 
+export type PayPalPlan = "monthly" | "yearly_monthly" | "yearly_annual";
+
 interface PayPalCheckoutProps {
-  plan: "monthly" | "yearly";
+  plan: PayPalPlan;
   onSuccess?: () => void;
 }
 
@@ -62,6 +64,13 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
         onApprove={onApprove}
         onError={onError}
       />
+      <PayPalButtons
+        fundingSource="applepay"
+        style={{ layout: "horizontal", height: 48, shape: "rect" }}
+        createOrder={createOrder}
+        onApprove={onApprove}
+        onError={onError}
+      />
     </div>
   );
 }
@@ -95,7 +104,7 @@ export function PayPalCheckout({ plan, onSuccess }: PayPalCheckoutProps) {
       clientId,
       currency: "USD",
       intent: "capture",
-      components: "buttons",
+      components: "buttons,applepay",
       enableFunding: "card",
     }}>
       <PayPalButtonsInner plan={plan} onSuccess={onSuccess} />

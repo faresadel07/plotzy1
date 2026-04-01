@@ -325,5 +325,6 @@ export type Follow = typeof follows.$inferSelect;
 // Subscription constants
 export const FREE_TRIAL_MAX_CHAPTERS = 3;
 export const FREE_TRIAL_MAX_WORDS = 3750; // 15 pages × 250 words/page
-export const SUBSCRIPTION_MONTHLY_CENTS = 1000;  // $10/month
-export const SUBSCRIPTION_YEARLY_CENTS = 9600;  // $96/year ($8/month)
+export const SUBSCRIPTION_MONTHLY_CENTS = 1300;        // $13/month
+export const SUBSCRIPTION_YEARLY_MONTHLY_CENTS = 1000; // $10/month (yearly plan, billed monthly)
+export const SUBSCRIPTION_YEARLY_ANNUAL_CENTS = 9999;  // $99.99/year (yearly plan, billed annually)

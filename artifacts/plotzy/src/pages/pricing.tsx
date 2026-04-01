@@ -4,12 +4,7 @@ import { Check, Star } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
-import { PayPalCheckout } from "@/components/paypal-button";
-
-const MONTHLY_PRICE = 10;
-const YEARLY_PRICE = 8;
-const YEARLY_TOTAL = (96).toFixed(2);
-const SAVE_PCT = Math.round(((MONTHLY_PRICE - YEARLY_PRICE) / MONTHLY_PRICE) * 100);
+import { PayPalCheckout, PayPalPlan } from "@/components/paypal-button";
 
 const FEATURES_FREE = [
   "1 chapter to start writing",
@@ -37,15 +32,26 @@ const FEATURES_PAID = [
 
 const FAQ = [
   ["Can I cancel anytime?", "Yes — cancel from your account settings at any time. You keep access until the end of your billing period."],
-  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, Google Pay, and PayPal — all handled securely."],
+  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and PayPal — all handled securely."],
   ["What happens to my work if I cancel?", "Your books and chapters are always yours. After cancellation you move back to the free plan, but your content is never deleted."],
   ["Is there a student or team discount?", "Reach out to us — we're happy to discuss educational and team pricing."],
 ];
 
+type BillingCycle = "monthly" | "yearly";
+type YearlyBilling = "monthly" | "annual";
+
 export default function Pricing() {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
+  const [yearlyBilling, setYearlyBilling] = useState<YearlyBilling>("monthly");
   const { user } = useAuth();
   const [, navigate] = useLocation();
+
+  const activePlan: PayPalPlan =
+    billingCycle === "monthly"
+      ? "monthly"
+      : yearlyBilling === "annual"
+        ? "yearly_annual"
+        : "yearly_monthly";
 
   return (
     <Layout isLanding>
@@ -96,7 +102,7 @@ export default function Pricing() {
                       : { backgroundColor: "rgba(255,255,255,0.07)", color: "#ccc", border: "1px solid rgba(255,255,255,0.12)" }
                   }
                 >
-                  Save {SAVE_PCT}%
+                  Save 23%
                 </span>
               </button>
             </div>
@@ -159,28 +165,72 @@ export default function Pricing() {
                 </span>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-5">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3 text-zinc-400">Pro</p>
+
                 {billingCycle === "monthly" ? (
                   <div>
                     <div className="flex items-end gap-1.5 mb-1">
-                      <span className="text-5xl font-bold text-white">${MONTHLY_PRICE}</span>
+                      <span className="text-5xl font-bold text-white">$13</span>
                       <span className="text-zinc-500 mb-1.5 text-sm">/month</span>
                     </div>
-                    <p className="text-zinc-600 text-sm">Billed monthly</p>
+                    <p className="text-zinc-600 text-sm">Billed $13 every month</p>
                   </div>
                 ) : (
                   <div>
                     <div className="flex items-end gap-1.5 mb-1">
-                      <span className="text-5xl font-bold text-white">${YEARLY_PRICE}</span>
+                      <span className="text-5xl font-bold text-white">$10</span>
                       <span className="text-zinc-500 mb-1.5 text-sm">/month</span>
                     </div>
-                    <p className="text-zinc-600 text-sm">${YEARLY_TOTAL} billed once per year</p>
+
+                    {/* Yearly billing sub-toggle */}
+                    <div
+                      className="flex rounded-xl overflow-hidden mt-3 mb-1"
+                      style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                    >
+                      <button
+                        onClick={() => setYearlyBilling("monthly")}
+                        className="flex-1 py-2.5 text-xs font-semibold transition-all"
+                        style={
+                          yearlyBilling === "monthly"
+                            ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
+                            : { background: "transparent", color: "#666" }
+                        }
+                      >
+                        Pay $10/month
+                      </button>
+                      <button
+                        onClick={() => setYearlyBilling("annual")}
+                        className="flex-1 py-2.5 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                        style={
+                          yearlyBilling === "annual"
+                            ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
+                            : { background: "transparent", color: "#666" }
+                        }
+                      >
+                        Pay $99.99/year
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                          style={{
+                            background: yearlyBilling === "annual" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.06)",
+                            color: yearlyBilling === "annual" ? "#fff" : "#555",
+                          }}
+                        >
+                          Save $20
+                        </span>
+                      </button>
+                    </div>
+
+                    <p className="text-zinc-600 text-xs mt-2">
+                      {yearlyBilling === "monthly"
+                        ? "Charged $10 every month · Cancel anytime"
+                        : "Charged $99.99 once · Full year access"}
+                    </p>
                   </div>
                 )}
               </div>
 
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="space-y-3 mb-6 flex-1">
                 {FEATURES_PAID.map(f => (
                   <li key={f} className="flex items-start gap-3 text-sm text-zinc-200">
                     <Check className="w-4 h-4 mt-0.5 shrink-0 text-white" />
@@ -189,9 +239,9 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {/* Direct payment buttons */}
+              {/* Payment buttons */}
               {user ? (
-                <PayPalCheckout plan={billingCycle} onSuccess={() => navigate("/")} />
+                <PayPalCheckout plan={activePlan} onSuccess={() => navigate("/")} />
               ) : (
                 <button
                   onClick={() => navigate("/?auth=required")}
@@ -203,7 +253,7 @@ export default function Pricing() {
               )}
 
               <p className="text-center text-zinc-600 text-xs mt-3">
-                Cancel anytime · Secure checkout
+                Secure checkout · Cancel anytime
               </p>
             </motion.div>
           </div>
@@ -234,7 +284,6 @@ export default function Pricing() {
 
         </div>
       </div>
-
     </Layout>
   );
 }

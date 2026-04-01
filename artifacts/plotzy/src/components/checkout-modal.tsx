@@ -4,10 +4,7 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
-
-const MONTHLY_PRICE = 10;
-const YEARLY_PRICE = 8;
-const YEARLY_TOTAL = (96).toFixed(2);
+import { PayPalPlan } from "@/components/paypal-button";
 
 const KEY_FEATURES = [
   "Unlimited books & chapters",
@@ -21,7 +18,7 @@ interface CheckoutModalProps {
   onClose: () => void;
 }
 
-function PayPalSection({ plan, onClose }: { plan: "monthly" | "yearly"; onClose: () => void }) {
+function PayPalSection({ plan, onClose }: { plan: PayPalPlan; onClose: () => void }) {
   const { toast } = useToast();
   const { refetch } = useAuth();
   const [, navigate] = useLocation();
@@ -80,20 +77,24 @@ function PayPalSection({ plan, onClose }: { plan: "monthly" | "yearly"; onClose:
       clientId,
       currency: "USD",
       intent: "capture",
-      components: "buttons",
+      components: "buttons,applepay",
       enableFunding: "card",
     }}>
       <div className="space-y-2.5">
-        {/* PayPal */}
         <PayPalButtons
           fundingSource="paypal"
           style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
           createOrder={createOrder}
           onApprove={onApprove}
         />
-        {/* Debit / Credit Card */}
         <PayPalButtons
           fundingSource="card"
+          style={{ layout: "horizontal", height: 48, shape: "rect" }}
+          createOrder={createOrder}
+          onApprove={onApprove}
+        />
+        <PayPalButtons
+          fundingSource="applepay"
           style={{ layout: "horizontal", height: 48, shape: "rect" }}
           createOrder={createOrder}
           onApprove={onApprove}
@@ -104,12 +105,12 @@ function PayPalSection({ plan, onClose }: { plan: "monthly" | "yearly"; onClose:
 }
 
 export function CheckoutModal({ plan, onClose }: CheckoutModalProps) {
-  const price = plan === "yearly" ? YEARLY_PRICE : MONTHLY_PRICE;
-  const total = plan === "yearly" ? YEARLY_TOTAL : MONTHLY_PRICE.toFixed(2);
+  const paypalPlan: PayPalPlan = plan === "monthly" ? "monthly" : "yearly_monthly";
+  const price = plan === "yearly" ? 10 : 13;
+  const billingNote = plan === "yearly" ? "Billed $10/month · Yearly plan" : "Billed $13/month";
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  // Redirect to login if not authenticated
   if (!user) {
     onClose();
     navigate("/?auth=required");
@@ -145,20 +146,15 @@ export function CheckoutModal({ plan, onClose }: CheckoutModalProps) {
           {/* Price breakdown */}
           <div className="rounded-xl p-4 space-y-2.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-400">Plotzy Pro ({plan === "yearly" ? "Annual" : "Monthly"})</span>
+              <span className="text-zinc-400">Plotzy Pro ({plan === "yearly" ? "Yearly" : "Monthly"})</span>
               <span className="text-white font-medium">${price}/mo</span>
             </div>
-            {plan === "yearly" && (
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Billed annually</span>
-                <span className="text-zinc-300">${total}/yr</span>
-              </div>
-            )}
             <div style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />
             <div className="flex justify-between">
-              <span className="text-white font-semibold">Total today</span>
-              <span className="text-white font-bold text-lg">${total}</span>
+              <span className="text-white font-semibold">Charged today</span>
+              <span className="text-white font-bold text-lg">${price}</span>
             </div>
+            <p className="text-zinc-600 text-xs">{billingNote}</p>
           </div>
 
           {/* Key features */}
@@ -177,7 +173,7 @@ export function CheckoutModal({ plan, onClose }: CheckoutModalProps) {
               <CreditCard className="w-3.5 h-3.5" />
               Choose payment method
             </p>
-            <PayPalSection plan={plan} onClose={onClose} />
+            <PayPalSection plan={paypalPlan} onClose={onClose} />
           </div>
 
           {/* Trust badge */}
