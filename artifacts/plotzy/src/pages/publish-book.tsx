@@ -608,18 +608,14 @@ export default function PublishBook() {
         </div>
       </div>
 
-      {/* ── Publisher Detail Panel (right slide-in) ────────────────── */}
+      {/* ── Publisher Detail Panel (right side, no overlay) ────────── */}
       {selectedPublisher && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }} onClick={e => { if (e.target === e.currentTarget) closeDetail(); }}>
-          {/* backdrop */}
-          <div style={{ flex: 1, background: "rgba(0,0,0,0.25)" }} onClick={closeDetail} />
-
-          {/* panel */}
           <div
             ref={detailRef}
             dir={isRTL ? "rtl" : "ltr"}
             style={{
-              width: 440, maxWidth: "92vw", height: "100vh", overflowY: "auto",
+              position: "fixed", right: 0, top: 0, bottom: 0, zIndex: 100,
+              width: 440, maxWidth: "92vw", overflowY: "auto",
               background: "#111", borderLeft: isRTL ? "none" : `1px solid ${BORDER}`,
               borderRight: isRTL ? `1px solid ${BORDER}` : "none",
               fontFamily: SF, padding: "24px 22px", boxSizing: "border-box",
@@ -790,7 +786,6 @@ export default function PublishBook() {
               </div>
             )}
           </div>
-        </div>
       )}
     </Layout>
   );
