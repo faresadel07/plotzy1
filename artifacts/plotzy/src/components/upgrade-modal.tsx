@@ -153,7 +153,7 @@ export function UpgradeModal({ open, onClose, reason = "chapter_limit" }: Upgrad
               ) : (
                 <Zap className="w-4 h-4" fill="currentColor" />
               )}
-              {loading ? "Redirecting to checkout…" : `Upgrade — ${billingCycle === "monthly" ? "$12.99/month" : "$9.99/month"}`}
+              {loading ? "Redirecting to checkout…" : `Upgrade — ${billingCycle === "monthly" ? "$10/month" : "$8/month"}`}
             </button>
 
             <div className="flex items-center justify-between mt-4">

@@ -6,9 +6,9 @@ import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
 import { PayPalCheckout } from "@/components/paypal-button";
 
-const MONTHLY_PRICE = 12.99;
-const YEARLY_PRICE = 9.99;
-const YEARLY_TOTAL = (YEARLY_PRICE * 12).toFixed(2);
+const MONTHLY_PRICE = 10;
+const YEARLY_PRICE = 8;
+const YEARLY_TOTAL = (96).toFixed(2);
 const SAVE_PCT = Math.round(((MONTHLY_PRICE - YEARLY_PRICE) / MONTHLY_PRICE) * 100);
 
 const FEATURES_FREE = [

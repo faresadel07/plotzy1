@@ -221,5 +221,5 @@ export type Follow = {
 // Constants
 export const FREE_TRIAL_MAX_CHAPTERS = 1;
 export const FREE_TRIAL_MAX_WORDS = 3750;
-export const SUBSCRIPTION_MONTHLY_CENTS = 800;
-export const SUBSCRIPTION_YEARLY_CENTS = 7800;
+export const SUBSCRIPTION_MONTHLY_CENTS = 1000;  // $10/month
+export const SUBSCRIPTION_YEARLY_CENTS = 9600;  // $96/year ($8/month)

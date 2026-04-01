@@ -5,9 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
 
-const MONTHLY_PRICE = 12.99;
-const YEARLY_PRICE = 9.99;
-const YEARLY_TOTAL = (YEARLY_PRICE * 12).toFixed(2);
+const MONTHLY_PRICE = 10;
+const YEARLY_PRICE = 8;
+const YEARLY_TOTAL = (96).toFixed(2);
 
 const KEY_FEATURES = [
   "Unlimited books & chapters",
