@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRoute, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
@@ -936,9 +937,27 @@ export default function ArticleEditor() {
 
           {/* Image buttons */}
           <Sep/>
-          <Btn onClick={()=>inlineImgInputRef.current?.click()} title="Insert image from file"><ImageIcon size={13}/></Btn>
-          <Btn onClick={()=>setShowImgAI(true)} title="Generate image with AI"><Sparkles size={13}/></Btn>
-          <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
+          <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+            <button
+              onMouseDown={e=>{e.preventDefault();inlineImgInputRef.current?.click();}}
+              title="Upload image"
+              style={{display:"flex",alignItems:"center",gap:5,padding:"3px 10px",height:26,borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:500,color:TS,whiteSpace:"nowrap"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.12)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.07)";}}
+            >
+              <ImageIcon size={12}/> Image
+            </button>
+            <button
+              onMouseDown={e=>{e.preventDefault();setShowImgAI(true);}}
+              title="Generate image with AI"
+              style={{display:"flex",alignItems:"center",gap:5,padding:"3px 10px",height:26,borderRadius:6,background:`${ACC}18`,border:`1px solid ${ACC}35`,cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap"}}
+              onMouseEnter={e=>{e.currentTarget.style.background=`${ACC}28`;}}
+              onMouseLeave={e=>{e.currentTarget.style.background=`${ACC}18`;}}
+            >
+              <Sparkles size={12}/> AI Image
+            </button>
+            <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
+          </div>
 
           {/* AI Writing Assistant button */}
           <div style={{marginLeft:"auto",flexShrink:0}}>
@@ -1393,8 +1412,8 @@ export default function ArticleEditor() {
         </div>
 
         {/* ── AI IMAGE GENERATION MODAL ── */}
-        {showImgAI && (
-          <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)"}} onClick={()=>setShowImgAI(false)}>
+        {showImgAI && createPortal(
+          <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.78)",backdropFilter:"blur(8px)"}} onClick={()=>setShowImgAI(false)}>
             <div style={{background:"#111117",border:`1px solid rgba(124,106,247,0.3)`,borderRadius:18,padding:28,width:"min(480px,90vw)",boxShadow:"0 20px 60px rgba(0,0,0,0.8)"}} onClick={e=>e.stopPropagation()}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
                 <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -1437,7 +1456,7 @@ export default function ArticleEditor() {
               </div>
             </div>
           </div>
-        )}
+        , document.body)}
 
         {/* ── AI ASSISTANT PANEL ── */}
         {showAI && (
