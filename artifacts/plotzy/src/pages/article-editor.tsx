@@ -21,7 +21,7 @@ import {
   Bold, Italic, Underline as UIcon, Strikethrough,
   List, ListOrdered, Quote, Code, Minus,
   Link as LinkIcon, Undo2, Redo2, ChevronDown,
-  Highlighter, Type, Indent, Outdent,
+  Highlighter, Type, Indent, Outdent, Mic, Square,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
@@ -226,6 +226,14 @@ export default function ArticleEditor() {
   const [fontSize, setFontSize]   = useState(16);
   const [fontSizeInput, setFontSizeInput] = useState("16");
 
+  /* ── voice dictation ── */
+  const [isRecording, setIsRecording]     = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef   = useRef<Blob[]>([]);
+  const recTimerRef      = useRef<ReturnType<typeof setInterval>>();
+
   /* ── toolbar dropdowns ── */
   const [styleOpen, setStyleOpen] = useState(false);
   const [fontOpen, setFontOpen]   = useState(false);
@@ -355,6 +363,60 @@ export default function ArticleEditor() {
     const t = tagInput.trim().toLowerCase();
     if (t && !tags.includes(t) && tags.length < 10) setTags(p => [...p, t]);
     setTagInput("");
+  };
+
+  /* ── Voice dictation ── */
+  const formatTime = (s: number) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        setIsRecording(false);
+        setRecordingTime(0);
+        setIsTranscribing(true);
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const base64 = await new Promise<string>(resolve => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+          });
+          const res = await fetch("/api/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ audio: base64 }),
+          });
+          if (!res.ok) throw new Error("Transcription failed");
+          const { text } = await res.json();
+          if (text?.trim() && editor) {
+            editor.chain().focus().insertContent(" " + text.trim()).run();
+            toast({ title: "Voice added to article" });
+          }
+        } catch {
+          toast({ title: "Transcription failed", variant: "destructive" });
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      recTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
+    } catch {
+      toast({ title: "Could not access microphone", variant: "destructive" });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
+    if (recTimerRef.current) clearInterval(recTimerRef.current);
   };
 
   /* ── AI ── */
@@ -556,6 +618,24 @@ export default function ArticleEditor() {
               style={{display:"flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
               {focusMode ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}
             </button>
+
+            {/* Mic / Recording button */}
+            {isTranscribing ? (
+              <div style={{display:"flex",alignItems:"center",gap:5,padding:"0 10px",height:32,borderRadius:8,background:`${ACC}15`,border:`1px solid ${ACC}35`,fontFamily:SF,fontSize:12,color:ACC}}>
+                <Loader2 size={12} style={{animation:"spin 1s linear infinite"}}/> Processing…
+              </div>
+            ) : isRecording ? (
+              <button onClick={stopRecording}
+                style={{display:"flex",alignItems:"center",gap:5,padding:"0 10px",height:32,borderRadius:8,background:"#ef444420",border:"1px solid #ef444455",cursor:"pointer",fontFamily:SF,fontSize:12,fontWeight:600,color:"#ef4444",animation:"pulse 1.5s ease-in-out infinite"}}>
+                <Square size={11} style={{fill:"#ef4444"}}/> <span style={{fontFamily:"monospace"}}>{formatTime(recordingTime)}</span>
+              </button>
+            ) : (
+              <button onClick={startRecording} title="Voice dictation"
+                style={{display:"flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
+                <Mic size={14}/>
+              </button>
+            )}
+
             <button onClick={() => setShowPreview(true)}
               style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",fontFamily:SF,fontSize:13,fontWeight:500,color:TS}}>
               <Eye size={13}/> Preview
@@ -1088,6 +1168,7 @@ export default function ArticleEditor() {
         {/* ── GLOBAL STYLES ── */}
         <style>{`
           @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+          @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
           .article-editor-content .ProseMirror {
             outline:none; min-height:520px; caret-color:rgba(255,255,255,0.8);
