@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Layout } from "@/components/layout";
 import { motion } from "framer-motion";
 import {
-  BookOpen, PenLine, Sparkles, Upload, Star, ChevronDown,
+  BookOpen, PenLine, Sparkles, Upload, ChevronDown,
   Play, Library, Wand2, BarChart2, Palette, Headphones,
   Users, ShoppingBag, BookMarked, CheckCircle2, ArrowRight,
   Lightbulb, FileText, MessageSquare,
@@ -246,7 +246,7 @@ export default function TutorialPage() {
     {
       icon: Sparkles, color: "#f472b6",
       title: "AI Writing Assistant",
-      description: "Expand scenes, polish sentences, continue your draft, or translate passages — all inside the editor.",
+      description: "Expand scenes, polish sentences, continue your draft, or translate passages, all inside the editor.",
       videoTitle: "AI tools in action",
       videoDuration: "~5 min",
     },
@@ -297,11 +297,11 @@ export default function TutorialPage() {
   const faqs = [
     {
       q: "Is Plotzy free to use?",
-      a: "Yes — you can create an account, write chapters, and use the core editor completely free. Some advanced AI features and publishing tools require a Pro subscription or a one-time payment.",
+      a: "Yes, you can create an account, write chapters, and use the core editor completely free. Some advanced AI features and publishing tools require a Pro subscription or a one-time payment.",
     },
     {
       q: "Do I need writing experience to use Plotzy?",
-      a: "Not at all. Plotzy is designed for writers of all levels. The AI tools are especially helpful for beginners — they can help you get unstuck, improve your writing, and guide you through story structure.",
+      a: "Not at all. Plotzy is designed for writers of all levels. The AI tools are especially helpful for beginners; they can help you get unstuck, improve your writing, and guide you through story structure.",
     },
     {
       q: "Can I export my book?",
@@ -313,7 +313,7 @@ export default function TutorialPage() {
     },
     {
       q: "Is my writing private?",
-      a: "Yes — all your books are private by default. You choose when and what to share with the community. Only books you explicitly publish appear in the Community Library.",
+      a: "Yes, all your books are private by default. You choose when and what to share with the community. Only books you explicitly publish appear in the Community Library.",
     },
     {
       q: "What languages does Plotzy support?",
@@ -322,28 +322,16 @@ export default function TutorialPage() {
   ];
 
   return (
-    <Layout>
+    <Layout isLanding darkNav>
       <div style={{ fontFamily: SF, background: "#0a0a0a", minHeight: "100vh" }}>
 
         {/* ─── HERO ─── */}
         <div style={{
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          padding: "100px 24px 72px",
+          padding: "64px 24px 48px",
           textAlign: "center",
         }}>
-          <motion.div variants={fadeUp} custom={0} initial="hidden" animate="visible">
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 20, padding: "5px 14px", marginBottom: 28,
-            }}>
-              <Star size={11} color="rgba(255,255,255,0.4)" fill="rgba(255,255,255,0.4)" />
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Learn Plotzy</span>
-            </div>
-          </motion.div>
-
-          <motion.h1 variants={fadeUp} custom={1} initial="hidden" animate="visible"
+          <motion.h1 variants={fadeUp} custom={0} initial="hidden" animate="visible"
             style={{
               fontSize: "clamp(30px, 5vw, 48px)", fontWeight: 700,
               color: "rgba(255,255,255,0.92)", letterSpacing: "-0.03em",
@@ -352,15 +340,15 @@ export default function TutorialPage() {
             Everything you need to<br />write your story
           </motion.h1>
 
-          <motion.p variants={fadeUp} custom={2} initial="hidden" animate="visible"
+          <motion.p variants={fadeUp} custom={1} initial="hidden" animate="visible"
             style={{
               fontSize: 15, color: "rgba(255,255,255,0.38)",
-              maxWidth: 480, margin: "0 auto 52px", lineHeight: 1.7,
+              maxWidth: 480, margin: "0 auto 32px", lineHeight: 1.7,
             }}>
-            New to Plotzy? This guide walks you through every feature — from your first chapter to publishing your finished book.
+            New to Plotzy? This guide walks you through every feature, from your first chapter to publishing your finished book.
           </motion.p>
 
-          <motion.div variants={fadeUp} custom={3} initial="hidden" animate="visible"
+          <motion.div variants={fadeUp} custom={2} initial="hidden" animate="visible"
             style={{
               display: "flex", flexWrap: "wrap", justifyContent: "center",
               gap: 48, maxWidth: 500, margin: "0 auto",
@@ -381,7 +369,7 @@ export default function TutorialPage() {
           </motion.div>
         </div>
 
-        <div style={{ maxWidth: 980, margin: "0 auto", padding: "60px 24px 100px" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "48px 32px 72px" }}>
 
           {/* ─── GETTING STARTED ─── */}
           <motion.div variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}
@@ -398,7 +386,7 @@ export default function TutorialPage() {
             </p>
           </motion.div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 72 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 48 }}>
             {steps.map((step, i) => (
               <StepCard key={step.title} {...step} delay={i * 0.4} />
             ))}
@@ -410,7 +398,7 @@ export default function TutorialPage() {
             style={{
               background: "#111",
               border: "1px solid rgba(255,255,255,0.07)",
-              borderRadius: 20, padding: 32, marginBottom: 72,
+              borderRadius: 20, padding: 32, marginBottom: 48,
               display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28,
               alignItems: "center",
             }}
@@ -463,7 +451,7 @@ export default function TutorialPage() {
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
-            gap: 16, marginBottom: 72,
+            gap: 16, marginBottom: 48,
           }}>
             {features.map((f, i) => (
               <FeatureCard key={f.title} {...f} delay={i * 0.25} />
@@ -476,7 +464,7 @@ export default function TutorialPage() {
             style={{
               background: "#111",
               border: "1px solid rgba(255,255,255,0.07)",
-              borderRadius: 18, padding: "32px 36px", marginBottom: 72,
+              borderRadius: 18, padding: "32px 36px", marginBottom: 48,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
@@ -501,9 +489,9 @@ export default function TutorialPage() {
                 "Use keyboard shortcuts in the editor: Ctrl+B for bold, Ctrl+I for italic.",
                 "Let auto-save handle it, or press Ctrl+S to save manually at any time.",
                 "Use the AI assistant on a highlighted paragraph for the best results.",
-                "Set your book language early — it affects AI suggestions and text direction.",
-                "Run the Plot Hole Detector after finishing every 3–5 chapters.",
-                "Design your cover last — the AI works best with a complete manuscript summary.",
+                "Set your book language early; it affects AI suggestions and text direction.",
+                "Run the Plot Hole Detector after finishing every 3 to 5 chapters.",
+                "Design your cover last; the AI works best with a complete manuscript summary.",
               ].map((tip, i) => (
                 <div key={i} style={{
                   display: "flex", gap: 10, alignItems: "flex-start",
@@ -533,7 +521,7 @@ export default function TutorialPage() {
             </p>
           </motion.div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 72 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 48 }}>
             {faqs.map((faq, i) => (
               <FaqItem key={faq.q} {...faq} delay={i * 0.25} />
             ))}
@@ -565,7 +553,7 @@ export default function TutorialPage() {
               Ready to write your story?
             </h3>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginBottom: 26, lineHeight: 1.6 }}>
-              Everything you need is already here. Start free — no credit card required.
+              Everything you need is already here. Start free, no credit card required.
             </p>
             <a href="/" style={{ textDecoration: "none" }}>
               <button style={{
