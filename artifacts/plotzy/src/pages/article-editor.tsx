@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
+import type { NodeViewProps } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
@@ -13,6 +14,7 @@ import Highlight from "@tiptap/extension-highlight";
 import Link2 from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Extension } from "@tiptap/core";
+import TiptapImage from "@tiptap/extension-image";
 import type { Editor } from "@tiptap/react";
 import {
   ArrowLeft, ImageIcon, Loader2, Save, Eye, X, Plus, Upload,
@@ -196,6 +198,96 @@ function useCloseOnOutside(isOpen: boolean, close: () => void) {
   }, [isOpen, close]);
 }
 
+/* ── Resizable Image NodeView ────────────────────────────────────── */
+function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const width  = (node.attrs.width  as string) || "100%";
+  const align  = (node.attrs.align  as string) || "center";
+  const justifyMap: Record<string,string> = { left:"flex-start", center:"center", right:"flex-end" };
+
+  return (
+    <NodeViewWrapper as="div" style={{display:"flex", justifyContent:justifyMap[align]||"center", margin:"1.2em 0", userSelect:"none"}}>
+      <div
+        ref={containerRef}
+        contentEditable={false}
+        style={{position:"relative", width, display:"inline-block", maxWidth:"100%", outline:selected?`2px solid ${ACC}`:"none", outlineOffset:2, borderRadius:10}}
+        onMouseEnter={()=>setHovered(true)}
+        onMouseLeave={()=>setHovered(false)}
+      >
+        <img
+          src={node.attrs.src as string}
+          alt={(node.attrs.alt as string)||""}
+          draggable={false}
+          style={{width:"100%", display:"block", borderRadius:10, objectFit:"cover", maxHeight:560}}
+        />
+
+        {/* Floating toolbar */}
+        {(selected||hovered) && (
+          <div style={{position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.82)",backdropFilter:"blur(12px)",border:"1px solid rgba(255,255,255,0.13)",borderRadius:9,padding:"4px 7px",zIndex:30,whiteSpace:"nowrap"}}>
+            {(["left","center","right"] as const).map(a=>(
+              <button key={a} onMouseDown={e=>{e.preventDefault();updateAttributes({align:a});}}
+                style={{width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:align===a?"rgba(255,255,255,0.22)":"transparent",color:"#fff"}}>
+                {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
+              </button>
+            ))}
+            <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+            {([["S","28%"],["M","58%"],["L","100%"]] as [string,string][]).map(([lbl,w])=>(
+              <button key={lbl} onMouseDown={e=>{e.preventDefault();updateAttributes({width:w});}}
+                style={{width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",background:width===w?"rgba(255,255,255,0.22)":"transparent",fontFamily:`-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`,fontSize:10,fontWeight:700,color:"#fff"}}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Resize handle — right edge */}
+        {(selected||hovered) && (
+          <div
+            style={{position:"absolute",top:"50%",right:-9,transform:"translateY(-50%)",width:18,height:44,borderRadius:9,cursor:"ew-resize",background:"rgba(255,255,255,0.18)",backdropFilter:"blur(4px)",border:"1px solid rgba(255,255,255,0.28)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:30}}
+            onMouseDown={e=>{
+              e.preventDefault(); e.stopPropagation();
+              const container = containerRef.current;
+              if (!container) return;
+              const parentW = container.parentElement?.getBoundingClientRect().width || 1;
+              const startX  = e.clientX;
+              const startWPx = container.getBoundingClientRect().width;
+              const onMove = (me:MouseEvent) => {
+                const delta   = me.clientX - startX;
+                const newWPct = Math.min(100, Math.max(15, Math.round(((startWPx+delta)/parentW)*100)));
+                updateAttributes({ width:`${newWPct}%` });
+              };
+              const onUp = () => { window.removeEventListener("mousemove",onMove); window.removeEventListener("mouseup",onUp); };
+              window.addEventListener("mousemove",onMove);
+              window.addEventListener("mouseup",onUp);
+            }}
+          >
+            <div style={{width:2,height:18,borderRadius:2,background:"rgba(255,255,255,0.7)"}}/>
+          </div>
+        )}
+
+        {/* Width badge */}
+        {(selected||hovered) && (
+          <div style={{position:"absolute",bottom:8,right:10,fontFamily:`-apple-system,sans-serif`,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.75)",background:"rgba(0,0,0,0.55)",padding:"2px 7px",borderRadius:5,pointerEvents:"none"}}>
+            {width}
+          </div>
+        )}
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const ResizableImage = TiptapImage.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: { default:"100%", parseHTML: el=>el.getAttribute("data-width")||el.style.width||"100%", renderHTML: a=>({ "data-width":a.width, style:`width:${a.width}` }) },
+      align: { default:"center", parseHTML: el=>el.getAttribute("data-align")||"center", renderHTML: a=>({ "data-align":a.align }) },
+    };
+  },
+  addNodeView() { return ReactNodeViewRenderer(ImageNodeView); },
+}).configure({ inline:false, allowBase64:true });
+
 /* ═══════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════════ */
@@ -279,8 +371,14 @@ export default function ArticleEditor() {
   useEffect(() => { tagsRef.current     = tags;      }, [tags]);
   useEffect(() => { imgRef.current      = featuredImage; }, [featuredImage]);
 
-  const fileInputRef   = useRef<HTMLInputElement>(null);
-  const autoSaveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef       = useRef<HTMLInputElement>(null);
+  const inlineImgInputRef  = useRef<HTMLInputElement>(null);
+  const autoSaveTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* ── AI image generation ── */
+  const [showImgAI, setShowImgAI]     = useState(false);
+  const [imgPrompt, setImgPrompt]     = useState("");
+  const [imgGenLoading, setImgGenLoading] = useState(false);
 
   /* ── tiptap ── */
   const [, forceUpdate] = useState(0);
@@ -301,6 +399,7 @@ export default function ArticleEditor() {
       Highlight.configure({ multicolor: true }),
       Link2.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: "Start writing your article…" }),
+      ResizableImage,
     ],
     content: "<p></p>",
     onUpdate: ({ editor }) => { setContent(editor.getHTML()); },
@@ -366,6 +465,43 @@ export default function ArticleEditor() {
     const t = tagInput.trim().toLowerCase();
     if (t && !tags.includes(t) && tags.length < 10) setTags(p => [...p, t]);
     setTagInput("");
+  };
+
+  /* ── Inline image ── */
+  const insertImageFromFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const src = ev.target?.result as string;
+      if (src && editor) {
+        editor.chain().focus().setImage({ src } as any).run();
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const generateInlineImage = async () => {
+    if (!imgPrompt.trim()) return;
+    setImgGenLoading(true);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ prompt: imgPrompt }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const { url } = await res.json();
+      if (url && editor) {
+        editor.chain().focus().setImage({ src: url } as any).run();
+        setShowImgAI(false);
+        setImgPrompt("");
+        toast({ title: "Image added to article" });
+      }
+    } catch {
+      toast({ title: "Image generation failed", variant: "destructive" });
+    } finally {
+      setImgGenLoading(false);
+    }
   };
 
   /* ── Voice dictation ── */
@@ -798,7 +934,13 @@ export default function ArticleEditor() {
             </button>
           </div>
 
-          {/* AI button */}
+          {/* Image buttons */}
+          <Sep/>
+          <Btn onClick={()=>inlineImgInputRef.current?.click()} title="Insert image from file"><ImageIcon size={13}/></Btn>
+          <Btn onClick={()=>setShowImgAI(true)} title="Generate image with AI"><Sparkles size={13}/></Btn>
+          <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
+
+          {/* AI Writing Assistant button */}
           <div style={{marginLeft:"auto",flexShrink:0}}>
             <button
               onMouseDown={e=>{e.preventDefault();setShowAI(true);}}
@@ -1249,6 +1391,53 @@ export default function ArticleEditor() {
             </aside>
           )}
         </div>
+
+        {/* ── AI IMAGE GENERATION MODAL ── */}
+        {showImgAI && (
+          <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)"}} onClick={()=>setShowImgAI(false)}>
+            <div style={{background:"#111117",border:`1px solid rgba(124,106,247,0.3)`,borderRadius:18,padding:28,width:"min(480px,90vw)",boxShadow:"0 20px 60px rgba(0,0,0,0.8)"}} onClick={e=>e.stopPropagation()}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+                <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <Sparkles size={16} color={ACC}/>
+                </div>
+                <div>
+                  <div style={{fontFamily:SF,fontSize:15,fontWeight:700,color:T}}>Generate Image with AI</div>
+                  <div style={{fontFamily:SF,fontSize:11,color:TD}}>Describe what you want to see</div>
+                </div>
+                <button onClick={()=>setShowImgAI(false)} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",color:TD,display:"flex"}}><X size={16}/></button>
+              </div>
+
+              <textarea
+                value={imgPrompt}
+                onChange={e=>setImgPrompt(e.target.value)}
+                placeholder="e.g. A cozy coffee shop at night, warm lighting, rain on windows, photorealistic..."
+                rows={4}
+                autoFocus
+                onKeyDown={e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))generateInlineImage();}}
+                style={{width:"100%",resize:"none",background:"rgba(255,255,255,0.05)",border:`1px solid rgba(255,255,255,0.1)`,borderRadius:10,padding:14,fontFamily:SF,fontSize:13,color:T,outline:"none",lineHeight:1.6,boxSizing:"border-box"}}
+              />
+
+              {/* Quick prompts */}
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,margin:"12px 0"}}>
+                {["Abstract art","Dark forest","City at night","Ocean waves","Mountain peak","Vintage library"].map(p=>(
+                  <button key={p} onClick={()=>setImgPrompt(p)}
+                    style={{fontFamily:SF,fontSize:11,padding:"4px 11px",borderRadius:20,background:`${ACC}12`,border:`1px solid ${ACC}30`,cursor:"pointer",color:ACC+"cc",transition:"all 0.15s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.background=`${ACC}22`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.background=`${ACC}12`;}}
+                  >{p}</button>
+                ))}
+              </div>
+
+              <div style={{display:"flex",gap:10,marginTop:4}}>
+                <button onClick={()=>setShowImgAI(false)} style={{flex:1,padding:"10px 0",borderRadius:10,background:"transparent",border:`1px solid rgba(255,255,255,0.1)`,cursor:"pointer",fontFamily:SF,fontSize:13,fontWeight:500,color:TS}}>Cancel</button>
+                <button onClick={generateInlineImage} disabled={!imgPrompt.trim()||imgGenLoading}
+                  style={{flex:2,padding:"10px 0",borderRadius:10,background:(!imgPrompt.trim()||imgGenLoading)?`${ACC}40`:ACC,border:"none",cursor:(!imgPrompt.trim()||imgGenLoading)?"default":"pointer",fontFamily:SF,fontSize:13,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",gap:7,transition:"background 0.2s"}}>
+                  {imgGenLoading?<><Loader2 size={14} style={{animation:"spin 1s linear infinite"}}/> Generating…</>:<><Sparkles size={14}/> Generate Image</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── AI ASSISTANT PANEL ── */}
         {showAI && (
