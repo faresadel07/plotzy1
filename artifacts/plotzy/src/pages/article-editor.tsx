@@ -238,9 +238,10 @@ function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeVie
   const startResize = (e: React.MouseEvent, h: HDir) => {
     e.preventDefault(); e.stopPropagation();
     const img = imgRef.current;
-    if (!img) return;
+    const cont = containerRef.current;
+    if (!img || !cont) return;
     const startX = e.clientX, startY = e.clientY;
-    const startW = img.offsetWidth,  startH = img.offsetHeight;
+    const startW = cont.offsetWidth, startH = img.offsetHeight;
     const natW   = natRef.current.w  || (node.attrs.natW as number) || startW;
     const natH   = natRef.current.h  || (node.attrs.natH as number) || startH;
     const ratio  = natW / natH;
@@ -406,8 +407,8 @@ export default function ArticleEditor() {
   const [tagInput, setTagInput]   = useState("");
   const [tags, setTags]           = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
-  const [imgWidth, setImgWidth]   = useState(100);
-  const [imgHeight, setImgHeight] = useState<number|null>(null);
+  const [imgWidth, setImgWidth]   = useState<number|null>(null);  // pixels, null = 100%
+  const [imgHeight, setImgHeight] = useState<number|null>(null);  // pixels, null = auto
   const [imgAlign, setImgAlign]   = useState<"left"|"center"|"right">("center");
   const [featDragging, setFeatDragging] = useState(false);
   const [featLive, setFeatLive]   = useState({ w:0, h:0 });
@@ -1230,8 +1231,12 @@ export default function ArticleEditor() {
               >
                 <div
                   ref={featContRef}
-                  style={{ position:"relative", width:`${imgWidth}%`, minWidth:120, maxWidth:"100%",
-                    borderRadius:12, overflow:"visible", flexShrink:0, userSelect:"none" }}
+                  style={{
+                    position:"relative",
+                    width: featDragging ? `${featLive.w}px` : imgWidth ? `${imgWidth}px` : "100%",
+                    minWidth:120, maxWidth:"100%",
+                    borderRadius:12, overflow:"visible", flexShrink:0, userSelect:"none",
+                  }}
                 >
                   {/* Image */}
                   <img
@@ -1246,7 +1251,7 @@ export default function ArticleEditor() {
                     style={{
                       width:"100%", display:"block", borderRadius:12, objectFit:"cover",
                       height: featDragging ? `${featLive.h}px` : imgHeight ? `${imgHeight}px` : undefined,
-                      maxHeight: (!featDragging && !imgHeight) ? 420 : undefined,
+                      maxHeight: (!featDragging && !imgHeight) ? 480 : undefined,
                     }}
                   />
 
@@ -1303,31 +1308,31 @@ export default function ArticleEditor() {
                         const cont = featContRef.current;
                         if (!img || !cont) return;
                         const startX=e.clientX, startY=e.clientY;
-                        const startW=img.offsetWidth, startH=img.offsetHeight;
-                        const parentW=cont.parentElement?.getBoundingClientRect().width||startW;
+                        const startW=cont.offsetWidth;
+                        const startH=img.offsetHeight;
+                        const parentW=cont.parentElement?.offsetWidth||startW;
                         const natW=featNatRef.current.w||startW, natH=featNatRef.current.h||startH;
                         const ratio=natW/natH;
                         setFeatDragging(true);
                         setFeatLive({w:startW,h:startH});
-                        const calc=(me:MouseEvent)=>{
+                        const calc=(me:MouseEvent):{w:number;h:number}=>{
                           const dx=(me.clientX-startX)*h.dx;
                           const dy=(me.clientY-startY)*h.dy;
                           if(h.corner){
                             const delta=Math.abs(dx)>Math.abs(dy)?dx:dy;
-                            const nw=Math.max(80,Math.round(startW+delta));
-                            return{w:nw,h:Math.round(nw/ratio)};
+                            const nw=Math.max(120,startW+delta);
+                            return{w:nw,h:nw/ratio};
                           }
                           return{
-                            w:h.dx!==0?Math.max(80,Math.round(startW+dx)):startW,
-                            h:h.dy!==0?Math.max(40,Math.round(startH+dy)):startH,
+                            w:h.dx!==0?Math.max(120,startW+dx):startW,
+                            h:h.dy!==0?Math.max(60,startH+dy):startH,
                           };
                         };
-                        const onMove=(me:MouseEvent)=>{const d=calc(me);setFeatLive(d);};
+                        const onMove=(me:MouseEvent)=>{const d=calc(me);setFeatLive({w:Math.round(d.w),h:Math.round(d.h)});};
                         const onUp=(me:MouseEvent)=>{
                           const d=calc(me);
-                          const newWPct=Math.min(100,Math.max(10,Math.round((d.w/parentW)*100)));
-                          setImgWidth(newWPct);
-                          if(h.dy!==0||h.corner) setImgHeight(d.h);
+                          setImgWidth(Math.min(Math.round(d.w), parentW));
+                          if(h.dy!==0||h.corner) setImgHeight(Math.round(d.h));
                           setFeatDragging(false);
                           window.removeEventListener("mousemove",onMove);
                           window.removeEventListener("mouseup",onUp);
