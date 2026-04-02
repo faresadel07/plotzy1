@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
+import { AIAssistant } from "@/components/ai-assistant";
 
 /* ── FontSize extension ─────────────────────────────────────────────── */
 const FontSize = Extension.create({
@@ -217,6 +218,7 @@ export default function ArticleEditor() {
   const [justSaved, setJustSaved] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showAI, setShowAI]           = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [dragOver, setDragOver]   = useState(false);
   const [wordGoal, setWordGoal]   = useState(1000);
@@ -716,19 +718,15 @@ export default function ArticleEditor() {
           {/* AI button */}
           <div style={{marginLeft:"auto",flexShrink:0}}>
             <button
-              onMouseDown={e=>{e.preventDefault();generateAi();}}
-              disabled={aiLoading}
+              onMouseDown={e=>{e.preventDefault();setShowAI(true);}}
               style={{
                 display:"flex",alignItems:"center",gap:6,
                 padding:"4px 13px",borderRadius:7,
-                background:`${ACC}1a`,border:`1px solid ${ACC}35`,
-                cursor:aiLoading?"default":"pointer",
-                fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap",
+                background:showAI?`${ACC}2a`:`${ACC}1a`,border:`1px solid ${ACC}45`,
+                cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap",
               }}
             >
-              {aiLoading
-                ? <><Loader2 size={11} style={{animation:"spin 1s linear infinite"}}/> Generating…</>
-                : <><Sparkles size={11}/> Write with AI</>}
+              <Sparkles size={11}/> AI Writing Assistant
             </button>
           </div>
         </div>
@@ -919,7 +917,28 @@ export default function ArticleEditor() {
 
           {/* ── SIDEBAR ── */}
           {!focusMode && (
-            <aside style={{display:"flex",flexDirection:"column",gap:11,position:"sticky",top:94}}>
+            <aside style={{display:"flex",flexDirection:"column",gap:11,position:"sticky",top:94,maxHeight:"calc(100vh - 110px)",overflowY:"auto",scrollbarWidth:"none"}}>
+
+              {/* AI Writing Assistant button */}
+              <button
+                onClick={() => setShowAI(true)}
+                style={{
+                  width:"100%",display:"flex",alignItems:"center",gap:10,
+                  padding:"14px 16px",borderRadius:14,cursor:"pointer",
+                  background:`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`,
+                  border:`1px solid ${ACC}35`,transition:"all 0.2s",
+                }}
+                onMouseEnter={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}28 0%,rgba(124,106,247,0.14) 100%)`)}
+                onMouseLeave={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`)}
+              >
+                <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <Sparkles size={16} color={ACC}/>
+                </div>
+                <div style={{textAlign:"left"}}>
+                  <div style={{fontFamily:SF,fontSize:12,fontWeight:700,color:T,marginBottom:2}}>AI Writing Assistant</div>
+                  <div style={{fontFamily:SF,fontSize:10,color:TS}}>Polish · Expand · Translate · Rewrite</div>
+                </div>
+              </button>
 
               {/* Stats */}
               <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
@@ -1049,6 +1068,22 @@ export default function ArticleEditor() {
             </aside>
           )}
         </div>
+
+        {/* ── AI ASSISTANT PANEL ── */}
+        {showAI && (
+          <AIAssistant
+            bookId={id}
+            currentContent={stripHtml(content)}
+            onApply={text => {
+              if (editor) {
+                editor.chain().focus().insertContent(
+                  `<p>${text.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
+                ).run();
+              }
+            }}
+            onClose={() => setShowAI(false)}
+          />
+        )}
 
         {/* ── GLOBAL STYLES ── */}
         <style>{`
