@@ -2,39 +2,74 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
-import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, Image as ImageIcon, Tag, Loader2, Save,
-  Clock, Eye, BookOpen, X, Plus, Upload, Wand2, Globe,
+  ArrowLeft, Image as ImageIcon, Loader2, Save,
+  Eye, X, Plus, Upload, Globe,
   CheckCircle2, Hash, BarChart2, AlignLeft, Maximize2, Minimize2,
-  FileText, Sparkles, EyeOff,
+  FileText, Sparkles, Target, Bold, Italic, Heading1, Heading2,
+  Quote, Code, List, Minus, ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 
+const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
+const SERIF = "Georgia, 'Times New Roman', serif";
+const BG = "#0a0a0a";
+const CARD = "#111111";
+const CARD2 = "#161616";
+const BORDER = "rgba(255,255,255,0.07)";
+const BORDER2 = "rgba(255,255,255,0.04)";
+const TEXT = "rgba(255,255,255,0.88)";
+const TEXT_SEC = "rgba(255,255,255,0.4)";
+const TEXT_DIM = "rgba(255,255,255,0.22)";
+const ACCENT = "#7c6af7";
+
 const ARTICLE_CATEGORIES = [
-  { label: "Writing Tips", color: "#6366f1" },
-  { label: "Craft & Technique", color: "#8b5cf6" },
-  { label: "Publishing", color: "#ec4899" },
-  { label: "Reading", color: "#f59e0b" },
-  { label: "Inspiration", color: "#10b981" },
-  { label: "Author Interviews", color: "#3b82f6" },
-  { label: "Book Reviews", color: "#14b8a6" },
-  { label: "Industry News", color: "#f97316" },
-  { label: "Self-Publishing", color: "#a855f7" },
-  { label: "Marketing", color: "#ef4444" },
-  { label: "Grammar & Style", color: "#0ea5e9" },
-  { label: "Research", color: "#84cc16" },
-  { label: "Other", color: "#6b7280" },
+  { label: "Writing Tips", color: "#818cf8" },
+  { label: "Craft & Technique", color: "#a78bfa" },
+  { label: "Publishing", color: "#f472b6" },
+  { label: "Reading", color: "#fbbf24" },
+  { label: "Inspiration", color: "#34d399" },
+  { label: "Author Interviews", color: "#60a5fa" },
+  { label: "Book Reviews", color: "#2dd4bf" },
+  { label: "Industry News", color: "#fb923c" },
+  { label: "Self-Publishing", color: "#c084fc" },
+  { label: "Marketing", color: "#f87171" },
+  { label: "Grammar & Style", color: "#38bdf8" },
+  { label: "Research", color: "#86efac" },
+  { label: "Other", color: "#94a3b8" },
 ];
 
-function estimateReadTime(text: string): number {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
+const WORD_GOALS = [
+  { value: 300, label: "Quick take · 300" },
+  { value: 500, label: "Blog post · 500" },
+  { value: 1000, label: "Long read · 1,000" },
+  { value: 2000, label: "Deep dive · 2,000" },
+  { value: 5000, label: "Essay · 5,000" },
+];
 
-function wordCount(text: string): number {
+function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
+}
+function charCount(text: string) {
+  return text.replace(/\s/g, "").length;
+}
+function sentenceCount(text: string) {
+  return text.split(/[.!?]+/).filter(s => s.trim().length > 2).length;
+}
+function paragraphCount(text: string) {
+  return text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+}
+function estimateReadTime(text: string) {
+  return Math.max(1, Math.ceil(wordCount(text) / 200));
+}
+function readingLevel(text: string): { label: string; color: string } {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length < 20) return { label: "—", color: TEXT_DIM };
+  const avgLen = words.reduce((s, w) => s + w.replace(/[^a-zA-Z]/g, "").length, 0) / words.length;
+  if (avgLen < 4.5) return { label: "Easy", color: "#34d399" };
+  if (avgLen < 6) return { label: "Medium", color: "#fbbf24" };
+  return { label: "Advanced", color: "#f472b6" };
 }
 
 export default function ArticleEditor() {
@@ -58,6 +93,8 @@ export default function ArticleEditor() {
   const [showPreview, setShowPreview] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [wordGoal, setWordGoal] = useState(1000);
+  const [showGoalPicker, setShowGoalPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
@@ -76,11 +113,8 @@ export default function ArticleEditor() {
     setSaving(true);
     try {
       await (updateArticle.mutateAsync as any)({
-        id,
-        title,
-        articleContent: content,
-        articleCategory: category,
-        tags,
+        id, title, articleContent: content,
+        articleCategory: category, tags,
         featuredImage: featuredImage ?? undefined,
       });
       setJustSaved(true);
@@ -101,39 +135,45 @@ export default function ArticleEditor() {
 
   const handleImageFile = (file: File) => {
     const reader = new FileReader();
-    reader.onload = (ev) => setFeaturedImage(ev.target?.result as string);
+    reader.onload = ev => setFeaturedImage(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
-
-  const handleFeaturedImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleImageFile(file);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file?.type.startsWith("image/")) handleImageFile(file);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) handleImageFile(file);
+  const insertFormat = (prefix: string, suffix = "", placeholder = "text") => {
+    const ta = contentRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const selected = content.slice(start, end) || placeholder;
+    const before = content.slice(0, start);
+    const after = content.slice(end);
+    const newContent = before + prefix + selected + suffix + after;
+    setContent(newContent);
+    setTimeout(() => {
+      ta.focus();
+      const newPos = start + prefix.length + selected.length + suffix.length;
+      ta.setSelectionRange(newPos, newPos);
+    }, 0);
   };
 
   const addTag = () => {
     const t = tagInput.trim().toLowerCase();
-    if (t && !tags.includes(t) && tags.length < 10) setTags(prev => [...prev, t]);
+    if (t && !tags.includes(t) && tags.length < 10) setTags(p => [...p, t]);
     setTagInput("");
   };
-
-  const removeTag = (tag: string) => setTags(prev => prev.filter(x => x !== tag));
-
+  const removeTag = (tag: string) => setTags(p => p.filter(x => x !== tag));
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
-    if (e.key === "Backspace" && !tagInput && tags.length) setTags(prev => prev.slice(0, -1));
+    if (e.key === "Backspace" && !tagInput && tags.length) setTags(p => p.slice(0, -1));
   };
 
   const generateAiContent = async () => {
     if (!title.trim()) {
-      toast({ variant: "destructive", title: "Add a title first", description: "AI needs a title to generate content." });
-      return;
+      toast({ variant: "destructive", title: "Add a title first" }); return;
     }
     setAiLoading(true);
     try {
@@ -151,84 +191,111 @@ export default function ArticleEditor() {
       });
       if (!res.ok) throw new Error("AI request failed");
       const data = await res.json();
-      const generated = data.content || "";
-      setContent(prev => prev ? `${prev}\n\n${generated}` : generated);
+      setContent(p => p ? `${p}\n\n${data.content || ""}` : (data.content || ""));
       toast({ title: "AI content added!" });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "AI Error", description: err?.message || "Could not generate content" });
+      toast({ variant: "destructive", title: "AI Error", description: err?.message });
     } finally {
       setAiLoading(false);
     }
   };
 
   const wc = wordCount(content);
+  const cc = charCount(content);
+  const sc = sentenceCount(content);
+  const pc = paragraphCount(content);
   const readTime = estimateReadTime(content);
+  const level = readingLevel(content);
+  const progress = Math.min(100, Math.round((wc / wordGoal) * 100));
   const selectedCat = ARTICLE_CATEGORIES.find(c => c.label === category);
 
+  /* ── Loading ── */
   if (isLoading) return (
-    <Layout>
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-foreground/40" />
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader2 size={28} color={TEXT_DIM} style={{ animation: "spin 1s linear infinite" }} />
       </div>
     </Layout>
   );
 
   if (!article) return (
-    <Layout>
-      <div className="text-center py-20 text-foreground/40">Article not found.</div>
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontFamily: SF, color: TEXT_DIM, fontSize: 14 }}>Article not found.</p>
+      </div>
     </Layout>
   );
 
   /* ── PREVIEW MODE ── */
   if (showPreview) return (
-    <Layout>
-      <div className="min-h-screen bg-[#fafaf8]">
-        <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-black/5 px-6 py-3 flex items-center justify-between">
-          <button onClick={() => setShowPreview(false)} className="flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-colors font-medium">
-            <ArrowLeft className="w-4 h-4" /> Back to editor
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh" }}>
+        {/* Preview bar */}
+        <div style={{
+          position: "sticky", top: 0, zIndex: 40,
+          background: "rgba(10,10,10,0.95)", backdropFilter: "blur(20px)",
+          borderBottom: `1px solid ${BORDER}`,
+          padding: "0 24px", height: 44,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <button onClick={() => setShowPreview(false)} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "none", border: "none", cursor: "pointer",
+            fontFamily: SF, fontSize: 13, color: TEXT_SEC,
+          }}>
+            <ArrowLeft size={14} /> Back to editor
           </button>
-          <span className="text-xs text-foreground/40 font-medium uppercase tracking-widest">Preview</span>
-          <div className="w-24" />
+          <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: TEXT_DIM }}>
+            Preview
+          </span>
+          <div style={{ width: 100 }} />
         </div>
-        <article className="max-w-2xl mx-auto px-6 py-16">
+
+        <article style={{ maxWidth: 680, margin: "0 auto", padding: "72px 24px 120px" }}>
           {featuredImage && (
-            <img src={featuredImage} alt="Featured" className="w-full h-72 object-cover rounded-3xl mb-10 shadow-lg" />
+            <img src={featuredImage} alt="Featured" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, marginBottom: 48 }} />
           )}
-          <div className="flex items-center gap-3 mb-5">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
             {selectedCat && (
-              <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: selectedCat.color + "20", color: selectedCat.color }}>
-                {category}
-              </span>
+              <span style={{
+                fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+                textTransform: "uppercase", padding: "4px 12px", borderRadius: 20,
+                background: selectedCat.color + "22", color: selectedCat.color,
+              }}>{category}</span>
             )}
-            <span className="text-xs text-foreground/35 flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {readTime} min read
-            </span>
-            <span className="text-xs text-foreground/35">{wc.toLocaleString()} words</span>
+            <span style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM }}>{readTime} min read</span>
+            <span style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM }}>{wc.toLocaleString()} words</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground leading-[1.15] mb-6" style={{ fontFamily: "Georgia, serif" }}>
-            {title || "Untitled Blog Post"}
+          <h1 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,42px)", fontWeight: 800, color: TEXT, lineHeight: 1.2, marginBottom: 28 }}>
+            {title || "Untitled"}
           </h1>
           {article.authorName && (
-            <div className="flex items-center gap-3 mb-10 pb-8 border-b border-black/8">
-              <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center font-bold text-sm text-foreground/60">
-                {article.authorName[0].toUpperCase()}
-              </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40, paddingBottom: 32, borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", background: CARD2,
+                border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: SF, fontSize: 13, fontWeight: 700, color: TEXT_SEC,
+              }}>{article.authorName[0].toUpperCase()}</div>
               <div>
-                <p className="text-sm font-semibold text-foreground/80">{article.authorName}</p>
-                <p className="text-xs text-foreground/40">Author</p>
+                <p style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: TEXT, margin: 0 }}>{article.authorName}</p>
+                <p style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, margin: 0 }}>Author</p>
               </div>
             </div>
           )}
-          <div className="prose prose-lg max-w-none leading-[1.9] text-foreground/80 whitespace-pre-wrap" dir={isRTL ? "rtl" : "ltr"}
-            style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "1.1rem" }}>
-            {content || <span className="text-foreground/30 italic">No content yet.</span>}
+          <div style={{
+            fontFamily: SERIF, fontSize: "1.08rem", lineHeight: 1.95,
+            color: TEXT_SEC, whiteSpace: "pre-wrap",
+          }} dir={isRTL ? "rtl" : "ltr"}>
+            {content || <span style={{ fontStyle: "italic", color: TEXT_DIM }}>No content yet.</span>}
           </div>
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-14 pt-8 border-t border-black/6">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 56, paddingTop: 32, borderTop: `1px solid ${BORDER}` }}>
               {tags.map(tag => (
-                <span key={tag} className="px-3 py-1.5 rounded-full bg-foreground/5 text-xs font-medium text-foreground/50">
-                  #{tag}
-                </span>
+                <span key={tag} style={{
+                  fontFamily: SF, fontSize: 12, color: TEXT_DIM,
+                  padding: "5px 12px", borderRadius: 20,
+                  background: CARD2, border: `1px solid ${BORDER}`,
+                }}>#{tag}</span>
               ))}
             </div>
           )}
@@ -239,304 +306,533 @@ export default function ArticleEditor() {
 
   /* ── EDITOR ── */
   return (
-    <Layout>
-      <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 
-        {/* ── Top Bar ── */}
-        <div className="sticky top-0 z-30 border-b border-border/50 px-5 py-2.5 flex items-center justify-between"
-          style={{ background: "hsl(var(--background) / 0.97)", backdropFilter: "blur(12px)" }}>
-          <div className="flex items-center gap-3">
+        {/* ── TOP BAR ── */}
+        <div style={{
+          position: "sticky", top: 0, zIndex: 40,
+          background: "rgba(10,10,10,0.96)", backdropFilter: "blur(20px)",
+          borderBottom: `1px solid ${BORDER}`,
+          padding: "0 20px", height: 48,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          {/* Left */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Link href="/">
-              <button className="flex items-center gap-1.5 text-sm text-foreground/50 hover:text-foreground transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Dashboard
+              <button style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: SF, fontSize: 13, color: TEXT_SEC,
+                padding: "4px 0",
+              }}>
+                <ArrowLeft size={14} /> Dashboard
               </button>
             </Link>
-            <div className="w-px h-4 bg-border" />
-            <span className="text-xs font-bold uppercase tracking-widest text-foreground/50 flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" /> Blog Post
-            </span>
+            <div style={{ width: 1, height: 16, background: BORDER }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <FileText size={12} color={TEXT_DIM} />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
+                Blog Post
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-foreground/35 hidden sm:block">
-              {wc.toLocaleString()} words · {readTime} min read
-            </span>
+          {/* Center — auto-save */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {saving ? (
+              <><Loader2 size={11} color={TEXT_DIM} style={{ animation: "spin 1s linear infinite" }} />
+              <span style={{ fontSize: 11, color: TEXT_DIM }}>Saving…</span></>
+            ) : justSaved ? (
+              <><CheckCircle2 size={11} color="#34d399" />
+              <span style={{ fontSize: 11, color: "#34d399" }}>Saved</span></>
+            ) : (
+              <span style={{ fontSize: 11, color: TEXT_DIM }}>{wc.toLocaleString()} words · {readTime} min read</span>
+            )}
+          </div>
 
-            <button
-              onClick={() => setFocusMode(f => !f)}
-              className="p-2 rounded-lg text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
-              title={focusMode ? "Exit focus mode" : "Focus mode"}
-            >
-              {focusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          {/* Right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={() => setFocusMode(f => !f)} title={focusMode ? "Exit focus" : "Focus mode"} style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 32, height: 32, borderRadius: 8,
+              background: "none", border: `1px solid ${BORDER}`, cursor: "pointer", color: TEXT_SEC,
+            }}>
+              {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
 
-            <button
-              onClick={() => setShowPreview(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-sm text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-all"
-            >
-              <Eye className="w-4 h-4" /> Preview
+            <button onClick={() => setShowPreview(true)} style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 14px", borderRadius: 8,
+              background: "none", border: `1px solid ${BORDER}`, cursor: "pointer",
+              fontFamily: SF, fontSize: 13, fontWeight: 500, color: TEXT_SEC,
+            }}>
+              <Eye size={13} /> Preview
             </button>
 
-            <button
-              onClick={() => save()}
-              disabled={saving}
-              style={justSaved
-                ? { background: "#10b981", color: "#fff", border: "none", borderRadius: "10px", fontWeight: 600, padding: "7px 16px", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "default", transition: "all 0.2s" }
-                : { background: "hsl(var(--primary))", color: "#fff", border: "none", borderRadius: "10px", fontWeight: 600, padding: "7px 16px", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer", transition: "all 0.2s" }
-              }
-            >
-              {saving
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                : justSaved
-                  ? <><CheckCircle2 className="w-4 h-4" /> Saved</>
-                  : <><Save className="w-4 h-4" /> Save</>
-              }
+            <button onClick={() => save()} disabled={saving} style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 16px", borderRadius: 8, cursor: "pointer",
+              background: justSaved ? "#34d399" : "#fff",
+              border: "none",
+              fontFamily: SF, fontSize: 13, fontWeight: 600,
+              color: justSaved ? "#fff" : "#000",
+              transition: "all 0.2s",
+            }}>
+              {saving ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
+                : justSaved ? <><CheckCircle2 size={13} /> Saved</>
+                : <><Save size={13} /> Save</>}
             </button>
           </div>
         </div>
 
-        {/* ── Content ── */}
-        <div className={`mx-auto px-4 py-8 transition-all duration-300 ${focusMode ? "max-w-2xl" : "max-w-5xl"}`}>
-          <div className={`grid gap-7 ${focusMode ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-[1fr_268px]"}`}>
+        {/* ── FORMAT TOOLBAR ── */}
+        <div style={{
+          borderBottom: `1px solid ${BORDER2}`,
+          padding: "0 20px", height: 38,
+          display: "flex", alignItems: "center", gap: 2,
+          background: CARD2,
+        }}>
+          {[
+            { icon: Bold, action: () => insertFormat("**", "**", "bold text"), title: "Bold (Ctrl+B)" },
+            { icon: Italic, action: () => insertFormat("_", "_", "italic text"), title: "Italic (Ctrl+I)" },
+            { icon: Heading1, action: () => insertFormat("\n# ", "", "Heading 1"), title: "Heading 1" },
+            { icon: Heading2, action: () => insertFormat("\n## ", "", "Heading 2"), title: "Heading 2" },
+          ].map(({ icon: Icon, action, title }) => (
+            <button key={title} onClick={action} title={title} style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 30, height: 30, borderRadius: 6, cursor: "pointer",
+              background: "none", border: "none", color: TEXT_SEC,
+              transition: "background 0.15s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = CARD)}
+              onMouseLeave={e => (e.currentTarget.style.background = "none")}
+            >
+              <Icon size={14} />
+            </button>
+          ))}
+          <div style={{ width: 1, height: 18, background: BORDER, margin: "0 4px" }} />
+          {[
+            { icon: Quote, action: () => insertFormat("\n> ", "", "quote"), title: "Blockquote" },
+            { icon: Code, action: () => insertFormat("`", "`", "code"), title: "Inline code" },
+            { icon: List, action: () => insertFormat("\n- ", "", "list item"), title: "Bullet list" },
+            { icon: Minus, action: () => insertFormat("\n---\n", "", ""), title: "Divider" },
+          ].map(({ icon: Icon, action, title }) => (
+            <button key={title} onClick={action} title={title} style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 30, height: 30, borderRadius: 6, cursor: "pointer",
+              background: "none", border: "none", color: TEXT_SEC,
+              transition: "background 0.15s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = CARD)}
+              onMouseLeave={e => (e.currentTarget.style.background = "none")}
+            >
+              <Icon size={14} />
+            </button>
+          ))}
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
+            <Sparkles size={11} color={ACCENT} />
+            <span style={{ fontSize: 10, color: TEXT_DIM, letterSpacing: "0.04em" }}>Markdown supported</span>
+          </div>
+        </div>
 
-            {/* ── Main Column ── */}
-            <div className="space-y-5">
+        {/* ── MAIN CONTENT ── */}
+        <div style={{
+          maxWidth: focusMode ? 740 : 1160,
+          margin: "0 auto", padding: "32px 20px 80px",
+          display: "grid",
+          gridTemplateColumns: focusMode ? "1fr" : "1fr 280px",
+          gap: 28,
+          transition: "all 0.3s ease",
+        }}>
 
-              {/* Featured Image */}
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className="relative rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200"
-                style={{
-                  minHeight: 200,
-                  border: dragOver ? "2px dashed hsl(var(--primary))" : "2px dashed hsl(var(--border))",
-                  background: featuredImage ? undefined : dragOver ? "hsl(var(--primary) / 0.05)" : "hsl(var(--muted) / 0.4)",
-                }}
-              >
-                {featuredImage ? (
-                  <>
-                    <img src={featuredImage} alt="Featured" className="w-full object-cover" style={{ maxHeight: 300 }} />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                      <span className="text-white text-sm font-semibold bg-black/30 backdrop-blur px-4 py-2 rounded-xl flex items-center gap-2">
-                        <Upload className="w-4 h-4" /> Change image
-                      </span>
-                    </div>
-                    <button
-                      onClick={e => { e.stopPropagation(); setFeaturedImage(null); }}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors shadow-lg"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[200px] gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-foreground/8 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <ImageIcon className="w-6 h-6 text-foreground/30" />
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold text-foreground/40 text-sm">Add a featured image</p>
-                      <p className="text-xs text-foreground/25 mt-0.5">Click or drag & drop · JPG, PNG, WebP</p>
-                    </div>
+          {/* ── WRITING COLUMN ── */}
+          <div>
+
+            {/* Featured Image */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              style={{
+                borderRadius: 14,
+                border: dragOver
+                  ? `2px dashed ${ACCENT}`
+                  : featuredImage ? "none" : `2px dashed ${BORDER}`,
+                background: featuredImage ? "transparent"
+                  : dragOver ? `${ACCENT}08` : CARD2,
+                minHeight: featuredImage ? "auto" : 180,
+                cursor: "pointer",
+                overflow: "hidden",
+                marginBottom: 24,
+                position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              {featuredImage ? (
+                <>
+                  <img src={featuredImage} alt="Featured" style={{ width: "100%", maxHeight: 320, objectFit: "cover", display: "block" }} />
+                  <div style={{
+                    position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    opacity: 0, transition: "opacity 0.2s",
+                  }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = "0")}
+                  >
+                    <span style={{
+                      fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#fff",
+                      background: "rgba(0,0,0,0.5)", padding: "8px 18px", borderRadius: 10,
+                      display: "flex", alignItems: "center", gap: 8,
+                    }}>
+                      <Upload size={14} /> Change image
+                    </span>
                   </div>
-                )}
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFeaturedImageUpload} />
-              </div>
-
-              {/* Category badge (quick view) */}
-              {category && selectedCat && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: selectedCat.color + "18", color: selectedCat.color }}>
-                    {category}
-                  </span>
-                  <button onClick={() => setCategory("")} className="text-foreground/30 hover:text-foreground/60 transition-colors">
-                    <X className="w-3 h-3" />
-                  </button>
+                  <button onClick={e => { e.stopPropagation(); setFeaturedImage(null); }} style={{
+                    position: "absolute", top: 10, right: 10,
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: "rgba(0,0,0,0.65)", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+                  }}><X size={12} /></button>
+                </>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 32 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: CARD, border: `1px solid ${BORDER}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <ImageIcon size={20} color={TEXT_DIM} />
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: TEXT_SEC, margin: 0 }}>Add a featured image</p>
+                    <p style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, marginTop: 4 }}>Click or drag · JPG, PNG, WebP</p>
+                  </div>
                 </div>
               )}
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f); }} />
+            </div>
 
-              {/* Title */}
-              <textarea
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Your article title…"
-                rows={2}
-                dir={isRTL ? "rtl" : "ltr"}
-                className="w-full resize-none bg-transparent border-none outline-none leading-tight placeholder:text-foreground/20"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 800, color: "hsl(var(--foreground))" }}
-              />
-
-              {/* Divider with AI button */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-border/60" />
-                <button
-                  onClick={generateAiContent}
-                  disabled={aiLoading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-[1.02]"
-                  style={{ background: aiLoading ? "hsl(var(--muted))" : "hsl(var(--primary) / 0.1)", color: aiLoading ? "hsl(var(--foreground) / 0.4)" : "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.2)" }}
-                >
-                  {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  {aiLoading ? "Generating…" : "Write with AI"}
+            {/* Category badge */}
+            {category && selectedCat && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{
+                  fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+                  textTransform: "uppercase", padding: "4px 12px", borderRadius: 20,
+                  background: selectedCat.color + "22", color: selectedCat.color,
+                }}>{category}</span>
+                <button onClick={() => setCategory("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", alignItems: "center" }}>
+                  <X size={12} />
                 </button>
-                <div className="flex-1 h-px bg-border/60" />
               </div>
+            )}
 
-              {/* Content Editor */}
-              <div className="relative">
-                <textarea
-                  ref={contentRef}
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  dir={isRTL ? "rtl" : "ltr"}
-                  placeholder={"Start writing your blog post…\n\nShare your ideas, tell your story, or explain a concept. Your readers are waiting."}
-                  className="w-full resize-none outline-none text-foreground/80 leading-[1.9] placeholder:text-foreground/20 bg-transparent border-none"
-                  style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "1.05rem", minHeight: "520px" }}
-                />
-                {/* Word count badge */}
-                {wc > 0 && (
-                  <div className="absolute bottom-3 right-3 text-[10px] text-foreground/25 font-medium tabular-nums">
-                    {wc.toLocaleString()} words
-                  </div>
-                )}
-              </div>
+            {/* Title */}
+            <textarea
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Your article title…"
+              rows={2}
+              dir={isRTL ? "rtl" : "ltr"}
+              style={{
+                width: "100%", resize: "none", background: "transparent",
+                border: "none", outline: "none",
+                fontFamily: SERIF, fontWeight: 800,
+                fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
+                color: TEXT, lineHeight: 1.2,
+                marginBottom: 8,
+              }}
+              className="placeholder:text-[rgba(255,255,255,0.12)]"
+            />
 
-              {/* Tags inline */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-4 border-t border-border/40">
-                  {tags.map(tag => (
-                    <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-foreground/50 bg-foreground/5">
-                      #{tag}
-                      <button onClick={() => removeTag(tag)} className="text-foreground/30 hover:text-foreground/60 ml-0.5 transition-colors">
-                        <X className="w-2.5 h-2.5" />
-                      </button>
-                    </span>
-                  ))}
+            {/* Subtitle / excerpt hint */}
+            <p style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM, marginBottom: 28 }}>
+              {title.length > 0 ? `${title.length} chars · Aim for 60–80 for best SEO` : "Add a compelling title to hook your readers"}
+            </p>
+
+            {/* AI Button */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+              <div style={{ flex: 1, height: 1, background: BORDER }} />
+              <button
+                onClick={generateAiContent}
+                disabled={aiLoading}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "8px 18px", borderRadius: 10, cursor: aiLoading ? "default" : "pointer",
+                  background: aiLoading ? CARD2 : `${ACCENT}18`,
+                  border: `1px solid ${aiLoading ? BORDER : ACCENT + "40"}`,
+                  fontFamily: SF, fontSize: 12, fontWeight: 600,
+                  color: aiLoading ? TEXT_DIM : ACCENT,
+                  transition: "all 0.2s",
+                }}
+              >
+                {aiLoading
+                  ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Generating…</>
+                  : <><Sparkles size={13} /> Write with AI</>}
+              </button>
+              <div style={{ flex: 1, height: 1, background: BORDER }} />
+            </div>
+
+            {/* Content area */}
+            <div style={{ position: "relative" }}>
+              <textarea
+                ref={contentRef}
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                dir={isRTL ? "rtl" : "ltr"}
+                placeholder={"Start writing your blog post…\n\nShare your ideas, tell your story, or explain a concept. Your readers are waiting.\n\nTip: Use the toolbar above for formatting, or type Markdown directly."}
+                style={{
+                  width: "100%", resize: "none", outline: "none",
+                  background: "transparent", border: "none",
+                  fontFamily: SERIF, fontSize: "1.07rem",
+                  color: TEXT_SEC, lineHeight: 1.95,
+                  minHeight: 560,
+                }}
+                className="placeholder:text-[rgba(255,255,255,0.1)]"
+                onKeyDown={e => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(); }
+                  if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); insertFormat("**", "**", "bold"); }
+                  if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); insertFormat("_", "_", "italic"); }
+                }}
+              />
+              {wc > 0 && (
+                <div style={{
+                  position: "absolute", bottom: 8, right: 0,
+                  fontFamily: SF, fontSize: 10, color: TEXT_DIM, fontVariantNumeric: "tabular-nums",
+                }}>
+                  {wc.toLocaleString()} / {wordGoal.toLocaleString()} words
                 </div>
               )}
             </div>
 
-            {/* ── Sidebar ── */}
-            {!focusMode && (
-              <aside className="space-y-4">
-
-                {/* Stats */}
-                <div className="rounded-2xl border border-border/50 p-4 space-y-3" style={{ background: "hsl(var(--card))" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-foreground/35 flex items-center gap-1.5">
-                    <BarChart2 className="w-3 h-3" /> Stats
-                  </h3>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="rounded-xl bg-foreground/4 py-3">
-                      <p className="text-lg font-bold text-foreground">{wc.toLocaleString()}</p>
-                      <p className="text-[10px] text-foreground/40 font-medium mt-0.5">Words</p>
-                    </div>
-                    <div className="rounded-xl bg-foreground/4 py-3">
-                      <p className="text-lg font-bold text-foreground">{readTime}</p>
-                      <p className="text-[10px] text-foreground/40 font-medium mt-0.5">Min read</p>
-                    </div>
-                    <div className="rounded-xl bg-foreground/4 py-3">
-                      <p className="text-lg font-bold text-foreground uppercase">{article.language || "EN"}</p>
-                      <p className="text-[10px] text-foreground/40 font-medium mt-0.5">Lang</p>
-                    </div>
-                  </div>
-                  {/* Progress bar for target */}
-                  <div>
-                    <div className="flex justify-between text-[10px] text-foreground/35 mb-1">
-                      <span>Progress to 1,000 words</span>
-                      <span>{Math.min(100, Math.round(wc / 10))}%</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-foreground/8 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, wc / 10)}%`, background: "hsl(var(--primary))" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Category */}
-                <div className="rounded-2xl border border-border/50 p-4" style={{ background: "hsl(var(--card))" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-foreground/35 mb-3 flex items-center gap-1.5">
-                    <AlignLeft className="w-3 h-3" /> Category
-                  </h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {ARTICLE_CATEGORIES.map(({ label, color }) => (
-                      <button
-                        key={label}
-                        onClick={() => setCategory(prev => prev === label ? "" : label)}
-                        className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all duration-150 hover:scale-[1.03]"
-                        style={
-                          category === label
-                            ? { background: color, color: "#fff", border: `1.5px solid ${color}` }
-                            : { background: color + "12", color: color, border: `1.5px solid ${color}30` }
-                        }
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="rounded-2xl border border-border/50 p-4" style={{ background: "hsl(var(--card))" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-foreground/35 mb-3 flex items-center gap-1.5">
-                    <Hash className="w-3 h-3" /> Tags
-                    <span className="ml-auto text-foreground/25">{tags.length}/10</span>
-                  </h3>
-                  <div className="flex flex-wrap gap-1.5 mb-3 min-h-[24px]">
-                    {tags.map(tag => (
-                      <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-foreground/60 bg-foreground/6 border border-border/40">
-                        #{tag}
-                        <button onClick={() => removeTag(tag)} className="text-foreground/35 hover:text-foreground/70 transition-colors">
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </span>
-                    ))}
-                    {tags.length === 0 && <span className="text-[11px] text-foreground/25 italic">No tags yet</span>}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      value={tagInput}
-                      onChange={e => setTagInput(e.target.value)}
-                      onKeyDown={handleTagKeyDown}
-                      placeholder="Add a tag…"
-                      className="flex-1 text-xs h-8 rounded-lg border border-border/50 bg-foreground/4 px-3 outline-none text-foreground/70 placeholder:text-foreground/25 focus:border-primary/40 transition-colors"
-                    />
-                    <button
-                      onClick={addTag}
-                      className="w-8 h-8 rounded-lg bg-foreground/8 hover:bg-foreground/12 text-foreground/50 hover:text-foreground/80 flex items-center justify-center flex-shrink-0 transition-all"
-                    >
-                      <Plus className="w-4 h-4" />
+            {/* Inline tags */}
+            {tags.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingTop: 20, borderTop: `1px solid ${BORDER}`, marginTop: 8 }}>
+                {tags.map(tag => (
+                  <span key={tag} style={{
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    fontFamily: SF, fontSize: 11, fontWeight: 500, color: TEXT_DIM,
+                    padding: "4px 10px", borderRadius: 20,
+                    background: CARD2, border: `1px solid ${BORDER}`,
+                  }}>
+                    #{tag}
+                    <button onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", alignItems: "center", padding: 0, marginLeft: 2 }}>
+                      <X size={10} />
                     </button>
-                  </div>
-                  <p className="text-[10px] text-foreground/25 mt-1.5">Press Enter or comma to add</p>
-                </div>
-
-                {/* Writing tips */}
-                <div className="rounded-2xl border border-primary/15 p-4" style={{ background: "hsl(var(--primary) / 0.04)" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-3 flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3" /> Quick Tips
-                  </h3>
-                  <ul className="space-y-1.5 text-[11px] text-foreground/50 leading-relaxed">
-                    <li>• Start with a strong hook in the first sentence</li>
-                    <li>• Keep paragraphs short — 3 to 5 sentences</li>
-                    <li>• Use the AI to expand or continue your writing</li>
-                    <li>• Add a featured image to boost engagement</li>
-                    <li>• Preview before publishing to catch any issues</li>
-                  </ul>
-                </div>
-
-                {isRTL && (
-                  <div className="rounded-xl border border-border/40 p-3 text-xs text-foreground/50 flex items-start gap-2">
-                    <Globe className="w-4 h-4 mt-0.5 text-foreground/30 flex-shrink-0" />
-                    Right-to-left layout is active for your language.
-                  </div>
-                )}
-              </aside>
+                  </span>
+                ))}
+              </div>
             )}
           </div>
+
+          {/* ── SIDEBAR ── */}
+          {!focusMode && (
+            <aside style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+              {/* Stats */}
+              <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+                  <BarChart2 size={11} color={TEXT_DIM} />
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
+                    Stats
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  {[
+                    { value: wc.toLocaleString(), label: "Words" },
+                    { value: readTime.toString(), label: "Min read" },
+                    { value: (article.language || "EN").toUpperCase(), label: "Lang" },
+                  ].map(({ value, label }) => (
+                    <div key={label} style={{
+                      background: CARD2, borderRadius: 10, padding: "10px 4px",
+                      textAlign: "center", border: `1px solid ${BORDER2}`,
+                    }}>
+                      <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: TEXT }}>{value}</div>
+                      <div style={{ fontFamily: SF, fontSize: 9, color: TEXT_DIM, marginTop: 2, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Extra stats row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  {[
+                    { value: cc.toLocaleString(), label: "Characters" },
+                    { value: sc > 0 ? sc.toString() : "0", label: "Sentences" },
+                    { value: pc > 0 ? pc.toString() : "0", label: "Paragraphs" },
+                    { value: level.label, label: "Reading level", valueColor: level.color },
+                  ].map(({ value, label, valueColor }) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM }}>{label}</span>
+                      <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: valueColor || TEXT_SEC }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Progress bar */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <button
+                      onClick={() => setShowGoalPicker(p => !p)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 4,
+                        background: "none", border: "none", cursor: "pointer",
+                        fontFamily: SF, fontSize: 10, color: TEXT_DIM, padding: 0,
+                      }}
+                    >
+                      <Target size={9} /> Goal: {wordGoal.toLocaleString()} words
+                      <ChevronDown size={9} style={{ transform: showGoalPicker ? "rotate(180deg)" : "none", transition: "0.2s" }} />
+                    </button>
+                    <span style={{ fontFamily: SF, fontSize: 10, color: progress >= 100 ? "#34d399" : TEXT_DIM }}>{progress}%</span>
+                  </div>
+                  {showGoalPicker && (
+                    <div style={{
+                      background: "#1a1a1a", border: `1px solid ${BORDER}`,
+                      borderRadius: 10, overflow: "hidden", marginBottom: 8,
+                    }}>
+                      {WORD_GOALS.map(g => (
+                        <button key={g.value} onClick={() => { setWordGoal(g.value); setShowGoalPicker(false); }} style={{
+                          width: "100%", padding: "8px 12px", background: wordGoal === g.value ? `${ACCENT}18` : "none",
+                          border: "none", cursor: "pointer", textAlign: "left",
+                          fontFamily: SF, fontSize: 11, color: wordGoal === g.value ? ACCENT : TEXT_SEC,
+                          borderBottom: `1px solid ${BORDER2}`,
+                        }}>{g.label}</button>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ height: 4, borderRadius: 4, background: CARD2, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%", borderRadius: 4,
+                      background: progress >= 100 ? "#34d399" : ACCENT,
+                      width: `${progress}%`, transition: "width 0.5s ease",
+                    }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Category */}
+              <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                  <AlignLeft size={11} color={TEXT_DIM} />
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
+                    Category
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {ARTICLE_CATEGORIES.map(({ label, color }) => (
+                    <button
+                      key={label}
+                      onClick={() => setCategory(p => p === label ? "" : label)}
+                      style={{
+                        padding: "4px 10px", borderRadius: 20,
+                        fontFamily: SF, fontSize: 10, fontWeight: 600,
+                        cursor: "pointer", transition: "all 0.15s",
+                        background: category === label ? color : color + "14",
+                        color: category === label ? "#fff" : color,
+                        border: `1px solid ${category === label ? color : color + "30"}`,
+                      }}
+                    >{label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                  <Hash size={11} color={TEXT_DIM} />
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
+                    Tags
+                  </span>
+                  <span style={{ marginLeft: "auto", fontFamily: SF, fontSize: 10, color: TEXT_DIM }}>{tags.length}/10</span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, minHeight: 24, marginBottom: 10 }}>
+                  {tags.map(tag => (
+                    <span key={tag} style={{
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      fontFamily: SF, fontSize: 10, fontWeight: 500, color: TEXT_SEC,
+                      padding: "4px 9px", borderRadius: 20,
+                      background: CARD2, border: `1px solid ${BORDER}`,
+                    }}>
+                      #{tag}
+                      <button onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", alignItems: "center", padding: 0 }}>
+                        <X size={9} />
+                      </button>
+                    </span>
+                  ))}
+                  {tags.length === 0 && <span style={{ fontFamily: SF, fontSize: 10, color: TEXT_DIM, fontStyle: "italic" }}>No tags yet</span>}
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    value={tagInput}
+                    onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Add a tag…"
+                    style={{
+                      flex: 1, height: 32, borderRadius: 8, padding: "0 10px",
+                      background: CARD2, border: `1px solid ${BORDER}`, outline: "none",
+                      fontFamily: SF, fontSize: 11, color: TEXT_SEC,
+                    }}
+                  />
+                  <button onClick={addTag} style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: CARD2, border: `1px solid ${BORDER}`,
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    color: TEXT_SEC,
+                  }}><Plus size={14} /></button>
+                </div>
+                <p style={{ fontFamily: SF, fontSize: 10, color: TEXT_DIM, marginTop: 6 }}>Enter or comma to add</p>
+              </div>
+
+              {/* Writing tips */}
+              <div style={{
+                background: `${ACCENT}0d`, borderRadius: 14,
+                border: `1px solid ${ACCENT}22`, padding: 16,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <Sparkles size={11} color={ACCENT} />
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT + "bb" }}>
+                    Writing Tips
+                  </span>
+                </div>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 7 }}>
+                  {[
+                    "Hook your reader in the first sentence",
+                    "Keep paragraphs to 2–3 sentences max",
+                    "Use subheadings to break up long sections",
+                    "Add a featured image to increase engagement",
+                    "End with a clear call-to-action or question",
+                  ].map((tip, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+                      <span style={{ fontFamily: SF, fontSize: 13, color: ACCENT, flexShrink: 0, marginTop: -1 }}>·</span>
+                      <span style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, lineHeight: 1.6 }}>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* RTL notice */}
+              {isRTL && (
+                <div style={{
+                  background: CARD2, borderRadius: 12, border: `1px solid ${BORDER}`,
+                  padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 8,
+                }}>
+                  <Globe size={13} color={TEXT_DIM} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, lineHeight: 1.5 }}>
+                    Right-to-left layout active for your language.
+                  </span>
+                </div>
+              )}
+            </aside>
+          )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        textarea::placeholder { color: rgba(255,255,255,0.1); }
+        input::placeholder { color: rgba(255,255,255,0.2); }
+        input { color: rgba(255,255,255,0.7); }
+      `}</style>
     </Layout>
   );
 }
