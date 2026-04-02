@@ -199,78 +199,160 @@ function useCloseOnOutside(isOpen: boolean, close: () => void) {
   }, [isOpen, close]);
 }
 
-/* ── Resizable Image NodeView ────────────────────────────────────── */
-function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
-  const width  = (node.attrs.width  as string) || "100%";
-  const align  = (node.attrs.align  as string) || "center";
+/* ── Resizable Image NodeView — full 8-handle system ────────────── */
+const _SF  = `-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`;
+const _ACC = `#7c6af7`;
+
+type HDir = { id:string; cursor:string; top?:number|string; bottom?:number|string; left?:number|string; right?:number|string; tx?:string; ty?:string; corner:boolean; dx:number; dy:number; };
+const HANDLES: HDir[] = [
+  { id:"nw", cursor:"nw-resize", top:-5,    left:-5,    corner:true,  dx:-1, dy:-1 },
+  { id:"n",  cursor:"n-resize",  top:-5,    left:"50%", tx:"-50%", corner:false, dx:0,  dy:-1 },
+  { id:"ne", cursor:"ne-resize", top:-5,    right:-5,   corner:true,  dx:1,  dy:-1 },
+  { id:"e",  cursor:"e-resize",  top:"50%", right:-5,   ty:"-50%", corner:false, dx:1,  dy:0  },
+  { id:"se", cursor:"se-resize", bottom:-5, right:-5,   corner:true,  dx:1,  dy:1  },
+  { id:"s",  cursor:"s-resize",  bottom:-5, left:"50%", tx:"-50%", corner:false, dx:0,  dy:1  },
+  { id:"sw", cursor:"sw-resize", bottom:-5, left:-5,    corner:true,  dx:-1, dy:1  },
+  { id:"w",  cursor:"w-resize",  top:"50%", left:-5,    ty:"-50%", corner:false, dx:-1, dy:0  },
+];
+const HS = 10;
+
+function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeViewProps) {
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const imgRef        = useRef<HTMLImageElement>(null);
+  const [hovered, setHovered]   = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [live, setLive]         = useState({ w:0, h:0 });
+  const natRef = useRef({ w:0, h:0 });
+
+  const storedW  = node.attrs.imgW  as number | null;
+  const storedH  = node.attrs.imgH  as number | null;
+  const align    = (node.attrs.align as string) || "center";
   const justifyMap: Record<string,string> = { left:"flex-start", center:"center", right:"flex-end" };
 
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    natRef.current = { w: img.naturalWidth, h: img.naturalHeight };
+    if (!node.attrs.natW) updateAttributes({ natW: img.naturalWidth, natH: img.naturalHeight });
+  };
+
+  const startResize = (e: React.MouseEvent, h: HDir) => {
+    e.preventDefault(); e.stopPropagation();
+    const img = imgRef.current;
+    if (!img) return;
+    const startX = e.clientX, startY = e.clientY;
+    const startW = img.offsetWidth,  startH = img.offsetHeight;
+    const natW   = natRef.current.w  || (node.attrs.natW as number) || startW;
+    const natH   = natRef.current.h  || (node.attrs.natH as number) || startH;
+    const ratio  = natW / natH;
+    setDragging(true);
+    setLive({ w: startW, h: startH });
+
+    const calc = (me: MouseEvent): { w:number; h:number } => {
+      const dx = (me.clientX - startX) * h.dx;
+      const dy = (me.clientY - startY) * h.dy;
+      if (h.corner) {
+        const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+        const newW  = Math.max(60, Math.round(startW + delta));
+        return { w: newW, h: Math.round(newW / ratio) };
+      }
+      return {
+        w: h.dx !== 0 ? Math.max(60, Math.round(startW + dx)) : startW,
+        h: h.dy !== 0 ? Math.max(40, Math.round(startH + dy)) : startH,
+      };
+    };
+
+    const onMove = (me: MouseEvent) => { const d = calc(me); setLive(d); };
+    const onUp   = (me: MouseEvent) => {
+      const d = calc(me);
+      updateAttributes({ imgW: d.w, imgH: d.h });
+      setDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup",   onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+  };
+
+  const showUI = selected || hovered;
+
   return (
-    <NodeViewWrapper as="div" style={{display:"flex", justifyContent:justifyMap[align]||"center", margin:"1.2em 0", userSelect:"none"}}>
+    <NodeViewWrapper as="div" style={{ display:"flex", justifyContent:justifyMap[align]||"center", margin:"1.4em 0", userSelect:"none" }}>
       <div
         ref={containerRef}
         contentEditable={false}
-        style={{position:"relative", width, display:"inline-block", maxWidth:"100%", outline:selected?`2px solid ${ACC}`:"none", outlineOffset:2, borderRadius:10}}
-        onMouseEnter={()=>setHovered(true)}
-        onMouseLeave={()=>setHovered(false)}
+        style={{ position:"relative", display:"inline-block", maxWidth:"100%",
+          outline: selected ? `2px solid ${_ACC}` : "none", outlineOffset:3, borderRadius:10 }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => { if (!dragging) setHovered(false); }}
       >
         <img
+          ref={imgRef}
           src={node.attrs.src as string}
-          alt={(node.attrs.alt as string)||""}
+          alt={(node.attrs.alt as string) || ""}
           draggable={false}
-          style={{width:"100%", display:"block", borderRadius:10, objectFit:"cover", maxHeight:560}}
+          onLoad={handleLoad}
+          style={{
+            display:"block", borderRadius:10, maxWidth:"100%",
+            width:  dragging ? `${live.w}px`  : storedW ? `${storedW}px`  : undefined,
+            height: dragging ? `${live.h}px`  : storedH ? `${storedH}px`  : undefined,
+            objectFit:"cover",
+          }}
         />
 
         {/* Floating toolbar */}
-        {(selected||hovered) && (
-          <div style={{position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,background:"rgba(0,0,0,0.82)",backdropFilter:"blur(12px)",border:"1px solid rgba(255,255,255,0.13)",borderRadius:9,padding:"4px 7px",zIndex:30,whiteSpace:"nowrap"}}>
-            {(["left","center","right"] as const).map(a=>(
+        {showUI && !dragging && (
+          <div style={{ position:"absolute", top:-46, left:"50%", transform:"translateX(-50%)",
+            display:"flex", alignItems:"center", gap:4,
+            background:"rgba(0,0,0,0.88)", backdropFilter:"blur(14px)",
+            border:"1px solid rgba(255,255,255,0.14)", borderRadius:10,
+            padding:"5px 8px", zIndex:50, whiteSpace:"nowrap" }}>
+            {(["left","center","right"] as const).map(a => (
               <button key={a} onMouseDown={e=>{e.preventDefault();updateAttributes({align:a});}}
-                style={{width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",background:align===a?"rgba(255,255,255,0.22)":"transparent",color:"#fff"}}>
+                style={{ width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  background:align===a?"rgba(124,106,247,0.4)":"transparent", color:"#fff" }}>
                 {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
               </button>
             ))}
             <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
-            {([["S","28%"],["M","58%"],["L","100%"]] as [string,string][]).map(([lbl,w])=>(
-              <button key={lbl} onMouseDown={e=>{e.preventDefault();updateAttributes({width:w});}}
-                style={{width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",background:width===w?"rgba(255,255,255,0.22)":"transparent",fontFamily:`-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`,fontSize:10,fontWeight:700,color:"#fff"}}>
-                {lbl}
-              </button>
-            ))}
+            <button onMouseDown={e=>{e.preventDefault();updateAttributes({imgW:null,imgH:null});}}
+              title="Reset size"
+              style={{ height:24,padding:"0 9px",borderRadius:5,border:"none",cursor:"pointer",
+                background:"transparent",fontFamily:_SF,fontSize:10,fontWeight:600,
+                color:"rgba(255,255,255,0.75)",whiteSpace:"nowrap" }}>
+              Reset
+            </button>
+            <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+            <button onMouseDown={e=>{e.preventDefault();deleteNode();}}
+              title="Delete image"
+              style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                background:"transparent",color:"#f87171",display:"flex",alignItems:"center",justifyContent:"center" }}>
+              <X size={12}/>
+            </button>
           </div>
         )}
 
-        {/* Resize handle — right edge */}
-        {(selected||hovered) && (
-          <div
-            style={{position:"absolute",top:"50%",right:-9,transform:"translateY(-50%)",width:18,height:44,borderRadius:9,cursor:"ew-resize",background:"rgba(255,255,255,0.18)",backdropFilter:"blur(4px)",border:"1px solid rgba(255,255,255,0.28)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:30}}
-            onMouseDown={e=>{
-              e.preventDefault(); e.stopPropagation();
-              const container = containerRef.current;
-              if (!container) return;
-              const parentW = container.parentElement?.getBoundingClientRect().width || 1;
-              const startX  = e.clientX;
-              const startWPx = container.getBoundingClientRect().width;
-              const onMove = (me:MouseEvent) => {
-                const delta   = me.clientX - startX;
-                const newWPct = Math.min(100, Math.max(15, Math.round(((startWPx+delta)/parentW)*100)));
-                updateAttributes({ width:`${newWPct}%` });
-              };
-              const onUp = () => { window.removeEventListener("mousemove",onMove); window.removeEventListener("mouseup",onUp); };
-              window.addEventListener("mousemove",onMove);
-              window.addEventListener("mouseup",onUp);
+        {/* 8 resize handles */}
+        {showUI && HANDLES.map(h => (
+          <div key={h.id}
+            style={{
+              position:"absolute",
+              top:h.top, bottom:h.bottom, left:h.left, right:h.right,
+              transform: [h.tx&&`translateX(${h.tx})`,h.ty&&`translateY(${h.ty})`].filter(Boolean).join(" ") || undefined,
+              width:HS, height:HS,
+              background:"#fff", border:`2px solid ${_ACC}`,
+              borderRadius:2, cursor:h.cursor, zIndex:50,
             }}
-          >
-            <div style={{width:2,height:18,borderRadius:2,background:"rgba(255,255,255,0.7)"}}/>
-          </div>
-        )}
+            onMouseDown={e => startResize(e, h)}
+          />
+        ))}
 
-        {/* Width badge */}
-        {(selected||hovered) && (
-          <div style={{position:"absolute",bottom:8,right:10,fontFamily:`-apple-system,sans-serif`,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.75)",background:"rgba(0,0,0,0.55)",padding:"2px 7px",borderRadius:5,pointerEvents:"none"}}>
-            {width}
+        {/* Real-time dimension badge */}
+        {dragging && (
+          <div style={{ position:"absolute", bottom:-30, left:"50%", transform:"translateX(-50%)",
+            background:"rgba(0,0,0,0.88)", color:"#fff", fontFamily:_SF, fontSize:11, fontWeight:600,
+            padding:"3px 10px", borderRadius:7, whiteSpace:"nowrap", zIndex:60, pointerEvents:"none" }}>
+            {live.w} × {live.h} px
           </div>
         )}
       </div>
@@ -282,7 +364,10 @@ const ResizableImage = TiptapImage.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      width: { default:"100%", parseHTML: el=>el.getAttribute("data-width")||el.style.width||"100%", renderHTML: a=>({ "data-width":a.width, style:`width:${a.width}` }) },
+      imgW:  { default:null, parseHTML: el=>el.getAttribute("data-imgw")?Number(el.getAttribute("data-imgw")):null, renderHTML: a=>a.imgW?{"data-imgw":a.imgW}:{} },
+      imgH:  { default:null, parseHTML: el=>el.getAttribute("data-imgh")?Number(el.getAttribute("data-imgh")):null, renderHTML: a=>a.imgH?{"data-imgh":a.imgH}:{} },
+      natW:  { default:null },
+      natH:  { default:null },
       align: { default:"center", parseHTML: el=>el.getAttribute("data-align")||"center", renderHTML: a=>({ "data-align":a.align }) },
     };
   },
@@ -405,6 +490,27 @@ export default function ArticleEditor() {
     content: "<p></p>",
     onUpdate: ({ editor }) => { setContent(editor.getHTML()); },
     onTransaction: () => { forceUpdate(n => n+1); },
+    editorProps: {
+      handleDrop(view, event) {
+        const files = event.dataTransfer?.files;
+        if (!files || !files.length) return false;
+        const file = files[0];
+        if (!file.type.startsWith("image/")) return false;
+        event.preventDefault();
+        const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const src = ev.target?.result as string;
+          if (!src) return;
+          const pos = coords?.pos ?? view.state.doc.content.size;
+          const node = view.state.schema.nodes.image.create({ src });
+          const tr = view.state.tr.insert(pos, node);
+          view.dispatch(tr);
+        };
+        reader.readAsDataURL(file);
+        return true;
+      },
+    },
   });
 
   /* ── load article (only once) ── */
