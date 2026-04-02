@@ -214,6 +214,9 @@ export default function ArticleEditor() {
   const [tagInput, setTagInput]   = useState("");
   const [tags, setTags]           = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
+  const [imgWidth, setImgWidth]   = useState(100);
+  const [imgAlign, setImgAlign]   = useState<"left"|"center"|"right">("center");
+  const imgResizeRef              = useRef<{ startX: number; startW: number } | null>(null);
   const [saving, setSaving]       = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -908,49 +911,147 @@ export default function ArticleEditor() {
           {/* ── WRITING COLUMN ── */}
           <div>
             {/* Featured Image */}
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={e=>{e.preventDefault();setDragOver(true);}}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={e=>{e.preventDefault();setDragOver(false);const f=e.dataTransfer.files?.[0];if(f?.type.startsWith("image/"))handleImageFile(f);}}
-              style={{
-                borderRadius:14, marginBottom:22, overflow:"hidden",
-                border: dragOver ? `2px dashed ${ACC}` : featuredImage ? "none" : `2px dashed ${B}`,
-                background: featuredImage ? "transparent" : dragOver ? `${ACC}0a` : C2,
-                minHeight: featuredImage ? "auto" : 156,
-                cursor:"pointer", position:"relative",
-                display:"flex", alignItems:"center", justifyContent:"center",
-              }}
-            >
-              {featuredImage ? (
-                <>
-                  <img src={featuredImage} alt="Featured" style={{width:"100%",maxHeight:280,objectFit:"cover",display:"block"}}/>
-                  <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0)",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.2s"}}
-                    onMouseEnter={e=>(e.currentTarget.style.background="rgba(0,0,0,0.45)")}
-                    onMouseLeave={e=>(e.currentTarget.style.background="rgba(0,0,0,0)")}>
-                    <span style={{fontFamily:SF,fontSize:12,fontWeight:600,color:"#fff",background:"rgba(0,0,0,0.6)",padding:"7px 16px",borderRadius:10,display:"flex",alignItems:"center",gap:7,opacity:0,transition:"opacity 0.2s"}}
-                      onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
-                      onMouseLeave={e=>(e.currentTarget.style.opacity="0")}>
-                      <Upload size={13}/> Change image
-                    </span>
+            {!featuredImage ? (
+              /* ── No image: compact button ── */
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+                  onDragLeave={()=>setDragOver(false)}
+                  onDrop={e=>{e.preventDefault();setDragOver(false);const f=e.dataTransfer.files?.[0];if(f?.type.startsWith("image/"))handleImageFile(f);}}
+                  style={{
+                    display:"flex",alignItems:"center",gap:6,
+                    padding:"6px 14px",borderRadius:8,cursor:"pointer",
+                    background: dragOver ? `${ACC}18` : C2,
+                    border: dragOver ? `1px dashed ${ACC}` : `1px dashed ${B}`,
+                    fontFamily:SF,fontSize:12,fontWeight:500,color:TD,
+                    transition:"all 0.15s",
+                  }}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor=`${ACC}60`;e.currentTarget.style.color=TS;}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor=`${B}`;e.currentTarget.style.color=TD;}}
+                >
+                  <ImageIcon size={13}/> Add image
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
+              </div>
+            ) : (
+              /* ── Has image: resizable + draggable block ── */
+              <div
+                style={{
+                  marginBottom:22,
+                  display:"flex",
+                  justifyContent: imgAlign==="left" ? "flex-start" : imgAlign==="right" ? "flex-end" : "center",
+                }}
+                onDragOver={e=>e.preventDefault()}
+              >
+                <div
+                  style={{
+                    position:"relative",
+                    width:`${imgWidth}%`,
+                    minWidth:120,
+                    maxWidth:"100%",
+                    borderRadius:12,
+                    overflow:"visible",
+                    flexShrink:0,
+                    userSelect:"none",
+                  }}
+                >
+                  {/* Image */}
+                  <img
+                    src={featuredImage}
+                    alt="Featured"
+                    draggable={false}
+                    style={{width:"100%",display:"block",borderRadius:12,objectFit:"cover",maxHeight:420}}
+                  />
+
+                  {/* Floating toolbar */}
+                  <div style={{
+                    position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",
+                    display:"flex",alignItems:"center",gap:4,
+                    background:"rgba(0,0,0,0.75)",backdropFilter:"blur(10px)",
+                    border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"4px 6px",
+                    zIndex:10,
+                  }}>
+                    {/* Alignment */}
+                    {(["left","center","right"] as const).map(a => (
+                      <button key={a} onClick={()=>setImgAlign(a)}
+                        title={`Align ${a}`}
+                        style={{
+                          width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+                          background: imgAlign===a ? "rgba(255,255,255,0.2)" : "transparent",color:"#fff",
+                        }}>
+                        {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
+                      </button>
+                    ))}
+                    <div style={{width:1,height:16,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                    {/* Size presets */}
+                    {([["S",40],["M",65],["L",100]] as [string,number][]).map(([label,w])=>(
+                      <button key={label} onClick={()=>setImgWidth(w)}
+                        style={{
+                          width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                          background: imgWidth===w ? "rgba(255,255,255,0.2)" : "transparent",
+                          fontFamily:SF,fontSize:10,fontWeight:700,color:"#fff",
+                        }}>{label}</button>
+                    ))}
+                    <div style={{width:1,height:16,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                    {/* Change */}
+                    <button onClick={()=>fileInputRef.current?.click()}
+                      title="Change image"
+                      style={{width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",background:"transparent",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <Upload size={11}/>
+                    </button>
+                    {/* Remove */}
+                    <button onClick={()=>{setFeaturedImage(null);setImgWidth(100);}}
+                      title="Remove image"
+                      style={{width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",background:"transparent",color:"#f87171",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <X size={11}/>
+                    </button>
                   </div>
-                  <button onClick={e=>{e.stopPropagation();setFeaturedImage(null);}} style={{position:"absolute",top:10,right:10,width:26,height:26,borderRadius:"50%",background:"rgba(0,0,0,0.65)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>
-                    <X size={12}/>
-                  </button>
-                </>
-              ) : (
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:9,padding:24}}>
-                  <div style={{width:42,height:42,borderRadius:11,background:C1,border:`1px solid ${B}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <ImageIcon size={18} color={TD}/>
+
+                  {/* Right resize handle */}
+                  <div
+                    style={{
+                      position:"absolute",top:"50%",right:-8,transform:"translateY(-50%)",
+                      width:16,height:40,borderRadius:8,cursor:"ew-resize",
+                      background:"rgba(255,255,255,0.18)",backdropFilter:"blur(4px)",
+                      border:"1px solid rgba(255,255,255,0.25)",
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      userSelect:"none",
+                    }}
+                    onMouseDown={e=>{
+                      e.preventDefault();
+                      const container = e.currentTarget.parentElement?.parentElement;
+                      if (!container) return;
+                      const containerW = container.getBoundingClientRect().width;
+                      imgResizeRef.current = { startX: e.clientX, startW: imgWidth };
+                      const onMove = (me: MouseEvent) => {
+                        if (!imgResizeRef.current) return;
+                        const delta = me.clientX - imgResizeRef.current.startX;
+                        const newW = Math.min(100, Math.max(20, imgResizeRef.current.startW + (delta / containerW) * 100));
+                        setImgWidth(Math.round(newW));
+                      };
+                      const onUp = () => {
+                        imgResizeRef.current = null;
+                        window.removeEventListener("mousemove", onMove);
+                        window.removeEventListener("mouseup", onUp);
+                      };
+                      window.addEventListener("mousemove", onMove);
+                      window.addEventListener("mouseup", onUp);
+                    }}
+                  >
+                    <div style={{width:2,height:16,borderRadius:2,background:"rgba(255,255,255,0.6)"}}/>
                   </div>
-                  <div style={{textAlign:"center"}}>
-                    <p style={{fontFamily:SF,fontSize:13,fontWeight:600,color:TS,margin:0}}>Add a featured image</p>
-                    <p style={{fontFamily:SF,fontSize:11,color:TD,marginTop:3}}>Click or drag · JPG, PNG, WebP</p>
-                  </div>
+
+                  {/* Width label */}
+                  <div style={{
+                    position:"absolute",bottom:10,right:14,
+                    fontFamily:SF,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.7)",
+                    background:"rgba(0,0,0,0.5)",padding:"2px 7px",borderRadius:5,pointerEvents:"none",
+                  }}>{imgWidth}%</div>
                 </div>
-              )}
-              <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
-            </div>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
+              </div>
+            )}
 
             {/* Category badge inline */}
             {category && selCat && (
