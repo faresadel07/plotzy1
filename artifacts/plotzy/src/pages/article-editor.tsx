@@ -24,7 +24,7 @@ import {
   Bold, Italic, Underline as UIcon, Strikethrough,
   List, ListOrdered, Quote, Code, Minus,
   Link as LinkIcon, Undo2, Redo2, ChevronDown,
-  Highlighter, Type, Indent, Outdent, Mic, Square,
+  Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
@@ -299,6 +299,19 @@ function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeVie
           }}
         />
 
+        {/* Drag handle — grip to reposition the image anywhere */}
+        {showUI && !dragging && (
+          <div
+            data-drag-handle
+            title="Drag to move"
+            style={{ position:"absolute", top:8, left:8, width:28, height:28, borderRadius:7,
+              background:"rgba(0,0,0,0.72)", backdropFilter:"blur(8px)",
+              border:"1px solid rgba(255,255,255,0.18)", cursor:"grab",
+              display:"flex", alignItems:"center", justifyContent:"center", zIndex:50 }}>
+            <GripVertical size={14} color="rgba(255,255,255,0.8)"/>
+          </div>
+        )}
+
         {/* Floating toolbar */}
         {showUI && !dragging && (
           <div style={{ position:"absolute", top:-46, left:"50%", transform:"translateX(-50%)",
@@ -361,6 +374,7 @@ function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeVie
 }
 
 const ResizableImage = TiptapImage.extend({
+  draggable: true,
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -393,8 +407,14 @@ export default function ArticleEditor() {
   const [tags, setTags]           = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
   const [imgWidth, setImgWidth]   = useState(100);
+  const [imgHeight, setImgHeight] = useState<number|null>(null);
   const [imgAlign, setImgAlign]   = useState<"left"|"center"|"right">("center");
+  const [featDragging, setFeatDragging] = useState(false);
+  const [featLive, setFeatLive]   = useState({ w:0, h:0 });
   const imgResizeRef              = useRef<{ startX: number; startW: number } | null>(null);
+  const featImgRef                = useRef<HTMLImageElement>(null);
+  const featContRef               = useRef<HTMLDivElement>(null);
+  const featNatRef                = useRef({ w:0, h:0 });
   const [saving, setSaving]       = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -1202,119 +1222,130 @@ export default function ArticleEditor() {
                 <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
               </div>
             ) : (
-              /* ── Has image: resizable + draggable block ── */
+              /* ── Has image: full 8-handle resize ── */
               <div
-                style={{
-                  marginBottom:22,
-                  display:"flex",
-                  justifyContent: imgAlign==="left" ? "flex-start" : imgAlign==="right" ? "flex-end" : "center",
-                }}
+                style={{ marginBottom:22, display:"flex",
+                  justifyContent: imgAlign==="left" ? "flex-start" : imgAlign==="right" ? "flex-end" : "center" }}
                 onDragOver={e=>e.preventDefault()}
               >
                 <div
-                  style={{
-                    position:"relative",
-                    width:`${imgWidth}%`,
-                    minWidth:120,
-                    maxWidth:"100%",
-                    borderRadius:12,
-                    overflow:"visible",
-                    flexShrink:0,
-                    userSelect:"none",
-                  }}
+                  ref={featContRef}
+                  style={{ position:"relative", width:`${imgWidth}%`, minWidth:120, maxWidth:"100%",
+                    borderRadius:12, overflow:"visible", flexShrink:0, userSelect:"none" }}
                 >
                   {/* Image */}
                   <img
-                    src={featuredImage}
+                    ref={featImgRef}
+                    src={featuredImage!}
                     alt="Featured"
                     draggable={false}
-                    style={{width:"100%",display:"block",borderRadius:12,objectFit:"cover",maxHeight:420}}
+                    onLoad={e=>{
+                      const img=e.currentTarget;
+                      featNatRef.current={w:img.naturalWidth,h:img.naturalHeight};
+                    }}
+                    style={{
+                      width:"100%", display:"block", borderRadius:12, objectFit:"cover",
+                      height: featDragging ? `${featLive.h}px` : imgHeight ? `${imgHeight}px` : undefined,
+                      maxHeight: (!featDragging && !imgHeight) ? 420 : undefined,
+                    }}
                   />
 
                   {/* Floating toolbar */}
-                  <div style={{
-                    position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",
-                    display:"flex",alignItems:"center",gap:4,
-                    background:"rgba(0,0,0,0.75)",backdropFilter:"blur(10px)",
-                    border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"4px 6px",
-                    zIndex:10,
-                  }}>
-                    {/* Alignment */}
-                    {(["left","center","right"] as const).map(a => (
-                      <button key={a} onClick={()=>setImgAlign(a)}
-                        title={`Align ${a}`}
-                        style={{
-                          width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
-                          background: imgAlign===a ? "rgba(255,255,255,0.2)" : "transparent",color:"#fff",
-                        }}>
-                        {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
+                  {!featDragging && (
+                    <div style={{ position:"absolute", top:-46, left:"50%", transform:"translateX(-50%)",
+                      display:"flex", alignItems:"center", gap:4,
+                      background:"rgba(0,0,0,0.88)", backdropFilter:"blur(14px)",
+                      border:"1px solid rgba(255,255,255,0.14)", borderRadius:10,
+                      padding:"5px 8px", zIndex:50, whiteSpace:"nowrap" }}>
+                      {(["left","center","right"] as const).map(a => (
+                        <button key={a} onClick={()=>setImgAlign(a)} title={`Align ${a}`}
+                          style={{ width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                            display:"flex",alignItems:"center",justifyContent:"center",
+                            background:imgAlign===a?"rgba(124,106,247,0.4)":"transparent",color:"#fff" }}>
+                          {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
+                        </button>
+                      ))}
+                      <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                      <button onClick={()=>{setImgWidth(100);setImgHeight(null);}} title="Reset size"
+                        style={{ height:24,padding:"0 9px",borderRadius:5,border:"none",cursor:"pointer",
+                          background:"transparent",fontFamily:SF,fontSize:10,fontWeight:600,
+                          color:"rgba(255,255,255,0.75)",whiteSpace:"nowrap" }}>
+                        Reset
                       </button>
-                    ))}
-                    <div style={{width:1,height:16,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
-                    {/* Size presets */}
-                    {([["S",40],["M",65],["L",100]] as [string,number][]).map(([label,w])=>(
-                      <button key={label} onClick={()=>setImgWidth(w)}
-                        style={{
-                          width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
-                          background: imgWidth===w ? "rgba(255,255,255,0.2)" : "transparent",
-                          fontFamily:SF,fontSize:10,fontWeight:700,color:"#fff",
-                        }}>{label}</button>
-                    ))}
-                    <div style={{width:1,height:16,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
-                    {/* Change */}
-                    <button onClick={()=>fileInputRef.current?.click()}
-                      title="Change image"
-                      style={{width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",background:"transparent",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      <Upload size={11}/>
-                    </button>
-                    {/* Remove */}
-                    <button onClick={()=>{setFeaturedImage(null);setImgWidth(100);}}
-                      title="Remove image"
-                      style={{width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",background:"transparent",color:"#f87171",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      <X size={11}/>
-                    </button>
-                  </div>
+                      <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                      <button onClick={()=>fileInputRef.current?.click()} title="Change image"
+                        style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                          background:"transparent",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                        <Upload size={11}/>
+                      </button>
+                      <button onClick={()=>{setFeaturedImage(null);setImgWidth(100);setImgHeight(null);}} title="Remove image"
+                        style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                          background:"transparent",color:"#f87171",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                        <X size={11}/>
+                      </button>
+                    </div>
+                  )}
 
-                  {/* Right resize handle */}
-                  <div
-                    style={{
-                      position:"absolute",top:"50%",right:-8,transform:"translateY(-50%)",
-                      width:16,height:40,borderRadius:8,cursor:"ew-resize",
-                      background:"rgba(255,255,255,0.18)",backdropFilter:"blur(4px)",
-                      border:"1px solid rgba(255,255,255,0.25)",
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      userSelect:"none",
-                    }}
-                    onMouseDown={e=>{
-                      e.preventDefault();
-                      const container = e.currentTarget.parentElement?.parentElement;
-                      if (!container) return;
-                      const containerW = container.getBoundingClientRect().width;
-                      imgResizeRef.current = { startX: e.clientX, startW: imgWidth };
-                      const onMove = (me: MouseEvent) => {
-                        if (!imgResizeRef.current) return;
-                        const delta = me.clientX - imgResizeRef.current.startX;
-                        const newW = Math.min(100, Math.max(20, imgResizeRef.current.startW + (delta / containerW) * 100));
-                        setImgWidth(Math.round(newW));
-                      };
-                      const onUp = () => {
-                        imgResizeRef.current = null;
-                        window.removeEventListener("mousemove", onMove);
-                        window.removeEventListener("mouseup", onUp);
-                      };
-                      window.addEventListener("mousemove", onMove);
-                      window.addEventListener("mouseup", onUp);
-                    }}
-                  >
-                    <div style={{width:2,height:16,borderRadius:2,background:"rgba(255,255,255,0.6)"}}/>
-                  </div>
+                  {/* 8 Resize handles */}
+                  {HANDLES.map(h => (
+                    <div key={h.id}
+                      style={{
+                        position:"absolute",
+                        top:h.top, bottom:h.bottom, left:h.left, right:h.right,
+                        transform:[h.tx&&`translateX(${h.tx})`,h.ty&&`translateY(${h.ty})`].filter(Boolean).join(" ")||undefined,
+                        width:HS, height:HS,
+                        background:"#fff", border:`2px solid ${_ACC}`,
+                        borderRadius:2, cursor:h.cursor, zIndex:50,
+                      }}
+                      onMouseDown={e=>{
+                        e.preventDefault(); e.stopPropagation();
+                        const img = featImgRef.current;
+                        const cont = featContRef.current;
+                        if (!img || !cont) return;
+                        const startX=e.clientX, startY=e.clientY;
+                        const startW=img.offsetWidth, startH=img.offsetHeight;
+                        const parentW=cont.parentElement?.getBoundingClientRect().width||startW;
+                        const natW=featNatRef.current.w||startW, natH=featNatRef.current.h||startH;
+                        const ratio=natW/natH;
+                        setFeatDragging(true);
+                        setFeatLive({w:startW,h:startH});
+                        const calc=(me:MouseEvent)=>{
+                          const dx=(me.clientX-startX)*h.dx;
+                          const dy=(me.clientY-startY)*h.dy;
+                          if(h.corner){
+                            const delta=Math.abs(dx)>Math.abs(dy)?dx:dy;
+                            const nw=Math.max(80,Math.round(startW+delta));
+                            return{w:nw,h:Math.round(nw/ratio)};
+                          }
+                          return{
+                            w:h.dx!==0?Math.max(80,Math.round(startW+dx)):startW,
+                            h:h.dy!==0?Math.max(40,Math.round(startH+dy)):startH,
+                          };
+                        };
+                        const onMove=(me:MouseEvent)=>{const d=calc(me);setFeatLive(d);};
+                        const onUp=(me:MouseEvent)=>{
+                          const d=calc(me);
+                          const newWPct=Math.min(100,Math.max(10,Math.round((d.w/parentW)*100)));
+                          setImgWidth(newWPct);
+                          if(h.dy!==0||h.corner) setImgHeight(d.h);
+                          setFeatDragging(false);
+                          window.removeEventListener("mousemove",onMove);
+                          window.removeEventListener("mouseup",onUp);
+                        };
+                        window.addEventListener("mousemove",onMove);
+                        window.addEventListener("mouseup",onUp);
+                      }}
+                    />
+                  ))}
 
-                  {/* Width label */}
-                  <div style={{
-                    position:"absolute",bottom:10,right:14,
-                    fontFamily:SF,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.7)",
-                    background:"rgba(0,0,0,0.5)",padding:"2px 7px",borderRadius:5,pointerEvents:"none",
-                  }}>{imgWidth}%</div>
+                  {/* Real-time dimension badge */}
+                  {featDragging && (
+                    <div style={{ position:"absolute", bottom:-30, left:"50%", transform:"translateX(-50%)",
+                      background:"rgba(0,0,0,0.88)", color:"#fff", fontFamily:SF, fontSize:11, fontWeight:600,
+                      padding:"3px 10px", borderRadius:7, whiteSpace:"nowrap", zIndex:60, pointerEvents:"none" }}>
+                      {featLive.w} × {featLive.h} px
+                    </div>
+                  )}
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
               </div>
