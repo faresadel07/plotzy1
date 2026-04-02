@@ -1,113 +1,227 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRoute, Link, useLocation } from "wouter";
+import { useRoute, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import FontFamily from "@tiptap/extension-font-family";
+import Highlight from "@tiptap/extension-highlight";
+import Link2 from "@tiptap/extension-link";
+import { Extension } from "@tiptap/core";
 import {
-  ArrowLeft, Image as ImageIcon, Loader2, Save,
-  Eye, X, Plus, Upload, Globe,
-  CheckCircle2, Hash, BarChart2, AlignLeft, Maximize2, Minimize2,
-  FileText, Sparkles, Target, Bold, Italic, Heading1, Heading2,
-  Quote, Code, List, Minus, ChevronDown,
+  ArrowLeft, ImageIcon, Loader2, Save, Eye, X, Plus, Upload, Globe,
+  CheckCircle2, Hash, BarChart2, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Maximize2, Minimize2, FileText, Sparkles, Target, Bold, Italic,
+  Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
+  Quote, Code, Minus, Link as LinkIcon, Undo2, Redo2, ChevronDown,
+  Highlighter, Type,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 
-const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
-const SERIF = "Georgia, 'Times New Roman', serif";
-const BG = "#0a0a0a";
-const CARD = "#111111";
-const CARD2 = "#161616";
-const BORDER = "rgba(255,255,255,0.07)";
-const BORDER2 = "rgba(255,255,255,0.04)";
-const TEXT = "rgba(255,255,255,0.88)";
-const TEXT_SEC = "rgba(255,255,255,0.4)";
-const TEXT_DIM = "rgba(255,255,255,0.22)";
-const ACCENT = "#7c6af7";
+/* ─── Font size tiptap extension (same as chapter editor) ─── */
+const FontSize = Extension.create({
+  name: "fontSize",
+  addGlobalAttributes() {
+    return [{ types: ["textStyle"], attributes: { fontSize: {
+      default: null,
+      parseHTML: el => el.style.fontSize?.replace("px", "") || null,
+      renderHTML: attrs => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}px` } : {},
+    }}}];
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: number) => ({ chain }: any) => chain().setMark("textStyle", { fontSize: size }).run(),
+    } as any;
+  },
+});
 
-const ARTICLE_CATEGORIES = [
-  { label: "Writing Tips", color: "#818cf8" },
+/* ─── Constants ─── */
+const SF    = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
+const BG    = "#0a0a0a";
+const CARD  = "#111111";
+const CARD2 = "#161616";
+const BORDER  = "rgba(255,255,255,0.07)";
+const BORDER2 = "rgba(255,255,255,0.04)";
+const TEXT    = "rgba(255,255,255,0.88)";
+const TEXT_SEC = "rgba(255,255,255,0.45)";
+const TEXT_DIM = "rgba(255,255,255,0.22)";
+const ACCENT  = "#7c6af7";
+
+const BLOG_FONTS = [
+  { id: "georgia",       label: "Georgia",            ff: "Georgia, serif",                        cat: "Serif" },
+  { id: "lora",          label: "Lora",               ff: "'Lora', serif",                         cat: "Serif" },
+  { id: "merriweather",  label: "Merriweather",        ff: "'Merriweather', serif",                 cat: "Serif" },
+  { id: "playfair",      label: "Playfair Display",    ff: "'Playfair Display', serif",             cat: "Serif" },
+  { id: "libre",         label: "Libre Baskerville",   ff: "'Libre Baskerville', serif",            cat: "Serif" },
+  { id: "source-serif",  label: "Source Serif 4",      ff: "'Source Serif 4', serif",               cat: "Serif" },
+  { id: "inter",         label: "Inter",               ff: "'Inter', sans-serif",                   cat: "Sans" },
+  { id: "open-sans",     label: "Open Sans",           ff: "'Open Sans', sans-serif",               cat: "Sans" },
+  { id: "poppins",       label: "Poppins",             ff: "'Poppins', sans-serif",                 cat: "Sans" },
+  { id: "dm-sans",       label: "DM Sans",             ff: "'DM Sans', sans-serif",                 cat: "Sans" },
+  { id: "space-grotesk", label: "Space Grotesk",       ff: "'Space Grotesk', sans-serif",           cat: "Sans" },
+  { id: "courier-prime", label: "Courier Prime",       ff: "'Courier Prime', monospace",            cat: "Mono" },
+  { id: "arabic-sans",   label: "Cairo (Arabic)",      ff: "'Cairo', sans-serif",                   cat: "Arabic" },
+  { id: "arabic-serif",  label: "Amiri (Arabic)",      ff: "'Amiri', serif",                        cat: "Arabic" },
+];
+
+const FONT_SIZES = [11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 28, 32, 36, 40, 48];
+
+const TEXT_STYLES = [
+  { label: "Normal text", value: "p" },
+  { label: "Heading 1",   value: "h1" },
+  { label: "Heading 2",   value: "h2" },
+  { label: "Heading 3",   value: "h3" },
+  { label: "Heading 4",   value: "h4" },
+  { label: "Blockquote",  value: "blockquote" },
+];
+
+const CATEGORIES = [
+  { label: "Writing Tips",      color: "#818cf8" },
   { label: "Craft & Technique", color: "#a78bfa" },
-  { label: "Publishing", color: "#f472b6" },
-  { label: "Reading", color: "#fbbf24" },
-  { label: "Inspiration", color: "#34d399" },
+  { label: "Publishing",        color: "#f472b6" },
+  { label: "Reading",           color: "#fbbf24" },
+  { label: "Inspiration",       color: "#34d399" },
   { label: "Author Interviews", color: "#60a5fa" },
-  { label: "Book Reviews", color: "#2dd4bf" },
-  { label: "Industry News", color: "#fb923c" },
-  { label: "Self-Publishing", color: "#c084fc" },
-  { label: "Marketing", color: "#f87171" },
-  { label: "Grammar & Style", color: "#38bdf8" },
-  { label: "Research", color: "#86efac" },
-  { label: "Other", color: "#94a3b8" },
+  { label: "Book Reviews",      color: "#2dd4bf" },
+  { label: "Industry News",     color: "#fb923c" },
+  { label: "Self-Publishing",   color: "#c084fc" },
+  { label: "Marketing",         color: "#f87171" },
+  { label: "Grammar & Style",   color: "#38bdf8" },
+  { label: "Research",          color: "#86efac" },
+  { label: "Other",             color: "#94a3b8" },
 ];
 
 const WORD_GOALS = [
-  { value: 300, label: "Quick take · 300" },
-  { value: 500, label: "Blog post · 500" },
-  { value: 1000, label: "Long read · 1,000" },
-  { value: 2000, label: "Deep dive · 2,000" },
-  { value: 5000, label: "Essay · 5,000" },
+  { value: 300,  label: "Quick take · 300 words" },
+  { value: 500,  label: "Blog post · 500 words" },
+  { value: 1000, label: "Long read · 1,000 words" },
+  { value: 2000, label: "Deep dive · 2,000 words" },
+  { value: 5000, label: "Essay · 5,000 words" },
 ];
 
-function wordCount(text: string) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-function charCount(text: string) {
-  return text.replace(/\s/g, "").length;
-}
-function sentenceCount(text: string) {
-  return text.split(/[.!?]+/).filter(s => s.trim().length > 2).length;
-}
-function paragraphCount(text: string) {
-  return text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
-}
-function estimateReadTime(text: string) {
-  return Math.max(1, Math.ceil(wordCount(text) / 200));
-}
-function readingLevel(text: string): { label: string; color: string } {
+const TEXT_COLORS = [
+  "#ffffff", "#e2e8f0", "#94a3b8", "#f87171", "#fb923c",
+  "#fbbf24", "#34d399", "#60a5fa", "#818cf8", "#f472b6",
+  "#2dd4bf", "#a78bfa",
+];
+
+/* ─── Utils ─── */
+const wc  = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
+const rtm = (t: string) => Math.max(1, Math.ceil(wc(t) / 200));
+const stripHtml = (h: string) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+function readingLevel(text: string) {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length < 20) return { label: "—", color: TEXT_DIM };
-  const avgLen = words.reduce((s, w) => s + w.replace(/[^a-zA-Z]/g, "").length, 0) / words.length;
-  if (avgLen < 4.5) return { label: "Easy", color: "#34d399" };
-  if (avgLen < 6) return { label: "Medium", color: "#fbbf24" };
-  return { label: "Advanced", color: "#f472b6" };
+  const avg = words.reduce((s, w) => s + w.replace(/[^a-z]/gi, "").length, 0) / words.length;
+  if (avg < 4.5) return { label: "Easy",     color: "#34d399" };
+  if (avg < 6.2) return { label: "Medium",   color: "#fbbf24" };
+  return             { label: "Advanced",  color: "#f472b6" };
 }
 
+/* ─── Toolbar button helper ─── */
+function TBtn({ onClick, active, title, children }: {
+  onClick: () => void; active?: boolean; title?: string; children: React.ReactNode;
+}) {
+  return (
+    <button
+      onMouseDown={e => { e.preventDefault(); onClick(); }}
+      title={title}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        width: 28, height: 26, borderRadius: 4, border: "none", cursor: "pointer",
+        background: active ? "rgba(255,255,255,0.14)" : "transparent",
+        color: active ? "#fff" : TEXT_SEC, flexShrink: 0, transition: "background 0.1s",
+      }}
+      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Sep() {
+  return <div style={{ width: 1, height: 18, background: BORDER, margin: "0 2px", flexShrink: 0 }} />;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+═══════════════════════════════════════════════════════════════ */
 export default function ArticleEditor() {
   const [, params] = useRoute("/articles/:id");
-  const [, navigate] = useLocation();
   const id = Number(params?.id);
   const { data: article, isLoading } = useBook(id);
   const updateArticle = useUpdateBook();
   const { toast } = useToast();
   const { isRTL } = useLanguage();
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [category, setCategory] = useState("");
-  const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  /* state */
+  const [title, setTitle]             = useState("");
+  const [content, setContent]         = useState("");       // HTML from tiptap
+  const [category, setCategory]       = useState("");
+  const [tagInput, setTagInput]       = useState("");
+  const [tags, setTags]               = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [justSaved, setJustSaved] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [justSaved, setJustSaved]     = useState(false);
+  const [aiLoading, setAiLoading]     = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [focusMode, setFocusMode] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [wordGoal, setWordGoal] = useState(1000);
+  const [focusMode, setFocusMode]     = useState(false);
+  const [dragOver, setDragOver]       = useState(false);
+  const [wordGoal, setWordGoal]       = useState(1000);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
+
+  /* toolbar dropdowns */
+  const [styleOpen, setStyleOpen]     = useState(false);
+  const [fontOpen, setFontOpen]       = useState(false);
+  const [colorOpen, setColorOpen]     = useState(false);
+  const [linkOpen, setLinkOpen]       = useState(false);
+  const [linkUrl, setLinkUrl]         = useState("");
+  const [fontSize, setFontSize]       = useState(16);
+  const [fontSizeInput, setFontSizeInput] = useState("16");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
 
+  /* ── tiptap ── */
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({ heading: { levels: [1,2,3,4] }, underline: false, link: false, gapcursor: false } as any),
+      Underline,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextStyle,
+      Color,
+      FontFamily,
+      FontSize,
+      Highlight.configure({ multicolor: true }),
+      Link2.configure({ openOnClick: false }),
+    ],
+    content: "<p></p>",
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+  });
+
+  /* load article */
   useEffect(() => {
-    if (!article) return;
+    if (!article || !editor) return;
     setTitle(article.title || "");
-    setContent(article.articleContent || "");
     setCategory(article.articleCategory || "");
     setTags((article.tags as string[]) || []);
     setFeaturedImage(article.featuredImage || null);
-  }, [article]);
+    const raw = article.articleContent || "";
+    const isHtml = raw.startsWith("<");
+    editor.commands.setContent(isHtml ? raw : `<p>${raw.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>` || "<p></p>", false);
+    setContent(article.articleContent || "");
+  }, [article, editor]);
 
+  /* save */
   const save = useCallback(async (silent = false) => {
     if (!article) return;
     setSaving(true);
@@ -121,18 +235,18 @@ export default function ArticleEditor() {
       setTimeout(() => setJustSaved(false), 2000);
     } catch {
       if (!silent) toast({ variant: "destructive", title: "Save failed" });
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   }, [article, id, title, content, category, tags, featuredImage, updateArticle, toast]);
 
+  /* auto-save */
   useEffect(() => {
     if (!article) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => save(true), 2000);
+    autoSaveTimer.current = setTimeout(() => save(true), 2500);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
   }, [title, content, category, tags, featuredImage]);
 
+  /* image helpers */
   const handleImageFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = ev => setFeaturedImage(ev.target?.result as string);
@@ -144,70 +258,86 @@ export default function ArticleEditor() {
     if (file?.type.startsWith("image/")) handleImageFile(file);
   };
 
-  const insertFormat = (prefix: string, suffix = "", placeholder = "text") => {
-    const ta = contentRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart, end = ta.selectionEnd;
-    const selected = content.slice(start, end) || placeholder;
-    const before = content.slice(0, start);
-    const after = content.slice(end);
-    const newContent = before + prefix + selected + suffix + after;
-    setContent(newContent);
-    setTimeout(() => {
-      ta.focus();
-      const newPos = start + prefix.length + selected.length + suffix.length;
-      ta.setSelectionRange(newPos, newPos);
-    }, 0);
-  };
-
+  /* tags */
   const addTag = () => {
     const t = tagInput.trim().toLowerCase();
     if (t && !tags.includes(t) && tags.length < 10) setTags(p => [...p, t]);
     setTagInput("");
   };
   const removeTag = (tag: string) => setTags(p => p.filter(x => x !== tag));
-  const handleTagKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
-    if (e.key === "Backspace" && !tagInput && tags.length) setTags(p => p.slice(0, -1));
-  };
 
+  /* AI */
   const generateAiContent = async () => {
-    if (!title.trim()) {
-      toast({ variant: "destructive", title: "Add a title first" }); return;
-    }
+    if (!title.trim()) { toast({ variant: "destructive", title: "Add a title first" }); return; }
     setAiLoading(true);
     try {
       const res = await fetch(`/api/books/${id}/generate-chapter`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           chapterTitle: title,
           bookSummary: `A blog article about: ${title}. Category: ${category || "General"}`,
           authorName: article?.authorName || "the author",
           language: article?.language || "en",
-          previousContent: content || "",
+          previousContent: stripHtml(content),
         }),
       });
       if (!res.ok) throw new Error("AI request failed");
       const data = await res.json();
-      setContent(p => p ? `${p}\n\n${data.content || ""}` : (data.content || ""));
+      if (editor && data.content) {
+        editor.chain().focus().insertContent(`<p>${data.content.replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>")}</p>`).run();
+      }
       toast({ title: "AI content added!" });
     } catch (err: any) {
       toast({ variant: "destructive", title: "AI Error", description: err?.message });
-    } finally {
-      setAiLoading(false);
-    }
+    } finally { setAiLoading(false); }
   };
 
-  const wc = wordCount(content);
-  const cc = charCount(content);
-  const sc = sentenceCount(content);
-  const pc = paragraphCount(content);
-  const readTime = estimateReadTime(content);
-  const level = readingLevel(content);
-  const progress = Math.min(100, Math.round((wc / wordGoal) * 100));
-  const selectedCat = ARTICLE_CATEGORIES.find(c => c.label === category);
+  /* computed */
+  const plainText = stripHtml(content);
+  const words     = wc(plainText);
+  const readTime  = rtm(plainText);
+  const progress  = Math.min(100, Math.round((words / wordGoal) * 100));
+  const level     = readingLevel(plainText);
+  const selectedCat = CATEGORIES.find(c => c.label === category);
+
+  /* toolbar helpers */
+  const applyStyle = (v: string) => {
+    if (!editor) return;
+    setStyleOpen(false);
+    if (v === "p")          editor.chain().focus().setParagraph().run();
+    else if (v === "h1")    editor.chain().focus().toggleHeading({ level: 1 }).run();
+    else if (v === "h2")    editor.chain().focus().toggleHeading({ level: 2 }).run();
+    else if (v === "h3")    editor.chain().focus().toggleHeading({ level: 3 }).run();
+    else if (v === "h4")    editor.chain().focus().toggleHeading({ level: 4 }).run();
+    else if (v === "blockquote") editor.chain().focus().toggleBlockquote().run();
+  };
+
+  const currentStyle = (): string => {
+    if (!editor) return "Normal text";
+    if (editor.isActive("heading", { level: 1 })) return "Heading 1";
+    if (editor.isActive("heading", { level: 2 })) return "Heading 2";
+    if (editor.isActive("heading", { level: 3 })) return "Heading 3";
+    if (editor.isActive("heading", { level: 4 })) return "Heading 4";
+    if (editor.isActive("blockquote"))            return "Blockquote";
+    return "Normal text";
+  };
+
+  const currentFontLabel = (): string => {
+    const ff = editor?.getAttributes("textStyle")?.fontFamily || "";
+    const match = BLOG_FONTS.find(f => f.ff.toLowerCase().includes(ff.replace(/['"]/g,"").split(",")[0].trim().toLowerCase()));
+    return match?.label || "Georgia";
+  };
+
+  const applyLink = () => {
+    setLinkOpen(false);
+    if (!linkUrl.trim()) { editor?.chain().focus().unsetLink().run(); }
+    else {
+      const href = linkUrl.startsWith("http") ? linkUrl : `https://${linkUrl}`;
+      editor?.chain().focus().setLink({ href }).run();
+    }
+    setLinkUrl("");
+  };
 
   /* ── Loading ── */
   if (isLoading) return (
@@ -217,86 +347,62 @@ export default function ArticleEditor() {
       </div>
     </Layout>
   );
-
   if (!article) return (
     <Layout isLanding darkNav>
       <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ fontFamily: SF, color: TEXT_DIM, fontSize: 14 }}>Article not found.</p>
+        <p style={{ fontFamily: SF, color: TEXT_DIM }}>Article not found.</p>
       </div>
     </Layout>
   );
 
-  /* ── PREVIEW MODE ── */
+  /* ══════════════════════════════════════
+     PREVIEW
+  ══════════════════════════════════════ */
   if (showPreview) return (
     <Layout isLanding darkNav>
       <div style={{ background: BG, minHeight: "100vh" }}>
-        {/* Preview bar */}
         <div style={{
           position: "sticky", top: 0, zIndex: 40,
-          background: "rgba(10,10,10,0.95)", backdropFilter: "blur(20px)",
+          background: "rgba(10,10,10,0.96)", backdropFilter: "blur(20px)",
           borderBottom: `1px solid ${BORDER}`,
           padding: "0 24px", height: 44,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <button onClick={() => setShowPreview(false)} style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: "none", border: "none", cursor: "pointer",
-            fontFamily: SF, fontSize: 13, color: TEXT_SEC,
-          }}>
-            <ArrowLeft size={14} /> Back to editor
-          </button>
-          <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: TEXT_DIM }}>
-            Preview
-          </span>
+            display: "flex", alignItems: "center", gap: 6, background: "none", border: "none",
+            cursor: "pointer", fontFamily: SF, fontSize: 13, color: TEXT_SEC,
+          }}><ArrowLeft size={14} /> Back to editor</button>
+          <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: TEXT_DIM }}>Preview</span>
           <div style={{ width: 100 }} />
         </div>
-
-        <article style={{ maxWidth: 680, margin: "0 auto", padding: "72px 24px 120px" }}>
-          {featuredImage && (
-            <img src={featuredImage} alt="Featured" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, marginBottom: 48 }} />
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-            {selectedCat && (
-              <span style={{
-                fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
-                textTransform: "uppercase", padding: "4px 12px", borderRadius: 20,
-                background: selectedCat.color + "22", color: selectedCat.color,
-              }}>{category}</span>
-            )}
-            <span style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM }}>{readTime} min read</span>
-            <span style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM }}>{wc.toLocaleString()} words</span>
+        <article style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px 120px" }}>
+          {featuredImage && <img src={featuredImage} alt="Featured" style={{ width: "100%", height: 360, objectFit: "cover", borderRadius: 16, marginBottom: 48 }} />}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20, flexWrap: "wrap" }}>
+            {selectedCat && <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "4px 12px", borderRadius: 20, background: selectedCat.color + "22", color: selectedCat.color }}>{category}</span>}
+            <span style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM }}>{readTime} min read · {words.toLocaleString()} words</span>
           </div>
-          <h1 style={{ fontFamily: SERIF, fontSize: "clamp(28px,5vw,42px)", fontWeight: 800, color: TEXT, lineHeight: 1.2, marginBottom: 28 }}>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(28px,5vw,44px)", fontWeight: 800, color: TEXT, lineHeight: 1.18, marginBottom: 32 }}>
             {title || "Untitled"}
           </h1>
           {article.authorName && (
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40, paddingBottom: 32, borderBottom: `1px solid ${BORDER}` }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%", background: CARD2,
-                border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: SF, fontSize: 13, fontWeight: 700, color: TEXT_SEC,
-              }}>{article.authorName[0].toUpperCase()}</div>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: CARD2, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: SF, fontSize: 13, fontWeight: 700, color: TEXT_SEC }}>
+                {article.authorName[0].toUpperCase()}
+              </div>
               <div>
                 <p style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: TEXT, margin: 0 }}>{article.authorName}</p>
                 <p style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, margin: 0 }}>Author</p>
               </div>
             </div>
           )}
-          <div style={{
-            fontFamily: SERIF, fontSize: "1.08rem", lineHeight: 1.95,
-            color: TEXT_SEC, whiteSpace: "pre-wrap",
-          }} dir={isRTL ? "rtl" : "ltr"}>
-            {content || <span style={{ fontStyle: "italic", color: TEXT_DIM }}>No content yet.</span>}
-          </div>
+          <div
+            className="article-preview-body"
+            dir={isRTL ? "rtl" : "ltr"}
+            dangerouslySetInnerHTML={{ __html: content || "<p><em>No content yet.</em></p>" }}
+          />
           {tags.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 56, paddingTop: 32, borderTop: `1px solid ${BORDER}` }}>
-              {tags.map(tag => (
-                <span key={tag} style={{
-                  fontFamily: SF, fontSize: 12, color: TEXT_DIM,
-                  padding: "5px 12px", borderRadius: 20,
-                  background: CARD2, border: `1px solid ${BORDER}`,
-                }}>#{tag}</span>
-              ))}
+              {tags.map(tag => <span key={tag} style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM, padding: "5px 12px", borderRadius: 20, background: CARD2, border: `1px solid ${BORDER}` }}>#{tag}</span>)}
             </div>
           )}
         </article>
@@ -304,151 +410,238 @@ export default function ArticleEditor() {
     </Layout>
   );
 
-  /* ── EDITOR ── */
+  /* ══════════════════════════════════════
+     EDITOR
+  ══════════════════════════════════════ */
   return (
     <Layout isLanding darkNav>
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 
         {/* ── TOP BAR ── */}
         <div style={{
-          position: "sticky", top: 0, zIndex: 40,
-          background: "rgba(10,10,10,0.96)", backdropFilter: "blur(20px)",
+          position: "sticky", top: 0, zIndex: 50,
+          background: "rgba(10,10,10,0.97)", backdropFilter: "blur(20px)",
           borderBottom: `1px solid ${BORDER}`,
-          padding: "0 20px", height: 48,
+          padding: "0 20px", height: 46,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          {/* Left */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link href="/">
-              <button style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: "none", border: "none", cursor: "pointer",
-                fontFamily: SF, fontSize: 13, color: TEXT_SEC,
-                padding: "4px 0",
-              }}>
-                <ArrowLeft size={14} /> Dashboard
-              </button>
-            </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <Link href="/"><button style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 13, color: TEXT_SEC, padding: "4px 0" }}>
+              <ArrowLeft size={14} /> Dashboard
+            </button></Link>
             <div style={{ width: 1, height: 16, background: BORDER }} />
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <FileText size={12} color={TEXT_DIM} />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
-                Blog Post
-              </span>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", color: TEXT_DIM }}>Blog Post</span>
             </div>
           </div>
 
-          {/* Center — auto-save */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {saving ? (
-              <><Loader2 size={11} color={TEXT_DIM} style={{ animation: "spin 1s linear infinite" }} />
-              <span style={{ fontSize: 11, color: TEXT_DIM }}>Saving…</span></>
-            ) : justSaved ? (
-              <><CheckCircle2 size={11} color="#34d399" />
-              <span style={{ fontSize: 11, color: "#34d399" }}>Saved</span></>
-            ) : (
-              <span style={{ fontSize: 11, color: TEXT_DIM }}>{wc.toLocaleString()} words · {readTime} min read</span>
-            )}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            {saving ? (<><Loader2 size={11} color={TEXT_DIM} style={{ animation: "spin 1s linear infinite" }} /><span style={{ fontSize: 11, color: TEXT_DIM }}>Saving…</span></>)
+            : justSaved ? (<><CheckCircle2 size={11} color="#34d399" /><span style={{ fontSize: 11, color: "#34d399" }}>Saved</span></>)
+            : (<span style={{ fontSize: 11, color: TEXT_DIM }}>{words.toLocaleString()} words · {readTime} min read</span>)}
           </div>
 
-          {/* Right */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button onClick={() => setFocusMode(f => !f)} title={focusMode ? "Exit focus" : "Focus mode"} style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: 32, height: 32, borderRadius: 8,
-              background: "none", border: `1px solid ${BORDER}`, cursor: "pointer", color: TEXT_SEC,
-            }}>
+            <button onClick={() => setFocusMode(f => !f)} title="Focus mode" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 8, background: "none", border: `1px solid ${BORDER}`, cursor: "pointer", color: TEXT_SEC }}>
               {focusMode ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
-
-            <button onClick={() => setShowPreview(true)} style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "6px 14px", borderRadius: 8,
-              background: "none", border: `1px solid ${BORDER}`, cursor: "pointer",
-              fontFamily: SF, fontSize: 13, fontWeight: 500, color: TEXT_SEC,
-            }}>
+            <button onClick={() => setShowPreview(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, background: "none", border: `1px solid ${BORDER}`, cursor: "pointer", fontFamily: SF, fontSize: 13, fontWeight: 500, color: TEXT_SEC }}>
               <Eye size={13} /> Preview
             </button>
-
-            <button onClick={() => save()} disabled={saving} style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "6px 16px", borderRadius: 8, cursor: "pointer",
-              background: justSaved ? "#34d399" : "#fff",
-              border: "none",
-              fontFamily: SF, fontSize: 13, fontWeight: 600,
-              color: justSaved ? "#fff" : "#000",
-              transition: "all 0.2s",
-            }}>
-              {saving ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
-                : justSaved ? <><CheckCircle2 size={13} /> Saved</>
-                : <><Save size={13} /> Save</>}
+            <button onClick={() => save()} disabled={saving} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", borderRadius: 8, cursor: "pointer", background: justSaved ? "#34d399" : "#fff", border: "none", fontFamily: SF, fontSize: 13, fontWeight: 600, color: justSaved ? "#fff" : "#000", transition: "all 0.2s" }}>
+              {saving ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</> : justSaved ? <><CheckCircle2 size={13} /> Saved</> : <><Save size={13} /> Save</>}
             </button>
           </div>
         </div>
 
-        {/* ── FORMAT TOOLBAR ── */}
+        {/* ── RICH FORMATTING TOOLBAR ── */}
         <div style={{
+          position: "sticky", top: 46, zIndex: 49,
+          background: "rgba(22,22,22,0.98)", backdropFilter: "blur(20px)",
           borderBottom: `1px solid ${BORDER2}`,
-          padding: "0 20px", height: 38,
-          display: "flex", alignItems: "center", gap: 2,
-          background: CARD2,
-        }}>
-          {[
-            { icon: Bold, action: () => insertFormat("**", "**", "bold text"), title: "Bold (Ctrl+B)" },
-            { icon: Italic, action: () => insertFormat("_", "_", "italic text"), title: "Italic (Ctrl+I)" },
-            { icon: Heading1, action: () => insertFormat("\n# ", "", "Heading 1"), title: "Heading 1" },
-            { icon: Heading2, action: () => insertFormat("\n## ", "", "Heading 2"), title: "Heading 2" },
-          ].map(({ icon: Icon, action, title }) => (
-            <button key={title} onClick={action} title={title} style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: 30, height: 30, borderRadius: 6, cursor: "pointer",
-              background: "none", border: "none", color: TEXT_SEC,
-              transition: "background 0.15s",
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = CARD)}
-              onMouseLeave={e => (e.currentTarget.style.background = "none")}
+          padding: "0 12px", height: 40,
+          display: "flex", alignItems: "center", gap: 1,
+          overflowX: "auto", scrollbarWidth: "none",
+        }} onMouseDown={e => e.preventDefault()}>
+
+          {/* Undo / Redo */}
+          <TBtn onClick={() => editor?.chain().focus().undo().run()} title="Undo (Ctrl+Z)"><Undo2 size={14} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().redo().run()} title="Redo (Ctrl+Y)"><Redo2 size={14} /></TBtn>
+          <Sep />
+
+          {/* Text style */}
+          <div style={{ position: "relative" }}>
+            <button
+              onMouseDown={e => { e.preventDefault(); setStyleOpen(o => !o); setFontOpen(false); setColorOpen(false); }}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 8px", height: 26, borderRadius: 4, border: "none", cursor: "pointer", background: styleOpen ? "rgba(255,255,255,0.12)" : "transparent", color: TEXT_SEC, fontFamily: SF, fontSize: 12, minWidth: 90, whiteSpace: "nowrap" }}
+              onMouseEnter={e => { if (!styleOpen) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+              onMouseLeave={e => { if (!styleOpen) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <Icon size={14} />
+              {currentStyle()} <ChevronDown size={11} style={{ marginLeft: "auto" }} />
             </button>
-          ))}
-          <div style={{ width: 1, height: 18, background: BORDER, margin: "0 4px" }} />
-          {[
-            { icon: Quote, action: () => insertFormat("\n> ", "", "quote"), title: "Blockquote" },
-            { icon: Code, action: () => insertFormat("`", "`", "code"), title: "Inline code" },
-            { icon: List, action: () => insertFormat("\n- ", "", "list item"), title: "Bullet list" },
-            { icon: Minus, action: () => insertFormat("\n---\n", "", ""), title: "Divider" },
-          ].map(({ icon: Icon, action, title }) => (
-            <button key={title} onClick={action} title={title} style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: 30, height: 30, borderRadius: 6, cursor: "pointer",
-              background: "none", border: "none", color: TEXT_SEC,
-              transition: "background 0.15s",
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = CARD)}
-              onMouseLeave={e => (e.currentTarget.style.background = "none")}
+            {styleOpen && (
+              <div style={{ position: "fixed", zIndex: 9999, background: "#1a1a22", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 4, minWidth: 160, boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}
+                ref={el => { if (el) { const btn = el.previousElementSibling as HTMLElement; const r = btn?.getBoundingClientRect(); if (r) { el.style.top = r.bottom + 4 + "px"; el.style.left = r.left + "px"; } } }}>
+                {TEXT_STYLES.map(s => (
+                  <button key={s.value} onMouseDown={e => { e.preventDefault(); applyStyle(s.value); }}
+                    style={{ display: "block", width: "100%", padding: "6px 12px", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 13, color: TEXT_SEC, borderRadius: 6 }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >{s.label}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Sep />
+
+          {/* Font family */}
+          <div style={{ position: "relative" }}>
+            <button
+              onMouseDown={e => { e.preventDefault(); setFontOpen(o => !o); setStyleOpen(false); setColorOpen(false); }}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 8px", height: 26, borderRadius: 4, border: "none", cursor: "pointer", background: fontOpen ? "rgba(255,255,255,0.12)" : "transparent", color: TEXT_SEC, fontFamily: SF, fontSize: 12, minWidth: 110, maxWidth: 140, whiteSpace: "nowrap", overflow: "hidden" }}
+              onMouseEnter={e => { if (!fontOpen) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+              onMouseLeave={e => { if (!fontOpen) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              <Icon size={14} />
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>{currentFontLabel()}</span>
+              <ChevronDown size={11} style={{ flexShrink: 0 }} />
             </button>
-          ))}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4 }}>
-            <Sparkles size={11} color={ACCENT} />
-            <span style={{ fontSize: 10, color: TEXT_DIM, letterSpacing: "0.04em" }}>Markdown supported</span>
+            {fontOpen && (
+              <div style={{ position: "fixed", zIndex: 9999, background: "#1a1a22", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 4, width: 210, maxHeight: 300, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}
+                ref={el => { if (el) { const btn = el.previousElementSibling as HTMLElement; const r = btn?.getBoundingClientRect(); if (r) { el.style.top = r.bottom + 4 + "px"; el.style.left = r.left + "px"; } } }}>
+                {["Serif", "Sans", "Mono", "Arabic"].map(cat => {
+                  const fonts = BLOG_FONTS.filter(f => f.cat === cat);
+                  return (
+                    <div key={cat}>
+                      <div style={{ fontFamily: SF, fontSize: 9, fontWeight: 700, color: TEXT_DIM, letterSpacing: "0.1em", textTransform: "uppercase", padding: "8px 12px 4px" }}>{cat}</div>
+                      {fonts.map(f => (
+                        <button key={f.id} onMouseDown={e => { e.preventDefault(); editor?.chain().focus().setFontFamily(f.ff).run(); setFontOpen(false); }}
+                          style={{ display: "block", width: "100%", padding: "6px 12px", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", fontFamily: f.ff, fontSize: 13, color: TEXT_SEC, borderRadius: 6 }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >{f.label}</button>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Font size */}
+          <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <button onMouseDown={e => { e.preventDefault(); const idx = FONT_SIZES.indexOf(fontSize); if (idx > 0) { const s = FONT_SIZES[idx - 1]; setFontSize(s); setFontSizeInput(String(s)); (editor?.chain().focus() as any)?.setFontSize(s)?.run(); } }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 18, height: 26, background: "transparent", border: "none", cursor: "pointer", color: TEXT_SEC, borderRadius: 4 }} onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}><Minus size={11} /></button>
+            <input value={fontSizeInput} onChange={e => setFontSizeInput(e.target.value)}
+              onBlur={() => { const n = parseInt(fontSizeInput, 10); if (!isNaN(n) && n >= 8 && n <= 96) { setFontSize(n); (editor?.chain().focus() as any)?.setFontSize(n)?.run(); } else setFontSizeInput(String(fontSize)); }}
+              onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+              style={{ width: 32, height: 26, background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, borderRadius: 4, textAlign: "center", fontFamily: SF, fontSize: 12, color: TEXT, outline: "none" }}
+            />
+            <button onMouseDown={e => { e.preventDefault(); const idx = FONT_SIZES.indexOf(fontSize); if (idx < FONT_SIZES.length - 1) { const s = FONT_SIZES[idx + 1]; setFontSize(s); setFontSizeInput(String(s)); (editor?.chain().focus() as any)?.setFontSize(s)?.run(); } }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 18, height: 26, background: "transparent", border: "none", cursor: "pointer", color: TEXT_SEC, borderRadius: 4 }} onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}><Plus size={11} /></button>
+          </div>
+          <Sep />
+
+          {/* Bold Italic Underline Strike */}
+          <TBtn onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive("bold")} title="Bold (Ctrl+B)"><Bold size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive("italic")} title="Italic (Ctrl+I)"><Italic size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().toggleUnderline().run()} active={editor?.isActive("underline")} title="Underline (Ctrl+U)"><UnderlineIcon size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().toggleStrike().run()} active={editor?.isActive("strike")} title="Strikethrough"><Strikethrough size={13} /></TBtn>
+          <Sep />
+
+          {/* Text color */}
+          <div style={{ position: "relative" }}>
+            <button
+              onMouseDown={e => { e.preventDefault(); setColorOpen(o => !o); setStyleOpen(false); setFontOpen(false); }}
+              title="Text color"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: 28, height: 26, borderRadius: 4, border: "none", cursor: "pointer", background: colorOpen ? "rgba(255,255,255,0.12)" : "transparent", color: TEXT_SEC, gap: 1 }}
+              onMouseEnter={e => { if (!colorOpen) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+              onMouseLeave={e => { if (!colorOpen) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <Type size={12} />
+              <div style={{ width: 14, height: 3, borderRadius: 2, background: editor?.getAttributes("textStyle")?.color || "#fff" }} />
+            </button>
+            {colorOpen && (
+              <div style={{ position: "fixed", zIndex: 9999, background: "#1a1a22", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}
+                ref={el => { if (el) { const btn = el.previousElementSibling as HTMLElement; const r = btn?.getBoundingClientRect(); if (r) { el.style.top = r.bottom + 4 + "px"; el.style.left = r.left + "px"; } } }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 5 }}>
+                  {TEXT_COLORS.map(c => (
+                    <button key={c} onMouseDown={e => { e.preventDefault(); editor?.chain().focus().setColor(c).run(); setColorOpen(false); }}
+                      style={{ width: 22, height: 22, borderRadius: 5, background: c, border: "none", cursor: "pointer", border: `2px solid ${c === "#ffffff" ? "rgba(255,255,255,0.2)" : "transparent"}` } as any}
+                      title={c}
+                    />
+                  ))}
+                </div>
+                <button onMouseDown={e => { e.preventDefault(); editor?.chain().focus().unsetColor().run(); setColorOpen(false); }}
+                  style={{ marginTop: 8, width: "100%", padding: "4px 8px", background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, borderRadius: 6, cursor: "pointer", fontFamily: SF, fontSize: 11, color: TEXT_DIM }}>
+                  Remove color
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Highlight */}
+          <TBtn onClick={() => editor?.chain().focus().toggleHighlight({ color: "#7c6af720" }).run()} active={editor?.isActive("highlight")} title="Highlight"><Highlighter size={13} /></TBtn>
+          <Sep />
+
+          {/* Alignment */}
+          <TBtn onClick={() => editor?.chain().focus().setTextAlign("left").run()} active={editor?.isActive({ textAlign: "left" })} title="Align left"><AlignLeft size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().setTextAlign("center").run()} active={editor?.isActive({ textAlign: "center" })} title="Align center"><AlignCenter size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().setTextAlign("right").run()} active={editor?.isActive({ textAlign: "right" })} title="Align right"><AlignRight size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().setTextAlign("justify").run()} active={editor?.isActive({ textAlign: "justify" })} title="Justify"><AlignJustify size={13} /></TBtn>
+          <Sep />
+
+          {/* Lists */}
+          <TBtn onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive("bulletList")} title="Bullet list"><List size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive("orderedList")} title="Numbered list"><ListOrdered size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive("blockquote")} title="Blockquote"><Quote size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().toggleCodeBlock().run()} active={editor?.isActive("codeBlock")} title="Code block"><Code size={13} /></TBtn>
+          <TBtn onClick={() => editor?.chain().focus().setHorizontalRule().run()} title="Divider"><Minus size={13} /></TBtn>
+          <Sep />
+
+          {/* Link */}
+          <div style={{ position: "relative" }}>
+            <TBtn onClick={() => { setLinkOpen(o => !o); setLinkUrl(editor?.getAttributes("link")?.href || ""); }} active={editor?.isActive("link")} title="Insert link">
+              <LinkIcon size={13} />
+            </TBtn>
+            {linkOpen && (
+              <div style={{ position: "fixed", zIndex: 9999, background: "#1a1a22", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.7)", width: 260 }}
+                ref={el => { if (el) { const btn = el.previousElementSibling as HTMLElement; const r = btn?.getBoundingClientRect(); if (r) { el.style.top = r.bottom + 4 + "px"; el.style.left = r.left + "px"; } } }}>
+                <div style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, marginBottom: 6 }}>Link URL</div>
+                <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} onKeyDown={e => { if (e.key === "Enter") applyLink(); }}
+                  placeholder="https://…" autoFocus
+                  style={{ width: "100%", padding: "7px 10px", background: CARD2, border: `1px solid ${BORDER}`, borderRadius: 7, fontFamily: SF, fontSize: 12, color: TEXT_SEC, outline: "none", boxSizing: "border-box" }}
+                />
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                  <button onMouseDown={e => { e.preventDefault(); applyLink(); }} style={{ flex: 1, padding: "6px 0", background: ACCENT, border: "none", borderRadius: 7, cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", fontWeight: 600 }}>Apply</button>
+                  <button onMouseDown={e => { e.preventDefault(); setLinkOpen(false); }} style={{ padding: "6px 12px", background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 7, cursor: "pointer", fontFamily: SF, fontSize: 12, color: TEXT_DIM }}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* AI button in toolbar */}
+          <div style={{ marginLeft: "auto" }}>
+            <button
+              onMouseDown={e => { e.preventDefault(); generateAiContent(); }}
+              disabled={aiLoading}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 7, background: `${ACCENT}1a`, border: `1px solid ${ACCENT}35`, cursor: aiLoading ? "default" : "pointer", fontFamily: SF, fontSize: 11, fontWeight: 600, color: ACCENT }}
+            >
+              {aiLoading ? <><Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> Generating…</> : <><Sparkles size={11} /> Write with AI</>}
+            </button>
           </div>
         </div>
 
         {/* ── MAIN CONTENT ── */}
         <div style={{
-          maxWidth: focusMode ? 740 : 1160,
+          maxWidth: focusMode ? 760 : 1180,
           margin: "0 auto", padding: "32px 20px 80px",
           display: "grid",
-          gridTemplateColumns: focusMode ? "1fr" : "1fr 280px",
-          gap: 28,
+          gridTemplateColumns: focusMode ? "1fr" : "1fr 284px",
+          gap: 28, alignItems: "start",
           transition: "all 0.3s ease",
         }}>
 
           {/* ── WRITING COLUMN ── */}
           <div>
-
             {/* Featured Image */}
             <div
               onClick={() => fileInputRef.current?.click()}
@@ -456,53 +649,29 @@ export default function ArticleEditor() {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               style={{
-                borderRadius: 14,
-                border: dragOver
-                  ? `2px dashed ${ACCENT}`
-                  : featuredImage ? "none" : `2px dashed ${BORDER}`,
-                background: featuredImage ? "transparent"
-                  : dragOver ? `${ACCENT}08` : CARD2,
-                minHeight: featuredImage ? "auto" : 180,
-                cursor: "pointer",
-                overflow: "hidden",
-                marginBottom: 24,
-                position: "relative",
+                borderRadius: 14, marginBottom: 24, overflow: "hidden",
+                border: dragOver ? `2px dashed ${ACCENT}` : featuredImage ? "none" : `2px dashed ${BORDER}`,
+                background: featuredImage ? "transparent" : dragOver ? `${ACCENT}08` : CARD2,
+                minHeight: featuredImage ? "auto" : 170,
+                cursor: "pointer", position: "relative",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
               {featuredImage ? (
                 <>
-                  <img src={featuredImage} alt="Featured" style={{ width: "100%", maxHeight: 320, objectFit: "cover", display: "block" }} />
-                  <div style={{
-                    position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    opacity: 0, transition: "opacity 0.2s",
-                  }}
+                  <img src={featuredImage} alt="Featured" style={{ width: "100%", maxHeight: 300, objectFit: "cover", display: "block" }} />
+                  <div className="img-overlay" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = "0")}
-                  >
-                    <span style={{
-                      fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#fff",
-                      background: "rgba(0,0,0,0.5)", padding: "8px 18px", borderRadius: 10,
-                      display: "flex", alignItems: "center", gap: 8,
-                    }}>
+                    onMouseLeave={e => (e.currentTarget.style.opacity = "0")}>
+                    <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#fff", background: "rgba(0,0,0,0.5)", padding: "8px 18px", borderRadius: 10, display: "flex", alignItems: "center", gap: 8 }}>
                       <Upload size={14} /> Change image
                     </span>
                   </div>
-                  <button onClick={e => { e.stopPropagation(); setFeaturedImage(null); }} style={{
-                    position: "absolute", top: 10, right: 10,
-                    width: 28, height: 28, borderRadius: "50%",
-                    background: "rgba(0,0,0,0.65)", border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
-                  }}><X size={12} /></button>
+                  <button onClick={e => { e.stopPropagation(); setFeaturedImage(null); }} style={{ position: "absolute", top: 10, right: 10, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.65)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}><X size={12} /></button>
                 </>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 32 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12,
-                    background: CARD, border: `1px solid ${BORDER}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 24 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: CARD, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <ImageIcon size={20} color={TEXT_DIM} />
                   </div>
                   <div style={{ textAlign: "center" }}>
@@ -516,15 +685,9 @@ export default function ArticleEditor() {
 
             {/* Category badge */}
             {category && selectedCat && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{
-                  fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
-                  textTransform: "uppercase", padding: "4px 12px", borderRadius: 20,
-                  background: selectedCat.color + "22", color: selectedCat.color,
-                }}>{category}</span>
-                <button onClick={() => setCategory("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", alignItems: "center" }}>
-                  <X size={12} />
-                </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "4px 12px", borderRadius: 20, background: selectedCat.color + "22", color: selectedCat.color }}>{category}</span>
+                <button onClick={() => setCategory("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex" }}><X size={12} /></button>
               </div>
             )}
 
@@ -535,91 +698,26 @@ export default function ArticleEditor() {
               placeholder="Your article title…"
               rows={2}
               dir={isRTL ? "rtl" : "ltr"}
-              style={{
-                width: "100%", resize: "none", background: "transparent",
-                border: "none", outline: "none",
-                fontFamily: SERIF, fontWeight: 800,
-                fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-                color: TEXT, lineHeight: 1.2,
-                marginBottom: 8,
-              }}
-              className="placeholder:text-[rgba(255,255,255,0.12)]"
+              style={{ width: "100%", resize: "none", background: "transparent", border: "none", outline: "none", fontFamily: "Georgia, serif", fontWeight: 800, fontSize: "clamp(1.8rem,4vw,2.6rem)", color: TEXT, lineHeight: 1.2, marginBottom: 6 }}
             />
-
-            {/* Subtitle / excerpt hint */}
-            <p style={{ fontFamily: SF, fontSize: 12, color: TEXT_DIM, marginBottom: 28 }}>
+            <p style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, marginBottom: 20 }}>
               {title.length > 0 ? `${title.length} chars · Aim for 60–80 for best SEO` : "Add a compelling title to hook your readers"}
             </p>
 
-            {/* AI Button */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-              <div style={{ flex: 1, height: 1, background: BORDER }} />
-              <button
-                onClick={generateAiContent}
-                disabled={aiLoading}
-                style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "8px 18px", borderRadius: 10, cursor: aiLoading ? "default" : "pointer",
-                  background: aiLoading ? CARD2 : `${ACCENT}18`,
-                  border: `1px solid ${aiLoading ? BORDER : ACCENT + "40"}`,
-                  fontFamily: SF, fontSize: 12, fontWeight: 600,
-                  color: aiLoading ? TEXT_DIM : ACCENT,
-                  transition: "all 0.2s",
-                }}
-              >
-                {aiLoading
-                  ? <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> Generating…</>
-                  : <><Sparkles size={13} /> Write with AI</>}
-              </button>
-              <div style={{ flex: 1, height: 1, background: BORDER }} />
-            </div>
-
-            {/* Content area */}
-            <div style={{ position: "relative" }}>
-              <textarea
-                ref={contentRef}
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                dir={isRTL ? "rtl" : "ltr"}
-                placeholder={"Start writing your blog post…\n\nShare your ideas, tell your story, or explain a concept. Your readers are waiting.\n\nTip: Use the toolbar above for formatting, or type Markdown directly."}
-                style={{
-                  width: "100%", resize: "none", outline: "none",
-                  background: "transparent", border: "none",
-                  fontFamily: SERIF, fontSize: "1.07rem",
-                  color: TEXT_SEC, lineHeight: 1.95,
-                  minHeight: 560,
-                }}
-                className="placeholder:text-[rgba(255,255,255,0.1)]"
-                onKeyDown={e => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(); }
-                  if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); insertFormat("**", "**", "bold"); }
-                  if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); insertFormat("_", "_", "italic"); }
-                }}
-              />
-              {wc > 0 && (
-                <div style={{
-                  position: "absolute", bottom: 8, right: 0,
-                  fontFamily: SF, fontSize: 10, color: TEXT_DIM, fontVariantNumeric: "tabular-nums",
-                }}>
-                  {wc.toLocaleString()} / {wordGoal.toLocaleString()} words
-                </div>
-              )}
-            </div>
+            {/* Rich Text Editor */}
+            <EditorContent
+              editor={editor}
+              className="article-editor-content"
+              dir={isRTL ? "rtl" : "ltr"}
+            />
 
             {/* Inline tags */}
             {tags.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingTop: 20, borderTop: `1px solid ${BORDER}`, marginTop: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingTop: 20, borderTop: `1px solid ${BORDER}`, marginTop: 16 }}>
                 {tags.map(tag => (
-                  <span key={tag} style={{
-                    display: "inline-flex", alignItems: "center", gap: 4,
-                    fontFamily: SF, fontSize: 11, fontWeight: 500, color: TEXT_DIM,
-                    padding: "4px 10px", borderRadius: 20,
-                    background: CARD2, border: `1px solid ${BORDER}`,
-                  }}>
+                  <span key={tag} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SF, fontSize: 11, fontWeight: 500, color: TEXT_DIM, padding: "4px 10px", borderRadius: 20, background: CARD2, border: `1px solid ${BORDER}` }}>
                     #{tag}
-                    <button onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", alignItems: "center", padding: 0, marginLeft: 2 }}>
-                      <X size={10} />
-                    </button>
+                    <button onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", padding: 0, marginLeft: 2 }}><X size={10} /></button>
                   </span>
                 ))}
               </div>
@@ -628,84 +726,59 @@ export default function ArticleEditor() {
 
           {/* ── SIDEBAR ── */}
           {!focusMode && (
-            <aside style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <aside style={{ display: "flex", flexDirection: "column", gap: 12, position: "sticky", top: 92 }}>
 
               {/* Stats */}
               <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
                   <BarChart2 size={11} color={TEXT_DIM} />
-                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
-                    Stats
-                  </span>
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>Stats</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
                   {[
-                    { value: wc.toLocaleString(), label: "Words" },
-                    { value: readTime.toString(), label: "Min read" },
+                    { value: words.toLocaleString(), label: "Words" },
+                    { value: String(readTime),         label: "Min read" },
                     { value: (article.language || "EN").toUpperCase(), label: "Lang" },
                   ].map(({ value, label }) => (
-                    <div key={label} style={{
-                      background: CARD2, borderRadius: 10, padding: "10px 4px",
-                      textAlign: "center", border: `1px solid ${BORDER2}`,
-                    }}>
+                    <div key={label} style={{ background: CARD2, borderRadius: 10, padding: "10px 4px", textAlign: "center", border: `1px solid ${BORDER2}` }}>
                       <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: TEXT }}>{value}</div>
                       <div style={{ fontFamily: SF, fontSize: 9, color: TEXT_DIM, marginTop: 2, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Extra stats row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginBottom: 14 }}>
                   {[
-                    { value: cc.toLocaleString(), label: "Characters" },
-                    { value: sc > 0 ? sc.toString() : "0", label: "Sentences" },
-                    { value: pc > 0 ? pc.toString() : "0", label: "Paragraphs" },
-                    { value: level.label, label: "Reading level", valueColor: level.color },
-                  ].map(({ value, label, valueColor }) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    { label: "Characters",    value: plainText.replace(/\s/g,"").length.toLocaleString() },
+                    { label: "Sentences",     value: String(plainText.split(/[.!?]+/).filter(s => s.trim().length > 2).length) },
+                    { label: "Paragraphs",    value: String(plainText.split(/\n\s*\n/).filter(p => p.trim().length > 0).length || 1) },
+                    { label: "Reading level", value: level.label, valueColor: level.color },
+                  ].map(({ label, value, valueColor }: any) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "2px 0" }}>
                       <span style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM }}>{label}</span>
                       <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: valueColor || TEXT_SEC }}>{value}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Progress bar */}
+                {/* Goal picker */}
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <button
-                      onClick={() => setShowGoalPicker(p => !p)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 4,
-                        background: "none", border: "none", cursor: "pointer",
-                        fontFamily: SF, fontSize: 10, color: TEXT_DIM, padding: 0,
-                      }}
-                    >
-                      <Target size={9} /> Goal: {wordGoal.toLocaleString()} words
-                      <ChevronDown size={9} style={{ transform: showGoalPicker ? "rotate(180deg)" : "none", transition: "0.2s" }} />
+                    <button onClick={() => setShowGoalPicker(p => !p)} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 10, color: TEXT_DIM, padding: 0 }}>
+                      <Target size={9} /> Goal: {wordGoal.toLocaleString()} words <ChevronDown size={9} style={{ transform: showGoalPicker ? "rotate(180deg)" : "none", transition: "0.2s" }} />
                     </button>
                     <span style={{ fontFamily: SF, fontSize: 10, color: progress >= 100 ? "#34d399" : TEXT_DIM }}>{progress}%</span>
                   </div>
                   {showGoalPicker && (
-                    <div style={{
-                      background: "#1a1a1a", border: `1px solid ${BORDER}`,
-                      borderRadius: 10, overflow: "hidden", marginBottom: 8,
-                    }}>
+                    <div style={{ background: "#1a1a1a", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
                       {WORD_GOALS.map(g => (
-                        <button key={g.value} onClick={() => { setWordGoal(g.value); setShowGoalPicker(false); }} style={{
-                          width: "100%", padding: "8px 12px", background: wordGoal === g.value ? `${ACCENT}18` : "none",
-                          border: "none", cursor: "pointer", textAlign: "left",
-                          fontFamily: SF, fontSize: 11, color: wordGoal === g.value ? ACCENT : TEXT_SEC,
-                          borderBottom: `1px solid ${BORDER2}`,
-                        }}>{g.label}</button>
+                        <button key={g.value} onClick={() => { setWordGoal(g.value); setShowGoalPicker(false); }} style={{ width: "100%", padding: "7px 12px", background: wordGoal === g.value ? `${ACCENT}18` : "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: SF, fontSize: 11, color: wordGoal === g.value ? ACCENT : TEXT_SEC, borderBottom: `1px solid ${BORDER2}` }}>
+                          {g.label}
+                        </button>
                       ))}
                     </div>
                   )}
                   <div style={{ height: 4, borderRadius: 4, background: CARD2, overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%", borderRadius: 4,
-                      background: progress >= 100 ? "#34d399" : ACCENT,
-                      width: `${progress}%`, transition: "width 0.5s ease",
-                    }} />
+                    <div style={{ height: "100%", borderRadius: 4, background: progress >= 100 ? "#34d399" : ACCENT, width: `${progress}%`, transition: "width 0.5s ease" }} />
                   </div>
                 </div>
               </div>
@@ -714,24 +787,13 @@ export default function ArticleEditor() {
               <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
                   <AlignLeft size={11} color={TEXT_DIM} />
-                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
-                    Category
-                  </span>
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>Category</span>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {ARTICLE_CATEGORIES.map(({ label, color }) => (
-                    <button
-                      key={label}
-                      onClick={() => setCategory(p => p === label ? "" : label)}
-                      style={{
-                        padding: "4px 10px", borderRadius: 20,
-                        fontFamily: SF, fontSize: 10, fontWeight: 600,
-                        cursor: "pointer", transition: "all 0.15s",
-                        background: category === label ? color : color + "14",
-                        color: category === label ? "#fff" : color,
-                        border: `1px solid ${category === label ? color : color + "30"}`,
-                      }}
-                    >{label}</button>
+                  {CATEGORIES.map(({ label, color }) => (
+                    <button key={label} onClick={() => setCategory(p => p === label ? "" : label)} style={{ padding: "4px 10px", borderRadius: 20, fontFamily: SF, fontSize: 10, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", background: category === label ? color : color + "14", color: category === label ? "#fff" : color, border: `1px solid ${category === label ? color : color + "30"}` }}>
+                      {label}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -740,59 +802,36 @@ export default function ArticleEditor() {
               <div style={{ background: CARD, borderRadius: 14, border: `1px solid ${BORDER}`, padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
                   <Hash size={11} color={TEXT_DIM} />
-                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>
-                    Tags
-                  </span>
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DIM }}>Tags</span>
                   <span style={{ marginLeft: "auto", fontFamily: SF, fontSize: 10, color: TEXT_DIM }}>{tags.length}/10</span>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, minHeight: 24, marginBottom: 10 }}>
                   {tags.map(tag => (
-                    <span key={tag} style={{
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                      fontFamily: SF, fontSize: 10, fontWeight: 500, color: TEXT_SEC,
-                      padding: "4px 9px", borderRadius: 20,
-                      background: CARD2, border: `1px solid ${BORDER}`,
-                    }}>
+                    <span key={tag} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SF, fontSize: 10, color: TEXT_SEC, padding: "4px 9px", borderRadius: 20, background: CARD2, border: `1px solid ${BORDER}` }}>
                       #{tag}
-                      <button onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", alignItems: "center", padding: 0 }}>
-                        <X size={9} />
-                      </button>
+                      <button onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_DIM, display: "flex", padding: 0 }}><X size={9} /></button>
                     </span>
                   ))}
-                  {tags.length === 0 && <span style={{ fontFamily: SF, fontSize: 10, color: TEXT_DIM, fontStyle: "italic" }}>No tags yet</span>}
+                  {!tags.length && <span style={{ fontFamily: SF, fontSize: 10, color: TEXT_DIM, fontStyle: "italic" }}>No tags yet</span>}
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <input
-                    value={tagInput}
-                    onChange={e => setTagInput(e.target.value)}
-                    onKeyDown={handleTagKeyDown}
+                  <input value={tagInput} onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } if (e.key === "Backspace" && !tagInput && tags.length) setTags(p => p.slice(0, -1)); }}
                     placeholder="Add a tag…"
-                    style={{
-                      flex: 1, height: 32, borderRadius: 8, padding: "0 10px",
-                      background: CARD2, border: `1px solid ${BORDER}`, outline: "none",
-                      fontFamily: SF, fontSize: 11, color: TEXT_SEC,
-                    }}
+                    style={{ flex: 1, height: 32, borderRadius: 8, padding: "0 10px", background: CARD2, border: `1px solid ${BORDER}`, outline: "none", fontFamily: SF, fontSize: 11, color: TEXT_SEC }}
                   />
-                  <button onClick={addTag} style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: CARD2, border: `1px solid ${BORDER}`,
-                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                    color: TEXT_SEC,
-                  }}><Plus size={14} /></button>
+                  <button onClick={addTag} style={{ width: 32, height: 32, borderRadius: 8, background: CARD2, border: `1px solid ${BORDER}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC }}>
+                    <Plus size={14} />
+                  </button>
                 </div>
                 <p style={{ fontFamily: SF, fontSize: 10, color: TEXT_DIM, marginTop: 6 }}>Enter or comma to add</p>
               </div>
 
               {/* Writing tips */}
-              <div style={{
-                background: `${ACCENT}0d`, borderRadius: 14,
-                border: `1px solid ${ACCENT}22`, padding: 16,
-              }}>
+              <div style={{ background: `${ACCENT}0d`, borderRadius: 14, border: `1px solid ${ACCENT}22`, padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                   <Sparkles size={11} color={ACCENT} />
-                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT + "bb" }}>
-                    Writing Tips
-                  </span>
+                  <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT + "bb" }}>Writing Tips</span>
                 </div>
                 <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 7 }}>
                   {[
@@ -810,29 +849,73 @@ export default function ArticleEditor() {
                 </ul>
               </div>
 
-              {/* RTL notice */}
               {isRTL && (
-                <div style={{
-                  background: CARD2, borderRadius: 12, border: `1px solid ${BORDER}`,
-                  padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 8,
-                }}>
+                <div style={{ background: CARD2, borderRadius: 12, border: `1px solid ${BORDER}`, padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 8 }}>
                   <Globe size={13} color={TEXT_DIM} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, lineHeight: 1.5 }}>
-                    Right-to-left layout active for your language.
-                  </span>
+                  <span style={{ fontFamily: SF, fontSize: 11, color: TEXT_DIM, lineHeight: 1.5 }}>Right-to-left layout active.</span>
                 </div>
               )}
             </aside>
           )}
         </div>
-      </div>
 
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        textarea::placeholder { color: rgba(255,255,255,0.1); }
-        input::placeholder { color: rgba(255,255,255,0.2); }
-        input { color: rgba(255,255,255,0.7); }
-      `}</style>
+        {/* ── Global Styles ── */}
+        <style>{`
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+          /* ── tiptap editor dark theme ── */
+          .article-editor-content .ProseMirror {
+            outline: none;
+            min-height: 520px;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 1.07rem;
+            line-height: 1.95;
+            color: rgba(255,255,255,0.72);
+            caret-color: rgba(255,255,255,0.8);
+          }
+          .article-editor-content .ProseMirror p { margin: 0 0 1em; }
+          .article-editor-content .ProseMirror h1 { font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.92); margin: 1.5em 0 0.5em; line-height: 1.2; }
+          .article-editor-content .ProseMirror h2 { font-size: 1.5rem; font-weight: 700; color: rgba(255,255,255,0.88); margin: 1.3em 0 0.4em; line-height: 1.25; }
+          .article-editor-content .ProseMirror h3 { font-size: 1.2rem; font-weight: 700; color: rgba(255,255,255,0.85); margin: 1.2em 0 0.4em; }
+          .article-editor-content .ProseMirror h4 { font-size: 1.05rem; font-weight: 700; color: rgba(255,255,255,0.8); margin: 1.1em 0 0.3em; }
+          .article-editor-content .ProseMirror blockquote {
+            border-left: 3px solid rgba(124,106,247,0.6);
+            margin: 1.5em 0; padding: 0.5em 0 0.5em 1.2em;
+            color: rgba(255,255,255,0.5); font-style: italic;
+          }
+          .article-editor-content .ProseMirror ul { list-style: disc; padding-left: 1.5em; margin: 0.8em 0; }
+          .article-editor-content .ProseMirror ol { list-style: decimal; padding-left: 1.5em; margin: 0.8em 0; }
+          .article-editor-content .ProseMirror li { margin: 0.3em 0; color: rgba(255,255,255,0.65); }
+          .article-editor-content .ProseMirror code { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 2px 6px; font-family: 'Courier Prime', monospace; font-size: 0.9em; color: rgba(124,106,247,0.9); }
+          .article-editor-content .ProseMirror pre { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; margin: 1em 0; overflow-x: auto; }
+          .article-editor-content .ProseMirror pre code { background: none; padding: 0; color: rgba(255,255,255,0.7); }
+          .article-editor-content .ProseMirror hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 2em 0; }
+          .article-editor-content .ProseMirror a { color: #818cf8; text-decoration: underline; text-decoration-color: rgba(129,140,248,0.4); }
+          .article-editor-content .ProseMirror mark { background: rgba(124,106,247,0.2); border-radius: 3px; padding: 1px 2px; }
+          .article-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+            content: attr(data-placeholder);
+            color: rgba(255,255,255,0.1);
+            pointer-events: none;
+            float: left; height: 0;
+          }
+
+          /* ── Preview styles ── */
+          .article-preview-body { font-family: Georgia, serif; font-size: 1.08rem; line-height: 1.95; color: rgba(255,255,255,0.55); }
+          .article-preview-body h1 { font-size: 2rem; font-weight: 800; color: rgba(255,255,255,0.92); margin: 1.4em 0 0.5em; }
+          .article-preview-body h2 { font-size: 1.5rem; font-weight: 700; color: rgba(255,255,255,0.88); margin: 1.3em 0 0.4em; }
+          .article-preview-body h3 { font-size: 1.2rem; font-weight: 700; color: rgba(255,255,255,0.82); margin: 1.2em 0 0.4em; }
+          .article-preview-body blockquote { border-left: 3px solid rgba(124,106,247,0.5); margin: 1.5em 0; padding: 0.5em 0 0.5em 1.2em; color: rgba(255,255,255,0.45); font-style: italic; }
+          .article-preview-body ul, .article-preview-body ol { padding-left: 1.5em; margin: 0.8em 0; }
+          .article-preview-body code { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.9em; }
+          .article-preview-body a { color: #818cf8; }
+          .article-preview-body hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 2em 0; }
+
+          input::placeholder { color: rgba(255,255,255,0.2); }
+          input { color: rgba(255,255,255,0.7); }
+          textarea::placeholder { color: rgba(255,255,255,0.1); }
+          textarea { color: rgba(255,255,255,0.88); }
+        `}</style>
+      </div>
     </Layout>
   );
 }
