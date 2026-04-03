@@ -18,7 +18,7 @@ import mammoth from "mammoth";
 import bcrypt from "bcryptjs";
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_ANNUAL_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks, arcRecipients } from "../../../lib/db/src/schema";
 import { db } from "./db";
-import { eq, or, ilike, sql } from "drizzle-orm";
+import { eq, or, ilike, sql, and, desc, asc } from "drizzle-orm";
 
 const isMockOpenAI = !process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY;
 
@@ -2536,80 +2536,69 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ── Gutenberg Public-Domain Library ────────────────────────────────────────
 
-  // GET /api/gutenberg/books?search=&topic=&page=&lang=
+  // GET /api/gutenberg/books?search=&topic=&page=&lang=sort=
   app.get("/api/gutenberg/books", async (req: any, res: any) => {
     try {
       const { search = "", topic = "", page = "1", lang = "en", sort = "" } = req.query as Record<string, string>;
+      const pageNum = Math.max(1, parseInt(page) || 1);
+      const limit = 32;
+      const offset = (pageNum - 1) * limit;
 
-      // Build Open Library search query
-      const olParams = new URLSearchParams({
-        limit: "32",
-        page,
-        fields: "key,title,author_name,cover_i,subject,language,edition_count,id_project_gutenberg",
-      });
-      // Always require Gutenberg ID so every result is readable
-      const gutFilter = "id_project_gutenberg:*";
+      // Check if catalog has been synced into DB
+      const [countRow] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
+      const totalInDB = countRow?.n ?? 0;
+
+      if (totalInDB < CATALOG_MIN_BOOKS) {
+        // Catalog not yet loaded — trigger background sync and return empty with a hint
+        if (!catalogSyncRunning) syncGutenbergCatalog().catch(() => {});
+        return res.json({ count: 0, next: null, previous: null, results: [], syncing: true });
+      }
+
+      // Build WHERE conditions from DB
+      const conditions: any[] = [];
       if (search) {
-        olParams.set("q", `${search} ${gutFilter}`);
-      } else if (topic) {
-        olParams.set("q", `${gutFilter} subject:${topic}`);
-      } else {
-        olParams.set("q", gutFilter);
+        const q = `%${search.toLowerCase()}%`;
+        conditions.push(sql`(lower(${gutenbergBooks.title}) like ${q} OR lower(${gutenbergBooks.authors}::text) like ${q})`);
       }
-      if (lang) olParams.set("language", lang === "en" ? "eng" : lang);
-      if (sort === "ascending") olParams.set("sort", "new");
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-      let resp: Response;
-      try {
-        resp = await fetch(`${OPEN_LIBRARY}/search.json?${olParams}`, { signal: controller.signal });
-      } finally {
-        clearTimeout(timeout);
+      if (topic) {
+        const t = `%${topic.toLowerCase()}%`;
+        conditions.push(sql`(lower(${gutenbergBooks.subjects}::text) like ${t} OR lower(${gutenbergBooks.bookshelves}::text) like ${t})`);
       }
-      if (!resp.ok) throw new Error(`OpenLibrary error: ${resp.status}`);
-      const data = await resp.json() as any;
+      if (lang) {
+        conditions.push(sql`${gutenbergBooks.languages}::text like ${`%"${lang}"%`}`);
+      }
+      const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-      const results = (data.docs || [])
-        .map((b: any) => {
-          // Use first Gutenberg ID if available (enables content reading), else OL numeric ID
-          const gutIds: string[] = b.id_project_gutenberg || [];
-          const gutId = gutIds.length > 0 ? parseInt(gutIds[0]) : null;
-          const olNum = parseInt((b.key || "").replace(/[^0-9]/g, "")) || null;
-          const id = gutId || olNum;
-          if (!id) return null;
+      const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(gutenbergBooks).where(where);
+      const orderBy = sort === "ascending" ? asc(gutenbergBooks.createdAt) : desc(gutenbergBooks.downloadCount);
+      const rows = await db.select().from(gutenbergBooks).where(where).orderBy(orderBy).limit(limit).offset(offset);
 
-          return {
-            id,
-            title: b.title || "Unknown",
-            authors: (b.author_name || []).map((n: string) => ({ name: n })),
-            subjects: (b.subject || []).slice(0, 5),
-            languages: (b.language || []).map(olLangToCode),
-            coverUrl: b.cover_i ? `${OL_COVERS}/${b.cover_i}-M.jpg` : null,
-            downloadCount: (b.edition_count || 0) * 100,
-            hasText: gutIds.length > 0,
-          };
-        })
-        .filter(Boolean);
-
-      // Cache metadata in DB (non-blocking)
-      Promise.all(results.map((b: any) => {
-        const olDoc = data.docs.find((d: any) => {
-          const ids: string[] = d.id_project_gutenberg || [];
-          return ids.length > 0 && parseInt(ids[0]) === b.id;
-        }) || data.docs.find((_: any, i: number) => results[i]?.id === b.id);
-        if (olDoc) upsertOLMeta(olDoc, b.id).catch(() => {});
-      })).catch(() => {});
+      const results = rows.map(b => ({
+        id: b.gutenbergId,
+        title: b.title,
+        authors: b.authors || [],
+        subjects: b.subjects || [],
+        languages: b.languages || [],
+        coverUrl: b.coverUrl,
+        downloadCount: b.downloadCount || 0,
+        hasText: true,
+      }));
 
       res.json({
-        count: data.numFound || results.length,
-        next: data.numFound > parseInt(page) * 32 ? `page=${parseInt(page) + 1}` : null,
-        previous: parseInt(page) > 1 ? `page=${parseInt(page) - 1}` : null,
+        count: total,
+        next: total > pageNum * limit ? `page=${pageNum + 1}` : null,
+        previous: pageNum > 1 ? `page=${pageNum - 1}` : null,
         results,
       });
     } catch (err: any) {
-      res.status(502).json({ error: "Failed to fetch from Open Library", message: err.message });
+      res.status(500).json({ error: "Failed to fetch books", message: err.message });
     }
+  });
+
+  // GET /api/gutenberg/sync-status — catalog import progress
+  app.get("/api/gutenberg/sync-status", async (_req: any, res: any) => {
+    const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
+    res.json({ synced: (row?.n ?? 0) >= CATALOG_MIN_BOOKS, count: row?.n ?? 0, running: catalogSyncRunning });
   });
 
   // GET /api/gutenberg/books/:id — metadata only
@@ -2845,6 +2834,9 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // Trigger catalog sync in background on startup (non-blocking)
+  setImmediate(() => syncGutenbergCatalog().catch(() => {}));
+
   return httpServer;
 }
 
@@ -2868,20 +2860,138 @@ function getChapterText(content: string): string {
 
 // ── Gutenberg Public-Domain Library ──────────────────────────────────────────
 
-const OPEN_LIBRARY = "https://openlibrary.org";
-const OL_COVERS = "https://covers.openlibrary.org/b/id";
+const GUTENBERG_CATALOG_URL = "https://www.gutenberg.org/cache/epub/feeds/pg_catalog.csv";
 const GUTENBERG_TEXT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+/** Minimum rows to consider the catalog synced */
+const CATALOG_MIN_BOOKS = 1000;
 
-/** Map ISO 639-2 (3-letter) language codes to ISO 639-1 (2-letter) */
-const LANG3_TO_2: Record<string, string> = {
-  eng: "en", fre: "fr", fra: "fr", ger: "de", deu: "de", spa: "es", ita: "it",
-  por: "pt", dut: "nl", nld: "nl", chi: "zh", zho: "zh", fin: "fi", jpn: "ja",
-  rus: "ru", ara: "ar", pol: "pl", swe: "sv", nor: "no", dan: "da", hun: "hu",
-  ces: "cs", ron: "ro", tur: "tr", kor: "ko", vie: "vi", ind: "id",
-};
+let catalogSyncRunning = false;
 
-function olLangToCode(lang: string): string {
-  return LANG3_TO_2[lang.toLowerCase()] || lang.slice(0, 2);
+/** Parse one CSV row, handling quoted fields correctly */
+function parseCSVRow(line: string): string[] {
+  const cols: string[] = [];
+  let cur = "";
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) {
+      cols.push(cur); cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+/** Parse "Last, First, YYYY-YYYY; Author2" into structured array */
+function parseGutAuthors(raw: string): { name: string; birth_year?: number; death_year?: number }[] {
+  if (!raw.trim()) return [];
+  return raw.split(";").flatMap(a => {
+    const s = a.trim();
+    if (!s) return [];
+    const ym = s.match(/,\s*(\d{3,4})\s*-\s*(\d{3,4})?\s*$/);
+    if (ym) {
+      return [{ name: s.slice(0, ym.index!).trim(), birth_year: parseInt(ym[1]), death_year: ym[2] ? parseInt(ym[2]) : undefined }];
+    }
+    return [{ name: s }];
+  });
+}
+
+/** Download and import the full Gutenberg catalog CSV into the DB */
+async function syncGutenbergCatalog(): Promise<void> {
+  if (catalogSyncRunning) return;
+  catalogSyncRunning = true;
+  try {
+    // Skip if already synced
+    const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
+    if ((row?.n ?? 0) >= CATALOG_MIN_BOOKS) {
+      console.log(`[catalog] Already synced (${row?.n} books) — skipping`);
+      return;
+    }
+
+    console.log("[catalog] Downloading Gutenberg catalog CSV (~21 MB)…");
+    const resp = await fetch(GUTENBERG_CATALOG_URL, { signal: AbortSignal.timeout(90_000) });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const lines = text.split("\n");
+    console.log(`[catalog] Parsing ${lines.length} lines…`);
+
+    const BATCH = 300;
+    const batch: any[] = [];
+    let imported = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const cols = parseCSVRow(line);
+      if (cols.length < 9) continue;
+      const [gutIdStr, type, , title, langStr, authorsStr, subjectsStr, , bookshelvesStr] = cols;
+      if (type.trim() !== "Text") continue;
+      const gutId = parseInt(gutIdStr.trim());
+      if (!gutId || gutId <= 0) continue;
+
+      const languages = langStr.trim().split(";").map(l => l.trim()).filter(Boolean);
+      const authors = parseGutAuthors(authorsStr);
+      const subjects = subjectsStr.trim().split(";").map(s => s.trim()).filter(Boolean);
+      const bookshelves = bookshelvesStr.trim().split(";").map(s => s.trim()).filter(Boolean);
+
+      batch.push({
+        gutenbergId: gutId,
+        title: title.trim() || "Unknown",
+        authors,
+        subjects,
+        bookshelves,
+        languages,
+        coverUrl: `https://www.gutenberg.org/cache/epub/${gutId}/pg${gutId}.cover.medium.jpg`,
+        textUrl: `https://www.gutenberg.org/cache/epub/${gutId}/pg${gutId}.txt`,
+        downloadCount: 0,
+      });
+
+      if (batch.length >= BATCH) {
+        await db.insert(gutenbergBooks).values(batch)
+          .onConflictDoUpdate({
+            target: gutenbergBooks.gutenbergId,
+            set: {
+              title: sql`excluded.title`,
+              authors: sql`excluded.authors`,
+              subjects: sql`excluded.subjects`,
+              bookshelves: sql`excluded.bookshelves`,
+              languages: sql`excluded.languages`,
+              coverUrl: sql`excluded.cover_url`,
+            },
+          });
+        imported += batch.length;
+        batch.length = 0;
+        if (imported % 3000 === 0) console.log(`[catalog] ${imported} books imported…`);
+      }
+    }
+
+    if (batch.length > 0) {
+      await db.insert(gutenbergBooks).values(batch)
+        .onConflictDoUpdate({
+          target: gutenbergBooks.gutenbergId,
+          set: {
+            title: sql`excluded.title`,
+            authors: sql`excluded.authors`,
+            subjects: sql`excluded.subjects`,
+            bookshelves: sql`excluded.bookshelves`,
+            languages: sql`excluded.languages`,
+            coverUrl: sql`excluded.cover_url`,
+          },
+        });
+      imported += batch.length;
+    }
+
+    console.log(`[catalog] Sync complete — ${imported} books imported`);
+  } catch (err) {
+    console.error("[catalog] Sync failed:", err);
+  } finally {
+    catalogSyncRunning = false;
+  }
 }
 
 /** Build Gutenberg text URL candidates for a given numeric gutenberg ID */
@@ -2891,31 +3001,6 @@ function gutenbergTextUrls(id: number): string[] {
     `https://www.gutenberg.org/files/${id}/${id}-0.txt`,
     `https://www.gutenberg.org/files/${id}/${id}.txt`,
   ];
-}
-
-/** Upsert Open Library result into DB and return the DB row */
-async function upsertOLMeta(olDoc: any, gutId: number) {
-  const coverUrl = olDoc.cover_i ? `${OL_COVERS}/${olDoc.cover_i}-M.jpg` : null;
-  const authors: any[] = (olDoc.author_name || []).map((n: string) => ({ name: n }));
-  const subjects: string[] = (olDoc.subject || []).slice(0, 10);
-  const languages: string[] = (olDoc.language || []).map(olLangToCode);
-  const title: string = olDoc.title || "Unknown";
-
-  const existing = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
-  if (existing.length > 0) {
-    await db.update(gutenbergBooks).set({
-      title, authors, subjects, bookshelves: [], languages, coverUrl,
-      downloadCount: (olDoc.edition_count || 0) * 100,
-    }).where(eq(gutenbergBooks.gutenbergId, gutId));
-    return existing[0];
-  } else {
-    const [inserted] = await db.insert(gutenbergBooks).values({
-      gutenbergId: gutId, title, authors, subjects, bookshelves: [],
-      languages, coverUrl, textUrl: null,
-      downloadCount: (olDoc.edition_count || 0) * 100,
-    }).returning();
-    return inserted;
-  }
 }
 
 function getChapterPages(content: string): string[] {

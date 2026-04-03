@@ -64,6 +64,7 @@ interface BooksResponse {
   next: string | null;
   previous: string | null;
   results: GutBook[];
+  syncing?: boolean;
 }
 
 interface RecentBook {
@@ -242,6 +243,8 @@ export default function DiscoverPage() {
   const [data, setData] = useState<BooksResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const syncPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [recent, setRecent] = useState<RecentBook[]>([]);
 
@@ -261,7 +264,17 @@ export default function DiscoverPage() {
       if (sort === "ascending") params.set("sort", "ascending");
       const res = await fetch(`${BASE}/api/gutenberg/books?${params}`);
       if (!res.ok) throw new Error("Failed to load books");
-      setData(await res.json());
+      const json: BooksResponse = await res.json();
+      setData(json);
+      if (json.syncing) {
+        setSyncing(true);
+        // Poll every 4 s until catalog is ready
+        if (syncPollRef.current) clearTimeout(syncPollRef.current);
+        syncPollRef.current = setTimeout(fetchBooks, 4000);
+      } else {
+        setSyncing(false);
+        if (syncPollRef.current) clearTimeout(syncPollRef.current);
+      }
     } catch (e: any) {
       setError(e.message || "Error loading books");
     } finally {
@@ -429,9 +442,28 @@ export default function DiscoverPage() {
           )}
 
           {/* Loading */}
-          {loading && (
+          {loading && !syncing && (
             <div className="flex items-center justify-center py-28">
               <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(255,255,255,0.40)" }} />
+            </div>
+          )}
+
+          {/* Catalog syncing banner */}
+          {syncing && (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <div className="flex items-center gap-3 px-6 py-4 rounded-2xl"
+                style={{ background: "rgba(124,106,247,0.10)", border: "1px solid rgba(124,106,247,0.25)" }}>
+                <Loader2 className="w-5 h-5 animate-spin shrink-0" style={{ color: "rgba(124,106,247,0.8)" }} />
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    {ar ? "جارٍ بناء المكتبة…" : "Building your library…"}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {ar ? "يتم استيراد 70,000+ كتاب من الملك العام — دقيقة واحدة فقط"
+                      : "Importing 70,000+ public-domain books — just a minute"}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -448,7 +480,7 @@ export default function DiscoverPage() {
           )}
 
           {/* Grid */}
-          {!loading && !error && data && (
+          {!loading && !error && !syncing && data && (
             <>
               {data.results.filter(b => b.hasText).length === 0 ? (
                 <div className="text-center py-24">
