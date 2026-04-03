@@ -98,18 +98,27 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
 
 const SF_FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
+const FOOTER_LINK_STYLE: React.CSSProperties = { fontSize: 13.5, color: 'rgba(255,255,255,0.48)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4, cursor: 'pointer' };
+
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', margin: '0 0 6px', fontFamily: SF_FONT }}>
         {title}
       </p>
-      {links.map(({ label, href }) => (
-        <a key={label} href={href} style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.48)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4 }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
-        >{label}</a>
-      ))}
+      {links.map(({ label, href }) =>
+        href.startsWith('/') ? (
+          <Link key={label} href={href} style={FOOTER_LINK_STYLE}
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
+          >{label}</Link>
+        ) : (
+          <a key={label} href={href} style={FOOTER_LINK_STYLE}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
+          >{label}</a>
+        )
+      )}
     </div>
   );
 }
