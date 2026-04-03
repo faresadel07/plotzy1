@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Layout } from "@/components/layout";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
 const SECTIONS = [
@@ -47,16 +46,25 @@ export default function TermsOfService() {
   };
 
   return (
-    <Layout>
-      <div style={{ minHeight: "100vh", paddingTop: 32, paddingBottom: 120 }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
-
+    <div style={{ minHeight: "100vh", background: "var(--background)", color: "var(--foreground)" }}>
+      {/* Minimal header */}
+      <header style={{ borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 50, backdropFilter: "blur(12px)" }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 5 }} />
+            <span style={{ fontWeight: 800, fontSize: 13.5, letterSpacing: "-0.05em" }}>PLOTZY</span>
+          </Link>
           <Link href="/" style={{ textDecoration: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 40, cursor: "pointer", color: "var(--muted-foreground)", fontSize: 13 }}>
-              <ArrowLeft style={{ width: 14, height: 14 }} />
-              Back to Plotzy
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--muted-foreground)", fontSize: 13, cursor: "pointer" }}>
+              <ArrowLeft style={{ width: 13, height: 13 }} />
+              Back
             </div>
           </Link>
+        </div>
+      </header>
+
+      <div style={{ paddingTop: 40, paddingBottom: 120 }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
 
           <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 64, alignItems: "start" }}>
 
@@ -417,7 +425,18 @@ export default function TermsOfService() {
           </div>
         </div>
       </div>
-    </Layout>
+
+      {/* Minimal footer */}
+      <div style={{ borderTop: "1px solid var(--border)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <p style={{ margin: 0, fontSize: 12, color: "var(--muted-foreground)" }}>
+          &copy; {new Date().getFullYear()} Plotzy, Inc. All rights reserved.
+        </p>
+        <div style={{ display: "flex", gap: 20, fontSize: 12 }}>
+          <Link href="/privacy" style={{ color: "var(--muted-foreground)", textDecoration: "none" }}>Privacy Policy</Link>
+          <Link href="/terms" style={{ color: "var(--muted-foreground)", textDecoration: "none" }}>Terms of Service</Link>
+        </div>
+      </div>
+    </div>
   );
 }
 
