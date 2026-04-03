@@ -443,7 +443,7 @@ export default function TermsOfService() {
 function S({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} style={{ scrollMarginTop: 96 }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 20px", paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+      <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 16px" }}>
         {title}
       </h2>
       <div style={{ fontSize: 15, lineHeight: 1.85, color: "var(--muted-foreground)", display: "flex", flexDirection: "column", gap: 12 }}>
