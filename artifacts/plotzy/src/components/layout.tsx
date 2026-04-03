@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, LogOut, User, Camera, GraduationCap, Store, Library, Globe } from "lucide-react";
+import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -33,6 +33,7 @@ const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/writing-guide", key: "navGuide" },
   { href: "/marketplace",   key: "navMarketplace" },
   { href: "/library",       key: "navCommunity" },
+  { href: "/pricing",       key: "navPro" },
   { href: "/support",       key: "navSupport" },
 ];
 

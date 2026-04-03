@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, ChevronDown, Zap } from "lucide-react";
+import { Check, X, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
@@ -89,15 +89,6 @@ export default function Pricing() {
             className="text-center"
             style={{ marginBottom: 28 }}
           >
-            <div
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-4"
-              style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}
-            >
-              <Zap className="w-3 h-3" style={{ color: "#a3a3a3" }} />
-              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#717171", textTransform: "uppercase" }}>
-                Plotzy Pro
-              </span>
-            </div>
             <h1
               className="font-bold tracking-tight"
               style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", lineHeight: 1.1, marginBottom: 10 }}
