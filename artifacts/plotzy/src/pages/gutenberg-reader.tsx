@@ -410,16 +410,33 @@ export default function GutenbergReader() {
   }
 
   if (error && !rawText) {
+    const gutenbergUrl = gutId ? `https://www.gutenberg.org/ebooks/${gutId}` : null;
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4" style={{ background: dark ? "#07060d" : "#b8b3aa" }}>
-        <BookOpen className="w-12 h-12" style={{ color: "rgba(28,22,16,0.3)" }} />
-        <p className="text-base text-center max-w-sm px-6" style={{ color: "#1c1610" }}>{error}</p>
-        <Link href="/discover">
-          <button className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium"
-            style={{ background: "rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.15)", color: "#1c1610" }}>
-            <ArrowLeft className="w-4 h-4" /> Back to Library
-          </button>
-        </Link>
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-5" style={{ background: dark ? "#07060d" : "#b8b3aa" }}>
+        <BookOpen className="w-12 h-12" style={{ color: "rgba(28,22,16,0.22)" }} />
+        <div className="text-center max-w-xs px-6">
+          <p className="text-base font-semibold mb-1" style={{ color: "#1c1610" }}>
+            {ar ? "النص غير متاح لهذا الكتاب" : "Text not available"}
+          </p>
+          <p className="text-sm" style={{ color: "rgba(28,22,16,0.55)" }}>
+            {ar ? "هذا الكتاب لا يوفر نسخة نصية قابلة للقراءة." : "This book doesn't have a readable plain-text version."}
+          </p>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <Link href="/discover">
+            <button className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium"
+              style={{ background: "rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.15)", color: "#1c1610" }}>
+              <ArrowLeft className="w-4 h-4" /> {ar ? "العودة للمكتبة" : "Browse other books"}
+            </button>
+          </Link>
+          {gutenbergUrl && (
+            <a href={gutenbergUrl} target="_blank" rel="noopener noreferrer"
+              className="text-xs underline underline-offset-2"
+              style={{ color: "rgba(28,22,16,0.45)" }}>
+              {ar ? "افتح على موقع Gutenberg" : "Open on Gutenberg.org"}
+            </a>
+          )}
+        </div>
       </div>
     );
   }

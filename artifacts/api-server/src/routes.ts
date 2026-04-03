@@ -2667,24 +2667,32 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       }
     }
 
-    // Try DB-cached textUrl first, then probe Gutenberg.org directly
-    let textUrl = row?.textUrl || null;
-    if (!textUrl) {
-      const candidates = gutenbergTextUrls(gutId);
-      for (const url of candidates) {
-        try {
-          const probe = await fetch(url, { method: "HEAD" });
-          if (probe.ok) { textUrl = url; break; }
-        } catch { /* try next */ }
-      }
+    // Build candidate list: DB-cached URL first, then fallback patterns
+    const candidates = gutenbergTextUrls(gutId);
+    if (row?.textUrl && !candidates.includes(row.textUrl)) candidates.unshift(row.textUrl);
+
+    let textUrl: string | null = null;
+    let textResp: Response | null = null;
+
+    for (const url of candidates) {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (r.ok) { textUrl = url; textResp = r; break; }
+      } catch { /* try next */ }
     }
 
-    if (!textUrl) {
+    if (!textUrl || !textResp) {
+      // Mark this book as unavailable so the UI can hide it
+      if (row) await db.update(gutenbergBooks).set({ textUrl: null }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
       return res.status(404).json({ error: "No plain-text version available for this book" });
     }
 
+    // Save the working textUrl back to DB if it changed
+    if (row?.textUrl !== textUrl) {
+      await db.update(gutenbergBooks).set({ textUrl }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
+    }
+
     try {
-      const textResp = await fetch(textUrl);
       if (!textResp.ok) return res.status(502).json({ error: "Failed to fetch book text" });
       const rawText = await textResp.text();
 
