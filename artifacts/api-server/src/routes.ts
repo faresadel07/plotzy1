@@ -2540,36 +2540,75 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   app.get("/api/gutenberg/books", async (req: any, res: any) => {
     try {
       const { search = "", topic = "", page = "1", lang = "en", sort = "" } = req.query as Record<string, string>;
-      const params = new URLSearchParams({ page });
-      if (search) params.set("search", search);
-      if (topic) params.set("topic", topic);
-      if (lang) params.set("languages", lang);
-      if (sort === "ascending") params.set("sort", "ascending");
 
-      const resp = await fetch(`${GUTENDEX}?${params}`);
-      if (!resp.ok) throw new Error(`Gutendex error: ${resp.status}`);
+      // Build Open Library search query
+      const olParams = new URLSearchParams({
+        limit: "32",
+        page,
+        fields: "key,title,author_name,cover_i,subject,language,edition_count,id_project_gutenberg",
+      });
+      // Always require Gutenberg ID so every result is readable
+      const gutFilter = "id_project_gutenberg:*";
+      if (search) {
+        olParams.set("q", `${search} ${gutFilter}`);
+      } else if (topic) {
+        olParams.set("q", `${gutFilter} subject:${topic}`);
+      } else {
+        olParams.set("q", gutFilter);
+      }
+      if (lang) olParams.set("language", lang === "en" ? "eng" : lang);
+      if (sort === "ascending") olParams.set("sort", "new");
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      let resp: Response;
+      try {
+        resp = await fetch(`${OPEN_LIBRARY}/search.json?${olParams}`, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
+      if (!resp.ok) throw new Error(`OpenLibrary error: ${resp.status}`);
       const data = await resp.json() as any;
 
+      const results = (data.docs || [])
+        .map((b: any) => {
+          // Use first Gutenberg ID if available (enables content reading), else OL numeric ID
+          const gutIds: string[] = b.id_project_gutenberg || [];
+          const gutId = gutIds.length > 0 ? parseInt(gutIds[0]) : null;
+          const olNum = parseInt((b.key || "").replace(/[^0-9]/g, "")) || null;
+          const id = gutId || olNum;
+          if (!id) return null;
+
+          return {
+            id,
+            title: b.title || "Unknown",
+            authors: (b.author_name || []).map((n: string) => ({ name: n })),
+            subjects: (b.subject || []).slice(0, 5),
+            languages: (b.language || []).map(olLangToCode),
+            coverUrl: b.cover_i ? `${OL_COVERS}/${b.cover_i}-M.jpg` : null,
+            downloadCount: (b.edition_count || 0) * 100,
+            hasText: gutIds.length > 0,
+          };
+        })
+        .filter(Boolean);
+
       // Cache metadata in DB (non-blocking)
-      Promise.all((data.results || []).map((b: any) => upsertGutenbergMeta(b))).catch(() => {});
+      Promise.all(results.map((b: any) => {
+        const olDoc = data.docs.find((d: any) => {
+          const ids: string[] = d.id_project_gutenberg || [];
+          return ids.length > 0 && parseInt(ids[0]) === b.id;
+        }) || data.docs.find((_: any, i: number) => results[i]?.id === b.id);
+        if (olDoc) upsertOLMeta(olDoc, b.id).catch(() => {});
+      })).catch(() => {});
 
       res.json({
-        count: data.count,
-        next: data.next,
-        previous: data.previous,
-        results: (data.results || []).map((b: any) => ({
-          id: b.id,
-          title: b.title,
-          authors: b.authors || [],
-          subjects: (b.subjects || []).slice(0, 5),
-          languages: b.languages || [],
-          coverUrl: pickCoverUrl(b.formats || {}),
-          downloadCount: b.download_count || 0,
-          hasText: !!pickTextUrl(b.formats || {}),
-        })),
+        count: data.numFound || results.length,
+        next: data.numFound > parseInt(page) * 32 ? `page=${parseInt(page) + 1}` : null,
+        previous: parseInt(page) > 1 ? `page=${parseInt(page) - 1}` : null,
+        results,
       });
     } catch (err: any) {
-      res.status(502).json({ error: "Failed to fetch from Gutendex", message: err.message });
+      res.status(502).json({ error: "Failed to fetch from Open Library", message: err.message });
     }
   });
 
@@ -2597,10 +2636,15 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
 
     try {
-      const resp = await fetch(`${GUTENDEX}/${gutId}`);
+      // Fetch from Open Library by searching for the Gutenberg ID
+      const resp = await fetch(`${OPEN_LIBRARY}/search.json?q=${gutId}&fields=key,title,author_name,cover_i,subject,language,edition_count,id_project_gutenberg&limit=5`);
       if (!resp.ok) return res.status(404).json({ error: "Book not found" });
-      const b = await resp.json() as any;
-      const row = await upsertGutenbergMeta(b);
+      const data = await resp.json() as any;
+      const olDoc = (data.docs || []).find((d: any) =>
+        (d.id_project_gutenberg || []).includes(String(gutId))
+      ) || data.docs?.[0];
+      if (!olDoc) return res.status(404).json({ error: "Book not found" });
+      const row = await upsertOLMeta(olDoc, gutId);
       return res.json({
         id: row.gutenbergId,
         dbId: row.id,
@@ -2634,16 +2678,15 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       }
     }
 
+    // Try DB-cached textUrl first, then probe Gutenberg.org directly
     let textUrl = row?.textUrl || null;
     if (!textUrl) {
-      try {
-        const resp = await fetch(`${GUTENDEX}/${gutId}`);
-        if (!resp.ok) return res.status(404).json({ error: "Book not found" });
-        const b = await resp.json() as any;
-        const updated = await upsertGutenbergMeta(b);
-        textUrl = updated.textUrl;
-      } catch {
-        return res.status(502).json({ error: "Could not resolve book text URL" });
+      const candidates = gutenbergTextUrls(gutId);
+      for (const url of candidates) {
+        try {
+          const probe = await fetch(url, { method: "HEAD" });
+          if (probe.ok) { textUrl = url; break; }
+        } catch { /* try next */ }
       }
     }
 
@@ -2825,57 +2868,51 @@ function getChapterText(content: string): string {
 
 // ── Gutenberg Public-Domain Library ──────────────────────────────────────────
 
-const GUTENDEX = "https://gutendex.com/books";
+const OPEN_LIBRARY = "https://openlibrary.org";
+const OL_COVERS = "https://covers.openlibrary.org/b/id";
 const GUTENBERG_TEXT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-/** Extract the best plain-text URL from Gutendex formats object */
-function pickTextUrl(formats: Record<string, string>): string | null {
-  const prefer = [
-    "text/plain; charset=utf-8",
-    "text/plain; charset=us-ascii",
-    "text/plain",
+/** Map ISO 639-2 (3-letter) language codes to ISO 639-1 (2-letter) */
+const LANG3_TO_2: Record<string, string> = {
+  eng: "en", fre: "fr", fra: "fr", ger: "de", deu: "de", spa: "es", ita: "it",
+  por: "pt", dut: "nl", nld: "nl", chi: "zh", zho: "zh", fin: "fi", jpn: "ja",
+  rus: "ru", ara: "ar", pol: "pl", swe: "sv", nor: "no", dan: "da", hun: "hu",
+  ces: "cs", ron: "ro", tur: "tr", kor: "ko", vie: "vi", ind: "id",
+};
+
+function olLangToCode(lang: string): string {
+  return LANG3_TO_2[lang.toLowerCase()] || lang.slice(0, 2);
+}
+
+/** Build Gutenberg text URL candidates for a given numeric gutenberg ID */
+function gutenbergTextUrls(id: number): string[] {
+  return [
+    `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`,
+    `https://www.gutenberg.org/files/${id}/${id}-0.txt`,
+    `https://www.gutenberg.org/files/${id}/${id}.txt`,
   ];
-  for (const mime of prefer) {
-    if (formats[mime] && !formats[mime].endsWith(".zip")) return formats[mime];
-  }
-  // Fallback: any text/plain key
-  const key = Object.keys(formats).find(k => k.startsWith("text/plain") && !formats[k].endsWith(".zip"));
-  return key ? formats[key] : null;
 }
 
-/** Extract cover image URL from Gutendex formats */
-function pickCoverUrl(formats: Record<string, string>): string | null {
-  return formats["image/jpeg"] || null;
-}
+/** Upsert Open Library result into DB and return the DB row */
+async function upsertOLMeta(olDoc: any, gutId: number) {
+  const coverUrl = olDoc.cover_i ? `${OL_COVERS}/${olDoc.cover_i}-M.jpg` : null;
+  const authors: any[] = (olDoc.author_name || []).map((n: string) => ({ name: n }));
+  const subjects: string[] = (olDoc.subject || []).slice(0, 10);
+  const languages: string[] = (olDoc.language || []).map(olLangToCode);
+  const title: string = olDoc.title || "Unknown";
 
-/** Upsert Gutendex result into DB and return the DB row */
-async function upsertGutenbergMeta(book: any) {
-  const textUrl = pickTextUrl(book.formats || {});
-  const coverUrl = pickCoverUrl(book.formats || {});
-  const existing = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, book.id)).limit(1);
+  const existing = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
   if (existing.length > 0) {
     await db.update(gutenbergBooks).set({
-      title: book.title,
-      authors: book.authors || [],
-      subjects: book.subjects || [],
-      bookshelves: book.bookshelves || [],
-      languages: book.languages || [],
-      coverUrl,
-      textUrl,
-      downloadCount: book.download_count || 0,
-    }).where(eq(gutenbergBooks.gutenbergId, book.id));
+      title, authors, subjects, bookshelves: [], languages, coverUrl,
+      downloadCount: (olDoc.edition_count || 0) * 100,
+    }).where(eq(gutenbergBooks.gutenbergId, gutId));
     return existing[0];
   } else {
     const [inserted] = await db.insert(gutenbergBooks).values({
-      gutenbergId: book.id,
-      title: book.title,
-      authors: book.authors || [],
-      subjects: book.subjects || [],
-      bookshelves: book.bookshelves || [],
-      languages: book.languages || [],
-      coverUrl,
-      textUrl,
-      downloadCount: book.download_count || 0,
+      gutenbergId: gutId, title, authors, subjects, bookshelves: [],
+      languages, coverUrl, textUrl: null,
+      downloadCount: (olDoc.edition_count || 0) * 100,
     }).returning();
     return inserted;
   }
