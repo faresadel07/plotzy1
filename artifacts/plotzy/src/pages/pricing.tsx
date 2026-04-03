@@ -64,7 +64,11 @@ export default function Pricing() {
         ? "yearly_annual"
         : "yearly_monthly";
 
-  const proPrice = billingCycle === "monthly" ? 13 : 10;
+  const proPrice =
+    billingCycle === "monthly" ? 13 :
+    yearlyBilling === "annual" ? 99.99 : 10;
+
+  const priceSuffix = yearlyBilling === "annual" && billingCycle === "yearly" ? "/yr" : "/mo";
   const billingLabel =
     billingCycle === "monthly"
       ? "Billed $13 every month"
@@ -266,10 +270,13 @@ export default function Pricing() {
                     <NumberFlow
                       value={proPrice}
                       prefix="$"
-                      suffix="/mo"
+                      suffix={priceSuffix}
                       className="font-bold"
                       style={{ fontSize: 48, lineHeight: 1, color: "#fff" }}
-                      format={{ minimumFractionDigits: 0, maximumFractionDigits: 0 }}
+                      format={{
+                        minimumFractionDigits: proPrice % 1 === 0 ? 0 : 2,
+                        maximumFractionDigits: 2,
+                      }}
                     />
                   </div>
 
