@@ -9,6 +9,7 @@ import { StoryBible } from "@/components/story-bible";
 import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
 import { RichWritingToolbar } from "@/components/RichWritingToolbar";
 import { RichChapterEditor } from "@/components/RichChapterEditor";
+import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil } from "lucide-react";
@@ -455,6 +456,7 @@ export default function ChapterEditor() {
   const [selectedImageIdx, setSelectedImageIdx] = useState<number | null>(null);
   const [resizingImage, setResizingImage] = useState<{ idx: number, startX: number, startPct: number } | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [floatingImages, setFloatingImages] = useState<Record<number, FloatingImage[]>>({});
 
   // Voice dictation state
   const [isRecording, setIsRecording] = useState(false);
@@ -482,7 +484,22 @@ export default function ChapterEditor() {
   useEffect(() => {
     if (chapter && !isDirty) {
       setTitle(chapter.title);
-      const parsed = parsePages(chapter.content);
+
+      // ── Detect v2 format (includes floatingImages) ──────────────────────
+      let rawContent = chapter.content;
+      let loadedFloatingImages: Record<number, FloatingImage[]> = {};
+      try {
+        const obj = JSON.parse(rawContent);
+        if (obj && obj.v === 2 && typeof obj.pages === 'string') {
+          loadedFloatingImages = obj.floatingImages || {};
+          rawContent = JSON.stringify([{ type: 'text', content: obj.pages }]);
+        }
+      } catch {
+        // fall through — use original rawContent
+      }
+      setFloatingImages(loadedFloatingImages);
+
+      const parsed = parsePages(rawContent);
       setPages(parsed);
       const html = pagesToHtml(parsed);
       setRichHtml(html);
@@ -891,7 +908,12 @@ export default function ChapterEditor() {
     try {
       // Join all rich pages into a single HTML string
       const htmlContent = richPages.join('') || richHtml;
-      const currentContent = JSON.stringify([{ type: 'text', content: htmlContent }]);
+      // v2 format: includes floating images
+      const currentContent = JSON.stringify({
+        v: 2,
+        pages: htmlContent,
+        floatingImages: floatingImages,
+      });
 
       // Calculate word count difference for daily tracking
       const previousContent = chapter?.content || "";
@@ -1052,6 +1074,30 @@ export default function ChapterEditor() {
 
   // ── Rich Media Handling ───────────────────────────────────────────────────
 
+  const insertFloatingImage = (src: string, naturalW: number, naturalH: number, pageIdx: number) => {
+    const maxW = dynPageW * 0.5;
+    const w = Math.min(maxW, naturalW > 0 ? naturalW : maxW);
+    const aspectRatio = naturalH > 0 ? naturalW / naturalH : 4 / 3;
+    const h = w / aspectRatio;
+    const x = Math.round((dynPageW - w) / 2);
+    const y = Math.round((dynPageH - h) / 2);
+    const newImg: FloatingImage = {
+      id: `fi-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      src,
+      x,
+      y,
+      width: Math.round(w),
+      height: Math.round(h),
+      locked: false,
+      aspectRatio,
+    };
+    setFloatingImages(prev => ({
+      ...prev,
+      [pageIdx]: [...(prev[pageIdx] || []), newImg],
+    }));
+    setIsDirty(true);
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1061,12 +1107,11 @@ export default function ChapterEditor() {
     reader.onloadend = () => {
       if (!reader.result) return;
       const src = reader.result as string;
-      const targetIdx = lastFocusedPageIdxRef.current;
-      const editor = pageEditorRefs.current[targetIdx] ?? pageEditorRefs.current[activePageIndex];
-      if (editor && !editor.isDestroyed) {
-        (editor.chain().focus() as any).setResizableImage({ src }).run();
-        setIsDirty(true);
-      }
+      const pageIdx = lastFocusedPageIdxRef.current ?? activePageIndex;
+      const img = new Image();
+      img.onload = () => insertFloatingImage(src, img.naturalWidth, img.naturalHeight, pageIdx);
+      img.onerror = () => insertFloatingImage(src, 0, 0, pageIdx);
+      img.src = src;
     };
     reader.readAsDataURL(file);
   };
@@ -1128,12 +1173,11 @@ export default function ChapterEditor() {
     reader.onloadend = () => {
       if (!reader.result) return;
       const src = reader.result as string;
-      const idx = targetPageIndex ?? lastFocusedPageIdxRef.current ?? activePageIndex;
-      const editor = pageEditorRefs.current[idx];
-      if (editor && !editor.isDestroyed) {
-        (editor.chain().focus() as any).setResizableImage({ src }).run();
-        setIsDirty(true);
-      }
+      const pageIdx = targetPageIndex ?? lastFocusedPageIdxRef.current ?? activePageIndex;
+      const imgEl = new Image();
+      imgEl.onload = () => insertFloatingImage(src, imgEl.naturalWidth, imgEl.naturalHeight, pageIdx);
+      imgEl.onerror = () => insertFloatingImage(src, 0, 0, pageIdx);
+      imgEl.src = src;
     };
     reader.readAsDataURL(file);
   };
@@ -1839,6 +1883,19 @@ export default function ChapterEditor() {
                       </span>
                     )}
                   </div>
+
+                  {/* Floating image overlay — absolutely positioned over the whole page */}
+                  <FloatingImageOverlay
+                    images={floatingImages[index] || []}
+                    pageWidth={dynPageW}
+                    pageHeight={dynPageH}
+                    zoom={zoom}
+                    ar={ar}
+                    onUpdate={(updated) => {
+                      setFloatingImages(prev => ({ ...prev, [index]: updated }));
+                      setIsDirty(true);
+                    }}
+                  />
                 </div>
                 <div className="absolute -bottom-1 left-2 right-2 h-3 rounded-b-sm opacity-[0.07] blur-sm" style={{ background: "black" }} />
               </div>
