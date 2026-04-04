@@ -7,6 +7,7 @@ import Color from "@tiptap/extension-color";
 import FontFamily from "@tiptap/extension-font-family";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
 import { Extension } from "@tiptap/core";
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import type { Editor } from "@tiptap/react";
@@ -239,6 +240,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
       FontSize,
       Highlight.configure({ multicolor: true }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "tiptap-link" } }),
+      Image.configure({ inline: false, allowBase64: true, HTMLAttributes: { style: "max-width: 100%; height: auto; border-radius: 4px;" } }),
     ],
     content: initialContent || "<p></p>",
     onUpdate: ({ editor }) => {
@@ -404,6 +406,18 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         }
         .tiptap-editor:focus { outline: none; }
         .tiptap-editor .ProseMirror { position: relative; }
+        .tiptap-editor img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 4px;
+          display: block;
+          margin: 12px auto;
+          cursor: default;
+        }
+        .tiptap-editor img.ProseMirror-selectednode {
+          outline: 2px solid #7c6af7;
+          outline-offset: 2px;
+        }
       `}</style>
       <EditorContent
         editor={editor}

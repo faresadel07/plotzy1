@@ -1053,29 +1053,20 @@ export default function ChapterEditor() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setPages(prev => {
-        const next = [...prev];
-        // Insert image block after current active text block, or replace empty block
-        const currentBlock = next[activePageIndex];
-        if (typeof currentBlock === 'string' && !currentBlock.trim() && pages.length === 1) {
-          next[activePageIndex] = { type: 'image', content: base64 };
-        } else {
-          next.splice(activePageIndex + 1, 0, { type: 'image', content: base64 });
-          // add an empty text block after the image so they can keep typing
-          next.splice(activePageIndex + 2, 0, "");
-          setTimeout(() => setActivePageIndex(activePageIndex + 2), 50);
-        }
-        return next;
-      });
-      setIsDirty(true);
+      if (!reader.result) return;
+      const src = reader.result as string;
+      // Insert into the active TipTap editor
+      const editor = pageEditorRefs.current[activePageIndex];
+      if (editor && !editor.isDestroyed) {
+        editor.chain().focus().setImage({ src }).run();
+        setIsDirty(true);
+      }
     };
     reader.readAsDataURL(file);
-    // Reset input
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSaveDrawing = async () => {
@@ -1129,20 +1120,18 @@ export default function ChapterEditor() {
     setIsDirty(true);
   };
 
-  const insertImageFromFile = (file: File, afterIndex?: number) => {
+  const insertImageFromFile = (file: File, targetPageIndex?: number) => {
     if (!file.type.startsWith('image/')) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setPages(prev => {
-        const next = [...prev];
-        const insertAt = (afterIndex ?? activePageIndex) + 1;
-        next.splice(insertAt, 0, { type: 'image', content: base64, widthPct: 100, align: 'center' });
-        next.splice(insertAt + 1, 0, "");
-        setTimeout(() => setActivePageIndex(insertAt + 1), 50);
-        return next;
-      });
-      setIsDirty(true);
+      if (!reader.result) return;
+      const src = reader.result as string;
+      const idx = targetPageIndex ?? activePageIndex;
+      const editor = pageEditorRefs.current[idx];
+      if (editor && !editor.isDestroyed) {
+        editor.chain().focus().setImage({ src }).run();
+        setIsDirty(true);
+      }
     };
     reader.readAsDataURL(file);
   };
