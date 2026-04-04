@@ -438,6 +438,8 @@ export default function ChapterEditor() {
   const pageEditorRefs = useRef<(Editor | null)[]>([]);
   // Which page index should receive focus once its editor mounts (after a split)
   const nextPageFocusRef = useRef<number>(-1);
+  // Pages that were freshly created by a user split and need overflow check on mount
+  const newSplitPagesRef = useRef<Set<number>>(new Set());
   // Track the last focused editor so image inserts go to the right page
   const lastFocusedPageIdxRef = useRef<number>(0);
   // Debounce timer for the reverse-merge (pull-back) logic
@@ -1766,6 +1768,8 @@ export default function ChapterEditor() {
                     onSplitNeeded={(fitsHtml, overflowHtml) => {
                       const nextIdx = index + 1;
                       nextPageFocusRef.current = nextIdx;
+                      // Mark this page as freshly created so it gets overflow check on mount
+                      newSplitPagesRef.current.add(nextIdx);
                       setRichPages(prev => {
                         const next = [...prev];
                         next[index] = fitsHtml;
@@ -1838,6 +1842,8 @@ export default function ChapterEditor() {
                     onEditorReady={(editor) => {
                       pageEditorRefs.current[index] = editor;
                       tiptapEditorRef.current = editor;
+                      // Clear the new-split mark now that the page has mounted
+                      newSplitPagesRef.current.delete(index);
                       if (index === 0) {
                         setTiptapReady(true);
                         setActiveToolbarEditor(editor);
@@ -1872,6 +1878,7 @@ export default function ChapterEditor() {
                       : (ar ? "تابع قصتك..." : "Continue your story...")}
                     fixedHeight={dynContentH}
                     zoom={100}
+                    checkOverflowOnMount={newSplitPagesRef.current.has(index)}
                   />
 
                   {/* Page footer */}

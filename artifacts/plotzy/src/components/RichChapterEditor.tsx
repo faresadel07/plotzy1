@@ -383,6 +383,7 @@ interface RichChapterEditorProps {
   minHeight?: number;
   fixedHeight?: number;
   zoom?: number;
+  checkOverflowOnMount?: boolean;
 }
 
 const FONT_FAMILY_MAP: Record<string, string> = {
@@ -423,6 +424,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   minHeight = 800,
   fixedHeight,
   zoom = 100,
+  checkOverflowOnMount = false,
 }, ref) => {
   const resolvedFont = FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif";
 
@@ -517,13 +519,12 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   }, [editor]);
 
   // ── Initial overflow check on mount ──────────────────────────────────────
-  // When a page is freshly created from a split (e.g. a large paste overflows
-  // page 1 and page 2 is created with the remainder), the overflow content may
-  // itself be larger than a single page. Without this check page 2 would never
-  // auto-split — it would just clip the content silently. We wait two frames
-  // so fonts and layout have stabilised before measuring.
+  // Only fires for pages freshly created by a user split (checkOverflowOnMount=true).
+  // Pages loaded from saved content are already correctly sized by splitHtmlIntoPages
+  // and must NOT trigger this, otherwise every page would cascade-split on load.
   const initialOverflowCheckedRef = useRef(false);
   useEffect(() => {
+    if (!checkOverflowOnMount) return;
     if (!editor || initialOverflowCheckedRef.current) return;
     initialOverflowCheckedRef.current = true;
 
