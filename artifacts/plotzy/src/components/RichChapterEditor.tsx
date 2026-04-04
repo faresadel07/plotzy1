@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
@@ -7,10 +7,213 @@ import Color from "@tiptap/extension-color";
 import FontFamily from "@tiptap/extension-font-family";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import { Extension } from "@tiptap/core";
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { Extension, Node } from "@tiptap/core";
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import type { Editor } from "@tiptap/react";
+import type { NodeViewProps } from "@tiptap/react";
+
+// ── Resizable Image NodeView ─────────────────────────────────────────────────
+function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps) {
+  const [isResizing, setIsResizing] = useState(false);
+  const startRef = useRef<{ x: number; w: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const widthPct: number = node.attrs.widthPct ?? 100;
+  const align: string = node.attrs.align ?? "center";
+  const src: string = node.attrs.src ?? "";
+
+  const justifyMap: Record<string, string> = { left: "flex-start", center: "center", right: "flex-end" };
+
+  const startResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const container = containerRef.current;
+    if (!container) return;
+    const containerW = container.parentElement?.offsetWidth ?? 508;
+    startRef.current = { x: e.clientX, w: (widthPct / 100) * containerW };
+    setIsResizing(true);
+
+    const onMove = (ev: MouseEvent) => {
+      if (!startRef.current) return;
+      const dx = ev.clientX - startRef.current.x;
+      const newW = Math.max(80, startRef.current.w + dx);
+      const pct = Math.round(Math.min(100, (newW / containerW) * 100));
+      updateAttributes({ widthPct: pct });
+    };
+    const onUp = () => { setIsResizing(false); startRef.current = null; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [widthPct, updateAttributes]);
+
+  const AlignIcon = ({ a }: { a: string }) => (
+    a === "left" ? <svg width="11" height="9" viewBox="0 0 11 9" fill="currentColor"><rect x="0" y="0" width="11" height="1.8" rx="0.9"/><rect x="0" y="3.6" width="7" height="1.8" rx="0.9"/><rect x="0" y="7.2" width="9" height="1.8" rx="0.9"/></svg>
+    : a === "center" ? <svg width="11" height="9" viewBox="0 0 11 9" fill="currentColor"><rect x="0" y="0" width="11" height="1.8" rx="0.9"/><rect x="2" y="3.6" width="7" height="1.8" rx="0.9"/><rect x="1" y="7.2" width="9" height="1.8" rx="0.9"/></svg>
+    : <svg width="11" height="9" viewBox="0 0 11 9" fill="currentColor"><rect x="0" y="0" width="11" height="1.8" rx="0.9"/><rect x="4" y="3.6" width="7" height="1.8" rx="0.9"/><rect x="2" y="7.2" width="9" height="1.8" rx="0.9"/></svg>
+  );
+
+  return (
+    <NodeViewWrapper>
+      <div
+        style={{ display: "flex", justifyContent: justifyMap[align], padding: "8px 0", userSelect: "none", position: "relative" }}
+        contentEditable={false}
+      >
+        {/* Floating toolbar — only when selected */}
+        {selected && (
+          <div
+            style={{
+              position: "absolute",
+              top: "-8px",
+              left: "50%",
+              transform: "translate(-50%, -100%)",
+              display: "flex",
+              alignItems: "center",
+              gap: "2px",
+              padding: "4px 6px",
+              background: "#1a1a1d",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "10px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+              zIndex: 50,
+              whiteSpace: "nowrap",
+            }}
+            onMouseDown={e => e.preventDefault()}
+          >
+            {(["left", "center", "right"] as const).map(a => (
+              <button
+                key={a}
+                onMouseDown={e => { e.preventDefault(); updateAttributes({ align: a }); }}
+                style={{
+                  width: 24, height: 24, borderRadius: 6, border: "none", cursor: "pointer",
+                  background: align === a ? "rgba(255,255,255,0.18)" : "transparent",
+                  color: align === a ? "#fff" : "rgba(255,255,255,0.45)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              ><AlignIcon a={a} /></button>
+            ))}
+            <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.12)", margin: "0 2px" }} />
+            {([{ l: "S", p: 33 }, { l: "M", p: 55 }, { l: "L", p: 80 }, { l: "↔", p: 100 }]).map(({ l, p }) => (
+              <button
+                key={l}
+                onMouseDown={e => { e.preventDefault(); updateAttributes({ widthPct: p }); }}
+                style={{
+                  width: 24, height: 24, borderRadius: 6, border: "none", cursor: "pointer",
+                  background: Math.abs(widthPct - p) < 5 ? "rgba(255,255,255,0.18)" : "transparent",
+                  color: Math.abs(widthPct - p) < 5 ? "#fff" : "rgba(255,255,255,0.45)",
+                  fontSize: 10, fontWeight: 700,
+                }}
+              >{l}</button>
+            ))}
+            <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.12)", margin: "0 2px" }} />
+            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", padding: "0 4px" }}>{widthPct}%</span>
+          </div>
+        )}
+
+        {/* Image container */}
+        <div
+          ref={containerRef}
+          style={{ position: "relative", width: `${widthPct}%`, minWidth: 60 }}
+        >
+          <img
+            src={src}
+            draggable={false}
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+              borderRadius: 4,
+              outline: selected ? "2px solid #7c6af7" : "2px solid transparent",
+              outlineOffset: 2,
+              cursor: isResizing ? "ew-resize" : "default",
+              transition: "outline-color 0.15s",
+            }}
+          />
+          {/* Resize handle */}
+          {selected && (
+            <div
+              onMouseDown={startResize}
+              style={{
+                position: "absolute",
+                bottom: -6,
+                right: -6,
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                background: "#7c6af7",
+                border: "2px solid #fff",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                cursor: "ew-resize",
+                zIndex: 10,
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+// ── Custom ResizableImage TipTap Node ────────────────────────────────────────
+const ResizableImage = Node.create({
+  name: "resizableImage",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: null },
+      title: { default: null },
+      widthPct: { default: 100 },
+      align: { default: "center" },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "img[src]",
+        getAttrs: el => {
+          const img = el as HTMLImageElement;
+          const w = img.getAttribute("data-width-pct");
+          const a = img.getAttribute("data-align");
+          return {
+            src: img.getAttribute("src"),
+            alt: img.getAttribute("alt"),
+            title: img.getAttribute("title"),
+            widthPct: w ? Number(w) : 100,
+            align: a ?? "center",
+          };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "img",
+      {
+        src: HTMLAttributes.src,
+        alt: HTMLAttributes.alt ?? "",
+        title: HTMLAttributes.title ?? "",
+        "data-width-pct": HTMLAttributes.widthPct ?? 100,
+        "data-align": HTMLAttributes.align ?? "center",
+        style: `max-width:${HTMLAttributes.widthPct ?? 100}%;height:auto;display:block;border-radius:4px;margin:${HTMLAttributes.align === "left" ? "8px auto 8px 0" : HTMLAttributes.align === "right" ? "8px 0 8px auto" : "8px auto"};`,
+      },
+    ];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ResizableImageView);
+  },
+
+  addCommands() {
+    return {
+      setResizableImage: (attrs: { src: string; alt?: string; title?: string }) => ({ commands }: any) =>
+        commands.insertContent({ type: this.name, attrs }),
+    } as any;
+  },
+});
 
 // ── FontSize extension ──────────────────────────────────────────────────────
 const FontSize = Extension.create({
@@ -240,7 +443,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
       FontSize,
       Highlight.configure({ multicolor: true }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "tiptap-link" } }),
-      Image.configure({ inline: false, allowBase64: true, HTMLAttributes: { style: "max-width: 100%; height: auto; border-radius: 4px;" } }),
+      ResizableImage,
     ],
     content: initialContent || "<p></p>",
     onUpdate: ({ editor }) => {

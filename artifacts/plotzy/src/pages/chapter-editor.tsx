@@ -437,6 +437,8 @@ export default function ChapterEditor() {
   const pageEditorRefs = useRef<(Editor | null)[]>([]);
   // Which page index should receive focus once its editor mounts (after a split)
   const nextPageFocusRef = useRef<number>(-1);
+  // Track the last focused editor so image inserts go to the right page
+  const lastFocusedPageIdxRef = useRef<number>(0);
   // Debounce timer for the reverse-merge (pull-back) logic
   const mergeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1059,10 +1061,10 @@ export default function ChapterEditor() {
     reader.onloadend = () => {
       if (!reader.result) return;
       const src = reader.result as string;
-      // Insert into the active TipTap editor
-      const editor = pageEditorRefs.current[activePageIndex];
+      const targetIdx = lastFocusedPageIdxRef.current;
+      const editor = pageEditorRefs.current[targetIdx] ?? pageEditorRefs.current[activePageIndex];
       if (editor && !editor.isDestroyed) {
-        editor.chain().focus().setImage({ src }).run();
+        (editor.chain().focus() as any).setResizableImage({ src }).run();
         setIsDirty(true);
       }
     };
@@ -1126,10 +1128,10 @@ export default function ChapterEditor() {
     reader.onloadend = () => {
       if (!reader.result) return;
       const src = reader.result as string;
-      const idx = targetPageIndex ?? activePageIndex;
+      const idx = targetPageIndex ?? lastFocusedPageIdxRef.current ?? activePageIndex;
       const editor = pageEditorRefs.current[idx];
       if (editor && !editor.isDestroyed) {
-        editor.chain().focus().setImage({ src }).run();
+        (editor.chain().focus() as any).setResizableImage({ src }).run();
         setIsDirty(true);
       }
     };
@@ -1807,6 +1809,7 @@ export default function ChapterEditor() {
                     onFocus={(editor) => {
                       tiptapEditorRef.current = editor;
                       setActiveToolbarEditor(editor);
+                      lastFocusedPageIdxRef.current = index;
                     }}
                     fontFamily={effectivePrefs.fontFamily || 'eb-garamond'}
                     fontSize={
