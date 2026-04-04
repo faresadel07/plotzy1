@@ -312,6 +312,21 @@ function splitAtOverflow(
     if (childBottom <= availableHeight + 4) {
       fitsNodes.push(child.outerHTML);
     } else {
+      // This child straddles the page boundary.
+      // If part of this child is still above the boundary, attempt a word-level
+      // split so that the first portion stays on this page (filling it fully)
+      // and only the remainder overflows. This eliminates the "empty space at
+      // the bottom of page 1" artifact caused by whole-paragraph eviction.
+      if (child.offsetTop < availableHeight) {
+        const spaceForChild = availableHeight - child.offsetTop;
+        const wordSplit = splitBlockAtWords(proseMirror, child, spaceForChild);
+        if (wordSplit) {
+          fitsNodes.push(wordSplit.fitsHtml);
+          overflowNodes.push(wordSplit.overflowHtml);
+          overflowStarted = true;
+          continue;
+        }
+      }
       overflowStarted = true;
       overflowNodes.push(child.outerHTML);
     }
@@ -319,9 +334,11 @@ function splitAtOverflow(
 
   if (overflowNodes.length === 0) return null;
 
-  // ── Special case: the very first block is already taller than the page ──
-  // This happens when pasting a long text without paragraph breaks, or when
-  // a single paragraph grows very tall. Don't leave the page blank.
+  // ── Special case: nothing fit on the current page ──────────────────────────
+  // The word-level split above already tried to fill the page from the first
+  // child. If we still end up here with fitsNodes empty, it means the very
+  // first child's offsetTop is >= availableHeight (edge case with large
+  // top-padding) or the word-split returned null (single-word paragraph).
   if (fitsNodes.length === 0) {
     const firstChild = children[0];
 
@@ -333,11 +350,7 @@ function splitAtOverflow(
       return { fitsHtml: fitsNodes.join(""), overflowHtml: overflowNodes.join("") };
     }
 
-    // Case B: single child — try to split at word boundary so the page fills
-    const wordSplit = splitBlockAtWords(proseMirror, firstChild, availableHeight);
-    if (wordSplit) return wordSplit;
-
-    // Case C: can't split (e.g. single very long word) — don't change the page
+    // Case B: single child — can't split (e.g. single very long word)
     return null;
   }
 
@@ -501,6 +514,37 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
 
   useEffect(() => {
     if (editor && onEditorReady) onEditorReady(editor);
+  }, [editor]);
+
+  // ── Initial overflow check on mount ──────────────────────────────────────
+  // When a page is freshly created from a split (e.g. a large paste overflows
+  // page 1 and page 2 is created with the remainder), the overflow content may
+  // itself be larger than a single page. Without this check page 2 would never
+  // auto-split — it would just clip the content silently. We wait two frames
+  // so fonts and layout have stabilised before measuring.
+  const initialOverflowCheckedRef = useRef(false);
+  useEffect(() => {
+    if (!editor || initialOverflowCheckedRef.current) return;
+    initialOverflowCheckedRef.current = true;
+
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        if (suppressOverflowRef.current) return;
+        const fh = fixedHeightRef.current;
+        if (!fh) return;
+        const proseMirror = editor.view.dom as HTMLElement;
+        const contentH = proseMirror.scrollHeight;
+        if (contentH <= fh + 2) return;
+        const cs = window.getComputedStyle(proseMirror);
+        const paddingBottom = parseFloat(cs.paddingBottom) || 0;
+        const available = fh - paddingBottom;
+        const split = splitAtOverflow(proseMirror, available);
+        if (split) {
+          onSplitNeededRef.current?.(split.fitsHtml, split.overflowHtml);
+        }
+      });
+    });
+    return () => cancelAnimationFrame(raf1);
   }, [editor]);
 
   // Sync content when initialContent changes externally (e.g. after a split/merge)
