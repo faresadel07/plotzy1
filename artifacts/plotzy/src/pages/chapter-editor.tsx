@@ -103,7 +103,7 @@ export type DrawingAlign = 'left' | 'center' | 'right';
 export type PageBlock =
   | string
   | { type: 'text', content: string, fontFamily?: string }
-  | { type: 'image', content: string }
+  | { type: 'image', content: string, widthPct?: number, align?: DrawingAlign }
   | { type: 'drawing', content: string, size?: DrawingSize, align?: DrawingAlign, widthPct?: number };
 
 function parsePages(raw: string): PageBlock[] {
@@ -450,6 +450,9 @@ export default function ChapterEditor() {
   const [drawingSize, setDrawingSize] = useState<DrawingSize>('large');
   const [selectedDrawingIdx, setSelectedDrawingIdx] = useState<number | null>(null);
   const [resizingDrawing, setResizingDrawing] = useState<{ idx: number, startX: number, startPct: number } | null>(null);
+  const [selectedImageIdx, setSelectedImageIdx] = useState<number | null>(null);
+  const [resizingImage, setResizingImage] = useState<{ idx: number, startX: number, startPct: number } | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   // Voice dictation state
   const [isRecording, setIsRecording] = useState(false);
@@ -584,6 +587,28 @@ export default function ChapterEditor() {
     window.addEventListener('mouseup', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [resizingDrawing]);
+
+  useEffect(() => {
+    if (!resizingImage) return;
+    const { idx, startX, startPct } = resizingImage;
+    const onMove = (e: MouseEvent) => {
+      const dx = e.clientX - startX;
+      const newPct = Math.max(20, Math.min(100, startPct + (dx / 508) * 100));
+      setPages(prev => {
+        const next = [...prev];
+        const block = next[idx];
+        if (typeof block !== 'string' && block.type === 'image') {
+          next[idx] = { ...block, widthPct: Math.round(newPct) };
+        }
+        return next;
+      });
+      setIsDirty(true);
+    };
+    const onUp = () => setResizingImage(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [resizingImage]);
 
   // ── Last-read position: save & restore per chapter ─────────────────────
   const lastPageStorageKey = (id: number) => `plotzy_last_page_${id}`;
@@ -1092,6 +1117,36 @@ export default function ChapterEditor() {
     setIsDirty(true);
   };
 
+  const updateImageBlock = (idx: number, updates: Partial<{ widthPct: number; align: DrawingAlign }>) => {
+    setPages(prev => {
+      const next = [...prev];
+      const block = next[idx];
+      if (typeof block !== 'string' && block.type === 'image') {
+        next[idx] = { ...block, ...updates };
+      }
+      return next;
+    });
+    setIsDirty(true);
+  };
+
+  const insertImageFromFile = (file: File, afterIndex?: number) => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setPages(prev => {
+        const next = [...prev];
+        const insertAt = (afterIndex ?? activePageIndex) + 1;
+        next.splice(insertAt, 0, { type: 'image', content: base64, widthPct: 100, align: 'center' });
+        next.splice(insertAt + 1, 0, "");
+        setTimeout(() => setActivePageIndex(insertAt + 1), 50);
+        return next;
+      });
+      setIsDirty(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // ────────────────────────────────────────────────────────────────────────────
 
   const fontClass = FONT_MAP[effectivePrefs.fontFamily || "serif"] || "";
@@ -1547,7 +1602,19 @@ export default function ChapterEditor() {
         </div>
 
         {/* ── TipTap Rich Editor — multi-page layout ── */}
-        <div className="flex flex-col items-center gap-6 px-4 pb-24" onClick={() => setSelectedDrawingIdx(null)}>
+        <div
+          className="flex flex-col items-center gap-6 px-4 pb-24"
+          onClick={() => { setSelectedDrawingIdx(null); setSelectedImageIdx(null); }}
+          onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setIsDraggingOver(true); }}
+          onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDraggingOver(false); }}
+          onDrop={e => {
+            e.preventDefault();
+            setIsDraggingOver(false);
+            const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+            if (file) insertImageFromFile(file);
+          }}
+          style={isDraggingOver ? { outline: '2px dashed #7c6af7', outlineOffset: '-4px', borderRadius: 8 } : undefined}
+        >
 
           {/* ── Page dimension badge ── */}
           {(() => {
@@ -1942,7 +2009,88 @@ export default function ChapterEditor() {
                       })()
                     : (
                       (() => {
-                        const drawBlock = typeof pageContent !== 'string' && pageContent.type === 'drawing' ? pageContent : null;
+                        if (typeof pageContent === 'string') return null;
+
+                        // ── Image block ─────────────────────────────────
+                        if (pageContent.type === 'image') {
+                          const imgBlock = pageContent;
+                          const rawPct = imgBlock.widthPct ?? 100;
+                          const align = imgBlock.align || 'center';
+                          const justifyMap: Record<DrawingAlign, string> = { left: 'flex-start', center: 'center', right: 'flex-end' };
+                          const isSelected = selectedImageIdx === index;
+                          return (
+                            <div
+                              className="w-full select-none"
+                              style={{ paddingTop: '16px', paddingBottom: '16px', display: 'flex', justifyContent: justifyMap[align] }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedImageIdx(index); setSelectedDrawingIdx(null); setActivePageIndex(index); }}
+                            >
+                              <div className="relative" style={{ width: `${rawPct}%`, minWidth: '80px' }}>
+                                {/* Floating toolbar */}
+                                {isSelected && (
+                                  <div
+                                    className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-xl z-10 whitespace-nowrap"
+                                    style={{ background: '#1a1a1d', border: '1px solid rgba(255,255,255,0.12)' }}
+                                    onMouseDown={e => e.stopPropagation()}
+                                  >
+                                    {([
+                                      { a: 'left' as DrawingAlign, icon: <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="0" width="12" height="2" rx="1"/><rect x="0" y="4" width="8" height="2" rx="1"/><rect x="0" y="8" width="10" height="2" rx="1"/></svg> },
+                                      { a: 'center' as DrawingAlign, icon: <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="0" width="12" height="2" rx="1"/><rect x="2" y="4" width="8" height="2" rx="1"/><rect x="1" y="8" width="10" height="2" rx="1"/></svg> },
+                                      { a: 'right' as DrawingAlign, icon: <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="0" width="12" height="2" rx="1"/><rect x="4" y="4" width="8" height="2" rx="1"/><rect x="2" y="8" width="10" height="2" rx="1"/></svg> },
+                                    ]).map(({ a, icon }) => (
+                                      <button key={a} onClick={() => updateImageBlock(index, { align: a })}
+                                        className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+                                        style={{ background: align === a ? 'rgba(255,255,255,0.18)' : 'transparent', color: align === a ? '#fff' : 'rgba(255,255,255,0.45)' }}
+                                      >{icon}</button>
+                                    ))}
+                                    <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                                    {([{ label: 'S', pct: 42 }, { label: 'M', pct: 64 }, { label: 'L', pct: 86 }, { label: '↔', pct: 100 }]).map(opt => (
+                                      <button key={opt.label} onClick={() => updateImageBlock(index, { widthPct: opt.pct })}
+                                        className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold transition-colors"
+                                        style={{ background: Math.abs(rawPct - opt.pct) < 5 ? 'rgba(255,255,255,0.18)' : 'transparent', color: Math.abs(rawPct - opt.pct) < 5 ? '#fff' : 'rgba(255,255,255,0.45)' }}
+                                      >{opt.label}</button>
+                                    ))}
+                                    <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                                    <span className="text-[9px] tabular-nums px-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{rawPct}%</span>
+                                    <div className="w-px h-4 mx-0.5" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                                    <button
+                                      onClick={() => { setPages(prev => { const n = [...prev]; n.splice(index, 1); return n.length ? n : [""]; }); setIsDirty(true); setSelectedImageIdx(null); }}
+                                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+                                      style={{ color: 'rgba(239,68,68,0.6)' }}
+                                      onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,68,68,1)')}
+                                      onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,68,68,0.6)')}
+                                    ><Trash2 className="w-3 h-3" /></button>
+                                  </div>
+                                )}
+                                <img
+                                  src={imgBlock.content}
+                                  alt={`Image ${index + 1}`}
+                                  draggable={false}
+                                  style={{
+                                    width: '100%',
+                                    display: 'block',
+                                    borderRadius: '6px',
+                                    boxShadow: isSelected ? '0 0 0 2px #7c6af7, 0 4px 24px rgba(0,0,0,0.18)' : '0 2px 12px rgba(0,0,0,0.10)',
+                                    transition: 'box-shadow 0.15s',
+                                    cursor: 'pointer',
+                                  }}
+                                />
+                                {/* Resize handle */}
+                                {isSelected && (
+                                  <div
+                                    className="absolute bottom-0 right-0 w-5 h-5 flex items-end justify-end cursor-ew-resize z-10"
+                                    style={{ transform: 'translate(50%, 50%)' }}
+                                    onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setResizingImage({ idx: index, startX: e.clientX, startPct: rawPct }); }}
+                                  >
+                                    <div className="w-3 h-3 rounded-full shadow-md" style={{ background: '#7c6af7', border: '2px solid #fff' }} />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // ── Drawing block ────────────────────────────────
+                        const drawBlock = pageContent.type === 'drawing' ? pageContent : null;
                         if (!drawBlock) return null;
                         const sizeMap: Record<DrawingSize, number> = { small: 42, medium: 64, large: 86, full: 100 };
                         const rawPct = drawBlock.widthPct ?? sizeMap[drawBlock.size || 'full'];
@@ -1954,7 +2102,7 @@ export default function ChapterEditor() {
                           <div
                             className="w-full select-none"
                             style={{ paddingTop: '24px', paddingBottom: '24px', display: 'flex', justifyContent: justifyMap[align] }}
-                            onClick={(e) => { e.stopPropagation(); setSelectedDrawingIdx(index); setActivePageIndex(index); }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedDrawingIdx(index); setSelectedImageIdx(null); setActivePageIndex(index); }}
                             onMouseLeave={() => {}}
                           >
                             <div className="relative" style={{ width: wPct, minWidth: '80px' }}>
