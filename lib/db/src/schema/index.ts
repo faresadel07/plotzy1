@@ -33,9 +33,22 @@ export type BookPages = {
   aboutAuthor?: string;
 };
 
+export const bookSeries = pgTable("book_series", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type BookSeries = typeof bookSeries.$inferSelect;
+export type InsertBookSeries = typeof bookSeries.$inferInsert;
+
 export const books = pgTable("books", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
+  seriesId: integer("series_id"),
+  seriesOrder: integer("series_order").default(0),
   title: text("title").notNull(),
   coverImage: text("cover_image"),
   backCoverImage: text("back_cover_image"),

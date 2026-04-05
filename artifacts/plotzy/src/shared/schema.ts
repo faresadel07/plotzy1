@@ -101,6 +101,8 @@ export type Book = {
   isPublished: boolean;
   publishedAt?: Date | null;
   viewCount: number;
+  seriesId?: number | null;
+  seriesOrder?: number | null;
 };
 
 export type InsertBook = Omit<Book, 'id' | 'createdAt'>;

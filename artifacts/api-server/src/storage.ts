@@ -1,8 +1,8 @@
 import { db } from "./db";
-import { eq, or, count, desc, sql, sum, and, inArray, isNull } from "drizzle-orm";
+import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzle-orm";
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
-  userStats, userAchievements,
+  userStats, userAchievements, bookSeries,
   type Book, type InsertBook,
   type Chapter, type InsertChapter,
   type Transaction, type InsertTransaction,
@@ -10,6 +10,7 @@ import {
   type LoreEntry, type InsertLoreEntry,
   type DailyProgress, type InsertDailyProgress,
   type StoryBeat, type InsertStoryBeat,
+  type BookSeries, type InsertBookSeries,
 } from "../../../lib/db/src/schema";
 
 export type UserStats = typeof userStats.$inferSelect;
@@ -92,6 +93,16 @@ export interface IStorage {
   incrementUserChapters(userId: number): Promise<void>;
   updateWritingStreak(userId: number): Promise<UserStats>;
   getUserTotalViews(userId: number): Promise<number>;
+
+  // Series
+  getUserSeries(userId: number): Promise<BookSeries[]>;
+  getSeries(id: number): Promise<BookSeries | undefined>;
+  createSeries(series: InsertBookSeries): Promise<BookSeries>;
+  updateSeries(id: number, updates: Partial<InsertBookSeries>): Promise<BookSeries>;
+  deleteSeries(id: number): Promise<void>;
+  assignBookToSeries(bookId: number, seriesId: number | null, seriesOrder?: number): Promise<Book>;
+  getSeriesBooks(seriesId: number): Promise<Book[]>;
+  reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -507,6 +518,54 @@ export class DatabaseStorage implements IStorage {
       .from(books)
       .where(eq(books.userId, userId));
     return Number(result[0]?.total ?? 0);
+  }
+
+  // ── Series ──────────────────────────────────────────────────────────────────
+  async getUserSeries(userId: number): Promise<BookSeries[]> {
+    return await db.select().from(bookSeries)
+      .where(eq(bookSeries.userId, userId))
+      .orderBy(desc(bookSeries.createdAt));
+  }
+
+  async getSeries(id: number): Promise<BookSeries | undefined> {
+    const [s] = await db.select().from(bookSeries).where(eq(bookSeries.id, id));
+    return s;
+  }
+
+  async createSeries(series: InsertBookSeries): Promise<BookSeries> {
+    const [s] = await db.insert(bookSeries).values(series).returning();
+    return s;
+  }
+
+  async updateSeries(id: number, updates: Partial<InsertBookSeries>): Promise<BookSeries> {
+    const [s] = await db.update(bookSeries).set(updates as any).where(eq(bookSeries.id, id)).returning();
+    return s;
+  }
+
+  async deleteSeries(id: number): Promise<void> {
+    // Unassign all books from this series first
+    await db.update(books).set({ seriesId: null, seriesOrder: 0 } as any).where(eq(books.seriesId as any, id));
+    await db.delete(bookSeries).where(eq(bookSeries.id, id));
+  }
+
+  async assignBookToSeries(bookId: number, seriesId: number | null, seriesOrder = 0): Promise<Book> {
+    const [b] = await db.update(books)
+      .set({ seriesId, seriesOrder } as any)
+      .where(eq(books.id, bookId))
+      .returning();
+    return b;
+  }
+
+  async getSeriesBooks(seriesId: number): Promise<Book[]> {
+    return await db.select().from(books)
+      .where(and(eq(books.isDeleted, false), eq(books.seriesId as any, seriesId)))
+      .orderBy(asc(books.seriesOrder as any));
+  }
+
+  async reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void> {
+    for (const { bookId, seriesOrder } of updates) {
+      await db.update(books).set({ seriesOrder } as any).where(eq(books.id, bookId));
+    }
   }
 }
 

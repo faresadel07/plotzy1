@@ -2842,6 +2842,101 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // ── Book Series ─────────────────────────────────────────────────────────────
+
+  // GET /api/series — list user's series with their books
+  app.get("/api/series", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesList = await storage.getUserSeries(userId);
+    // Attach books to each series
+    const withBooks = await Promise.all(
+      seriesList.map(async (s) => {
+        const seriesBooks = await storage.getSeriesBooks(s.id);
+        return { ...s, books: seriesBooks };
+      })
+    );
+    return res.json(withBooks);
+  });
+
+  // POST /api/series — create a new series
+  app.post("/api/series", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const { name, description } = req.body;
+    if (!name?.trim()) return res.status(400).json({ message: "Name is required" });
+    const series = await storage.createSeries({ userId, name: name.trim(), description: description?.trim() || null });
+    return res.status(201).json({ ...series, books: [] });
+  });
+
+  // PATCH /api/series/:id — update series name/description
+  app.patch("/api/series/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const existing = await storage.getSeries(seriesId);
+    if (!existing || existing.userId !== userId) return res.status(404).json({ message: "Not found" });
+    const { name, description } = req.body;
+    const updates: any = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (description !== undefined) updates.description = description?.trim() || null;
+    const updated = await storage.updateSeries(seriesId, updates);
+    return res.json(updated);
+  });
+
+  // DELETE /api/series/:id — delete series (unlinks books, doesn't delete them)
+  app.delete("/api/series/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const existing = await storage.getSeries(seriesId);
+    if (!existing || existing.userId !== userId) return res.status(404).json({ message: "Not found" });
+    await storage.deleteSeries(seriesId);
+    return res.status(204).send();
+  });
+
+  // POST /api/series/:id/books/:bookId — add book to series
+  app.post("/api/series/:id/books/:bookId", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const bookId = Number(req.params.bookId);
+    const series = await storage.getSeries(seriesId);
+    if (!series || series.userId !== userId) return res.status(404).json({ message: "Not found" });
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== userId) return res.status(404).json({ message: "Book not found" });
+    // Assign at end of series
+    const existingBooks = await storage.getSeriesBooks(seriesId);
+    const order = req.body.order ?? existingBooks.length;
+    const updated = await storage.assignBookToSeries(bookId, seriesId, order);
+    return res.json(updated);
+  });
+
+  // DELETE /api/series/:id/books/:bookId — remove book from series
+  app.delete("/api/series/:id/books/:bookId", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const bookId = Number(req.params.bookId);
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== userId) return res.status(404).json({ message: "Book not found" });
+    const updated = await storage.assignBookToSeries(bookId, null, 0);
+    return res.json(updated);
+  });
+
+  // PUT /api/series/:id/reorder — reorder books within a series
+  app.put("/api/series/:id/reorder", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const series = await storage.getSeries(seriesId);
+    if (!series || series.userId !== userId) return res.status(404).json({ message: "Not found" });
+    const { order } = req.body; // array of bookIds in new order
+    if (!Array.isArray(order)) return res.status(400).json({ message: "order must be an array" });
+    const updates = order.map((bookId: number, idx: number) => ({ bookId, seriesOrder: idx }));
+    await storage.reorderSeriesBooks(updates);
+    return res.json({ ok: true });
+  });
+
   // Trigger catalog sync in background on startup (non-blocking)
   setImmediate(() => syncGutenbergCatalog().catch(() => {}));
 

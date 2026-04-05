@@ -13,6 +13,7 @@ import { BookCarousel } from "@/components/BookCarousel";
 import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
 import { BookViewerOverlay } from "@/components/BookViewerOverlay";
 import { useBooks, useCreateBook, useGenerateCover, useTrashBook, useDuplicateBook, useUpdateBook } from "@/hooks/use-books";
+import { SeriesSection } from "@/components/SeriesSection";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -922,6 +923,11 @@ export default function Home() {
 
 
 
+
+        {/* ===== BOOK SERIES ===== */}
+        {user && !isLoading && (
+          <SeriesSection books={books} />
+        )}
 
         {/* ===== HOW IT WORKS ===== */}
         <section className="bg-white overflow-hidden border-b border-[#f0f0f0]">
