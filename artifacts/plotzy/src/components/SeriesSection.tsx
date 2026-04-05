@@ -241,8 +241,11 @@ function SeriesCard({
         </button>
       ) : (
         <div className="flex items-end gap-3 overflow-x-auto pb-2 scrollbar-thin">
-          {series.books.map((book, idx) => (
-            <div key={book.id} className="relative flex-shrink-0 flex flex-col items-center gap-1">
+          {series.books.map((seriesBook, idx) => {
+            // Use full book data from allBooks (has coverImage, spineColor etc.) — fall back to series book data
+            const fullBook = allBooks.find((b) => b.id === seriesBook.id) ?? seriesBook;
+            return (
+            <div key={seriesBook.id} className="relative flex-shrink-0 flex flex-col items-center gap-1">
               {/* Reorder arrows */}
               <div className="flex gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity h-4">
                 <button
@@ -260,14 +263,15 @@ function SeriesCard({
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
-              {/* Cover */}
-              <MiniCover book={book} onClick={() => setLocation(`/books/${book.id}`)} />
+              {/* Cover — uses full book data so coverImage is always present */}
+              <MiniCover book={fullBook} onClick={() => setLocation(`/books/${seriesBook.id}`)} />
               {/* Volume badge */}
               <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider mt-1">
                 Vol. {idx + 1}
               </span>
             </div>
-          ))}
+            );
+          })}
           {/* + add more */}
           <button
             onClick={() => setManageOpen(true)}
