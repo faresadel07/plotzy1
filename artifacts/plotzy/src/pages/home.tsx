@@ -758,6 +758,7 @@ export default function Home() {
                       const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];
                       const titleLen = book.title.length;
                       const titleFontSize = titleLen > 30 ? '0.67rem' : titleLen > 20 ? '0.78rem' : titleLen > 12 ? '0.9rem' : '1.05rem';
+                      const isArticle = book.contentType === 'article';
                       return (
                         <motion.div
                           key={book.id}
@@ -767,93 +768,211 @@ export default function Home() {
                           transition={{ duration: 0.5, delay: bookIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
                           style={{ flexShrink: 0, width: 180 }}
                         >
-                          <Link href={book.contentType === "article" ? `/articles/${book.id}` : `/books/${book.id}`} className="block outline-none focus:outline-none">
+                          <Link href={isArticle ? `/articles/${book.id}` : `/books/${book.id}`} className="block outline-none focus:outline-none">
 
-                            {/* ── 3D Perspective Book ── */}
-                            <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
-                              {/* Animated shader background (no custom cover) */}
-                              {!book.coverImage && (
-                                <div className="absolute inset-0">
-                                  <BookCoverShader bookId={book.id} speed={0.5} />
-                                </div>
-                              )}
-
-                              {/* Cover image (if exists) */}
-                              {book.coverImage && (
-                                <img
-                                  src={book.coverImage}
-                                  alt={book.title}
-                                  className="absolute inset-0 w-full h-full object-cover object-center"
-                                />
-                              )}
-
-                              {/* Top-half lighting sheen */}
+                            {isArticle ? (
+                              /* ── Blog / Article Card ── */
                               <div
-                                className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20"
-                                style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }}
-                              />
-
-                              {/* Bottom gradient + title block */}
-                              <div
-                                className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20"
-                                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}
+                                className="group relative w-full overflow-hidden transition-all duration-300 ease-out"
+                                style={{
+                                  aspectRatio: '2/3',
+                                  borderRadius: 10,
+                                  background: 'linear-gradient(160deg, #1c1c28 0%, #141420 60%, #0f0f1a 100%)',
+                                  border: '1px solid rgba(255,255,255,0.08)',
+                                  boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)',
+                                }}
                               >
-                                <h3
-                                  className="text-white font-bold leading-tight line-clamp-2"
-                                  style={{
-                                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif",
-                                    fontSize: titleFontSize,
-                                    textShadow: '0 1px 8px rgba(0,0,0,0.7)',
-                                  }}
-                                >
-                                  {book.title}
-                                </h3>
+                                {/* Colored accent bar at top */}
                                 <div
-                                  className="mt-0.5 tracking-[0.18em] uppercase"
-                                  style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}
+                                  style={{
+                                    position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+                                    background: coverPalette.accent,
+                                    borderRadius: '10px 10px 0 0',
+                                    opacity: 0.85,
+                                  }}
+                                />
+
+                                {/* Cover image if set */}
+                                {book.coverImage && (
+                                  <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                                    <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />
+                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, #1c1c28cc 0%, #0f0f1aee 100%)' }} />
+                                  </div>
+                                )}
+
+                                {/* Paper lines decoration */}
+                                <div style={{ position: 'absolute', top: 44, left: 14, right: 14, zIndex: 1 }}>
+                                  {[0,1,2,3,4,5].map(i => (
+                                    <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.045)', marginBottom: 10, borderRadius: 1, width: i === 5 ? '55%' : '100%' }} />
+                                  ))}
+                                </div>
+
+                                {/* Main content */}
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: '16px 14px 14px', zIndex: 2 }}>
+                                  {/* BLOG badge + date */}
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                    <span style={{
+                                      fontSize: 8, fontWeight: 700, letterSpacing: '0.18em',
+                                      textTransform: 'uppercase', color: coverPalette.accent,
+                                      background: `${coverPalette.accent}22`,
+                                      border: `1px solid ${coverPalette.accent}55`,
+                                      borderRadius: 4, padding: '2px 6px',
+                                    }}>
+                                      Blog
+                                    </span>
+                                    {langInfo && langInfo.code !== 'en' && (
+                                      <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                        {langInfo.nativeName.slice(0, 3)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Article icon */}
+                                  <div style={{ marginBottom: 8 }}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.25 }}>
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <polyline points="14 2 14 8 20 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <line x1="16" y1="13" x2="8" y2="13" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                                      <line x1="16" y1="17" x2="8" y2="17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                                    </svg>
+                                  </div>
+
+                                  {/* Title */}
+                                  <h3 style={{
+                                    fontSize: titleFontSize, fontWeight: 700, color: 'rgba(255,255,255,0.9)',
+                                    lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 4,
+                                    WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+                                    marginBottom: 8, flex: 1,
+                                  }}>
+                                    {book.title}
+                                  </h3>
+
+                                  {/* Category */}
+                                  {book.articleCategory && (
+                                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>
+                                      {book.articleCategory}
+                                    </div>
+                                  )}
+
+                                  {/* Bottom simulated lines */}
+                                  <div style={{ marginTop: 'auto' }}>
+                                    {[100, 88, 72].map((w, i) => (
+                                      <div key={i} style={{ height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 5, width: `${w}%` }} />
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Hover overlay */}
+                                <div
+                                  className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                                  style={{ background: 'rgba(10,10,20,0.78)', backdropFilter: 'blur(8px)', borderRadius: 10 }}
                                 >
-                                  {book.genre ? book.genre : book.contentType === 'article' ? 'Blog' : 'Book'}
+                                  <span className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                    Continue Writing
+                                  </span>
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); duplicateBook.mutate(book.id); }}
+                                    disabled={duplicateBook.isPending}
+                                    className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
+                                  >
+                                    {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmTrashId(book.id); }}
+                                    className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-75"
+                                  >
+                                    Delete
+                                  </button>
                                 </div>
                               </div>
+                            ) : (
+                              /* ── 3D Perspective Book ── */
+                              <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
+                                {/* Animated shader background (no custom cover) */}
+                                {!book.coverImage && (
+                                  <div className="absolute inset-0">
+                                    <BookCoverShader bookId={book.id} speed={0.5} />
+                                  </div>
+                                )}
 
-                              {/* Lang badge */}
-                              {langInfo && langInfo.code !== 'en' && (
-                                <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">
-                                  {langInfo.nativeName.slice(0, 3)}
+                                {/* Cover image (if exists) */}
+                                {book.coverImage && (
+                                  <img
+                                    src={book.coverImage}
+                                    alt={book.title}
+                                    className="absolute inset-0 w-full h-full object-cover object-center"
+                                  />
+                                )}
+
+                                {/* Top-half lighting sheen */}
+                                <div
+                                  className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20"
+                                  style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }}
+                                />
+
+                                {/* Bottom gradient + title block */}
+                                <div
+                                  className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20"
+                                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}
+                                >
+                                  <h3
+                                    className="text-white font-bold leading-tight line-clamp-2"
+                                    style={{
+                                      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+                                      fontSize: titleFontSize,
+                                      textShadow: '0 1px 8px rgba(0,0,0,0.7)',
+                                    }}
+                                  >
+                                    {book.title}
+                                  </h3>
+                                  <div
+                                    className="mt-0.5 tracking-[0.18em] uppercase"
+                                    style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}
+                                  >
+                                    {book.genre ? book.genre : 'Book'}
+                                  </div>
                                 </div>
-                              )}
 
-                              {/* Hover overlay */}
-                              <div
-                                className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                                style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
-                              >
-                                <span className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                  Continue Writing
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    duplicateBook.mutate(book.id);
-                                  }}
-                                  disabled={duplicateBook.isPending}
-                                  className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
+                                {/* Lang badge */}
+                                {langInfo && langInfo.code !== 'en' && (
+                                  <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">
+                                    {langInfo.nativeName.slice(0, 3)}
+                                  </div>
+                                )}
+
+                                {/* Hover overlay */}
+                                <div
+                                  className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                                  style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
                                 >
-                                  {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setConfirmTrashId(book.id);
-                                  }}
-                                  className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-75"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </PerspectiveBook>
+                                  <span className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                    Continue Writing
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      duplicateBook.mutate(book.id);
+                                    }}
+                                    disabled={duplicateBook.isPending}
+                                    className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
+                                  >
+                                    {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setConfirmTrashId(book.id);
+                                    }}
+                                    className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-75"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </PerspectiveBook>
+                            )}
 
                             {/* ── Label below card ── */}
                             <div className="mt-2.5 px-0.5">
