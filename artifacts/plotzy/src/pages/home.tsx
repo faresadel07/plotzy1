@@ -876,9 +876,10 @@ export default function Home() {
                                   <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">{langInfo.nativeName.slice(0, 3)}</div>
                                 )}
                                 {/* Hover overlay — inside PerspectiveBook so it gets the 3D transform */}
+                                {/* NOTE: no backdropFilter here — backdrop-filter inside CSS 3D transform blurs the entire page */}
                                 <div
                                   className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                                  style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
+                                  style={{ background: 'rgba(0,0,0,0.82)', borderRadius: '6px 4px 4px 6px' }}
                                 >
                                   {renamingId === book.id ? (
                                     <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
