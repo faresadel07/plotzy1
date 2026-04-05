@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 import { AIAssistant } from "@/components/ai-assistant";
+import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 
 /* ── FontSize extension ─────────────────────────────────────────────── */
 const FontSize = Extension.create({
@@ -482,6 +483,12 @@ export default function ArticleEditor() {
   const inlineImgInputRef  = useRef<HTMLInputElement>(null);
   const autoSaveTimer      = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /* ── Floating images ── */
+  const [floatingImages, setFloatingImages] = useState<FloatingImage[]>([]);
+  const floatingImagesRef = useRef<FloatingImage[]>([]);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const [containerW, setContainerW] = useState(620);
+
   /* ── AI image generation ── */
   const [showImgAI, setShowImgAI]     = useState(false);
   const [imgPrompt, setImgPrompt]     = useState("");
@@ -512,21 +519,34 @@ export default function ArticleEditor() {
     onUpdate: ({ editor }) => { setContent(editor.getHTML()); },
     onTransaction: () => { forceUpdate(n => n+1); },
     editorProps: {
-      handleDrop(view, event) {
+      handleDrop(_view, event) {
         const files = event.dataTransfer?.files;
         if (!files || !files.length) return false;
         const file = files[0];
         if (!file.type.startsWith("image/")) return false;
         event.preventDefault();
-        const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
         const reader = new FileReader();
         reader.onload = ev => {
           const src = ev.target?.result as string;
           if (!src) return;
-          const pos = coords?.pos ?? view.state.doc.content.size;
-          const node = view.state.schema.nodes.image.create({ src });
-          const tr = view.state.tr.insert(pos, node);
-          view.dispatch(tr);
+          const probe = new Image();
+          probe.onload = () => {
+            const contW = editorContainerRef.current?.clientWidth || 620;
+            const maxW = contW * 0.5;
+            const w = Math.round(Math.min(maxW, probe.naturalWidth));
+            const h = Math.round((probe.naturalHeight / probe.naturalWidth) * w);
+            setFloatingImages(prev => [...prev, {
+              id: `fi-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              src,
+              x: Math.round((contW - w) / 2),
+              y: 40,
+              width: w,
+              height: h,
+              locked: false,
+              aspectRatio: probe.naturalWidth / probe.naturalHeight,
+            }]);
+          };
+          probe.src = src;
         };
         reader.readAsDataURL(file);
         return true;
@@ -542,10 +562,23 @@ export default function ArticleEditor() {
     setCategory(article.articleCategory || "");
     setTags((article.tags as string[]) || []);
     setFeaturedImage(article.featuredImage || null);
-    const raw = article.articleContent || "";
-    const isHtml = raw.trimStart().startsWith("<");
-    const html = isHtml ? raw
-      : raw ? `<p>${raw.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
+
+    let rawContent = article.articleContent || "";
+    let loadedFloatingImages: FloatingImage[] = [];
+    try {
+      const obj = JSON.parse(rawContent);
+      if (obj && obj.v === 2 && typeof obj.html === "string") {
+        rawContent = obj.html;
+        loadedFloatingImages = Array.isArray(obj.floatingImages) ? obj.floatingImages : [];
+      }
+    } catch { /* fall through — treat rawContent as plain HTML */ }
+
+    setFloatingImages(loadedFloatingImages);
+    floatingImagesRef.current = loadedFloatingImages;
+
+    const isHtml = rawContent.trimStart().startsWith("<");
+    const html = isHtml ? rawContent
+      : rawContent ? `<p>${rawContent.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
       : "<p></p>";
     editor.commands.setContent(html, false);
     setContent(html);
@@ -555,10 +588,15 @@ export default function ArticleEditor() {
   const saveNow = useCallback(async (silent = false) => {
     setSaving(true);
     try {
+      const serializedContent = JSON.stringify({
+        v: 2,
+        html: contentRef.current,
+        floatingImages: floatingImagesRef.current,
+      });
       await (updateArticle.mutateAsync as any)({
         id: idRef.current,
         title: titleRef.current,
-        articleContent: contentRef.current,
+        articleContent: serializedContent,
         articleCategory: categoryRef.current,
         tags: tagsRef.current,
         featuredImage: imgRef.current ?? undefined,
@@ -579,7 +617,22 @@ export default function ArticleEditor() {
   useEffect(() => {
     if (!initialized.current) return;
     scheduleAutoSave();
-  }, [title, content, category, tags, featuredImage]);
+  }, [title, content, category, tags, featuredImage, floatingImages]);
+
+  /* ── keep floatingImagesRef in sync ── */
+  useEffect(() => { floatingImagesRef.current = floatingImages; }, [floatingImages]);
+
+  /* ── track editor container width ── */
+  useEffect(() => {
+    const el = editorContainerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setContainerW(Math.round(w));
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   /* ── image ── */
   const handleImageFile = (file: File) => {
@@ -595,14 +648,33 @@ export default function ArticleEditor() {
     setTagInput("");
   };
 
+  /* ── Floating image helper ── */
+  const insertFloatingImage = (src: string, natW: number, natH: number) => {
+    const contW = editorContainerRef.current?.clientWidth || containerW;
+    const maxW = contW * 0.5;
+    const w = Math.round(Math.min(maxW, natW || contW * 0.5));
+    const h = natW > 0 ? Math.round((natH / natW) * w) : Math.round(w * 0.75);
+    setFloatingImages(prev => [...prev, {
+      id: `fi-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      src,
+      x: Math.round((contW - w) / 2),
+      y: 40,
+      width: w,
+      height: h,
+      locked: false,
+      aspectRatio: natW > 0 ? natW / natH : w / h,
+    }]);
+  };
+
   /* ── Inline image ── */
   const insertImageFromFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = ev => {
       const src = ev.target?.result as string;
-      if (src && editor) {
-        editor.chain().focus().setImage({ src } as any).run();
-      }
+      if (!src) return;
+      const probe = new Image();
+      probe.onload = () => insertFloatingImage(src, probe.naturalWidth, probe.naturalHeight);
+      probe.src = src;
     };
     reader.readAsDataURL(file);
   };
@@ -619,8 +691,10 @@ export default function ArticleEditor() {
       });
       if (!res.ok) throw new Error("Failed");
       const { url } = await res.json();
-      if (url && editor) {
-        editor.chain().focus().setImage({ src: url } as any).run();
+      if (url) {
+        const probe = new Image();
+        probe.onload = () => insertFloatingImage(url, probe.naturalWidth, probe.naturalHeight);
+        probe.src = url;
         setShowImgAI(false);
         setImgPrompt("");
         toast({ title: "Image added to article" });
@@ -1383,8 +1457,18 @@ export default function ArticleEditor() {
               {title.length > 0 ? `${title.length} chars · Aim for 60–80 for best SEO` : "Add a compelling title to hook your readers"}
             </p>
 
-            {/* tiptap editor */}
-            <EditorContent editor={editor} className="article-editor-content" dir={isRTL?"rtl":"ltr"}/>
+            {/* tiptap editor with floating image overlay */}
+            <div ref={editorContainerRef} style={{ position: "relative" }}>
+              <EditorContent editor={editor} className="article-editor-content" dir={isRTL?"rtl":"ltr"}/>
+              <FloatingImageOverlay
+                images={floatingImages}
+                pageWidth={containerW}
+                pageHeight={999999}
+                zoom={100}
+                onUpdate={(imgs) => setFloatingImages(imgs)}
+                ar={isRTL}
+              />
+            </div>
 
             {/* Tags inline */}
             {tags.length > 0 && (
