@@ -37,17 +37,52 @@ function extractText(node: any): string {
   return "";
 }
 
+function htmlToText(html: string): string {
+  return html
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function parseContent(raw: string | null | undefined): string {
   if (!raw) return "";
   try {
     const parsed = JSON.parse(raw);
+    /* v2 chapter format: { v:2, pages: "<p>...</p>", floatingImages: {...} } */
+    if (parsed && typeof parsed === "object" && parsed.v === 2) {
+      const pagesHtml =
+        typeof parsed.pages === "string"
+          ? parsed.pages
+          : Array.isArray(parsed.pages)
+          ? parsed.pages.join("\n\n")
+          : "";
+      return htmlToText(pagesHtml);
+    }
+    /* TipTap JSON doc format */
     if (parsed && typeof parsed === "object" && parsed.type === "doc") {
       return extractText(parsed).trim();
     }
-    if (Array.isArray(parsed)) return parsed.map(extractText).join("").trim();
+    /* Old page-array format: [{ type:"text", content:"<p>...</p>" }] */
+    if (Array.isArray(parsed)) {
+      const combined = parsed.map((item: any) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item.content === "string") return item.content;
+        return extractText(item);
+      }).join("\n\n");
+      return htmlToText(combined);
+    }
     if (typeof parsed === "string") return parsed;
   } catch { }
-  return raw.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s{2,}/g, " ").trim();
+  /* Plain HTML fallback */
+  return htmlToText(raw);
 }
 
 /* ─── Star Rating ────────────────────────────────────────── */
@@ -171,9 +206,11 @@ interface BookSpreadProps {
   spreadIndex: number;
   totalSpreads: number;
   onTotalSpreads: (n: number) => void;
+  onPrev: () => void;
+  onNext: () => void;
 }
 
-function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads }: BookSpreadProps) {
+function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPrev, onNext }: BookSpreadProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [containerW, setContainerW] = useState(0);
@@ -341,6 +378,56 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads }: Boo
           {bookContent}
         </div>
       </div>
+
+      {/* ── Left-side tap area: go to previous spread ── */}
+      {spreadIndex > 0 && (
+        <div
+          onClick={onPrev}
+          title="Previous pages"
+          style={{
+            position: "absolute", left: 0, top: 0, bottom: FOOTER_H,
+            width: "22%", zIndex: 5, cursor: "w-resize",
+            display: "flex", alignItems: "center", justifyContent: "flex-start",
+            paddingLeft: 8,
+          }}
+        >
+          <div
+            className="page-nav-hint page-nav-hint-left"
+            style={{
+              opacity: 0, transition: "opacity 0.2s",
+              background: "rgba(0,0,0,0.35)", borderRadius: "0 50% 50% 0",
+              width: 32, height: 56, display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <ChevronLeft style={{ width: 18, height: 18, color: "#fff" }} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Right-side tap area: go to next spread ── */}
+      {spreadIndex < totalSpreads - 1 && (
+        <div
+          onClick={onNext}
+          title="Next pages"
+          style={{
+            position: "absolute", right: 0, top: 0, bottom: FOOTER_H,
+            width: "22%", zIndex: 5, cursor: "e-resize",
+            display: "flex", alignItems: "center", justifyContent: "flex-end",
+            paddingRight: 8,
+          }}
+        >
+          <div
+            className="page-nav-hint page-nav-hint-right"
+            style={{
+              opacity: 0, transition: "opacity 0.2s",
+              background: "rgba(0,0,0,0.35)", borderRadius: "50% 0 0 50%",
+              width: 32, height: 56, display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <ChevronRight style={{ width: 18, height: 18, color: "#fff" }} />
+          </div>
+        </div>
+      )}
 
       {/* Page number footers (overlaid) */}
       {containerW > 0 && (
@@ -577,6 +664,8 @@ export default function ReadBook() {
               spreadIndex={spreadIndex}
               totalSpreads={totalSpreads}
               onTotalSpreads={setTotalSpreads}
+              onPrev={() => goSpread(spreadIndex - 1)}
+              onNext={() => goSpread(spreadIndex + 1)}
             />
 
             {/* ── Inline spacer so content doesn't hide behind sticky nav ── */}
@@ -764,6 +853,8 @@ export default function ReadBook() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* Show arrow hints when hovering the tap areas */
+        div:hover > .page-nav-hint { opacity: 1 !important; }
       `}</style>
     </div>
   );
