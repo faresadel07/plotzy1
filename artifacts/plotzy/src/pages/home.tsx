@@ -873,7 +873,7 @@ export default function Home() {
                                   <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ? book.genre : 'Book'}</div>
                                 </div>
                                 {langInfo && langInfo.code !== 'en' && (
-                                  <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">{langInfo.nativeName.slice(0, 3)}</div>
+                                  <div className="absolute top-2 left-2 z-30 text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10" style={{ background: 'rgba(0,0,0,0.75)' }}>{langInfo.nativeName.slice(0, 3)}</div>
                                 )}
                                 {/* Hover overlay — inside PerspectiveBook so it gets the 3D transform */}
                                 {/* NOTE: no backdropFilter here — backdrop-filter inside CSS 3D transform blurs the entire page */}
