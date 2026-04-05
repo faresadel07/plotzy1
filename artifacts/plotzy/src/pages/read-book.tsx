@@ -52,6 +52,10 @@ function htmlToText(html: string): string {
     .trim();
 }
 
+function isArabicText(text: string): boolean {
+  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+}
+
 function parseContent(raw: string | null | undefined): string {
   if (!raw) return "";
   try {
@@ -221,15 +225,16 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
   const bookContent = chapters.map((ch, i) => {
     const text = parseContent(ch?.content);
     const paras = text ? text.split(/\n{2,}/).map((p: string) => p.trim()).filter(Boolean) : [];
+    const isRTL = paras.some(p => isArabicText(p));
     return (
-      <div key={ch.id} style={{ breakInside: "avoid-column" as any }}>
+      <div key={ch.id} style={{ breakInside: "avoid-column" as any, direction: isRTL ? "rtl" : "ltr" }}>
         {/* Chapter header */}
         <div style={{ textAlign: "center", marginBottom: 28, marginTop: i === 0 ? 0 : 32, breakAfter: "avoid" as any }}>
           <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: 10 }}>
             Chapter {i + 1}
           </p>
           {ch?.title && (
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1c1410", fontFamily: "'Georgia', 'Palatino Linotype', serif", lineHeight: 1.25, margin: "0 0 14px" }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1c1410", fontFamily: "'Georgia', 'Palatino Linotype', serif", lineHeight: 1.25, margin: "0 0 14px", direction: isArabicText(ch.title) ? "rtl" : "ltr" }}>
               {ch.title}
             </h2>
           )}
@@ -237,21 +242,27 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
         </div>
 
         {/* Paragraphs */}
-        {paras.length > 0 ? paras.map((p: string, pi: number) => (
-          <p key={pi} style={{
-            marginBottom: "1.35em",
-            textIndent: pi === 0 ? 0 : "2em",
-            lineHeight: 1.8,
-            fontSize: 14,
-            color: "#1c1410",
-            fontFamily: "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif",
-            letterSpacing: "0.008em",
-            textAlign: "justify",
-            hyphens: "auto" as any,
-          }}>
-            {p}
-          </p>
-        )) : (
+        {paras.length > 0 ? paras.map((p: string, pi: number) => {
+          const pIsRTL = isArabicText(p);
+          return (
+            <p key={pi} style={{
+              marginBottom: "1.35em",
+              textIndent: pi === 0 ? 0 : "2em",
+              lineHeight: 1.85,
+              fontSize: 14,
+              color: "#1c1410",
+              fontFamily: pIsRTL
+                ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', 'Arial', serif"
+                : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif",
+              letterSpacing: pIsRTL ? "0" : "0.008em",
+              textAlign: "justify",
+              direction: pIsRTL ? "rtl" : "ltr",
+              hyphens: "auto" as any,
+            }}>
+              {p}
+            </p>
+          );
+        }) : (
           <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
             This chapter has no content yet.
           </p>
