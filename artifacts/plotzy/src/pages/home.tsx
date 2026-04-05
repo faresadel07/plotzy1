@@ -838,27 +838,26 @@ export default function Home() {
                                     ))}
                                   </div>
                                 </div>
-                                {/* Hover overlay — inside card div, stopPropagation blocks parent onClick */}
+                                {/* Hover overlay — clicking empty area navigates; buttons stop propagation */}
                                 <div
                                   className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                                   style={{ background: 'rgba(10,10,20,0.78)', backdropFilter: 'blur(8px)', borderRadius: 10 }}
-                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {renamingId === book.id ? (
-                                    <form onSubmit={(e) => commitRename(e, book.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
+                                    <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
                                       <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
                                       <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
                                       <div style={{ display: 'flex', gap: 6 }}>
                                         <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : 'Save'}</button>
-                                        <button type="button" onClick={() => setRenamingId(null)} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">Cancel</button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">Cancel</button>
                                       </div>
                                     </form>
                                   ) : (
                                     <>
-                                      <button onClick={() => setLocation(`/articles/${book.id}`)} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">Continue Writing</button>
-                                      <button onClick={() => duplicateBook.mutate(book.id)} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? "Duplicating…" : "Duplicate"}</button>
-                                      <button onClick={() => { setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">Rename</button>
-                                      <button onClick={() => setConfirmTrashId(book.id)} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">Delete</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/articles/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">Continue Writing</button>
+                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? "Duplicating…" : "Duplicate"}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">Rename</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">Delete</button>
                                     </>
                                   )}
                                 </div>
@@ -880,23 +879,22 @@ export default function Home() {
                                 <div
                                   className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                                   style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
-                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {renamingId === book.id ? (
-                                    <form onSubmit={(e) => commitRename(e, book.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
+                                    <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
                                       <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
                                       <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
                                       <div style={{ display: 'flex', gap: 6 }}>
                                         <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : 'Save'}</button>
-                                        <button type="button" onClick={() => setRenamingId(null)} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">Cancel</button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">Cancel</button>
                                       </div>
                                     </form>
                                   ) : (
                                     <>
-                                      <button onClick={() => setLocation(`/books/${book.id}`)} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">Continue Writing</button>
-                                      <button onClick={() => duplicateBook.mutate(book.id)} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? "Duplicating…" : "Duplicate"}</button>
-                                      <button onClick={() => { setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">Rename</button>
-                                      <button onClick={() => setConfirmTrashId(book.id)} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">Delete</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/books/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">Continue Writing</button>
+                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? "Duplicating…" : "Duplicate"}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">Rename</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">Delete</button>
                                     </>
                                   )}
                                 </div>
