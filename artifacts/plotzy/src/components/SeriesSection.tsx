@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { PerspectiveBook } from "@/components/ui/perspective-book";
+import { BookCoverShader } from "@/components/ui/book-cover-shader";
 import {
   useSeries, useCreateSeries, useUpdateSeries, useDeleteSeries,
   useAddBookToSeries, useRemoveBookFromSeries, useReorderSeriesBooks,
@@ -18,33 +20,35 @@ import type { Book } from "@/hooks/use-books";
 
 type Props = { books: Book[] | undefined };
 
-// Tiny inline book cover for series shelf
-function MiniCover({ book, onClick }: { book: { id: number; title: string; coverImage?: string | null; spineColor?: string | null }; onClick: () => void }) {
-  const spine = book.spineColor ?? "#333";
+// Book cover matching the original library style
+function MiniCover({ book, onClick }: { book: { id: number; title: string; coverImage?: string | null; spineColor?: string | null; genre?: string | null }; onClick: () => void }) {
+  const spine = book.spineColor ?? "#1a1a2e";
   return (
     <button
       onClick={onClick}
-      className="group relative flex-shrink-0 focus:outline-none"
+      className="flex-shrink-0 focus:outline-none text-left"
       title={book.title}
+      style={{ width: 90 }}
     >
-      <div
-        className="relative overflow-hidden rounded-[3px] shadow-lg transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl"
-        style={{ width: 60, height: 86, background: spine }}
-      >
-        {book.coverImage ? (
-          <img src={book.coverImage} alt={book.title} className="absolute inset-0 w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-end p-1.5">
-            <span className="text-white/80 text-[8px] font-bold leading-tight line-clamp-3 text-center w-full" style={{ wordBreak: "break-word" }}>
-              {book.title}
-            </span>
+      <PerspectiveBook spineColor={spine}>
+        {/* Shader background (same as original — no coverImage) */}
+        {!book.coverImage && (
+          <div className="absolute inset-0">
+            <BookCoverShader bookId={book.id} speed={0.5} />
           </div>
         )}
-        <div className="absolute inset-y-0 left-0 w-[3px] bg-white/20 rounded-l-[3px]" />
-      </div>
-      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <span className="text-[9px] text-white/40 whitespace-nowrap">{book.title.slice(0, 10)}{book.title.length > 10 ? "…" : ""}</span>
-      </div>
+        {/* Cover image */}
+        {book.coverImage && (
+          <img src={book.coverImage} alt={book.title} className="absolute inset-0 w-full h-full object-cover object-center" />
+        )}
+        {/* Top gloss */}
+        <div className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }} />
+        {/* Title overlay */}
+        <div className="absolute bottom-0 inset-x-0 p-2 flex flex-col justify-end z-20" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}>
+          <h3 className="text-white font-bold leading-tight line-clamp-2" style={{ fontSize: 8, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif", textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>{book.title}</h3>
+          <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '7px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ?? 'Book'}</div>
+        </div>
+      </PerspectiveBook>
     </button>
   );
 }
@@ -238,8 +242,9 @@ function SeriesCard({
       ) : (
         <div className="flex items-end gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {series.books.map((book, idx) => (
-            <div key={book.id} className="relative flex-shrink-0 flex flex-col items-center gap-1.5">
-              <div className="flex gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+            <div key={book.id} className="relative flex-shrink-0 flex flex-col items-center gap-1">
+              {/* Reorder arrows */}
+              <div className="flex gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity h-4">
                 <button
                   disabled={idx === 0}
                   onClick={() => moveBook(idx, -1)}
@@ -255,15 +260,19 @@ function SeriesCard({
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
+              {/* Cover */}
               <MiniCover book={book} onClick={() => setLocation(`/books/${book.id}`)} />
-              <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider mt-5">
+              {/* Volume badge */}
+              <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider mt-1">
                 Vol. {idx + 1}
               </span>
             </div>
           ))}
+          {/* + add more */}
           <button
             onClick={() => setManageOpen(true)}
-            className="flex-shrink-0 w-14 h-20 rounded-[3px] border border-dashed border-white/12 flex items-center justify-center text-white/20 hover:text-white/40 hover:border-white/25 transition-all self-end mb-[26px]"
+            className="flex-shrink-0 rounded-[4px] border border-dashed border-white/12 flex items-center justify-center text-white/20 hover:text-white/40 hover:border-white/25 transition-all self-center mt-4"
+            style={{ width: 56, height: 80 }}
           >
             <Plus className="w-4 h-4" />
           </button>
