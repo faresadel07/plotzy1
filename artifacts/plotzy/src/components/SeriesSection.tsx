@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen, Plus, Pencil, Trash2, X, Check, ChevronRight, ChevronLeft,
-  Library, GripVertical, Layers
+  BookOpen, Plus, Pencil, Trash2, X, Check, ChevronRight, ChevronLeft, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,14 +20,13 @@ type Props = { books: Book[] | undefined };
 
 // Tiny inline book cover for series shelf
 function MiniCover({ book, onClick }: { book: { id: number; title: string; coverImage?: string | null; spineColor?: string | null }; onClick: () => void }) {
-  const spine = book.spineColor ?? "#7c3aed";
+  const spine = book.spineColor ?? "#333";
   return (
     <button
       onClick={onClick}
       className="group relative flex-shrink-0 focus:outline-none"
       title={book.title}
     >
-      {/* Book body */}
       <div
         className="relative overflow-hidden rounded-[3px] shadow-lg transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl"
         style={{ width: 60, height: 86, background: spine }}
@@ -42,10 +40,8 @@ function MiniCover({ book, onClick }: { book: { id: number; title: string; cover
             </span>
           </div>
         )}
-        {/* Spine highlight */}
         <div className="absolute inset-y-0 left-0 w-[3px] bg-white/20 rounded-l-[3px]" />
       </div>
-      {/* Ordinal tooltip (just a nice touch) */}
       <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <span className="text-[9px] text-white/40 whitespace-nowrap">{book.title.slice(0, 10)}{book.title.length > 10 ? "…" : ""}</span>
       </div>
@@ -53,7 +49,7 @@ function MiniCover({ book, onClick }: { book: { id: number; title: string; cover
   );
 }
 
-// Manage books dialog — add / remove books from a series
+// Manage books dialog
 function ManageBooksDialog({
   series,
   allBooks,
@@ -94,7 +90,7 @@ function ManageBooksDialog({
             <p className="text-white/30 text-sm text-center py-6">No books yet.</p>
           )}
           {candidates.map((book) => {
-            const spine = book.spineColor ?? "#7c3aed";
+            const spine = book.spineColor ?? "#333";
             const inSeries = seriesBookIds.has(book.id);
             return (
               <button
@@ -102,11 +98,10 @@ function ManageBooksDialog({
                 onClick={() => toggle(book)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200 text-left ${
                   inSeries
-                    ? "border-violet-500/50 bg-violet-500/10"
+                    ? "border-white/30 bg-white/10"
                     : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]"
                 }`}
               >
-                {/* Mini cover */}
                 <div
                   className="relative flex-shrink-0 rounded-sm overflow-hidden shadow"
                   style={{ width: 28, height: 40, background: spine }}
@@ -116,8 +111,8 @@ function ManageBooksDialog({
                   )}
                 </div>
                 <span className="flex-1 text-sm text-white/80 truncate">{book.title}</span>
-                <span className={`flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-all ${inSeries ? "bg-violet-500 border-violet-500" : "border-white/20"}`}>
-                  {inSeries && <Check className="w-3 h-3 text-white" />}
+                <span className={`flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-all ${inSeries ? "bg-white border-white" : "border-white/20"}`}>
+                  {inSeries && <Check className="w-3 h-3 text-black" />}
                 </span>
               </button>
             );
@@ -179,8 +174,8 @@ function SeriesCard({
     >
       {/* Header row */}
       <div className="flex items-start gap-3 mb-5">
-        <div className="w-8 h-8 rounded-lg bg-violet-500/15 border border-violet-500/25 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Layers className="w-4 h-4 text-violet-400" />
+        <div className="w-8 h-8 rounded-lg bg-white/8 border border-white/12 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Layers className="w-4 h-4 text-white/50" />
         </div>
         <div className="flex-1 min-w-0">
           {editingName ? (
@@ -189,10 +184,10 @@ function SeriesCard({
                 autoFocus
                 value={nameVal}
                 onChange={(e) => setNameVal(e.target.value)}
-                className="h-7 text-sm bg-white/5 border-white/20 text-white focus:border-violet-500 px-2"
+                className="h-7 text-sm bg-white/5 border-white/20 text-white focus:border-white/50 px-2"
                 onClick={(e) => e.stopPropagation()}
               />
-              <button type="submit" className="p-1 text-violet-400 hover:text-violet-300"><Check className="w-4 h-4" /></button>
+              <button type="submit" className="p-1 text-white/60 hover:text-white"><Check className="w-4 h-4" /></button>
               <button type="button" onClick={() => { setNameVal(series.name); setEditingName(false); }} className="p-1 text-white/30 hover:text-white/60"><X className="w-4 h-4" /></button>
             </form>
           ) : (
@@ -216,7 +211,7 @@ function SeriesCard({
           </button>
           <button
             onClick={() => setManageOpen(true)}
-            className="p-1.5 rounded-lg text-white/30 hover:text-violet-400 hover:bg-violet-500/10 transition-all"
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
             title="Manage books"
           >
             <BookOpen className="w-3.5 h-3.5" />
@@ -244,7 +239,6 @@ function SeriesCard({
         <div className="flex items-end gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {series.books.map((book, idx) => (
             <div key={book.id} className="relative flex-shrink-0 flex flex-col items-center gap-1.5">
-              {/* Reorder arrows */}
               <div className="flex gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
                 <button
                   disabled={idx === 0}
@@ -261,15 +255,12 @@ function SeriesCard({
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
-              {/* Cover */}
               <MiniCover book={book} onClick={() => setLocation(`/books/${book.id}`)} />
-              {/* Volume number badge */}
               <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider mt-5">
                 Vol. {idx + 1}
               </span>
             </div>
           ))}
-          {/* + add more */}
           <button
             onClick={() => setManageOpen(true)}
             className="flex-shrink-0 w-14 h-20 rounded-[3px] border border-dashed border-white/12 flex items-center justify-center text-white/20 hover:text-white/40 hover:border-white/25 transition-all self-end mb-[26px]"
@@ -279,10 +270,8 @@ function SeriesCard({
         </div>
       )}
 
-      {/* Shelf base line */}
       <div className="mt-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-      {/* Manage books dialog */}
       <ManageBooksDialog
         series={series}
         allBooks={allBooks ?? []}
@@ -290,7 +279,6 @@ function SeriesCard({
         onOpenChange={setManageOpen}
       />
 
-      {/* Confirm delete */}
       <AnimatePresence>
         {showConfirmDelete && (
           <motion.div
@@ -299,14 +287,14 @@ function SeriesCard({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-10 bg-[#0c0c0c]/95 rounded-2xl flex flex-col items-center justify-center gap-3 px-6 text-center"
           >
-            <Trash2 className="w-6 h-6 text-red-400" />
+            <Trash2 className="w-6 h-6 text-white/50" />
             <p className="text-sm text-white/80">Delete <span className="font-semibold text-white">"{series.name}"</span>?</p>
             <p className="text-xs text-white/35">Your books won't be deleted, just unlinked from this series.</p>
             <div className="flex gap-2 mt-1">
               <Button size="sm" variant="ghost" onClick={() => setShowConfirmDelete(false)} className="text-white/50 hover:text-white/80 hover:bg-white/8 border border-white/10 text-xs h-8">
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleDelete} className="bg-red-500/80 hover:bg-red-500 text-white text-xs h-8 border-0">
+              <Button size="sm" onClick={handleDelete} className="bg-white/10 hover:bg-white/20 text-white text-xs h-8 border border-white/15">
                 Delete Series
               </Button>
             </div>
@@ -338,7 +326,7 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
       <DialogContent className="bg-[#111] border border-white/10 text-white max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-white text-base font-semibold flex items-center gap-2">
-            <Layers className="w-4 h-4 text-violet-400" /> New Book Series
+            <Layers className="w-4 h-4 text-white/50" /> New Book Series
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-1">
@@ -349,24 +337,26 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
               placeholder='e.g. "The Dark Tower" or "Mistborn"'
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-violet-500"
+              className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-white/40"
             />
           </div>
           <div>
-            <label className="text-xs text-white/40 uppercase tracking-wider font-semibold block mb-1.5">Description <span className="text-white/20 normal-case tracking-normal font-normal">(optional)</span></label>
+            <label className="text-xs text-white/40 uppercase tracking-wider font-semibold block mb-1.5">
+              Description <span className="text-white/20 normal-case tracking-normal font-normal">(optional)</span>
+            </label>
             <Textarea
               placeholder="A short description of this series…"
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               rows={2}
-              className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-violet-500 resize-none text-sm"
+              className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-white/40 resize-none text-sm"
             />
           </div>
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5 text-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || create.isPending} className="flex-1 bg-violet-600 hover:bg-violet-500 text-white text-sm border-0">
+            <Button type="submit" disabled={!name.trim() || create.isPending} className="flex-1 bg-white text-black hover:bg-white/90 text-sm border-0">
               {create.isPending ? "Creating…" : "Create Series"}
             </Button>
           </div>
@@ -409,8 +399,8 @@ export function SeriesSection({ books }: Props) {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl border border-dashed border-white/8 py-16 text-center"
           >
-            <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-4">
-              <Layers className="w-6 h-6 text-violet-400/70" />
+            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
+              <Layers className="w-6 h-6 text-white/30" />
             </div>
             <h3 className="text-white/60 font-semibold mb-2">No series yet</h3>
             <p className="text-white/30 text-sm mb-6 max-w-xs mx-auto">
@@ -418,7 +408,7 @@ export function SeriesSection({ books }: Props) {
             </p>
             <Button
               onClick={() => setCreateOpen(true)}
-              className="bg-violet-600/80 hover:bg-violet-600 text-white border-0 gap-2 text-sm"
+              className="bg-white text-black hover:bg-white/90 border-0 gap-2 text-sm"
             >
               <Plus className="w-3.5 h-3.5" />
               Create your first series
