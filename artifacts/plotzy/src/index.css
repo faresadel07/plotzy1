@@ -265,23 +265,16 @@
   }
 }
 
-/* ─── Page Turn Transition ──────────────────────────────────────── */
-/* NOTE: no 3D transforms here — perspective()+rotateY() on a page wrapper causes
-   any child backdrop-filter to blur the entire viewport */
+/* ─── Page Transition ───────────────────────────────────────────── */
+/* NOTE: opacity-only — any CSS transform on this wrapper (even 2D) creates a
+   stacking context that makes child backdrop-filters blur the entire viewport */
 .page-turn-enter {
-  animation: pageTurnIn 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: pageFadeIn 0.22s ease both;
 }
 
-@keyframes pageTurnIn {
-  0% {
-    opacity: 0;
-    transform: translateX(28px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: none;
-  }
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ─── Book Opening Animation ────────────────────────────────────── */
