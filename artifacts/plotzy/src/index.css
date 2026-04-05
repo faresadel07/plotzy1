@@ -266,15 +266,16 @@
 }
 
 /* ─── Page Turn Transition ──────────────────────────────────────── */
+/* NOTE: no 3D transforms here — perspective()+rotateY() on a page wrapper causes
+   any child backdrop-filter to blur the entire viewport */
 .page-turn-enter {
-  animation: pageTurnIn 0.38s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-  transform-origin: left center;
+  animation: pageTurnIn 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 @keyframes pageTurnIn {
   0% {
     opacity: 0;
-    transform: perspective(1400px) translateX(60px) rotateY(-8deg);
+    transform: translateX(28px);
   }
 
   100% {

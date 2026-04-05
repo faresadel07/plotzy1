@@ -838,10 +838,10 @@ export default function Home() {
                                     ))}
                                   </div>
                                 </div>
-                                {/* Hover overlay — clicking empty area navigates; buttons stop propagation */}
+                                {/* Hover overlay — no backdropFilter to avoid 3D-ancestor full-page blur bug */}
                                 <div
                                   className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                                  style={{ background: 'rgba(10,10,20,0.78)', backdropFilter: 'blur(8px)', borderRadius: 10 }}
+                                  style={{ background: 'rgba(8,8,18,0.88)', borderRadius: 10 }}
                                 >
                                   {renamingId === book.id ? (
                                     <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
