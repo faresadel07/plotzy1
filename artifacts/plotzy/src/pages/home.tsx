@@ -784,296 +784,157 @@ export default function Home() {
                           transition={{ duration: 0.5, delay: bookIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
                           style={{ flexShrink: 0, width: 180 }}
                         >
-                          <Link href={isArticle ? `/articles/${book.id}` : `/books/${book.id}`} className="block outline-none focus:outline-none">
+                          {/* ── Card + Overlay wrapper (group for hover; overlay is OUTSIDE Link) ── */}
+                          <div className="group" style={{ position: 'relative' }}>
+                            <Link href={isArticle ? `/articles/${book.id}` : `/books/${book.id}`} className="block outline-none focus:outline-none">
 
-                            {isArticle ? (
-                              /* ── Blog / Article Card ── */
-                              <div
-                                className="group relative w-full overflow-hidden transition-all duration-300 ease-out"
-                                style={{
-                                  aspectRatio: '2/3',
-                                  borderRadius: 10,
-                                  background: 'linear-gradient(160deg, #1c1c28 0%, #141420 60%, #0f0f1a 100%)',
-                                  border: '1px solid rgba(255,255,255,0.08)',
-                                  boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)',
-                                }}
-                              >
-                                {/* Colored accent bar at top */}
+                              {isArticle ? (
+                                /* ── Blog / Article Card (visual only, no overlay) ── */
                                 <div
+                                  className="relative w-full overflow-hidden transition-all duration-300 ease-out"
                                   style={{
-                                    position: 'absolute', top: 0, left: 0, right: 0, height: 4,
-                                    background: coverPalette.accent,
-                                    borderRadius: '10px 10px 0 0',
-                                    opacity: 0.85,
+                                    aspectRatio: '2/3',
+                                    borderRadius: 10,
+                                    background: 'linear-gradient(160deg, #1c1c28 0%, #141420 60%, #0f0f1a 100%)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)',
                                   }}
-                                />
+                                >
+                                  {/* Colored accent bar at top */}
+                                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: coverPalette.accent, borderRadius: '10px 10px 0 0', opacity: 0.85 }} />
 
-                                {/* Cover image if set */}
-                                {book.coverImage && (
-                                  <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-                                    <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />
-                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, #1c1c28cc 0%, #0f0f1aee 100%)' }} />
-                                  </div>
-                                )}
-
-                                {/* Paper lines decoration */}
-                                <div style={{ position: 'absolute', top: 44, left: 14, right: 14, zIndex: 1 }}>
-                                  {[0,1,2,3,4,5].map(i => (
-                                    <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.045)', marginBottom: 10, borderRadius: 1, width: i === 5 ? '55%' : '100%' }} />
-                                  ))}
-                                </div>
-
-                                {/* Main content */}
-                                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: '16px 14px 14px', zIndex: 2 }}>
-                                  {/* BLOG badge + date */}
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                    <span style={{
-                                      fontSize: 8, fontWeight: 700, letterSpacing: '0.18em',
-                                      textTransform: 'uppercase', color: coverPalette.accent,
-                                      background: `${coverPalette.accent}22`,
-                                      border: `1px solid ${coverPalette.accent}55`,
-                                      borderRadius: 4, padding: '2px 6px',
-                                    }}>
-                                      Blog
-                                    </span>
-                                    {langInfo && langInfo.code !== 'en' && (
-                                      <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                                        {langInfo.nativeName.slice(0, 3)}
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Article icon */}
-                                  <div style={{ marginBottom: 8 }}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.25 }}>
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                      <polyline points="14 2 14 8 20 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                      <line x1="16" y1="13" x2="8" y2="13" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                                      <line x1="16" y1="17" x2="8" y2="17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                                    </svg>
-                                  </div>
-
-                                  {/* Title */}
-                                  <h3 style={{
-                                    fontSize: titleFontSize, fontWeight: 700, color: 'rgba(255,255,255,0.9)',
-                                    lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 4,
-                                    WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                                    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
-                                    marginBottom: 8, flex: 1,
-                                  }}>
-                                    {book.title}
-                                  </h3>
-
-                                  {/* Category */}
-                                  {book.articleCategory && (
-                                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>
-                                      {book.articleCategory}
+                                  {/* Cover image if set */}
+                                  {book.coverImage && (
+                                    <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                                      <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />
+                                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, #1c1c28cc 0%, #0f0f1aee 100%)' }} />
                                     </div>
                                   )}
 
-                                  {/* Bottom simulated lines */}
-                                  <div style={{ marginTop: 'auto' }}>
-                                    {[100, 88, 72].map((w, i) => (
-                                      <div key={i} style={{ height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 5, width: `${w}%` }} />
+                                  {/* Paper lines decoration */}
+                                  <div style={{ position: 'absolute', top: 44, left: 14, right: 14, zIndex: 1 }}>
+                                    {[0,1,2,3,4,5].map(i => (
+                                      <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.045)', marginBottom: 10, borderRadius: 1, width: i === 5 ? '55%' : '100%' }} />
                                     ))}
                                   </div>
-                                </div>
 
-                                {/* Hover overlay — stopPropagation on the whole div so clicks never reach the <Link> */}
-                                <div
-                                  className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                                  style={{ background: 'rgba(10,10,20,0.78)', backdropFilter: 'blur(8px)', borderRadius: 10 }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {renamingId === book.id ? (
-                                    /* ── Rename form ── */
-                                    <form onSubmit={(e) => commitRename(e, book.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
-                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
-                                      <input
-                                        autoFocus
-                                        value={renameValue}
-                                        onChange={e => setRenameValue(e.target.value)}
-                                        onKeyDown={e => { if (e.key === 'Escape') { setRenamingId(null); } }}
-                                        style={{
-                                          width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center',
-                                          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                                          color: '#fff', outline: 'none', fontFamily: 'inherit',
-                                        }}
-                                        maxLength={120}
-                                      />
-                                      <div style={{ display: 'flex', gap: 6 }}>
-                                        <button type="submit" disabled={updateBook.isPending}
-                                          className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">
-                                          {updateBook.isPending ? '…' : 'Save'}
-                                        </button>
-                                        <button type="button" onClick={() => setRenamingId(null)}
-                                          className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">
-                                          Cancel
-                                        </button>
-                                      </div>
-                                    </form>
-                                  ) : (
-                                    /* ── Normal action buttons ── */
-                                    <>
-                                      <button
-                                        onClick={() => setLocation(isArticle ? `/articles/${book.id}` : `/books/${book.id}`)}
-                                        className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all translate-y-2 group-hover:translate-y-0 duration-300"
-                                      >
-                                        Continue Writing
-                                      </button>
-                                      <button
-                                        onClick={() => duplicateBook.mutate(book.id)}
-                                        disabled={duplicateBook.isPending}
-                                        className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
-                                      >
-                                        {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
-                                      </button>
-                                      <button
-                                        onClick={() => { setRenamingId(book.id); setRenameValue(book.title); }}
-                                        className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[60ms]"
-                                      >
-                                        Rename
-                                      </button>
-                                      <button
-                                        onClick={() => setConfirmTrashId(book.id)}
-                                        className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-75"
-                                      >
-                                        Delete
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              /* ── 3D Perspective Book ── */
-                              <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
-                                {/* Animated shader background (no custom cover) */}
-                                {!book.coverImage && (
-                                  <div className="absolute inset-0">
-                                    <BookCoverShader bookId={book.id} speed={0.5} />
+                                  {/* Main content */}
+                                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: '16px 14px 14px', zIndex: 2 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: coverPalette.accent, background: `${coverPalette.accent}22`, border: `1px solid ${coverPalette.accent}55`, borderRadius: 4, padding: '2px 6px' }}>Blog</span>
+                                      {langInfo && langInfo.code !== 'en' && (
+                                        <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{langInfo.nativeName.slice(0, 3)}</span>
+                                      )}
+                                    </div>
+                                    <div style={{ marginBottom: 8 }}>
+                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.25 }}>
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <polyline points="14 2 14 8 20 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <line x1="16" y1="13" x2="8" y2="13" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                                        <line x1="16" y1="17" x2="8" y2="17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                                      </svg>
+                                    </div>
+                                    <h3 style={{ fontSize: titleFontSize, fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", marginBottom: 8, flex: 1 }}>{book.title}</h3>
+                                    {book.articleCategory && (
+                                      <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>{book.articleCategory}</div>
+                                    )}
+                                    <div style={{ marginTop: 'auto' }}>
+                                      {[100, 88, 72].map((w, i) => (
+                                        <div key={i} style={{ height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 5, width: `${w}%` }} />
+                                      ))}
+                                    </div>
                                   </div>
-                                )}
+                                </div>
+                              ) : (
+                                /* ── 3D Perspective Book (visual only, no overlay) ── */
+                                <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
+                                  {!book.coverImage && (<div className="absolute inset-0"><BookCoverShader bookId={book.id} speed={0.5} /></div>)}
+                                  {book.coverImage && (<img src={book.coverImage} alt={book.title} className="absolute inset-0 w-full h-full object-cover object-center" />)}
+                                  <div className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }} />
+                                  <div className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}>
+                                    <h3 className="text-white font-bold leading-tight line-clamp-2" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif", fontSize: titleFontSize, textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>{book.title}</h3>
+                                    <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ? book.genre : 'Book'}</div>
+                                  </div>
+                                  {langInfo && langInfo.code !== 'en' && (
+                                    <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">{langInfo.nativeName.slice(0, 3)}</div>
+                                  )}
+                                </PerspectiveBook>
+                              )}
 
-                                {/* Cover image (if exists) */}
-                                {book.coverImage && (
-                                  <img
-                                    src={book.coverImage}
-                                    alt={book.title}
-                                    className="absolute inset-0 w-full h-full object-cover object-center"
+                            </Link>
+
+                            {/* ── Hover overlay — OUTSIDE the <Link> so clicks NEVER trigger navigation ── */}
+                            <div
+                              className={`absolute inset-0 z-50 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto'}`}
+                              style={{
+                                background: isArticle ? 'rgba(10,10,20,0.78)' : 'rgba(0,0,0,0.62)',
+                                backdropFilter: 'blur(8px)',
+                                borderRadius: 10,
+                              }}
+                            >
+                              {renamingId === book.id ? (
+                                /* ── Rename form ── */
+                                <form onSubmit={(e) => commitRename(e, book.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
+                                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
+                                  <input
+                                    autoFocus
+                                    value={renameValue}
+                                    onChange={e => setRenameValue(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }}
+                                    style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }}
+                                    maxLength={120}
                                   />
-                                )}
-
-                                {/* Top-half lighting sheen */}
-                                <div
-                                  className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20"
-                                  style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }}
-                                />
-
-                                {/* Bottom gradient + title block */}
-                                <div
-                                  className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20"
-                                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}
-                                >
-                                  <h3
-                                    className="text-white font-bold leading-tight line-clamp-2"
-                                    style={{
-                                      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif",
-                                      fontSize: titleFontSize,
-                                      textShadow: '0 1px 8px rgba(0,0,0,0.7)',
-                                    }}
-                                  >
-                                    {book.title}
-                                  </h3>
-                                  <div
-                                    className="mt-0.5 tracking-[0.18em] uppercase"
-                                    style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}
-                                  >
-                                    {book.genre ? book.genre : 'Book'}
+                                  <div style={{ display: 'flex', gap: 6 }}>
+                                    <button type="submit" disabled={updateBook.isPending}
+                                      className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">
+                                      {updateBook.isPending ? '…' : 'Save'}
+                                    </button>
+                                    <button type="button" onClick={() => setRenamingId(null)}
+                                      className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">
+                                      Cancel
+                                    </button>
                                   </div>
-                                </div>
-
-                                {/* Lang badge */}
-                                {langInfo && langInfo.code !== 'en' && (
-                                  <div className="absolute top-2 left-2 z-30 bg-black/60 backdrop-blur-md text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10">
-                                    {langInfo.nativeName.slice(0, 3)}
-                                  </div>
-                                )}
-
-                                {/* Hover overlay — stopPropagation on the whole div so clicks never reach the <Link> */}
-                                <div
-                                  className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                                  style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {renamingId === book.id ? (
-                                    /* ── Rename form ── */
-                                    <form onSubmit={(e) => commitRename(e, book.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
-                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
-                                      <input
-                                        autoFocus
-                                        value={renameValue}
-                                        onChange={e => setRenameValue(e.target.value)}
-                                        onKeyDown={e => { if (e.key === 'Escape') { setRenamingId(null); } }}
-                                        style={{
-                                          width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center',
-                                          background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-                                          color: '#fff', outline: 'none', fontFamily: 'inherit',
-                                        }}
-                                        maxLength={120}
-                                      />
-                                      <div style={{ display: 'flex', gap: 6 }}>
-                                        <button type="submit" disabled={updateBook.isPending}
-                                          className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">
-                                          {updateBook.isPending ? '…' : 'Save'}
-                                        </button>
-                                        <button type="button" onClick={() => setRenamingId(null)}
-                                          className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">
-                                          Cancel
-                                        </button>
-                                      </div>
-                                    </form>
-                                  ) : (
-                                    /* ── Normal action buttons ── */
-                                    <>
-                                      <button
-                                        onClick={() => setLocation(`/books/${book.id}`)}
-                                        className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all translate-y-2 group-hover:translate-y-0 duration-300"
-                                      >
-                                        Continue Writing
-                                      </button>
-                                      <button
-                                        onClick={() => duplicateBook.mutate(book.id)}
-                                        disabled={duplicateBook.isPending}
-                                        className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[40ms] disabled:opacity-40"
-                                      >
-                                        {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
-                                      </button>
-                                      <button
-                                        onClick={() => { setRenamingId(book.id); setRenameValue(book.title); }}
-                                        className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-[60ms]"
-                                      >
-                                        Rename
-                                      </button>
-                                      <button
-                                        onClick={() => setConfirmTrashId(book.id)}
-                                        className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors translate-y-2 group-hover:translate-y-0 duration-300 delay-75"
-                                      >
-                                        Delete
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </PerspectiveBook>
-                            )}
-
-                            {/* ── Label below card ── */}
-                            <div className="mt-2.5 px-0.5">
-                              <p className="text-[12px] font-semibold text-white/75 truncate leading-snug">{book.title}</p>
-                              <p className="text-[10px] text-white/28 mt-0.5">
-                                {book.createdAt ? format(new Date(book.createdAt), 'MMM d, yyyy') : ''}
-                              </p>
+                                </form>
+                              ) : (
+                                /* ── Normal action buttons ── */
+                                <>
+                                  <button
+                                    onClick={() => setLocation(isArticle ? `/articles/${book.id}` : `/books/${book.id}`)}
+                                    className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300"
+                                  >
+                                    Continue Writing
+                                  </button>
+                                  <button
+                                    onClick={() => duplicateBook.mutate(book.id)}
+                                    disabled={duplicateBook.isPending}
+                                    className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40"
+                                  >
+                                    {duplicateBook.isPending ? "Duplicating…" : "Duplicate"}
+                                  </button>
+                                  <button
+                                    onClick={() => { setRenamingId(book.id); setRenameValue(book.title); }}
+                                    className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors"
+                                  >
+                                    Rename
+                                  </button>
+                                  <button
+                                    onClick={() => setConfirmTrashId(book.id)}
+                                    className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </div>
-                          </Link>
+                          </div>
+
+                          {/* ── Label below card ── */}
+                          <div className="mt-2.5 px-0.5">
+                            <p className="text-[12px] font-semibold text-white/75 truncate leading-snug">{book.title}</p>
+                            <p className="text-[10px] text-white/28 mt-0.5">
+                              {book.createdAt ? format(new Date(book.createdAt), 'MMM d, yyyy') : ''}
+                            </p>
+                          </div>
                         </motion.div>
                       );
                     })}
