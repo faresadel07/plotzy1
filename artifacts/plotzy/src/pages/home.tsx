@@ -883,7 +883,7 @@ export default function Home() {
                                 <div
                                   className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                                   style={{ background: 'rgba(10,10,20,0.78)', backdropFilter: 'blur(8px)', borderRadius: 10 }}
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {renamingId === book.id ? (
                                     /* ── Rename form ── */
@@ -1003,7 +1003,7 @@ export default function Home() {
                                 <div
                                   className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                                   style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(8px)' }}
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {renamingId === book.id ? (
                                     /* ── Rename form ── */
