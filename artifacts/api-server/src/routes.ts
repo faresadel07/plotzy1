@@ -2937,6 +2937,131 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     return res.json({ ok: true });
   });
 
+  // ── Support messages (public submission) ──────────────────────────────────
+  app.post("/api/support/messages", async (req, res) => {
+    try {
+      const { insertSupportMessageSchema } = await import("../../../lib/db/src/schema");
+      const data = insertSupportMessageSchema.parse({
+        ...req.body,
+        userId: req.isAuthenticated() && req.user ? req.user.id : null,
+      });
+      const msg = await storage.submitSupportMessage(data);
+      res.json(msg);
+    } catch (err) {
+      res.status(400).json({ message: "Invalid data" });
+    }
+  });
+
+  // ── Admin middleware helper ──────────────────────────────────────────────
+  function checkAdmin(req: any, res: any): boolean {
+    if (!req.isAuthenticated() || !req.user) { res.status(401).json({ message: "Not authenticated" }); return false; }
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) { res.status(403).json({ message: "Admin not configured" }); return false; }
+    const userEmail = (req.user as any).email;
+    if (userEmail !== adminEmail) { res.status(403).json({ message: "Forbidden" }); return false; }
+    return true;
+  }
+
+  // ── Admin: stats ────────────────────────────────────────────────────────
+  app.get("/api/admin/stats", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Admin: users ────────────────────────────────────────────────────────
+  app.get("/api/admin/users", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const allUsers = await storage.getAllUsers();
+      const safe = allUsers.map(u => ({
+        id: u.id,
+        email: u.email,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        subscriptionStatus: u.subscriptionStatus,
+        subscriptionPlan: u.subscriptionPlan,
+        subscriptionEndDate: u.subscriptionEndDate,
+        googleId: u.googleId ? "connected" : null,
+        appleId: u.appleId ? "connected" : null,
+        createdAt: (u as any).createdAt ?? null,
+      }));
+      res.json(safe);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      await storage.deleteUser(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id/subscription", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const { subscriptionStatus, subscriptionPlan, subscriptionEndDate } = req.body;
+      const updated = await storage.updateUser(id, {
+        subscriptionStatus: subscriptionStatus ?? null,
+        subscriptionPlan: subscriptionPlan ?? null,
+        subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : null,
+      });
+      res.json({ success: true, user: updated });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Admin: books (delete any published book) ────────────────────────────
+  app.delete("/api/admin/books/:id", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      await storage.deleteBook(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Admin: support messages ──────────────────────────────────────────────
+  app.get("/api/admin/support", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const messages = await storage.getSupportMessages();
+      res.json(messages);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.patch("/api/admin/support/:id", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const { read, status } = req.body;
+      const msg = await storage.updateSupportMessage(id, { read, status });
+      res.json(msg);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
   // Trigger catalog sync in background on startup (non-blocking)
   setImmediate(() => syncGutenbergCatalog().catch(() => {}));
 

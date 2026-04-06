@@ -28,6 +28,7 @@ import Library from "@/pages/library";
 import ReadBook from "@/pages/read-book";
 import AuthorProfile from "@/pages/author-profile";
 import SupportPage from "@/pages/support";
+import AdminPage from "@/pages/admin";
 import TutorialPage from "@/pages/tutorial";
 import DiscoverPage from "@/pages/discover";
 import GutenbergReader from "@/pages/gutenberg-reader";
@@ -89,6 +90,7 @@ function Router() {
         <Route path="/authors/:userId" component={AuthorProfile} />
         <Route path="/tutorial" component={TutorialPage} />
         <Route path="/support" component={SupportPage} />
+        <Route path="/admin" component={AdminPage} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/terms" component={TermsOfService} />
         <Route component={NotFound} />

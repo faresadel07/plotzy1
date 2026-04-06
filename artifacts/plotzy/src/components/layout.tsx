@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe } from "lucide-react";
+import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings2 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -300,6 +300,15 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                     <Camera className="w-4 h-4" />
                     {uploadingAvatar ? "Uploading..." : "Change profile picture"}
                   </DropdownMenuItem>
+                  {user.isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { window.location.href = "/admin"; }} className="gap-2 cursor-pointer">
+                        <Settings2 className="w-4 h-4" />
+                        Admin Panel
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="gap-2 cursor-pointer text-destructive focus:text-destructive" data-testid="menuitem-logout">
                     <LogOut className="w-4 h-4" />

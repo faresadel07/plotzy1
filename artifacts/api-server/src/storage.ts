@@ -2,7 +2,7 @@ import { db } from "./db";
 import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzle-orm";
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
-  userStats, userAchievements, bookSeries,
+  userStats, userAchievements, bookSeries, supportMessages,
   type Book, type InsertBook,
   type Chapter, type InsertChapter,
   type Transaction, type InsertTransaction,
@@ -11,6 +11,7 @@ import {
   type DailyProgress, type InsertDailyProgress,
   type StoryBeat, type InsertStoryBeat,
   type BookSeries, type InsertBookSeries,
+  type SupportMessage, type InsertSupportMessage,
 } from "../../../lib/db/src/schema";
 
 export type UserStats = typeof userStats.$inferSelect;
@@ -103,6 +104,14 @@ export interface IStorage {
   assignBookToSeries(bookId: number, seriesId: number | null, seriesOrder?: number): Promise<Book>;
   getSeriesBooks(seriesId: number): Promise<Book[]>;
   reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void>;
+
+  // Admin
+  getAllUsers(): Promise<User[]>;
+  deleteUser(id: number): Promise<void>;
+  getSupportMessages(): Promise<SupportMessage[]>;
+  submitSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
+  updateSupportMessage(id: number, updates: { read?: boolean; status?: string }): Promise<SupportMessage>;
+  getAdminStats(): Promise<{ totalUsers: number; totalBooks: number; publishedBooks: number; totalChapters: number; openSupportTickets: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -566,6 +575,44 @@ export class DatabaseStorage implements IStorage {
     for (const { bookId, seriesOrder } of updates) {
       await db.update(books).set({ seriesOrder } as any).where(eq(books.id, bookId));
     }
+  }
+
+  // ── Admin ────────────────────────────────────────────────────────────────────
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.id));
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  async getSupportMessages(): Promise<SupportMessage[]> {
+    return await db.select().from(supportMessages).orderBy(desc(supportMessages.createdAt));
+  }
+
+  async submitSupportMessage(data: InsertSupportMessage): Promise<SupportMessage> {
+    const [msg] = await db.insert(supportMessages).values(data).returning();
+    return msg;
+  }
+
+  async updateSupportMessage(id: number, updates: { read?: boolean; status?: string }): Promise<SupportMessage> {
+    const [msg] = await db.update(supportMessages).set(updates).where(eq(supportMessages.id, id)).returning();
+    return msg;
+  }
+
+  async getAdminStats(): Promise<{ totalUsers: number; totalBooks: number; publishedBooks: number; totalChapters: number; openSupportTickets: number }> {
+    const [userCount] = await db.select({ total: count() }).from(users);
+    const [bookCount] = await db.select({ total: count() }).from(books).where(eq(books.isDeleted, false));
+    const [publishedCount] = await db.select({ total: count() }).from(books).where(and(eq(books.isDeleted, false), eq(books.isPublished, true)));
+    const [chapterCount] = await db.select({ total: count() }).from(chapters);
+    const [supportCount] = await db.select({ total: count() }).from(supportMessages).where(eq(supportMessages.status, "open"));
+    return {
+      totalUsers: Number(userCount?.total ?? 0),
+      totalBooks: Number(bookCount?.total ?? 0),
+      publishedBooks: Number(publishedCount?.total ?? 0),
+      totalChapters: Number(chapterCount?.total ?? 0),
+      openSupportTickets: Number(supportCount?.total ?? 0),
+    };
   }
 }
 
