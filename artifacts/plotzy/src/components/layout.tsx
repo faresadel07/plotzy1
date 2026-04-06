@@ -132,6 +132,23 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
   const [scrolled, setScrolled] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.isAdmin) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/admin/support/unread-count", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadSupportCount(data.count ?? 0);
+        }
+      } catch {}
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [user?.isAdmin]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -326,7 +343,18 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => { window.location.href = "/admin"; }} className="gap-2 cursor-pointer">
                         <Settings2 className="w-4 h-4" />
-                        Admin Panel
+                        <span style={{ flex: 1 }}>Admin Panel</span>
+                        {unreadSupportCount > 0 && (
+                          <span style={{
+                            minWidth: 18, height: 18, borderRadius: 9,
+                            background: "#ef4444", color: "#fff",
+                            fontSize: 10, fontWeight: 700,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            padding: "0 5px",
+                          }}>
+                            {unreadSupportCount > 99 ? "99+" : unreadSupportCount}
+                          </span>
+                        )}
                       </DropdownMenuItem>
                     </>
                   )}

@@ -3038,6 +3038,18 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // ── Admin: unread support count (used for nav badge) ──────────────────────
+  app.get("/api/admin/support/unread-count", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const messages = await storage.getSupportMessages();
+      const count = messages.filter((m: any) => !m.read).length;
+      res.json({ count });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
   // ── Admin: support messages ──────────────────────────────────────────────
   app.get("/api/admin/support", async (req, res) => {
     if (!checkAdmin(req, res)) return;
