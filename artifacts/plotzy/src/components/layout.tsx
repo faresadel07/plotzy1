@@ -349,7 +349,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   {user.isAdmin && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { window.location.href = "/admin"; }} className="gap-2 cursor-pointer">
+                      <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2 cursor-pointer">
                         <Settings2 className="w-4 h-4" />
                         <span style={{ flex: 1 }}>Admin Panel</span>
                         {unreadSupportCount > 0 && (
