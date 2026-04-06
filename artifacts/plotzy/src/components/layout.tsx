@@ -273,15 +273,36 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                         {getInitials(user.displayName, user.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: darkNav ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {user.displayName || user.email?.split("@")[0] || "Me"}
+                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: darkNav ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.displayName || user.email?.split("@")[0] || "Me"}
+                      </span>
+                      {user.isAdmin && (
+                        <span style={{
+                          fontFamily: SF, fontSize: 9, fontWeight: 700,
+                          letterSpacing: "0.06em", textTransform: "uppercase",
+                          color: darkNav ? "#000" : "#fff",
+                          background: darkNav ? "#fff" : "#111",
+                          borderRadius: 4, padding: "1px 5px",
+                          lineHeight: 1.6, flexShrink: 0,
+                        }}>Admin</span>
+                      )}
                     </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-52 rounded-xl" sideOffset={8}>
                   <DropdownMenuLabel className="font-normal" dir={isRTL ? "rtl" : "ltr"}>
                     <div className="flex flex-col gap-0.5">
-                      <p className="font-semibold text-sm truncate">{user.displayName || t("noNameSet")}</p>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <p className="font-semibold text-sm truncate">{user.displayName || t("noNameSet")}</p>
+                        {user.isAdmin && (
+                          <span style={{
+                            fontSize: 9, fontWeight: 700, letterSpacing: "0.06em",
+                            textTransform: "uppercase", color: "#fff", background: "#111",
+                            borderRadius: 4, padding: "1px 5px", lineHeight: 1.6, flexShrink: 0,
+                          }}>Admin</span>
+                        )}
+                      </div>
                       {user.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
                     </div>
                   </DropdownMenuLabel>
