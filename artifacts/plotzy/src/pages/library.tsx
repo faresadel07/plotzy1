@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
-import { usePublishedBooks, useBookRatingStats, useFeaturedBook, useSetFeaturedBook } from "@/hooks/use-public-library";
+import { usePublishedBooks, useBookRatingStats, useFeaturedBook, useSetFeaturedBook, useAdminDeleteBook } from "@/hooks/use-public-library";
 import type { PublishedBook } from "@/hooks/use-public-library";
 import { useAuth } from "@/contexts/auth-context";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen, Search, Eye, User, Calendar, Loader2, Star, Filter,
-  Award, X, Trophy,
+  Award, X, Trophy, Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -172,6 +172,8 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
   const publishedDate = book.publishedAt ? format(new Date(book.publishedAt), "MMM d, yyyy") : null;
   const { data: ratingStats } = useBookRatingStats(book.id);
   const { mutate: setFeatured, isPending } = useSetFeaturedBook();
+  const { mutate: deleteBook, isPending: isDeleting } = useAdminDeleteBook();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleFeatureToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -182,6 +184,28 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
     });
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmDelete(true);
+  };
+
+  const handleDeleteConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteBook(book.id, {
+      onSuccess: () => toast({ title: "Book deleted from community" }),
+      onError: () => toast({ title: "Failed to delete book", variant: "destructive" }),
+    });
+    setConfirmDelete(false);
+  };
+
+  const handleDeleteCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmDelete(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -190,18 +214,53 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
       className="group relative"
     >
       {isAdmin && (
-        <button
-          onClick={handleFeatureToggle}
-          disabled={isPending}
-          className={`absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-            isFeatured
-              ? "bg-amber-400 text-amber-900 shadow-md"
-              : "bg-black/50 text-white/60 opacity-0 group-hover:opacity-100 hover:bg-black/70 hover:text-amber-400"
-          }`}
-          title={isFeatured ? "Remove featured" : "Set as featured"}
-        >
-          <Trophy className="w-3.5 h-3.5" />
-        </button>
+        <>
+          <button
+            onClick={handleFeatureToggle}
+            disabled={isPending}
+            className={`absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              isFeatured
+                ? "bg-amber-400 text-amber-900 shadow-md"
+                : "bg-black/50 text-white/60 opacity-0 group-hover:opacity-100 hover:bg-black/70 hover:text-amber-400"
+            }`}
+            title={isFeatured ? "Remove featured" : "Set as featured"}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Delete button / confirm */}
+          {!confirmDelete ? (
+            <button
+              onClick={handleDeleteClick}
+              disabled={isDeleting}
+              className="absolute top-2 left-2 z-10 w-7 h-7 rounded-full bg-black/50 text-white/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all hover:bg-red-600 hover:text-white"
+              title="Delete book"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <div
+              className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-black/90 rounded-full px-2 py-1"
+              onClick={e => e.stopPropagation()}
+            >
+              <span className="text-white text-[10px] font-semibold">Delete?</span>
+              <button
+                onClick={handleDeleteConfirm}
+                className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-500 transition-colors"
+                title="Confirm delete"
+              >
+                <Trash2 className="w-2.5 h-2.5" />
+              </button>
+              <button
+                onClick={handleDeleteCancel}
+                className="w-5 h-5 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
+                title="Cancel"
+              >
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          )}
+        </>
       )}
       <Link href={`/read/${book.id}`}>
         <div className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-black/8 hover:-translate-y-1 hover:border-foreground/20 flex flex-col h-full">

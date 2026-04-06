@@ -76,6 +76,26 @@ export function useSetFeaturedBook() {
   });
 }
 
+export function useAdminDeleteBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (bookId: number) => {
+      const res = await fetch(`/api/admin/books/${bookId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to delete book");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/public/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/public/books/featured"] });
+    },
+  });
+}
+
 export function usePublishedBooks() {
   return useQuery<PublishedBook[]>({
     queryKey: ["/api/public/books"],
