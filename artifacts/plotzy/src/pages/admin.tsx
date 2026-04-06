@@ -25,6 +25,14 @@ interface AdminUser {
   googleId: string | null;
   appleId: string | null;
   createdAt: string | null;
+  suspended: boolean | null;
+}
+
+interface ActivityEvent {
+  type: string;
+  title: string;
+  subtitle: string;
+  time: string;
 }
 
 interface AdminBook {
@@ -212,15 +220,26 @@ function UsersTab() {
   const [grantModal, setGrantModal] = useState<AdminUser | null>(null);
   const [plan, setPlan] = useState("pro");
   const [months, setMonths] = useState(1);
+  const [search, setSearch] = useState("");
 
   const { data: users = [], isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
-    queryFn: () => fetch("/api/admin/users").then(r => r.json()),
+    queryFn: () => fetch("/api/admin/users", { credentials: "include" }).then(r => r.json()),
   });
 
   const deleteUser = useMutation({
-    mutationFn: (id: number) => fetch(`/api/admin/users/${id}`, { method: "DELETE" }).then(r => r.json()),
+    mutationFn: (id: number) => fetch(`/api/admin/users/${id}`, { method: "DELETE", credentials: "include" }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); qc.invalidateQueries({ queryKey: ["/api/admin/stats"] }); toast({ title: "User deleted" }); },
+  });
+
+  const suspendUser = useMutation({
+    mutationFn: ({ id, suspended }: { id: number; suspended: boolean }) =>
+      fetch(`/api/admin/users/${id}/suspend`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ suspended }),
+      }).then(r => r.json()),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); toast({ title: v.suspended ? "User suspended" : "User unsuspended" }); },
   });
 
   const grantSub = useMutation({
@@ -230,6 +249,7 @@ function UsersTab() {
       return fetch(`/api/admin/users/${id}/subscription`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ subscriptionStatus: "active", subscriptionPlan: plan, subscriptionEndDate: end.toISOString() }),
       }).then(r => r.json());
     },
@@ -240,30 +260,52 @@ function UsersTab() {
     mutationFn: (id: number) => fetch(`/api/admin/users/${id}/subscription`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ subscriptionStatus: null, subscriptionPlan: null, subscriptionEndDate: null }),
     }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); toast({ title: "Subscription revoked" }); },
+  });
+
+  const filtered = users.filter(u => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (u.displayName || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
   });
 
   if (isLoading) return <Spinner />;
 
   return (
     <>
+      {/* Search bar */}
+      <div style={{ marginBottom: 16 }}>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search by name or email…"
+          style={{ ...inputStyle, width: 320, display: "inline-block" }}
+        />
+        {search && (
+          <span style={{ marginLeft: 12, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+            {filtered.length} of {users.length} users
+          </span>
+        )}
+      </div>
+
       <div style={{ overflowX: "auto" }}>
         <table style={S.table}>
           <thead>
             <tr>
               <th style={S.th}>User</th>
               <th style={S.th}>Email</th>
+              <th style={S.th}>Status</th>
               <th style={S.th}>Subscription</th>
-              <th style={S.th}>Providers</th>
               <th style={S.th}>Joined</th>
               <th style={S.th}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map(u => (
-              <tr key={u.id}>
+            {filtered.map(u => (
+              <tr key={u.id} style={{ opacity: u.suspended ? 0.55 : 1 }}>
                 <td style={S.td}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {u.avatarUrl
@@ -275,13 +317,16 @@ function UsersTab() {
                 </td>
                 <td style={{ ...S.td, color: "rgba(255,255,255,0.5)", fontSize: 12 }}>{u.email || "—"}</td>
                 <td style={S.td}>
+                  {u.suspended
+                    ? <span style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", borderRadius: 5, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>SUSPENDED</span>
+                    : <span style={{ background: "rgba(34,197,94,0.1)", color: "#4ade80", borderRadius: 5, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>ACTIVE</span>
+                  }
+                </td>
+                <td style={S.td}>
                   {u.subscriptionStatus === "active"
                     ? <span style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", borderRadius: 5, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>{u.subscriptionPlan?.toUpperCase() || "PRO"}</span>
                     : <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>Free</span>
                   }
-                </td>
-                <td style={{ ...S.td, fontSize: 12 }}>
-                  {[u.googleId && "Google", u.appleId && "Apple"].filter(Boolean).join(", ") || "Email"}
                 </td>
                 <td style={{ ...S.td, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
                   {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
@@ -292,6 +337,11 @@ function UsersTab() {
                       ? <button style={S.btn("ghost")} onClick={() => revokeSub.mutate(u.id)}>Revoke Sub</button>
                       : <button style={S.btn("success")} onClick={() => { setGrantModal(u); setPlan("pro"); setMonths(1); }}>Grant Sub</button>
                     }
+                    <button
+                      style={S.btn(u.suspended ? "success" : "ghost")}
+                      onClick={() => suspendUser.mutate({ id: u.id, suspended: !u.suspended })}
+                      disabled={suspendUser.isPending}
+                    >{u.suspended ? "Unsuspend" : "Suspend"}</button>
                     <button
                       style={S.btn("danger")}
                       onClick={() => { if (confirm(`Delete user ${u.email}?`)) deleteUser.mutate(u.id); }}
@@ -329,6 +379,162 @@ function UsersTab() {
         </Modal>
       )}
     </>
+  );
+}
+
+// ─── Activity Tab ─────────────────────────────────────────────────────────────
+
+const EVENT_ICONS: Record<string, string> = { user: "👤", book: "📖", support: "🎫" };
+const EVENT_COLORS: Record<string, string> = { user: "#818cf8", book: "#34d399", support: "#fb923c" };
+
+function ActivityTab() {
+  const { data: events = [], isLoading } = useQuery<ActivityEvent[]>({
+    queryKey: ["/api/admin/activity"],
+    queryFn: () => fetch("/api/admin/activity", { credentials: "include" }).then(r => r.json()),
+    refetchInterval: 60000,
+  });
+
+  if (isLoading) return <Spinner />;
+  if (!events.length) return (
+    <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: 14 }}>
+      No activity yet.
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {events.map((e, i) => (
+        <div key={i} style={{
+          display: "flex", alignItems: "flex-start", gap: 16,
+          padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+            background: `${EVENT_COLORS[e.type] || "#fff"}18`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 16, marginTop: 2,
+          }}>{EVENT_ICONS[e.type] || "•"}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 2 }}>{e.title}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.subtitle}</div>
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0, marginTop: 3 }}>
+            {e.time ? new Date(e.time).toLocaleString() : "—"}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Banner Tab ───────────────────────────────────────────────────────────────
+
+function BannerTab() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [message, setMessage] = useState("");
+  const [color, setColor] = useState("default");
+
+  const { data: current } = useQuery<{ message: string | null; color: string | null }>({
+    queryKey: ["/api/banner"],
+    queryFn: () => fetch("/api/banner").then(r => r.json()),
+  });
+
+  const setBanner = useMutation({
+    mutationFn: () => fetch("/api/admin/banner", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ message, color }),
+    }).then(r => r.json()),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/banner"] }); toast({ title: "Banner published!" }); setMessage(""); },
+  });
+
+  const removeBanner = useMutation({
+    mutationFn: () => fetch("/api/admin/banner", { method: "DELETE", credentials: "include" }).then(r => r.json()),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/banner"] }); toast({ title: "Banner removed" }); },
+  });
+
+  const COLORS = [
+    { value: "default", label: "Dark (default)", bg: "#1a1a1a", fg: "#fff" },
+    { value: "info",    label: "Blue",            bg: "#1e40af", fg: "#fff" },
+    { value: "success", label: "Green",           bg: "#166534", fg: "#fff" },
+    { value: "warning", label: "Yellow",          bg: "#92400e", fg: "#fef08a" },
+    { value: "danger",  label: "Red",             bg: "#991b1b", fg: "#fff" },
+  ];
+
+  const selectedColor = COLORS.find(c => c.value === color) || COLORS[0];
+
+  return (
+    <div style={{ maxWidth: 600 }}>
+      {/* Current banner status */}
+      <div style={{ marginBottom: 28, padding: 20, background: "rgba(255,255,255,0.04)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)" }}>
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Current Banner</p>
+        {current?.message ? (
+          <div>
+            <div style={{
+              padding: "10px 16px", borderRadius: 8, marginBottom: 12,
+              background: selectedColor.bg, color: selectedColor.fg,
+              fontSize: 13, fontWeight: 500,
+            }}>{current.message}</div>
+            <button style={{ ...S.btn("danger"), fontSize: 12 }} onClick={() => removeBanner.mutate()} disabled={removeBanner.isPending}>
+              {removeBanner.isPending ? "Removing…" : "Remove Banner"}
+            </button>
+          </div>
+        ) : (
+          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>No active banner</p>
+        )}
+      </div>
+
+      {/* New banner form */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>New Banner</p>
+          <textarea
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Enter announcement message for all users…"
+            rows={3}
+            style={{ ...inputStyle, resize: "vertical" }}
+          />
+        </div>
+
+        <div>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8, fontWeight: 600 }}>Color</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {COLORS.map(c => (
+              <button
+                key={c.value}
+                onClick={() => setColor(c.value)}
+                style={{
+                  padding: "6px 14px", borderRadius: 8, fontSize: 12, cursor: "pointer",
+                  background: c.bg, color: c.fg,
+                  border: color === c.value ? "2px solid #fff" : "2px solid transparent",
+                  fontWeight: color === c.value ? 700 : 400,
+                }}
+              >{c.label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Preview */}
+        {message && (
+          <div style={{
+            padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+            background: selectedColor.bg, color: selectedColor.fg,
+          }}>
+            📢 {message}
+          </div>
+        )}
+
+        <button
+          style={{ ...S.btn("default"), padding: "10px 24px", fontSize: 14, alignSelf: "flex-start" }}
+          onClick={() => setBanner.mutate()}
+          disabled={!message.trim() || setBanner.isPending}
+        >
+          {setBanner.isPending ? "Publishing…" : "Publish Banner"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -563,7 +769,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "users" | "books" | "support";
+type Tab = "overview" | "users" | "books" | "support" | "activity" | "banner";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -619,24 +825,30 @@ export default function AdminPage() {
         <div style={S.tabs}>
           <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
           <TabBtn label={`Users${stats ? ` (${stats.totalUsers})` : ""}`} active={tab === "users"} onClick={() => setTab("users")} />
-          <TabBtn label={`Published Books${stats ? ` (${stats.publishedBooks})` : ""}`} active={tab === "books"} onClick={() => setTab("books")} />
+          <TabBtn label={`Books${stats ? ` (${stats.publishedBooks})` : ""}`} active={tab === "books"} onClick={() => setTab("books")} />
           <TabBtn label={`Support${stats && stats.openSupportTickets > 0 ? ` (${stats.openSupportTickets})` : ""}`} active={tab === "support"} onClick={() => setTab("support")} />
+          <TabBtn label="Activity" active={tab === "activity"} onClick={() => setTab("activity")} />
+          <TabBtn label="Banner" active={tab === "banner"} onClick={() => setTab("banner")} />
         </div>
 
         {tab === "overview" && (
           <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 2 }}>
             <p>Welcome to the Plotzy admin panel. Use the tabs above to manage the platform:</p>
             <ul style={{ paddingLeft: 20 }}>
-              <li><b style={{ color: "#fff" }}>Users</b> — view all accounts, grant or revoke subscriptions, delete users</li>
-              <li><b style={{ color: "#fff" }}>Published Books</b> — manage any publicly published book, delete if needed</li>
+              <li><b style={{ color: "#fff" }}>Users</b> — view all accounts, search, suspend/unsuspend, grant or revoke subscriptions, delete</li>
+              <li><b style={{ color: "#fff" }}>Books</b> — manage any publicly published book, delete if needed</li>
               <li><b style={{ color: "#fff" }}>Support</b> — read and manage support tickets submitted by users</li>
+              <li><b style={{ color: "#fff" }}>Activity</b> — recent events across the platform (registrations, new books, support)</li>
+              <li><b style={{ color: "#fff" }}>Banner</b> — publish a site-wide announcement visible to all users</li>
             </ul>
           </div>
         )}
 
-        {tab === "users"   && <UsersTab />}
-        {tab === "books"   && <BooksTab />}
-        {tab === "support" && <SupportTab />}
+        {tab === "users"    && <UsersTab />}
+        {tab === "books"    && <BooksTab />}
+        {tab === "support"  && <SupportTab />}
+        {tab === "activity" && <ActivityTab />}
+        {tab === "banner"   && <BannerTab />}
       </div>
     </div>
   );

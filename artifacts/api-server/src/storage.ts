@@ -2,7 +2,7 @@ import { db } from "./db";
 import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzle-orm";
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
-  userStats, userAchievements, bookSeries, supportMessages,
+  userStats, userAchievements, bookSeries, supportMessages, siteSettings,
   type Book, type InsertBook,
   type Chapter, type InsertChapter,
   type Transaction, type InsertTransaction,
@@ -108,10 +108,14 @@ export interface IStorage {
   // Admin
   getAllUsers(): Promise<User[]>;
   deleteUser(id: number): Promise<void>;
+  suspendUser(id: number, suspended: boolean): Promise<User>;
   getSupportMessages(): Promise<SupportMessage[]>;
   submitSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
   updateSupportMessage(id: number, updates: { read?: boolean; status?: string }): Promise<SupportMessage>;
   getAdminStats(): Promise<{ totalUsers: number; totalBooks: number; publishedBooks: number; totalChapters: number; openSupportTickets: number }>;
+  getActivityFeed(): Promise<Array<{ type: string; title: string; subtitle: string; time: string }>>;
+  getSetting(key: string): Promise<string | null>;
+  setSetting(key: string, value: string | null): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -613,6 +617,39 @@ export class DatabaseStorage implements IStorage {
       totalChapters: Number(chapterCount?.total ?? 0),
       openSupportTickets: Number(supportCount?.total ?? 0),
     };
+  }
+
+  async suspendUser(id: number, suspended: boolean): Promise<User> {
+    const [updated] = await db.update(users).set({ suspended }).where(eq(users.id, id)).returning();
+    return updated;
+  }
+
+  async getActivityFeed(): Promise<Array<{ type: string; title: string; subtitle: string; time: string }>> {
+    const [recentUsers, recentBooks, recentSupport] = await Promise.all([
+      db.select().from(users).orderBy(desc(users.createdAt)).limit(15),
+      db.select().from(books).where(and(eq(books.isPublished, true), eq(books.isDeleted, false))).orderBy(desc(books.createdAt)).limit(15),
+      db.select().from(supportMessages).orderBy(desc(supportMessages.createdAt)).limit(15),
+    ]);
+    const events: Array<{ type: string; title: string; subtitle: string; time: string; ts: Date }> = [
+      ...recentUsers.map(u => ({ type: "user", title: `New user registered`, subtitle: u.displayName || u.email || "Unknown", time: "", ts: u.createdAt ?? new Date(0) })),
+      ...recentBooks.map(b => ({ type: "book", title: `Book published`, subtitle: b.title, time: "", ts: b.createdAt ?? new Date(0) })),
+      ...recentSupport.map(m => ({ type: "support", title: `Support ticket: ${m.subject}`, subtitle: m.name || m.email, time: "", ts: m.createdAt ?? new Date(0) })),
+    ];
+    events.sort((a, b) => b.ts.getTime() - a.ts.getTime());
+    return events.slice(0, 30).map(e => ({ ...e, time: e.ts.toISOString() }));
+  }
+
+  async getSetting(key: string): Promise<string | null> {
+    const [row] = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
+    return row?.value ?? null;
+  }
+
+  async setSetting(key: string, value: string | null): Promise<void> {
+    if (value === null) {
+      await db.delete(siteSettings).where(eq(siteSettings.key, key));
+    } else {
+      await db.insert(siteSettings).values({ key, value }).onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+    }
   }
 }
 

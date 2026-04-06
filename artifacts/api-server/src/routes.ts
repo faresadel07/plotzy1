@@ -1961,9 +1961,9 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     if (req.isAuthenticated() && req.user) {
       const dbUser = await storage.getUserById(req.user.id);
       if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
-      const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = dbUser;
+      const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
       const isAdmin = !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
-      return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin });
+      return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin, suspended: !!suspended });
     }
     return res.status(401).json({ message: "Not authenticated" });
   });
@@ -3033,6 +3033,67 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
       await storage.deleteBook(id);
       res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Banner (public read) ─────────────────────────────────────────────────
+  app.get("/api/banner", async (req, res) => {
+    try {
+      const message = await storage.getSetting("banner_message");
+      const color = await storage.getSetting("banner_color");
+      res.json({ message, color });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Admin: banner management ─────────────────────────────────────────────
+  app.post("/api/admin/banner", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const { message, color } = req.body;
+      if (!message?.trim()) return res.status(400).json({ message: "Message required" });
+      await storage.setSetting("banner_message", message.trim());
+      await storage.setSetting("banner_color", color || "default");
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.delete("/api/admin/banner", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      await storage.setSetting("banner_message", null);
+      await storage.setSetting("banner_color", null);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Admin: suspend/unsuspend user ─────────────────────────────────────────
+  app.patch("/api/admin/users/:id/suspend", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const { suspended } = req.body;
+      const user = await storage.suspendUser(id, !!suspended);
+      res.json(user);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Admin: activity feed ─────────────────────────────────────────────────
+  app.get("/api/admin/activity", async (req, res) => {
+    if (!checkAdmin(req, res)) return;
+    try {
+      const feed = await storage.getActivityFeed();
+      res.json(feed);
     } catch (err) {
       res.status(500).json({ message: "Internal error" });
     }

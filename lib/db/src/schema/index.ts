@@ -24,6 +24,13 @@ export const users = pgTable("users", {
   subscriptionEndDate: timestamp("subscription_end_date"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  suspended: boolean("suspended").default(false),
+});
+
+export const siteSettings = pgTable("site_settings", {
+  key: text("key").primaryKey(),
+  value: text("value"),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type BookPages = {

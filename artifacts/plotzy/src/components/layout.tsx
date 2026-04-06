@@ -133,6 +133,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [unreadSupportCount, setUnreadSupportCount] = useState(0);
+  const [banner, setBannerData] = useState<{ message: string | null; color: string | null } | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (!user?.isAdmin) return;
@@ -149,6 +151,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
     const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
   }, [user?.isAdmin]);
+
+  useEffect(() => {
+    fetch("/api/banner").then(r => r.ok ? r.json() : null).then(data => {
+      if (data?.message) setBannerData(data);
+    }).catch(() => {});
+  }, []);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -389,6 +397,32 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           )}
         </div>
       </header>
+
+      {/* ── Site-wide Banner ── */}
+      {banner?.message && !bannerDismissed && (() => {
+        const BG: Record<string, string> = {
+          default: "#1a1a1a", info: "#1e40af", success: "#166534", warning: "#92400e", danger: "#991b1b",
+        };
+        const FG: Record<string, string> = {
+          default: "#fff", info: "#fff", success: "#fff", warning: "#fef08a", danger: "#fff",
+        };
+        const bg = BG[banner.color ?? "default"] ?? BG.default;
+        const fg = FG[banner.color ?? "default"] ?? FG.default;
+        return (
+          <div style={{
+            position: "fixed", top: 44, left: 0, right: 0, zIndex: 90,
+            background: bg, color: fg,
+            padding: "8px 20px", fontSize: 13, fontWeight: 500,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          }}>
+            <span style={{ flex: 1, textAlign: "center" }}>📢 {banner.message}</span>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: fg, opacity: 0.6, fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0 }}
+            >×</button>
+          </div>
+        );
+      })()}
 
       <main className={
         noScroll ? "flex-1 overflow-hidden pt-[44px]" :
