@@ -57,7 +57,7 @@ function FeaturedBookBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: b
             style={{
               background: book.spineColor
                 ? `linear-gradient(135deg, ${book.spineColor}55 0%, ${book.spineColor}11 60%, transparent 100%)`
-                : "linear-gradient(135deg, #7c3aed33 0%, #7c3aed08 60%, transparent 100%)",
+                : "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 60%, transparent 100%)",
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/60 to-transparent" />
@@ -91,8 +91,9 @@ function FeaturedBookBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: b
                 <div
                   className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full"
                   style={{
-                    background: book.spineColor ? `${book.spineColor}33` : "#7c3aed33",
-                    color: book.spineColor || "#7c3aed",
+                    background: "rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.9)",
+                    border: "1px solid rgba(255,255,255,0.2)",
                   }}
                 >
                   <Trophy className="w-3.5 h-3.5" />
@@ -139,8 +140,8 @@ function FeaturedBookBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: b
                 <span
                   className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all duration-200 group-hover:opacity-80"
                   style={{
-                    background: book.spineColor ? `${book.spineColor}22` : "#7c3aed22",
-                    color: book.spineColor || "#7c3aed",
+                    background: "#fff",
+                    color: "#000",
                   }}
                 >
                   Read Now →
@@ -221,7 +222,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
               >
                 <div
                   className="w-16 h-20 rounded-sm shadow-md flex items-center justify-center mb-3"
-                  style={{ backgroundColor: book.spineColor || "#7c3aed" }}
+                  style={{ backgroundColor: book.spineColor || "rgba(255,255,255,0.15)" }}
                 >
                   <BookOpen className="w-6 h-6 text-white/80" />
                 </div>
@@ -275,7 +276,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
 
 const MOCK_BOOKS = [
   { title: "The Last Voyage", color: "#2563eb", icon: "⚓" },
-  { title: "Whispers of Dawn", color: "#7c3aed", icon: "🌅" },
+  { title: "Whispers of Dawn", color: "#475569", icon: "🌅" },
   { title: "Iron & Silk", color: "#059669", icon: "⚔️" },
   { title: "Beneath the Stars", color: "#dc2626", icon: "✨" },
 ];
