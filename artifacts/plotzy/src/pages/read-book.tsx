@@ -275,10 +275,30 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
   useEffect(() => {
     function measure() {
       if (!wrapperRef.current || !innerRef.current) return;
-      const w = wrapperRef.current.clientWidth;
+      const fullW = wrapperRef.current.parentElement?.clientWidth ?? wrapperRef.current.clientWidth;
+      /* Available viewport height minus header + top-padding + bottom nav */
+      const HEADER_H = 52;
+      const TOP_PAD = 28;
+      const BOTTOM_NAV = 64;
+      const maxH = Math.max(300, window.innerHeight - HEADER_H - TOP_PAD - BOTTOM_NAV);
+
       /* Each page is half the spread width; book ratio is 2:3 (w:h per page) */
-      const pageW = (w - SPINE_W) / 2;
-      const h = Math.round(pageW * 1.5);
+      const pageW_from_w = (fullW - SPINE_W) / 2;
+      const h_from_w = Math.round(pageW_from_w * 1.5);
+
+      let h: number;
+      let w: number;
+      if (h_from_w <= maxH) {
+        /* Width is the binding constraint — use full width */
+        h = h_from_w;
+        w = fullW;
+      } else {
+        /* Height is the binding constraint — scale down to maintain 2:3 ratio */
+        h = maxH;
+        const pageW_from_h = Math.round(maxH / 1.5);
+        w = pageW_from_h * 2 + SPINE_W;
+      }
+
       setContainerW(w);
       setContainerH(h);
 
@@ -294,7 +314,8 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
     }
     measure();
     const ro = new ResizeObserver(measure);
-    if (wrapperRef.current) ro.observe(wrapperRef.current);
+    const target = wrapperRef.current?.parentElement ?? wrapperRef.current;
+    if (target) ro.observe(target);
     return () => ro.disconnect();
   }, [chapters]);
 
@@ -308,7 +329,9 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
     <div
       ref={wrapperRef}
       style={{
-        width: "100%",
+        width: containerW > 0 ? containerW : "100%",
+        maxWidth: "100%",
+        margin: "0 auto",
         height: containerH || 620,
         position: "relative",
         overflow: "hidden",
