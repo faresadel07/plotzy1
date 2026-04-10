@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /messages
+Disallow: /api/
+
+Sitemap: https://plotzy.com/sitemap.xml

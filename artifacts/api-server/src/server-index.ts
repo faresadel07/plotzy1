@@ -107,7 +107,7 @@ app.use(express.urlencoded({ extended: false }));
 setupPassport();
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "plotzy-dev-secret",
+    secret: process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? (() => { throw new Error("SESSION_SECRET is required in production"); })() : "plotzy-dev-secret"),
     resave: false,
     saveUninitialized: false,
     cookie: {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
@@ -315,6 +315,9 @@ export default function ChapterEditor() {
   const [activeToolbarEditor, setActiveToolbarEditor] = useState<Editor | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSaveInFlightRef = useRef(false);
   const [showAI, setShowAI] = useState(false);
   const [showStoryBible, setShowStoryBible] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -906,7 +909,12 @@ export default function ChapterEditor() {
     if (activePageIndex >= index && activePageIndex > 0) setActivePageIndex(activePageIndex - 1);
   };
 
-  const handleSave = async () => {
+  // ── Core save logic (shared between manual save and auto-save) ───────────
+  const performSave = useCallback(async (options: { silent?: boolean } = {}) => {
+    if (autoSaveInFlightRef.current) return;
+    autoSaveInFlightRef.current = true;
+    if (!options.silent) setAutoSaving(false);
+    else setAutoSaving(true);
     try {
       // Join all rich pages into a single HTML string
       const htmlContent = richPages.join('') || richHtml;
@@ -930,10 +938,12 @@ export default function ChapterEditor() {
 
       await updateChapter.mutateAsync({ id: chapterId, bookId, title, content: currentContent });
 
-      // Auto-save a version snapshot on every manual save
-      const now = new Date();
-      const label = `${now.toLocaleDateString(ar ? "ar" : "en", { month: "short", day: "numeric" })} ${now.toLocaleTimeString(ar ? "ar" : "en", { hour: "2-digit", minute: "2-digit" })}`;
-      saveVersion.mutate({ content: currentContent, label });
+      // Save a version snapshot only on manual saves (not every auto-save)
+      if (!options.silent) {
+        const now = new Date();
+        const label = `${now.toLocaleDateString(ar ? "ar" : "en", { month: "short", day: "numeric" })} ${now.toLocaleTimeString(ar ? "ar" : "en", { hour: "2-digit", minute: "2-digit" })}`;
+        saveVersion.mutate({ content: currentContent, label });
+      }
 
       // Track progress if there's a net change in words
       if (wordsAdded !== 0) {
@@ -947,13 +957,70 @@ export default function ChapterEditor() {
       }
 
       setIsDirty(false);
-      setJustSaved(true);
-      setTimeout(() => setJustSaved(false), 2000);
-      toast({ title: ar ? "تم الحفظ!" : "Saved successfully" });
+      if (!options.silent) {
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 2000);
+        toast({ title: ar ? "تم الحفظ!" : "Saved successfully" });
+      }
     } catch {
-      toast({ title: ar ? "فشل الحفظ" : "Failed to save", variant: "destructive" });
+      if (!options.silent) {
+        toast({ title: ar ? "فشل الحفظ" : "Failed to save", variant: "destructive" });
+      }
+    } finally {
+      autoSaveInFlightRef.current = false;
+      setAutoSaving(false);
     }
+  }, [richPages, richHtml, floatingImages, chapter, chapterId, bookId, title, ar, updateChapter, saveVersion, toast]);
+
+  // Manual save — creates version snapshot + shows toast
+  const handleSave = async () => {
+    // Cancel any pending auto-save since user is saving manually
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+    await performSave({ silent: false });
   };
+
+  // ── Debounced Auto-Save: triggers 3 seconds after the last edit ─────────
+  useEffect(() => {
+    if (!isDirty || !chapterId || !bookId) return;
+
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      performSave({ silent: true });
+    }, 3000);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [isDirty, richPages, title, floatingImages, chapterId, bookId, performSave]);
+
+  // Save on unmount / navigation away if there are unsaved changes
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Warn on browser close/refresh if there are unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   const handleDelete = async () => {
     try {
@@ -1441,6 +1508,12 @@ export default function ChapterEditor() {
               {t("aiAssistant")}
             </button>
 
+            {autoSaving && (
+              <span className="h-8 px-2 rounded-lg text-[10px] font-medium flex items-center gap-1 text-muted-foreground opacity-70">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                {ar ? "حفظ تلقائي..." : "Auto-saving..."}
+              </span>
+            )}
             <button
               className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 justSaved
@@ -1457,7 +1530,9 @@ export default function ChapterEditor() {
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{t("saving")}</>
                 : justSaved
                   ? <><CheckCircle2 className="w-3.5 h-3.5" />{ar ? "محفوظ" : "Saved"}</>
-                  : <><Save className="w-3.5 h-3.5" />{t("save")}</>
+                  : isDirty
+                    ? <><Save className="w-3.5 h-3.5" />{ar ? "حفظ" : "Save"}</>
+                    : <><CheckCircle2 className="w-3.5 h-3.5 opacity-60" />{ar ? "محفوظ" : "Saved"}</>
               }
             </button>
           </div>

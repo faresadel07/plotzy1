@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { AuthModal } from "@/components/auth-modal";
+import { NotificationBell } from "@/components/notification-bell";
 import { DisplayNameModal } from "@/components/display-name-modal";
 import { LanguagePicker } from "@/components/language-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -270,6 +271,9 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         {/* ── Right: Controls ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
 
+          {/* Notifications */}
+          {user && <NotificationBell darkNav={!!darkNav} />}
+
           {/* Language */}
           <LanguagePicker />
 
@@ -335,6 +339,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   <DropdownMenuItem onClick={() => setShowDisplayName(true)} className="gap-2 cursor-pointer" data-testid="menuitem-edit-display-name">
                     <User className="w-4 h-4" />
                     {t("changeDisplayName")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate(`/authors/${user.id}`)} className="gap-2 cursor-pointer">
+                    <User className="w-4 h-4" />
+                    My Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={uploadingAvatar}

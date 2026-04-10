@@ -1,20 +1,29 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
 import {
   BookOpen, Users, UserPlus, UserCheck, Globe, Twitter, Instagram,
-  Edit3, Check, X, Calendar, Eye, ArrowLeft
+  Edit3, Check, X, Calendar, ArrowLeft, MessageCircle, Heart, Eye,
+  Camera, Loader2, Star,
 } from "lucide-react";
 import { Link } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+/* ── Design tokens (monochromatic black/white) ─────────────────────── */
+const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
+const BG = "#000";
+const C1 = "#0a0a0a";
+const C2 = "#111";
+const C3 = "#1a1a1a";
+const B = "rgba(255,255,255,0.08)";
+const T = "#fff";
+const TS = "rgba(255,255,255,0.55)";
+const TD = "rgba(255,255,255,0.25)";
+
+/* ── Types ─────────────────────────────────────────────────────────── */
 interface AuthorBook {
   id: number;
   title: string;
@@ -23,6 +32,8 @@ interface AuthorBook {
   authorName: string | null;
   isPublished: boolean;
   createdAt: string;
+  viewCount?: number;
+  likesCount?: number;
 }
 
 interface AuthorProfileData {
@@ -37,14 +48,16 @@ interface AuthorProfileData {
   books: AuthorBook[];
   followersCount: number;
   followingCount: number;
+  totalLikes: number;
   isFollowing: boolean;
 }
 
-function EditProfileModal({ profile, onClose }: { profile: AuthorProfileData; onClose: () => void }) {
-  const { lang } = useLanguage();
-  const ar = lang === "ar";
+/* ── Edit Profile Modal ────────────────────────────────────────────── */
+function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfileData; onClose: () => void; userId: number }) {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     displayName: profile.displayName || "",
     bio: profile.bio || "",
@@ -54,65 +67,154 @@ function EditProfileModal({ profile, onClose }: { profile: AuthorProfileData; on
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => apiRequest("PATCH", "/api/me/profile", form),
+    mutationFn: () => fetch("/api/me/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(form),
+    }).then(r => r.json()),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/authors"] });
-      qc.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({ title: ar ? "تم حفظ الملف الشخصي" : "Profile updated!" });
+      qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
+      qc.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({ title: "Profile updated!" });
       onClose();
     },
-    onError: () => toast({ title: ar ? "فشل الحفظ" : "Save failed", variant: "destructive" }),
+    onError: () => toast({ title: "Save failed", variant: "destructive" }),
   });
 
+  const handleAvatarUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const res = await fetch("/api/auth/avatar", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ avatarUrl: dataUrl }),
+        });
+        if (res.ok) {
+          qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
+          qc.invalidateQueries({ queryKey: ["/api/auth/user"] });
+          toast({ title: "Profile photo updated!" });
+        }
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploading(false);
+      toast({ title: "Upload failed", variant: "destructive" });
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "10px 14px", borderRadius: 10,
+    background: C3, border: `1px solid ${B}`, color: T,
+    fontFamily: SF, fontSize: 14, outline: "none", boxSizing: "border-box",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontFamily: SF, fontSize: 11, fontWeight: 600,
+    color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6,
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">{ar ? "تعديل الملف الشخصي" : "Edit Profile"}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted"><X className="w-4 h-4" /></button>
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", padding: 24 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ background: C2, border: `1px solid ${B}`, borderRadius: 20, width: "100%", maxWidth: 500, padding: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <span style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: T }}>Edit Profile</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: TD }}><X size={18} /></button>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{ar ? "الاسم" : "Display Name"}</label>
-            <Input value={form.displayName} onChange={e => setForm(p => ({ ...p, displayName: e.target.value }))} />
+        {/* Avatar upload */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+          <div style={{ position: "relative", width: 72, height: 72, borderRadius: "50%", background: C3, border: `2px solid ${B}`, overflow: "hidden", flexShrink: 0 }}>
+            {profile.avatarUrl ? (
+              <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: SF, fontSize: 24, fontWeight: 700, color: TS }}>
+                {(profile.displayName || "?")[0].toUpperCase()}
+              </div>
+            )}
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.15s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "0"; }}
+            >
+              {uploading ? <Loader2 size={18} color="#fff" style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={18} color="#fff" />}
+            </button>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{ar ? "نبذة تعريفية" : "Bio"}</label>
-            <Textarea
-              value={form.bio}
-              onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
-              rows={3}
-              placeholder={ar ? "أخبر القراء عنك..." : "Tell readers about yourself..."}
+            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: T, marginBottom: 2 }}>Profile Photo</div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: TD }}>Click the avatar to upload any image</div>
+          </div>
+          <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Display Name</label>
+            <input value={form.displayName} onChange={e => setForm(p => ({ ...p, displayName: e.target.value }))} style={inputStyle} placeholder="Your name" />
+          </div>
+          <div>
+            <label style={labelStyle}>Bio</label>
+            <textarea
+              value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
+              rows={3} placeholder="Tell readers about yourself..."
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{ar ? "الموقع الإلكتروني" : "Website"}</label>
-            <Input value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} placeholder="https://" />
+            <label style={labelStyle}>Website</label>
+            <input value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} style={inputStyle} placeholder="https://yoursite.com" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Twitter / X</label>
-              <Input value={form.twitterHandle} onChange={e => setForm(p => ({ ...p, twitterHandle: e.target.value }))} placeholder="@handle" />
+              <label style={labelStyle}>Twitter / X</label>
+              <input value={form.twitterHandle} onChange={e => setForm(p => ({ ...p, twitterHandle: e.target.value }))} style={inputStyle} placeholder="@handle" />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Instagram</label>
-              <Input value={form.instagramHandle} onChange={e => setForm(p => ({ ...p, instagramHandle: e.target.value }))} placeholder="@handle" />
+              <label style={labelStyle}>Instagram</label>
+              <input value={form.instagramHandle} onChange={e => setForm(p => ({ ...p, instagramHandle: e.target.value }))} style={inputStyle} placeholder="@handle" />
             </div>
           </div>
         </div>
 
-        <div className="flex gap-2 justify-end pt-2">
-          <Button variant="outline" onClick={onClose}>{ar ? "إلغاء" : "Cancel"}</Button>
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? (ar ? "جارٍ الحفظ..." : "Saving...") : (ar ? "حفظ التغييرات" : "Save Changes")}
-          </Button>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
+          <button onClick={onClose} style={{ padding: "9px 20px", borderRadius: 10, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, fontWeight: 500, color: TS, cursor: "pointer" }}>Cancel</button>
+          <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
+            style={{ padding: "9px 24px", borderRadius: 10, background: "#fff", border: "none", fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#000", cursor: "pointer", opacity: saveMutation.isPending ? 0.5 : 1 }}>
+            {saveMutation.isPending ? "Saving..." : "Save Changes"}
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+/* ── Stat Pill ─────────────────────────────────────────────────────── */
+function StatPill({ icon, value, label }: { icon: React.ReactNode; value: string | number; label: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 70 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {icon}
+        <span style={{ fontFamily: SF, fontSize: 20, fontWeight: 700, color: T }}>{typeof value === "number" ? value.toLocaleString() : value}</span>
+      </div>
+      <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 500, color: TD, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+    </div>
+  );
+}
+
+/* ── Main Page ─────────────────────────────────────────────────────── */
 export default function AuthorProfile() {
   const [, params] = useRoute("/authors/:userId");
   const userId = Number(params?.userId);
@@ -123,202 +225,282 @@ export default function AuthorProfile() {
   const { toast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [, navigate] = useLocation();
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const { data: profile, isLoading } = useQuery<AuthorProfileData>({
     queryKey: ["/api/authors", userId, "profile"],
-    queryFn: () => fetch(`/api/authors/${userId}/profile`).then(r => r.json()),
+    queryFn: () => fetch(`/api/authors/${userId}/profile`, { credentials: "include" }).then(r => r.json()),
     enabled: !!userId,
   });
 
   const followMutation = useMutation({
     mutationFn: async () => {
       const method = profile?.isFollowing ? "DELETE" : "POST";
-      const res = await fetch(`/api/authors/${userId}/follow`, { method });
+      const res = await fetch(`/api/authors/${userId}/follow`, { method, credentials: "include" });
       return res.json();
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
-    },
-    onError: () => toast({ title: ar ? "يرجى تسجيل الدخول" : "Please log in to follow authors", variant: "destructive" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] }),
+    onError: () => toast({ title: "Please log in to follow authors", variant: "destructive" }),
   });
 
   const isOwnProfile = user && Number((user as any).id) === userId;
 
-  if (isLoading) {
-    return (
-      <Layout>
-      <div className="flex items-center justify-center py-32">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-      </Layout>
-    );
-  }
+  const handleAvatarUpload = (file: File) => {
+    setAvatarUploading(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const dataUrl = ev.target?.result as string;
+        const res = await fetch("/api/auth/avatar", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ avatarUrl: dataUrl }),
+        });
+        if (res.ok) {
+          qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
+          qc.invalidateQueries({ queryKey: ["/api/auth/user"] });
+          toast({ title: "Profile photo updated!" });
+        }
+      } catch { toast({ title: "Upload failed", variant: "destructive" }); }
+      finally { setAvatarUploading(false); }
+    };
+    reader.readAsDataURL(file);
+  };
 
-  if (!profile || (profile as any).message) {
-    return (
-      <Layout>
-      <div className="flex flex-col items-center justify-center gap-4 text-center p-6">
-        <p className="text-muted-foreground text-lg">{ar ? "لم يُعثر على هذا المؤلف" : "Author not found"}</p>
-        <Button variant="outline" onClick={() => navigate("/")}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {ar ? "العودة" : "Go Back"}
-        </Button>
-      </div>
-      </Layout>
-    );
-  }
+  const totalLikes = profile?.totalLikes ?? 0;
 
-  const publishedBooks = profile.books.filter(b => (b as any).publishedAt || (b as any).isPublished !== false);
+  /* ── Loading ── */
+  if (isLoading) return (
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader2 size={24} color={TD} style={{ animation: "spin 1s linear infinite" }} />
+      </div>
+    </Layout>
+  );
+
+  if (!profile || (profile as any).message) return (
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <p style={{ fontFamily: SF, color: TS, fontSize: 16 }}>Author not found</p>
+        <button onClick={() => navigate("/")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 10, background: C3, border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, color: TS, cursor: "pointer" }}>
+          <ArrowLeft size={14} /> Go Back
+        </button>
+      </div>
+    </Layout>
+  );
 
   return (
-    <Layout isLanding>
-    <div className="min-h-screen bg-background">
-      {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} />}
+    <Layout isLanding darkNav>
+      <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 
-      {/* Header */}
-      <div className="border-b border-border/30 bg-muted/20">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <button
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-            onClick={() => navigate(-1 as any)}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {ar ? "رجوع" : "Back"}
-          </button>
+        {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} />}
 
-          <div className="flex flex-col sm:flex-row gap-6 items-start">
-            {/* Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0 overflow-hidden shadow-lg">
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt={profile.displayName || ""} className="w-full h-full object-cover" />
-              ) : (
-                (profile.displayName || "?")[0].toUpperCase()
-              )}
-            </div>
+        {/* ── Hero Section ── */}
+        <div style={{ borderBottom: `1px solid ${B}`, background: C1 }}>
+          <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px 36px" }}>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-start gap-2 mb-2">
-                <h1 className="text-2xl font-bold">{profile.displayName || (ar ? "كاتب" : "Author")}</h1>
+            {/* Back button */}
+            <button
+              onClick={() => navigate(-1 as any)}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 13, color: TD, marginBottom: 28, padding: 0 }}
+              onMouseEnter={e => { e.currentTarget.style.color = TS; }}
+              onMouseLeave={e => { e.currentTarget.style.color = TD; }}
+            >
+              <ArrowLeft size={14} /> Back
+            </button>
+
+            {/* Profile row */}
+            <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+
+              {/* Avatar — clickable for owner to upload photo */}
+              <div
+                style={{
+                  position: "relative", width: 100, height: 100, borderRadius: "50%", flexShrink: 0,
+                  background: C3, border: `2px solid rgba(255,255,255,0.12)`,
+                  overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: isOwnProfile ? "pointer" : "default",
+                }}
+                onClick={() => { if (isOwnProfile) avatarFileRef.current?.click(); }}
+              >
+                {profile.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt={profile.displayName || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: 36, fontWeight: 700, color: TS }}>{(profile.displayName || "?")[0].toUpperCase()}</span>
+                )}
+                {/* Camera overlay for own profile */}
                 {isOwnProfile && (
-                  <button
-                    onClick={() => setEditOpen(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-border/40 rounded-full px-2.5 py-1 transition-colors"
+                  <div
+                    className="avatar-upload-overlay"
+                    style={{
+                      position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)",
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                      opacity: 0, transition: "opacity 0.15s",
+                    }}
                   >
-                    <Edit3 className="w-3 h-3" />
-                    {ar ? "تعديل الملف" : "Edit Profile"}
-                  </button>
+                    {avatarUploading
+                      ? <Loader2 size={20} color="#fff" style={{ animation: "spin 1s linear infinite" }} />
+                      : <><Camera size={20} color="#fff" /><span style={{ fontFamily: SF, fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>UPLOAD</span></>
+                    }
+                  </div>
                 )}
+                <input ref={avatarFileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }} />
               </div>
 
-              {profile.bio && (
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-xl">{profile.bio}</p>
-              )}
+              {/* Name + Bio + Actions */}
+              <div style={{ flex: 1, minWidth: 0 }}>
 
-              {/* Social links */}
-              <div className="flex flex-wrap gap-3 mb-4">
-                {profile.website && (
-                  <a href={profile.website} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-primary hover:underline">
-                    <Globe className="w-3.5 h-3.5" />
-                    {profile.website.replace(/^https?:\/\//, "")}
-                  </a>
-                )}
-                {profile.twitterHandle && (
-                  <a href={`https://twitter.com/${profile.twitterHandle.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-sky-500 hover:underline">
-                    <Twitter className="w-3.5 h-3.5" />
-                    {profile.twitterHandle.startsWith("@") ? profile.twitterHandle : `@${profile.twitterHandle}`}
-                  </a>
-                )}
-                {profile.instagramHandle && (
-                  <a href={`https://instagram.com/${profile.instagramHandle.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-pink-500 hover:underline">
-                    <Instagram className="w-3.5 h-3.5" />
-                    {profile.instagramHandle.startsWith("@") ? profile.instagramHandle : `@${profile.instagramHandle}`}
-                  </a>
-                )}
-                {profile.createdAt && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {ar ? "عضو منذ " : "Member since "}
-                    {new Date(profile.createdAt).toLocaleDateString(ar ? "ar-SA" : "en-US", { year: "numeric", month: "long" })}
-                  </span>
-                )}
-              </div>
-
-              {/* Stats + Follow button */}
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex gap-4">
-                  <div className="text-center">
-                    <div className="text-lg font-bold">{profile.followersCount}</div>
-                    <div className="text-xs text-muted-foreground">{ar ? "متابع" : "Followers"}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold">{profile.followingCount}</div>
-                    <div className="text-xs text-muted-foreground">{ar ? "يتابع" : "Following"}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold">{profile.books.length}</div>
-                    <div className="text-xs text-muted-foreground">{ar ? "كتاب" : "Books"}</div>
-                  </div>
+                {/* Name row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em" }}>
+                    {profile.displayName || "Author"}
+                  </h1>
+                  {isOwnProfile && (
+                    <button onClick={() => setEditOpen(true)}
+                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 12px", borderRadius: 20, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 11, fontWeight: 500, color: TS, cursor: "pointer" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
+                    >
+                      <Edit3 size={11} /> Edit Profile
+                    </button>
+                  )}
                 </div>
 
-                {!isOwnProfile && (
-                  <Button
-                    size="sm"
-                    variant={profile.isFollowing ? "outline" : "default"}
-                    className="rounded-full"
-                    onClick={() => followMutation.mutate()}
-                    disabled={followMutation.isPending}
-                  >
-                    {profile.isFollowing ? (
-                      <><UserCheck className="w-3.5 h-3.5 mr-1.5" />{ar ? "تتابعه" : "Following"}</>
-                    ) : (
-                      <><UserPlus className="w-3.5 h-3.5 mr-1.5" />{ar ? "متابعة" : "Follow"}</>
-                    )}
-                  </Button>
+                {/* Bio */}
+                {profile.bio && (
+                  <p style={{ fontSize: 14, color: TS, lineHeight: 1.7, margin: "0 0 12px", maxWidth: 520 }}>{profile.bio}</p>
                 )}
+
+                {/* Social links */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 16 }}>
+                  {profile.website && (
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
+                      onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
+                      <Globe size={12} /> {profile.website.replace(/^https?:\/\//, "")}
+                    </a>
+                  )}
+                  {profile.twitterHandle && (
+                    <a href={`https://twitter.com/${profile.twitterHandle.replace("@", "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
+                      onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
+                      <Twitter size={12} /> {profile.twitterHandle.startsWith("@") ? profile.twitterHandle : `@${profile.twitterHandle}`}
+                    </a>
+                  )}
+                  {profile.instagramHandle && (
+                    <a href={`https://instagram.com/${profile.instagramHandle.replace("@", "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
+                      onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
+                      <Instagram size={12} /> {profile.instagramHandle.startsWith("@") ? profile.instagramHandle : `@${profile.instagramHandle}`}
+                    </a>
+                  )}
+                  {profile.createdAt && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TD }}>
+                      <Calendar size={12} /> Joined {new Date(profile.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
+                    </span>
+                  )}
+                </div>
+
+                {/* Stats row */}
+                <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                  <StatPill icon={<Users size={14} color={TS} />} value={profile.followersCount} label="Followers" />
+                  <StatPill icon={<UserPlus size={14} color={TS} />} value={profile.followingCount} label="Following" />
+                  <StatPill icon={<BookOpen size={14} color={TS} />} value={profile.books.length} label="Books" />
+                  <StatPill icon={<Heart size={14} color={TS} />} value={totalLikes} label="Likes" />
+
+                  {/* Action buttons */}
+                  {!isOwnProfile && (
+                    <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+                      <button
+                        onClick={() => followMutation.mutate()}
+                        disabled={followMutation.isPending}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "8px 18px", borderRadius: 20, cursor: "pointer",
+                          fontFamily: SF, fontSize: 13, fontWeight: 600,
+                          background: profile.isFollowing ? "transparent" : "#fff",
+                          color: profile.isFollowing ? TS : "#000",
+                          border: profile.isFollowing ? `1px solid ${B}` : "none",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {profile.isFollowing ? <><UserCheck size={13} /> Following</> : <><UserPlus size={13} /> Follow</>}
+                      </button>
+                      {user && (
+                        <button
+                          onClick={() => navigate(`/messages/${userId}`)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            padding: "8px 18px", borderRadius: 20, cursor: "pointer",
+                            fontFamily: SF, fontSize: 13, fontWeight: 500,
+                            background: "transparent", color: TS,
+                            border: `1px solid ${B}`, transition: "all 0.15s",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = T; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.color = TS; }}
+                        >
+                          <MessageCircle size={13} /> Message
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Books grid */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-base font-bold mb-5 flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-primary" />
-          {ar ? "مؤلفات الكاتب" : "Books by this Author"}
-        </h2>
-
-        {profile.books.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">{ar ? "لم ينشر هذا الكاتب أي كتاب بعد" : "No published books yet"}</p>
+        {/* ── Books Grid ── */}
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "36px 24px 80px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+            <BookOpen size={15} color={TS} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: T }}>Published Works</span>
+            <span style={{ fontSize: 12, color: TD, marginLeft: 4 }}>({profile.books.length})</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {profile.books.map(book => (
-              <Link key={book.id} href={`/read/${book.id}`}>
-                <div className="group cursor-pointer">
-                  <div className="aspect-[2/3] rounded-xl overflow-hidden bg-gradient-to-br from-violet-200 to-purple-300 dark:from-violet-900/40 dark:to-purple-900/40 mb-2 shadow-sm group-hover:shadow-md transition-shadow">
-                    {book.coverImage ? (
-                      <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-3">
-                        <p className="text-xs font-semibold text-center text-violet-700 dark:text-violet-300 line-clamp-4">{book.title}</p>
-                      </div>
-                    )}
+
+          {profile.books.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 0", color: TD }}>
+              <BookOpen size={32} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
+              <p style={{ fontSize: 14 }}>No published books yet</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 20 }}>
+              {profile.books.map(book => (
+                <Link key={book.id} href={`/read/${book.id}`}>
+                  <div style={{ cursor: "pointer", transition: "transform 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+                  >
+                    {/* Cover */}
+                    <div style={{
+                      aspectRatio: "2/3", borderRadius: 12, overflow: "hidden",
+                      background: C3, border: `1px solid ${B}`, marginBottom: 10,
+                    }}>
+                      {book.coverImage ? (
+                        <img src={book.coverImage} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: TS, textAlign: "center", lineHeight: 1.5 }}>{book.title}</p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Title */}
+                    <p style={{ fontSize: 13, fontWeight: 600, color: T, lineHeight: 1.4, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any }}>{book.title}</p>
+                    {/* Stats */}
+                    <div style={{ display: "flex", gap: 10, fontSize: 11, color: TD }}>
+                      {(book.likesCount ?? 0) > 0 && <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Heart size={10} /> {book.likesCount}</span>}
+                      {(book.viewCount ?? 0) > 0 && <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Eye size={10} /> {book.viewCount}</span>}
+                    </div>
                   </div>
-                  <p className="text-xs font-semibold line-clamp-2 group-hover:text-primary transition-colors">{book.title}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+          div:hover > .avatar-upload-overlay { opacity: 1 !important; }
+        `}</style>
       </div>
-    </div>
     </Layout>
   );
 }

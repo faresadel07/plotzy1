@@ -22,8 +22,11 @@ declare global {
 }
 
 function getCallbackBase(): string {
+  if (process.env.APP_DOMAIN) return process.env.APP_DOMAIN;
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-  return domain ? `https://${domain}` : `http://localhost:5000`;
+  if (domain) return `https://${domain}`;
+  const port = process.env.PORT || "8080";
+  return `http://localhost:${port}`;
 }
 
 export function setupPassport() {

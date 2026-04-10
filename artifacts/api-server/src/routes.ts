@@ -16,9 +16,11 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import bcrypt from "bcryptjs";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_ANNUAL_CENTS, professionals, quoteRequests, researchItems, gutenbergBooks, arcRecipients } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_ANNUAL_CENTS, professionals, quoteRequests, researchItems as researchItemsTable, gutenbergBooks, arcRecipients as arcRecipientsTable, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable } from "../../../lib/db/src/schema";
 import { db } from "./db";
 import { eq, or, ilike, sql, and, desc, asc } from "drizzle-orm";
+import { requireAuth, requireAdmin, requireBookOwner, requireChapterOwner, requireChildOwner } from "./middleware/auth";
+import { aiLimiter, imageGenLimiter } from "./middleware/rate-limit";
 
 const isMockOpenAI = !process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY;
 
@@ -43,7 +45,7 @@ function countWords(content: string): number {
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY || "dummy-key-for-local-development",
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY || "missing-openai-key",
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
@@ -142,7 +144,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.books.update.path, async (req, res) => {
+  app.put(api.books.update.path, requireBookOwner, async (req, res) => {
     try {
       const input = api.books.update.input.parse(req.body);
       const book = await storage.updateBook(Number(req.params.id), input);
@@ -153,7 +155,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch(api.books.trash.path, async (req, res) => {
+  app.patch(api.books.trash.path, requireBookOwner, async (req, res) => {
     try {
       const book = await storage.updateBook(Number(req.params.id), { isDeleted: true } as any);
       res.json(book);
@@ -162,7 +164,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch(api.books.restore.path, async (req, res) => {
+  app.patch(api.books.restore.path, requireBookOwner, async (req, res) => {
     try {
       const book = await storage.updateBook(Number(req.params.id), { isDeleted: false } as any);
       res.json(book);
@@ -171,7 +173,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete(api.books.delete.path, async (req, res) => {
+  app.delete(api.books.delete.path, requireBookOwner, async (req, res) => {
     try {
       await storage.deleteBook(Number(req.params.id));
       res.status(204).send();
@@ -240,12 +242,8 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/books/:id/feature", async (req, res) => {
+  app.post("/api/admin/books/:id/feature", requireAdmin, async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
-      const dbUser = await storage.getUserById(req.user.id);
-      const adminEmail = process.env.ADMIN_EMAIL;
-      if (!adminEmail || dbUser?.email !== adminEmail) return res.status(403).json({ message: "Forbidden" });
       const bookId = Number(req.params.id);
       const { feature } = z.object({ feature: z.boolean() }).parse(req.body);
       await storage.setFeaturedBook(feature ? bookId : null);
@@ -306,7 +304,7 @@ export async function registerRoutes(
 
   // ─── Generate Book Front Cover (portrait) ──────────────────────────────────
 
-  app.post(api.books.generateCover.path, async (req, res) => {
+  app.post(api.books.generateCover.path, imageGenLimiter, async (req, res) => {
     try {
       const { prompt, side } = api.books.generateCover.input.parse(req.body);
       const bookId = Number(req.params.id);
@@ -349,7 +347,7 @@ export async function registerRoutes(
 
   // ─── Marketplace AI Analysis ────────────────────────────────────────────────
 
-  app.post("/api/marketplace/analyze", async (req, res) => {
+  app.post("/api/marketplace/analyze", aiLimiter, async (req, res) => {
     try {
       const { serviceId, text } = req.body as { serviceId: string; text: string };
       if (!text || text.trim().length < 30) {
@@ -420,7 +418,7 @@ export async function registerRoutes(
 
   // ─── Generate Book Blurb (multi-language) ──────────────────────────────────
 
-  app.post(api.books.generateBlurb.path, async (req, res) => {
+  app.post(api.books.generateBlurb.path, aiLimiter, async (req, res) => {
     try {
       const { language } = api.books.generateBlurb.input.parse(req.body);
       const bookId = Number(req.params.id);
@@ -905,12 +903,12 @@ export async function registerRoutes(
     }
   });
 
-  app.delete(api.chapters.delete.path, async (req, res) => {
+  app.delete(api.chapters.delete.path, requireChapterOwner, async (req, res) => {
     await storage.deleteChapter(Number(req.params.id));
     res.status(204).send();
   });
 
-  app.patch('/api/books/:bookId/chapters/reorder', async (req, res) => {
+  app.patch('/api/books/:bookId/chapters/reorder', requireBookOwner, async (req, res) => {
     try {
       const body = z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() })) }).parse(req.body);
       await storage.reorderChapters(body.updates);
@@ -946,7 +944,7 @@ export async function registerRoutes(
 
   const audioBodyParser = express.json({ limit: '50mb' });
 
-  app.post(api.chapters.voice.path, audioBodyParser, async (req, res) => {
+  app.post(api.chapters.voice.path, audioBodyParser, aiLimiter, async (req, res) => {
     try {
       const { audio } = api.chapters.voice.input.parse(req.body);
       const bookId = Number(req.params.bookId);
@@ -993,7 +991,7 @@ export async function registerRoutes(
 
   // ─── Transcribe Audio (inline dictation for chapter editor) ────────────────
 
-  app.post("/api/transcribe", audioBodyParser, async (req, res) => {
+  app.post("/api/transcribe", audioBodyParser, aiLimiter, async (req, res) => {
     try {
       const { audio, language } = z.object({
         audio: z.string(),
@@ -1017,7 +1015,7 @@ export async function registerRoutes(
 
   // ─── Generate Inline Image ─────────────────────────────────────────────────
 
-  app.post("/api/generate-image", async (req, res) => {
+  app.post("/api/generate-image", imageGenLimiter, async (req, res) => {
     try {
       const { prompt } = z.object({ prompt: z.string().min(3) }).parse(req.body);
 
@@ -1051,7 +1049,7 @@ export async function registerRoutes(
     res.json(entries);
   });
 
-  app.post(api.lore.create.path, async (req, res) => {
+  app.post(api.lore.create.path, requireBookOwner, async (req, res) => {
     try {
       const input = api.lore.create.input.parse(req.body);
       const lore = await storage.createLoreEntry({ ...input, bookId: Number(req.params.bookId) });
@@ -1062,7 +1060,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.lore.update.path, async (req, res) => {
+  app.put(api.lore.update.path, requireChildOwner(loreEntriesTable), async (req, res) => {
     try {
       const input = api.lore.update.input.parse(req.body);
       const lore = await storage.updateLoreEntry(Number(req.params.id), input);
@@ -1073,12 +1071,12 @@ export async function registerRoutes(
     }
   });
 
-  app.delete(api.lore.delete.path, async (req, res) => {
+  app.delete(api.lore.delete.path, requireChildOwner(loreEntriesTable), async (req, res) => {
     await storage.deleteLoreEntry(Number(req.params.id));
     res.status(204).send();
   });
 
-  app.post(api.lore.generate.path, async (req, res) => {
+  app.post(api.lore.generate.path, aiLimiter, requireBookOwner, async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1256,7 +1254,7 @@ Return a strict JSON object with these two arrays.`;
 
   const largeBodyParser = express.json({ limit: '5mb' });
 
-  app.post(api.ai.improve.path, largeBodyParser, async (req, res) => {
+  app.post(api.ai.improve.path, largeBodyParser, aiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.improve.input.parse(req.body);
       const langCode = language || "en";
@@ -1293,7 +1291,7 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
-  app.post(api.ai.expand.path, largeBodyParser, async (req, res) => {
+  app.post(api.ai.expand.path, largeBodyParser, aiLimiter, async (req, res) => {
     try {
       const { idea, language, bookId } = api.ai.expand.input.parse(req.body);
       const langCode = language || "en";
@@ -1330,7 +1328,7 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
-  app.post(api.ai.continueText.path, largeBodyParser, async (req, res) => {
+  app.post(api.ai.continueText.path, largeBodyParser, aiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.continueText.input.parse(req.body);
       const langCode = language || "en";
@@ -1367,7 +1365,7 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
-  app.post(api.ai.showDontTell.path, largeBodyParser, async (req, res) => {
+  app.post(api.ai.showDontTell.path, largeBodyParser, aiLimiter, async (req, res) => {
     try {
       const { text, language } = api.ai.showDontTell.input.parse(req.body);
       const langCode = language || "en";
@@ -1415,7 +1413,7 @@ Rules:
     }
   });
 
-  app.post(api.ai.translate.path, largeBodyParser, async (req, res) => {
+  app.post(api.ai.translate.path, largeBodyParser, aiLimiter, async (req, res) => {
     try {
       const { text, targetLanguage, bookId } = api.ai.translate.input.parse(req.body);
       const targetName = getLangName(targetLanguage);
@@ -1461,7 +1459,7 @@ Rules:
   }
 
   // Plot Hole Detector
-  app.post("/api/books/:bookId/ai/plot-holes", async (req, res) => {
+  app.post("/api/books/:bookId/ai/plot-holes", aiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1492,7 +1490,7 @@ Return an empty array if no issues found. Focus on real narrative problems, not 
   });
 
   // Dialogue Coach
-  app.post("/api/books/:bookId/ai/dialogue-coach", async (req, res) => {
+  app.post("/api/books/:bookId/ai/dialogue-coach", aiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1523,7 +1521,7 @@ Provide 2-4 specific suggestions with real examples from the text.`,
   });
 
   // Pacing Analyzer
-  app.post("/api/books/:bookId/ai/pacing", async (req, res) => {
+  app.post("/api/books/:bookId/ai/pacing", aiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1560,7 +1558,7 @@ Cover all chapters. Give 2-3 recommendations.`,
   });
 
   // Character Voice Consistency
-  app.post("/api/books/:bookId/ai/voice-consistency", async (req, res) => {
+  app.post("/api/books/:bookId/ai/voice-consistency", aiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1592,7 +1590,7 @@ List 2-5 main characters. Issues array can be empty if consistent.`,
 
   // ─── Publisher Proposal ────────────────────────────────────────────────────
 
-  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, async (req, res) => {
+  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, aiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -2195,7 +2193,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    const { avatarUrl } = z.object({ avatarUrl: z.string().max(500_000) }).parse(req.body);
+    const { avatarUrl } = z.object({ avatarUrl: z.string().max(10_000_000) }).parse(req.body);
     const updated = await storage.updateUser(req.user.id, { avatarUrl });
     const { passwordHash: _ph, ...safe } = updated as any;
     return res.json(safe);
@@ -2213,11 +2211,13 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // Google OAuth
   app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
+  const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? "" : "http://localhost:5173");
+
   app.get(
     "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/?auth=error" }),
+    passport.authenticate("google", { failureRedirect: `${frontendUrl}/?auth=error` }),
     (req, res) => {
-      res.redirect("/?auth=success");
+      res.redirect(`${frontendUrl}/?auth=success`);
     }
   );
 
@@ -2403,35 +2403,35 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── Research Items ────────────────────────────────────────────────────────
 
-  app.get("/api/books/:bookId/research", async (req, res) => {
+  app.get("/api/books/:bookId/research", requireBookOwner, async (req, res) => {
     const bookId = parseInt(req.params.bookId);
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
     try {
-      const items = await db.select().from(researchItems).where(eq(researchItems.bookId, bookId));
+      const items = await db.select().from(researchItemsTable).where(eq(researchItemsTable.bookId, bookId));
       res.json(items);
     } catch {
       res.status(500).json({ message: "Failed to fetch research items" });
     }
   });
 
-  app.post("/api/books/:bookId/research", async (req, res) => {
+  app.post("/api/books/:bookId/research", requireBookOwner, async (req, res) => {
     const bookId = parseInt(req.params.bookId);
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
     const { type = "note", title, content = "", previewImageUrl, description, color } = req.body;
     try {
-      const [item] = await db.insert(researchItems).values({ bookId, type, title, content, previewImageUrl, description, color }).returning();
+      const [item] = await db.insert(researchItemsTable).values({ bookId, type, title, content, previewImageUrl, description, color }).returning();
       res.status(201).json(item);
     } catch {
       res.status(500).json({ message: "Failed to create research item" });
     }
   });
 
-  app.put("/api/books/:bookId/research/:id", async (req, res) => {
+  app.put("/api/books/:bookId/research/:id", requireBookOwner, async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     const { type, title, content, previewImageUrl, description, color } = req.body;
     try {
-      const [item] = await db.update(researchItems).set({ type, title, content, previewImageUrl, description, color }).where(eq(researchItems.id, id)).returning();
+      const [item] = await db.update(researchItemsTable).set({ type, title, content, previewImageUrl, description, color }).where(eq(researchItemsTable.id, id)).returning();
       if (!item) return res.status(404).json({ message: "Not found" });
       res.json(item);
     } catch {
@@ -2439,11 +2439,11 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  app.delete("/api/books/:bookId/research/:id", async (req, res) => {
+  app.delete("/api/books/:bookId/research/:id", requireBookOwner, async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     try {
-      await db.delete(researchItems).where(eq(researchItems.id, id));
+      await db.delete(researchItemsTable).where(eq(researchItemsTable.id, id));
       res.status(204).send();
     } catch {
       res.status(500).json({ message: "Failed to delete research item" });
@@ -2452,7 +2452,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── ISBN ──────────────────────────────────────────────────────────────────
 
-  app.patch("/api/books/:bookId/isbn", async (req: any, res: any) => {
+  app.patch("/api/books/:bookId/isbn", requireBookOwner, async (req: any, res: any) => {
     const bookId = parseInt(req.params.bookId);
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
     const { isbn } = req.body as { isbn?: string };
@@ -2466,47 +2466,47 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── ARC Recipients ────────────────────────────────────────────────────────
 
-  app.get("/api/books/:bookId/arc", async (req: any, res: any) => {
+  app.get("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: any) => {
     const bookId = parseInt(req.params.bookId);
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
     try {
-      const rows = await db.select().from(arcRecipients).where(eq(arcRecipients.bookId, bookId));
+      const rows = await db.select().from(arcRecipientsTable).where(eq(arcRecipientsTable.bookId, bookId));
       res.json(rows);
     } catch {
       res.status(500).json({ message: "Failed to fetch ARC recipients" });
     }
   });
 
-  app.post("/api/books/:bookId/arc", async (req: any, res: any) => {
+  app.post("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: any) => {
     const bookId = parseInt(req.params.bookId);
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
     const { name, email, note } = req.body as { name: string; email: string; note?: string };
     if (!name || !email) return res.status(400).json({ message: "name and email required" });
     try {
-      const [row] = await db.insert(arcRecipients).values({ bookId, name, email, note: note ?? null, status: "sent" }).returning();
+      const [row] = await db.insert(arcRecipientsTable).values({ bookId, name, email, note: note ?? null, status: "sent" }).returning();
       res.status(201).json(row);
     } catch {
       res.status(500).json({ message: "Failed to add ARC recipient" });
     }
   });
 
-  app.patch("/api/books/:bookId/arc/:id", async (req: any, res: any) => {
+  app.patch("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, res: any) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
     const { status } = req.body as { status?: string };
     try {
-      const [row] = await db.update(arcRecipients).set({ status: status ?? "sent" }).where(eq(arcRecipients.id, id)).returning();
+      const [row] = await db.update(arcRecipientsTable).set({ status: status ?? "sent" }).where(eq(arcRecipientsTable.id, id)).returning();
       res.json(row);
     } catch {
       res.status(500).json({ message: "Failed to update ARC recipient" });
     }
   });
 
-  app.delete("/api/books/:bookId/arc/:id", async (req: any, res: any) => {
+  app.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, res: any) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
     try {
-      await db.delete(arcRecipients).where(eq(arcRecipients.id, id));
+      await db.delete(arcRecipientsTable).where(eq(arcRecipientsTable.id, id));
       res.status(204).send();
     } catch {
       res.status(500).json({ message: "Failed to delete ARC recipient" });
@@ -2952,19 +2952,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  // ── Admin middleware helper ──────────────────────────────────────────────
-  function checkAdmin(req: any, res: any): boolean {
-    if (!req.isAuthenticated() || !req.user) { res.status(401).json({ message: "Not authenticated" }); return false; }
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (!adminEmail) { res.status(403).json({ message: "Admin not configured" }); return false; }
-    const userEmail = (req.user as any).email;
-    if (userEmail !== adminEmail) { res.status(403).json({ message: "Forbidden" }); return false; }
-    return true;
-  }
-
   // ── Admin: stats ────────────────────────────────────────────────────────
-  app.get("/api/admin/stats", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
     try {
       const stats = await storage.getAdminStats();
       res.json(stats);
@@ -2974,8 +2963,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: users ────────────────────────────────────────────────────────
-  app.get("/api/admin/users", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+
     try {
       const allUsers = await storage.getAllUsers();
       const safe = allUsers.map(u => ({
@@ -2996,8 +2985,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  app.delete("/api/admin/users/:id", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
+
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
@@ -3008,8 +2997,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  app.patch("/api/admin/users/:id/subscription", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.patch("/api/admin/users/:id/subscription", requireAdmin, async (req, res) => {
+
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
@@ -3026,8 +3015,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: books (delete any published book) ────────────────────────────
-  app.delete("/api/admin/books/:id", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.delete("/api/admin/books/:id", requireAdmin, async (req, res) => {
+
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
@@ -3050,8 +3039,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: banner management ─────────────────────────────────────────────
-  app.post("/api/admin/banner", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.post("/api/admin/banner", requireAdmin, async (req, res) => {
+
     try {
       const { message, color } = req.body;
       if (!message?.trim()) return res.status(400).json({ message: "Message required" });
@@ -3063,8 +3052,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  app.delete("/api/admin/banner", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.delete("/api/admin/banner", requireAdmin, async (req, res) => {
+
     try {
       await storage.setSetting("banner_message", null);
       await storage.setSetting("banner_color", null);
@@ -3075,8 +3064,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: suspend/unsuspend user ─────────────────────────────────────────
-  app.patch("/api/admin/users/:id/suspend", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
+
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
@@ -3089,8 +3078,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: activity feed ─────────────────────────────────────────────────
-  app.get("/api/admin/activity", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.get("/api/admin/activity", requireAdmin, async (req, res) => {
+
     try {
       const feed = await storage.getActivityFeed();
       res.json(feed);
@@ -3100,8 +3089,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: unread support count (used for nav badge) ──────────────────────
-  app.get("/api/admin/support/unread-count", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.get("/api/admin/support/unread-count", requireAdmin, async (req, res) => {
+
     try {
       const messages = await storage.getSupportMessages();
       const count = messages.filter((m: any) => !m.read).length;
@@ -3112,8 +3101,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // ── Admin: support messages ──────────────────────────────────────────────
-  app.get("/api/admin/support", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.get("/api/admin/support", requireAdmin, async (req, res) => {
+
     try {
       const messages = await storage.getSupportMessages();
       res.json(messages);
@@ -3122,14 +3111,286 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  app.patch("/api/admin/support/:id", async (req, res) => {
-    if (!checkAdmin(req, res)) return;
+  app.patch("/api/admin/support/:id", requireAdmin, async (req, res) => {
+
     try {
       const id = Number(req.params.id);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
       const { read, status } = req.body;
       const msg = await storage.updateSupportMessage(id, { read, status });
       res.json(msg);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Social: Author Profiles, Follows, Notifications, Messages ─────────
+
+  // GET /api/authors/:userId/profile — public author profile
+  app.get("/api/authors/:userId/profile", async (req, res) => {
+    try {
+      const userId = Number(req.params.userId);
+      if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
+
+      const user = await storage.getUserById(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const { passwordHash, stripeCustomerId, stripeSubscriptionId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, googleId, appleId, linkedinId, facebookId, suspended, ...publicUser } = user;
+
+      const userBooks = await storage.getUserBooks(userId);
+      const publishedBooks = userBooks.filter(b => b.isPublished && !b.isDeleted);
+
+      const [followersCount, followingCount, totalLikes] = await Promise.all([
+        storage.getFollowersCount(userId),
+        storage.getFollowingCount(userId),
+        storage.getAuthorTotalLikes(userId),
+      ]);
+
+      // Get like count per book
+      const booksWithLikes = await Promise.all(publishedBooks.map(async (b) => ({
+        ...b,
+        likesCount: await storage.getBookLikesCount(b.id),
+      })));
+
+      let isFollowing = false;
+      if (req.isAuthenticated() && req.user) {
+        isFollowing = await storage.isFollowing(req.user.id, userId);
+      }
+
+      res.json({ ...publicUser, books: booksWithLikes, followersCount, followingCount, totalLikes, isFollowing });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // PATCH /api/me/profile — update own profile
+  app.patch("/api/me/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const { displayName, bio, website, twitterHandle, instagramHandle, avatarUrl } = req.body;
+      const updates: Record<string, any> = {};
+      if (displayName !== undefined) updates.displayName = displayName;
+      if (bio !== undefined) updates.bio = bio;
+      if (website !== undefined) updates.website = website;
+      if (twitterHandle !== undefined) updates.twitterHandle = twitterHandle;
+      if (instagramHandle !== undefined) updates.instagramHandle = instagramHandle;
+      if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+
+      const updated = await storage.updateUser(req.user.id, updates);
+      const { passwordHash, ...safeUser } = updated;
+      res.json(safeUser);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // POST /api/authors/:userId/follow
+  app.post("/api/authors/:userId/follow", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const targetId = Number(req.params.userId);
+      if (isNaN(targetId)) return res.status(400).json({ message: "Invalid user ID" });
+      if (targetId === req.user.id) return res.status(400).json({ message: "Cannot follow yourself" });
+
+      await storage.followUser(req.user.id, targetId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // DELETE /api/authors/:userId/follow
+  app.delete("/api/authors/:userId/follow", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const targetId = Number(req.params.userId);
+      if (isNaN(targetId)) return res.status(400).json({ message: "Invalid user ID" });
+
+      await storage.unfollowUser(req.user.id, targetId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ── Book Likes ─────────────────────────────────────────────────────
+
+  // POST /api/books/:bookId/like
+  app.post("/api/books/:bookId/like", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const bookId = Number(req.params.bookId);
+      if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
+      await storage.likeBook(req.user.id, bookId);
+      const likesCount = await storage.getBookLikesCount(bookId);
+      res.json({ liked: true, likesCount });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // DELETE /api/books/:bookId/like
+  app.delete("/api/books/:bookId/like", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const bookId = Number(req.params.bookId);
+      if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
+      await storage.unlikeBook(req.user.id, bookId);
+      const likesCount = await storage.getBookLikesCount(bookId);
+      res.json({ liked: false, likesCount });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // GET /api/books/:bookId/like — check if current user liked + count
+  app.get("/api/books/:bookId/like", async (req, res) => {
+    try {
+      const bookId = Number(req.params.bookId);
+      if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
+      const likesCount = await storage.getBookLikesCount(bookId);
+      let liked = false;
+      if (req.isAuthenticated() && req.user) {
+        liked = await storage.isBookLiked(req.user.id, bookId);
+      }
+      res.json({ liked, likesCount });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // GET /api/notifications
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const notifs = await storage.getNotifications(req.user.id, 50);
+      res.json(notifs);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // GET /api/notifications/unread-count
+  app.get("/api/notifications/unread-count", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const count = await storage.getUnreadNotificationCount(req.user.id);
+      res.json({ count });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // PATCH /api/notifications/:id/read
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid notification ID" });
+
+      await storage.markNotificationRead(id, req.user.id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // POST /api/notifications/read-all
+  app.post("/api/notifications/read-all", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      await storage.markAllNotificationsRead(req.user.id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // GET /api/messages/unread-count (must be before /api/messages/:userId)
+  app.get("/api/messages/unread-count", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const count = await storage.getUnreadMessageCount(req.user.id);
+      res.json({ count });
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // GET /api/messages/conversations
+  app.get("/api/messages/conversations", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const conversations = await storage.getConversations(req.user.id);
+      res.json(conversations);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // GET /api/messages/:userId
+  app.get("/api/messages/:userId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const otherUserId = Number(req.params.userId);
+      if (isNaN(otherUserId)) return res.status(400).json({ message: "Invalid user ID" });
+
+      const messages = await storage.getMessages(req.user.id, otherUserId, 100);
+      // Mark messages from the other user as read
+      await storage.markMessagesRead(req.user.id, otherUserId);
+      res.json(messages);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // POST /api/messages/:userId
+  app.post("/api/messages/:userId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const receiverId = Number(req.params.userId);
+      if (isNaN(receiverId)) return res.status(400).json({ message: "Invalid user ID" });
+
+      const { content } = req.body;
+      if (!content || typeof content !== "string" || content.trim().length === 0) {
+        return res.status(400).json({ message: "Message content is required" });
+      }
+
+      const message = await storage.sendMessage(req.user.id, receiverId, content.trim());
+
+      // Notify the receiver
+      const sender = await storage.getUserById(req.user.id);
+      await storage.createNotification({
+        userId: receiverId,
+        type: "message",
+        title: `New message from ${sender?.displayName || "Someone"}`,
+        body: content.trim().substring(0, 100),
+        actorId: req.user.id,
+      });
+
+      res.json(message);
     } catch (err) {
       res.status(500).json({ message: "Internal error" });
     }
@@ -3210,16 +3471,16 @@ async function syncGutenbergCatalog(): Promise<void> {
     // Skip if already synced
     const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
     if ((row?.n ?? 0) >= CATALOG_MIN_BOOKS) {
-      console.log(`[catalog] Already synced (${row?.n} books) — skipping`);
+      process.env.NODE_ENV !== "production" && console.log(`[catalog] Already synced (${row?.n} books) — skipping`);
       return;
     }
 
-    console.log("[catalog] Downloading Gutenberg catalog CSV (~21 MB)…");
+    process.env.NODE_ENV !== "production" && console.log("[catalog] Downloading Gutenberg catalog CSV (~21 MB)…");
     const resp = await fetch(GUTENBERG_CATALOG_URL, { signal: AbortSignal.timeout(90_000) });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const text = await resp.text();
     const lines = text.split("\n");
-    console.log(`[catalog] Parsing ${lines.length} lines…`);
+    process.env.NODE_ENV !== "production" && console.log(`[catalog] Parsing ${lines.length} lines…`);
 
     const BATCH = 300;
     const batch: any[] = [];
@@ -3267,7 +3528,7 @@ async function syncGutenbergCatalog(): Promise<void> {
           });
         imported += batch.length;
         batch.length = 0;
-        if (imported % 3000 === 0) console.log(`[catalog] ${imported} books imported…`);
+        if (imported % 3000 === 0) process.env.NODE_ENV !== "production" && console.log(`[catalog] ${imported} books imported…`);
       }
     }
 
@@ -3287,7 +3548,7 @@ async function syncGutenbergCatalog(): Promise<void> {
       imported += batch.length;
     }
 
-    console.log(`[catalog] Sync complete — ${imported} books imported`);
+    process.env.NODE_ENV !== "production" && console.log(`[catalog] Sync complete — ${imported} books imported`);
   } catch (err) {
     console.error("[catalog] Sync failed:", err);
   } finally {

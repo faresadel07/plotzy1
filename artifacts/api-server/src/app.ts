@@ -2,11 +2,14 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import passport from "passport";
+import helmet from "helmet";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { WebhookHandlers } from "./webhook-handlers";
 import { setupPassport } from "./auth";
 import { logger } from "./lib/logger";
+import { generalLimiter, authLimiter } from "./middleware/rate-limit";
+import { apiLogger } from "./middleware/api-logger";
 
 declare module "http" {
   interface IncomingMessage {
@@ -46,9 +49,17 @@ async function initStripe() {
 const app = express();
 export const httpServer = createServer(app);
 
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
 app.use((req, res, next) => {
-  const origin = req.headers.origin || "*";
-  res.setHeader("Access-Control-Allow-Origin", origin);
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") ?? ["http://localhost:5173"];
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With");
@@ -86,7 +97,7 @@ app.use(
           createTableIfMissing: true,
         })
       : undefined,
-    secret: process.env.SESSION_SECRET || "plotzy-dev-secret",
+    secret: process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? (() => { throw new Error("SESSION_SECRET is required in production"); })() : "plotzy-dev-secret"),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -99,6 +110,13 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Rate limiting — applied after auth so user id is available as key
+app.use("/api", generalLimiter);
+app.use("/auth", authLimiter);
+
+// API request logging for admin System Health dashboard
+app.use(apiLogger);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -121,7 +139,11 @@ app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
 });
 
 export async function setupApp() {
-  initStripe();
+  if (process.env.REPL_ID) {
+    initStripe();
+  } else {
+    log("Stripe init skipped (not on Replit)", "stripe");
+  }
   await registerRoutes(httpServer, app);
 }
 

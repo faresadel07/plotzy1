@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -767,14 +768,451 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
+// ─── Chart Colors ─────────────────────────────────────────────────────────────
+
+const COLORS = ["#818cf8", "#34d399", "#fbbf24", "#f87171", "#60a5fa", "#a78bfa"];
+const chartTooltipStyle = { backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 12 };
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 16 }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "16px 20px", flex: 1 }}>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px" }}>{typeof value === "number" ? value.toLocaleString() : value}</div>
+      {sub && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+}
+
+// ─── 1. ANALYTICS TAB ─────────────────────────────────────────────────────────
+
+function AnalyticsTab() {
+  const { data: overview } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/overview"],
+    queryFn: () => fetch("/api/admin/analytics/overview", { credentials: "include" }).then(r => r.json()),
+  });
+  const { data: signups = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/analytics/signups"],
+    queryFn: () => fetch("/api/admin/analytics/signups", { credentials: "include" }).then(r => r.json()),
+  });
+  const { data: writing = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/analytics/writing-activity"],
+    queryFn: () => fetch("/api/admin/analytics/writing-activity", { credentials: "include" }).then(r => r.json()),
+  });
+
+  if (!overview) return <Spinner />;
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <MiniStat label="DAU" value={overview.dau} sub="Active today" />
+        <MiniStat label="WAU" value={overview.wau} sub="Active this week" />
+        <MiniStat label="MAU" value={overview.mau} sub="Active this month" />
+        <MiniStat label="New Users (30d)" value={overview.newUsersMonth} />
+        <MiniStat label="Words Written (30d)" value={overview.wordsWrittenMonth.toLocaleString()} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <ChartCard title="Daily Sign-ups (30d)">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={signups.map((r: any) => ({ day: r.day?.slice(5, 10), count: Number(r.count) }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Bar dataKey="count" fill="#818cf8" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Daily Writing Activity (30d)">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={writing.map((r: any) => ({ day: r.day?.slice(5, 10), words: Number(r.words) }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Area type="monotone" dataKey="words" stroke="#34d399" fill="rgba(52,211,153,0.15)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+    </div>
+  );
+}
+
+// ─── 2. REVENUE TAB ───────────────────────────────────────────────────────────
+
+function RevenueTab() {
+  const { data } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/revenue"],
+    queryFn: () => fetch("/api/admin/analytics/revenue", { credentials: "include" }).then(r => r.json()),
+  });
+
+  if (!data) return <Spinner />;
+
+  const pieData = (data.tiers || []).map((t: any, i: number) => ({
+    name: `${t.tier}/${t.plan}`,
+    value: Number(t.count),
+    color: COLORS[i % COLORS.length],
+  }));
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <MiniStat label="MRR" value={`$${data.mrrDollars}`} sub="Monthly Recurring Revenue" />
+        <MiniStat label="Active Subscribers" value={data.activeSubscribers} />
+        <MiniStat label="Monthly Plans" value={data.monthlySubs} sub="@ $13/mo" />
+        <MiniStat label="Yearly Plans" value={data.yearlySubs} sub="@ $99.99/yr" />
+        <MiniStat label="Churned (30d)" value={data.churnedLast30Days} sub="Cancelled recently" />
+      </div>
+
+      <ChartCard title="Subscription Tier Breakdown">
+        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+          <ResponsiveContainer width="50%" height={250}>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value">
+                {pieData.map((entry: any, i: number) => <Cell key={i} fill={entry.color} />)}
+              </Pie>
+              <Tooltip contentStyle={chartTooltipStyle} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ flex: 1 }}>
+            {pieData.map((t: any, i: number) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div style={{ width: 12, height: 12, borderRadius: 3, background: t.color }} />
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>{t.name}</span>
+                <span style={{ marginLeft: "auto", fontWeight: 700 }}>{t.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ChartCard>
+    </div>
+  );
+}
+
+// ─── 3. MODERATION TAB ────────────────────────────────────────────────────────
+
+function ModerationTab() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [filter, setFilter] = useState<"pending" | "approved" | "rejected">("pending");
+  const [flagBookId, setFlagBookId] = useState("");
+  const [flagReason, setFlagReason] = useState("");
+
+  const { data: flags = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/flags", filter],
+    queryFn: () => fetch(`/api/admin/flags?status=${filter}`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  const createFlag = useMutation({
+    mutationFn: () => fetch("/api/admin/flags", {
+      method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+      body: JSON.stringify({ bookId: Number(flagBookId), reason: flagReason }),
+    }).then(r => r.json()),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/flags"] }); toast({ title: "Book flagged" }); setFlagBookId(""); setFlagReason(""); },
+  });
+
+  const reviewFlag = useMutation({
+    mutationFn: ({ id, status, reviewNote }: { id: number; status: string; reviewNote?: string }) =>
+      fetch(`/api/admin/flags/${id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include",
+        body: JSON.stringify({ status, reviewNote }),
+      }).then(r => r.json()),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/flags"] }); toast({ title: "Flag reviewed" }); },
+  });
+
+  return (
+    <div>
+      {/* Flag a book form */}
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 20, marginBottom: 24, display: "flex", gap: 12, alignItems: "flex-end" }}>
+        <div style={{ flex: "0 0 100px" }}>
+          <label style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Book ID</label>
+          <input value={flagBookId} onChange={e => setFlagBookId(e.target.value)} style={inputStyle} placeholder="123" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Reason</label>
+          <input value={flagReason} onChange={e => setFlagReason(e.target.value)} style={inputStyle} placeholder="Inappropriate content, copyright claim..." />
+        </div>
+        <button onClick={() => createFlag.mutate()} disabled={!flagBookId || !flagReason} style={{ ...S.btn("danger"), padding: "10px 20px", opacity: (!flagBookId || !flagReason) ? 0.4 : 1 }}>Flag Book</button>
+      </div>
+
+      {/* Filter */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {(["pending", "approved", "rejected"] as const).map(s => (
+          <button key={s} onClick={() => setFilter(s)} style={{ ...S.btn(filter === s ? "default" : "ghost"), textTransform: "capitalize" }}>{s}</button>
+        ))}
+      </div>
+
+      {/* Flag list */}
+      <table style={S.table}>
+        <thead><tr>
+          <th style={S.th}>Book</th><th style={S.th}>Author</th><th style={S.th}>Reason</th><th style={S.th}>Flagged</th><th style={S.th}>Actions</th>
+        </tr></thead>
+        <tbody>
+          {flags.map((f: any) => (
+            <tr key={f.id}>
+              <td style={S.td}>{f.book_title || `#${f.book_id}`}</td>
+              <td style={S.td}>{f.author_name || "—"}</td>
+              <td style={S.td}>{f.reason}</td>
+              <td style={S.td}>{f.created_at ? new Date(f.created_at).toLocaleDateString() : "—"}</td>
+              <td style={S.td}>
+                {f.status === "pending" && (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => reviewFlag.mutate({ id: f.id, status: "approved", reviewNote: "Content approved" })} style={S.btn("success")}>Approve</button>
+                    <button onClick={() => reviewFlag.mutate({ id: f.id, status: "rejected", reviewNote: "Unpublished for policy violation" })} style={S.btn("danger")}>Reject & Unpublish</button>
+                  </div>
+                )}
+                {f.status !== "pending" && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", textTransform: "capitalize" }}>{f.status}</span>}
+              </td>
+            </tr>
+          ))}
+          {flags.length === 0 && (
+            <tr><td colSpan={5} style={{ ...S.td, textAlign: "center", color: "rgba(255,255,255,0.2)", padding: 40 }}>No {filter} flags</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ─── 4. ENGAGEMENT TAB ────────────────────────────────────────────────────────
+
+function EngagementTab() {
+  const [view, setView] = useState<"leaderboard" | "inactive" | "ai">("leaderboard");
+
+  const { data: leaderboard = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/analytics/leaderboard"],
+    queryFn: () => fetch("/api/admin/analytics/leaderboard", { credentials: "include" }).then(r => r.json()),
+    enabled: view === "leaderboard",
+  });
+
+  const { data: inactive = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/analytics/inactive-users"],
+    queryFn: () => fetch("/api/admin/analytics/inactive-users", { credentials: "include" }).then(r => r.json()),
+    enabled: view === "inactive",
+  });
+
+  const { data: ai } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/ai-usage"],
+    queryFn: () => fetch("/api/admin/analytics/ai-usage", { credentials: "include" }).then(r => r.json()),
+    enabled: view === "ai",
+  });
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <button onClick={() => setView("leaderboard")} style={S.btn(view === "leaderboard" ? "default" : "ghost")}>Leaderboard</button>
+        <button onClick={() => setView("inactive")} style={S.btn(view === "inactive" ? "default" : "ghost")}>Inactive Users</button>
+        <button onClick={() => setView("ai")} style={S.btn(view === "ai" ? "default" : "ghost")}>AI Usage</button>
+      </div>
+
+      {view === "leaderboard" && (
+        <table style={S.table}>
+          <thead><tr>
+            <th style={S.th}>#</th><th style={S.th}>User</th><th style={S.th}>Words Written</th><th style={S.th}>Streak</th><th style={S.th}>Published</th><th style={S.th}>Views</th>
+          </tr></thead>
+          <tbody>
+            {leaderboard.map((u: any, i: number) => (
+              <tr key={u.user_id}>
+                <td style={S.td}>{i + 1}</td>
+                <td style={S.td}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {u.avatar_url && <img src={u.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: "50%" }} />}
+                    <span>{u.display_name || u.email || "—"}</span>
+                  </div>
+                </td>
+                <td style={{ ...S.td, fontWeight: 700, color: "#818cf8" }}>{Number(u.total_words_written || 0).toLocaleString()}</td>
+                <td style={S.td}>{u.streak_days}d (best: {u.longest_streak}d)</td>
+                <td style={S.td}>{u.total_books_published}</td>
+                <td style={S.td}>{Number(u.total_views_received || 0).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {view === "inactive" && (
+        <table style={S.table}>
+          <thead><tr>
+            <th style={S.th}>User</th><th style={S.th}>Last Wrote</th><th style={S.th}>Words Total</th><th style={S.th}>Subscription</th><th style={S.th}>Joined</th>
+          </tr></thead>
+          <tbody>
+            {inactive.map((u: any) => (
+              <tr key={u.id}>
+                <td style={S.td}>{u.display_name || u.email || "—"}</td>
+                <td style={{ ...S.td, color: "#f87171" }}>{u.last_writing_date ? new Date(u.last_writing_date).toLocaleDateString() : "Never"}</td>
+                <td style={S.td}>{Number(u.total_words_written || 0).toLocaleString()}</td>
+                <td style={S.td}>{u.subscription_status || "free"}</td>
+                <td style={S.td}>{u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {view === "ai" && ai && (
+        <div>
+          <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+            <MiniStat label="Total AI Calls" value={ai.totals.calls} />
+            <MiniStat label="Total Cost" value={`$${ai.totals.costDollars}`} sub="Estimated" />
+            <MiniStat label="Prompt Tokens" value={ai.totals.promptTokens.toLocaleString()} />
+            <MiniStat label="Completion Tokens" value={ai.totals.completionTokens.toLocaleString()} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+            <ChartCard title="Daily AI Cost (30d)">
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={(ai.dailyCost || []).map((r: any) => ({ day: r.day?.slice(5, 10), cost: (Number(r.cost_cents) / 100) }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+                  <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} tickFormatter={v => `$${v}`} />
+                  <Tooltip contentStyle={chartTooltipStyle} formatter={(v: any) => [`$${Number(v).toFixed(2)}`, "Cost"]} />
+                  <Bar dataKey="cost" fill="#fbbf24" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="Cost by Model">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={(ai.byModel || []).map((m: any, i: number) => ({ name: m.model, value: Number(m.cost_cents), color: COLORS[i % COLORS.length] }))} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                    {(ai.byModel || []).map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={chartTooltipStyle} formatter={(v: any) => [`$${(Number(v) / 100).toFixed(2)}`, "Cost"]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8, justifyContent: "center" }}>
+                {(ai.byModel || []).map((m: any, i: number) => (
+                  <span key={i} style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 2, background: COLORS[i % COLORS.length], display: "inline-block" }} />
+                    {m.model} ({m.calls} calls)
+                  </span>
+                ))}
+              </div>
+            </ChartCard>
+          </div>
+
+          <ChartCard title="Top AI Consumers">
+            <table style={S.table}>
+              <thead><tr>
+                <th style={S.th}>User</th><th style={S.th}>Calls</th><th style={S.th}>Tokens</th><th style={S.th}>Est. Cost</th>
+              </tr></thead>
+              <tbody>
+                {(ai.perUser || []).map((u: any) => (
+                  <tr key={u.user_id}>
+                    <td style={S.td}>{u.display_name || u.email || `User #${u.user_id}`}</td>
+                    <td style={S.td}>{Number(u.total_calls).toLocaleString()}</td>
+                    <td style={S.td}>{(Number(u.total_prompt_tokens) + Number(u.total_completion_tokens)).toLocaleString()}</td>
+                    <td style={{ ...S.td, fontWeight: 700, color: "#fbbf24" }}>${(Number(u.total_cost_cents) / 100).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ChartCard>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 5. SYSTEM HEALTH TAB ─────────────────────────────────────────────────────
+
+function SystemHealthTab() {
+  const { data } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/system-health"],
+    queryFn: () => fetch("/api/admin/analytics/system-health", { credentials: "include" }).then(r => r.json()),
+    refetchInterval: 30000, // Auto-refresh every 30s
+  });
+
+  if (!data) return <Spinner />;
+
+  const lat = data.latency || {};
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <MiniStat label="Total Requests (24h)" value={data.totalRequests} />
+        <MiniStat label="Error Rate" value={`${data.errorRate}%`} sub={`${data.errorCount} errors`} />
+        <MiniStat label="Avg Latency" value={`${Math.round(lat.avg_ms || 0)}ms`} />
+        <MiniStat label="P95 Latency" value={`${Math.round(lat.p95_ms || 0)}ms`} />
+        <MiniStat label="P99 Latency" value={`${Math.round(lat.p99_ms || 0)}ms`} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+        <ChartCard title="Requests Per Hour (24h)">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={(data.hourlyTraffic || []).map((r: any) => ({
+              hour: new Date(r.hour).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              requests: Number(r.requests),
+              errors: Number(r.errors),
+            }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="hour" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Area type="monotone" dataKey="requests" stroke="#60a5fa" fill="rgba(96,165,250,0.15)" />
+              <Area type="monotone" dataKey="errors" stroke="#f87171" fill="rgba(248,113,113,0.15)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Status Code Breakdown">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={(data.statusBreakdown || []).map((r: any) => ({ code: String(r.status_code), count: Number(r.count) }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="code" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                {(data.statusBreakdown || []).map((r: any, i: number) => (
+                  <Cell key={i} fill={Number(r.status_code) >= 500 ? "#f87171" : Number(r.status_code) >= 400 ? "#fbbf24" : "#34d399"} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
+      <ChartCard title="Slowest Endpoints (24h)">
+        <table style={S.table}>
+          <thead><tr>
+            <th style={S.th}>Endpoint</th><th style={S.th}>Method</th><th style={S.th}>Hits</th><th style={S.th}>Avg (ms)</th><th style={S.th}>Max (ms)</th>
+          </tr></thead>
+          <tbody>
+            {(data.slowestEndpoints || []).map((ep: any, i: number) => (
+              <tr key={i}>
+                <td style={{ ...S.td, fontFamily: "monospace", fontSize: 12 }}>{ep.path}</td>
+                <td style={S.td}>{ep.method}</td>
+                <td style={S.td}>{Number(ep.hits).toLocaleString()}</td>
+                <td style={{ ...S.td, color: Number(ep.avg_ms) > 500 ? "#f87171" : Number(ep.avg_ms) > 200 ? "#fbbf24" : "#34d399", fontWeight: 600 }}>{ep.avg_ms}ms</td>
+                <td style={S.td}>{ep.max_ms}ms</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ChartCard>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "users" | "books" | "support" | "activity" | "banner";
+type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>("analytics");
 
   const { data: stats } = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
@@ -822,24 +1260,41 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div style={S.tabs}>
-          <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
+        <div style={{ ...S.tabs, flexWrap: "wrap" }}>
+          <TabBtn label="Analytics" active={tab === "analytics"} onClick={() => setTab("analytics")} />
+          <TabBtn label="Revenue" active={tab === "revenue"} onClick={() => setTab("revenue")} />
+          <TabBtn label="Moderation" active={tab === "moderation"} onClick={() => setTab("moderation")} />
+          <TabBtn label="Engagement" active={tab === "engagement"} onClick={() => setTab("engagement")} />
+          <TabBtn label="System" active={tab === "system"} onClick={() => setTab("system")} />
+          <span style={{ width: 1, background: "rgba(255,255,255,0.1)", margin: "4px 4px" }} />
           <TabBtn label={`Users${stats ? ` (${stats.totalUsers})` : ""}`} active={tab === "users"} onClick={() => setTab("users")} />
           <TabBtn label={`Books${stats ? ` (${stats.publishedBooks})` : ""}`} active={tab === "books"} onClick={() => setTab("books")} />
           <TabBtn label={`Support${stats && stats.openSupportTickets > 0 ? ` (${stats.openSupportTickets})` : ""}`} active={tab === "support"} onClick={() => setTab("support")} />
           <TabBtn label="Activity" active={tab === "activity"} onClick={() => setTab("activity")} />
           <TabBtn label="Banner" active={tab === "banner"} onClick={() => setTab("banner")} />
+          <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
         </div>
+
+        {tab === "analytics"  && <AnalyticsTab />}
+        {tab === "revenue"    && <RevenueTab />}
+        {tab === "moderation" && <ModerationTab />}
+        {tab === "engagement" && <EngagementTab />}
+        {tab === "system"     && <SystemHealthTab />}
 
         {tab === "overview" && (
           <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 2 }}>
             <p>Welcome to the Plotzy admin panel. Use the tabs above to manage the platform:</p>
             <ul style={{ paddingLeft: 20 }}>
-              <li><b style={{ color: "#fff" }}>Users</b> — view all accounts, search, suspend/unsuspend, grant or revoke subscriptions, delete</li>
-              <li><b style={{ color: "#fff" }}>Books</b> — manage any publicly published book, delete if needed</li>
-              <li><b style={{ color: "#fff" }}>Support</b> — read and manage support tickets submitted by users</li>
-              <li><b style={{ color: "#fff" }}>Activity</b> — recent events across the platform (registrations, new books, support)</li>
-              <li><b style={{ color: "#fff" }}>Banner</b> — publish a site-wide announcement visible to all users</li>
+              <li><b style={{ color: "#818cf8" }}>Analytics</b> — DAU/WAU/MAU, sign-up trends, writing activity charts</li>
+              <li><b style={{ color: "#34d399" }}>Revenue</b> — MRR, subscription tiers, churn tracking</li>
+              <li><b style={{ color: "#f87171" }}>Moderation</b> — flag books, approve/reject, auto-unpublish</li>
+              <li><b style={{ color: "#fbbf24" }}>Engagement</b> — writing leaderboard, inactive users, AI usage/cost per user</li>
+              <li><b style={{ color: "#60a5fa" }}>System</b> — API latency (p50/p95/p99), error rates, slowest endpoints, traffic charts</li>
+              <li><b style={{ color: "#fff" }}>Users</b> — manage accounts, suspend, grant subscriptions</li>
+              <li><b style={{ color: "#fff" }}>Books</b> — manage published books</li>
+              <li><b style={{ color: "#fff" }}>Support</b> — read and manage support tickets</li>
+              <li><b style={{ color: "#fff" }}>Activity</b> — recent platform events</li>
+              <li><b style={{ color: "#fff" }}>Banner</b> — site-wide announcements</li>
             </ul>
           </div>
         )}

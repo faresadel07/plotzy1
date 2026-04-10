@@ -3,6 +3,7 @@ import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzl
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
+  follows, notifications, directMessages, bookLikes,
   type Book, type InsertBook,
   type Chapter, type InsertChapter,
   type Transaction, type InsertTransaction,
@@ -12,6 +13,7 @@ import {
   type StoryBeat, type InsertStoryBeat,
   type BookSeries, type InsertBookSeries,
   type SupportMessage, type InsertSupportMessage,
+  type Follow, type Notification, type DirectMessage,
 } from "../../../lib/db/src/schema";
 
 export type UserStats = typeof userStats.$inferSelect;
@@ -116,6 +118,34 @@ export interface IStorage {
   getActivityFeed(): Promise<Array<{ type: string; title: string; subtitle: string; time: string }>>;
   getSetting(key: string): Promise<string | null>;
   setSetting(key: string, value: string | null): Promise<void>;
+
+  // Social: Follows
+  followUser(followerId: number, followeeId: number): Promise<Follow>;
+  unfollowUser(followerId: number, followeeId: number): Promise<void>;
+  isFollowing(followerId: number, followeeId: number): Promise<boolean>;
+  getFollowersCount(userId: number): Promise<number>;
+  getFollowingCount(userId: number): Promise<number>;
+
+  // Social: Notifications
+  getNotifications(userId: number, limit?: number): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
+  createNotification(data: { userId: number; type: string; title: string; body?: string; linkUrl?: string; actorId?: number; entityId?: number }): Promise<Notification>;
+  markNotificationRead(id: number, userId: number): Promise<void>;
+  markAllNotificationsRead(userId: number): Promise<void>;
+
+  // Social: Messages
+  getConversations(userId: number): Promise<any[]>;
+  getMessages(userId: number, otherUserId: number, limit?: number): Promise<DirectMessage[]>;
+  sendMessage(senderId: number, receiverId: number, content: string): Promise<DirectMessage>;
+  markMessagesRead(receiverId: number, senderId: number): Promise<void>;
+  getUnreadMessageCount(userId: number): Promise<number>;
+
+  // Book Likes
+  likeBook(userId: number, bookId: number): Promise<void>;
+  unlikeBook(userId: number, bookId: number): Promise<void>;
+  isBookLiked(userId: number, bookId: number): Promise<boolean>;
+  getBookLikesCount(bookId: number): Promise<number>;
+  getAuthorTotalLikes(userId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -228,15 +258,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reorderStoryBeats(updates: { id: number; columnId: string; order: number }[]): Promise<void> {
-    for (const update of updates) {
-      await db.update(storyBeats).set({ columnId: update.columnId, order: update.order }).where(eq(storyBeats.id, update.id));
-    }
+    if (updates.length === 0) return;
+
+    // Bulk update in a single SQL statement using CASE expressions.
+    // Replaces the N+1 loop that issued one UPDATE per beat.
+    const ids = updates.map((u) => u.id);
+    const orderCases = updates.map((u) => `WHEN id = ${Number(u.id)} THEN ${Number(u.order)}`).join(" ");
+    const columnCases = updates.map((u) => {
+      // Sanitize columnId to one of the allowed values
+      const safe = ["act1", "act2", "act3"].includes(u.columnId) ? u.columnId : "act1";
+      return `WHEN id = ${Number(u.id)} THEN '${safe}'`;
+    }).join(" ");
+
+    await db.execute(sql`
+      UPDATE story_beats
+      SET "order"     = CASE ${sql.raw(orderCases)} END,
+          "column_id" = CASE ${sql.raw(columnCases)} END
+      WHERE id IN (${sql.raw(ids.join(","))})
+    `);
   }
 
   async reorderChapters(updates: { id: number; order: number }[]): Promise<void> {
-    for (const update of updates) {
-      await db.update(chapters).set({ order: update.order }).where(eq(chapters.id, update.id));
-    }
+    if (updates.length === 0) return;
+
+    // Bulk update in a single SQL statement using a CASE expression.
+    // Replaces the N+1 loop that issued one UPDATE per chapter.
+    const ids = updates.map((u) => u.id);
+    const cases = updates.map((u) => `WHEN id = ${Number(u.id)} THEN ${Number(u.order)}`).join(" ");
+
+    await db.execute(sql`
+      UPDATE chapters
+      SET "order" = CASE ${sql.raw(cases)} END
+      WHERE id IN (${sql.raw(ids.join(","))})
+    `);
   }
 
   // ─── Chapters ──────────────────────────────────────────────────────────────
@@ -576,9 +630,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void> {
-    for (const { bookId, seriesOrder } of updates) {
-      await db.update(books).set({ seriesOrder } as any).where(eq(books.id, bookId));
-    }
+    if (updates.length === 0) return;
+
+    // Bulk update in a single SQL statement using a CASE expression.
+    // Replaces the N+1 loop that issued one UPDATE per book.
+    const ids = updates.map((u) => u.bookId);
+    const cases = updates.map((u) => `WHEN id = ${Number(u.bookId)} THEN ${Number(u.seriesOrder)}`).join(" ");
+
+    await db.execute(sql`
+      UPDATE books
+      SET "series_order" = CASE ${sql.raw(cases)} END
+      WHERE id IN (${sql.raw(ids.join(","))})
+    `);
   }
 
   // ── Admin ────────────────────────────────────────────────────────────────────
@@ -650,6 +713,172 @@ export class DatabaseStorage implements IStorage {
     } else {
       await db.insert(siteSettings).values({ key, value }).onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
     }
+  }
+
+  // ── Social: Follows ─────────────────────────────────────────────────────────
+
+  async followUser(followerId: number, followeeId: number): Promise<Follow> {
+    const [follow] = await db.insert(follows).values({ followerId, followeeId }).returning();
+    // Notify the followee
+    const follower = await this.getUserById(followerId);
+    await this.createNotification({
+      userId: followeeId,
+      type: "new_follower",
+      title: `${follower?.displayName || "Someone"} started following you`,
+      actorId: followerId,
+    });
+    return follow;
+  }
+
+  async unfollowUser(followerId: number, followeeId: number): Promise<void> {
+    await db.delete(follows).where(
+      and(eq(follows.followerId, followerId), eq(follows.followeeId, followeeId))
+    );
+  }
+
+  async isFollowing(followerId: number, followeeId: number): Promise<boolean> {
+    const [row] = await db.select({ id: follows.id }).from(follows).where(
+      and(eq(follows.followerId, followerId), eq(follows.followeeId, followeeId))
+    ).limit(1);
+    return !!row;
+  }
+
+  async getFollowersCount(userId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(follows).where(eq(follows.followeeId, userId));
+    return Number(result?.count ?? 0);
+  }
+
+  async getFollowingCount(userId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(follows).where(eq(follows.followerId, userId));
+    return Number(result?.count ?? 0);
+  }
+
+  // ── Social: Notifications ───────────────────────────────────────────────────
+
+  async getNotifications(userId: number, limit = 50): Promise<Notification[]> {
+    return await db.select().from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    return Number(result?.count ?? 0);
+  }
+
+  async createNotification(data: { userId: number; type: string; title: string; body?: string; linkUrl?: string; actorId?: number; entityId?: number }): Promise<Notification> {
+    const [notif] = await db.insert(notifications).values(data).returning();
+    return notif;
+  }
+
+  async markNotificationRead(id: number, userId: number): Promise<void> {
+    await db.update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.id, id), eq(notifications.userId, userId)));
+  }
+
+  async markAllNotificationsRead(userId: number): Promise<void> {
+    await db.update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+  }
+
+  // ── Social: Messages ────────────────────────────────────────────────────────
+
+  async getConversations(userId: number): Promise<any[]> {
+    const result = await db.execute(sql`
+      WITH ranked AS (
+        SELECT
+          dm.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY CASE WHEN dm.sender_id = ${userId} THEN dm.receiver_id ELSE dm.sender_id END
+            ORDER BY dm.created_at DESC
+          ) AS rn,
+          CASE WHEN dm.sender_id = ${userId} THEN dm.receiver_id ELSE dm.sender_id END AS partner_id
+        FROM direct_messages dm
+        WHERE dm.sender_id = ${userId} OR dm.receiver_id = ${userId}
+      )
+      SELECT
+        r.id, r.sender_id AS "senderId", r.receiver_id AS "receiverId",
+        r.content, r.read, r.created_at AS "createdAt",
+        r.partner_id AS "partnerId",
+        u.display_name AS "partnerDisplayName",
+        u.avatar_url AS "partnerAvatarUrl",
+        (SELECT COUNT(*) FROM direct_messages
+         WHERE sender_id = r.partner_id AND receiver_id = ${userId} AND read = false
+        )::int AS "unreadCount"
+      FROM ranked r
+      LEFT JOIN users u ON u.id = r.partner_id
+      WHERE r.rn = 1
+      ORDER BY r.created_at DESC
+    `);
+    return result.rows;
+  }
+
+  async getMessages(userId: number, otherUserId: number, limit = 100): Promise<DirectMessage[]> {
+    return await db.select().from(directMessages)
+      .where(
+        or(
+          and(eq(directMessages.senderId, userId), eq(directMessages.receiverId, otherUserId)),
+          and(eq(directMessages.senderId, otherUserId), eq(directMessages.receiverId, userId))
+        )
+      )
+      .orderBy(asc(directMessages.createdAt))
+      .limit(limit);
+  }
+
+  async sendMessage(senderId: number, receiverId: number, content: string): Promise<DirectMessage> {
+    const [msg] = await db.insert(directMessages).values({ senderId, receiverId, content }).returning();
+    return msg;
+  }
+
+  async markMessagesRead(receiverId: number, senderId: number): Promise<void> {
+    await db.update(directMessages)
+      .set({ read: true })
+      .where(
+        and(
+          eq(directMessages.senderId, senderId),
+          eq(directMessages.receiverId, receiverId),
+          eq(directMessages.read, false)
+        )
+      );
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(directMessages)
+      .where(and(eq(directMessages.receiverId, userId), eq(directMessages.read, false)));
+    return Number(result?.count ?? 0);
+  }
+
+  // ── Book Likes ──────────────────────────────────────────────────────
+  async likeBook(userId: number, bookId: number): Promise<void> {
+    await db.insert(bookLikes).values({ userId, bookId }).onConflictDoNothing();
+  }
+
+  async unlikeBook(userId: number, bookId: number): Promise<void> {
+    await db.delete(bookLikes).where(and(eq(bookLikes.userId, userId), eq(bookLikes.bookId, bookId)));
+  }
+
+  async isBookLiked(userId: number, bookId: number): Promise<boolean> {
+    const [row] = await db.select({ id: bookLikes.id }).from(bookLikes)
+      .where(and(eq(bookLikes.userId, userId), eq(bookLikes.bookId, bookId)));
+    return !!row;
+  }
+
+  async getBookLikesCount(bookId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(bookLikes).where(eq(bookLikes.bookId, bookId));
+    return Number(result?.count ?? 0);
+  }
+
+  async getAuthorTotalLikes(userId: number): Promise<number> {
+    const result = await db.execute(sql`
+      SELECT COUNT(*) as total FROM book_likes bl
+      JOIN books b ON bl.book_id = b.id
+      WHERE b.user_id = ${userId} AND b.is_published = true AND b.is_deleted = false
+    `);
+    return Number((result as any).rows?.[0]?.total ?? 0);
   }
 }
 

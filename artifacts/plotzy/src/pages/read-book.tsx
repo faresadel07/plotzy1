@@ -89,6 +89,28 @@ function parseContent(raw: string | null | undefined): string {
   return htmlToText(raw);
 }
 
+/** Like parseContent but returns HTML string (preserving formatting) */
+function parseContentAsHtml(raw: string | null | undefined): string {
+  if (!raw) return "";
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.v === 2) {
+      return typeof parsed.pages === "string"
+        ? parsed.pages
+        : Array.isArray(parsed.pages) ? parsed.pages.join("") : "";
+    }
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item.content === "string") return item.content;
+        return "";
+      }).join("");
+    }
+    if (typeof parsed === "string") return parsed;
+  } catch { }
+  return raw;
+}
+
 /* ─── Star Rating ────────────────────────────────────────── */
 
 function StarRating({ bookId, currentAvg, count }: { bookId: number; currentAvg: number; count: number }) {
@@ -200,9 +222,9 @@ function CommentsSection({ bookId }: { bookId: number }) {
 
 /* ─── Two-column paginated book spread ───────────────────── */
 
-const PAGE_PADDING_V = 48;
-const PAGE_PADDING_H = 52;
-const SPINE_W = 3;
+const PAGE_PADDING_V = 52;
+const PAGE_PADDING_H = 48;
+const SPINE_W = 4;
 const FOOTER_H = 40;
 
 interface BookSpreadProps {
@@ -221,48 +243,42 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
   const [containerH, setContainerH] = useState(620);
   const [measured, setMeasured] = useState(false);
 
-  /* Build full book text as React nodes with chapter breaks */
+  /* Build full book content as React nodes with chapter breaks */
   const bookContent = chapters.map((ch, i) => {
-    const text = parseContent(ch?.content);
-    const paras = text ? text.split(/\n{2,}/).map((p: string) => p.trim()).filter(Boolean) : [];
-    const isRTL = paras.some(p => isArabicText(p));
+    const html = parseContentAsHtml(ch?.content);
+    const plainText = parseContent(ch?.content);
+    const isRTL = isArabicText(plainText);
+    const fontFam = isRTL
+      ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
+      : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
+    // Determine if title is just a number (like "1", "2") -- skip showing it separately
+    const titleIsNumber = ch?.title && /^\d+$/.test(ch.title.trim());
+    const chapterLabel = titleIsNumber ? `Chapter ${ch.title}` : `Chapter ${i + 1}`;
+    const showTitle = ch?.title && !titleIsNumber;
+
     return (
-      <div key={ch.id} style={{ breakInside: "avoid-column" as any, direction: isRTL ? "rtl" : "ltr" }}>
+      <div key={ch.id} style={{ direction: isRTL ? "rtl" : "ltr" }}>
         {/* Chapter header */}
-        <div style={{ textAlign: "center", marginBottom: 28, marginTop: i === 0 ? 0 : 32, breakAfter: "avoid" as any }}>
-          <p style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: 10 }}>
-            Chapter {i + 1}
+        <div style={{ textAlign: "center", marginBottom: 28, marginTop: i === 0 ? 0 : 48, breakAfter: "avoid" as any }}>
+          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
+            {chapterLabel}
           </p>
-          {ch?.title && (
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1c1410", fontFamily: "'Georgia', 'Palatino Linotype', serif", lineHeight: 1.25, margin: "0 0 14px", direction: isArabicText(ch.title) ? "rtl" : "ltr" }}>
+          {showTitle && (
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1c1410", fontFamily: "'Georgia', 'Palatino Linotype', serif", lineHeight: 1.3, margin: "0 0 16px", direction: isArabicText(ch.title) ? "rtl" : "ltr" }}>
               {ch.title}
             </h2>
           )}
-          <div style={{ width: 28, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+          <div style={{ width: 32, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
         </div>
 
-        {/* Paragraphs */}
-        {paras.length > 0 ? paras.map((p: string, pi: number) => {
-          const pIsRTL = isArabicText(p);
-          return (
-            <p key={pi} style={{
-              marginBottom: "1.35em",
-              textIndent: pi === 0 ? 0 : "2em",
-              lineHeight: 1.85,
-              fontSize: 14,
-              color: "#1c1410",
-              fontFamily: pIsRTL
-                ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', 'Arial', serif"
-                : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif",
-              letterSpacing: pIsRTL ? "0" : "0.008em",
-              textAlign: "justify",
-              direction: pIsRTL ? "rtl" : "ltr",
-              hyphens: "auto" as any,
-            }}>
-              {p}
-            </p>
-          );
-        }) : (
+        {/* Chapter content — rendered as HTML to preserve formatting */}
+        {html ? (
+          <div
+            className="book-reader-content"
+            style={{ fontFamily: fontFam, fontSize: 14, lineHeight: 1.85, color: "#1c1410", textAlign: "justify", letterSpacing: isRTL ? "0" : "0.008em", hyphens: "auto" as any }}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ) : (
           <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
             This chapter has no content yet.
           </p>
@@ -385,9 +401,9 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
           top: 0,
           left: 0,
           height: "100%",
-          /* Two columns per spread, column-width = half of container */
-          columnWidth: containerW > 0 ? `${(containerW - SPINE_W) / 2}px` : "50%",
-          columnGap: SPINE_W,
+          /* Two columns per spread — gap includes spine + inner margins */
+          columnWidth: containerW > 0 ? `${(containerW - SPINE_W - PAGE_PADDING_H * 2) / 2}px` : "45%",
+          columnGap: SPINE_W + PAGE_PADDING_H * 2,
           columnFill: "auto",
           /* Animate page turns */
           transform: `translateX(${translateX}px)`,
@@ -401,9 +417,9 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
           boxSizing: "border-box",
         }}
       >
-        {/* Inline padding via column wrapper hack */}
+        {/* Page padding applied to left/right of the content area */}
         <style>{`
-          .book-col-inner > * { padding-left: ${PAGE_PADDING_H}px; padding-right: ${PAGE_PADDING_H}px; }
+          .book-col-inner > * { padding-left: ${PAGE_PADDING_H}px; padding-right: 0; }
         `}</style>
         <div
           className="book-col-inner"
@@ -616,9 +632,9 @@ export default function ReadBook() {
             </div>
           )}
 
-          {totalSpreads > 1 && (
-            <span style={{ fontSize: 11, color: "#444", fontFamily: "Georgia, serif", letterSpacing: "0.06em", flexShrink: 0 }}>
-              {spreadIndex + 1} / {totalSpreads}
+          {sortedChapters.length > 0 && (
+            <span style={{ fontSize: 11, color: "#444", fontFamily: "Georgia, serif", flexShrink: 0 }}>
+              {sortedChapters.length} {sortedChapters.length === 1 ? "chapter" : "chapters"}
             </span>
           )}
 
@@ -682,8 +698,8 @@ export default function ReadBook() {
         )}
       </AnimatePresence>
 
-      {/* ── Reading area ── */}
-      <div style={{ maxWidth: 980, margin: "0 auto", padding: "28px 16px 0" }}>
+      {/* ── Reading area — scrollable pages ── */}
+      <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
 
         {!sortedChapters.length ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#555" }}>
@@ -692,34 +708,67 @@ export default function ReadBook() {
           </div>
         ) : (
           <>
-            {/* Book spread with CSS columns for true pagination */}
-            <BookSpread
-              chapters={sortedChapters}
-              spreadIndex={spreadIndex}
-              totalSpreads={totalSpreads}
-              onTotalSpreads={setTotalSpreads}
-              onPrev={() => goSpread(spreadIndex - 1)}
-              onNext={() => goSpread(spreadIndex + 1)}
-            />
+            {/* Chapters rendered as scrollable pages */}
+            {sortedChapters.map((ch, i) => {
+              const html = parseContentAsHtml(ch?.content);
+              const plainText = parseContent(ch?.content);
+              const isRTL = isArabicText(plainText);
+              const titleIsNumber = ch?.title && /^\d+$/.test(ch.title.trim());
+              const chapterLabel = titleIsNumber ? `Chapter ${ch.title}` : `Chapter ${i + 1}`;
+              const showTitle = ch?.title && !titleIsNumber;
+              const fontFam = isRTL
+                ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
+                : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
 
-            {/* ── Inline spacer so content doesn't hide behind sticky nav ── */}
-            <div style={{ height: 80 }} />
+              return (
+                <div key={ch.id} id={`chapter-${ch.id}`} style={{
+                  background: "#faf7f2",
+                  border: "1px solid rgba(0,0,0,0.08)",
+                  borderRadius: 4,
+                  padding: "56px 56px 48px",
+                  marginTop: i === 0 ? 32 : 24,
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+                  direction: isRTL ? "rtl" : "ltr",
+                }}>
+                  {/* Chapter header */}
+                  <div style={{ textAlign: "center", marginBottom: 36 }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
+                      {chapterLabel}
+                    </p>
+                    {showTitle && (
+                      <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.3, margin: "0 0 16px" }}>
+                        {ch.title}
+                      </h2>
+                    )}
+                    <div style={{ width: 36, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+                  </div>
 
-            {/* Rating & Comments — always visible */}
-            <div style={{ maxWidth: 700, margin: "8px auto 0", paddingBottom: 64 }}>
-              {/* Rating card */}
+                  {/* Chapter content */}
+                  {html ? (
+                    <div
+                      className="book-reader-content"
+                      style={{
+                        fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
+                        color: "#1c1410", textAlign: "justify",
+                        letterSpacing: isRTL ? "0" : "0.01em",
+                      }}
+                      dangerouslySetInnerHTML={{ __html: html }}
+                    />
+                  ) : (
+                    <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
+                      This chapter has no content yet.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Rating & Comments */}
+            <div style={{ maxWidth: 600, margin: "40px auto", paddingBottom: 64 }}>
               <div style={{ background: "#1a1815", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 32px", textAlign: "center", marginBottom: 28 }}>
-                {spreadIndex === totalSpreads - 1 ? (
-                  <>
-                    <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>You've reached the end</p>
-                    <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>Did you enjoy this story?</h3>
-                    <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>Your rating helps other readers discover great books</p>
-                  </>
-                ) : (
-                  <>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#888", fontFamily: "Georgia, serif", marginBottom: 16 }}>Rate this book</p>
-                  </>
-                )}
+                <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>You've reached the end</p>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>Did you enjoy this story?</h3>
+                <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>Your rating helps other readers discover great books</p>
                 <StarRating bookId={bookId} currentAvg={ratingStats?.avg ?? 0} count={ratingStats?.count ?? 0} />
               </div>
               <CommentsSection bookId={bookId} />
@@ -728,167 +777,33 @@ export default function ReadBook() {
         )}
       </div>
 
-      {/* ── Sticky Page Navigator Bar ── */}
-      {sortedChapters.length > 0 && totalSpreads > 1 && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
-          background: "rgba(18,16,14,0.97)", backdropFilter: "blur(20px)",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-        }}>
-          {/* Page grid panel */}
-          <AnimatePresence>
-            {showPageNav && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.22 }}
-                style={{ overflow: "hidden", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-              >
-                <div style={{ padding: "14px 20px 10px", maxWidth: 980, margin: "0 auto" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <p style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#555", fontFamily: "Georgia, serif" }}>
-                      Jump to page
-                    </p>
-                    {/* Jump-to-page input */}
-                    <form onSubmit={e => { e.preventDefault(); handleJumpSubmit(jumpInput); }}
-                      style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 11, color: "#555" }}>Go to page</span>
-                      <input
-                        type="number" min={1} max={totalPages} value={jumpInput}
-                        onChange={e => setJumpInput(e.target.value)}
-                        onFocus={() => setJumpEditing(true)}
-                        onBlur={() => { handleJumpSubmit(jumpInput); }}
-                        placeholder={String(leftPage)}
-                        style={{
-                          width: 60, padding: "3px 8px", borderRadius: 6, fontSize: 12, textAlign: "center",
-                          background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-                          color: "#ccc", outline: "none",
-                        }}
-                      />
-                      <span style={{ fontSize: 11, color: "#444" }}>/ {totalPages}</span>
-                    </form>
-                  </div>
-                  {/* Page tile grid */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {Array.from({ length: totalSpreads }).map((_, i) => {
-                      const isActive = i === spreadIndex;
-                      const lp = i * 2 + 1;
-                      const rp = i * 2 + 2;
-                      return (
-                        <button key={i} onClick={() => { goSpread(i); setShowPageNav(false); }}
-                          title={`Pages ${lp}–${rp}`}
-                          style={{
-                            width: 36, height: 26, borderRadius: 5, fontSize: 9, border: "none",
-                            cursor: "pointer", transition: "all 0.15s", fontFamily: "Georgia, serif",
-                            background: isActive ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.07)",
-                            color: isActive ? "#fff" : "#555",
-                            fontWeight: isActive ? 700 : 400,
-                          }}
-                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.14)"; }}
-                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)"; }}
-                        >
-                          {lp}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Main nav row */}
-          <div style={{ maxWidth: 980, margin: "0 auto", padding: "0 16px", height: 56, display: "flex", alignItems: "center", gap: 12 }}>
-
-            {/* Previous button */}
-            <button
-              onClick={() => goSpread(spreadIndex - 1)}
-              disabled={spreadIndex === 0}
-              style={{
-                display: "flex", alignItems: "center", gap: 5,
-                background: "none", border: "none", cursor: spreadIndex === 0 ? "default" : "pointer",
-                color: spreadIndex === 0 ? "#333" : "#888", fontSize: 13, fontFamily: "Georgia, serif",
-                padding: "6px 10px", borderRadius: 8, transition: "color 0.15s", flexShrink: 0,
-              }}
-              onMouseEnter={e => { if (spreadIndex > 0) (e.currentTarget as HTMLButtonElement).style.color = "#ddd"; }}
-              onMouseLeave={e => { if (spreadIndex > 0) (e.currentTarget as HTMLButtonElement).style.color = "#888"; }}
-            >
-              <ChevronLeft style={{ width: 16, height: 16 }} />
-              <span>Previous</span>
-            </button>
-
-            {/* Scrubber + page info */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-              {/* Scrubber track */}
-              <div
-                ref={scrubberRef}
-                onClick={handleScrubberClick}
-                style={{ width: "100%", height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", cursor: "pointer", position: "relative", flexShrink: 0 }}
-              >
-                <div style={{
-                  position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 3,
-                  background: "linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3))",
-                  width: `${pct}%`, transition: "width 0.25s",
-                }} />
-                {/* Thumb */}
-                <div style={{
-                  position: "absolute", top: "50%", transform: "translate(-50%, -50%)",
-                  left: `${pct}%`, width: 14, height: 14, borderRadius: "50%",
-                  background: "#e8e0d4", boxShadow: "0 1px 6px rgba(0,0,0,0.6)",
-                  transition: "left 0.25s",
-                }} />
-              </div>
-
-              {/* Page numbers + % */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                <button
-                  onClick={() => { setShowPageNav(p => !p); setJumpInput(""); }}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: 6,
-                    fontFamily: "Georgia, serif",
-                  }}
-                >
-                  <span style={{ fontSize: 12, color: "#999", letterSpacing: "0.04em" }}>
-                    {leftPage}–{rightPage}
-                    <span style={{ color: "#444" }}> / {totalPages}</span>
-                  </span>
-                  <span style={{ fontSize: 10, color: "#444", padding: "1px 6px", borderRadius: 4, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    {pct}% complete
-                  </span>
-                  <BookMarked style={{ width: 11, height: 11, color: showPageNav ? "#bbb" : "#444", transition: "color 0.15s" }} />
-                </button>
-              </div>
-            </div>
-
-            {/* Next button */}
-            {spreadIndex < totalSpreads - 1 ? (
-              <button
-                onClick={() => goSpread(spreadIndex + 1)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "#888", fontSize: 13, fontFamily: "Georgia, serif",
-                  padding: "6px 10px", borderRadius: 8, transition: "color 0.15s", flexShrink: 0,
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#ddd"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#888"; }}
-              >
-                <span>Next</span>
-                <ChevronRight style={{ width: 16, height: 16 }} />
-              </button>
-            ) : (
-              <span style={{ fontSize: 12, color: "#383430", fontFamily: "Georgia, serif", flexShrink: 0, padding: "6px 10px" }}>End</span>
-            )}
-          </div>
-        </div>
-      )}
+      {/* No sticky page navigator — using scroll layout */}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        /* Show arrow hints when hovering the tap areas */
         div:hover > .page-nav-hint { opacity: 1 !important; }
+
+        /* Book reader content styles — preserves formatting from the editor */
+        .book-reader-content p { margin: 0 0 1.1em; text-indent: 1.8em; orphans: 2; widows: 2; }
+        .book-reader-content p:first-child { text-indent: 0; }
+        .book-reader-content p:first-child::first-letter { font-size: 1.8em; font-weight: 700; line-height: 1; float: left; margin-right: 0.08em; }
+        .book-reader-content h1 { font-size: 1.5em; font-weight: 800; margin: 1.2em 0 0.5em; text-indent: 0; color: #1c1410; }
+        .book-reader-content h2 { font-size: 1.3em; font-weight: 700; margin: 1.1em 0 0.4em; text-indent: 0; color: #1c1410; }
+        .book-reader-content h3 { font-size: 1.15em; font-weight: 700; margin: 1em 0 0.35em; text-indent: 0; color: #1c1410; }
+        .book-reader-content h4 { font-size: 1em; font-weight: 700; margin: 0.9em 0 0.3em; text-indent: 0; }
+        .book-reader-content blockquote { border-left: 2px solid #c8bfb3; margin: 1.2em 0; padding: 0.3em 0 0.3em 1.2em; color: #5a4f42; font-style: italic; text-indent: 0; }
+        .book-reader-content ul { list-style: disc; padding-left: 1.8em; margin: 0.8em 0; text-indent: 0; }
+        .book-reader-content ol { list-style: decimal; padding-left: 1.8em; margin: 0.8em 0; text-indent: 0; }
+        .book-reader-content li { margin: 0.2em 0; text-indent: 0; }
+        .book-reader-content strong, .book-reader-content b { font-weight: 700; }
+        .book-reader-content em, .book-reader-content i { font-style: italic; }
+        .book-reader-content code { background: #f0ebe4; border-radius: 3px; padding: 1px 4px; font-family: 'Courier Prime', monospace; font-size: 0.9em; }
+        .book-reader-content pre { background: #f0ebe4; border-radius: 6px; padding: 12px; margin: 1em 0; overflow-x: auto; text-indent: 0; }
+        .book-reader-content hr { border: none; border-top: 1px solid #d4ccc2; margin: 2em auto; width: 40%; }
+        .book-reader-content a { color: #4a5568; text-decoration: underline; }
+        .book-reader-content img { max-width: 100%; height: auto; border-radius: 6px; margin: 1em 0; }
       `}</style>
     </div>
   );

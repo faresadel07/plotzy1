@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 import { AIAssistant } from "@/components/ai-assistant";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
+import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 
 /* ── FontSize extension ─────────────────────────────────────────────── */
 const FontSize = Extension.create({
@@ -423,6 +424,7 @@ export default function ArticleEditor() {
   const [showPreview, setShowPreview] = useState(false);
   const [showAI, setShowAI]           = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [dragOver, setDragOver]   = useState(false);
   const [wordGoal, setWordGoal]   = useState(1000);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
@@ -586,7 +588,7 @@ export default function ArticleEditor() {
 
   /* ── save ── */
   const saveNow = useCallback(async (silent = false) => {
-    setSaving(true);
+    if (!silent) setSaving(true);
     try {
       const serializedContent = JSON.stringify({
         v: 2,
@@ -601,8 +603,10 @@ export default function ArticleEditor() {
         tags: tagsRef.current,
         featuredImage: imgRef.current ?? undefined,
       });
-      setJustSaved(true);
-      setTimeout(() => setJustSaved(false), 2000);
+      if (!silent) {
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 2000);
+      }
     } catch {
       if (!silent) toast({ variant:"destructive", title:"Save failed" });
     } finally { setSaving(false); }
@@ -919,46 +923,51 @@ export default function ArticleEditor() {
     </Layout>
   );
 
+
   /* ═══════════════════════ EDITOR ═══════════════════════ */
   return (
     <Layout isLanding darkNav>
       <div style={{background:BG,minHeight:"100vh",fontFamily:SF}}>
 
-        {/* ── TOP BAR ── */}
+        {/* ── TOP BAR — Ultra-minimal, 52px ── */}
         <div style={{
           position:"sticky",top:0,zIndex:50,
           background:"rgba(10,10,10,0.98)",backdropFilter:"blur(20px)",
           borderBottom:`1px solid ${B}`,
-          padding:"0 18px",height:46,
+          padding:"0 20px",height:52,
           display:"flex",alignItems:"center",justifyContent:"space-between",
         }}>
-          <div style={{display:"flex",alignItems:"center",gap:14}}>
+          {/* Left: back arrow + label */}
+          <div style={{display:"flex",alignItems:"center",gap:12,minWidth:180}}>
             <Link href="/">
               <button style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:13,color:TS,padding:"4px 0"}}>
-                <ArrowLeft size={14}/> Dashboard
+                <ArrowLeft size={15}/>
               </button>
             </Link>
-            <div style={{width:1,height:16,background:B}}/>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              <FileText size={11} color={TD}/>
-              <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Blog Post</span>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <FileText size={12} color={TD}/>
+              <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:TD}}>Blog Post</span>
             </div>
           </div>
 
-          <div style={{display:"flex",alignItems:"center",gap:5}}>
+          {/* Center: save status */}
+          <div style={{display:"flex",alignItems:"center",gap:5,position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
             {saving
               ? <><Loader2 size={11} color={TD} style={{animation:"spin 1s linear infinite"}}/><span style={{fontSize:11,color:TD}}>Saving…</span></>
               : justSaved
                 ? <><CheckCircle2 size={11} color="#34d399"/><span style={{fontSize:11,color:"#34d399"}}>Saved</span></>
-                : <span style={{fontSize:11,color:TD}}>{words.toLocaleString()} words · {readTime} min read</span>
+                : null
             }
           </div>
 
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <button onClick={() => setFocusMode(f=>!f)} title="Focus mode"
-              style={{display:"flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
-              {focusMode ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}
-            </button>
+          {/* Right: word count, preview, settings gear, save */}
+          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:180,justifyContent:"flex-end"}}>
+            <span style={{fontSize:11,color:TD}}>{words.toLocaleString()} words</span>
+            <span style={{fontSize:10,color:"rgba(255,255,255,0.12)"}}>|</span>
+            <span style={{fontSize:11,color:TD,marginRight:2}}>{readTime} min</span>
+
+            {/* Ambient Soundscape */}
+            <AmbientSoundscape />
 
             {/* Mic / Recording button */}
             {isTranscribing ? (
@@ -972,17 +981,28 @@ export default function ArticleEditor() {
               </button>
             ) : (
               <button onClick={startRecording} title="Voice dictation"
-                style={{display:"flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
+                style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
                 <Mic size={14}/>
               </button>
             )}
 
-            <button onClick={() => setShowPreview(true)}
-              style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",fontFamily:SF,fontSize:13,fontWeight:500,color:TS}}>
-              <Eye size={13}/> Preview
+            <button onClick={() => setFocusMode(f=>!f)} title="Focus mode"
+              style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
+              {focusMode ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}
             </button>
+
+            <button onClick={() => setShowPreview(true)} title="Preview"
+              style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
+              <Eye size={14}/>
+            </button>
+
+            <button onClick={() => setDrawerOpen(true)} title="Settings"
+              style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:drawerOpen?"rgba(255,255,255,0.1)":"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
+              <BarChart2 size={14}/>
+            </button>
+
             <button onClick={() => saveNow(false)} disabled={saving}
-              style={{display:"flex",alignItems:"center",gap:6,padding:"6px 16px",borderRadius:8,cursor:"pointer",background:justSaved?"#34d399":"#fff",border:"none",fontFamily:SF,fontSize:13,fontWeight:600,color:justSaved?"#fff":"#000",transition:"all 0.2s"}}>
+              style={{display:"flex",alignItems:"center",gap:6,padding:"7px 18px",borderRadius:8,cursor:"pointer",background:justSaved?"#34d399":"#fff",border:"none",fontFamily:SF,fontSize:13,fontWeight:600,color:justSaved?"#fff":"#000",transition:"all 0.2s"}}>
               {saving ? <><Loader2 size={13} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
                 : justSaved ? <><CheckCircle2 size={13}/> Saved</>
                 : <><Save size={13}/> Save</>}
@@ -990,24 +1010,25 @@ export default function ArticleEditor() {
           </div>
         </div>
 
-        {/* ── FORMATTING TOOLBAR ── */}
+        {/* ── FORMATTING TOOLBAR — Sticky below top bar, reorganized groups ── */}
+        {!focusMode && (
         <div
           style={{
-            position:"sticky",top:46,zIndex:49,
-            background:"rgba(18,18,22,0.99)",backdropFilter:"blur(20px)",
+            position:"sticky",top:52,zIndex:49,
+            background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
-            padding:"0 10px",height:42,
-            display:"flex",alignItems:"center",gap:1,
+            padding:"0 14px",height:44,
+            display:"flex",alignItems:"center",gap:2,
             overflowX:"auto",scrollbarWidth:"none",
           }}
           onMouseDown={e => e.preventDefault()}
         >
-          {/* Undo Redo */}
+          {/* Group 1: Undo/Redo */}
           <Btn onClick={() => editor?.chain().focus().undo().run()} title="Undo (Ctrl+Z)"><Undo2 size={14}/></Btn>
           <Btn onClick={() => editor?.chain().focus().redo().run()} title="Redo (Ctrl+Y)"><Redo2 size={14}/></Btn>
           <Sep/>
 
-          {/* Text Style dropdown */}
+          {/* Group 2: Text Style + Font + Size */}
           <div data-dropdown>
             <button
               ref={styleBtnRef}
@@ -1025,9 +1046,7 @@ export default function ArticleEditor() {
               <ChevronDown size={11}/>
             </button>
           </div>
-          <Sep/>
 
-          {/* Font Family dropdown */}
           <div data-dropdown>
             <button
               ref={fontBtnRef}
@@ -1047,7 +1066,6 @@ export default function ArticleEditor() {
             </button>
           </div>
 
-          {/* Font Size */}
           <div style={{display:"flex",alignItems:"center",gap:1,marginLeft:2}}>
             <button onMouseDown={e=>{e.preventDefault();changeSize(-1);}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:18,height:26,background:"transparent",border:"none",cursor:"pointer",color:TS,borderRadius:3}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.07)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}><Minus size={10}/></button>
             <input
@@ -1067,14 +1085,14 @@ export default function ArticleEditor() {
           </div>
           <Sep/>
 
-          {/* Bold Italic Underline Strike */}
+          {/* Group 3: B I U S */}
           <Btn onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive("bold")} title="Bold (Ctrl+B)"><Bold size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive("italic")} title="Italic (Ctrl+I)"><Italic size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().toggleUnderline().run()} active={editor?.isActive("underline")} title="Underline (Ctrl+U)"><UIcon size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().toggleStrike().run()} active={editor?.isActive("strike")} title="Strikethrough"><Strikethrough size={13}/></Btn>
           <Sep/>
 
-          {/* Text Color */}
+          {/* Group 4: Text Color + Highlight */}
           <div data-dropdown>
             <button
               ref={colorBtnRef}
@@ -1092,32 +1110,30 @@ export default function ArticleEditor() {
               <div style={{width:14,height:3,borderRadius:2,background:editor?.getAttributes("textStyle")?.color||"#fff"}}/>
             </button>
           </div>
-
-          {/* Highlight */}
           <Btn onClick={() => editor?.chain().focus().toggleHighlight({color:"rgba(124,106,247,0.25)"}).run()} active={editor?.isActive("highlight")} title="Highlight"><Highlighter size={13}/></Btn>
           <Sep/>
 
-          {/* Alignment */}
+          {/* Group 5: Alignment */}
           <Btn onClick={() => editor?.chain().focus().setTextAlign("left").run()} active={editor?.isActive({textAlign:"left"})} title="Align left"><AlignLeft size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().setTextAlign("center").run()} active={editor?.isActive({textAlign:"center"})} title="Align center"><AlignCenter size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().setTextAlign("right").run()} active={editor?.isActive({textAlign:"right"})} title="Align right"><AlignRight size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().setTextAlign("justify").run()} active={editor?.isActive({textAlign:"justify"})} title="Justify"><AlignJustify size={13}/></Btn>
           <Sep/>
 
-          {/* Lists + Indent */}
+          {/* Group 6: Lists + Indent/Outdent */}
           <Btn onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive("bulletList")} title="Bullet list"><List size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive("orderedList")} title="Numbered list"><ListOrdered size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().sinkListItem("listItem").run()} title="Indent"><Indent size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().liftListItem("listItem").run()} title="Outdent"><Outdent size={13}/></Btn>
           <Sep/>
 
-          {/* Block elements */}
+          {/* Group 7: Blockquote + Code + Divider */}
           <Btn onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive("blockquote")} title="Blockquote"><Quote size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().toggleCodeBlock().run()} active={editor?.isActive("codeBlock")} title="Code block"><Code size={13}/></Btn>
           <Btn onClick={() => editor?.chain().focus().setHorizontalRule().run()} title="Divider"><Minus size={13}/></Btn>
           <Sep/>
 
-          {/* Link */}
+          {/* Group 8: Link + Image + AI Image */}
           <div data-dropdown>
             <button
               ref={linkBtnRef}
@@ -1135,10 +1151,7 @@ export default function ArticleEditor() {
               <LinkIcon size={13}/>
             </button>
           </div>
-
-          {/* Image buttons */}
-          <Sep/>
-          <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0,marginLeft:2}}>
             <button
               onMouseDown={e=>{e.preventDefault();inlineImgInputRef.current?.click();}}
               title="Upload image"
@@ -1148,33 +1161,39 @@ export default function ArticleEditor() {
             >
               <ImageIcon size={12}/> Image
             </button>
-            <button
-              onMouseDown={e=>{e.preventDefault();setShowImgAI(true);}}
-              title="Generate image with AI"
-              style={{display:"flex",alignItems:"center",gap:5,padding:"3px 10px",height:26,borderRadius:6,background:`${ACC}18`,border:`1px solid ${ACC}35`,cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap"}}
-              onMouseEnter={e=>{e.currentTarget.style.background=`${ACC}28`;}}
-              onMouseLeave={e=>{e.currentTarget.style.background=`${ACC}18`;}}
-            >
-              <Sparkles size={12}/> AI Image
-            </button>
             <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
           </div>
 
-          {/* AI Writing Assistant button */}
-          <div style={{marginLeft:"auto",flexShrink:0}}>
+          {/* Far right: AI Image + AI Writing Assistant grouped together */}
+          <div style={{marginLeft:"auto",flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
+            <button
+              onMouseDown={e=>{e.preventDefault();setShowImgAI(true);}}
+              title="Generate image with AI"
+              style={{
+                display:"flex",alignItems:"center",gap:5,
+                padding:"5px 12px",borderRadius:7,
+                background:`${ACC}12`,border:`1px solid ${ACC}30`,
+                cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap",
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background=`${ACC}22`;}}
+              onMouseLeave={e=>{e.currentTarget.style.background=`${ACC}12`;}}
+            >
+              <Sparkles size={11}/> AI Image
+            </button>
             <button
               onMouseDown={e=>{e.preventDefault();setShowAI(true);}}
               style={{
                 display:"flex",alignItems:"center",gap:6,
-                padding:"4px 13px",borderRadius:7,
+                padding:"5px 14px",borderRadius:7,
                 background:showAI?`${ACC}2a`:`${ACC}1a`,border:`1px solid ${ACC}45`,
                 cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap",
               }}
             >
-              <Sparkles size={11}/> AI Writing Assistant
+              <Sparkles size={11}/> AI Writer
             </button>
           </div>
         </div>
+        )}
 
         {/* ── DROPDOWNS (portaled into body via fixed positioning) ── */}
 
@@ -1260,382 +1279,407 @@ export default function ArticleEditor() {
           </div>
         )}
 
-        {/* ── CONTENT AREA ── */}
+        {/* ── WRITING CANVAS — centered column, the star of the show ── */}
         <div style={{
-          maxWidth: focusMode ? 760 : 1180,
-          margin:"0 auto", padding:"28px 20px 80px",
-          display:"grid",
-          gridTemplateColumns: focusMode ? "1fr" : "1fr 282px",
-          gap:24, alignItems:"start",
+          maxWidth:720,
+          margin:"0 auto",
+          padding: focusMode ? "36px 24px 120px" : "48px 24px 120px",
           transition:"all 0.3s ease",
         }}>
-
-          {/* ── WRITING COLUMN ── */}
-          <div>
-            {/* Featured Image */}
-            {!featuredImage ? (
-              /* ── No image: compact button ── */
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={e=>{e.preventDefault();setDragOver(true);}}
-                  onDragLeave={()=>setDragOver(false)}
-                  onDrop={e=>{e.preventDefault();setDragOver(false);const f=e.dataTransfer.files?.[0];if(f?.type.startsWith("image/"))handleImageFile(f);}}
-                  style={{
-                    display:"flex",alignItems:"center",gap:6,
-                    padding:"6px 14px",borderRadius:8,cursor:"pointer",
-                    background: dragOver ? `${ACC}18` : C2,
-                    border: dragOver ? `1px dashed ${ACC}` : `1px dashed ${B}`,
-                    fontFamily:SF,fontSize:12,fontWeight:500,color:TD,
-                    transition:"all 0.15s",
-                  }}
-                  onMouseEnter={e=>{e.currentTarget.style.borderColor=`${ACC}60`;e.currentTarget.style.color=TS;}}
-                  onMouseLeave={e=>{e.currentTarget.style.borderColor=`${B}`;e.currentTarget.style.color=TD;}}
-                >
-                  <ImageIcon size={13}/> Add image
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
-              </div>
-            ) : (
-              /* ── Has image: full 8-handle resize ── */
+          {/* Featured Image — shown only when image exists */}
+          {featuredImage && (
+            <div
+              style={{ marginBottom:32, display:"flex",
+                justifyContent: imgAlign==="left" ? "flex-start" : imgAlign==="right" ? "flex-end" : "center" }}
+              onDragOver={e=>e.preventDefault()}
+            >
               <div
-                style={{ marginBottom:22, display:"flex",
-                  justifyContent: imgAlign==="left" ? "flex-start" : imgAlign==="right" ? "flex-end" : "center" }}
-                onDragOver={e=>e.preventDefault()}
+                ref={featContRef}
+                style={{
+                  position:"relative",
+                  width: featDragging ? `${featLive.w}px` : imgWidth ? `${imgWidth}px` : "100%",
+                  minWidth:120, maxWidth:"100%",
+                  borderRadius:14, overflow:"visible", flexShrink:0, userSelect:"none",
+                }}
               >
-                <div
-                  ref={featContRef}
-                  style={{
-                    position:"relative",
-                    width: featDragging ? `${featLive.w}px` : imgWidth ? `${imgWidth}px` : "100%",
-                    minWidth:120, maxWidth:"100%",
-                    borderRadius:12, overflow:"visible", flexShrink:0, userSelect:"none",
+                <img
+                  ref={featImgRef}
+                  src={featuredImage!}
+                  alt="Featured"
+                  draggable={false}
+                  onLoad={e=>{
+                    const img=e.currentTarget;
+                    featNatRef.current={w:img.naturalWidth,h:img.naturalHeight};
                   }}
-                >
-                  {/* Image */}
-                  <img
-                    ref={featImgRef}
-                    src={featuredImage!}
-                    alt="Featured"
-                    draggable={false}
-                    onLoad={e=>{
-                      const img=e.currentTarget;
-                      featNatRef.current={w:img.naturalWidth,h:img.naturalHeight};
-                    }}
+                  style={{
+                    width:"100%", display:"block", borderRadius:14, objectFit:"cover",
+                    height: featDragging ? `${featLive.h}px` : imgHeight ? `${imgHeight}px` : undefined,
+                    maxHeight: (!featDragging && !imgHeight) ? 420 : undefined,
+                  }}
+                />
+
+                {/* Floating toolbar on hover */}
+                {!featDragging && (
+                  <div style={{ position:"absolute", top:-46, left:"50%", transform:"translateX(-50%)",
+                    display:"flex", alignItems:"center", gap:4,
+                    background:"rgba(0,0,0,0.88)", backdropFilter:"blur(14px)",
+                    border:"1px solid rgba(255,255,255,0.14)", borderRadius:10,
+                    padding:"5px 8px", zIndex:50, whiteSpace:"nowrap",
+                    opacity:0, transition:"opacity 0.15s",
+                  }}
+                  className="feat-img-toolbar"
+                  >
+                    {(["left","center","right"] as const).map(a => (
+                      <button key={a} onClick={()=>setImgAlign(a)} title={`Align ${a}`}
+                        style={{ width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                          display:"flex",alignItems:"center",justifyContent:"center",
+                          background:imgAlign===a?"rgba(124,106,247,0.4)":"transparent",color:"#fff" }}>
+                        {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
+                      </button>
+                    ))}
+                    <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                    <button onClick={()=>{setImgWidth(100);setImgHeight(null);}} title="Reset size"
+                      style={{ height:24,padding:"0 9px",borderRadius:5,border:"none",cursor:"pointer",
+                        background:"transparent",fontFamily:SF,fontSize:10,fontWeight:600,
+                        color:"rgba(255,255,255,0.75)",whiteSpace:"nowrap" }}>
+                      Reset
+                    </button>
+                    <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                    <button onClick={()=>fileInputRef.current?.click()} title="Change image"
+                      style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                        background:"transparent",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                      <Upload size={11}/>
+                    </button>
+                    <button onClick={()=>{setFeaturedImage(null);setImgWidth(100);setImgHeight(null);}} title="Remove image"
+                      style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
+                        background:"transparent",color:"#f87171",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                      <X size={11}/>
+                    </button>
+                  </div>
+                )}
+
+                {/* 8 Resize handles */}
+                {HANDLES.map(h => (
+                  <div key={h.id}
                     style={{
-                      width:"100%", display:"block", borderRadius:12, objectFit:"cover",
-                      height: featDragging ? `${featLive.h}px` : imgHeight ? `${imgHeight}px` : undefined,
-                      maxHeight: (!featDragging && !imgHeight) ? 480 : undefined,
+                      position:"absolute",
+                      top:h.top, bottom:h.bottom, left:h.left, right:h.right,
+                      transform:[h.tx&&`translateX(${h.tx})`,h.ty&&`translateY(${h.ty})`].filter(Boolean).join(" ")||undefined,
+                      width:HS, height:HS,
+                      background:"#fff", border:`2px solid ${_ACC}`,
+                      borderRadius:2, cursor:h.cursor, zIndex:50,
+                      opacity:0, transition:"opacity 0.15s",
+                    }}
+                    className="feat-img-handle"
+                    onMouseDown={e=>{
+                      e.preventDefault(); e.stopPropagation();
+                      const img = featImgRef.current;
+                      const cont = featContRef.current;
+                      if (!img || !cont) return;
+                      const startX=e.clientX, startY=e.clientY;
+                      const startW=cont.offsetWidth;
+                      const startH=img.offsetHeight;
+                      const parentW=cont.parentElement?.offsetWidth||startW;
+                      const natW=featNatRef.current.w||startW, natH=featNatRef.current.h||startH;
+                      const ratio=natW/natH;
+                      setFeatDragging(true);
+                      setFeatLive({w:startW,h:startH});
+                      const calc=(me:MouseEvent):{w:number;h:number}=>{
+                        const dx=(me.clientX-startX)*h.dx;
+                        const dy=(me.clientY-startY)*h.dy;
+                        if(h.corner){
+                          const delta=Math.abs(dx)>Math.abs(dy)?dx:dy;
+                          const nw=Math.max(120,startW+delta);
+                          return{w:nw,h:nw/ratio};
+                        }
+                        return{
+                          w:h.dx!==0?Math.max(120,startW+dx):startW,
+                          h:h.dy!==0?Math.max(60,startH+dy):startH,
+                        };
+                      };
+                      const onMove=(me:MouseEvent)=>{const d=calc(me);setFeatLive({w:Math.round(d.w),h:Math.round(d.h)});};
+                      const onUp=(me:MouseEvent)=>{
+                        const d=calc(me);
+                        setImgWidth(Math.min(Math.round(d.w), parentW));
+                        if(h.dy!==0||h.corner) setImgHeight(Math.round(d.h));
+                        setFeatDragging(false);
+                        window.removeEventListener("mousemove",onMove);
+                        window.removeEventListener("mouseup",onUp);
+                      };
+                      window.addEventListener("mousemove",onMove);
+                      window.addEventListener("mouseup",onUp);
                     }}
                   />
-
-                  {/* Floating toolbar */}
-                  {!featDragging && (
-                    <div style={{ position:"absolute", top:-46, left:"50%", transform:"translateX(-50%)",
-                      display:"flex", alignItems:"center", gap:4,
-                      background:"rgba(0,0,0,0.88)", backdropFilter:"blur(14px)",
-                      border:"1px solid rgba(255,255,255,0.14)", borderRadius:10,
-                      padding:"5px 8px", zIndex:50, whiteSpace:"nowrap" }}>
-                      {(["left","center","right"] as const).map(a => (
-                        <button key={a} onClick={()=>setImgAlign(a)} title={`Align ${a}`}
-                          style={{ width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",
-                            display:"flex",alignItems:"center",justifyContent:"center",
-                            background:imgAlign===a?"rgba(124,106,247,0.4)":"transparent",color:"#fff" }}>
-                          {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
-                        </button>
-                      ))}
-                      <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
-                      <button onClick={()=>{setImgWidth(100);setImgHeight(null);}} title="Reset size"
-                        style={{ height:24,padding:"0 9px",borderRadius:5,border:"none",cursor:"pointer",
-                          background:"transparent",fontFamily:SF,fontSize:10,fontWeight:600,
-                          color:"rgba(255,255,255,0.75)",whiteSpace:"nowrap" }}>
-                        Reset
-                      </button>
-                      <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
-                      <button onClick={()=>fileInputRef.current?.click()} title="Change image"
-                        style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
-                          background:"transparent",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                        <Upload size={11}/>
-                      </button>
-                      <button onClick={()=>{setFeaturedImage(null);setImgWidth(100);setImgHeight(null);}} title="Remove image"
-                        style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
-                          background:"transparent",color:"#f87171",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                        <X size={11}/>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* 8 Resize handles */}
-                  {HANDLES.map(h => (
-                    <div key={h.id}
-                      style={{
-                        position:"absolute",
-                        top:h.top, bottom:h.bottom, left:h.left, right:h.right,
-                        transform:[h.tx&&`translateX(${h.tx})`,h.ty&&`translateY(${h.ty})`].filter(Boolean).join(" ")||undefined,
-                        width:HS, height:HS,
-                        background:"#fff", border:`2px solid ${_ACC}`,
-                        borderRadius:2, cursor:h.cursor, zIndex:50,
-                      }}
-                      onMouseDown={e=>{
-                        e.preventDefault(); e.stopPropagation();
-                        const img = featImgRef.current;
-                        const cont = featContRef.current;
-                        if (!img || !cont) return;
-                        const startX=e.clientX, startY=e.clientY;
-                        const startW=cont.offsetWidth;
-                        const startH=img.offsetHeight;
-                        const parentW=cont.parentElement?.offsetWidth||startW;
-                        const natW=featNatRef.current.w||startW, natH=featNatRef.current.h||startH;
-                        const ratio=natW/natH;
-                        setFeatDragging(true);
-                        setFeatLive({w:startW,h:startH});
-                        const calc=(me:MouseEvent):{w:number;h:number}=>{
-                          const dx=(me.clientX-startX)*h.dx;
-                          const dy=(me.clientY-startY)*h.dy;
-                          if(h.corner){
-                            const delta=Math.abs(dx)>Math.abs(dy)?dx:dy;
-                            const nw=Math.max(120,startW+delta);
-                            return{w:nw,h:nw/ratio};
-                          }
-                          return{
-                            w:h.dx!==0?Math.max(120,startW+dx):startW,
-                            h:h.dy!==0?Math.max(60,startH+dy):startH,
-                          };
-                        };
-                        const onMove=(me:MouseEvent)=>{const d=calc(me);setFeatLive({w:Math.round(d.w),h:Math.round(d.h)});};
-                        const onUp=(me:MouseEvent)=>{
-                          const d=calc(me);
-                          setImgWidth(Math.min(Math.round(d.w), parentW));
-                          if(h.dy!==0||h.corner) setImgHeight(Math.round(d.h));
-                          setFeatDragging(false);
-                          window.removeEventListener("mousemove",onMove);
-                          window.removeEventListener("mouseup",onUp);
-                        };
-                        window.addEventListener("mousemove",onMove);
-                        window.addEventListener("mouseup",onUp);
-                      }}
-                    />
-                  ))}
-
-                  {/* Real-time dimension badge */}
-                  {featDragging && (
-                    <div style={{ position:"absolute", bottom:-30, left:"50%", transform:"translateX(-50%)",
-                      background:"rgba(0,0,0,0.88)", color:"#fff", fontFamily:SF, fontSize:11, fontWeight:600,
-                      padding:"3px 10px", borderRadius:7, whiteSpace:"nowrap", zIndex:60, pointerEvents:"none" }}>
-                      {featLive.w} × {featLive.h} px
-                    </div>
-                  )}
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
-              </div>
-            )}
-
-            {/* Category badge inline */}
-            {category && selCat && (
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                <span style={{fontFamily:SF,fontSize:10,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",padding:"4px 12px",borderRadius:20,background:selCat.color+"22",color:selCat.color}}>{category}</span>
-                <button onClick={()=>setCategory("")} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex"}}><X size={11}/></button>
-              </div>
-            )}
-
-            {/* Title */}
-            <textarea
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Your article title…"
-              rows={2}
-              dir={isRTL?"rtl":"ltr"}
-              style={{
-                width:"100%",resize:"none",background:"transparent",
-                border:"none",outline:"none",
-                fontFamily:"Georgia,'Times New Roman',serif",
-                fontWeight:800,fontSize:"clamp(1.7rem,4vw,2.5rem)",
-                color:T,lineHeight:1.18,marginBottom:5,
-              }}
-            />
-            <p style={{fontFamily:SF,fontSize:11,color:TD,marginBottom:20}}>
-              {title.length > 0 ? `${title.length} chars · Aim for 60–80 for best SEO` : "Add a compelling title to hook your readers"}
-            </p>
-
-            {/* tiptap editor with floating image overlay */}
-            <div ref={editorContainerRef} style={{ position: "relative" }}>
-              <EditorContent editor={editor} className="article-editor-content" dir={isRTL?"rtl":"ltr"}/>
-              <FloatingImageOverlay
-                images={floatingImages}
-                pageWidth={containerW}
-                pageHeight={999999}
-                zoom={100}
-                onUpdate={(imgs) => setFloatingImages(imgs)}
-                ar={isRTL}
-              />
-            </div>
-
-            {/* Tags inline */}
-            {tags.length > 0 && (
-              <div style={{display:"flex",flexWrap:"wrap",gap:6,paddingTop:18,borderTop:`1px solid ${B}`,marginTop:16}}>
-                {tags.map(tag => (
-                  <span key={tag} style={{display:"inline-flex",alignItems:"center",gap:4,fontFamily:SF,fontSize:10,fontWeight:500,color:TD,padding:"4px 10px",borderRadius:20,background:C2,border:`1px solid ${B}`}}>
-                    #{tag}
-                    <button onClick={()=>setTags(p=>p.filter(x=>x!==tag))} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex",padding:0,marginLeft:2}}><X size={9}/></button>
-                  </span>
                 ))}
+
+                {/* Real-time dimension badge */}
+                {featDragging && (
+                  <div style={{ position:"absolute", bottom:-30, left:"50%", transform:"translateX(-50%)",
+                    background:"rgba(0,0,0,0.88)", color:"#fff", fontFamily:SF, fontSize:11, fontWeight:600,
+                    padding:"3px 10px", borderRadius:7, whiteSpace:"nowrap", zIndex:60, pointerEvents:"none" }}>
+                    {featLive.w} × {featLive.h} px
+                  </div>
+                )}
               </div>
-            )}
+              <input ref={fileInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)handleImageFile(f);}}/>
+            </div>
+          )}
+
+          {/* Category badge inline */}
+          {category && selCat && (
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+              <span style={{fontFamily:SF,fontSize:10,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",padding:"4px 12px",borderRadius:20,background:selCat.color+"22",color:selCat.color}}>{category}</span>
+              <button onClick={()=>setCategory("")} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex"}}><X size={11}/></button>
+            </div>
+          )}
+
+          {/* Title — Large Georgia serif */}
+          <textarea
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Your article title…"
+            rows={2}
+            dir={isRTL?"rtl":"ltr"}
+            style={{
+              width:"100%",resize:"none",background:"transparent",
+              border:"none",outline:"none",
+              fontFamily:"Georgia,'Times New Roman',serif",
+              fontWeight:800,fontSize:"2.8rem",
+              color:T,lineHeight:1.15,marginBottom:6,
+              letterSpacing:"-0.02em",
+            }}
+          />
+          <p style={{fontFamily:SF,fontSize:11,color:TD,marginBottom:28,opacity:0.6}}>
+            {title.length > 0 ? `${title.length} chars` : "Add a compelling title"}
+          </p>
+
+          {/* TipTap editor with floating image overlay */}
+          <div ref={editorContainerRef} style={{ position: "relative" }}>
+            <EditorContent editor={editor} className="article-editor-content" dir={isRTL?"rtl":"ltr"}/>
+            <FloatingImageOverlay
+              images={floatingImages}
+              pageWidth={containerW}
+              pageHeight={999999}
+              zoom={100}
+              onUpdate={(imgs) => setFloatingImages(imgs)}
+              ar={isRTL}
+            />
           </div>
 
-          {/* ── SIDEBAR ── */}
-          {!focusMode && (
-            <aside style={{display:"flex",flexDirection:"column",gap:11,position:"sticky",top:94,maxHeight:"calc(100vh - 110px)",overflowY:"auto",scrollbarWidth:"none"}}>
-
-              {/* AI Writing Assistant button */}
-              <button
-                onClick={() => setShowAI(true)}
-                style={{
-                  width:"100%",display:"flex",alignItems:"center",gap:10,
-                  padding:"14px 16px",borderRadius:14,cursor:"pointer",
-                  background:`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`,
-                  border:`1px solid ${ACC}35`,transition:"all 0.2s",
-                }}
-                onMouseEnter={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}28 0%,rgba(124,106,247,0.14) 100%)`)}
-                onMouseLeave={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`)}
-              >
-                <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <Sparkles size={16} color={ACC}/>
-                </div>
-                <div style={{textAlign:"left"}}>
-                  <div style={{fontFamily:SF,fontSize:12,fontWeight:700,color:T,marginBottom:2}}>AI Writing Assistant</div>
-                  <div style={{fontFamily:SF,fontSize:10,color:TS}}>Polish · Expand · Translate · Rewrite</div>
-                </div>
-              </button>
-
-              {/* Stats */}
-              <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:13}}>
-                  <BarChart2 size={11} color={TD}/>
-                  <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Stats</span>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:11}}>
-                  {[
-                    {v:words.toLocaleString(), l:"Words"},
-                    {v:String(readTime),        l:"Min read"},
-                    {v:(article.language||"EN").toUpperCase(), l:"Lang"},
-                  ].map(({v,l}) => (
-                    <div key={l} style={{background:C2,borderRadius:10,padding:"9px 4px",textAlign:"center",border:`1px solid ${B2}`}}>
-                      <div style={{fontFamily:SF,fontSize:15,fontWeight:700,color:T}}>{v}</div>
-                      <div style={{fontFamily:SF,fontSize:8,color:TD,marginTop:2,fontWeight:600,letterSpacing:"0.05em",textTransform:"uppercase"}}>{l}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginBottom:13}}>
-                  {[
-                    {l:"Characters",    v:plain.replace(/\s/g,"").length.toLocaleString()},
-                    {l:"Sentences",     v:String(plain.split(/[.!?]+/).filter(s=>s.trim().length>2).length)},
-                    {l:"Paragraphs",    v:String(plain.split(/\n\s*\n/).filter(p=>p.trim().length>0).length||1)},
-                    {l:"Reading level", v:level.label, vc:level.color},
-                  ].map(({l,v,vc}:any) => (
-                    <div key={l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"2px 0"}}>
-                      <span style={{fontFamily:SF,fontSize:10,color:TD}}>{l}</span>
-                      <span style={{fontFamily:SF,fontSize:10,fontWeight:600,color:vc||TS}}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Word goal */}
-                <div>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                    <button onClick={()=>setShowGoalPicker(p=>!p)} style={{display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:10,color:TD,padding:0}}>
-                      <Target size={9}/> Goal: {wordGoal.toLocaleString()} words
-                      <ChevronDown size={9} style={{transform:showGoalPicker?"rotate(180deg)":"none",transition:"0.2s"}}/>
-                    </button>
-                    <span style={{fontFamily:SF,fontSize:10,color:progress>=100?"#34d399":TD}}>{progress}%</span>
-                  </div>
-                  {showGoalPicker && (
-                    <div style={{background:"#1a1a1a",border:`1px solid ${B}`,borderRadius:10,overflow:"hidden",marginBottom:8}}>
-                      {WORD_GOALS.map(g => (
-                        <button key={g.value} onClick={()=>{setWordGoal(g.value);setShowGoalPicker(false);}}
-                          style={{width:"100%",padding:"7px 12px",background:wordGoal===g.value?`${ACC}18`:"none",border:"none",borderBottom:`1px solid ${B2}`,cursor:"pointer",textAlign:"left",fontFamily:SF,fontSize:11,color:wordGoal===g.value?ACC:TS}}
-                        >{g.label}</button>
-                      ))}
-                    </div>
-                  )}
-                  <div style={{height:4,borderRadius:4,background:C2,overflow:"hidden"}}>
-                    <div style={{height:"100%",borderRadius:4,background:progress>=100?"#34d399":ACC,width:`${progress}%`,transition:"width 0.5s ease"}}/>
-                  </div>
-                </div>
-              </div>
-
-              {/* Category */}
-              <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:11}}>
-                  <AlignLeft size={11} color={TD}/>
-                  <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Category</span>
-                </div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                  {CATEGORIES.map(({label,color}) => (
-                    <button key={label} onClick={()=>setCategory(p=>p===label?"":label)}
-                      style={{padding:"4px 9px",borderRadius:20,fontFamily:SF,fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.15s",
-                        background:category===label?color:color+"14",color:category===label?"#fff":color,
-                        border:`1px solid ${category===label?color:color+"30"}`}}
-                    >{label}</button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:11}}>
-                  <Hash size={11} color={TD}/>
-                  <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Tags</span>
-                  <span style={{marginLeft:"auto",fontFamily:SF,fontSize:10,color:TD}}>{tags.length}/10</span>
-                </div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:5,minHeight:22,marginBottom:9}}>
-                  {tags.length
-                    ? tags.map(tag => (
-                        <span key={tag} style={{display:"inline-flex",alignItems:"center",gap:4,fontFamily:SF,fontSize:10,color:TS,padding:"4px 9px",borderRadius:20,background:C2,border:`1px solid ${B}`}}>
-                          #{tag}
-                          <button onClick={()=>setTags(p=>p.filter(x=>x!==tag))} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex",padding:0}}><X size={9}/></button>
-                        </span>
-                      ))
-                    : <span style={{fontFamily:SF,fontSize:10,color:TD,fontStyle:"italic"}}>No tags yet</span>}
-                </div>
-                <div style={{display:"flex",gap:5}}>
-                  <input
-                    value={tagInput} onChange={e=>setTagInput(e.target.value)}
-                    onKeyDown={e=>{if(e.key==="Enter"||e.key===","){e.preventDefault();addTag();}if(e.key==="Backspace"&&!tagInput&&tags.length)setTags(p=>p.slice(0,-1));}}
-                    placeholder="Add a tag…"
-                    style={{flex:1,height:30,borderRadius:7,padding:"0 9px",background:C2,border:`1px solid ${B}`,outline:"none",fontFamily:SF,fontSize:11,color:TS}}
-                  />
-                  <button onClick={addTag} style={{width:30,height:30,borderRadius:7,background:C2,border:`1px solid ${B}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:TS}}>
-                    <Plus size={13}/>
-                  </button>
-                </div>
-                <p style={{fontFamily:SF,fontSize:10,color:TD,marginTop:5}}>Enter or comma to add</p>
-              </div>
-
-              {/* Writing tips */}
-              <div style={{background:`${ACC}0d`,borderRadius:14,border:`1px solid ${ACC}22`,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:9}}>
-                  <Sparkles size={11} color={ACC}/>
-                  <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:ACC+"bb"}}>Writing Tips</span>
-                </div>
-                <ul style={{listStyle:"none",margin:0,padding:0,display:"flex",flexDirection:"column",gap:6}}>
-                  {[
-                    "Hook your reader in the first sentence",
-                    "Keep paragraphs short, 2–3 sentences",
-                    "Use subheadings to break up long sections",
-                    "Bold key phrases to improve scannability",
-                    "End with a question or call-to-action",
-                  ].map((tip,i) => (
-                    <li key={i} style={{display:"flex",alignItems:"flex-start",gap:7}}>
-                      <span style={{fontFamily:SF,fontSize:13,color:ACC,flexShrink:0,marginTop:-1}}>·</span>
-                      <span style={{fontFamily:SF,fontSize:10,color:TD,lineHeight:1.6}}>{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </aside>
+          {/* Tags shown inline below content as pills */}
+          {tags.length > 0 && (
+            <div style={{display:"flex",flexWrap:"wrap",gap:8,paddingTop:24,borderTop:`1px solid ${B}`,marginTop:32}}>
+              {tags.map(tag => (
+                <span key={tag} style={{display:"inline-flex",alignItems:"center",gap:5,fontFamily:SF,fontSize:11,fontWeight:500,color:TS,padding:"5px 12px",borderRadius:20,background:C2,border:`1px solid ${B}`}}>
+                  #{tag}
+                  <button onClick={()=>setTags(p=>p.filter(x=>x!==tag))} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex",padding:0,marginLeft:2}}><X size={9}/></button>
+                </span>
+              ))}
+            </div>
           )}
         </div>
+
+        {/* ── SETTINGS DRAWER — slides from right ── */}
+        {/* Backdrop */}
+        {drawerOpen && (
+          <div
+            onClick={() => setDrawerOpen(false)}
+            style={{
+              position:"fixed",inset:0,zIndex:998,
+              background:"rgba(0,0,0,0.45)",
+              backdropFilter:"blur(2px)",
+              transition:"opacity 0.2s",
+            }}
+          />
+        )}
+        {/* Drawer panel */}
+        <div style={{
+          position:"fixed",top:0,right:0,bottom:0,
+          width:340,zIndex:999,
+          background:"#0e0e12",
+          borderLeft:`1px solid ${B}`,
+          boxShadow: drawerOpen ? "-8px 0 40px rgba(0,0,0,0.6)" : "none",
+          transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
+          transition:"transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+          overflowY:"auto",scrollbarWidth:"none",
+          display:"flex",flexDirection:"column",
+        }}>
+          {/* Drawer header */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 20px 14px",borderBottom:`1px solid ${B}`,flexShrink:0}}>
+            <span style={{fontFamily:SF,fontSize:13,fontWeight:700,color:T,letterSpacing:"-0.01em"}}>Settings</span>
+            <button onClick={() => setDrawerOpen(false)} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex",padding:4}}>
+              <X size={16}/>
+            </button>
+          </div>
+
+          <div style={{padding:"16px 20px 32px",display:"flex",flexDirection:"column",gap:14}}>
+            {/* AI Writing Assistant — prominent at top */}
+            <button
+              onClick={() => { setShowAI(true); setDrawerOpen(false); }}
+              style={{
+                width:"100%",display:"flex",alignItems:"center",gap:10,
+                padding:"14px 16px",borderRadius:14,cursor:"pointer",
+                background:`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`,
+                border:`1px solid ${ACC}35`,transition:"all 0.2s",
+              }}
+              onMouseEnter={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}28 0%,rgba(124,106,247,0.14) 100%)`)}
+              onMouseLeave={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`)}
+            >
+              <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <Sparkles size={16} color={ACC}/>
+              </div>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:SF,fontSize:12,fontWeight:700,color:T,marginBottom:2}}>AI Writing Assistant</div>
+                <div style={{fontFamily:SF,fontSize:10,color:TS}}>Polish · Expand · Translate · Rewrite</div>
+              </div>
+            </button>
+
+            {/* Stats section */}
+            <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:13}}>
+                <BarChart2 size={11} color={TD}/>
+                <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Stats</span>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:11}}>
+                {[
+                  {v:words.toLocaleString(), l:"Words"},
+                  {v:String(readTime),        l:"Min read"},
+                  {v:(article.language||"EN").toUpperCase(), l:"Lang"},
+                ].map(({v,l}) => (
+                  <div key={l} style={{background:C2,borderRadius:10,padding:"9px 4px",textAlign:"center",border:`1px solid ${B2}`}}>
+                    <div style={{fontFamily:SF,fontSize:15,fontWeight:700,color:T}}>{v}</div>
+                    <div style={{fontFamily:SF,fontSize:8,color:TD,marginTop:2,fontWeight:600,letterSpacing:"0.05em",textTransform:"uppercase"}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginBottom:13}}>
+                {[
+                  {l:"Characters",    v:plain.replace(/\s/g,"").length.toLocaleString()},
+                  {l:"Sentences",     v:String(plain.split(/[.!?]+/).filter(s=>s.trim().length>2).length)},
+                  {l:"Paragraphs",    v:String(plain.split(/\n\s*\n/).filter(p=>p.trim().length>0).length||1)},
+                  {l:"Reading level", v:level.label, vc:level.color},
+                ].map(({l,v,vc}:any) => (
+                  <div key={l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"2px 0"}}>
+                    <span style={{fontFamily:SF,fontSize:10,color:TD}}>{l}</span>
+                    <span style={{fontFamily:SF,fontSize:10,fontWeight:600,color:vc||TS}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Word goal with progress bar */}
+              <div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                  <button onClick={()=>setShowGoalPicker(p=>!p)} style={{display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:10,color:TD,padding:0}}>
+                    <Target size={9}/> Goal: {wordGoal.toLocaleString()} words
+                    <ChevronDown size={9} style={{transform:showGoalPicker?"rotate(180deg)":"none",transition:"0.2s"}}/>
+                  </button>
+                  <span style={{fontFamily:SF,fontSize:10,color:progress>=100?"#34d399":TD}}>{progress}%</span>
+                </div>
+                {showGoalPicker && (
+                  <div style={{background:"#1a1a1a",border:`1px solid ${B}`,borderRadius:10,overflow:"hidden",marginBottom:8}}>
+                    {WORD_GOALS.map(g => (
+                      <button key={g.value} onClick={()=>{setWordGoal(g.value);setShowGoalPicker(false);}}
+                        style={{width:"100%",padding:"7px 12px",background:wordGoal===g.value?`${ACC}18`:"none",border:"none",borderBottom:`1px solid ${B2}`,cursor:"pointer",textAlign:"left",fontFamily:SF,fontSize:11,color:wordGoal===g.value?ACC:TS}}
+                      >{g.label}</button>
+                    ))}
+                  </div>
+                )}
+                <div style={{height:4,borderRadius:4,background:C2,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:4,background:progress>=100?"#34d399":ACC,width:`${progress}%`,transition:"width 0.5s ease"}}/>
+                </div>
+              </div>
+            </div>
+
+            {/* Category picker */}
+            <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:11}}>
+                <AlignLeft size={11} color={TD}/>
+                <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Category</span>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                {CATEGORIES.map(({label,color}) => (
+                  <button key={label} onClick={()=>setCategory(p=>p===label?"":label)}
+                    style={{padding:"4px 9px",borderRadius:20,fontFamily:SF,fontSize:10,fontWeight:600,cursor:"pointer",transition:"all 0.15s",
+                      background:category===label?color:color+"14",color:category===label?"#fff":color,
+                      border:`1px solid ${category===label?color:color+"30"}`}}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tags section */}
+            <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:11}}>
+                <Hash size={11} color={TD}/>
+                <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Tags</span>
+                <span style={{marginLeft:"auto",fontFamily:SF,fontSize:10,color:TD}}>{tags.length}/10</span>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:5,minHeight:22,marginBottom:9}}>
+                {tags.length
+                  ? tags.map(tag => (
+                      <span key={tag} style={{display:"inline-flex",alignItems:"center",gap:4,fontFamily:SF,fontSize:10,color:TS,padding:"4px 9px",borderRadius:20,background:C2,border:`1px solid ${B}`}}>
+                        #{tag}
+                        <button onClick={()=>setTags(p=>p.filter(x=>x!==tag))} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex",padding:0}}><X size={9}/></button>
+                      </span>
+                    ))
+                  : <span style={{fontFamily:SF,fontSize:10,color:TD,fontStyle:"italic"}}>No tags yet</span>}
+              </div>
+              <div style={{display:"flex",gap:5}}>
+                <input
+                  value={tagInput} onChange={e=>setTagInput(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter"||e.key===","){e.preventDefault();addTag();}if(e.key==="Backspace"&&!tagInput&&tags.length)setTags(p=>p.slice(0,-1));}}
+                  placeholder="Add a tag…"
+                  style={{flex:1,height:30,borderRadius:7,padding:"0 9px",background:C2,border:`1px solid ${B}`,outline:"none",fontFamily:SF,fontSize:11,color:TS}}
+                />
+                <button onClick={addTag} style={{width:30,height:30,borderRadius:7,background:C2,border:`1px solid ${B}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:TS}}>
+                  <Plus size={13}/>
+                </button>
+              </div>
+              <p style={{fontFamily:SF,fontSize:10,color:TD,marginTop:5}}>Enter or comma to add</p>
+            </div>
+
+            {/* Writing Tips */}
+            <div style={{background:`${ACC}0d`,borderRadius:14,border:`1px solid ${ACC}22`,padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:9}}>
+                <Sparkles size={11} color={ACC}/>
+                <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:ACC+"bb"}}>Writing Tips</span>
+              </div>
+              <ul style={{listStyle:"none",margin:0,padding:0,display:"flex",flexDirection:"column",gap:6}}>
+                {[
+                  "Hook your reader in the first sentence",
+                  "Keep paragraphs short, 2-3 sentences",
+                  "Use subheadings to break up long sections",
+                  "Bold key phrases to improve scannability",
+                  "End with a question or call-to-action",
+                ].map((tip,i) => (
+                  <li key={i} style={{display:"flex",alignItems:"flex-start",gap:7}}>
+                    <span style={{fontFamily:SF,fontSize:13,color:ACC,flexShrink:0,marginTop:-1}}>·</span>
+                    <span style={{fontFamily:SF,fontSize:10,color:TD,lineHeight:1.6}}>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Focus mode: floating save button ── */}
+        {focusMode && (
+          <div style={{
+            position:"fixed",bottom:28,right:28,zIndex:60,
+            display:"flex",alignItems:"center",gap:8,
+          }}>
+            <button onClick={() => setFocusMode(false)} title="Exit focus mode"
+              style={{width:40,height:40,borderRadius:12,background:"rgba(20,20,24,0.9)",backdropFilter:"blur(12px)",border:`1px solid ${B}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:TS,boxShadow:"0 4px 20px rgba(0,0,0,0.5)"}}>
+              <Minimize2 size={15}/>
+            </button>
+            <button onClick={() => saveNow(false)} disabled={saving}
+              style={{height:40,padding:"0 20px",borderRadius:12,background:justSaved?"#34d399":"#fff",border:"none",cursor:"pointer",fontFamily:SF,fontSize:13,fontWeight:600,color:justSaved?"#fff":"#000",display:"flex",alignItems:"center",gap:6,boxShadow:"0 4px 20px rgba(0,0,0,0.5)",transition:"all 0.2s"}}>
+              {saving ? <><Loader2 size={13} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
+                : justSaved ? <><CheckCircle2 size={13}/> Saved</>
+                : <><Save size={13}/> Save</>}
+            </button>
+          </div>
+        )}
 
         {/* ── AI IMAGE GENERATION MODAL ── */}
         {showImgAI && createPortal(
@@ -1708,7 +1752,7 @@ export default function ArticleEditor() {
           .article-editor-content .ProseMirror {
             outline:none; min-height:520px; caret-color:rgba(255,255,255,0.8);
             font-family:Georgia,'Times New Roman',serif;
-            font-size:1.06rem; line-height:2; color:rgba(255,255,255,0.65);
+            font-size:1.08rem; line-height:2.0; color:rgba(255,255,255,0.65);
           }
           .article-editor-content .ProseMirror > * + * { margin-top:0.8em; }
           .article-editor-content .ProseMirror p { margin:0 0 0.9em; }
@@ -1731,6 +1775,10 @@ export default function ArticleEditor() {
           .article-editor-content .ProseMirror a{color:#818cf8;text-decoration:underline;text-decoration-color:rgba(129,140,248,0.35);}
           .article-editor-content .ProseMirror mark{border-radius:3px;padding:1px 3px;}
           .article-editor-content .ProseMirror p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:rgba(255,255,255,0.12);pointer-events:none;float:left;height:0;}
+
+          /* Featured image: show toolbar & handles on hover */
+          div:hover > .feat-img-toolbar { opacity:1 !important; }
+          div:hover > .feat-img-handle { opacity:1 !important; }
 
           .article-preview-body{font-family:Georgia,serif;font-size:1.08rem;line-height:2;color:rgba(255,255,255,0.55);}
           .article-preview-body h1{font-size:2rem;font-weight:800;color:rgba(255,255,255,0.92);margin:1.4em 0 0.5em;}

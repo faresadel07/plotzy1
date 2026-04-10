@@ -8,6 +8,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/language-context";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ProtectedRoute, AdminRoute } from "@/components/protected-route";
+import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/home";
@@ -34,6 +36,7 @@ import DiscoverPage from "@/pages/discover";
 import GutenbergReader from "@/pages/gutenberg-reader";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
+import Messages from "@/pages/messages";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -70,29 +73,39 @@ function Router() {
   return (
     <div key={location} className={isFullscreen ? "" : "page-turn-enter"}>
       <Switch>
+        {/* ── Public routes ── */}
         <Route path="/" component={Home} />
-        <Route path="/trash" component={Trash} />
-        <Route path="/dashboard" component={DashboardDemo} />
-        <Route path="/books/:id" component={BookDetails} />
-        <Route path="/articles/:id" component={ArticleEditor} />
-        <Route path="/books/:bookId/chapters/:chapterId" component={ChapterEditor} />
-        <Route path="/books/:id/cover-designer" component={CoverDesigner} />
-        <Route path="/books/:id/find-publishers" component={PublishBook} />
-        <Route path="/books/:id/audiobook" component={AudiobookStudio} />
-        <Route path="/writing-guide" component={WritingGuide} />
         <Route path="/pricing" component={Pricing} />
-        <Route path="/subscription/success" component={SubscriptionSuccess} />
-        <Route path="/marketplace" component={Marketplace} />
         <Route path="/library" component={Library} />
         <Route path="/read/:id" component={ReadBook} />
         <Route path="/discover" component={DiscoverPage} />
         <Route path="/discover/:id" component={GutenbergReader} />
         <Route path="/authors/:userId" component={AuthorProfile} />
+        <Route path="/writing-guide" component={WritingGuide} />
         <Route path="/tutorial" component={TutorialPage} />
-        <Route path="/support" component={SupportPage} />
-        <Route path="/admin" component={AdminPage} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/terms" component={TermsOfService} />
+        <Route path="/marketplace" component={Marketplace} />
+
+        {/* ── Auth-required routes ── */}
+        <Route path="/dashboard" component={ProtectedRoute(DashboardDemo)} />
+        <Route path="/trash" component={ProtectedRoute(Trash)} />
+        <Route path="/books/:id" component={ProtectedRoute(BookDetails)} />
+        <Route path="/articles/:id" component={ProtectedRoute(ArticleEditor)} />
+        <Route path="/books/:bookId/chapters/:chapterId" component={ProtectedRoute(ChapterEditor)} />
+        <Route path="/books/:id/cover-designer" component={ProtectedRoute(CoverDesigner)} />
+        <Route path="/books/:id/find-publishers" component={ProtectedRoute(PublishBook)} />
+        <Route path="/books/:id/audiobook" component={ProtectedRoute(AudiobookStudio)} />
+        <Route path="/subscription/success" component={ProtectedRoute(SubscriptionSuccess)} />
+        <Route path="/support" component={ProtectedRoute(SupportPage)} />
+
+        {/* ── Messages ── */}
+        <Route path="/messages/:userId" component={ProtectedRoute(Messages)} />
+        <Route path="/messages" component={ProtectedRoute(Messages)} />
+
+        {/* ── Admin-only route ── */}
+        <Route path="/admin" component={AdminRoute(AdminPage)} />
+
         <Route component={NotFound} />
       </Switch>
     </div>
@@ -101,21 +114,23 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" attribute="class">
-        <LanguageProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <ScrollToTop />
-              <OAuthCallbackHandler />
-              <Router />
-              <QuickDropNotepad />
-              <Toaster />
-            </TooltipProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" attribute="class">
+          <LanguageProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <ScrollToTop />
+                <OAuthCallbackHandler />
+                <Router />
+                <QuickDropNotepad />
+                <Toaster />
+              </TooltipProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

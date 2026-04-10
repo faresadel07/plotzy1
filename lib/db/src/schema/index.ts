@@ -249,8 +249,16 @@ export const bookComments = pgTable("book_comments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const bookLikes = pgTable("book_likes", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type BookRating = typeof bookRatings.$inferSelect;
 export type BookComment = typeof bookComments.$inferSelect;
+export type BookLike = typeof bookLikes.$inferSelect;
 
 // ── Gutenberg public-domain reading library ──────────────────────────────────
 export const gutenbergBooks = pgTable("gutenberg_books", {
@@ -306,6 +314,66 @@ export const follows = pgTable("follows", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Notifications ─────────────────────────────────────────────────────────
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // new_follower | new_comment | new_rating | new_book | message | support_reply
+  title: text("title").notNull(),
+  body: text("body"),
+  linkUrl: text("link_url"),
+  actorId: integer("actor_id").references(() => users.id, { onDelete: "set null" }),
+  entityId: integer("entity_id"),
+  read: boolean("read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ── Direct Messages ──────────────────────────────────────────────────────
+
+export const directMessages = pgTable("direct_messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  receiverId: integer("receiver_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  read: boolean("read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ── Admin Analytics Tables ─────────────────────────────────────────────────
+
+export const apiLogs = pgTable("api_logs", {
+  id: serial("id").primaryKey(),
+  method: text("method").notNull(),
+  path: text("path").notNull(),
+  statusCode: integer("status_code").notNull(),
+  durationMs: integer("duration_ms").notNull(),
+  userId: integer("user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const aiUsageLogs = pgTable("ai_usage_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  endpoint: text("endpoint").notNull(),
+  model: text("model").notNull(),
+  promptTokens: integer("prompt_tokens").default(0),
+  completionTokens: integer("completion_tokens").default(0),
+  estimatedCostCents: integer("estimated_cost_cents").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const contentFlags = pgTable("content_flags", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("pending"), // pending | approved | rejected
+  reviewedBy: integer("reviewed_by"),
+  reviewNote: text("review_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
 export const insertBookSchema = createInsertSchema(books).omit({ id: true, createdAt: true });
 export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true });
 export const insertChapterSnapshotSchema = createInsertSchema(chapterSnapshots).omit({ id: true, createdAt: true });
@@ -341,6 +409,8 @@ export type Professional = typeof professionals.$inferSelect;
 export type QuoteRequest = typeof quoteRequests.$inferSelect;
 export type ArcRecipient = typeof arcRecipients.$inferSelect;
 export type Follow = typeof follows.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
+export type DirectMessage = typeof directMessages.$inferSelect;
 
 // Subscription constants
 export const FREE_TRIAL_MAX_CHAPTERS = 3;
