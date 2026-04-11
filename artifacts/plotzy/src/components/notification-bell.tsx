@@ -184,7 +184,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
           position: "absolute",
           top: "calc(100% + 8px)",
           right: 0,
-          width: 360,
+          width: "min(360px, calc(100vw - 24px))",
           maxHeight: 480,
           background: BG,
           border: `1px solid ${B}`,

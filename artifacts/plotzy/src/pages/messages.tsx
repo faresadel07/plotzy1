@@ -6,6 +6,16 @@ import { Layout } from "@/components/layout";
 import { Send, MessageCircle, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < breakpoint);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#0a0a0a";
 const BG2 = "#111";
@@ -77,6 +87,7 @@ export default function Messages() {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Conversations list
   const { data: conversations } = useQuery<Conversation[]>({
@@ -141,9 +152,9 @@ export default function Messages() {
       }}>
         {/* Left sidebar - conversations */}
         <div style={{
-          width: 300,
-          borderRight: `1px solid ${B}`,
-          display: "flex",
+          width: isMobile ? "100%" : 300,
+          borderRight: isMobile ? "none" : `1px solid ${B}`,
+          display: isMobile && selectedUserId ? "none" : "flex",
           flexDirection: "column",
           background: BG2,
           flexShrink: 0,
@@ -254,7 +265,7 @@ export default function Messages() {
         {/* Right panel - message thread */}
         <div style={{
           flex: 1,
-          display: "flex",
+          display: isMobile && !selectedUserId ? "none" : "flex",
           flexDirection: "column",
           background: BG,
           minWidth: 0,

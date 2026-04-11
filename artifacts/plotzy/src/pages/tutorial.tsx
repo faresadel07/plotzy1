@@ -56,7 +56,7 @@ function VideoCard({ title, duration }: { title: string; duration: string }) {
         }}>
           <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.25)" }} />
           <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-            Coming soon · {duration}
+            Guide · {duration}
           </span>
         </div>
       </div>
@@ -427,7 +427,7 @@ export default function TutorialPage() {
                 borderRadius: 20, padding: "5px 14px",
               }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.3)" }}>Coming soon · ~10 min</span>
+                <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.3)" }}>Guide · ~10 min</span>
               </div>
             </div>
             <VideoCard title="Complete Plotzy walkthrough" duration="~10 min" />

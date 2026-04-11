@@ -310,7 +310,7 @@ function UsersTab() {
                 <td style={S.td}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {u.avatarUrl
-                      ? <img src={u.avatarUrl} style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />
+                      ? <img src={u.avatarUrl} loading="lazy" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />
                       : <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>{(u.displayName || u.email || "?")[0].toUpperCase()}</div>
                     }
                     <span style={{ fontWeight: 500 }}>{u.displayName || "—"}</span>
@@ -1251,7 +1251,7 @@ export default function AdminPage() {
 
       <div style={S.body}>
         {stats && (
-          <div style={S.statsGrid}>
+          <div className="admin-stats-grid" style={S.statsGrid}>
             <StatCard label="Total Users" value={stats.totalUsers} icon="👤" />
             <StatCard label="Total Books" value={stats.totalBooks} icon="📚" />
             <StatCard label="Published" value={stats.publishedBooks} icon="🌐" />
@@ -1260,7 +1260,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div style={{ ...S.tabs, flexWrap: "wrap" }}>
+        <div style={{ ...S.tabs, flexWrap: "wrap", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <TabBtn label="Analytics" active={tab === "analytics"} onClick={() => setTab("analytics")} />
           <TabBtn label="Revenue" active={tab === "revenue"} onClick={() => setTab("revenue")} />
           <TabBtn label="Moderation" active={tab === "moderation"} onClick={() => setTab("moderation")} />

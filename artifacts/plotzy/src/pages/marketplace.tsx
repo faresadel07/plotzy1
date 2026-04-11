@@ -613,7 +613,7 @@ function LaunchModal({
                               display: "flex", alignItems: "center", justifyContent: "center",
                             }}>
                               {book.coverImage ? (
-                                <img src={book.coverImage} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                <img src={book.coverImage} alt={book.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                               ) : (
                                 <BookOpen style={{ width: 16, height: 16, color: book.spineColor || "#555" }} />
                               )}

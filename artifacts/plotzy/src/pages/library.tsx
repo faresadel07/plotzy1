@@ -94,7 +94,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           transition: "box-shadow 0.25s",
         }}>
           {book.coverImage ? (
-            <img src={book.coverImage} alt={book.title} style={{
+            <img src={book.coverImage} alt={book.title} loading="lazy" style={{
               width: "100%", height: "100%", objectFit: "cover",
               transform: hover ? "scale(1.04)" : "scale(1)",
               transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1)",
@@ -191,8 +191,8 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
                 onMouseEnter={e => { (e.currentTarget.querySelector("span") as any).style.color = T; }}
                 onMouseLeave={e => { (e.currentTarget.querySelector("span") as any).style.color = TS; }}
               >
-                {(book as any).authorAvatarUrl ? (
-                  <img src={(book as any).authorAvatarUrl} alt="" style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
+                {book.authorAvatarUrl ? (
+                  <img src={book.authorAvatarUrl} alt="" style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
                 ) : (
                   <User style={{ width: 12, height: 12, color: TD }} />
                 )}
@@ -260,7 +260,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
             boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
           }}>
             {book.coverImage ? (
-              <img src={book.coverImage} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={book.coverImage} alt={book.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
               <div style={{ width: "100%", height: "100%", background: book.spineColor || C3, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <BookOpen style={{ width: 28, height: 28, color: "rgba(255,255,255,0.5)" }} />

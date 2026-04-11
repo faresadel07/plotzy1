@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings2 } from "lucide-react";
+import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings2, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -133,6 +133,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
   const [scrolled, setScrolled] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadSupportCount, setUnreadSupportCount] = useState(0);
   const [banner, setBannerData] = useState<{ message: string | null; color: string | null } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -257,8 +258,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           }}>PLOTZY</span>
         </Link>
 
-        {/* ── Center: Nav links ── */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        {/* ── Center: Nav links (desktop) ── */}
+        <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 0 }}>
           {NAV_ITEMS.map(({ href, key }) =>
             key === "myLibrary" ? (
               <LibraryNavLink key="library" active={location === "/"} navigate={navigate} label={t(key)} dark={darkNav} />
@@ -267,6 +268,28 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             )
           )}
         </nav>
+
+        {/* ── Mobile menu button ── */}
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenuOpen(o => !o)}
+          style={{
+            display: "none",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            color: darkNav ? "#fff" : "#111",
+            justifySelf: "center",
+          }}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X style={{ width: 22, height: 22 }} /> : <Menu style={{ width: 22, height: 22 }} />}
+        </button>
 
         {/* ── Right: Controls ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
@@ -406,6 +429,83 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         </div>
       </header>
 
+      {/* ── Mobile overlay menu ── */}
+      {mobileMenuOpen && (
+        <div
+          className="mobile-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99,
+            background: "#000",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 16,
+              background: "transparent",
+              border: "none",
+              color: "#fff",
+              cursor: "pointer",
+              padding: 8,
+            }}
+            aria-label="Close menu"
+          >
+            <X style={{ width: 24, height: 24 }} />
+          </button>
+          {NAV_ITEMS.map(({ href, key }) =>
+            key === "myLibrary" ? (
+              <a
+                key="library"
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileMenuOpen(false);
+                  navigate("/");
+                }}
+                style={{
+                  fontFamily: SF,
+                  fontSize: 20,
+                  fontWeight: location === "/" ? 700 : 400,
+                  color: location === "/" ? "#fff" : "rgba(255,255,255,0.7)",
+                  textDecoration: "none",
+                  padding: "10px 24px",
+                }}
+              >
+                {t(key)}
+              </a>
+            ) : (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontFamily: SF,
+                  fontSize: 20,
+                  fontWeight: location === href ? 700 : 400,
+                  color: location === href ? "#fff" : "rgba(255,255,255,0.7)",
+                  textDecoration: "none",
+                  padding: "10px 24px",
+                }}
+              >
+                {t(key)}
+              </Link>
+            )
+          )}
+        </div>
+      )}
+
       {/* ── Site-wide Banner ── */}
       {banner?.message && !bannerDismissed && (() => {
         const BG: Record<string, string> = {
@@ -452,7 +552,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
         {/* Main content */}
         <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 48px', position: 'relative' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '32px 40px', alignItems: 'start' }}>
+          <div className="site-footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '32px 40px', alignItems: 'start' }}>
 
             {/* Brand */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -529,6 +629,23 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           }
         }}
       />
+
+      {/* ── Responsive styles ── */}
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-menu-btn { display: flex !important; }
+          .admin-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .site-footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-menu-btn { display: none !important; }
+          .mobile-overlay { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .admin-stats-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

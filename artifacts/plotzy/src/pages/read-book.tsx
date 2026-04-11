@@ -725,7 +725,7 @@ export default function ReadBook() {
                   background: "#faf7f2",
                   border: "1px solid rgba(0,0,0,0.08)",
                   borderRadius: 4,
-                  padding: "56px 56px 48px",
+                  padding: "40px clamp(16px, 5vw, 56px) 32px",
                   marginTop: i === 0 ? 32 : 24,
                   boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
                   direction: isRTL ? "rtl" : "ltr",

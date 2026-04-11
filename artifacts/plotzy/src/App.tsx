@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -11,32 +11,44 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute, AdminRoute } from "@/components/protected-route";
 import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
-
-import Home from "@/pages/home";
-import DashboardDemo from "@/pages/dashboard-demo";
-import BookDetails from "@/pages/book-details";
-import ChapterEditor from "@/pages/chapter-editor";
-import CoverDesigner from "@/pages/cover-designer";
-import PublishBook from "@/pages/publish-book";
-import AudiobookStudio from "@/pages/audiobook-studio";
-import ArticleEditor from "@/pages/article-editor";
 import QuickDropNotepad from "@/components/QuickDropNotepad";
-import Trash from "@/pages/trash";
-import WritingGuide from "@/pages/writing-guide";
-import Pricing from "@/pages/pricing";
-import SubscriptionSuccess from "@/pages/subscription-success";
-import Marketplace from "@/pages/marketplace";
-import Library from "@/pages/library";
-import ReadBook from "@/pages/read-book";
-import AuthorProfile from "@/pages/author-profile";
-import SupportPage from "@/pages/support";
-import AdminPage from "@/pages/admin";
-import TutorialPage from "@/pages/tutorial";
-import DiscoverPage from "@/pages/discover";
-import GutenbergReader from "@/pages/gutenberg-reader";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import TermsOfService from "@/pages/terms-of-service";
-import Messages from "@/pages/messages";
+
+/* Eager: landing page (must load instantly) */
+import Home from "@/pages/home";
+
+/* Lazy: everything else (loaded on demand) */
+const DashboardDemo = lazy(() => import("@/pages/dashboard-demo"));
+const BookDetails = lazy(() => import("@/pages/book-details"));
+const ChapterEditor = lazy(() => import("@/pages/chapter-editor"));
+const CoverDesigner = lazy(() => import("@/pages/cover-designer"));
+const PublishBook = lazy(() => import("@/pages/publish-book"));
+const AudiobookStudio = lazy(() => import("@/pages/audiobook-studio"));
+const ArticleEditor = lazy(() => import("@/pages/article-editor"));
+const Trash = lazy(() => import("@/pages/trash"));
+const WritingGuide = lazy(() => import("@/pages/writing-guide"));
+const Pricing = lazy(() => import("@/pages/pricing"));
+const SubscriptionSuccess = lazy(() => import("@/pages/subscription-success"));
+const Marketplace = lazy(() => import("@/pages/marketplace"));
+const Library = lazy(() => import("@/pages/library"));
+const ReadBook = lazy(() => import("@/pages/read-book"));
+const AuthorProfile = lazy(() => import("@/pages/author-profile"));
+const SupportPage = lazy(() => import("@/pages/support"));
+const AdminPage = lazy(() => import("@/pages/admin"));
+const TutorialPage = lazy(() => import("@/pages/tutorial"));
+const DiscoverPage = lazy(() => import("@/pages/discover"));
+const GutenbergReader = lazy(() => import("@/pages/gutenberg-reader"));
+const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
+const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
+const Messages = lazy(() => import("@/pages/messages"));
+
+function LazyFallback() {
+  return (
+    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "rgba(255,255,255,0.4)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -72,6 +84,7 @@ function Router() {
 
   return (
     <div key={location} className={isFullscreen ? "" : "page-turn-enter"}>
+      <Suspense fallback={<LazyFallback />}>
       <Switch>
         {/* ── Public routes ── */}
         <Route path="/" component={Home} />
@@ -108,6 +121,7 @@ function Router() {
 
         <Route component={NotFound} />
       </Switch>
+      </Suspense>
     </div>
   );
 }

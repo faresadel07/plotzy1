@@ -99,7 +99,7 @@ function BookCard({ book, size = "normal" }: { book: GutBook; size?: "normal" | 
         style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className={`relative overflow-hidden ${sm ? "aspect-[2/3]" : "aspect-[2/3]"} w-full`}>
           {hasImg ? (
-            <img src={book.coverUrl!} alt={book.title} onError={() => setImgErr(true)}
+            <img src={book.coverUrl!} alt={book.title} loading="lazy" onError={() => setImgErr(true)}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center p-3"
@@ -141,7 +141,7 @@ function RecentCard({ book }: { book: RecentBook }) {
         <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden mb-2"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
           {hasImg ? (
-            <img src={book.coverUrl!} alt={book.title} onError={() => setImgErr(true)}
+            <img src={book.coverUrl!} alt={book.title} loading="lazy" onError={() => setImgErr(true)}
               className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"

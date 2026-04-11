@@ -1,268 +1,427 @@
 "use client";
-import React, { useState } from "react";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LayoutDashboard, UserCog, Settings, LogOut, BookOpen, PenTool, Library, Sparkles, Flame, FileText, Eye, Clock, TrendingUp, Sparkle } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
-import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import React from "react";
+import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/auth-context";
+import { Layout } from "@/components/layout";
+import {
+  BookOpen, Bell, Mail, PenTool, Send, Library, Plus,
+  FileText, Loader2, Clock,
+} from "lucide-react";
+import type { Book } from "@/shared/schema";
 
+/* ── Design tokens ─────────────────────────────────────────── */
+const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
+const BG = "#000";
+const C1 = "#0a0a0a";
+const C2 = "#111";
+const B = "rgba(255,255,255,0.07)";
+const T = "#fff";
+const TS = "rgba(255,255,255,0.55)";
+const TD = "rgba(255,255,255,0.25)";
+
+/* ── Helpers ───────────────────────────────────────────────── */
+function formatDate(d: string | Date | null | undefined): string {
+  if (!d) return "";
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "";
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function countWords(text: string | null | undefined): number {
+  if (!text) return 0;
+  // Strip HTML tags for word count
+  const plain = text.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ");
+  const words = plain.trim().split(/\s+/).filter(Boolean);
+  return words.length;
+}
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return n.toLocaleString();
+}
+
+/* ── Main Component ────────────────────────────────────────── */
 export default function DashboardDemo() {
-  const links = [
-    {
-      label: "My Library",
-      href: "/",
-      icon: (
-        <Library className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Active Projects",
-      href: "#",
-      icon: (
-        <PenTool className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Story Bible",
-      href: "#",
-      icon: (
-        <BookOpen className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "AI Assistant",
-      href: "#",
-      icon: (
-        <Sparkles className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Settings",
-      href: "#",
-      icon: (
-        <Settings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-    {
-      label: "Logout",
-      href: "#",
-      icon: (
-        <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
-  ];
-  const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+
+  // Fetch user's books
+  const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
+    queryKey: ["/api/books"],
+    queryFn: () => fetch("/api/books", { credentials: "include" }).then(r => r.ok ? r.json() : []),
+    enabled: !!user,
+  });
+
+  // Fetch unread notifications count
+  const { data: notifData } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count"],
+    queryFn: () => fetch("/api/notifications/unread-count", { credentials: "include" }).then(r => r.ok ? r.json() : { count: 0 }),
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
+
+  // Fetch unread messages count
+  const { data: msgData } = useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread-count"],
+    queryFn: () => fetch("/api/messages/unread-count", { credentials: "include" }).then(r => r.ok ? r.json() : { count: 0 }),
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
+
+  const totalBooks = books?.length ?? 0;
+  const totalWords = (books ?? []).reduce((sum, b) => sum + countWords(b.articleContent), 0);
+  const unreadNotifs = notifData?.count ?? 0;
+  const unreadMsgs = msgData?.count ?? 0;
+
+  // Sort books by createdAt desc, take last 6
+  const recentBooks = [...(books ?? [])]
+    .sort((a, b) => {
+      const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return db - da;
+    })
+    .slice(0, 6);
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const subStatus = user?.subscriptionPlan || user?.subscriptionStatus || "Free";
+  const subLabel = subStatus.charAt(0).toUpperCase() + subStatus.slice(1);
+
   return (
-    <div
-      className={cn(
-        "rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 max-w-7xl mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-        "h-screen" 
-      )}
-    >
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10">
-          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
-              ))}
+    <Layout isLanding darkNav>
+      <div style={{
+        minHeight: "100vh",
+        background: BG,
+        fontFamily: SF,
+        color: T,
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 64px" }}>
+
+          {/* ── Welcome Header ──────────────────────────────── */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", margin: 0 }}>
+                Welcome back, {user?.displayName || user?.email?.split("@")[0] || "Writer"}
+              </h1>
+              <span style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                background: subLabel === "Free" ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg, #f59e0b, #f97316)",
+                color: subLabel === "Free" ? TS : "#fff",
+                borderRadius: 6,
+                padding: "3px 8px",
+                lineHeight: 1.6,
+              }}>
+                {subLabel}
+              </span>
             </div>
+            <p style={{ fontSize: 14, color: TS, marginTop: 4 }}>{today}</p>
           </div>
-          <div>
-            <SidebarLink
-              link={{
-                label: "Plotzy Author",
-                href: "#",
-                icon: (
-                  <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    className="h-7 w-7 flex-shrink-0 rounded-full"
-                    width={50}
-                    height={50}
-                    alt="Avatar"
-                  />
-                ),
-              }}
+
+          {/* ── Quick Stats Row ─────────────────────────────── */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 14,
+            marginBottom: 36,
+          }}>
+            <StatCard
+              icon={<BookOpen style={{ width: 18, height: 18 }} />}
+              label="Total Books"
+              value={booksLoading ? "..." : formatNumber(totalBooks)}
+              color="#8b5cf6"
+            />
+            <StatCard
+              icon={<FileText style={{ width: 18, height: 18 }} />}
+              label="Total Words Written"
+              value={booksLoading ? "..." : formatNumber(totalWords)}
+              color="#3b82f6"
+            />
+            <StatCard
+              icon={<Bell style={{ width: 18, height: 18 }} />}
+              label="Unread Notifications"
+              value={formatNumber(unreadNotifs)}
+              color="#f59e0b"
+              highlight={unreadNotifs > 0}
+            />
+            <StatCard
+              icon={<Mail style={{ width: 18, height: 18 }} />}
+              label="Unread Messages"
+              value={formatNumber(unreadMsgs)}
+              color="#10b981"
+              highlight={unreadMsgs > 0}
             />
           </div>
-        </SidebarBody>
-      </Sidebar>
-      <Dashboard />
+
+          {/* ── Recent Books ────────────────────────────────── */}
+          <div style={{ marginBottom: 36 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                <Clock style={{ width: 18, height: 18, color: TS }} />
+                Recent Books
+              </h2>
+              {totalBooks > 6 && (
+                <Link href="/" style={{ fontSize: 13, color: TS, textDecoration: "none" }}>
+                  View all
+                </Link>
+              )}
+            </div>
+
+            {booksLoading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
+                <Loader2 style={{ width: 24, height: 24, color: TS, animation: "spin 1s linear infinite" }} />
+              </div>
+            ) : (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                gap: 14,
+              }}>
+                {recentBooks.map(book => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+                {/* Create New Book card */}
+                <div
+                  onClick={() => navigate("/")}
+                  style={{
+                    background: C1,
+                    border: `1px dashed ${B}`,
+                    borderRadius: 12,
+                    padding: 20,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: 240,
+                    cursor: "pointer",
+                    transition: "border-color 0.2s, background 0.2s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                    e.currentTarget.style.background = C2;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = B;
+                    e.currentTarget.style.background = C1;
+                  }}
+                >
+                  <div style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.06)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 12,
+                  }}>
+                    <Plus style={{ width: 22, height: 22, color: TS }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TS }}>Create New Book</span>
+                </div>
+              </div>
+            )}
+
+            {!booksLoading && totalBooks === 0 && (
+              <p style={{ fontSize: 14, color: TD, textAlign: "center", padding: "20px 0" }}>
+                You haven't created any books yet. Start your first one!
+              </p>
+            )}
+          </div>
+
+          {/* ── Quick Actions ───────────────────────────────── */}
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
+              Quick Actions
+            </h2>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 12,
+            }}>
+              <ActionButton
+                icon={<PenTool style={{ width: 16, height: 16 }} />}
+                label="Write a new chapter"
+                onClick={() => navigate("/")}
+              />
+              <ActionButton
+                icon={<Send style={{ width: 16, height: 16 }} />}
+                label="Publish a book"
+                onClick={() => navigate("/")}
+              />
+              <ActionButton
+                icon={<Library style={{ width: 16, height: 16 }} />}
+                label="Visit Community Library"
+                onClick={() => navigate("/library")}
+              />
+              <ActionButton
+                icon={<Mail style={{ width: 16, height: 16 }} />}
+                label="View Messages"
+                onClick={() => navigate("/messages")}
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Spinner keyframe for loading state */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </Layout>
+  );
+}
+
+/* ── Stat Card ─────────────────────────────────────────────── */
+function StatCard({ icon, label, value, color, highlight }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div style={{
+      background: C2,
+      border: `1px solid ${highlight ? color + "44" : B}`,
+      borderRadius: 12,
+      padding: "18px 20px",
+      transition: "border-color 0.2s",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 500, color: TS, margin: 0, marginBottom: 6 }}>{label}</p>
+          <p style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: "-0.03em", color: highlight ? color : T }}>{value}</p>
+        </div>
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: color + "18",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color,
+        }}>
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }
 
-export const Logo = () => {
+/* ── Book Card ─────────────────────────────────────────────── */
+function BookCard({ book }: { book: Book }) {
   return (
-    <Link
-      href="/"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
-    >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-medium text-black dark:text-white whitespace-pre"
+    <Link href={`/books/${book.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+      <div
+        style={{
+          background: C2,
+          border: `1px solid ${B}`,
+          borderRadius: 12,
+          overflow: "hidden",
+          cursor: "pointer",
+          transition: "border-color 0.2s, transform 0.15s",
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+          e.currentTarget.style.transform = "translateY(-2px)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = B;
+          e.currentTarget.style.transform = "translateY(0)";
+        }}
       >
-        Plotzy
-      </motion.span>
+        {/* Cover */}
+        <div style={{
+          width: "100%",
+          height: 160,
+          background: book.coverImage
+            ? `url(${book.coverImage}) center/cover no-repeat`
+            : `linear-gradient(135deg, ${book.spineColor || "#333"}, #111)`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          {!book.coverImage && (
+            <BookOpen style={{ width: 32, height: 32, color: "rgba(255,255,255,0.2)" }} />
+          )}
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: "12px 14px 14px" }}>
+          <p style={{
+            fontSize: 13,
+            fontWeight: 600,
+            margin: 0,
+            color: T,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}>
+            {book.title}
+          </p>
+          <p style={{ fontSize: 11, color: TD, margin: "4px 0 0" }}>
+            {formatDate(book.createdAt)}
+          </p>
+        </div>
+      </div>
     </Link>
   );
-};
+}
 
-export const LogoIcon = () => {
+/* ── Action Button ─────────────────────────────────────────── */
+function ActionButton({ icon, label, onClick }: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <Link
-      href="/"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        background: C2,
+        border: `1px solid ${B}`,
+        borderRadius: 10,
+        padding: "14px 18px",
+        color: T,
+        fontSize: 13,
+        fontWeight: 500,
+        fontFamily: SF,
+        cursor: "pointer",
+        transition: "background 0.2s, border-color 0.2s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = "#1a1a1a";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = C2;
+        e.currentTarget.style.borderColor = B;
+      }}
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-    </Link>
+      <span style={{ color: TS }}>{icon}</span>
+      {label}
+    </button>
   );
-};
-
-// Mock data for the Activity Chart
-const activityData = [
-  { day: "Mon", words: 800 },
-  { day: "Tue", words: 1200 },
-  { day: "Wed", words: 950 },
-  { day: "Thu", words: 2100 },
-  { day: "Fri", words: 1600 },
-  { day: "Sat", words: 500 },
-  { day: "Sun", words: 3200 },
-];
-
-const mockProjects = [
-  { id: 1, title: "The Cosmic Nexus", genre: "Sci-Fi", progress: 65, lastEdited: "2 hours ago" },
-  { id: 2, title: "Whispers of the Old Gods", genre: "Fantasy", progress: 32, lastEdited: "Yesterday" },
-  { id: 3, title: "Silicon Dreams", genre: "Cyberpunk", progress: 89, lastEdited: "3 days ago" },
-];
-
-const Dashboard = () => {
-  return (
-    <div className="flex flex-1 overflow-y-auto">
-      <div className="p-4 md:p-8 rounded-tl-2xl border border-neutral-200 dark:border-white/10 bg-[#f9f6f1] dark:bg-zinc-950 flex flex-col gap-8 flex-1 w-full min-h-full">
-        
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Writer's Control Room</h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-1">Welcome back, Plotzy Author. Your worlds await.</p>
-        </div>
-
-        {/* Top Row: Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard title="Writing Streak" value="5 Days" subtitle="Keep the fire burning!" icon={<Flame className="w-5 h-5 text-orange-500" />} />
-          <MetricCard title="Total Words" value="45,230" subtitle="+3,200 this week" icon={<FileText className="w-5 h-5 text-blue-500" />} />
-          <MetricCard title="Active Projects" value="3" subtitle="Living in 3 worlds" icon={<BookOpen className="w-5 h-5 text-purple-500" />} />
-          <MetricCard title="Engagement" value="1.2k views" subtitle="Total chapter reads" icon={<Eye className="w-5 h-5 text-green-500" />} />
-        </div>
-
-        {/* Middle Row: Recent Projects & Quick AI Prompt */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Projects (Left Col - 2/3 width) */}
-          <div className="lg:col-span-2 bg-white dark:bg-zinc-900/50 border border-neutral-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
-                <Clock className="w-5 h-5 text-neutral-400" /> Recent Projects
-              </h2>
-              <button className="text-sm text-foreground/70 font-medium hover:underline flex items-center gap-1">
-                View all <TrendingUp className="w-3 h-3" />
-              </button>
-            </div>
-            
-            <div className="flex flex-col gap-4">
-              {mockProjects.map((project) => (
-                <div key={project.id} className="group relative bg-neutral-50 dark:bg-zinc-900 border border-neutral-100 dark:border-white/5 rounded-lg p-4 transition-all hover:shadow-md dark:hover:border-white/10">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-neutral-800 dark:text-neutral-100">{project.title}</h3>
-                      <span className="text-xs font-medium text-neutral-500 bg-neutral-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full mt-1 inline-block">
-                        {project.genre}
-                      </span>
-                    </div>
-                    <button className="h-8 px-4 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform">
-                      Continue
-                    </button>
-                  </div>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex-1 h-2 bg-neutral-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-foreground/70 rounded-full" style={{ width: `${project.progress}%` }} />
-                    </div>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium w-8">{project.progress}%</span>
-                  </div>
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2">Last edited: {project.lastEdited}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick AI Prompt (Right Col - 1/3 width) */}
-          <div className="bg-gradient-to-br from-zinc-50 to-neutral-100 dark:from-zinc-900 dark:to-black border border-neutral-200 dark:border-white/10 rounded-xl p-6 shadow-sm relative overflow-hidden">
-             {/* Decorative glow */}
-             <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-foreground/5 rounded-full blur-3xl pointer-events-none" />
-             
-             <h2 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center gap-2 mb-2 relative z-10">
-                <Sparkles className="w-5 h-5 text-foreground/70" /> Idea Spark
-             </h2>
-             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4 relative z-10">Stuck? Let AI help you outline your next chapter or flesh out a character.</p>
-             
-             <div className="relative z-10">
-               <textarea 
-                 className="w-full h-28 bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-white/10 rounded-lg p-3 text-sm text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-foreground/15 resize-none mb-3 shadow-inner"
-                 placeholder="E.g., Give me a plot twist for a cyberpunk heist involving a rogue AI..."
-               />
-               <button className="w-full h-10 rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black font-semibold text-sm hover:scale-[1.02] transition-transform shadow-md flex items-center justify-center gap-2 cursor-pointer">
-                 <Sparkle className="w-4 h-4" /> Inspire Me
-               </button>
-             </div>
-          </div>
-        </div>
-
-        {/* Bottom Chart Row */}
-        <div className="bg-white dark:bg-zinc-900/50 border border-neutral-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-6">Writing Activity (Words)</h2>
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={activityData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorWords" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#EAB308" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#EAB308" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(150,150,150,0.1)" />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} />
-                <RechartsTooltip 
-                  contentStyle={{ backgroundColor: 'rgba(20,20,20,0.9)', border: 'none', borderRadius: '8px', color: '#fff' }}
-                  itemStyle={{ color: '#EAB308' }}
-                />
-                <Area type="monotone" dataKey="words" stroke="#EAB308" strokeWidth={3} fillOpacity={1} fill="url(#colorWords)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-};
-
-const MetricCard = ({ title, value, subtitle, icon }: { title: string, value: string, subtitle: string, icon: React.ReactNode }) => {
-  return (
-    <div className="bg-white dark:bg-zinc-900/50 border border-neutral-200 dark:border-white/10 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{title}</p>
-          <h3 className="text-2xl font-bold text-neutral-900 dark:text-white mt-1">{value}</h3>
-        </div>
-        <div className="p-2 bg-neutral-100 dark:bg-zinc-800 rounded-lg">
-          {icon}
-        </div>
-      </div>
-      <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-4 font-medium">{subtitle}</p>
-    </div>
-  );
-};
+}
