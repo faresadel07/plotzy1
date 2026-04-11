@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useLocation } from "wouter";
 
-export type PayPalPlan = "monthly" | "yearly_monthly" | "yearly_annual";
+export type PayPalPlan = "monthly" | "yearly_monthly" | "yearly_annual" | "pro_monthly" | "pro_yearly" | "premium_monthly" | "premium_yearly";
 
 interface PayPalCheckoutProps {
   plan: PayPalPlan;

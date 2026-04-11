@@ -74,18 +74,28 @@ router.post(api.payments.confirm.path, async (req, res) => {
 
 router.get("/api/subscription/status", async (req, res) => {
   if (!req.isAuthenticated() || !req.user) {
-    return res.json({ subscriptionStatus: "free_trial", subscriptionPlan: null, subscriptionEndDate: null });
+    return res.json({ subscriptionStatus: "free_trial", subscriptionPlan: null, subscriptionEndDate: null, tier: "free" });
   }
   const user = await storage.getUserById(req.user.id);
-  if (!user) return res.json({ subscriptionStatus: "free_trial", subscriptionPlan: null, subscriptionEndDate: null });
+  if (!user) return res.json({ subscriptionStatus: "free_trial", subscriptionPlan: null, subscriptionEndDate: null, tier: "free" });
+
+  const { getUserTier, getTierLimits, getAiUsageToday } = await import("../lib/tier-limits");
+  const tier = getUserTier(user as any);
+  const limits = getTierLimits(tier);
   const chapterCount = await storage.getUserChapterCount(user.id);
+  const aiUsedToday = await getAiUsageToday(user.id);
+
   return res.json({
     subscriptionStatus: user.subscriptionStatus,
     subscriptionPlan: user.subscriptionPlan,
     subscriptionEndDate: user.subscriptionEndDate,
+    tier,
+    limits,
     chapterCount,
-    chapterLimit: FREE_TRIAL_MAX_CHAPTERS,
-    wordLimit: FREE_TRIAL_MAX_WORDS,
+    chapterLimit: limits.maxChaptersPerBook,
+    wordLimit: limits.maxWords,
+    aiUsedToday,
+    aiLimitToday: limits.maxAiCallsPerDay,
     isActive: isSubscriptionActive(user as any),
   });
 });
@@ -239,18 +249,42 @@ router.get("/api/paypal/config", (_req, res) => {
   return res.json({ enabled: true, clientId });
 });
 
-type PayPalPlan = "monthly" | "yearly_monthly" | "yearly_annual";
+import {
+  PRO_MONTHLY_CENTS, PRO_YEARLY_CENTS,
+  PREMIUM_MONTHLY_CENTS, PREMIUM_YEARLY_CENTS,
+} from "../../../../lib/db/src/schema";
+
+type PayPalPlan = "monthly" | "yearly_monthly" | "yearly_annual" | "pro_monthly" | "pro_yearly" | "premium_monthly" | "premium_yearly";
 
 function paypalPlanAmount(plan: PayPalPlan): string {
-  if (plan === "monthly")        return (SUBSCRIPTION_MONTHLY_CENTS / 100).toFixed(2);
-  if (plan === "yearly_monthly") return (SUBSCRIPTION_YEARLY_MONTHLY_CENTS / 100).toFixed(2);
-  return (SUBSCRIPTION_YEARLY_ANNUAL_CENTS / 100).toFixed(2);
+  switch (plan) {
+    case "pro_monthly":      return (PRO_MONTHLY_CENTS / 100).toFixed(2);
+    case "pro_yearly":       return (PRO_YEARLY_CENTS / 100).toFixed(2);
+    case "premium_monthly":  return (PREMIUM_MONTHLY_CENTS / 100).toFixed(2);
+    case "premium_yearly":   return (PREMIUM_YEARLY_CENTS / 100).toFixed(2);
+    // Legacy plans
+    case "monthly":          return (PRO_MONTHLY_CENTS / 100).toFixed(2);
+    case "yearly_monthly":   return (PRO_MONTHLY_CENTS / 100).toFixed(2);
+    case "yearly_annual":    return (PRO_YEARLY_CENTS / 100).toFixed(2);
+    default:                 return (PRO_MONTHLY_CENTS / 100).toFixed(2);
+  }
 }
 
 function paypalPlanDescription(plan: PayPalPlan): string {
-  if (plan === "monthly")        return "Plotzy Pro — Monthly Plan ($13/mo)";
-  if (plan === "yearly_monthly") return "Plotzy Pro — Yearly Plan, Monthly Billing ($10/mo)";
-  return "Plotzy Pro — Yearly Plan, Annual Billing ($99.99/yr)";
+  switch (plan) {
+    case "pro_monthly":      return "Plotzy Pro — Monthly ($9.99/mo)";
+    case "pro_yearly":       return "Plotzy Pro — Annual ($79.99/yr)";
+    case "premium_monthly":  return "Plotzy Premium — Monthly ($19.99/mo)";
+    case "premium_yearly":   return "Plotzy Premium — Annual ($159.99/yr)";
+    case "monthly":          return "Plotzy Pro — Monthly ($9.99/mo)";
+    case "yearly_monthly":   return "Plotzy Pro — Monthly ($9.99/mo)";
+    case "yearly_annual":    return "Plotzy Pro — Annual ($79.99/yr)";
+    default:                 return "Plotzy Pro — Monthly ($9.99/mo)";
+  }
+}
+
+function planToTier(plan: PayPalPlan): "pro" | "premium" {
+  return plan.startsWith("premium") ? "premium" : "pro";
 }
 
 // Create a PayPal order for a subscription plan
@@ -310,13 +344,14 @@ router.post("/api/paypal/capture-order", async (req, res) => {
     } else {
       endDate.setMonth(endDate.getMonth() + 1);
     }
-    const subscriptionPlan = plan === "monthly" ? "monthly" : "yearly";
+    const tier = planToTier(plan);
     await storage.updateUser(userId, {
       subscriptionStatus: "active",
-      subscriptionPlan,
+      subscriptionTier: tier,
+      subscriptionPlan: plan,
       subscriptionEndDate: endDate,
       paymentMethod: "paypal",
-    });
+    } as any);
     return res.json({ success: true });
   } catch (err) {
     console.error(err);

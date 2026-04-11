@@ -51,6 +51,41 @@ export const authLimiter = rateLimit({
 });
 
 // ---------------------------------------------------------------------------
+// Tier-based AI daily limit — checks subscription tier's daily AI allowance
+// This runs AFTER aiLimiter (which handles per-minute rate limiting)
+// ---------------------------------------------------------------------------
+import type { Request, Response, NextFunction } from "express";
+import { getUserTier, checkAiLimit, incrementAiUsage } from "../lib/tier-limits";
+import { storage } from "../storage";
+
+export async function tierAiLimiter(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const dbUser = await storage.getUserById(req.user.id);
+  if (!dbUser) return res.status(401).json({ message: "User not found" });
+
+  const tier = getUserTier(dbUser as any);
+  const { allowed, remaining, limit, used } = await checkAiLimit(req.user.id, tier);
+
+  if (!allowed) {
+    return res.status(429).json({
+      message: `Daily AI limit reached (${limit} calls/day on ${tier} plan). Upgrade for more.`,
+      code: "AI_DAILY_LIMIT",
+      tier,
+      limit,
+      used,
+      remaining: 0,
+    });
+  }
+
+  // Increment usage and attach info to request for downstream use
+  await incrementAiUsage(req.user.id);
+  (req as any).aiUsage = { tier, remaining: remaining - 1, limit, used: used + 1 };
+  next();
+}
+
+// ---------------------------------------------------------------------------
 // General API — generous but prevents bulk scraping
 //   200 requests per minute per user/IP
 // ---------------------------------------------------------------------------

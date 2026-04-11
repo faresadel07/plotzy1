@@ -13,7 +13,7 @@ import multer from "multer";
 import mammoth from "mammoth";
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable } from "../../../lib/db/src/schema";
 import { requireAdmin, requireBookOwner, requireChapterOwner, requireChildOwner } from "./middleware/auth";
-import { aiLimiter, imageGenLimiter } from "./middleware/rate-limit";
+import { aiLimiter, imageGenLimiter, tierAiLimiter } from "./middleware/rate-limit";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
@@ -300,7 +300,7 @@ export async function registerRoutes(
 
   // ─── Generate Book Front Cover (portrait) ──────────────────────────────────
 
-  app.post(api.books.generateCover.path, imageGenLimiter, async (req, res) => {
+  app.post(api.books.generateCover.path, imageGenLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { prompt, side } = api.books.generateCover.input.parse(req.body);
       const bookId = Number(req.params.id);
@@ -343,7 +343,7 @@ export async function registerRoutes(
 
   // ─── Marketplace AI Analysis ────────────────────────────────────────────────
 
-  app.post("/api/marketplace/analyze", aiLimiter, async (req, res) => {
+  app.post("/api/marketplace/analyze", aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { serviceId, text } = req.body as { serviceId: string; text: string };
       if (!text || text.trim().length < 30) {
@@ -414,7 +414,7 @@ export async function registerRoutes(
 
   // ─── Generate Book Blurb (multi-language) ──────────────────────────────────
 
-  app.post(api.books.generateBlurb.path, aiLimiter, async (req, res) => {
+  app.post(api.books.generateBlurb.path, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { language } = api.books.generateBlurb.input.parse(req.body);
       const bookId = Number(req.params.id);
@@ -940,7 +940,7 @@ export async function registerRoutes(
 
   const audioBodyParser = express.json({ limit: '50mb' });
 
-  app.post(api.chapters.voice.path, audioBodyParser, aiLimiter, async (req, res) => {
+  app.post(api.chapters.voice.path, audioBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { audio } = api.chapters.voice.input.parse(req.body);
       const bookId = Number(req.params.bookId);
@@ -987,7 +987,7 @@ export async function registerRoutes(
 
   // ─── Transcribe Audio (inline dictation for chapter editor) ────────────────
 
-  app.post("/api/transcribe", audioBodyParser, aiLimiter, async (req, res) => {
+  app.post("/api/transcribe", audioBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { audio, language } = z.object({
         audio: z.string(),
@@ -1011,7 +1011,7 @@ export async function registerRoutes(
 
   // ─── Generate Inline Image ─────────────────────────────────────────────────
 
-  app.post("/api/generate-image", imageGenLimiter, async (req, res) => {
+  app.post("/api/generate-image", imageGenLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { prompt } = z.object({ prompt: z.string().min(3) }).parse(req.body);
 
@@ -1250,7 +1250,7 @@ Return a strict JSON object with these two arrays.`;
 
   const largeBodyParser = express.json({ limit: '5mb' });
 
-  app.post(api.ai.improve.path, largeBodyParser, aiLimiter, async (req, res) => {
+  app.post(api.ai.improve.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.improve.input.parse(req.body);
       const langCode = language || "en";
@@ -1287,7 +1287,7 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
-  app.post(api.ai.expand.path, largeBodyParser, aiLimiter, async (req, res) => {
+  app.post(api.ai.expand.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { idea, language, bookId } = api.ai.expand.input.parse(req.body);
       const langCode = language || "en";
@@ -1324,7 +1324,7 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
-  app.post(api.ai.continueText.path, largeBodyParser, aiLimiter, async (req, res) => {
+  app.post(api.ai.continueText.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.continueText.input.parse(req.body);
       const langCode = language || "en";
@@ -1361,7 +1361,7 @@ Return a strict JSON object with these two arrays.`;
     }
   });
 
-  app.post(api.ai.showDontTell.path, largeBodyParser, aiLimiter, async (req, res) => {
+  app.post(api.ai.showDontTell.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language } = api.ai.showDontTell.input.parse(req.body);
       const langCode = language || "en";
@@ -1409,7 +1409,7 @@ Rules:
     }
   });
 
-  app.post(api.ai.translate.path, largeBodyParser, aiLimiter, async (req, res) => {
+  app.post(api.ai.translate.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, targetLanguage, bookId } = api.ai.translate.input.parse(req.body);
       const targetName = getLangName(targetLanguage);
@@ -1455,7 +1455,7 @@ Rules:
   }
 
   // Plot Hole Detector
-  app.post("/api/books/:bookId/ai/plot-holes", aiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/plot-holes", aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1486,7 +1486,7 @@ Return an empty array if no issues found. Focus on real narrative problems, not 
   });
 
   // Dialogue Coach
-  app.post("/api/books/:bookId/ai/dialogue-coach", aiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/dialogue-coach", aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1517,7 +1517,7 @@ Provide 2-4 specific suggestions with real examples from the text.`,
   });
 
   // Pacing Analyzer
-  app.post("/api/books/:bookId/ai/pacing", aiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/pacing", aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1554,7 +1554,7 @@ Cover all chapters. Give 2-3 recommendations.`,
   });
 
   // Character Voice Consistency
-  app.post("/api/books/:bookId/ai/voice-consistency", aiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/voice-consistency", aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1586,7 +1586,7 @@ List 2-5 main characters. Issues array can be empty if consistent.`,
 
   // ─── Publisher Proposal ────────────────────────────────────────────────────
 
-  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, aiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);

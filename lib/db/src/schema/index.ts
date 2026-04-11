@@ -19,8 +19,9 @@ export const users = pgTable("users", {
   twitterHandle: text("twitter_handle"),
   instagramHandle: text("instagram_handle"),
   // Subscription fields
+  subscriptionTier: text("subscription_tier").default("free").notNull(), // free | pro | premium
   subscriptionStatus: text("subscription_status").default("free_trial"), // free_trial | active | canceled | expired
-  subscriptionPlan: text("subscription_plan"), // monthly | yearly
+  subscriptionPlan: text("subscription_plan"), // monthly | yearly_monthly | yearly_annual
   subscriptionEndDate: timestamp("subscription_end_date"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
@@ -340,6 +341,15 @@ export const directMessages = pgTable("direct_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Daily AI Usage Tracking ───────────────────────────────────────────────
+
+export const dailyAiUsage = pgTable("daily_ai_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: text("date").notNull(), // YYYY-MM-DD
+  callCount: integer("call_count").notNull().default(0),
+});
+
 // ── Admin Analytics Tables ─────────────────────────────────────────────────
 
 export const apiLogs = pgTable("api_logs", {
@@ -412,9 +422,48 @@ export type Follow = typeof follows.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type DirectMessage = typeof directMessages.$inferSelect;
 
-// Subscription constants
-export const FREE_TRIAL_MAX_CHAPTERS = 3;
-export const FREE_TRIAL_MAX_WORDS = 3750; // 15 pages × 250 words/page
-export const SUBSCRIPTION_MONTHLY_CENTS = 1300;        // $13/month
-export const SUBSCRIPTION_YEARLY_MONTHLY_CENTS = 1000; // $10/month (yearly plan, billed monthly)
-export const SUBSCRIPTION_YEARLY_ANNUAL_CENTS = 9999;  // $99.99/year (yearly plan, billed annually)
+// ── Subscription Tiers ───────────────────────────────────────────────────
+//
+// FREE tier:  Limited access to test the platform
+// PRO tier:   Full writing platform for serious writers
+// PREMIUM:    Everything + unlimited AI + priority support
+//
+// Pricing based on AI-SaaS market analysis (Jasper $49/mo, Sudowrite $19/mo,
+// NovelAI $15/mo). Plotzy targets the $9-25 sweet spot for indie writers.
+//
+// Cost basis: OpenAI gpt-4o-mini ~$0.15/1K tokens, Neon ~$0.02/query,
+// ~$3-5/user/month at moderate AI usage.
+
+// ── Free Tier Limits ──
+export const FREE_MAX_BOOKS = 2;
+export const FREE_MAX_CHAPTERS_PER_BOOK = 3;
+export const FREE_MAX_WORDS = 5000;
+export const FREE_MAX_AI_CALLS_PER_DAY = 5;
+export const FREE_MAX_PUBLISHED_BOOKS = 1;
+
+// ── Pro Tier Limits ──
+export const PRO_MAX_BOOKS = 50;
+export const PRO_MAX_CHAPTERS_PER_BOOK = 100;
+export const PRO_MAX_WORDS = 500000;
+export const PRO_MAX_AI_CALLS_PER_DAY = 100;
+export const PRO_MAX_PUBLISHED_BOOKS = 20;
+
+// ── Premium Tier Limits (effectively unlimited) ──
+export const PREMIUM_MAX_BOOKS = 9999;
+export const PREMIUM_MAX_CHAPTERS_PER_BOOK = 9999;
+export const PREMIUM_MAX_WORDS = 99999999;
+export const PREMIUM_MAX_AI_CALLS_PER_DAY = 9999;
+export const PREMIUM_MAX_PUBLISHED_BOOKS = 9999;
+
+// ── Pricing (cents) ──
+export const PRO_MONTHLY_CENTS = 999;           // $9.99/month
+export const PRO_YEARLY_CENTS = 7999;            // $79.99/year ($6.67/mo - save 33%)
+export const PREMIUM_MONTHLY_CENTS = 1999;       // $19.99/month
+export const PREMIUM_YEARLY_CENTS = 15999;       // $159.99/year ($13.33/mo - save 33%)
+
+// Legacy constants (kept for backward compatibility)
+export const FREE_TRIAL_MAX_CHAPTERS = FREE_MAX_CHAPTERS_PER_BOOK;
+export const FREE_TRIAL_MAX_WORDS = FREE_MAX_WORDS;
+export const SUBSCRIPTION_MONTHLY_CENTS = PRO_MONTHLY_CENTS;
+export const SUBSCRIPTION_YEARLY_MONTHLY_CENTS = PRO_MONTHLY_CENTS;
+export const SUBSCRIPTION_YEARLY_ANNUAL_CENTS = PRO_YEARLY_CENTS;

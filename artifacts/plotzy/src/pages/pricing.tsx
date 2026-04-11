@@ -1,44 +1,55 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
 import { PayPalCheckout, PayPalPlan } from "@/components/paypal-button";
 import NumberFlow from "@number-flow/react";
 
+/* ── Design tokens ── */
+const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
+const BG = "#000";
+const C2 = "#111";
+const C3 = "#1a1a1a";
+const B = "rgba(255,255,255,0.07)";
+const T = "#fff";
+const TS = "rgba(255,255,255,0.55)";
+const TD = "rgba(255,255,255,0.25)";
+
+/* ── Feature lists ── */
 const FEATURES_FREE = [
-  "1 chapter to start writing",
-  "Up to 3,750 words (15 pages)",
-  "Inline AI ghost-text suggestions",
-  "Book cover designer",
-  "45+ languages & RTL support",
+  "2 books, 3 chapters per book",
+  "5,000 words total",
+  "5 AI assists per day",
+  "1 published book",
+  "Basic cover designer",
+  "Community library access",
+  "Ambient sounds",
 ];
 
-const FEATURES_PRO_TOP = [
-  "Unlimited books & chapters",
-  "Unlimited words & pages",
-  "Full AI suite: Polish, Expand, Continue & Rewrite",
-  "Voice dictation & transcription",
-  "Version history & auto-snapshots",
-  "AI cover generator: front, back & spine",
-  "Story Bible: characters, world & plot notes",
-];
-
-const FEATURES_PRO_MORE = [
-  "Writing streaks, calendar & analytics",
-  "PDF & EPUB professional export",
-  "AI Marketplace: editing, proofreading & marketing kits",
-  "Community library publishing & ARC distribution",
-  "Priority support",
-];
-
-const LOCKED_FREE = [
-  "Unlimited books & chapters",
-  "Full AI suite",
+const FEATURES_PRO = [
+  "50 books, 100 chapters per book",
+  "500,000 words",
+  "100 AI assists per day",
+  "20 published books",
+  "PDF & EPUB export",
+  "Audiobook studio",
+  "AI analysis tools (plot holes, pacing, voice)",
   "Version history",
+  "Marketplace access",
 ];
 
+const FEATURES_PREMIUM = [
+  "Everything in Pro",
+  "Unlimited books, chapters & words",
+  "Unlimited AI assists",
+  "Unlimited publishing",
+  "Priority support",
+  "Early access to new features",
+];
+
+/* ── FAQ ── */
 const FAQ = [
   ["Can I cancel anytime?", "Yes — cancel from your account settings at any time. You keep access until the end of your billing period."],
   ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and PayPal — all handled securely."],
@@ -47,94 +58,129 @@ const FAQ = [
 ];
 
 type BillingCycle = "monthly" | "yearly";
-type YearlyBilling = "monthly" | "annual";
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
-  const [yearlyBilling, setYearlyBilling] = useState<YearlyBilling>("monthly");
-  const [showMore, setShowMore] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  const activePlan: PayPalPlan =
-    billingCycle === "monthly"
-      ? "monthly"
-      : yearlyBilling === "annual"
-        ? "yearly_annual"
-        : "yearly_monthly";
+  const isYearly = billingCycle === "yearly";
 
-  const proPrice =
-    billingCycle === "monthly" ? 13 :
-    yearlyBilling === "annual" ? 99.99 : 10;
+  const proPrice = isYearly ? 79.99 : 9.99;
+  const proPriceSuffix = isYearly ? "/yr" : "/mo";
+  const proLabel = isYearly ? "Billed $79.99 per year" : "Billed $9.99 every month";
+  const proPlan: PayPalPlan = isYearly ? "pro_yearly" : "pro_monthly";
 
-  const priceSuffix = yearlyBilling === "annual" && billingCycle === "yearly" ? "/yr" : "/mo";
-  const billingLabel =
-    billingCycle === "monthly"
-      ? "Billed $13 every month"
-      : yearlyBilling === "monthly"
-        ? "Billed $10/month · Cancel anytime"
-        : "Billed $99.99 once · Full year";
+  const premiumPrice = isYearly ? 159.99 : 19.99;
+  const premiumPriceSuffix = isYearly ? "/yr" : "/mo";
+  const premiumLabel = isYearly ? "Billed $159.99 per year" : "Billed $19.99 every month";
+  const premiumPlan: PayPalPlan = isYearly ? "premium_yearly" : "premium_monthly";
+
+  /* ── Shared styles ── */
+  const cardBase: React.CSSProperties = {
+    fontFamily: SF,
+    background: C2,
+    border: `1px solid ${B}`,
+    borderRadius: 18,
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  };
+
+  const checkIcon = (highlight: boolean) => (
+    <div
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: "50%",
+        background: highlight ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
+      <Check style={{ width: 11, height: 11, color: highlight ? T : TS }} />
+    </div>
+  );
+
+  const featureRow = (text: string, highlight: boolean) => (
+    <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      {checkIcon(highlight)}
+      <span style={{ fontSize: 13, color: highlight ? "rgba(255,255,255,0.85)" : TS }}>{text}</span>
+    </div>
+  );
 
   return (
-    <Layout isLanding>
-      <div style={{ backgroundColor: "#080808", minHeight: "100vh", color: "#fff" }}>
-        <div className="max-w-4xl mx-auto px-5" style={{ paddingTop: 40, paddingBottom: 48 }}>
+    <Layout isLanding darkNav>
+      <div style={{ backgroundColor: BG, minHeight: "100vh", color: T, fontFamily: SF }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px 48px" }}>
 
           {/* ── Header ── */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-center"
-            style={{ marginBottom: 28 }}
+            style={{ textAlign: "center", marginBottom: 28 }}
           >
-            <h1
-              className="font-bold tracking-tight"
-              style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", lineHeight: 1.1, marginBottom: 10 }}
-            >
+            <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 700, lineHeight: 1.1, marginBottom: 10, letterSpacing: "-0.02em" }}>
               Simple, honest pricing
             </h1>
-            <p style={{ color: "#555", fontSize: 14, maxWidth: 340, margin: "0 auto" }}>
+            <p style={{ color: TS, fontSize: 14, maxWidth: 380, margin: "0 auto" }}>
               Start free. Upgrade when you're ready to write without limits.
             </p>
           </motion.div>
 
           {/* ── Billing toggle ── */}
-          <div className="flex justify-center" style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex p-1 rounded-full gap-1"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{
+                display: "flex",
+                padding: 4,
+                borderRadius: 100,
+                gap: 4,
+                background: "rgba(255,255,255,0.04)",
+                border: `1px solid rgba(255,255,255,0.08)`,
+              }}
             >
               {(["monthly", "yearly"] as BillingCycle[]).map(cycle => (
                 <button
                   key={cycle}
                   onClick={() => setBillingCycle(cycle)}
-                  className="relative px-5 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2"
-                  style={{ color: billingCycle === cycle ? "#111" : "#4a4a4a" }}
+                  style={{
+                    position: "relative",
+                    padding: "8px 20px",
+                    borderRadius: 100,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    fontFamily: SF,
+                    color: billingCycle === cycle ? "#111" : TS,
+                    background: billingCycle === cycle ? "#efefef" : "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    transition: "color 0.2s",
+                  }}
                 >
-                  {billingCycle === cycle && (
-                    <motion.div
-                      layoutId="billing-pill"
-                      className="absolute inset-0 rounded-full"
-                      style={{ background: "#efefef" }}
-                      transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                    />
-                  )}
-                  <span className="relative z-10 capitalize">{cycle}</span>
+                  <span style={{ textTransform: "capitalize" }}>{cycle}</span>
                   {cycle === "yearly" && (
                     <span
-                      className="relative z-10 text-[10px] px-2 py-0.5 rounded-full font-bold"
                       style={{
-                        background: billingCycle === "yearly" ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.06)",
-                        color: billingCycle === "yearly" ? "#333" : "#444",
-                        border: billingCycle === "yearly" ? "none" : "1px solid rgba(255,255,255,0.1)",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 100,
+                        background: billingCycle === "yearly" ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.06)",
+                        color: billingCycle === "yearly" ? "#333" : TS,
                       }}
                     >
-                      Save 23%
+                      Save 33%
                     </span>
                   )}
                 </button>
@@ -142,105 +188,99 @@ export default function Pricing() {
             </motion.div>
           </div>
 
-          {/* ── Cards ── */}
-          <div className="grid md:grid-cols-2 gap-4 items-start">
+          {/* ── Cards grid ── */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+              alignItems: "start",
+            }}
+          >
 
-            {/* Free */}
+            {/* ── Free ── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="rounded-2xl overflow-hidden flex flex-col"
-              style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}
+              style={cardBase}
             >
               <div style={{ padding: "24px 24px 20px" }}>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#444", textTransform: "uppercase", marginBottom: 14 }}>
-                  Free Trial
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TD, textTransform: "uppercase", marginBottom: 14 }}>
+                  Free
                 </p>
-                <p className="font-bold" style={{ fontSize: 48, lineHeight: 1, marginBottom: 4, color: "#fff" }}>$0</p>
-                <p style={{ fontSize: 13, color: "#3d3d3d", marginBottom: 20 }}>No credit card needed</p>
+                <p style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, marginBottom: 4, color: T }}>$0</p>
+                <p style={{ fontSize: 13, color: TD, marginBottom: 20 }}>No credit card needed</p>
                 <button
-                  disabled
-                  className="w-full rounded-xl font-medium"
+                  onClick={() => navigate("/signup")}
                   style={{
-                    padding: "10px 0",
-                    fontSize: 13,
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "#2e2e2e",
-                    cursor: "not-allowed",
+                    width: "100%",
+                    padding: "12px 0",
+                    borderRadius: 12,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    fontFamily: SF,
+                    background: "rgba(255,255,255,0.06)",
+                    border: `1px solid ${B}`,
+                    color: TS,
+                    cursor: "pointer",
+                    transition: "background 0.2s",
                   }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                 >
-                  Current plan
+                  Get Started
                 </button>
               </div>
 
-              <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
+              <div style={{ height: 1, background: B }} />
 
               <div style={{ padding: "20px 24px 24px" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: "#3a3a3a", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
                   Included
                 </p>
-                <div className="flex flex-col" style={{ gap: 10 }}>
-                  {FEATURES_FREE.map(f => (
-                    <div key={f} className="flex items-center" style={{ gap: 10 }}>
-                      <div className="flex items-center justify-center rounded-full shrink-0"
-                        style={{ width: 20, height: 20, background: "rgba(255,255,255,0.06)" }}>
-                        <Check style={{ width: 11, height: 11, color: "#555" }} />
-                      </div>
-                      <span style={{ fontSize: 13, color: "#4a4a4a" }}>{f}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "16px 0" }} />
-
-                <p style={{ fontSize: 11, fontWeight: 600, color: "#2a2a2a", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-                  Not included
-                </p>
-                <div className="flex flex-col" style={{ gap: 10 }}>
-                  {LOCKED_FREE.map(f => (
-                    <div key={f} className="flex items-center" style={{ gap: 10 }}>
-                      <div className="flex items-center justify-center rounded-full shrink-0"
-                        style={{ width: 20, height: 20, background: "rgba(255,255,255,0.03)" }}>
-                        <X style={{ width: 11, height: 11, color: "#2d2d2d" }} />
-                      </div>
-                      <span style={{ fontSize: 13, color: "#2d2d2d" }}>{f}</span>
-                    </div>
-                  ))}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {FEATURES_FREE.map(f => featureRow(f, false))}
                 </div>
               </div>
             </motion.div>
 
-            {/* Pro — gradient border wrapper */}
+            {/* ── Pro (Most Popular) ── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22 }}
-              className="relative"
-              style={{ borderRadius: 18, padding: 1.5, background: "linear-gradient(145deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.10) 100%)" }}
+              style={{
+                borderRadius: 18,
+                padding: 1.5,
+                background: "linear-gradient(145deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.15) 100%)",
+              }}
             >
-              {/* inner card */}
               <div
-                className="relative flex flex-col overflow-hidden"
-                style={{ borderRadius: 17, background: "#111111" }}
+                style={{
+                  ...cardBase,
+                  border: "none",
+                  borderRadius: 17,
+                  position: "relative",
+                }}
               >
                 {/* Radial glow */}
                 <div
-                  className="absolute inset-0 pointer-events-none"
                   style={{
+                    position: "absolute",
+                    inset: 0,
+                    pointerEvents: "none",
                     background: "radial-gradient(ellipse at 60% -10%, rgba(255,255,255,0.06) 0%, transparent 60%)",
+                    borderRadius: 17,
                   }}
                 />
 
-                <div className="relative" style={{ padding: "24px 24px 20px" }}>
-                  {/* Header row: label + badge */}
-                  <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#666", textTransform: "uppercase" }}>
+                <div style={{ padding: "24px 24px 20px", position: "relative" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TS, textTransform: "uppercase" }}>
                       Pro
                     </p>
                     <span
-                      className="flex items-center"
                       style={{
                         fontSize: 10,
                         fontWeight: 700,
@@ -249,157 +289,152 @@ export default function Pricing() {
                         background: "#efefef",
                         padding: "4px 10px",
                         borderRadius: 100,
-                        gap: 5,
                       }}
                     >
                       ✦ Most Popular
                     </span>
                   </div>
 
-                  {/* Price */}
-                  <div className="flex items-end" style={{ gap: 4, marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                     <NumberFlow
                       value={proPrice}
                       prefix="$"
-                      suffix={priceSuffix}
-                      className="font-bold"
-                      style={{ fontSize: 48, lineHeight: 1, color: "#fff" }}
-                      format={{
-                        minimumFractionDigits: proPrice % 1 === 0 ? 0 : 2,
-                        maximumFractionDigits: 2,
-                      }}
+                      style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: T }}
+                      format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
                     />
+                    <span style={{ fontSize: 16, color: TS }}>{proPriceSuffix}</span>
                   </div>
 
-                  {/* Yearly billing sub-toggle */}
-                  <AnimatePresence>
-                    {billingCycle === "yearly" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                        style={{ marginTop: 12 }}
-                      >
-                        <div
-                          className="flex overflow-hidden"
-                          style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.09)" }}
-                        >
-                          {(["monthly", "annual"] as YearlyBilling[]).map(yb => (
-                            <button
-                              key={yb}
-                              onClick={() => setYearlyBilling(yb)}
-                              className="flex-1 flex items-center justify-center transition-all"
-                              style={{
-                                padding: "9px 4px",
-                                fontSize: 12,
-                                fontWeight: 600,
-                                gap: 6,
-                                background: yearlyBilling === yb ? "rgba(255,255,255,0.1)" : "transparent",
-                                color: yearlyBilling === yb ? "#fff" : "#444",
-                              }}
-                            >
-                              {yb === "monthly" ? "Pay $10/month" : "Pay $99.99/year"}
-                              {yb === "annual" && (
-                                <span style={{
-                                  fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99,
-                                  background: yearlyBilling === "annual" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
-                                  color: yearlyBilling === "annual" ? "#fff" : "#3a3a3a",
-                                }}>Save $20</span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {isYearly && (
+                    <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
+                      $6.67/mo — Save 33%
+                    </p>
+                  )}
 
-                  {/* CTA */}
-                  <div style={{ marginTop: 16 }}>
+                  <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{proLabel}</p>
+
+                  <div style={{ marginTop: 4 }}>
                     {user ? (
-                      <PayPalCheckout plan={activePlan} onSuccess={() => navigate("/")} />
+                      <PayPalCheckout plan={proPlan} onSuccess={() => navigate("/")} />
                     ) : (
                       <button
                         onClick={() => navigate("/?auth=required")}
-                        className="w-full rounded-xl font-semibold transition-opacity hover:opacity-90"
-                        style={{ padding: "12px 0", fontSize: 14, background: "#efefef", color: "#111" }}
+                        style={{
+                          width: "100%",
+                          padding: "12px 0",
+                          borderRadius: 12,
+                          fontSize: 14,
+                          fontWeight: 600,
+                          fontFamily: SF,
+                          background: "#efefef",
+                          color: "#111",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "opacity 0.2s",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = "0.9")}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                       >
                         Get started
                       </button>
                     )}
                   </div>
-
-                  {/* Billing label */}
-                  <div style={{ height: 20, overflow: "hidden", marginTop: 8 }}>
-                    <AnimatePresence mode="wait">
-                      <motion.p
-                        key={billingLabel}
-                        initial={{ y: 12, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -12, opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        style={{ textAlign: "center", fontSize: 12, color: "#3a3a3a" }}
-                      >
-                        {billingLabel}
-                      </motion.p>
-                    </AnimatePresence>
-                  </div>
                 </div>
 
-                <div style={{ height: 1, background: "rgba(255,255,255,0.07)" }} />
+                <div style={{ height: 1, background: B }} />
 
-                <div className="relative" style={{ padding: "20px 24px 24px" }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                <div style={{ padding: "20px 24px 24px", position: "relative" }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: TS, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
                     Everything in Free, plus
                   </p>
-                  <div className="flex flex-col" style={{ gap: 10 }}>
-                    {FEATURES_PRO_TOP.map(f => (
-                      <div key={f} className="flex items-center" style={{ gap: 10 }}>
-                        <div className="flex items-center justify-center rounded-full shrink-0"
-                          style={{ width: 20, height: 20, background: "rgba(255,255,255,0.09)" }}>
-                          <Check style={{ width: 11, height: 11, color: "#ccc" }} />
-                        </div>
-                        <span style={{ fontSize: 13, color: "#ccc" }}>{f}</span>
-                      </div>
-                    ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {FEATURES_PRO.map(f => featureRow(f, true))}
                   </div>
+                </div>
+              </div>
+            </motion.div>
 
-                  {/* Expandable extras */}
-                  <AnimatePresence>
-                    {showMore && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex flex-col" style={{ gap: 10, marginTop: 10 }}>
-                          {FEATURES_PRO_MORE.map(f => (
-                            <div key={f} className="flex items-center" style={{ gap: 10 }}>
-                              <div className="flex items-center justify-center rounded-full shrink-0"
-                                style={{ width: 20, height: 20, background: "rgba(255,255,255,0.09)" }}>
-                                <Check style={{ width: 11, height: 11, color: "#ccc" }} />
-                              </div>
-                              <span style={{ fontSize: 13, color: "#ccc" }}>{f}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+            {/* ── Premium ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.29 }}
+              style={{
+                ...cardBase,
+                position: "relative",
+                boxShadow: "0 0 40px rgba(255,255,255,0.03), 0 0 80px rgba(255,255,255,0.02)",
+              }}
+            >
+              {/* Subtle glow overlay */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  borderRadius: 18,
+                  background: "radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.04) 0%, transparent 70%)",
+                }}
+              />
 
-                  <button
-                    onClick={() => setShowMore(v => !v)}
-                    className="flex items-center transition-colors"
-                    style={{ gap: 5, marginTop: 14, fontSize: 12, color: "#444", cursor: "pointer" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "#888")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "#444")}
-                  >
-                    <motion.div animate={{ rotate: showMore ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown style={{ width: 13, height: 13 }} />
-                    </motion.div>
-                    {showMore ? "Show less" : `+${FEATURES_PRO_MORE.length} more features`}
-                  </button>
+              <div style={{ padding: "24px 24px 20px", position: "relative" }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TD, textTransform: "uppercase", marginBottom: 14 }}>
+                  Premium
+                </p>
+
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                  <NumberFlow
+                    value={premiumPrice}
+                    prefix="$"
+                    style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: T }}
+                    format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+                  />
+                  <span style={{ fontSize: 16, color: TS }}>{premiumPriceSuffix}</span>
+                </div>
+
+                {isYearly && (
+                  <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
+                    $13.33/mo — Save 33%
+                  </p>
+                )}
+
+                <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{premiumLabel}</p>
+
+                <div style={{ marginTop: 4 }}>
+                  {user ? (
+                    <PayPalCheckout plan={premiumPlan} onSuccess={() => navigate("/")} />
+                  ) : (
+                    <button
+                      onClick={() => navigate("/?auth=required")}
+                      style={{
+                        width: "100%",
+                        padding: "12px 0",
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        fontFamily: SF,
+                        background: "rgba(255,255,255,0.08)",
+                        border: `1px solid rgba(255,255,255,0.12)`,
+                        color: T,
+                        cursor: "pointer",
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+                    >
+                      Get started
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ height: 1, background: B }} />
+
+              <div style={{ padding: "20px 24px 24px", position: "relative" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                  Includes
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {FEATURES_PREMIUM.map(f => featureRow(f, true))}
                 </div>
               </div>
             </motion.div>
@@ -407,13 +442,23 @@ export default function Pricing() {
           </div>
 
           {/* ── FAQ ── */}
-          <div className="text-center" style={{ marginTop: 28 }}>
+          <div style={{ textAlign: "center", marginTop: 40 }}>
             <button
               onClick={() => setShowFaq(v => !v)}
-              className="inline-flex items-center transition-colors"
-              style={{ gap: 5, fontSize: 12, color: "#333", cursor: "pointer" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#666")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#333")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: 12,
+                color: TD,
+                cursor: "pointer",
+                background: "none",
+                border: "none",
+                fontFamily: SF,
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = TS)}
+              onMouseLeave={e => (e.currentTarget.style.color = TD)}
             >
               <motion.div animate={{ rotate: showFaq ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown style={{ width: 13, height: 13 }} />
@@ -428,17 +473,28 @@ export default function Pricing() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
+                style={{ overflow: "hidden" }}
               >
-                <div className="grid md:grid-cols-2 gap-3" style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: 12,
+                    marginTop: 16,
+                  }}
+                >
                   {FAQ.map(([q, a]) => (
-                    <div key={q} style={{
-                      borderRadius: 14, padding: "16px 18px",
-                      background: "rgba(255,255,255,0.025)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}>
-                      <p style={{ fontWeight: 600, color: "#ccc", marginBottom: 6, fontSize: 13 }}>{q}</p>
-                      <p style={{ color: "#444", fontSize: 12, lineHeight: 1.7 }}>{a}</p>
+                    <div
+                      key={q}
+                      style={{
+                        borderRadius: 14,
+                        padding: "16px 18px",
+                        background: C3,
+                        border: `1px solid ${B}`,
+                      }}
+                    >
+                      <p style={{ fontWeight: 600, color: "rgba(255,255,255,0.85)", marginBottom: 6, fontSize: 13 }}>{q}</p>
+                      <p style={{ color: TS, fontSize: 12, lineHeight: 1.7 }}>{a}</p>
                     </div>
                   ))}
                 </div>
