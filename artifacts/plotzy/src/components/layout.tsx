@@ -570,23 +570,24 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
             {/* Write */}
             <FooterCol title="Write" links={[
-              { label: 'Dashboard', href: '/' },
-              { label: 'Writing Guide', href: '/writing-guide' },
-              { label: 'Marketplace', href: '/marketplace' },
-              { label: 'Pricing', href: '/pricing' },
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'AI Marketplace', href: '/marketplace' },
+              { label: 'Cover Designer', href: '/' },
+              { label: 'Pricing & Plans', href: '/pricing' },
             ]} />
 
             {/* Read & Explore */}
             <FooterCol title="Read & Explore" links={[
-              { label: 'Public Domain Books', href: '/discover' },
               { label: 'Community Library', href: '/library' },
-              { label: 'Browse Authors', href: '/library' },
+              { label: 'Public Domain Books', href: '/discover' },
+              { label: 'Messages', href: '/messages' },
             ]} />
 
-            {/* Resources */}
-            <FooterCol title="Resources" links={[
-              { label: 'Support Center', href: '/support' },
+            {/* Learn */}
+            <FooterCol title="Learn" links={[
               { label: 'Writing Guide', href: '/writing-guide' },
+              { label: 'Tutorial Videos', href: '/tutorial' },
+              { label: 'Support Center', href: '/support' },
             ]} />
 
             {/* Legal */}
