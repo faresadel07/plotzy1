@@ -162,7 +162,12 @@ router.patch("/api/auth/avatar", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    const { avatarUrl } = z.object({ avatarUrl: z.string().max(10_000_000) }).parse(req.body);
+    const { avatarUrl } = z.object({
+      avatarUrl: z.string().max(10_000_000).refine(
+        (v: string) => v.startsWith("data:image/") || v.startsWith("http"),
+        { message: "Must be a valid image" }
+      ),
+    }).parse(req.body);
     const updated = await storage.updateUser(req.user.id, { avatarUrl });
     const { passwordHash: _ph, ...safe } = updated as any;
     return res.json(safe);

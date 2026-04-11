@@ -260,12 +260,18 @@ export default function DashboardDemo() {
               <ActionButton
                 icon={<PenTool style={{ width: 16, height: 16 }} />}
                 label="Write a new chapter"
-                onClick={() => navigate("/")}
+                onClick={() => {
+                  const latest = books?.[0];
+                  navigate(latest ? `/books/${latest.id}` : "/");
+                }}
               />
               <ActionButton
                 icon={<Send style={{ width: 16, height: 16 }} />}
                 label="Publish a book"
-                onClick={() => navigate("/")}
+                onClick={() => {
+                  const latest = books?.[0];
+                  navigate(latest ? `/books/${latest.id}` : "/");
+                }}
               />
               <ActionButton
                 icon={<Library style={{ width: 16, height: 16 }} />}

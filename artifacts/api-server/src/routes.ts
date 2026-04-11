@@ -125,6 +125,10 @@ export async function registerRoutes(
   app.post(api.books.create.path, async (req, res) => {
     try {
       const input = api.books.create.input.parse(req.body);
+      if (!input.title || !input.title.trim()) {
+        return res.status(400).json({ message: "Book title is required" });
+      }
+      input.title = input.title.trim();
       if (req.user) input.userId = (req.user as any).id;
       const book = await storage.createBook(input);
       // Track guest books in session so they can be claimed on login

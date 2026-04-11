@@ -188,7 +188,9 @@ router.post("/api/admin/flags", async (req, res) => {
 // List flagged content
 router.get("/api/admin/flags", async (req, res) => {
   try {
-    const status = (req.query.status as string) || "pending";
+    const validStatuses = ["pending", "approved", "rejected"];
+    const rawStatus = (req.query.status as string) || "pending";
+    const status = validStatuses.includes(rawStatus) ? rawStatus : "pending";
     const rows = await db.execute(sql`
       SELECT cf.*, b.title as book_title, b.user_id as author_id, u.display_name as author_name
       FROM content_flags cf
