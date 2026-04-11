@@ -21,7 +21,7 @@ const TD = "rgba(255,255,255,0.25)";
 const FEATURES_FREE = [
   "2 books, 3 chapters per book",
   "5,000 words total",
-  "5 AI assists per day",
+  "10 AI assists per day",
   "1 published book",
   "Basic cover designer",
   "Community library access",
@@ -44,7 +44,7 @@ const FEATURES_PRO = [
 const FEATURES_PREMIUM = [
   "Everything in Pro",
   "Unlimited books, chapters & words",
-  "Unlimited AI assists",
+  "500 AI assists per day",
   "Unlimited publishing",
   "9 AI Marketplace analyses per month",
   "Priority support",

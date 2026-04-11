@@ -456,7 +456,7 @@ export type DirectMessage = typeof directMessages.$inferSelect;
 export const FREE_MAX_BOOKS = 2;
 export const FREE_MAX_CHAPTERS_PER_BOOK = 3;
 export const FREE_MAX_WORDS = 5000;
-export const FREE_MAX_AI_CALLS_PER_DAY = 5;
+export const FREE_MAX_AI_CALLS_PER_DAY = 10;
 export const FREE_MAX_PUBLISHED_BOOKS = 1;
 
 // ── Pro Tier Limits ──
@@ -470,7 +470,7 @@ export const PRO_MAX_PUBLISHED_BOOKS = 20;
 export const PREMIUM_MAX_BOOKS = 9999;
 export const PREMIUM_MAX_CHAPTERS_PER_BOOK = 9999;
 export const PREMIUM_MAX_WORDS = 99999999;
-export const PREMIUM_MAX_AI_CALLS_PER_DAY = 9999;
+export const PREMIUM_MAX_AI_CALLS_PER_DAY = 500;
 export const PREMIUM_MAX_PUBLISHED_BOOKS = 9999;
 
 // ── Pricing (cents) ──
