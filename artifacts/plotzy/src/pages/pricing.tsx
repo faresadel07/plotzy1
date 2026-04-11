@@ -212,7 +212,7 @@ export default function Pricing() {
                 <p style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, marginBottom: 4, color: T }}>$0</p>
                 <p style={{ fontSize: 13, color: TD, marginBottom: 20 }}>No credit card needed</p>
                 <button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/")}
                   style={{
                     width: "100%",
                     padding: "12px 0",

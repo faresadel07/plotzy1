@@ -399,6 +399,12 @@ export class DatabaseStorage implements IStorage {
   // ─── Publishing ────────────────────────────────────────────────────────────
 
   async publishBook(id: number, publish: boolean): Promise<Book> {
+    if (publish) {
+      const bookChapters = await this.getChapters(id);
+      if (bookChapters.length === 0) {
+        throw new Error("EMPTY_BOOK");
+      }
+    }
     const [book] = await db
       .update(books)
       .set({
@@ -650,6 +656,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: number): Promise<void> {
+    // Clean up books owned by this user
+    await db.update(books).set({ userId: null } as any).where(eq(books.userId, id));
     await db.delete(users).where(eq(users.id, id));
   }
 

@@ -231,6 +231,7 @@ function UsersTab() {
   const deleteUser = useMutation({
     mutationFn: (id: number) => fetch(`/api/admin/users/${id}`, { method: "DELETE", credentials: "include" }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); qc.invalidateQueries({ queryKey: ["/api/admin/stats"] }); toast({ title: "User deleted" }); },
+    onError: () => toast({ title: "Failed to delete user", variant: "destructive" }),
   });
 
   const suspendUser = useMutation({
@@ -241,6 +242,7 @@ function UsersTab() {
         body: JSON.stringify({ suspended }),
       }).then(r => r.json()),
     onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); toast({ title: v.suspended ? "User suspended" : "User unsuspended" }); },
+    onError: () => toast({ title: "Failed to update user", variant: "destructive" }),
   });
 
   const grantSub = useMutation({
@@ -255,6 +257,7 @@ function UsersTab() {
       }).then(r => r.json());
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); setGrantModal(null); toast({ title: "Subscription granted" }); },
+    onError: () => toast({ title: "Failed to grant subscription", variant: "destructive" }),
   });
 
   const revokeSub = useMutation({
@@ -265,6 +268,7 @@ function UsersTab() {
       body: JSON.stringify({ subscriptionStatus: null, subscriptionPlan: null, subscriptionEndDate: null }),
     }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); toast({ title: "Subscription revoked" }); },
+    onError: () => toast({ title: "Failed to revoke subscription", variant: "destructive" }),
   });
 
   const filtered = users.filter(u => {
@@ -448,11 +452,13 @@ function BannerTab() {
       body: JSON.stringify({ message, color }),
     }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/banner"] }); toast({ title: "Banner published!" }); setMessage(""); },
+    onError: () => toast({ title: "Failed to publish banner", variant: "destructive" }),
   });
 
   const removeBanner = useMutation({
     mutationFn: () => fetch("/api/admin/banner", { method: "DELETE", credentials: "include" }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/banner"] }); toast({ title: "Banner removed" }); },
+    onError: () => toast({ title: "Failed to remove banner", variant: "destructive" }),
   });
 
   const COLORS = [
@@ -554,6 +560,7 @@ function BooksTab() {
   const deleteBook = useMutation({
     mutationFn: (id: number) => fetch(`/api/admin/books/${id}`, { method: "DELETE" }).then(r => r.json()),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/public/books"] }); qc.invalidateQueries({ queryKey: ["/api/admin/stats"] }); toast({ title: "Book deleted" }); },
+    onError: () => toast({ title: "Failed to delete book", variant: "destructive" }),
   });
 
   if (isLoading) return <Spinner />;

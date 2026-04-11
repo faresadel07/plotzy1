@@ -1,8 +1,8 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ChevronDown, Search, Send, CheckCircle2, Clock, Zap,
   BookOpen, CreditCard, Shield, Cpu, Settings, Users,
@@ -10,7 +10,7 @@ import {
   Globe, Lock, ChevronRight, Circle,
 } from "lucide-react";
 
-const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif";
+const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
 /* ─── FAQ Data ─── */
 const FAQ_CATEGORIES = [
@@ -124,16 +124,8 @@ const CONTACT_PRIORITIES = [
   { value: "urgent", label: "Urgent", desc: "Complete data loss",    time: "< 2h"  },
 ];
 
-const QUICK_LINKS = [
-  { icon: BookOpen,   label: "Getting Started Guide",  href: "/writing-guide", desc: "Your first steps with Plotzy"    },
-  { icon: Cpu,        label: "AI Assistant Docs",       href: "/writing-guide", desc: "Make the most of AI features"   },
-  { icon: FileText,   label: "Cover Designer Help",     href: "/writing-guide", desc: "Create stunning book covers"    },
-  { icon: CreditCard, label: "Billing & Plans",         href: "/pricing",       desc: "Pricing, refunds, and upgrades" },
-  { icon: Globe,      label: "Public Domain Library",   href: "/gutenberg",     desc: "3.6M+ free books to read"       },
-  { icon: Users,      label: "Community Hub",           href: "/library",       desc: "Connect with other authors"     },
-];
-
 /* ─── Sub-components ─── */
+
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
@@ -141,10 +133,10 @@ function FAQItem({ q, a }: { q: string; a: string }) {
       style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}
       onClick={() => setOpen(o => !o)}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", gap: 16 }}>
         <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.88)", lineHeight: 1.5, flex: 1 }}>{q}</span>
         <ChevronDown
-          size={16}
+          size={15}
           style={{
             color: "rgba(255,255,255,0.3)",
             flexShrink: 0,
@@ -156,7 +148,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
       {open && (
         <div style={{
           fontFamily: SF, fontSize: 13.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.8,
-          paddingBottom: 18, paddingRight: 28,
+          paddingBottom: 16, paddingRight: 28,
         }}>
           {a}
         </div>
@@ -165,15 +157,37 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+type Tab = "faq" | "contact" | "tickets";
+
+const TABS: { id: Tab; label: string; icon: typeof HelpCircle }[] = [
+  { id: "faq", label: "FAQ", icon: HelpCircle },
+  { id: "contact", label: "Contact", icon: MessageSquare },
+  { id: "tickets", label: "My Tickets", icon: FileText },
+];
+
+const PRIORITY_COLORS: Record<string, string> = {
+  low: "#6b7280",
+  normal: "#3b82f6",
+  high: "#f59e0b",
+  urgent: "#ef4444",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  open: "#4ade80",
+  closed: "#6b7280",
+  pending: "#f59e0b",
+};
+
 /* ─── Main ─── */
 export default function SupportPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [searchQuery, setSearchQuery]   = useState("");
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [submitted, setSubmitted]       = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("faq");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("getting-started");
+  const [submitted, setSubmitted] = useState(false);
 
   const [form, setForm] = useState({
     name:     (user as any)?.displayName || (user as any)?.username || "",
@@ -183,6 +197,17 @@ export default function SupportPage() {
     category: "general",
     priority: "normal",
   });
+
+  // Auto-fill when user loads
+  useEffect(() => {
+    if (user) {
+      setForm(f => ({
+        ...f,
+        name: (user as any)?.displayName || (user as any)?.username || f.name,
+        email: (user as any)?.email || f.email,
+      }));
+    }
+  }, [user]);
 
   const filteredCategories = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -198,7 +223,21 @@ export default function SupportPage() {
       .filter(cat => cat.questions.length > 0);
   }, [searchQuery, activeCategory]);
 
-  const totalResults = filteredCategories.reduce((acc, c) => acc + c.questions.length, 0);
+  // When searching, show across all categories
+  const searchResults = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return null;
+    return FAQ_CATEGORIES
+      .map(cat => ({
+        ...cat,
+        questions: cat.questions.filter(faq => faq.q.toLowerCase().includes(q) || faq.a.toLowerCase().includes(q)),
+      }))
+      .filter(cat => cat.questions.length > 0);
+  }, [searchQuery]);
+
+  const totalResults = searchResults
+    ? searchResults.reduce((acc, c) => acc + c.questions.length, 0)
+    : 0;
 
   const submitMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -227,360 +266,502 @@ export default function SupportPage() {
     submitMutation.mutate(form);
   };
 
+  // Tickets query
+  const ticketsQuery = useQuery({
+    queryKey: ["my-tickets"],
+    queryFn: async () => {
+      const res = await fetch("/api/support/my-tickets", { credentials: "include" });
+      if (res.status === 404) return [];
+      if (!res.ok) throw new Error("Failed to fetch tickets");
+      return res.json();
+    },
+    enabled: activeTab === "tickets",
+    retry: false,
+  });
+
   const allOperational = SYSTEM_COMPONENTS.every(c => c.status === "operational");
 
   return (
-    <Layout isLanding>
-      <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>
+    <Layout isLanding darkNav>
+      <div style={{ background: "#000", minHeight: "100vh" }}>
       <style>{`
         @keyframes fadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { to { transform:rotate(360deg); } }
         .s-input {
           width:100%; font-family:${SF}; font-size:14px; color:rgba(255,255,255,0.88);
-          background:#161616; border:1px solid rgba(255,255,255,0.1); border-radius:10px;
-          padding:11px 14px; outline:none; transition:border-color 0.15s; box-sizing:border-box;
+          background:#111; border:1px solid rgba(255,255,255,0.07); border-radius:8px;
+          padding:10px 14px; outline:none; transition:border-color 0.15s; box-sizing:border-box;
         }
         .s-input::placeholder { color:rgba(255,255,255,0.25); }
-        .s-input:focus { border-color:rgba(255,255,255,0.35); }
+        .s-input:focus { border-color:rgba(255,255,255,0.25); }
         .s-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px !important; cursor:pointer; }
-        .s-select option { background:#1a1a1a; color:rgba(255,255,255,0.88); }
-        .ql-card { transition:border-color 0.15s, transform 0.15s; }
-        .ql-card:hover { border-color:rgba(255,255,255,0.2) !important; transform:translateY(-2px); }
-        .cat-btn { transition:all 0.15s ease; cursor:pointer; }
-        .cat-btn:hover { opacity:1 !important; }
+        .s-select option { background:#111; color:rgba(255,255,255,0.88); }
+        .cat-pill { transition:all 0.15s ease; cursor:pointer; border:none; outline:none; }
+        .cat-pill:hover { background:rgba(255,255,255,0.08) !important; }
+        .tab-btn { transition:all 0.15s ease; cursor:pointer; border:none; outline:none; }
+        .tab-btn:hover { color:rgba(255,255,255,0.8) !important; }
       `}</style>
 
-      {/* ── Hero ── */}
-      <div style={{ background: "#0a0a0a", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "80px 24px 60px", textAlign: "center" }}>
-
+      {/* ── Compact Hero ── */}
+      <div style={{
+        background: "#000",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        padding: "48px 24px 40px",
+        textAlign: "center",
+      }}>
         {/* Status badge */}
         <div style={{
-          display: "inline-flex", alignItems: "center", gap: 7,
-          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 20, padding: "5px 14px", marginBottom: 28,
+          display: "inline-flex", alignItems: "center", gap: 6,
+          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: 20, padding: "4px 12px", marginBottom: 20,
         }}>
-          <Circle size={6} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
-          <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.55)", letterSpacing: "0.02em" }}>
-            {allOperational ? "All Systems Operational" : "Partial Outage: We're On It"}
+          <Circle size={5} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
+          <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
+            {allOperational ? "All Systems Operational" : "Partial Outage"}
           </span>
         </div>
 
-        <h1 style={{ fontFamily: SF, fontSize: 50, fontWeight: 700, color: "#fff", margin: "0 0 14px", letterSpacing: "-0.03em", lineHeight: 1.08 }}>
-          How can we help?
+        <h1 style={{
+          fontFamily: SF, fontSize: 40, fontWeight: 700, color: "#fff",
+          margin: "0 0 10px", letterSpacing: "-0.03em", lineHeight: 1.1,
+        }}>
+          Help Center
         </h1>
-        <p style={{ fontFamily: SF, fontSize: 17, color: "rgba(255,255,255,0.38)", margin: "0 auto 44px", maxWidth: 480, lineHeight: 1.65 }}>
-          Search our knowledge base, browse by topic, or reach out to our support team: we're here 24/7.
+        <p style={{
+          fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.35)",
+          margin: "0 auto 28px", maxWidth: 420, lineHeight: 1.6,
+        }}>
+          Search our knowledge base, browse by topic, or reach out directly.
         </p>
 
         {/* Search bar */}
-        <div style={{ maxWidth: 540, margin: "0 auto", position: "relative" }}>
-          <Search size={17} style={{ position: "absolute", left: 17, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }} />
+        <div style={{ maxWidth: 480, margin: "0 auto", position: "relative" }}>
+          <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)", pointerEvents: "none" }} />
           <input
             type="text"
-            placeholder="Search questions: try 'cancel subscription' or 'AI credits'…"
+            placeholder="Search questions..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{
-              width: "100%", fontFamily: SF, fontSize: 14.5, color: "rgba(255,255,255,0.88)",
-              background: "#141414", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 13,
-              padding: "14px 18px 14px 46px", outline: "none", boxSizing: "border-box",
+              width: "100%", fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.88)",
+              background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10,
+              padding: "12px 16px 12px 40px", outline: "none", boxSizing: "border-box",
               transition: "border-color 0.15s",
             }}
-            onFocus={e => { e.target.style.borderColor = "rgba(255,255,255,0.3)"; }}
-            onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; }}
+            onFocus={e => { e.target.style.borderColor = "rgba(255,255,255,0.2)"; }}
+            onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.07)"; }}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 4, fontSize: 18, lineHeight: 1 }}>×</button>
+            <button onClick={() => setSearchQuery("")} style={{
+              position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+              background: "none", border: "none", cursor: "pointer",
+              color: "rgba(255,255,255,0.3)", padding: 4, fontSize: 16, lineHeight: 1,
+            }}>
+              x
+            </button>
           )}
         </div>
 
         {searchQuery && (
-          <p style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.35)", marginTop: 10 }}>
-            {totalResults === 0 ? "No results: try different keywords or contact us below." : `${totalResults} result${totalResults !== 1 ? "s" : ""} found`}
+          <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>
+            {totalResults === 0 ? "No results found. Try different keywords or contact us." : `${totalResults} result${totalResults !== 1 ? "s" : ""} found`}
           </p>
         )}
       </div>
 
-      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px 80px" }}>
+      {/* ── Tab Navigation ── */}
+      <div style={{
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        background: "#000",
+      }}>
+        <div style={{
+          maxWidth: 900, margin: "0 auto", padding: "0 24px",
+          display: "flex", gap: 0,
+        }}>
+          {TABS.map(tab => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className="tab-btn"
+                onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
+                style={{
+                  fontFamily: SF, fontSize: 13, fontWeight: 500,
+                  color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)",
+                  background: "transparent",
+                  padding: "14px 20px",
+                  borderBottom: active ? "2px solid #fff" : "2px solid transparent",
+                  display: "flex", alignItems: "center", gap: 7,
+                  marginBottom: -1,
+                }}
+              >
+                <tab.icon size={14} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* ── Quick Links ── */}
-        {!searchQuery && (
-          <div style={{ paddingTop: 52 }}>
-            <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 18px" }}>Popular topics</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 12 }}>
-              {QUICK_LINKS.map(link => (
-                <a key={link.label} href={link.href} style={{ textDecoration: "none" }}>
-                  <div className="ql-card" style={{
-                    background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 13,
-                    padding: "18px 18px", display: "flex", alignItems: "flex-start", gap: 13,
-                  }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <link.icon size={16} color="rgba(255,255,255,0.55)" />
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.88)", marginBottom: 3 }}>{link.label}</div>
-                      <div style={{ fontFamily: SF, fontSize: 11.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>{link.desc}</div>
-                    </div>
+      {/* ── Content ── */}
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px 60px" }}>
+
+        {/* ========== FAQ TAB ========== */}
+        {activeTab === "faq" && (
+          <div style={{ display: "flex", gap: 32, animation: "fadeIn 0.2s ease" }}>
+            {/* Left sidebar: category pills */}
+            {!searchQuery && (
+              <div style={{
+                width: 200, flexShrink: 0,
+                display: "flex", flexDirection: "column", gap: 2,
+                position: "sticky", top: 80, alignSelf: "flex-start",
+              }}>
+                {FAQ_CATEGORIES.map(cat => {
+                  const active = activeCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      className="cat-pill"
+                      onClick={() => setActiveCategory(cat.id)}
+                      style={{
+                        fontFamily: SF, fontSize: 13, fontWeight: active ? 600 : 400,
+                        color: active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.4)",
+                        background: active ? "rgba(255,255,255,0.08)" : "transparent",
+                        borderRadius: 8, padding: "9px 14px",
+                        textAlign: "left",
+                        display: "flex", alignItems: "center", gap: 10,
+                      }}
+                    >
+                      <cat.icon size={14} style={{ opacity: active ? 0.9 : 0.4, flexShrink: 0 }} />
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Right side: questions */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {searchQuery && searchResults ? (
+                // Search mode: show results across all categories
+                searchResults.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "48px 0" }}>
+                    <HelpCircle size={32} style={{ color: "rgba(255,255,255,0.12)", marginBottom: 12 }} />
+                    <p style={{ fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>
+                      No results for "{searchQuery}"
+                    </p>
+                    <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+                      Try different keywords or use the Contact tab.
+                    </p>
                   </div>
-                </a>
-              ))}
+                ) : (
+                  searchResults.map(cat => (
+                    <div key={cat.id} style={{ marginBottom: 24 }}>
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        marginBottom: 8, padding: "0 0 8px",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                      }}>
+                        <cat.icon size={13} color="rgba(255,255,255,0.35)" />
+                        <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
+                          {cat.label}
+                        </span>
+                      </div>
+                      {cat.questions.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}
+                    </div>
+                  ))
+                )
+              ) : (
+                // Category mode
+                filteredCategories.map(cat => (
+                  <div key={cat.id}>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      marginBottom: 4,
+                    }}>
+                      <span style={{
+                        fontFamily: SF, fontSize: 11, fontWeight: 600,
+                        color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                      }}>
+                        {cat.label}
+                      </span>
+                      <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.18)" }}>
+                        {cat.questions.length} questions
+                      </span>
+                    </div>
+                    {cat.questions.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {/* ── FAQ ── */}
-        <div style={{ paddingTop: 52 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
-            <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>Frequently Asked Questions</p>
-
-            {!searchQuery && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {/* ========== CONTACT TAB ========== */}
+        {activeTab === "contact" && (
+          <div style={{ maxWidth: 560, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
+            {submitted ? (
+              <div style={{
+                background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 14, padding: "48px 36px", textAlign: "center",
+                animation: "slideUp 0.3s ease",
+              }}>
+                <CheckCircle2 size={40} color="#4ade80" style={{ marginBottom: 14 }} />
+                <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.9)", margin: "0 0 8px" }}>
+                  Message sent
+                </h3>
+                <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(255,255,255,0.4)", margin: "0 0 24px", lineHeight: 1.65 }}>
+                  We have received your message and will respond as soon as possible. Check your email for a confirmation.
+                </p>
                 <button
-                  className="cat-btn"
-                  onClick={() => setActiveCategory(null)}
+                  onClick={() => setSubmitted(false)}
                   style={{
-                    fontFamily: SF, fontSize: 12, fontWeight: 500, padding: "4px 12px", borderRadius: 20,
-                    border: `1px solid ${!activeCategory ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.1)"}`,
-                    background: !activeCategory ? "rgba(255,255,255,0.1)" : "transparent",
-                    color: !activeCategory ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.4)",
-                    cursor: "pointer",
+                    fontFamily: SF, fontSize: 13, fontWeight: 500,
+                    color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8,
+                    padding: "8px 18px", cursor: "pointer",
                   }}
-                >All</button>
-                {FAQ_CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    className="cat-btn"
-                    onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
-                    style={{
-                      fontFamily: SF, fontSize: 12, fontWeight: 500, padding: "4px 12px", borderRadius: 20,
-                      border: `1px solid ${activeCategory === cat.id ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.1)"}`,
-                      background: activeCategory === cat.id ? "rgba(255,255,255,0.1)" : "transparent",
-                      color: activeCategory === cat.id ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.4)",
-                      cursor: "pointer",
-                    }}
-                  >{cat.label}</button>
+                >
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ marginBottom: 24 }}>
+                  <h2 style={{
+                    fontFamily: SF, fontSize: 22, fontWeight: 700,
+                    color: "rgba(255,255,255,0.9)", margin: "0 0 6px",
+                    letterSpacing: "-0.02em",
+                  }}>
+                    Contact Support
+                  </h2>
+                  <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
+                    Our team reads every message and typically responds within 24 hours.
+                  </p>
+                </div>
+
+                <form ref={formRef} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Name</label>
+                      <input className="s-input" type="text" placeholder="Your name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+                    </div>
+                    <div>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Email</label>
+                      <input className="s-input" type="email" placeholder="you@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Subject</label>
+                    <input className="s-input" type="text" placeholder="Brief description of your issue" value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} required />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Category</label>
+                      <select className="s-input s-select" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                        {CONTACT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Priority</label>
+                      <select className="s-input s-select" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
+                        {CONTACT_PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}: {p.desc}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Message</label>
+                    <textarea
+                      className="s-input"
+                      placeholder="Describe what happened, what you expected, and any steps to reproduce..."
+                      value={form.message}
+                      onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                      rows={5}
+                      required
+                      style={{ resize: "vertical", minHeight: 120 }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
+                    <p style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)", margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                      <Lock size={10} />
+                      Encrypted and stored securely.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={submitMutation.isPending}
+                      style={{
+                        fontFamily: SF, fontSize: 13, fontWeight: 600,
+                        color: submitMutation.isPending ? "rgba(255,255,255,0.4)" : "#000",
+                        background: submitMutation.isPending ? "rgba(255,255,255,0.08)" : "#fff",
+                        border: "none", borderRadius: 8, padding: "10px 22px",
+                        cursor: submitMutation.isPending ? "not-allowed" : "pointer",
+                        display: "flex", alignItems: "center", gap: 7,
+                        transition: "opacity 0.15s",
+                      }}
+                    >
+                      {submitMutation.isPending ? (
+                        <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "rgba(255,255,255,0.6)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> Sending...</>
+                      ) : (
+                        <><Send size={12} /> Send Message</>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ========== MY TICKETS TAB ========== */}
+        {activeTab === "tickets" && (
+          <div style={{ maxWidth: 640, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{
+                fontFamily: SF, fontSize: 22, fontWeight: 700,
+                color: "rgba(255,255,255,0.9)", margin: "0 0 6px",
+                letterSpacing: "-0.02em",
+              }}>
+                My Tickets
+              </h2>
+              <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
+                Track the status of your support requests.
+              </p>
+            </div>
+
+            {ticketsQuery.isLoading && (
+              <div style={{ textAlign: "center", padding: "48px 0" }}>
+                <div style={{
+                  width: 20, height: 20,
+                  border: "2px solid rgba(255,255,255,0.1)",
+                  borderTopColor: "rgba(255,255,255,0.4)",
+                  borderRadius: "50%", animation: "spin 0.6s linear infinite",
+                  margin: "0 auto 12px",
+                }} />
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Loading tickets...</p>
+              </div>
+            )}
+
+            {ticketsQuery.isError || (ticketsQuery.data && ticketsQuery.data.length === 0) ? (
+              <div style={{
+                background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 12, padding: "48px 24px", textAlign: "center",
+              }}>
+                <MessageSquare size={28} style={{ color: "rgba(255,255,255,0.12)", marginBottom: 12 }} />
+                <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.45)", margin: "0 0 6px" }}>
+                  No tickets yet
+                </p>
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)", margin: "0 0 20px" }}>
+                  When you contact support, your tickets will appear here.
+                </p>
+                <button
+                  onClick={() => setActiveTab("contact")}
+                  style={{
+                    fontFamily: SF, fontSize: 13, fontWeight: 500,
+                    color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8,
+                    padding: "8px 18px", cursor: "pointer",
+                  }}
+                >
+                  Contact Support
+                </button>
+              </div>
+            ) : null}
+
+            {ticketsQuery.data && ticketsQuery.data.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {ticketsQuery.data.map((ticket: any) => (
+                  <div key={ticket.id || ticket._id} style={{
+                    background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+                    borderRadius: 10, padding: "16px 20px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                      <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", flex: 1 }}>
+                        {ticket.subject}
+                      </span>
+                      <span style={{
+                        fontFamily: SF, fontSize: 11, fontWeight: 600,
+                        color: STATUS_COLORS[ticket.status] || "#6b7280",
+                        background: `${STATUS_COLORS[ticket.status] || "#6b7280"}18`,
+                        padding: "3px 10px", borderRadius: 12,
+                        textTransform: "capitalize",
+                      }}>
+                        {ticket.status}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      {ticket.category && (
+                        <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+                          {ticket.category}
+                        </span>
+                      )}
+                      {ticket.priority && (
+                        <span style={{
+                          fontFamily: SF, fontSize: 11, fontWeight: 500,
+                          color: PRIORITY_COLORS[ticket.priority] || "rgba(255,255,255,0.35)",
+                        }}>
+                          {ticket.priority} priority
+                        </span>
+                      )}
+                      {ticket.createdAt && (
+                        <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+                          {new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      )}
+                    </div>
+                    {ticket.reply && (
+                      <div style={{
+                        marginTop: 12, paddingTop: 12,
+                        borderTop: "1px solid rgba(255,255,255,0.06)",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                          <MessageSquare size={11} color="rgba(255,255,255,0.3)" />
+                          <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>
+                            Admin Reply
+                          </span>
+                        </div>
+                        <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.6 }}>
+                          {ticket.reply}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          {filteredCategories.length === 0 && searchQuery && (
-            <div style={{ textAlign: "center", padding: "48px 0" }}>
-              <HelpCircle size={36} style={{ color: "rgba(255,255,255,0.15)", marginBottom: 14 }} />
-              <p style={{ fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>No results for "{searchQuery}"</p>
-              <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>Try different keywords or use the contact form below.</p>
-            </div>
-          )}
-
-          <div style={{ display: "grid", gridTemplateColumns: filteredCategories.length === 1 ? "1fr" : "repeat(auto-fill, minmax(460px, 1fr))", gap: 16 }}>
-            {filteredCategories.map(cat => (
-              <div key={cat.id} style={{ background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "22px 24px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <cat.icon size={14} color="rgba(255,255,255,0.5)" />
-                  </div>
-                  <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.88)" }}>{cat.label}</span>
-                  <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>{cat.questions.length} questions</span>
-                </div>
-                <div>{cat.questions.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}</div>
-              </div>
-            ))}
+      {/* ── Compact System Status Bar ── */}
+      <div style={{
+        borderTop: "1px solid rgba(255,255,255,0.07)",
+        background: "#000",
+        padding: "16px 24px",
+      }}>
+        <div style={{
+          maxWidth: 900, margin: "0 auto",
+          display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Circle size={5} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
+            <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>
+              {allOperational ? "All Systems Operational" : "Partial Outage"}
+            </span>
           </div>
-        </div>
-
-        {/* ── Support Promise ── */}
-        <div style={{ marginTop: 48, background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "36px 32px" }}>
-          <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 6px" }}>Support Promise</p>
-            <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0 }}>Our commitment to response times.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 12 }}>
-            {[
-              { icon: Zap,          label: "Pro: Urgent", time: "< 2 hours",  desc: "Data or access issues" },
-              { icon: Clock,        label: "Pro: Normal",  time: "< 8 hours",  desc: "Billing & account help" },
-              { icon: MessageSquare,label: "Free: Urgent", time: "< 24 hours", desc: "Bugs and data issues"   },
-              { icon: CheckCircle2, label: "Free: Normal", time: "< 48 hours", desc: "General how-to questions" },
-            ].map(item => (
-              <div key={item.label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "18px", textAlign: "center" }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-                  <item.icon size={17} color="rgba(255,255,255,0.45)" />
-                </div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>{item.label}</div>
-                <div style={{ fontFamily: SF, fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,0.88)", letterSpacing: "-0.02em", marginBottom: 4 }}>{item.time}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.28)" }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── System Status ── */}
-        <div style={{ marginTop: 20, background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "24px 28px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <div>
-              <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 3px" }}>System Status</p>
-              <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.3)", margin: 0 }}>Real-time status of all Plotzy services</p>
-            </div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "4px 12px" }}>
-              <Circle size={6} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
-              <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>
-                {allOperational ? "All Operational" : "Investigating"}
+          <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.07)" }} />
+          {SYSTEM_COMPONENTS.map(comp => (
+            <div key={comp.name} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <Circle size={4} fill={comp.status === "operational" ? "#4ade80" : "#fb923c"} color="transparent" />
+              <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                {comp.name}
               </span>
             </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
-            {SYSTEM_COMPONENTS.map(comp => (
-              <div key={comp.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 9 }}>
-                <span style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{comp.name}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <Circle size={6} fill={comp.status === "operational" ? "#4ade80" : "#fb923c"} color="transparent" />
-                  <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500, textTransform: "capitalize" }}>{comp.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
-
-        {/* ── Contact Form ── */}
-        <div style={{ marginTop: 48, display: "grid", gridTemplateColumns: "1fr 340px", gap: 28, alignItems: "start" }}>
-
-          {/* Form */}
-          <div>
-            <div style={{ marginBottom: 28 }}>
-              <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px" }}>Contact Support</p>
-              <h2 style={{ fontFamily: SF, fontSize: 26, fontWeight: 700, color: "rgba(255,255,255,0.9)", margin: "0 0 8px", letterSpacing: "-0.025em" }}>Still need help?</h2>
-              <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.38)", margin: 0, lineHeight: 1.65 }}>
-                Our support team reads every message personally. Tell us what's going on and we'll get back to you as quickly as possible.
-              </p>
-            </div>
-
-            {submitted ? (
-              <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "40px 36px", textAlign: "center", animation: "slideUp 0.3s ease" }}>
-                <CheckCircle2 size={44} color="rgba(255,255,255,0.6)" style={{ marginBottom: 14 }} />
-                <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.88)", margin: "0 0 8px" }}>Message sent</h3>
-                <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(255,255,255,0.4)", margin: "0 0 20px", lineHeight: 1.65 }}>
-                  We've received your message and assigned it a support ticket. You'll get a confirmation email shortly.
-                </p>
-                <button onClick={() => setSubmitted(false)} style={{ fontFamily: SF, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.55)", background: "none", border: "none", cursor: "pointer" }}>
-                  Send another message →
-                </button>
-              </div>
-            ) : (
-              <form ref={formRef} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <label style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Full Name</label>
-                    <input className="s-input" type="text" placeholder="Your name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
-                  </div>
-                  <div>
-                    <label style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Email Address</label>
-                    <input className="s-input" type="email" placeholder="you@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <label style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Category</label>
-                    <select className="s-input s-select" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                      {CONTACT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Priority</label>
-                    <select className="s-input s-select" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
-                      {CONTACT_PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}: {p.desc}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Subject</label>
-                  <input className="s-input" type="text" placeholder="Brief description of your issue" value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} required />
-                </div>
-                <div>
-                  <label style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Message</label>
-                  <textarea
-                    className="s-input"
-                    placeholder="Describe what happened, what you expected, and any steps to reproduce the issue. The more detail, the faster we can help."
-                    value={form.message}
-                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    rows={6}
-                    required
-                    style={{ resize: "vertical", minHeight: 130 }}
-                  />
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-                  <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.25)", margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
-                    <Lock size={10} />
-                    Your message is encrypted and stored securely.
-                  </p>
-                  <button
-                    type="submit"
-                    disabled={submitMutation.isPending}
-                    style={{
-                      fontFamily: SF, fontSize: 13.5, fontWeight: 600,
-                      color: submitMutation.isPending ? "rgba(255,255,255,0.4)" : "#000",
-                      background: submitMutation.isPending ? "rgba(255,255,255,0.08)" : "#fff",
-                      border: "none", borderRadius: 10, padding: "11px 24px",
-                      cursor: submitMutation.isPending ? "not-allowed" : "pointer",
-                      display: "flex", alignItems: "center", gap: 7,
-                      transition: "opacity 0.15s",
-                    }}
-                  >
-                    {submitMutation.isPending ? (
-                      <><div style={{ width: 13, height: 13, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "rgba(255,255,255,0.6)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> Sending…</>
-                    ) : (
-                      <><Send size={13} /> Send Message</>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-            {/* Response times */}
-            <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "20px 22px" }}>
-              <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.07em", textTransform: "uppercase", margin: "0 0 14px" }}>Expected Response</p>
-              {CONTACT_PRIORITIES.map(p => (
-                <div key={p.value} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: form.priority === p.value ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.18)", flexShrink: 0 }} />
-                  <span style={{ fontFamily: SF, fontSize: 12.5, color: form.priority === p.value ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.35)", fontWeight: form.priority === p.value ? 600 : 400, flex: 1 }}>{p.label}</span>
-                  <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: form.priority === p.value ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.25)" }}>{p.time}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Other channels */}
-            <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "20px 22px" }}>
-              <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.07em", textTransform: "uppercase", margin: "0 0 14px" }}>Other ways to get help</p>
-              {[
-                { icon: BookOpen, label: "Writing Guide",          desc: "Step-by-step tutorials",   href: "/writing-guide" },
-                { icon: Users,    label: "Community Forum",        desc: "Ask other Plotzy authors", href: "/library"       },
-                { icon: Globe,    label: "Public Domain Library",  desc: "3.6M+ free books",         href: "/gutenberg"     },
-              ].map(item => (
-                <a key={item.label} href={item.href} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                  <item.icon size={14} color="rgba(255,255,255,0.4)" />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.75)" }}>{item.label}</div>
-                    <div style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{item.desc}</div>
-                  </div>
-                  <ChevronRight size={13} color="rgba(255,255,255,0.2)" />
-                </a>
-              ))}
-            </div>
-
-            {/* Trust */}
-            <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "20px 22px" }}>
-              <Shield size={18} style={{ color: "rgba(255,255,255,0.45)", marginBottom: 10 }} />
-              <p style={{ fontFamily: SF, fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.8)", margin: "0 0 5px" }}>Your data is safe with us</p>
-              <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.65 }}>
-                End-to-end encryption. SOC 2 Type II certified infrastructure. We never share your writing with anyone.
-              </p>
-            </div>
-          </div>
-        </div>
-
       </div>
+
       </div>
     </Layout>
   );

@@ -236,40 +236,44 @@ router.get("/api/gutenberg/books", async (req: any, res: any) => {
       results,
     });
   } catch (err: any) {
-    res.status(500).json({ error: "Failed to fetch books", message: err.message });
+    res.status(500).json({ message: "Failed to fetch books" });
   }
 });
 
 // GET /api/gutenberg/sync-status — catalog import progress
 router.get("/api/gutenberg/sync-status", async (_req: any, res: any) => {
-  const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
-  res.json({ synced: (row?.n ?? 0) >= CATALOG_MIN_BOOKS, count: row?.n ?? 0, running: catalogSyncRunning });
+  try {
+    const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
+    res.json({ synced: (row?.n ?? 0) >= CATALOG_MIN_BOOKS, count: row?.n ?? 0, running: catalogSyncRunning });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // GET /api/gutenberg/books/:id — metadata only
 router.get("/api/gutenberg/books/:id", async (req: any, res: any) => {
-  const gutId = parseInt(req.params.id);
-  if (!gutId) return res.status(400).json({ error: "Invalid id" });
-
-  const cached = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
-  if (cached.length > 0) {
-    const b = cached[0];
-    return res.json({
-      id: b.gutenbergId,
-      dbId: b.id,
-      title: b.title,
-      authors: b.authors || [],
-      subjects: b.subjects || [],
-      bookshelves: b.bookshelves || [],
-      languages: b.languages || [],
-      coverUrl: b.coverUrl,
-      downloadCount: b.downloadCount || 0,
-      hasContent: !!b.content,
-      contentCachedAt: b.contentCachedAt,
-    });
-  }
-
   try {
+    const gutId = parseInt(req.params.id);
+    if (!gutId) return res.status(400).json({ error: "Invalid id" });
+
+    const cached = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
+    if (cached.length > 0) {
+      const b = cached[0];
+      return res.json({
+        id: b.gutenbergId,
+        dbId: b.id,
+        title: b.title,
+        authors: b.authors || [],
+        subjects: b.subjects || [],
+        bookshelves: b.bookshelves || [],
+        languages: b.languages || [],
+        coverUrl: b.coverUrl,
+        downloadCount: b.downloadCount || 0,
+        hasContent: !!b.content,
+        contentCachedAt: b.contentCachedAt,
+      });
+    }
+
     // Fetch from Open Library by searching for the Gutenberg ID
     const resp = await fetch(`${OPEN_LIBRARY}/search.json?q=${gutId}&fields=key,title,author_name,cover_i,subject,language,edition_count,id_project_gutenberg&limit=5`);
     if (!resp.ok) return res.status(404).json({ error: "Book not found" });
@@ -299,45 +303,45 @@ router.get("/api/gutenberg/books/:id", async (req: any, res: any) => {
 
 // GET /api/gutenberg/books/:id/content — full text (cached in DB)
 router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
-  const gutId = parseInt(req.params.id);
-  if (!gutId) return res.status(400).json({ error: "Invalid id" });
-
-  const cached = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
-  const row = cached[0];
-
-  if (row?.content && row.contentCachedAt) {
-    const age = Date.now() - new Date(row.contentCachedAt).getTime();
-    if (age < GUTENBERG_TEXT_CACHE_TTL_MS) {
-      return res.json({ content: row.content, fromCache: true, cachedAt: row.contentCachedAt });
-    }
-  }
-
-  // Build candidate list: DB-cached URL first, then fallback patterns
-  const candidates = gutenbergTextUrls(gutId);
-  if (row?.textUrl && !candidates.includes(row.textUrl)) candidates.unshift(row.textUrl);
-
-  let textUrl: string | null = null;
-  let textResp: Response | null = null;
-
-  for (const url of candidates) {
-    try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
-      if (r.ok) { textUrl = url; textResp = r; break; }
-    } catch { /* try next */ }
-  }
-
-  if (!textUrl || !textResp) {
-    // Mark this book as unavailable so the UI can hide it
-    if (row) await db.update(gutenbergBooks).set({ textUrl: null }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
-    return res.status(404).json({ error: "No plain-text version available for this book" });
-  }
-
-  // Save the working textUrl back to DB if it changed
-  if (row?.textUrl !== textUrl) {
-    await db.update(gutenbergBooks).set({ textUrl }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
-  }
-
   try {
+    const gutId = parseInt(req.params.id);
+    if (!gutId) return res.status(400).json({ error: "Invalid id" });
+
+    const cached = await db.select().from(gutenbergBooks).where(eq(gutenbergBooks.gutenbergId, gutId)).limit(1);
+    const row = cached[0];
+
+    if (row?.content && row.contentCachedAt) {
+      const age = Date.now() - new Date(row.contentCachedAt).getTime();
+      if (age < GUTENBERG_TEXT_CACHE_TTL_MS) {
+        return res.json({ content: row.content, fromCache: true, cachedAt: row.contentCachedAt });
+      }
+    }
+
+    // Build candidate list: DB-cached URL first, then fallback patterns
+    const candidates = gutenbergTextUrls(gutId);
+    if (row?.textUrl && !candidates.includes(row.textUrl)) candidates.unshift(row.textUrl);
+
+    let textUrl: string | null = null;
+    let textResp: Response | null = null;
+
+    for (const url of candidates) {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        if (r.ok) { textUrl = url; textResp = r; break; }
+      } catch { /* try next */ }
+    }
+
+    if (!textUrl || !textResp) {
+      // Mark this book as unavailable so the UI can hide it
+      if (row) await db.update(gutenbergBooks).set({ textUrl: null }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
+      return res.status(404).json({ error: "No plain-text version available for this book" });
+    }
+
+    // Save the working textUrl back to DB if it changed
+    if (row?.textUrl !== textUrl) {
+      await db.update(gutenbergBooks).set({ textUrl }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
+    }
+
     if (!textResp.ok) return res.status(502).json({ error: "Failed to fetch book text" });
     const rawText = await textResp.text();
 
@@ -368,7 +372,7 @@ router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
 
     return res.json({ content, fromCache: false, cachedAt: new Date() });
   } catch (err: any) {
-    return res.status(502).json({ error: "Failed to retrieve book text", message: err.message });
+    return res.status(502).json({ message: "Failed to retrieve book text" });
   }
 });
 

@@ -83,11 +83,11 @@ export function PayPalCheckout({ plan, onSuccess }: PayPalCheckoutProps) {
 
   useEffect(() => {
     fetch("/api/paypal/config")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then((d: { enabled: boolean; clientId?: string }) => {
         if (d.enabled && d.clientId) setClientId(d.clientId);
       })
-      .catch(() => {})
+      .catch(() => { setClientId(null); })
       .finally(() => setLoading(false));
   }, []);
 

@@ -21,8 +21,12 @@ const router = Router();
 // ─── List Chapters ──────────────────────────────────────────────────────────
 
 router.get(api.chapters.list.path, async (req, res) => {
-  const chapters = await storage.getChapters(Number(req.params.bookId));
-  res.json(chapters);
+  try {
+    const chapters = await storage.getChapters(Number(req.params.bookId));
+    res.json(chapters);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // ─── Create Chapter (enforces free trial limits) ────────────────────────────
@@ -146,8 +150,12 @@ router.delete(
   api.chapters.delete.path,
   requireChapterOwner,
   async (req, res) => {
-    await storage.deleteChapter(Number(req.params.id));
-    res.status(204).send();
+    try {
+      await storage.deleteChapter(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
   }
 );
 

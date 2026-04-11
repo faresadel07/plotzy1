@@ -78,7 +78,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
   // Mark single as read
   const markReadMut = useMutation({
     mutationFn: (id: number) =>
-      fetch(`/api/notifications/${id}/read`, { method: "PATCH", credentials: "include" }),
+      fetch(`/api/notifications/${id}/read`, { method: "PATCH", credentials: "include" }).then(r => { if (!r.ok) throw new Error(); }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/notifications"] });
       qc.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
@@ -88,7 +88,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
   // Mark all as read
   const markAllMut = useMutation({
     mutationFn: () =>
-      fetch("/api/notifications/mark-all-read", { method: "POST", credentials: "include" }),
+      fetch("/api/notifications/mark-all-read", { method: "POST", credentials: "include" }).then(r => { if (!r.ok) throw new Error(); }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/notifications"] });
       qc.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });

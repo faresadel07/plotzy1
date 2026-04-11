@@ -59,14 +59,18 @@ router.get("/api/users/me/achievements", async (req, res) => {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 router.get("/api/auth/user", async (req, res) => {
-  if (req.isAuthenticated() && req.user) {
-    const dbUser = await storage.getUserById(req.user.id);
-    if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
-    const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
-    const isAdmin = !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
-    return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin, suspended: !!suspended });
+  try {
+    if (req.isAuthenticated() && req.user) {
+      const dbUser = await storage.getUserById(req.user.id);
+      if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
+      const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
+      const isAdmin = !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
+      return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin, suspended: !!suspended });
+    }
+    return res.status(401).json({ message: "Not authenticated" });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
   }
-  return res.status(401).json({ message: "Not authenticated" });
 });
 
 // ─── Email / Password Auth ─────────────────────────────────────────────────
@@ -106,7 +110,7 @@ router.post("/api/auth/register", async (req, res) => {
     return res.status(201).json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: err.errors?.[0]?.message || "Invalid input" });
-    return res.status(500).json({ message: err?.message || "Registration failed" });
+    return res.status(500).json({ message: "Registration failed" });
   }
 });
 
@@ -140,7 +144,7 @@ router.post("/api/auth/login", async (req, res) => {
     return res.json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid input" });
-    return res.status(500).json({ message: err?.message || "Login failed" });
+    return res.status(500).json({ message: "Login failed" });
   }
 });
 
@@ -154,22 +158,30 @@ router.post("/api/auth/logout", (req, res) => {
 });
 
 router.patch("/api/auth/avatar", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) {
-    return res.status(401).json({ message: "Not authenticated" });
+  try {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const { avatarUrl } = z.object({ avatarUrl: z.string().max(10_000_000) }).parse(req.body);
+    const updated = await storage.updateUser(req.user.id, { avatarUrl });
+    const { passwordHash: _ph, ...safe } = updated as any;
+    return res.json(safe);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
   }
-  const { avatarUrl } = z.object({ avatarUrl: z.string().max(10_000_000) }).parse(req.body);
-  const updated = await storage.updateUser(req.user.id, { avatarUrl });
-  const { passwordHash: _ph, ...safe } = updated as any;
-  return res.json(safe);
 });
 
 router.patch("/api/auth/display-name", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) {
-    return res.status(401).json({ message: "Not authenticated" });
+  try {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const { displayName } = z.object({ displayName: z.string().min(1).max(50) }).parse(req.body);
+    const updated = await storage.updateUser(req.user.id, { displayName });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
   }
-  const { displayName } = z.object({ displayName: z.string().min(1).max(50) }).parse(req.body);
-  const updated = await storage.updateUser(req.user.id, { displayName });
-  res.json(updated);
 });
 
 // Google OAuth

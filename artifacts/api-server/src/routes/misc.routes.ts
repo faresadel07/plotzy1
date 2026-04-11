@@ -11,95 +11,123 @@ const router = Router();
 
 // GET /api/series — list user's series with their books
 router.get("/api/series", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const seriesList = await storage.getUserSeries(userId);
-  // Attach books to each series
-  const withBooks = await Promise.all(
-    seriesList.map(async (s) => {
-      const seriesBooks = await storage.getSeriesBooks(s.id);
-      return { ...s, books: seriesBooks };
-    })
-  );
-  return res.json(withBooks);
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesList = await storage.getUserSeries(userId);
+    // Attach books to each series
+    const withBooks = await Promise.all(
+      seriesList.map(async (s) => {
+        const seriesBooks = await storage.getSeriesBooks(s.id);
+        return { ...s, books: seriesBooks };
+      })
+    );
+    return res.json(withBooks);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // POST /api/series — create a new series
 router.post("/api/series", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const { name, description } = req.body;
-  if (!name?.trim()) return res.status(400).json({ message: "Name is required" });
-  const series = await storage.createSeries({ userId, name: name.trim(), description: description?.trim() || null });
-  return res.status(201).json({ ...series, books: [] });
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const { name, description } = req.body;
+    if (!name?.trim()) return res.status(400).json({ message: "Name is required" });
+    const series = await storage.createSeries({ userId, name: name.trim(), description: description?.trim() || null });
+    return res.status(201).json({ ...series, books: [] });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // PATCH /api/series/:id — update series name/description
 router.patch("/api/series/:id", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const seriesId = Number(req.params.id);
-  const existing = await storage.getSeries(seriesId);
-  if (!existing || existing.userId !== userId) return res.status(404).json({ message: "Not found" });
-  const { name, description } = req.body;
-  const updates: any = {};
-  if (name !== undefined) updates.name = name.trim();
-  if (description !== undefined) updates.description = description?.trim() || null;
-  const updated = await storage.updateSeries(seriesId, updates);
-  return res.json(updated);
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const existing = await storage.getSeries(seriesId);
+    if (!existing || existing.userId !== userId) return res.status(404).json({ message: "Not found" });
+    const { name, description } = req.body;
+    const updates: any = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (description !== undefined) updates.description = description?.trim() || null;
+    const updated = await storage.updateSeries(seriesId, updates);
+    return res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // DELETE /api/series/:id — delete series (unlinks books, doesn't delete them)
 router.delete("/api/series/:id", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const seriesId = Number(req.params.id);
-  const existing = await storage.getSeries(seriesId);
-  if (!existing || existing.userId !== userId) return res.status(404).json({ message: "Not found" });
-  await storage.deleteSeries(seriesId);
-  return res.status(204).send();
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const existing = await storage.getSeries(seriesId);
+    if (!existing || existing.userId !== userId) return res.status(404).json({ message: "Not found" });
+    await storage.deleteSeries(seriesId);
+    return res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // POST /api/series/:id/books/:bookId — add book to series
 router.post("/api/series/:id/books/:bookId", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const seriesId = Number(req.params.id);
-  const bookId = Number(req.params.bookId);
-  const series = await storage.getSeries(seriesId);
-  if (!series || series.userId !== userId) return res.status(404).json({ message: "Not found" });
-  const book = await storage.getBook(bookId);
-  if (!book || book.userId !== userId) return res.status(404).json({ message: "Book not found" });
-  // Assign at end of series
-  const existingBooks = await storage.getSeriesBooks(seriesId);
-  const order = req.body.order ?? existingBooks.length;
-  const updated = await storage.assignBookToSeries(bookId, seriesId, order);
-  return res.json(updated);
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const bookId = Number(req.params.bookId);
+    const series = await storage.getSeries(seriesId);
+    if (!series || series.userId !== userId) return res.status(404).json({ message: "Not found" });
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== userId) return res.status(404).json({ message: "Book not found" });
+    // Assign at end of series
+    const existingBooks = await storage.getSeriesBooks(seriesId);
+    const order = req.body.order ?? existingBooks.length;
+    const updated = await storage.assignBookToSeries(bookId, seriesId, order);
+    return res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // DELETE /api/series/:id/books/:bookId — remove book from series
 router.delete("/api/series/:id/books/:bookId", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const bookId = Number(req.params.bookId);
-  const book = await storage.getBook(bookId);
-  if (!book || book.userId !== userId) return res.status(404).json({ message: "Book not found" });
-  const updated = await storage.assignBookToSeries(bookId, null, 0);
-  return res.json(updated);
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const bookId = Number(req.params.bookId);
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== userId) return res.status(404).json({ message: "Book not found" });
+    const updated = await storage.assignBookToSeries(bookId, null, 0);
+    return res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // PUT /api/series/:id/reorder — reorder books within a series
 router.put("/api/series/:id/reorder", async (req, res) => {
-  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
-  const userId = (req.user as any).id;
-  const seriesId = Number(req.params.id);
-  const series = await storage.getSeries(seriesId);
-  if (!series || series.userId !== userId) return res.status(404).json({ message: "Not found" });
-  const { order } = req.body; // array of bookIds in new order
-  if (!Array.isArray(order)) return res.status(400).json({ message: "order must be an array" });
-  const updates = order.map((bookId: number, idx: number) => ({ bookId, seriesOrder: idx }));
-  await storage.reorderSeriesBooks(updates);
-  return res.json({ ok: true });
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    const series = await storage.getSeries(seriesId);
+    if (!series || series.userId !== userId) return res.status(404).json({ message: "Not found" });
+    const { order } = req.body; // array of bookIds in new order
+    if (!Array.isArray(order)) return res.status(400).json({ message: "order must be an array" });
+    const updates = order.map((bookId: number, idx: number) => ({ bookId, seriesOrder: idx }));
+    await storage.reorderSeriesBooks(updates);
+    return res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // ── Support messages (public submission) ──────────────────────────────────
@@ -114,6 +142,24 @@ router.post("/api/support/messages", async (req, res) => {
     res.json(msg);
   } catch (err) {
     res.status(400).json({ message: "Invalid data" });
+  }
+});
+
+// ── Support: my tickets (user's own tickets) ─────────────────────────────
+router.get("/api/support/my-tickets", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const { supportMessages } = await import("../../../../lib/db/src/schema");
+    const { eq, desc } = await import("drizzle-orm");
+    const { db } = await import("../db");
+    const tickets = await db.select().from(supportMessages)
+      .where(eq(supportMessages.userId, req.user.id))
+      .orderBy(desc(supportMessages.createdAt));
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
   }
 });
 

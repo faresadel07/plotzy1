@@ -74,7 +74,7 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // Set up multer for memory storage
-  const upload = multer({ storage: multer.memoryStorage() });
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
   // ─── Books ─────────────────────────────────────────────────────────────────
 
@@ -181,49 +181,56 @@ export async function registerRoutes(
   // ─── Publish / Unpublish Book ───────────────────────────────────────────────
 
   app.post("/api/books/:id/publish", async (req, res) => {
-    const bookId = Number(req.params.id);
-    const book = await storage.getBook(bookId);
-    if (!book) return res.status(404).json({ message: "Book not found" });
+    try {
+      const bookId = Number(req.params.id);
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
 
-    const sess = req.session as any;
-    const isAuthenticated = req.isAuthenticated() && req.user;
-    const sessionGuestIds: number[] = sess.guestBookIds || [];
-    const bodyGuestIds: number[] = Array.isArray(req.body?.guestIds) ? req.body.guestIds : [];
-    const allGuestIds = [...new Set([...sessionGuestIds, ...bodyGuestIds])];
-    const isGuestOwner = !isAuthenticated && (book.userId === null) && allGuestIds.includes(bookId);
+      const sess = req.session as any;
+      const isAuthenticated = req.isAuthenticated() && req.user;
+      const sessionGuestIds: number[] = sess.guestBookIds || [];
+      const bodyGuestIds: number[] = Array.isArray(req.body?.guestIds) ? req.body.guestIds : [];
+      const allGuestIds = [...new Set([...sessionGuestIds, ...bodyGuestIds])];
+      const isGuestOwner = !isAuthenticated && (book.userId === null) && allGuestIds.includes(bookId);
 
-    if (!isAuthenticated && !isGuestOwner) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-
-    if (isAuthenticated) {
-      const userId = (req.user as any).id;
-      if (book.userId !== null && book.userId !== userId) return res.status(403).json({ message: "Forbidden" });
-      // Assign ownership if book was created before user authenticated
-      if (book.userId === null) await storage.updateBook(bookId, { userId } as any);
-    }
-
-    const { publish } = req.body as { publish: boolean };
-    const updated = await storage.publishBook(bookId, !!publish);
-
-    // Gamification: track publish stats and check achievements (auth users only)
-    if (isAuthenticated) {
-      try {
-        const userId = (req.user as any).id;
-        if (publish && !book.isPublished) {
-          await storage.incrementUserPublished(userId);
-        } else if (!publish && book.isPublished) {
-          await storage.decrementUserPublished(userId);
-        }
-        const stats = await storage.getOrCreateUserStats(userId);
-        const newAchievements = await checkAndUnlockAchievements(userId, stats);
-        return res.json({ ...updated, newAchievements: newAchievements.map(a => a.id) });
-      } catch {
-        return res.json(updated);
+      if (!isAuthenticated && !isGuestOwner) {
+        return res.status(401).json({ message: "Not authenticated" });
       }
-    }
 
-    return res.json(updated);
+      if (isAuthenticated) {
+        const userId = (req.user as any).id;
+        if (book.userId !== null && book.userId !== userId) return res.status(403).json({ message: "Forbidden" });
+        // Assign ownership if book was created before user authenticated
+        if (book.userId === null) await storage.updateBook(bookId, { userId } as any);
+      }
+
+      const { publish } = req.body as { publish: boolean };
+      const updated = await storage.publishBook(bookId, !!publish);
+
+      // Gamification: track publish stats and check achievements (auth users only)
+      if (isAuthenticated) {
+        try {
+          const userId = (req.user as any).id;
+          if (publish && !book.isPublished) {
+            await storage.incrementUserPublished(userId);
+          } else if (!publish && book.isPublished) {
+            await storage.decrementUserPublished(userId);
+          }
+          const stats = await storage.getOrCreateUserStats(userId);
+          const newAchievements = await checkAndUnlockAchievements(userId, stats);
+          return res.json({ ...updated, newAchievements: newAchievements.map(a => a.id) });
+        } catch {
+          return res.json(updated);
+        }
+      }
+
+      return res.json(updated);
+    } catch (err: any) {
+      if (err.message === "EMPTY_BOOK") {
+        return res.status(400).json({ message: "Book must have at least one chapter to publish" });
+      }
+      res.status(500).json({ message: "Internal error" });
+    }
   });
 
   // ─── Public Library ────────────────────────────────────────────────────────

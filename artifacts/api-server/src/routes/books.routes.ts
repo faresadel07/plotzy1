@@ -27,56 +27,68 @@ import {
 import { cache } from "../lib/cache";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ─── List Books ─────────────────────────────────────────────────────────────
 
 router.get(api.books.list.path, async (req, res) => {
-  const sess = req.session as any;
-  const rawGuestIds = (req.query.guestIds as string) || "";
-  const queryGuestIds: number[] = rawGuestIds
-    .split(",")
-    .filter(Boolean)
-    .map(Number)
-    .filter((n) => !isNaN(n) && n > 0);
+  try {
+    const sess = req.session as any;
+    const rawGuestIds = (req.query.guestIds as string) || "";
+    const queryGuestIds: number[] = rawGuestIds
+      .split(",")
+      .filter(Boolean)
+      .map(Number)
+      .filter((n) => !isNaN(n) && n > 0);
 
-  if (req.isAuthenticated() && req.user) {
-    const userId = (req.user as any).id;
+    if (req.isAuthenticated() && req.user) {
+      const userId = (req.user as any).id;
+      const sessionGuestIds: number[] = sess.guestBookIds || [];
+      const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
+      if (allGuestIds.length > 0) {
+        await storage.claimGuestBooks(allGuestIds, userId);
+        sess.guestBookIds = [];
+      }
+      const userBooks = await storage.getUserBooks(userId);
+      return res.json(userBooks);
+    }
+
     const sessionGuestIds: number[] = sess.guestBookIds || [];
     const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
+
     if (allGuestIds.length > 0) {
-      await storage.claimGuestBooks(allGuestIds, userId);
-      sess.guestBookIds = [];
+      const guestBooks = await storage.getBooksByIds(allGuestIds);
+      return res.json(guestBooks);
     }
-    const userBooks = await storage.getUserBooks(userId);
-    return res.json(userBooks);
+
+    const allGuestBooks = await storage.getGuestBooks();
+    return res.json(allGuestBooks);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
   }
-
-  const sessionGuestIds: number[] = sess.guestBookIds || [];
-  const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
-
-  if (allGuestIds.length > 0) {
-    const guestBooks = await storage.getBooksByIds(allGuestIds);
-    return res.json(guestBooks);
-  }
-
-  const allGuestBooks = await storage.getGuestBooks();
-  return res.json(allGuestBooks);
 });
 
 // ─── Trash List ─────────────────────────────────────────────────────────────
 
 router.get(api.books.trashList.path, async (req, res) => {
-  const books = await storage.getDeletedBooks();
-  res.json(books);
+  try {
+    const books = await storage.getDeletedBooks();
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // ─── Get Single Book ────────────────────────────────────────────────────────
 
 router.get(api.books.get.path, async (req, res) => {
-  const book = await storage.getBook(Number(req.params.id));
-  if (!book) return res.status(404).json({ message: "Book not found" });
-  res.json(book);
+  try {
+    const book = await storage.getBook(Number(req.params.id));
+    if (!book) return res.status(404).json({ message: "Book not found" });
+    res.json(book);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // ─── Create Book ────────────────────────────────────────────────────────────
@@ -151,60 +163,67 @@ router.delete(api.books.delete.path, requireBookOwner, async (req, res) => {
 // ─── Publish / Unpublish ────────────────────────────────────────────────────
 
 router.post("/api/books/:id/publish", async (req, res) => {
-  const bookId = Number(req.params.id);
-  const book = await storage.getBook(bookId);
-  if (!book) return res.status(404).json({ message: "Book not found" });
+  try {
+    const bookId = Number(req.params.id);
+    const book = await storage.getBook(bookId);
+    if (!book) return res.status(404).json({ message: "Book not found" });
 
-  const sess = req.session as any;
-  const isAuthenticated = req.isAuthenticated() && req.user;
-  const sessionGuestIds: number[] = sess.guestBookIds || [];
-  const bodyGuestIds: number[] = Array.isArray(req.body?.guestIds)
-    ? req.body.guestIds
-    : [];
-  const allGuestIds = [...new Set([...sessionGuestIds, ...bodyGuestIds])];
-  const isGuestOwner =
-    !isAuthenticated && book.userId === null && allGuestIds.includes(bookId);
+    const sess = req.session as any;
+    const isAuthenticated = req.isAuthenticated() && req.user;
+    const sessionGuestIds: number[] = sess.guestBookIds || [];
+    const bodyGuestIds: number[] = Array.isArray(req.body?.guestIds)
+      ? req.body.guestIds
+      : [];
+    const allGuestIds = [...new Set([...sessionGuestIds, ...bodyGuestIds])];
+    const isGuestOwner =
+      !isAuthenticated && book.userId === null && allGuestIds.includes(bookId);
 
-  if (!isAuthenticated && !isGuestOwner) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-
-  if (isAuthenticated) {
-    const userId = (req.user as any).id;
-    if (book.userId !== null && book.userId !== userId)
-      return res.status(403).json({ message: "Forbidden" });
-    if (book.userId === null)
-      await storage.updateBook(bookId, { userId } as any);
-  }
-
-  const { publish } = req.body as { publish: boolean };
-  const updated = await storage.publishBook(bookId, !!publish);
-
-  // Bust public-library caches so readers see the change immediately
-  await cache.invalidate("public:books");
-  await cache.invalidate(`public:book:${bookId}`);
-  await cache.invalidate("public:featured");
-
-  if (isAuthenticated) {
-    try {
-      const userId = (req.user as any).id;
-      if (publish && !book.isPublished) {
-        await storage.incrementUserPublished(userId);
-      } else if (!publish && book.isPublished) {
-        await storage.decrementUserPublished(userId);
-      }
-      const stats = await storage.getOrCreateUserStats(userId);
-      const newAchievements = await checkAndUnlockAchievements(userId, stats);
-      return res.json({
-        ...updated,
-        newAchievements: newAchievements.map((a) => a.id),
-      });
-    } catch {
-      return res.json(updated);
+    if (!isAuthenticated && !isGuestOwner) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
-  }
 
-  return res.json(updated);
+    if (isAuthenticated) {
+      const userId = (req.user as any).id;
+      if (book.userId !== null && book.userId !== userId)
+        return res.status(403).json({ message: "Forbidden" });
+      if (book.userId === null)
+        await storage.updateBook(bookId, { userId } as any);
+    }
+
+    const { publish } = req.body as { publish: boolean };
+    const updated = await storage.publishBook(bookId, !!publish);
+
+    // Bust public-library caches so readers see the change immediately
+    await cache.invalidate("public:books");
+    await cache.invalidate(`public:book:${bookId}`);
+    await cache.invalidate("public:featured");
+
+    if (isAuthenticated) {
+      try {
+        const userId = (req.user as any).id;
+        if (publish && !book.isPublished) {
+          await storage.incrementUserPublished(userId);
+        } else if (!publish && book.isPublished) {
+          await storage.decrementUserPublished(userId);
+        }
+        const stats = await storage.getOrCreateUserStats(userId);
+        const newAchievements = await checkAndUnlockAchievements(userId, stats);
+        return res.json({
+          ...updated,
+          newAchievements: newAchievements.map((a) => a.id),
+        });
+      } catch {
+        return res.json(updated);
+      }
+    }
+
+    return res.json(updated);
+  } catch (err: any) {
+    if (err.message === "EMPTY_BOOK") {
+      return res.status(400).json({ message: "Book must have at least one chapter to publish" });
+    }
+    res.status(500).json({ message: "Internal error" });
+  }
 });
 
 // ─── Public Library ─────────────────────────────────────────────────────────
