@@ -341,6 +341,24 @@ export const directMessages = pgTable("direct_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Tutorials ────────────────────────────────────────────────────────────
+
+export const tutorials = pgTable("tutorials", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  category: text("category").notNull().default("getting-started"),
+  duration: text("duration"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  published: boolean("published").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type Tutorial = typeof tutorials.$inferSelect;
+
 // ── Daily AI Usage Tracking ───────────────────────────────────────────────
 
 export const dailyAiUsage = pgTable("daily_ai_usage", {

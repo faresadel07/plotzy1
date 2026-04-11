@@ -500,4 +500,86 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
   } catch { /* table might not exist yet */ }
 })();
 
+// ── Tutorials ────────────────────────────────────────────────────────────
+
+import { tutorials } from "../../../../lib/db/src/schema";
+import { desc, asc } from "drizzle-orm";
+
+// GET /api/tutorials — public, list published tutorials
+router.get("/api/tutorials", async (req, res) => {
+  try {
+    const all = await db.select().from(tutorials)
+      .where(eq(tutorials.published, true))
+      .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
+    res.json(all);
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// GET /api/admin/tutorials — admin, list ALL tutorials (including unpublished)
+router.get("/api/admin/tutorials", requireAdmin, async (req, res) => {
+  try {
+    const all = await db.select().from(tutorials)
+      .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
+    res.json(all);
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// POST /api/admin/tutorials — admin, create tutorial
+router.post("/api/admin/tutorials", requireAdmin, async (req, res) => {
+  try {
+    const { title, description, videoUrl, thumbnailUrl, category, duration, sortOrder, published } = req.body;
+    if (!title?.trim() || !videoUrl?.trim()) {
+      return res.status(400).json({ message: "Title and video URL are required" });
+    }
+    const [tutorial] = await db.insert(tutorials).values({
+      title: title.trim(),
+      description: description?.trim() || null,
+      videoUrl: videoUrl.trim(),
+      thumbnailUrl: thumbnailUrl?.trim() || null,
+      category: category || "getting-started",
+      duration: duration?.trim() || null,
+      sortOrder: sortOrder ?? 0,
+      published: published !== false,
+    }).returning();
+    res.status(201).json(tutorial);
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// PATCH /api/admin/tutorials/:id — admin, update tutorial
+router.patch("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    const updates: any = {};
+    const fields = ["title", "description", "videoUrl", "thumbnailUrl", "category", "duration", "sortOrder", "published"];
+    for (const f of fields) {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
+    }
+    updates.updatedAt = new Date();
+    const [updated] = await db.update(tutorials).set(updates).where(eq(tutorials.id, id)).returning();
+    if (!updated) return res.status(404).json({ message: "Tutorial not found" });
+    res.json(updated);
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// DELETE /api/admin/tutorials/:id — admin, delete tutorial
+router.delete("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    await db.delete(tutorials).where(eq(tutorials.id, id));
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
 export default router;

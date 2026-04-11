@@ -1214,7 +1214,318 @@ function SystemHealthTab() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner";
+// ─── Tutorials Tab ──────────────────────────────────────────────────────────
+
+interface AdminTutorial {
+  id: number;
+  title: string;
+  description: string;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  category: string;
+  duration: string;
+  sortOrder: number;
+  published: boolean;
+  createdAt: string | null;
+}
+
+const TUTORIAL_CATEGORIES = [
+  "getting-started",
+  "writing",
+  "ai-tools",
+  "publishing",
+  "cover-design",
+  "community",
+  "advanced",
+] as const;
+
+const emptyTutorialForm = {
+  title: "",
+  description: "",
+  videoUrl: "",
+  thumbnailUrl: "",
+  category: "getting-started" as string,
+  duration: "",
+  sortOrder: 0,
+  published: false,
+};
+
+function TutorialsTab() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState({ ...emptyTutorialForm });
+
+  const { data: tutorials = [], isLoading } = useQuery<AdminTutorial[]>({
+    queryKey: ["/api/admin/tutorials"],
+    queryFn: () => fetch("/api/admin/tutorials", { credentials: "include" }).then(r => r.json()),
+  });
+
+  const createTutorial = useMutation({
+    mutationFn: (data: typeof emptyTutorialForm) =>
+      fetch("/api/admin/tutorials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      }).then(r => { if (!r.ok) throw new Error("Failed"); return r.json(); }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/tutorials"] });
+      toast({ title: "Tutorial created" });
+      setForm({ ...emptyTutorialForm });
+      setShowForm(false);
+    },
+    onError: () => toast({ title: "Failed to create tutorial", variant: "destructive" }),
+  });
+
+  const updateTutorial = useMutation({
+    mutationFn: ({ id, ...data }: Partial<AdminTutorial> & { id: number }) =>
+      fetch(`/api/admin/tutorials/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      }).then(r => { if (!r.ok) throw new Error("Failed"); return r.json(); }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/tutorials"] });
+      toast({ title: "Tutorial updated" });
+      setEditingId(null);
+      setForm({ ...emptyTutorialForm });
+    },
+    onError: () => toast({ title: "Failed to update tutorial", variant: "destructive" }),
+  });
+
+  const deleteTutorial = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/admin/tutorials/${id}`, { method: "DELETE", credentials: "include" }).then(r => { if (!r.ok) throw new Error("Failed"); return r.json(); }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/tutorials"] });
+      toast({ title: "Tutorial deleted" });
+    },
+    onError: () => toast({ title: "Failed to delete tutorial", variant: "destructive" }),
+  });
+
+  const togglePublished = useMutation({
+    mutationFn: ({ id, published }: { id: number; published: boolean }) =>
+      fetch(`/api/admin/tutorials/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ published }),
+      }).then(r => { if (!r.ok) throw new Error("Failed"); return r.json(); }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/tutorials"] });
+      toast({ title: "Tutorial updated" });
+    },
+    onError: () => toast({ title: "Failed to toggle published", variant: "destructive" }),
+  });
+
+  const startEdit = (t: AdminTutorial) => {
+    setEditingId(t.id);
+    setForm({
+      title: t.title,
+      description: t.description,
+      videoUrl: t.videoUrl,
+      thumbnailUrl: t.thumbnailUrl || "",
+      category: t.category,
+      duration: t.duration,
+      sortOrder: t.sortOrder,
+      published: t.published,
+    });
+    setShowForm(true);
+  };
+
+  const cancelForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ ...emptyTutorialForm });
+  };
+
+  const handleSubmit = () => {
+    if (!form.title.trim() || !form.videoUrl.trim() || !form.duration.trim()) {
+      toast({ title: "Title, Video URL, and Duration are required", variant: "destructive" });
+      return;
+    }
+    if (editingId) {
+      updateTutorial.mutate({ id: editingId, ...form });
+    } else {
+      createTutorial.mutate(form);
+    }
+  };
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <>
+      <div style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
+          {tutorials.length} tutorial{tutorials.length !== 1 ? "s" : ""}
+        </div>
+        {!showForm && (
+          <button style={{ ...S.btn("success"), padding: "8px 18px" }} onClick={() => { setEditingId(null); setForm({ ...emptyTutorialForm }); setShowForm(true); }}>
+            + Add Tutorial
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 12,
+          padding: 24,
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 18, color: "#fff" }}>
+            {editingId ? "Edit Tutorial" : "New Tutorial"}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Title *</label>
+              <input style={inputStyle} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Tutorial title" />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Video URL *</label>
+              <input style={inputStyle} value={form.videoUrl} onChange={e => setForm(f => ({ ...f, videoUrl: e.target.value }))} placeholder="https://youtube.com/watch?v=..." />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Thumbnail URL</label>
+              <input style={inputStyle} value={form.thumbnailUrl} onChange={e => setForm(f => ({ ...f, thumbnailUrl: e.target.value }))} placeholder="Optional thumbnail URL" />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Category *</label>
+              <select
+                style={{ ...inputStyle, appearance: "auto" as any }}
+                value={form.category}
+                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+              >
+                {TUTORIAL_CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Duration *</label>
+              <input style={inputStyle} value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} placeholder="e.g. 5:30" />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Sort Order</label>
+              <input style={inputStyle} type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))} />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Description</label>
+            <textarea
+              style={{ ...inputStyle, minHeight: 80, resize: "vertical", fontFamily: "inherit" }}
+              value={form.description}
+              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Tutorial description"
+            />
+          </div>
+
+          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={form.published}
+              onChange={e => setForm(f => ({ ...f, published: e.target.checked }))}
+              id="tut-published"
+              style={{ accentColor: "#4ade80" }}
+            />
+            <label htmlFor="tut-published" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", cursor: "pointer" }}>Published</label>
+          </div>
+
+          <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+            <button style={{ ...S.btn("success"), padding: "8px 20px" }} onClick={handleSubmit}>
+              {editingId ? "Save Changes" : "Create Tutorial"}
+            </button>
+            <button style={{ ...S.btn("ghost"), padding: "8px 20px" }} onClick={cancelForm}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tutorials.length === 0 && !showForm ? (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)" }}>
+          No tutorials yet. Click "Add Tutorial" to create one.
+        </div>
+      ) : tutorials.length > 0 && (
+        <div style={{ overflowX: "auto" }}>
+          <table style={S.table}>
+            <thead>
+              <tr>
+                <th style={S.th}>Order</th>
+                <th style={S.th}>Title</th>
+                <th style={S.th}>Category</th>
+                <th style={S.th}>Duration</th>
+                <th style={S.th}>Published</th>
+                <th style={S.th}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tutorials.map(t => (
+                <tr key={t.id}>
+                  <td style={S.td}>{t.sortOrder}</td>
+                  <td style={S.td}>
+                    <div style={{ fontWeight: 600 }}>{t.title}</div>
+                    {t.description && (
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {t.description}
+                      </div>
+                    )}
+                  </td>
+                  <td style={S.td}>
+                    <span style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 20,
+                      padding: "2px 10px",
+                      fontSize: 11,
+                      fontWeight: 500,
+                    }}>
+                      {t.category}
+                    </span>
+                  </td>
+                  <td style={S.td}>{t.duration}</td>
+                  <td style={S.td}>
+                    <button
+                      style={{ ...S.btn(t.published ? "success" : "ghost"), padding: "4px 12px", fontSize: 11 }}
+                      onClick={() => togglePublished.mutate({ id: t.id, published: !t.published })}
+                    >
+                      {t.published ? "Published" : "Draft"}
+                    </button>
+                  </td>
+                  <td style={S.td}>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button style={{ ...S.btn("default"), padding: "4px 12px", fontSize: 11 }} onClick={() => startEdit(t)}>
+                        Edit
+                      </button>
+                      <button
+                        style={{ ...S.btn("danger"), padding: "4px 12px", fontSize: 11 }}
+                        onClick={() => {
+                          if (window.confirm(`Delete "${t.title}"? This cannot be undone.`)) {
+                            deleteTutorial.mutate(t.id);
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+
+type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -1280,6 +1591,7 @@ export default function AdminPage() {
           <TabBtn label="Activity" active={tab === "activity"} onClick={() => setTab("activity")} />
           <TabBtn label="Banner" active={tab === "banner"} onClick={() => setTab("banner")} />
           <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
+          <TabBtn label="Tutorials" active={tab === "tutorials"} onClick={() => setTab("tutorials")} />
         </div>
 
         {tab === "analytics"  && <AnalyticsTab />}
@@ -1302,6 +1614,7 @@ export default function AdminPage() {
               <li><b style={{ color: "#fff" }}>Support</b> — read and manage support tickets</li>
               <li><b style={{ color: "#fff" }}>Activity</b> — recent platform events</li>
               <li><b style={{ color: "#fff" }}>Banner</b> — site-wide announcements</li>
+              <li><b style={{ color: "#fff" }}>Tutorials</b> — manage video tutorials for the Learning Center</li>
             </ul>
           </div>
         )}
@@ -1311,6 +1624,7 @@ export default function AdminPage() {
         {tab === "support"  && <SupportTab />}
         {tab === "activity" && <ActivityTab />}
         {tab === "banner"   && <BannerTab />}
+        {tab === "tutorials" && <TutorialsTab />}
       </div>
     </div>
   );
