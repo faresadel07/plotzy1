@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
@@ -1247,7 +1247,17 @@ const emptyTutorialForm = {
   category: "getting-started" as string,
   duration: "",
   sortOrder: 0,
-  published: false,
+  published: true,
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  "getting-started": "Getting Started",
+  "writing": "Writing",
+  "ai-tools": "AI Tools",
+  "publishing": "Publishing",
+  "cover-design": "Cover Design",
+  "community": "Community",
+  "advanced": "Advanced",
 };
 
 function TutorialsTab() {
@@ -1256,6 +1266,8 @@ function TutorialsTab() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...emptyTutorialForm });
+  const [dragOver, setDragOver] = useState(false);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
 
   const { data: tutorials = [], isLoading } = useQuery<AdminTutorial[]>({
     queryKey: ["/api/admin/tutorials"],
@@ -1354,171 +1366,212 @@ function TutorialsTab() {
     }
   };
 
+  /* Handle thumbnail file upload */
+  const handleThumbFile = (file: File) => {
+    if (!file.type.startsWith("image/")) { toast({ title: "Please select an image file", variant: "destructive" }); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => setForm(f => ({ ...f, thumbnailUrl: ev.target?.result as string }));
+    reader.readAsDataURL(file);
+  };
+
+  /* Auto-extract YouTube thumbnail */
+  const autoThumbnail = (url: string) => {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]+)/);
+    if (m && !form.thumbnailUrl) {
+      setForm(f => ({ ...f, thumbnailUrl: `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` }));
+    }
+  };
+
   if (isLoading) return <Spinner />;
+
+  const lbl: React.CSSProperties = { fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 5, display: "block" };
 
   return (
     <>
+      {/* ── Header ── */}
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
-          {tutorials.length} tutorial{tutorials.length !== 1 ? "s" : ""}
+          {tutorials.length} tutorial{tutorials.length !== 1 ? "s" : ""} · {tutorials.filter(t => t.published).length} published
         </div>
         {!showForm && (
-          <button style={{ ...S.btn("success"), padding: "8px 18px" }} onClick={() => { setEditingId(null); setForm({ ...emptyTutorialForm }); setShowForm(true); }}>
+          <button style={{ ...S.btn("default"), padding: "8px 18px", background: "#fff", color: "#000" }} onClick={() => { setEditingId(null); setForm({ ...emptyTutorialForm }); setShowForm(true); }}>
             + Add Tutorial
           </button>
         )}
       </div>
 
+      {/* ── Add/Edit Form ── */}
       {showForm && (
-        <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 12,
-          padding: 24,
-          marginBottom: 24,
-        }}>
-          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 18, color: "#fff" }}>
-            {editingId ? "Edit Tutorial" : "New Tutorial"}
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 24, marginBottom: 24 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20, color: "#fff" }}>
+            {editingId ? "Edit Tutorial" : "Add New Tutorial"}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {/* Drag & drop zone for video URL */}
+          <div
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => {
+              e.preventDefault(); setDragOver(false);
+              const text = e.dataTransfer.getData("text/plain") || e.dataTransfer.getData("text/uri-list");
+              if (text && (text.includes("youtube") || text.includes("youtu.be") || text.includes("vimeo"))) {
+                setForm(f => ({ ...f, videoUrl: text }));
+                autoThumbnail(text);
+                toast({ title: "Video URL added!" });
+              } else {
+                toast({ title: "Drop a YouTube or Vimeo link here", variant: "destructive" });
+              }
+            }}
+            style={{
+              border: `2px dashed ${dragOver ? "#fff" : "rgba(255,255,255,0.12)"}`,
+              borderRadius: 12, padding: "20px 24px", marginBottom: 16,
+              background: dragOver ? "rgba(255,255,255,0.04)" : "transparent",
+              transition: "all 0.15s", textAlign: "center",
+            }}
+          >
+            {form.videoUrl ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ flex: 1, textAlign: "left" }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>VIDEO URL</div>
+                  <input
+                    style={{ ...inputStyle, borderColor: "rgba(255,255,255,0.15)" }}
+                    value={form.videoUrl}
+                    onChange={e => { setForm(f => ({ ...f, videoUrl: e.target.value })); autoThumbnail(e.target.value); }}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+                <button onClick={() => setForm(f => ({ ...f, videoUrl: "", thumbnailUrl: "" }))} style={{ ...S.btn("ghost"), padding: "6px 10px", fontSize: 11 }}>Clear</button>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }}>🎬</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>Drag & drop a YouTube or Vimeo link here</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>or paste the URL below</div>
+                <input
+                  style={{ ...inputStyle, marginTop: 12, maxWidth: 400, margin: "12px auto 0", display: "block", textAlign: "center" }}
+                  value={form.videoUrl}
+                  onChange={e => { setForm(f => ({ ...f, videoUrl: e.target.value })); autoThumbnail(e.target.value); }}
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Form fields */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Title *</label>
-              <input style={inputStyle} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Tutorial title" />
+              <label style={lbl}>Title *</label>
+              <input style={inputStyle} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. How to Write Your First Chapter" />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Video URL *</label>
-              <input style={inputStyle} value={form.videoUrl} onChange={e => setForm(f => ({ ...f, videoUrl: e.target.value }))} placeholder="https://youtube.com/watch?v=..." />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Thumbnail URL</label>
-              <input style={inputStyle} value={form.thumbnailUrl} onChange={e => setForm(f => ({ ...f, thumbnailUrl: e.target.value }))} placeholder="Optional thumbnail URL" />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Category *</label>
-              <select
-                style={{ ...inputStyle, appearance: "auto" as any }}
-                value={form.category}
-                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-              >
-                {TUTORIAL_CATEGORIES.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+              <label style={lbl}>Category</label>
+              <select style={{ ...inputStyle, appearance: "auto" as any }} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                {TUTORIAL_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Duration *</label>
+              <label style={lbl}>Duration *</label>
               <input style={inputStyle} value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} placeholder="e.g. 5:30" />
             </div>
             <div>
-              <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Sort Order</label>
+              <label style={lbl}>Sort Order</label>
               <input style={inputStyle} type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))} />
             </div>
           </div>
 
-          <div style={{ marginTop: 16 }}>
-            <label style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Description</label>
+          {/* Thumbnail */}
+          <div style={{ marginTop: 14 }}>
+            <label style={lbl}>Thumbnail</label>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              {form.thumbnailUrl && (
+                <img src={form.thumbnailUrl} alt="" style={{ width: 120, height: 68, objectFit: "cover", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }} />
+              )}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => thumbInputRef.current?.click()} style={{ ...S.btn("ghost"), padding: "6px 14px", fontSize: 11 }}>
+                  Upload Image
+                </button>
+                {form.thumbnailUrl && (
+                  <button onClick={() => setForm(f => ({ ...f, thumbnailUrl: "" }))} style={{ ...S.btn("ghost"), padding: "6px 14px", fontSize: 11, color: "#f87171" }}>
+                    Remove
+                  </button>
+                )}
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", alignSelf: "center" }}>
+                  {form.thumbnailUrl ? "" : "Auto-detected from YouTube"}
+                </span>
+              </div>
+              <input ref={thumbInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleThumbFile(f); }} />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div style={{ marginTop: 14 }}>
+            <label style={lbl}>Description</label>
             <textarea
-              style={{ ...inputStyle, minHeight: 80, resize: "vertical", fontFamily: "inherit" }}
-              value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              placeholder="Tutorial description"
+              style={{ ...inputStyle, minHeight: 70, resize: "vertical", fontFamily: "inherit" }}
+              value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Brief description of what this tutorial covers..."
             />
           </div>
 
-          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={form.published}
-              onChange={e => setForm(f => ({ ...f, published: e.target.checked }))}
-              id="tut-published"
-              style={{ accentColor: "#4ade80" }}
-            />
-            <label htmlFor="tut-published" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", cursor: "pointer" }}>Published</label>
-          </div>
-
-          <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-            <button style={{ ...S.btn("success"), padding: "8px 20px" }} onClick={handleSubmit}>
-              {editingId ? "Save Changes" : "Create Tutorial"}
-            </button>
-            <button style={{ ...S.btn("ghost"), padding: "8px 20px" }} onClick={cancelForm}>
-              Cancel
-            </button>
+          {/* Published toggle + actions */}
+          <div style={{ marginTop: 18, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" checked={form.published} onChange={e => setForm(f => ({ ...f, published: e.target.checked }))} id="tut-pub" style={{ accentColor: "#4ade80" }} />
+              <label htmlFor="tut-pub" style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", cursor: "pointer" }}>Publish immediately</label>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={{ ...S.btn("ghost"), padding: "8px 18px" }} onClick={cancelForm}>Cancel</button>
+              <button style={{ ...S.btn("default"), padding: "8px 20px", background: "#fff", color: "#000", fontWeight: 700 }} onClick={handleSubmit}>
+                {editingId ? "Save Changes" : "Add Tutorial"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* ── Tutorial Cards Grid ── */}
       {tutorials.length === 0 && !showForm ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)" }}>
-          No tutorials yet. Click "Add Tutorial" to create one.
+        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.25)" }}>
+          <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.4 }}>🎬</div>
+          <p style={{ fontSize: 14 }}>No tutorials yet</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.15)", marginTop: 4 }}>Click "Add Tutorial" to create your first video guide</p>
         </div>
       ) : tutorials.length > 0 && (
-        <div style={{ overflowX: "auto" }}>
-          <table style={S.table}>
-            <thead>
-              <tr>
-                <th style={S.th}>Order</th>
-                <th style={S.th}>Title</th>
-                <th style={S.th}>Category</th>
-                <th style={S.th}>Duration</th>
-                <th style={S.th}>Published</th>
-                <th style={S.th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tutorials.map(t => (
-                <tr key={t.id}>
-                  <td style={S.td}>{t.sortOrder}</td>
-                  <td style={S.td}>
-                    <div style={{ fontWeight: 600 }}>{t.title}</div>
-                    {t.description && (
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {t.description}
-                      </div>
-                    )}
-                  </td>
-                  <td style={S.td}>
-                    <span style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 20,
-                      padding: "2px 10px",
-                      fontSize: 11,
-                      fontWeight: 500,
-                    }}>
-                      {t.category}
-                    </span>
-                  </td>
-                  <td style={S.td}>{t.duration}</td>
-                  <td style={S.td}>
-                    <button
-                      style={{ ...S.btn(t.published ? "success" : "ghost"), padding: "4px 12px", fontSize: 11 }}
-                      onClick={() => togglePublished.mutate({ id: t.id, published: !t.published })}
-                    >
-                      {t.published ? "Published" : "Draft"}
-                    </button>
-                  </td>
-                  <td style={S.td}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button style={{ ...S.btn("default"), padding: "4px 12px", fontSize: 11 }} onClick={() => startEdit(t)}>
-                        Edit
-                      </button>
-                      <button
-                        style={{ ...S.btn("danger"), padding: "4px 12px", fontSize: 11 }}
-                        onClick={() => {
-                          if (window.confirm(`Delete "${t.title}"? This cannot be undone.`)) {
-                            deleteTutorial.mutate(t.id);
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+          {tutorials.map(t => (
+            <div key={t.id} style={{
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 12, overflow: "hidden", opacity: t.published ? 1 : 0.5,
+            }}>
+              {/* Thumbnail */}
+              <div style={{ aspectRatio: "16/9", background: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                {t.thumbnailUrl ? (
+                  <img src={t.thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: 24, opacity: 0.3 }}>🎬</span>
+                )}
+                {t.duration && (
+                  <span style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.75)", borderRadius: 4, padding: "2px 6px", fontSize: 10, fontWeight: 600, color: "#fff" }}>{t.duration}</span>
+                )}
+                {!t.published && (
+                  <span style={{ position: "absolute", top: 6, left: 6, background: "rgba(251,191,36,0.9)", borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700, color: "#000", textTransform: "uppercase" }}>Draft</span>
+                )}
+              </div>
+              {/* Info */}
+              <div style={{ padding: "12px 14px" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginBottom: 4, lineHeight: 1.3 }}>{t.title}</div>
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: "1px 8px" }}>{CATEGORY_LABELS[t.category] || t.category}</span>
+                {/* Actions */}
+                <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                  <button style={{ ...S.btn("ghost"), padding: "4px 10px", fontSize: 11 }} onClick={() => startEdit(t)}>Edit</button>
+                  <button style={{ ...S.btn(t.published ? "ghost" : "success"), padding: "4px 10px", fontSize: 11 }} onClick={() => togglePublished.mutate({ id: t.id, published: !t.published })}>
+                    {t.published ? "Unpublish" : "Publish"}
+                  </button>
+                  <button style={{ ...S.btn("danger"), padding: "4px 10px", fontSize: 11 }} onClick={() => { if (confirm(`Delete "${t.title}"?`)) deleteTutorial.mutate(t.id); }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </>

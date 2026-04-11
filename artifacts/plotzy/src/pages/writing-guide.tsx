@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -415,14 +416,29 @@ function Divider() {
 /* ─── MAIN PAGE ─── */
 
 export default function WritingGuide() {
+  const [, navigate] = useLocation();
   const [activeSection, setActiveSection] = useState("genres");
   const [expandedGenre, setExpandedGenre] = useState<string | null>(null);
   const [activeStructure, setActiveStructure] = useState(0);
   const [expandedAct, setExpandedAct] = useState<number | null>(null);
   const [expandedChecklist, setExpandedChecklist] = useState<number | null>(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [readSections, setReadSections] = useState<Set<string>>(new Set());
 
   const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Scroll progress bar
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0;
+      setScrollProgress(progress);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const sectionIds = ["genres", "structure", "characters", "dialogue", "process", "editing", "mistakes"];
@@ -433,8 +449,16 @@ export default function WritingGuide() {
       if (!el) return;
       const obs = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting && !isScrollingRef.current) {
-            setActiveSection(id);
+          if (entry.isIntersecting) {
+            if (!isScrollingRef.current) {
+              setActiveSection(id);
+            }
+            setReadSections(prev => {
+              if (prev.has(id)) return prev;
+              const next = new Set(prev);
+              next.add(id);
+              return next;
+            });
           }
         },
         { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
@@ -457,6 +481,12 @@ export default function WritingGuide() {
 
   return (
     <Layout isFullDark lightNav>
+      {/* ── Progress Bar ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: 3,
+        background: "#fff", zIndex: 50, transition: "width 0.1s linear",
+      }} />
+
       <div className="dark px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* ── Hero ── */}
       <motion.div
@@ -496,8 +526,47 @@ export default function WritingGuide() {
               {label}
             </button>
           ))}
+          <span className="flex-shrink-0 ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-foreground/[0.04] border border-border/50 whitespace-nowrap">
+            {readSections.size}/7 sections read
+          </span>
         </div>
       </div>
+
+      {/* ── Flex wrapper for sidebar + content ── */}
+      <div className="flex gap-0 lg:gap-8">
+        {/* ── Sticky Sidebar TOC (Desktop Only) ── */}
+        <aside className="hidden lg:block flex-shrink-0" style={{ width: 200 }}>
+          <div className="sticky top-[100px]" style={{ width: 200 }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">Table of Contents</p>
+            <nav className="space-y-1">
+              {sections.map((sec, i) => {
+                const isActive = activeSection === sec.id;
+                const isRead = readSections.has(sec.id);
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => scrollTo(sec.id)}
+                    className="w-full flex items-center gap-2.5 py-1.5 text-left transition-all group"
+                  >
+                    <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full transition-all ${isActive ? "bg-white scale-125" : "bg-transparent"}`} />
+                    <span className={`text-xs font-mono ${isActive ? "text-white font-bold" : "text-muted-foreground group-hover:text-foreground/70"}`}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className={`text-xs flex-1 truncate transition-colors ${isActive ? "text-white font-semibold" : "text-muted-foreground group-hover:text-foreground/70"}`}>
+                      {sec.label}
+                    </span>
+                    {isRead && !isActive && (
+                      <svg className="w-3 h-3 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </aside>
+
+        {/* ── Main content area ── */}
+        <div className="flex-1 min-w-0">
 
       {/* ══════════════════════════════════════════════ */}
       {/* SECTION 1: GENRES */}
@@ -562,7 +631,17 @@ export default function WritingGuide() {
                           </div>
                           <div className="rounded-xl p-3 border border-border bg-foreground/4">
                             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Writing Tip</p>
-                            <p className="text-sm text-foreground/80 leading-relaxed">{genre.tip}</p>
+                            <div style={{
+                              borderLeft: "3px solid " + genre.accent,
+                              paddingLeft: 16,
+                              margin: "12px 0",
+                              fontStyle: "italic",
+                              color: "rgba(255,255,255,0.6)",
+                              fontSize: 14,
+                              lineHeight: 1.7,
+                            }}>
+                              {genre.tip}
+                            </div>
                           </div>
                           <div>
                             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Notable Examples</p>
@@ -582,6 +661,25 @@ export default function WritingGuide() {
           })}
         </div>
         <p className="text-center text-sm text-muted-foreground">Tap any genre to expand its full breakdown.</p>
+
+        {/* CTA: Genres */}
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: "32px 24px",
+          textAlign: "center",
+          margin: "32px 0 48px",
+        }}>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Choose your genre and begin your first chapter</p>
+          <button onClick={() => navigate("/")} style={{
+            padding: "10px 28px", borderRadius: 10,
+            background: "#fff", color: "#000", border: "none",
+            fontSize: 14, fontWeight: 600, cursor: "pointer",
+          }}>
+            Start Writing in Your Genre
+          </button>
+        </div>
       </section>
 
       <Divider />
@@ -671,6 +769,25 @@ export default function WritingGuide() {
             })()}
           </motion.div>
         </AnimatePresence>
+
+        {/* CTA: Structure */}
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: "32px 24px",
+          textAlign: "center",
+          margin: "32px 0 48px",
+        }}>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Use our Story Beats board to plan your narrative</p>
+          <button onClick={() => navigate("/")} style={{
+            padding: "10px 28px", borderRadius: 10,
+            background: "#fff", color: "#000", border: "none",
+            fontSize: 14, fontWeight: 600, cursor: "pointer",
+          }}>
+            Create Your Story Outline
+          </button>
+        </div>
       </section>
 
       <Divider />
@@ -742,6 +859,25 @@ export default function WritingGuide() {
               );
             })}
           </div>
+        </div>
+
+        {/* CTA: Characters */}
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: "32px 24px",
+          textAlign: "center",
+          margin: "32px 0 48px",
+        }}>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Document your characters in the Story Bible</p>
+          <button onClick={() => navigate("/")} style={{
+            padding: "10px 28px", borderRadius: 10,
+            background: "#fff", color: "#000", border: "none",
+            fontSize: 14, fontWeight: 600, cursor: "pointer",
+          }}>
+            Build Your Character Bible
+          </button>
         </div>
       </section>
 
@@ -1049,6 +1185,10 @@ export default function WritingGuide() {
           </p>
         </motion.div>
       </section>
+
+        </div>{/* end main content area */}
+      </div>{/* end flex wrapper */}
+
       </div>
     </Layout>
   );

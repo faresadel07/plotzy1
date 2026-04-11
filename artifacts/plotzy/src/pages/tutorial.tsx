@@ -35,8 +35,8 @@ interface Tutorial {
 }
 
 function toEmbedUrl(url: string): string {
-  // YouTube: watch?v=ID
-  let m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/);
+  // YouTube: watch?v=ID, youtu.be/ID, shorts/ID, live/ID
+  let m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]+)/);
   if (m) return `https://www.youtube.com/embed/${m[1]}`;
   // YouTube: already embed
   if (url.includes("youtube.com/embed/")) return url;
