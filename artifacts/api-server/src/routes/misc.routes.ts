@@ -500,6 +500,53 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
   } catch { /* table might not exist yet */ }
 })();
 
+// ── Marketplace Usage ────────────────────────────────────────────────────
+
+import { getUserTier, getTierLimits, checkMarketplaceLimit, recordMarketplaceUsage, getMarketplaceHistory } from "../lib/tier-limits";
+
+// GET /api/marketplace/usage — current user's marketplace usage + limits
+router.get("/api/marketplace/usage", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const user = await storage.getUserById(req.user.id);
+    if (!user) return res.status(401).json({ message: "User not found" });
+    const tier = getUserTier(user as any);
+    const limits = getTierLimits(tier);
+    const usage = await checkMarketplaceLimit(req.user.id, tier);
+    res.json({ tier, ...usage, canUse: limits.canUseMarketplace });
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// GET /api/marketplace/history — user's past analyses
+router.get("/api/marketplace/history", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const history = await getMarketplaceHistory(req.user.id);
+    res.json(history);
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// POST /api/marketplace/record — record a marketplace usage (called after analysis completes)
+router.post("/api/marketplace/record", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const user = await storage.getUserById(req.user.id);
+    if (!user) return res.status(401).json({ message: "User not found" });
+    const tier = getUserTier(user as any);
+    const { allowed } = await checkMarketplaceLimit(req.user.id, tier);
+    if (!allowed) return res.status(429).json({ message: "Monthly marketplace limit reached. Upgrade your plan for more analyses.", code: "MARKETPLACE_LIMIT" });
+    const { serviceId, bookId } = req.body;
+    await recordMarketplaceUsage(req.user.id, serviceId, bookId);
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
 // ── Tutorials ────────────────────────────────────────────────────────────
 
 import { tutorials } from "../../../../lib/db/src/schema";

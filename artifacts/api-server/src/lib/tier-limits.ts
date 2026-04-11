@@ -15,11 +15,12 @@ interface TierLimits {
   maxWords: number;
   maxAiCallsPerDay: number;
   maxPublishedBooks: number;
+  maxMarketplacePerMonth: number;
   canExportPdf: boolean;
   canExportEpub: boolean;
   canUseAudiobook: boolean;
   canUseCoverDesigner: boolean;
-  canUseAdvancedAI: boolean;      // show-don't-tell, plot holes, voice analysis
+  canUseAdvancedAI: boolean;
   canUseMarketplace: boolean;
   canUseVersionHistory: boolean;
   canUseAmbientSounds: boolean;
@@ -38,6 +39,7 @@ const LIMITS: Record<Tier, TierLimits> = {
     canUseAudiobook: false,
     canUseCoverDesigner: true,
     canUseAdvancedAI: false,
+    maxMarketplacePerMonth: 0,
     canUseMarketplace: false,
     canUseVersionHistory: false,
     canUseAmbientSounds: true,
@@ -54,6 +56,7 @@ const LIMITS: Record<Tier, TierLimits> = {
     canUseAudiobook: true,
     canUseCoverDesigner: true,
     canUseAdvancedAI: true,
+    maxMarketplacePerMonth: 3,
     canUseMarketplace: true,
     canUseVersionHistory: true,
     canUseAmbientSounds: true,
@@ -70,6 +73,7 @@ const LIMITS: Record<Tier, TierLimits> = {
     canUseAudiobook: true,
     canUseCoverDesigner: true,
     canUseAdvancedAI: true,
+    maxMarketplacePerMonth: 9,
     canUseMarketplace: true,
     canUseVersionHistory: true,
     canUseAmbientSounds: true,
@@ -116,4 +120,45 @@ export async function checkAiLimit(userId: number, tier: Tier): Promise<{ allowe
   const used = await getAiUsageToday(userId);
   const remaining = Math.max(0, limits.maxAiCallsPerDay - used);
   return { allowed: used < limits.maxAiCallsPerDay, remaining, limit: limits.maxAiCallsPerDay, used };
+}
+
+// ── Marketplace Usage (monthly) ──────────────────────────────────────────
+
+/** Get this month's marketplace usage count. */
+export async function getMarketplaceUsageThisMonth(userId: number): Promise<number> {
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  const result = await db.execute(sql`
+    SELECT COUNT(*) as cnt FROM marketplace_usage
+    WHERE user_id = ${userId} AND created_at >= ${monthStart}::date
+  `);
+  return Number((result as any).rows?.[0]?.cnt ?? 0);
+}
+
+/** Record a marketplace usage. */
+export async function recordMarketplaceUsage(userId: number, serviceId: string, bookId?: number): Promise<void> {
+  await db.execute(sql`
+    INSERT INTO marketplace_usage (user_id, service_id, book_id)
+    VALUES (${userId}, ${serviceId}, ${bookId ?? null})
+  `);
+}
+
+/** Check if user can use marketplace. */
+export async function checkMarketplaceLimit(userId: number, tier: Tier): Promise<{ allowed: boolean; remaining: number; limit: number; used: number }> {
+  const limits = getTierLimits(tier);
+  if (!limits.canUseMarketplace) return { allowed: false, remaining: 0, limit: 0, used: 0 };
+  const used = await getMarketplaceUsageThisMonth(userId);
+  const remaining = Math.max(0, limits.maxMarketplacePerMonth - used);
+  return { allowed: used < limits.maxMarketplacePerMonth, remaining, limit: limits.maxMarketplacePerMonth, used };
+}
+
+/** Get user's marketplace history. */
+export async function getMarketplaceHistory(userId: number): Promise<any[]> {
+  const result = await db.execute(sql`
+    SELECT * FROM marketplace_usage
+    WHERE user_id = ${userId}
+    ORDER BY created_at DESC
+    LIMIT 50
+  `);
+  return (result as any).rows ?? [];
 }
