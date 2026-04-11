@@ -722,7 +722,7 @@ function LaunchModal({
                       </p>
                     </div>
                     <Link
-                      href="/settings"
+                      href="/pricing"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "11px 24px", borderRadius: 10,
@@ -762,7 +762,7 @@ function LaunchModal({
                       </p>
                     </div>
                     <Link
-                      href="/settings"
+                      href="/pricing"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 6,
                         padding: "11px 24px", borderRadius: 10,

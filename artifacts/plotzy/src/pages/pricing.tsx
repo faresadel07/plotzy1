@@ -26,6 +26,7 @@ const FEATURES_FREE = [
   "Basic cover designer",
   "Community library access",
   "Ambient sounds",
+  "No Marketplace access",
 ];
 
 const FEATURES_PRO = [
@@ -37,7 +38,7 @@ const FEATURES_PRO = [
   "Audiobook studio",
   "AI analysis tools (plot holes, pacing, voice)",
   "Version history",
-  "Marketplace access",
+  "3 AI Marketplace analyses per month",
 ];
 
 const FEATURES_PREMIUM = [
@@ -45,16 +46,17 @@ const FEATURES_PREMIUM = [
   "Unlimited books, chapters & words",
   "Unlimited AI assists",
   "Unlimited publishing",
+  "9 AI Marketplace analyses per month",
   "Priority support",
   "Early access to new features",
 ];
 
 /* ── FAQ ── */
 const FAQ = [
-  ["Can I cancel anytime?", "Yes — cancel from your account settings at any time. You keep access until the end of your billing period."],
-  ["What payment methods are accepted?", "Credit/debit cards, Apple Pay, and PayPal — all handled securely."],
-  ["What happens to my work if I cancel?", "Your books are always yours. After cancellation you move back to the free plan, but your content is never deleted."],
-  ["Is there a student or team discount?", "Reach out to us — we're happy to discuss educational and team pricing."],
+  ["Can I cancel anytime?", "Yes. Cancel from your account settings at any time. You keep full access until the end of your current billing period. No cancellation fees."],
+  ["What payment methods do you accept?", "We accept credit cards, debit cards, Apple Pay, and PayPal. All payments are processed securely through PayPal's payment infrastructure."],
+  ["What happens to my work if I cancel?", "Your books are always yours. After cancellation you move back to the Free plan, but your content is never deleted. You can export everything at any time."],
+  ["What are Marketplace analyses?", "The AI Marketplace lets you run professional editorial analyses on your manuscripts. Pro users get 3 analyses per month, Premium users get 9. Each analysis provides a detailed score card and report."],
 ];
 
 type BillingCycle = "monthly" | "yearly";
@@ -478,7 +480,7 @@ export default function Pricing() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                    gridTemplateColumns: "1fr 1fr",
                     gap: 12,
                     marginTop: 16,
                   }}
@@ -488,13 +490,13 @@ export default function Pricing() {
                       key={q}
                       style={{
                         borderRadius: 14,
-                        padding: "16px 18px",
-                        background: C3,
+                        padding: "18px 20px",
+                        background: C2,
                         border: `1px solid ${B}`,
                       }}
                     >
-                      <p style={{ fontWeight: 600, color: "rgba(255,255,255,0.85)", marginBottom: 6, fontSize: 13 }}>{q}</p>
-                      <p style={{ color: TS, fontSize: 12, lineHeight: 1.7 }}>{a}</p>
+                      <p style={{ fontWeight: 600, color: T, marginBottom: 8, fontSize: 13.5 }}>{q}</p>
+                      <p style={{ color: TS, fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>{a}</p>
                     </div>
                   ))}
                 </div>

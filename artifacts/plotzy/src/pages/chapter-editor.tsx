@@ -140,7 +140,7 @@ const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: numb
   "a4":     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",         labelAr: "A4 قياسي",        icon: "📄" },
 };
 
-const DEFAULT_MARGIN = 72; // px — 0.75 inch at 96 dpi
+const DEFAULT_MARGIN = 60; // px — 0.625 inch at 96 dpi (tighter margins = more text per page)
 
 function getPageDimensions(prefs: { paperSize?: string; marginTop?: number; marginBottom?: number; marginLeft?: number; marginRight?: number }) {
   const paper = PAPER_SIZES[prefs.paperSize || "trade"];
@@ -161,8 +161,8 @@ function getPageDimensions(prefs: { paperSize?: string; marginTop?: number; marg
 }
 
 // Legacy fallbacks (used in measurement div until effectivePrefs are loaded)
-const PAGE_CONTENT_HEIGHT = 720; // px — Trade 6×9 with 72px margins (864-144)
-const PAGE_CONTENT_WIDTH  = 432; // px — 576 - 144
+const PAGE_CONTENT_HEIGHT = 744; // px — Trade 6×9 with 60px margins (864-120)
+const PAGE_CONTENT_WIDTH  = 456; // px — 576 - 120
 
 /**
  * Calculate the ideal words per page.
@@ -380,7 +380,7 @@ export default function ChapterEditor() {
       const pagePaddingV = 80;
       const available = containerH - titleAreaH - pagePaddingV;
       const fitPct = Math.floor((available / pageH) * 100);
-      const optimal = Math.max(55, Math.min(95, fitPct));
+      const optimal = Math.max(60, Math.min(95, fitPct));
       setZoom(optimal);
       autoZoomApplied.current = true;
     });
@@ -767,7 +767,7 @@ export default function ChapterEditor() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
   if (!chapter) {
-    return <div className="text-center py-20">{ar ? "الفصل غير موجود." : "Chapter not found."}</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
   }
 
   const handlePageChange = (index: number, value: string) => {

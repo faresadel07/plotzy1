@@ -15,6 +15,7 @@ export function useChapters(bookId: number) {
       return parseWithLogging(api.chapters.list.responses?.[200], data, "chapters.list");
     },
     enabled: !!bookId,
+    placeholderData: (prev: any) => prev,
   });
 }
 
