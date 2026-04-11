@@ -25,6 +25,7 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan }),
+      credentials: "include",
     });
     if (!res.ok) throw new Error("Failed to create order");
     return (await res.json()).orderId as string;
@@ -36,6 +37,7 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId: data.orderID, plan }),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Capture failed");
       toast({ title: "🎉 Welcome to Plotzy Pro!", description: "Your subscription is now active." });
@@ -46,7 +48,12 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
     }
   };
 
-  const onError = () => {
+  const onError = (err: any) => {
+    console.error("PayPal error:", err);
+    toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
+  };
+
+  const onCancel = () => {
     toast({ title: "Payment cancelled", description: "You can try again anytime.", variant: "destructive" });
   };
 
@@ -58,6 +65,7 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
         createOrder={createOrder}
         onApprove={onApprove}
         onError={onError}
+        onCancel={onCancel}
       />
       <PayPalButtons
         fundingSource="card"
@@ -65,13 +73,7 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
         createOrder={createOrder}
         onApprove={onApprove}
         onError={onError}
-      />
-      <PayPalButtons
-        fundingSource="applepay"
-        style={{ layout: "horizontal", height: 48, shape: "rect" }}
-        createOrder={createOrder}
-        onApprove={onApprove}
-        onError={onError}
+        onCancel={onCancel}
       />
     </div>
   );

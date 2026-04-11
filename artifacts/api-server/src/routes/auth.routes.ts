@@ -65,7 +65,7 @@ router.get("/api/auth/user", async (req, res) => {
       const dbUser = await storage.getUserById(req.user.id);
       if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
       const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
-      const isAdmin = !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
+      const isAdmin = (dbUser as any).role === "admin" || !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
       return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin, suspended: !!suspended });
     }
     return res.status(401).json({ message: "Not authenticated" });
@@ -145,6 +145,7 @@ router.post("/api/auth/login", async (req, res) => {
     return res.json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid input" });
+    logger.error({ err }, "Login error");
     return res.status(500).json({ message: "Login failed" });
   }
 });
