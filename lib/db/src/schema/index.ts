@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean, jsonb, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb, numeric, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -26,6 +26,7 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   suspended: boolean("suspended").default(false),
+  role: text("role").default("user").notNull(), // user | admin | moderator
 });
 
 export const siteSettings = pgTable("site_settings", {
@@ -43,19 +44,21 @@ export type BookPages = {
 
 export const bookSeries = pgTable("book_series", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_book_series_user_id").on(t.userId),
+]);
 
 export type BookSeries = typeof bookSeries.$inferSelect;
 export type InsertBookSeries = typeof bookSeries.$inferInsert;
 
 export const books = pgTable("books", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id"),
-  seriesId: integer("series_id"),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  seriesId: integer("series_id").references(() => bookSeries.id, { onDelete: "set null" }),
   seriesOrder: integer("series_order").default(0),
   title: text("title").notNull(),
   coverImage: text("cover_image"),
@@ -91,12 +94,17 @@ export const books = pgTable("books", {
   viewCount: integer("view_count").default(0).notNull(),
   // Featured by admin in community library
   featured: boolean("featured").default(false),
-});
+}, (t) => [
+  index("idx_books_user_id").on(t.userId),
+  index("idx_books_is_published").on(t.isPublished),
+  index("idx_books_is_deleted").on(t.isDeleted),
+  index("idx_books_series_id").on(t.seriesId),
+]);
 
 export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
-  userId: integer("user_id"),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   title: text("title").notNull(),
   content: text("content").notNull(),
   // Ordering for drag-and-drop reordering
@@ -104,7 +112,10 @@ export const chapters = pgTable("chapters", {
   // Writing status label
   status: text("status").default("draft").notNull(), // draft | revised | final
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_chapters_book_id").on(t.bookId),
+  index("idx_chapters_user_id").on(t.userId),
+]);
 
 export const chapterSnapshots = pgTable("chapter_snapshots", {
   id: serial("id").primaryKey(),
@@ -145,22 +156,26 @@ export type BookPreferences = {
 
 export const dailyProgress = pgTable("daily_progress", {
   id: serial("id").primaryKey(),
-  bookId: integer("book_id").notNull(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   date: timestamp("date").notNull(), // e.g., midnight of that day
   wordCount: integer("word_count").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_daily_progress_book_id").on(t.bookId),
+]);
 
 export const storyBeats = pgTable("story_beats", {
   id: serial("id").primaryKey(),
-  bookId: integer("book_id").notNull(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   columnId: text("column_id").notNull(), // e.g., 'act1', 'act2', 'act3'
   order: integer("order").notNull().default(0),
   color: text("color"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_story_beats_book_id").on(t.bookId),
+]);
 
 export const professionals = pgTable("professionals", {
   id: serial("id").primaryKey(),
@@ -213,7 +228,9 @@ export const userAchievements = pgTable("user_achievements", {
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   achievementId: text("achievement_id").notNull(),
   unlockedAt: timestamp("unlocked_at").defaultNow(),
-});
+}, (t) => [
+  uniqueIndex("uq_user_achievements_user_achievement").on(t.userId, t.achievementId),
+]);
 
 export const supportMessages = pgTable("support_messages", {
   id: serial("id").primaryKey(),
@@ -224,7 +241,7 @@ export const supportMessages = pgTable("support_messages", {
   category: text("category").default("general"),
   priority: text("priority").default("normal"),
   status: text("status").default("open"),
-  userId: integer("user_id"),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
   read: boolean("read").default(false),
 });
@@ -239,7 +256,9 @@ export const bookRatings = pgTable("book_ratings", {
   userId: integer("user_id"),
   rating: integer("rating").notNull(), // 1-5
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_book_ratings_book_id").on(t.bookId),
+]);
 
 export const bookComments = pgTable("book_comments", {
   id: serial("id").primaryKey(),
@@ -248,14 +267,18 @@ export const bookComments = pgTable("book_comments", {
   authorName: text("author_name").notNull().default("Anonymous"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_book_comments_book_id").on(t.bookId),
+]);
 
 export const bookLikes = pgTable("book_likes", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  uniqueIndex("uq_book_likes_book_user").on(t.bookId, t.userId),
+]);
 
 export type BookRating = typeof bookRatings.$inferSelect;
 export type BookComment = typeof bookComments.$inferSelect;
@@ -313,7 +336,9 @@ export const follows = pgTable("follows", {
   followerId: integer("follower_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   followeeId: integer("followee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  uniqueIndex("uq_follows_follower_followee").on(t.followerId, t.followeeId),
+]);
 
 // ── Notifications ─────────────────────────────────────────────────────────
 
@@ -328,7 +353,10 @@ export const notifications = pgTable("notifications", {
   entityId: integer("entity_id"),
   read: boolean("read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_notifications_user_id").on(t.userId),
+  index("idx_notifications_created_at").on(t.createdAt),
+]);
 
 // ── Direct Messages ──────────────────────────────────────────────────────
 
@@ -339,7 +367,11 @@ export const directMessages = pgTable("direct_messages", {
   content: text("content").notNull(),
   read: boolean("read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_direct_messages_sender_id").on(t.senderId),
+  index("idx_direct_messages_receiver_id").on(t.receiverId),
+  index("idx_direct_messages_created_at").on(t.createdAt),
+]);
 
 // ── Tutorials ────────────────────────────────────────────────────────────
 
@@ -366,7 +398,9 @@ export const dailyAiUsage = pgTable("daily_ai_usage", {
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: text("date").notNull(), // YYYY-MM-DD
   callCount: integer("call_count").notNull().default(0),
-});
+}, (t) => [
+  uniqueIndex("uq_daily_ai_usage_user_date").on(t.userId, t.date),
+]);
 
 // ── Admin Analytics Tables ─────────────────────────────────────────────────
 
@@ -378,7 +412,9 @@ export const apiLogs = pgTable("api_logs", {
   durationMs: integer("duration_ms").notNull(),
   userId: integer("user_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_api_logs_created_at").on(t.createdAt),
+]);
 
 export const aiUsageLogs = pgTable("ai_usage_logs", {
   id: serial("id").primaryKey(),
@@ -393,14 +429,33 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
 
 export const contentFlags = pgTable("content_flags", {
   id: serial("id").primaryKey(),
-  bookId: integer("book_id").notNull(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   reason: text("reason").notNull(),
   status: text("status").notNull().default("pending"), // pending | approved | rejected
-  reviewedBy: integer("reviewed_by"),
+  reviewedBy: integer("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   reviewNote: text("review_note"),
   createdAt: timestamp("created_at").defaultNow(),
   reviewedAt: timestamp("reviewed_at"),
-});
+}, (t) => [
+  index("idx_content_flags_book_id").on(t.bookId),
+]);
+
+// ── Admin Audit Logs ──────────────────────────────────────────────────────
+
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  action: text("action").notNull(), // user_suspend | user_delete | user_grant_sub | book_delete | flag_review | banner_update
+  targetType: text("target_type").notNull(), // user | book | flag | banner | tutorial
+  targetId: integer("target_id"),
+  details: text("details"), // JSON string with action-specific data
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("idx_audit_logs_admin_id").on(t.adminId),
+  index("idx_audit_logs_created_at").on(t.createdAt),
+]);
+
+export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
 
 export const insertBookSchema = createInsertSchema(books).omit({ id: true, createdAt: true });
 export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true });

@@ -6,6 +6,7 @@ import passport from "passport";
 import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -192,7 +193,9 @@ router.patch("/api/auth/display-name", async (req, res) => {
 // Google OAuth
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? "" : "http://localhost:5173");
+const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
+  ? `https://${process.env.APP_DOMAIN || process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost"}`
+  : "http://localhost:5173");
 
 router.get(
   "/auth/google/callback",
@@ -237,13 +240,13 @@ router.get("/auth/linkedin/callback", async (req, res) => {
     const { code, state, error } = req.query as Record<string, string>;
 
     if (error) {
-      console.error("[linkedin] OAuth error:", error);
+      logger.error({ error }, "LinkedIn OAuth error");
       return res.redirect("/?auth=error");
     }
 
     const savedState = (req.session as any).linkedinOAuthState;
     if (!state || state !== savedState) {
-      console.error("[linkedin] State mismatch");
+      logger.error("LinkedIn state mismatch");
       return res.redirect("/?auth=error");
     }
     delete (req.session as any).linkedinOAuthState;
@@ -270,7 +273,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
 
     if (!tokenRes.ok) {
       const txt = await tokenRes.text();
-      console.error("[linkedin] Token exchange failed:", txt);
+      logger.error({ response: txt }, "LinkedIn token exchange failed");
       return res.redirect("/?auth=error");
     }
 
@@ -283,7 +286,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
     });
 
     if (!infoRes.ok) {
-      console.error("[linkedin] Userinfo fetch failed:", infoRes.status);
+      logger.error({ status: infoRes.status }, "LinkedIn userinfo fetch failed");
       return res.redirect("/?auth=error");
     }
 
@@ -322,7 +325,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
 
     res.redirect("/?auth=success");
   } catch (err) {
-    console.error("[linkedin] callback error:", err);
+    logger.error({ err }, "LinkedIn callback error");
     res.redirect("/?auth=error");
   }
 });

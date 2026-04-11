@@ -222,6 +222,9 @@ function UsersTab() {
   const [plan, setPlan] = useState("pro");
   const [months, setMonths] = useState(1);
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   const { data: users = [], isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
@@ -271,35 +274,76 @@ function UsersTab() {
     onError: () => toast({ title: "Failed to revoke subscription", variant: "destructive" }),
   });
 
+  const bulkSuspend = useMutation({
+    mutationFn: ({ userIds, suspended }: { userIds: number[]; suspended: boolean }) =>
+      fetch("/api/admin/users/bulk-suspend", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ userIds, suspended }) }).then(r => r.json()),
+    onSuccess: (d) => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); setSelected(new Set()); toast({ title: `${d.count} users updated` }); },
+  });
+
+  const bulkDelete = useMutation({
+    mutationFn: (userIds: number[]) =>
+      fetch("/api/admin/users/bulk-delete", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ userIds }) }).then(r => r.json()),
+    onSuccess: (d) => { qc.invalidateQueries({ queryKey: ["/api/admin/users"] }); qc.invalidateQueries({ queryKey: ["/api/admin/stats"] }); setSelected(new Set()); toast({ title: `${d.count} users deleted` }); },
+  });
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selected);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelected(next);
+  };
+  const toggleAll = () => {
+    if (selected.size === paged.length) setSelected(new Set());
+    else setSelected(new Set(paged.map(u => u.id)));
+  };
+
   const filtered = users.filter(u => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (u.displayName || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
   });
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (isLoading) return <Spinner />;
 
   return (
     <>
-      {/* Search bar */}
-      <div style={{ marginBottom: 16 }}>
+      {/* Toolbar: Search + Bulk actions + Export */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16, alignItems: "center" }}>
         <input
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search by name or email…"
-          style={{ ...inputStyle, width: 320, display: "inline-block" }}
+          style={{ ...inputStyle, width: 280, display: "inline-block" }}
         />
         {search && (
-          <span style={{ marginLeft: 12, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-            {filtered.length} of {users.length} users
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+            {filtered.length} of {users.length}
           </span>
         )}
+
+        {/* Bulk actions — show only when items are selected */}
+        {selected.size > 0 && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: 8, padding: "4px 12px", background: "rgba(255,255,255,0.04)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginRight: 4 }}>{selected.size} selected</span>
+            <button style={S.btn("ghost")} onClick={() => bulkSuspend.mutate({ userIds: [...selected], suspended: true })}>Suspend All</button>
+            <button style={S.btn("ghost")} onClick={() => bulkSuspend.mutate({ userIds: [...selected], suspended: false })}>Unsuspend All</button>
+            <button style={S.btn("danger")} onClick={() => { if (confirm(`Delete ${selected.size} users?`)) bulkDelete.mutate([...selected]); }}>Delete All</button>
+            <button style={{ ...S.btn("ghost"), color: "rgba(255,255,255,0.3)" }} onClick={() => setSelected(new Set())}>✕</button>
+          </div>
+        )}
+
+        {/* CSV export */}
+        <a href="/api/admin/export/users.csv" download style={{ marginLeft: "auto", ...S.btn("ghost"), textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+          ↓ Export CSV
+        </a>
       </div>
 
       <div style={{ overflowX: "auto" }}>
         <table style={S.table}>
           <thead>
             <tr>
+              <th style={{ ...S.th, width: 36 }}><input type="checkbox" checked={selected.size === paged.length && paged.length > 0} onChange={toggleAll} style={{ accentColor: "#fff" }} /></th>
               <th style={S.th}>User</th>
               <th style={S.th}>Email</th>
               <th style={S.th}>Status</th>
@@ -309,8 +353,9 @@ function UsersTab() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(u => (
+            {paged.map(u => (
               <tr key={u.id} style={{ opacity: u.suspended ? 0.55 : 1 }}>
+                <td style={{ ...S.td, width: 36 }}><input type="checkbox" checked={selected.has(u.id)} onChange={() => toggleSelect(u.id)} style={{ accentColor: "#fff" }} /></td>
                 <td style={S.td}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {u.avatarUrl
@@ -358,6 +403,15 @@ function UsersTab() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 16, alignItems: "center" }}>
+          <button style={S.btn("ghost")} disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>Page {page} of {totalPages}</span>
+          <button style={S.btn("ghost")} disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
+        </div>
+      )}
 
       {grantModal && (
         <Modal title={`Grant Subscription — ${grantModal.displayName || grantModal.email}`} onClose={() => setGrantModal(null)}>
@@ -802,17 +856,18 @@ function MiniStat({ label, value, sub }: { label: string; value: string | number
 // ─── 1. ANALYTICS TAB ─────────────────────────────────────────────────────────
 
 function AnalyticsTab() {
+  const [days, setDays] = useState(30);
   const { data: overview } = useQuery<any>({
     queryKey: ["/api/admin/analytics/overview"],
     queryFn: () => fetch("/api/admin/analytics/overview", { credentials: "include" }).then(r => r.json()),
   });
   const { data: signups = [] } = useQuery<any[]>({
-    queryKey: ["/api/admin/analytics/signups"],
-    queryFn: () => fetch("/api/admin/analytics/signups", { credentials: "include" }).then(r => r.json()),
+    queryKey: ["/api/admin/analytics/signups", days],
+    queryFn: () => fetch(`/api/admin/analytics/signups?days=${days}`, { credentials: "include" }).then(r => r.json()),
   });
   const { data: writing = [] } = useQuery<any[]>({
-    queryKey: ["/api/admin/analytics/writing-activity"],
-    queryFn: () => fetch("/api/admin/analytics/writing-activity", { credentials: "include" }).then(r => r.json()),
+    queryKey: ["/api/admin/analytics/writing-activity", days],
+    queryFn: () => fetch(`/api/admin/analytics/writing-activity?days=${days}`, { credentials: "include" }).then(r => r.json()),
   });
 
   if (!overview) return <Spinner />;
@@ -827,8 +882,21 @@ function AnalyticsTab() {
         <MiniStat label="Words Written (30d)" value={overview.wordsWrittenMonth.toLocaleString()} />
       </div>
 
+      {/* Date range selector */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, alignItems: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginRight: 4 }}>Range:</span>
+        {[7, 30, 60, 90].map(d => (
+          <button key={d} onClick={() => setDays(d)}
+            style={{ padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", border: days === d ? "none" : "1px solid rgba(255,255,255,0.08)", background: days === d ? "#fff" : "transparent", color: days === d ? "#000" : "rgba(255,255,255,0.4)", transition: "all 0.15s" }}
+          >{d}d</button>
+        ))}
+        <a href={`/api/admin/export/analytics.csv?days=${days}`} download style={{ marginLeft: "auto", ...S.btn("ghost"), textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11 }}>
+          ↓ Export CSV
+        </a>
+      </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-        <ChartCard title="Daily Sign-ups (30d)">
+        <ChartCard title={`Daily Sign-ups (${days}d)`}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={signups.map((r: any) => ({ day: r.day?.slice(5, 10), count: Number(r.count) }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -840,7 +908,7 @@ function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Daily Writing Activity (30d)">
+        <ChartCard title={`Daily Writing Activity (${days}d)`}>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={writing.map((r: any) => ({ day: r.day?.slice(5, 10), words: Number(r.words) }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -1578,7 +1646,92 @@ function TutorialsTab() {
   );
 }
 
-type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials";
+// ─── Audit Log Tab ───────────────────────────────────────────────────────────
+
+const ACTION_LABELS: Record<string, string> = {
+  user_suspend: "Suspended user",
+  user_unsuspend: "Unsuspended user",
+  user_delete: "Deleted user",
+  user_grant_subscription: "Granted subscription",
+  bulk_suspend: "Bulk suspended users",
+  bulk_unsuspend: "Bulk unsuspended users",
+  bulk_delete: "Bulk deleted users",
+  book_delete: "Deleted book",
+  banner_update: "Updated banner",
+  flag_review: "Reviewed flag",
+};
+
+const ACTION_COLORS: Record<string, string> = {
+  user_delete: "#f87171",
+  bulk_delete: "#f87171",
+  user_suspend: "#fbbf24",
+  bulk_suspend: "#fbbf24",
+  user_grant_subscription: "#4ade80",
+  banner_update: "#60a5fa",
+};
+
+function AuditLogTab() {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useQuery<{ logs: any[]; total: number; totalPages: number }>({
+    queryKey: ["/api/admin/audit-logs", page],
+    queryFn: () => fetch(`/api/admin/audit-logs?page=${page}&limit=30`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  if (isLoading) return <Spinner />;
+  if (!data?.logs?.length) return <div style={{ color: "rgba(255,255,255,0.4)", padding: 40, textAlign: "center" }}>No admin actions recorded yet.</div>;
+
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 12 }}>
+        {data.total} total actions — Page {page} of {data.totalPages}
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={S.table}>
+          <thead>
+            <tr>
+              <th style={S.th}>When</th>
+              <th style={S.th}>Action</th>
+              <th style={S.th}>Target</th>
+              <th style={S.th}>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.logs.map((log: any) => {
+              const details = log.details ? JSON.parse(log.details) : null;
+              return (
+                <tr key={log.id}>
+                  <td style={{ ...S.td, fontSize: 11, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>
+                    {log.createdAt ? new Date(log.createdAt).toLocaleString() : "—"}
+                  </td>
+                  <td style={S.td}>
+                    <span style={{ color: ACTION_COLORS[log.action] || "#fff", fontWeight: 600, fontSize: 12 }}>
+                      {ACTION_LABELS[log.action] || log.action}
+                    </span>
+                  </td>
+                  <td style={{ ...S.td, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                    {log.targetType} {log.targetId ? `#${log.targetId}` : ""}
+                  </td>
+                  <td style={{ ...S.td, fontSize: 11, color: "rgba(255,255,255,0.35)", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {details ? JSON.stringify(details) : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {data.totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 16, alignItems: "center" }}>
+          <button style={S.btn("ghost")} disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>Page {page} of {data.totalPages}</span>
+          <button style={S.btn("ghost")} disabled={page === data.totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials" | "audit";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -1645,6 +1798,7 @@ export default function AdminPage() {
           <TabBtn label="Banner" active={tab === "banner"} onClick={() => setTab("banner")} />
           <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
           <TabBtn label="Tutorials" active={tab === "tutorials"} onClick={() => setTab("tutorials")} />
+          <TabBtn label="Audit Log" active={tab === "audit"} onClick={() => setTab("audit")} />
         </div>
 
         {tab === "analytics"  && <AnalyticsTab />}
@@ -1668,6 +1822,7 @@ export default function AdminPage() {
               <li><b style={{ color: "#fff" }}>Activity</b> — recent platform events</li>
               <li><b style={{ color: "#fff" }}>Banner</b> — site-wide announcements</li>
               <li><b style={{ color: "#fff" }}>Tutorials</b> — manage video tutorials for the Learning Center</li>
+              <li><b style={{ color: "#fff" }}>Audit Log</b> — track all admin actions (who did what, when)</li>
             </ul>
           </div>
         )}
@@ -1678,6 +1833,7 @@ export default function AdminPage() {
         {tab === "activity" && <ActivityTab />}
         {tab === "banner"   && <BannerTab />}
         {tab === "tutorials" && <TutorialsTab />}
+        {tab === "audit" && <AuditLogTab />}
       </div>
     </div>
   );

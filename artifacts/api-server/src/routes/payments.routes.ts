@@ -5,6 +5,7 @@ import { getUncachableStripeClient, getStripePublishableKey } from "../stripe-cl
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_ANNUAL_CENTS } from "../../../../lib/db/src/schema";
 import { api } from "../../../../lib/shared/src/routes";
 import { isSubscriptionActive } from "./helpers";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -35,7 +36,7 @@ router.post(api.payments.createIntent.path, async (req, res) => {
 
     res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Failed to create payment intent");
     res.status(500).json({ message: "Failed to create payment intent" });
   }
 });
@@ -52,7 +53,7 @@ router.post(api.payments.confirm.path, async (req, res) => {
           return res.status(400).json({ message: "Payment not confirmed by Stripe" });
         }
       } catch (stripeErr) {
-        console.error("Stripe verify error:", stripeErr);
+        logger.error({ err: stripeErr }, "Stripe verify error");
         return res.status(400).json({ message: "Payment verification failed" });
       }
     }
@@ -65,7 +66,7 @@ router.post(api.payments.confirm.path, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Failed to confirm payment");
     res.status(500).json({ message: "Failed to confirm payment" });
   }
 });
@@ -145,7 +146,7 @@ router.post("/api/subscription/create-checkout", async (req, res) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url, sessionId: session.id });
   } catch (err: any) {
-    console.error("Checkout error:", err?.message);
+    logger.error({ err }, "Checkout error");
     res.status(500).json({ message: err?.message || "Failed to create checkout session" });
   }
 });
@@ -288,9 +289,13 @@ function planToTier(plan: PayPalPlan): "pro" | "premium" {
 }
 
 // Create a PayPal order for a subscription plan
+const paypalPlanSchema = z.enum(["pro_monthly", "pro_yearly", "premium_monthly", "premium_yearly", "monthly", "yearly_monthly", "yearly_annual"]);
+
 router.post("/api/paypal/create-order", async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-  const { plan } = req.body as { plan: PayPalPlan };
+  const parsed = paypalPlanSchema.safeParse(req.body?.plan);
+  if (!parsed.success) return res.status(400).json({ message: "Invalid plan" });
+  const plan = parsed.data as PayPalPlan;
   try {
     const token = await getPayPalToken();
     const orderRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
@@ -306,13 +311,13 @@ router.post("/api/paypal/create-order", async (req, res) => {
     });
     if (!orderRes.ok) {
       const err = await orderRes.text();
-      console.error("PayPal create-order error:", err);
+      logger.error({ err }, "PayPal create-order error");
       return res.status(502).json({ message: "Failed to create PayPal order" });
     }
     const order = await orderRes.json() as { id: string };
     return res.json({ orderId: order.id });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "PayPal error");
     return res.status(500).json({ message: "PayPal error" });
   }
 });
@@ -320,7 +325,10 @@ router.post("/api/paypal/create-order", async (req, res) => {
 // Capture the approved PayPal order and activate subscription
 router.post("/api/paypal/capture-order", async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-  const { orderId, plan } = req.body as { orderId: string; plan: PayPalPlan };
+  const captureSchema = z.object({ orderId: z.string().min(1), plan: paypalPlanSchema });
+  const parsed = captureSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
+  const { orderId, plan } = parsed.data as { orderId: string; plan: PayPalPlan };
   try {
     const token = await getPayPalToken();
     const captureRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
@@ -329,17 +337,18 @@ router.post("/api/paypal/capture-order", async (req, res) => {
     });
     if (!captureRes.ok) {
       const err = await captureRes.text();
-      console.error("PayPal capture error:", err);
+      logger.error({ err }, "PayPal capture error");
       return res.status(502).json({ message: "Failed to capture PayPal order" });
     }
     const capture = await captureRes.json() as { status: string };
     if (capture.status !== "COMPLETED") {
       return res.status(400).json({ message: "Payment not completed" });
     }
-    // Activate subscription in DB — yearly_annual gives 1 year, others give 1 month
+    // Activate subscription in DB — yearly plans give 1 year, monthly gives 1 month
     const userId = (req.user as any).id;
     const endDate = new Date();
-    if (plan === "yearly_annual") {
+    const isYearly = plan === "yearly_annual" || plan === "pro_yearly" || plan === "premium_yearly";
+    if (isYearly) {
       endDate.setFullYear(endDate.getFullYear() + 1);
     } else {
       endDate.setMonth(endDate.getMonth() + 1);
@@ -354,7 +363,7 @@ router.post("/api/paypal/capture-order", async (req, res) => {
     } as any);
     return res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "PayPal capture error");
     return res.status(500).json({ message: "PayPal capture error" });
   }
 });

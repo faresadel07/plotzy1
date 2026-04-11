@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { usePublishedBooks, useBookRatingStats, useFeaturedBook, useSetFeaturedBook, useAdminDeleteBook } from "@/hooks/use-public-library";
 import type { PublishedBook } from "@/hooks/use-public-library";
@@ -365,12 +365,12 @@ export default function Library() {
           </div>
 
           {/* Featured Book */}
-          {featuredBook && !hasFilter && (
+          {user && featuredBook && !hasFilter && (
             <FeaturedBanner book={featuredBook} isAdmin={isAdmin} />
           )}
 
-          {/* Search + Filters */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
+          {/* Search + Filters — only when signed in */}
+          {user && <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
             {/* Search */}
             <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
               <Search style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: TD }} />
@@ -415,10 +415,10 @@ export default function Library() {
               {sort === "recent" ? "Newest" : "Popular"}
               <ChevronDown style={{ width: 12, height: 12 }} />
             </button>
-          </div>
+          </div>}
 
           {/* Results count */}
-          {books && books.length > 0 && !isEmpty && (
+          {user && books && books.length > 0 && !isEmpty && (
             <p style={{ fontSize: 12, color: TD, marginBottom: 20 }}>
               <span style={{ color: TS, fontWeight: 600 }}>{filtered?.length ?? 0}</span> works published
               {hasFilter && " (filtered)"}
@@ -426,7 +426,44 @@ export default function Library() {
           )}
 
           {/* Content */}
-          {isLoading ? (
+          {!user ? (
+            /* ── Sign-in prompt for unauthenticated users ── */
+            <div style={{
+              textAlign: "center", padding: "80px 24px",
+              background: C1, border: `1px solid ${B}`, borderRadius: 16,
+            }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 16, margin: "0 auto 20px",
+                background: "rgba(255,255,255,0.04)", border: `1px solid ${B}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <BookOpen style={{ width: 28, height: 28, color: "rgba(255,255,255,0.3)" }} />
+              </div>
+              <h3 style={{ fontFamily: SF, fontSize: 20, fontWeight: 700, color: T, margin: "0 0 8px" }}>
+                Sign in to explore the Community Library
+              </h3>
+              <p style={{ fontFamily: SF, fontSize: 14, color: TD, margin: "0 0 28px", maxWidth: 420, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
+                Create a free account to browse stories written by writers from around the world, leave ratings, and share your own work.
+              </p>
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("open-auth-modal"));
+                }}
+                style={{
+                  padding: "12px 36px", borderRadius: 10, background: "#fff", color: "#000",
+                  fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer",
+                  transition: "opacity 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              >
+                Sign In
+              </button>
+              <p style={{ fontFamily: SF, fontSize: 12, color: TD, marginTop: 14 }}>
+                It's free — no credit card required
+              </p>
+            </div>
+          ) : isLoading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "100px 0" }}>
               <Loader2 style={{ width: 24, height: 24, color: TD, animation: "spin 1s linear infinite" }} />
             </div>

@@ -7,6 +7,7 @@ import {
   contentFlags, dailyProgress, supportMessages,
 } from "../../../../lib/db/src/schema";
 import { requireAdmin } from "../middleware/auth";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -73,18 +74,19 @@ router.get("/api/admin/analytics/overview", async (_req, res) => {
       openSupportTickets: openTickets.c,
     });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Admin route error");
     res.status(500).json({ message: "Internal error" });
   }
 });
 
-// Daily sign-ups for chart (last 30 days)
-router.get("/api/admin/analytics/signups", async (_req, res) => {
+// Daily sign-ups for chart (supports ?days=7|30|90, default 30)
+router.get("/api/admin/analytics/signups", async (req, res) => {
   try {
+    const days = Math.min(90, Math.max(7, Number(req.query.days) || 30));
     const rows = await db.execute(sql`
       SELECT DATE(created_at) as day, COUNT(*) as count
       FROM users
-      WHERE created_at >= NOW() - INTERVAL '30 days'
+      WHERE created_at >= NOW() - ${days + ' days'}::interval
       GROUP BY DATE(created_at)
       ORDER BY day
     `);
@@ -94,13 +96,14 @@ router.get("/api/admin/analytics/signups", async (_req, res) => {
   }
 });
 
-// Daily words written for chart (last 30 days)
-router.get("/api/admin/analytics/writing-activity", async (_req, res) => {
+// Daily words written for chart (supports ?days=7|30|90, default 30)
+router.get("/api/admin/analytics/writing-activity", async (req, res) => {
   try {
+    const days = Math.min(90, Math.max(7, Number(req.query.days) || 30));
     const rows = await db.execute(sql`
       SELECT DATE(created_at) as day, COALESCE(SUM(word_count), 0) as words
       FROM daily_progress
-      WHERE created_at >= NOW() - INTERVAL '30 days'
+      WHERE created_at >= NOW() - ${days + ' days'}::interval
       GROUP BY DATE(created_at)
       ORDER BY day
     `);
@@ -160,7 +163,7 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
       churnedLast30Days: Number(churnResult.rows?.[0]?.c || 0),
     });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Admin route error");
     res.status(500).json({ message: "Internal error" });
   }
 });
@@ -335,7 +338,7 @@ router.get("/api/admin/analytics/ai-usage", async (_req, res) => {
       byModel: byModel.rows,
     });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Admin route error");
     res.status(500).json({ message: "Internal error" });
   }
 });
@@ -412,7 +415,7 @@ router.get("/api/admin/analytics/system-health", async (_req, res) => {
       statusBreakdown: statusBreakdown.rows,
     });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Admin route error");
     res.status(500).json({ message: "Internal error" });
   }
 });

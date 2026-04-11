@@ -19,8 +19,17 @@ import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
 import gutenbergRouter, { syncGutenbergCatalog } from "./routes/gutenberg.routes";
 import miscRouter from "./routes/misc.routes";
+import { logger } from "./lib/logger";
 
 const isMockOpenAI = !process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY;
+
+// Guard middleware: return 503 if OpenAI key is missing instead of crashing
+const requireOpenAI = (req: any, res: any, next: any) => {
+  if (isMockOpenAI) {
+    return res.status(503).json({ message: "AI features are not available — OpenAI API key is not configured." });
+  }
+  next();
+};
 
 function isSubscriptionActive(user: Express.User): boolean {
   if (user.subscriptionStatus === "active") {
@@ -347,14 +356,14 @@ export async function registerRoutes(
 
       res.json({ url: dataUri });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Internal error" });
     }
   });
 
   // ─── Marketplace AI Analysis ────────────────────────────────────────────────
 
-  app.post("/api/marketplace/analyze", aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/marketplace/analyze", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { serviceId, text } = req.body as { serviceId: string; text: string };
       if (!text || text.trim().length < 30) {
@@ -418,14 +427,14 @@ export async function registerRoutes(
       const report = response.choices[0]?.message?.content || "No analysis returned.";
       res.json({ report });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // ─── Generate Book Blurb (multi-language) ──────────────────────────────────
 
-  app.post(api.books.generateBlurb.path, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.books.generateBlurb.path, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { language } = api.books.generateBlurb.input.parse(req.body);
       const bookId = Number(req.params.id);
@@ -469,7 +478,7 @@ export async function registerRoutes(
       await storage.updateBook(bookId, { summary: blurb });
       res.json({ blurb });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to generate blurb" });
     }
   });
@@ -815,7 +824,7 @@ export async function registerRoutes(
 
       res.status(400).json({ message: "Unsupported format" });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to generate download" });
     }
   });
@@ -951,7 +960,7 @@ export async function registerRoutes(
 
   const audioBodyParser = express.json({ limit: '50mb' });
 
-  app.post(api.chapters.voice.path, audioBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.chapters.voice.path, audioBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { audio } = api.chapters.voice.input.parse(req.body);
       const bookId = Number(req.params.bookId);
@@ -991,14 +1000,14 @@ export async function registerRoutes(
       const chapter = await storage.createChapter({ bookId, title, content: chapterContent });
       res.json(chapter);
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to process voice" });
     }
   });
 
   // ─── Transcribe Audio (inline dictation for chapter editor) ────────────────
 
-  app.post("/api/transcribe", audioBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/transcribe", audioBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { audio, language } = z.object({
         audio: z.string(),
@@ -1015,7 +1024,7 @@ export async function registerRoutes(
 
       res.json({ text: transcription.text });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Transcription failed" });
     }
   });
@@ -1044,7 +1053,7 @@ export async function registerRoutes(
 
       res.json({ url: `data:image/png;base64,${b64}` });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Image generation failed" });
     }
   });
@@ -1145,7 +1154,7 @@ export async function registerRoutes(
 
       res.json({ success: true, generatedCount: count });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to extract lore" });
     }
   });
@@ -1252,7 +1261,7 @@ Return a strict JSON object with these two arrays.`;
 
       res.json({ success: true, message: "Parsed text and extracted lore/beats successfully." });
     } catch (err) {
-      console.error("Legacy import error:", err);
+      logger.error({ err }, "Legacy import error");
       res.status(500).json({ message: "Failed to process the legacy file. It might be corrupted or too large." });
     }
   });
@@ -1261,7 +1270,7 @@ Return a strict JSON object with these two arrays.`;
 
   const largeBodyParser = express.json({ limit: '5mb' });
 
-  app.post(api.ai.improve.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.ai.improve.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.improve.input.parse(req.body);
       const langCode = language || "en";
@@ -1293,12 +1302,12 @@ Return a strict JSON object with these two arrays.`;
 
       res.json({ improvedText: response.choices[0]?.message?.content || text });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to improve text" });
     }
   });
 
-  app.post(api.ai.expand.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.ai.expand.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { idea, language, bookId } = api.ai.expand.input.parse(req.body);
       const langCode = language || "en";
@@ -1330,12 +1339,12 @@ Return a strict JSON object with these two arrays.`;
 
       res.json({ expandedText: response.choices[0]?.message?.content || idea });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to expand idea" });
     }
   });
 
-  app.post(api.ai.continueText.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.ai.continueText.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.continueText.input.parse(req.body);
       const langCode = language || "en";
@@ -1367,12 +1376,12 @@ Return a strict JSON object with these two arrays.`;
 
       res.json({ continuedText: response.choices[0]?.message?.content || "" });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to continue text" });
     }
   });
 
-  app.post(api.ai.showDontTell.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.ai.showDontTell.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language } = api.ai.showDontTell.input.parse(req.body);
       const langCode = language || "en";
@@ -1415,12 +1424,12 @@ Rules:
       try { parsed = JSON.parse(raw); } catch { parsed = { findings: [] }; }
       res.json(parsed);
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ findings: [] });
     }
   });
 
-  app.post(api.ai.translate.path, largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.ai.translate.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, targetLanguage, bookId } = api.ai.translate.input.parse(req.body);
       const targetName = getLangName(targetLanguage);
@@ -1447,7 +1456,7 @@ Rules:
 
       res.json({ translatedText: response.choices[0]?.message?.content || text });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to translate text" });
     }
   });
@@ -1466,7 +1475,7 @@ Rules:
   }
 
   // Plot Hole Detector
-  app.post("/api/books/:bookId/ai/plot-holes", aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/plot-holes", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1491,13 +1500,13 @@ Return an empty array if no issues found. Focus on real narrative problems, not 
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
       res.json({ issues: data.issues ?? [] });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // Dialogue Coach
-  app.post("/api/books/:bookId/ai/dialogue-coach", aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/dialogue-coach", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1522,13 +1531,13 @@ Provide 2-4 specific suggestions with real examples from the text.`,
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
       res.json({ score: data.score ?? 50, feedback: data.feedback ?? "", suggestions: data.suggestions ?? [] });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // Pacing Analyzer
-  app.post("/api/books/:bookId/ai/pacing", aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/pacing", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1559,13 +1568,13 @@ Cover all chapters. Give 2-3 recommendations.`,
         recommendations: data.recommendations ?? [],
       });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // Character Voice Consistency
-  app.post("/api/books/:bookId/ai/voice-consistency", aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/voice-consistency", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1590,14 +1599,14 @@ List 2-5 main characters. Issues array can be empty if consistent.`,
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
       res.json({ score: data.score ?? 50, characters: data.characters ?? [], recommendation: data.recommendation ?? "" });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // ─── Publisher Proposal ────────────────────────────────────────────────────
 
-  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1681,7 +1690,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
       res.json({ proposal: response.choices[0]?.message?.content || "" });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Route error");
       res.status(500).json({ message: "Failed to generate proposal" });
     }
   });
@@ -1771,7 +1780,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const buffer = Buffer.from(arrayBuffer);
       res.json({ audio: buffer.toString("base64"), mimeType: "audio/mpeg", chapterId });
     } catch (err) {
-      console.error("Audiobook preview error:", err);
+      logger.error({ err }, "Audiobook preview error");
       res.status(500).json({ message: "Failed to generate audio preview" });
     }
   });
@@ -1851,7 +1860,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       res.setHeader("Content-Length", merged.length);
       res.send(merged);
     } catch (err) {
-      console.error("Audiobook export error:", err);
+      logger.error({ err }, "Audiobook export error");
       res.status(500).json({ message: "Failed to export audiobook" });
     }
   });

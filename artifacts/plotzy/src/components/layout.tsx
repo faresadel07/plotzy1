@@ -138,6 +138,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
   const [banner, setBannerData] = useState<{ message: string | null; color: string | null } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
+  // Listen for "open-auth-modal" events from other pages
+  useEffect(() => {
+    const handler = () => setAuthModalOpen(true);
+    window.addEventListener("open-auth-modal", handler);
+    return () => window.removeEventListener("open-auth-modal", handler);
+  }, []);
+
   useEffect(() => {
     if (!user?.isAdmin) return;
     const fetchUnread = async () => {

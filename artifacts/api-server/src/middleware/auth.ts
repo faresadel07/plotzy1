@@ -15,16 +15,18 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
 // ---------------------------------------------------------------------------
 // 2) requireAdmin — reject non-admin users
+//    Checks DB role column first, falls back to ADMIN_EMAIL env var
 // ---------------------------------------------------------------------------
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
+  const user = req.user as any;
+  // Check DB role first (preferred), then env var fallback
+  if (user.role === "admin") return next();
   const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail || (req.user as any).email !== adminEmail) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-  next();
+  if (adminEmail && user.email === adminEmail) return next();
+  return res.status(403).json({ message: "Forbidden" });
 }
 
 // ---------------------------------------------------------------------------

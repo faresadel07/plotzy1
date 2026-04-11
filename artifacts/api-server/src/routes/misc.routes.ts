@@ -3,9 +3,26 @@ import { storage } from "../storage";
 import { requireAdmin, requireBookOwner } from "../middleware/auth";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable } from "../../../../lib/db/src/schema";
+import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs } from "../../../../lib/db/src/schema";
+import { desc, sql } from "drizzle-orm";
+import { logger } from "../lib/logger";
 
 const router = Router();
+
+// ── Audit Log Helper ────────────────────────────────────────────────────────
+async function logAdminAction(adminId: number, action: string, targetType: string, targetId: number | null, details?: Record<string, any>) {
+  try {
+    await db.insert(adminAuditLogs).values({
+      adminId,
+      action,
+      targetType,
+      targetId,
+      details: details ? JSON.stringify(details) : null,
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to write audit log");
+  }
+}
 
 // ── Book Series ─────────────────────────────────────────────────────────────
 
@@ -200,6 +217,7 @@ router.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await storage.deleteUser(id);
+    await logAdminAction((req.user as any).id, "user_delete", "user", id);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -216,6 +234,7 @@ router.patch("/api/admin/users/:id/subscription", requireAdmin, async (req, res)
       subscriptionPlan: subscriptionPlan ?? null,
       subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : null,
     });
+    await logAdminAction((req.user as any).id, "user_grant_subscription", "user", id, { subscriptionStatus, subscriptionPlan });
     res.json({ success: true, user: updated });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -228,6 +247,7 @@ router.delete("/api/admin/books/:id", requireAdmin, async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await storage.deleteBook(id);
+    await logAdminAction((req.user as any).id, "book_delete", "book", id);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -252,6 +272,7 @@ router.post("/api/admin/banner", requireAdmin, async (req, res) => {
     if (!message?.trim()) return res.status(400).json({ message: "Message required" });
     await storage.setSetting("banner_message", message.trim());
     await storage.setSetting("banner_color", color || "default");
+    await logAdminAction((req.user as any).id, "banner_update", "banner", null, { message: message.trim(), color });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -275,6 +296,7 @@ router.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     const { suspended } = req.body;
     const user = await storage.suspendUser(id, !!suspended);
+    await logAdminAction((req.user as any).id, suspended ? "user_suspend" : "user_unsuspend", "user", id);
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -321,6 +343,104 @@ router.patch("/api/admin/support/:id", requireAdmin, async (req, res) => {
     res.json(msg);
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ── Admin: audit logs ───────────────────────────────────────────────────────
+router.get("/api/admin/audit-logs", requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+    const logs = await db.select({
+      id: adminAuditLogs.id,
+      adminId: adminAuditLogs.adminId,
+      action: adminAuditLogs.action,
+      targetType: adminAuditLogs.targetType,
+      targetId: adminAuditLogs.targetId,
+      details: adminAuditLogs.details,
+      createdAt: adminAuditLogs.createdAt,
+    }).from(adminAuditLogs).orderBy(desc(adminAuditLogs.createdAt)).limit(limit).offset(offset);
+    const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(adminAuditLogs);
+    res.json({ logs, total, page, limit, totalPages: Math.ceil(total / limit) });
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch audit logs");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ── Admin: bulk suspend users ───────────────────────────────────────────────
+router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
+  try {
+    const { userIds, suspended } = req.body;
+    if (!Array.isArray(userIds) || userIds.length === 0) return res.status(400).json({ message: "userIds required" });
+    if (userIds.length > 50) return res.status(400).json({ message: "Max 50 users at once" });
+    let count = 0;
+    for (const id of userIds) {
+      try {
+        await storage.suspendUser(Number(id), !!suspended);
+        count++;
+      } catch {}
+    }
+    await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count });
+    res.json({ success: true, count });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ── Admin: bulk delete users ────────────────────────────────────────────────
+router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    if (!Array.isArray(userIds) || userIds.length === 0) return res.status(400).json({ message: "userIds required" });
+    if (userIds.length > 20) return res.status(400).json({ message: "Max 20 users at once" });
+    let count = 0;
+    for (const id of userIds) {
+      try {
+        await storage.deleteUser(Number(id));
+        count++;
+      } catch {}
+    }
+    await logAdminAction((req.user as any).id, "bulk_delete", "user", null, { userIds, count });
+    res.json({ success: true, count });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ── Admin: CSV export — users ───────────────────────────────────────────────
+router.get("/api/admin/export/users.csv", requireAdmin, async (req, res) => {
+  try {
+    const users = await storage.getAllUsers();
+    const header = "id,email,display_name,role,subscription_tier,subscription_status,subscription_plan,created_at,suspended";
+    const rows = (users as any[]).map(u =>
+      [u.id, u.email || "", (u.displayName || "").replace(/,/g, ""), u.role || "user", u.subscriptionTier || "free", u.subscriptionStatus || "free_trial", u.subscriptionPlan || "", u.createdAt || "", u.suspended ? "true" : "false"].join(",")
+    );
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=plotzy-users.csv");
+    res.send([header, ...rows].join("\n"));
+  } catch (err) {
+    res.status(500).json({ message: "Export failed" });
+  }
+});
+
+// ── Admin: CSV export — analytics ───────────────────────────────────────────
+router.get("/api/admin/export/analytics.csv", requireAdmin, async (req, res) => {
+  try {
+    const days = Math.min(90, Math.max(7, Number(req.query.days) || 30));
+    const signups = await db.execute(sql`
+      SELECT to_char(created_at::date, 'YYYY-MM-DD') as date, count(*)::int as signups
+      FROM users WHERE created_at >= now() - ${days + ' days'}::interval
+      GROUP BY created_at::date ORDER BY date
+    `);
+    const header = "date,signups";
+    const rows = (signups.rows as any[]).map(r => `${r.date},${r.signups}`);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=plotzy-analytics-${days}d.csv`);
+    res.send([header, ...rows].join("\n"));
+  } catch (err) {
+    res.status(500).json({ message: "Export failed" });
   }
 });
 

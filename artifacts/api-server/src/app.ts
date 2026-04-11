@@ -8,7 +8,7 @@ import { registerRoutes } from "./routes";
 import { WebhookHandlers } from "./webhook-handlers";
 import { setupPassport } from "./auth";
 import { logger } from "./lib/logger";
-import { generalLimiter, authLimiter } from "./middleware/rate-limit";
+import { generalLimiter, authLimiter, publicReadLimiter } from "./middleware/rate-limit";
 import { apiLogger } from "./middleware/api-logger";
 
 declare module "http" {
@@ -50,7 +50,22 @@ const app = express();
 export const httpServer = createServer(app);
 
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://accounts.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "https://api.openai.com", "https://www.paypal.com", "https://www.sandbox.paypal.com", "wss:", "ws:"],
+      frameSrc: ["'self'", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://accounts.google.com", "https://www.youtube.com", "https://player.vimeo.com"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'self'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
+    },
+  },
   crossOriginEmbedderPolicy: false,
 }));
 
@@ -88,6 +103,16 @@ app.use(express.urlencoded({ extended: false }));
 
 setupPassport();
 const PgSession = ConnectPgSimple(session);
+
+// Validate SESSION_SECRET strength
+const sessionSecret = process.env.SESSION_SECRET;
+if (process.env.NODE_ENV === "production" && !sessionSecret) {
+  throw new Error("SESSION_SECRET is required in production");
+}
+if (process.env.NODE_ENV === "production" && sessionSecret && sessionSecret.length < 32) {
+  logger.warn("SESSION_SECRET is too short — use at least 32 random characters for production security");
+}
+
 app.use(
   session({
     store: process.env.DATABASE_URL
@@ -97,14 +122,15 @@ app.use(
           createTableIfMissing: true,
         })
       : undefined,
-    secret: process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? (() => { throw new Error("SESSION_SECRET is required in production"); })() : "plotzy-dev-secret"),
+    secret: sessionSecret || "plotzy-dev-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      // "lax" is safer (blocks CSRF). Use "none" only if frontend and API are on different domains.
+      sameSite: process.env.COOKIE_SAME_SITE === "none" ? "none" : "lax",
     },
   })
 );
@@ -114,6 +140,10 @@ app.use(passport.session());
 // Rate limiting — applied after auth so user id is available as key
 app.use("/api", generalLimiter);
 app.use("/auth", authLimiter);
+// Tighter limit on public endpoints to prevent content scraping
+app.use("/api/public", publicReadLimiter);
+app.use("/api/gutenberg", publicReadLimiter);
+app.use("/api/authors", publicReadLimiter);
 
 // API request logging for admin System Health dashboard
 app.use(apiLogger);

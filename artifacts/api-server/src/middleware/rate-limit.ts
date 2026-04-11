@@ -97,3 +97,15 @@ export const generalLimiter = rateLimit({
   keyGenerator,
   message: { message: "Too many requests. Please slow down." },
 });
+
+// ---------------------------------------------------------------------------
+// Public read endpoints — tighter limit to prevent content scraping
+//   60 requests per minute per IP (books, chapters, profiles, gutenberg)
+// ---------------------------------------------------------------------------
+export const publicReadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests. Please slow down." },
+});

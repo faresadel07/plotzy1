@@ -12,6 +12,7 @@ import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS } from "../../../../lib/d
 import { checkAndUnlockAchievements } from "../achievements-engine";
 import { requireAuth, requireBookOwner, requireAdmin } from "../middleware/auth";
 import { aiLimiter, imageGenLimiter } from "../middleware/rate-limit";
+import { logger } from "../lib/logger";
 import {
   isMockOpenAI,
   openai,
@@ -370,7 +371,7 @@ router.post(
 
       res.json({ url: dataUri });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Books route error");
       res.status(500).json({ message: "Internal error" });
     }
   }
@@ -429,7 +430,7 @@ router.post(
       await storage.updateBook(bookId, { summary: blurb });
       res.json({ blurb });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Books route error");
       res.status(500).json({ message: "Failed to generate blurb" });
     }
   }
@@ -822,7 +823,7 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
 
     res.status(400).json({ message: "Unsupported format" });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, "Books route error");
     res.status(500).json({ message: "Failed to generate download" });
   }
 });
@@ -950,7 +951,7 @@ Return a strict JSON object with these two arrays.`;
         message: "Parsed text and extracted lore/beats successfully.",
       });
     } catch (err) {
-      console.error("Legacy import error:", err);
+      logger.error({ err }, "Legacy import error");
       res.status(500).json({
         message:
           "Failed to process the legacy file. It might be corrupted or too large.",

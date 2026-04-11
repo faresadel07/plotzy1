@@ -3,6 +3,8 @@ import { db } from "../db";
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { gutenbergBooks } from "../../../../lib/db/src/schema";
 
+import { logger } from "../lib/logger";
+
 const router = Router();
 
 // ── Gutenberg Public-Domain Library ──────────────────────────────────────────
@@ -57,16 +59,16 @@ export async function syncGutenbergCatalog(): Promise<void> {
     // Skip if already synced
     const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
     if ((row?.n ?? 0) >= CATALOG_MIN_BOOKS) {
-      process.env.NODE_ENV !== "production" && console.log(`[catalog] Already synced (${row?.n} books) — skipping`);
+      logger.debug({ count: row?.n }, "Gutenberg catalog already synced — skipping");
       return;
     }
 
-    process.env.NODE_ENV !== "production" && console.log("[catalog] Downloading Gutenberg catalog CSV (~21 MB)…");
+    logger.info("Downloading Gutenberg catalog CSV (~21 MB)…");
     const resp = await fetch(GUTENBERG_CATALOG_URL, { signal: AbortSignal.timeout(90_000) });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const text = await resp.text();
     const lines = text.split("\n");
-    process.env.NODE_ENV !== "production" && console.log(`[catalog] Parsing ${lines.length} lines…`);
+    logger.info({ lines: lines.length }, "Parsing Gutenberg catalog lines");
 
     const BATCH = 300;
     const batch: any[] = [];
@@ -114,7 +116,7 @@ export async function syncGutenbergCatalog(): Promise<void> {
           });
         imported += batch.length;
         batch.length = 0;
-        if (imported % 3000 === 0) process.env.NODE_ENV !== "production" && console.log(`[catalog] ${imported} books imported…`);
+        if (imported % 3000 === 0) logger.info({ imported }, "Gutenberg catalog import progress");
       }
     }
 
@@ -134,9 +136,9 @@ export async function syncGutenbergCatalog(): Promise<void> {
       imported += batch.length;
     }
 
-    process.env.NODE_ENV !== "production" && console.log(`[catalog] Sync complete — ${imported} books imported`);
+    logger.info({ imported }, "Gutenberg catalog sync complete");
   } catch (err) {
-    console.error("[catalog] Sync failed:", err);
+    logger.error({ err }, "Gutenberg catalog sync failed");
   } finally {
     catalogSyncRunning = false;
   }

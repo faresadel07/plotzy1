@@ -11,10 +11,12 @@ import { aiLimiter } from "../middleware/rate-limit";
 import {
   isMockOpenAI,
   openai,
+  requireOpenAI,
   isSubscriptionActive,
   countWords,
   getLangName,
 } from "./helpers";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -222,6 +224,7 @@ router.post(
   api.chapters.voice.path,
   audioBodyParser,
   requireBookOwner,
+  requireOpenAI,
   aiLimiter,
   async (req, res) => {
     try {
@@ -274,7 +277,7 @@ router.post(
       });
       res.json(chapter);
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Chapters route error");
       res.status(500).json({ message: "Failed to process voice" });
     }
   }
@@ -285,6 +288,7 @@ router.post(
 router.post(
   "/api/transcribe",
   audioBodyParser,
+  requireOpenAI,
   aiLimiter,
   async (req, res) => {
     try {
@@ -308,7 +312,7 @@ router.post(
 
       res.json({ text: transcription.text });
     } catch (err) {
-      console.error(err);
+      logger.error({ err }, "Chapters route error");
       res.status(500).json({ message: "Transcription failed" });
     }
   }

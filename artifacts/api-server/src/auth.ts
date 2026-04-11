@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { storage } from "./storage";
+import { logger } from "./lib/logger";
 
 declare global {
   namespace Express {
@@ -12,6 +13,7 @@ declare global {
       appleId?: string | null;
       linkedinId?: string | null;
       avatarUrl?: string | null;
+      role?: string;
       subscriptionStatus?: string | null;
       subscriptionPlan?: string | null;
       subscriptionEndDate?: Date | null;
@@ -119,7 +121,7 @@ export function setupPassport() {
         )
       );
     } catch (e) {
-      console.warn("[auth] Apple strategy setup failed:", e);
+      logger.warn({ err: e }, "Apple strategy setup failed");
     }
   }
 }

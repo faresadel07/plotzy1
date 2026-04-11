@@ -1,10 +1,15 @@
 import OpenAI from "openai";
+import { logger } from "../lib/logger";
 
 // ---------------------------------------------------------------------------
 // OpenAI client (shared across route modules)
 // ---------------------------------------------------------------------------
 export const isMockOpenAI =
   !process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY;
+
+if (isMockOpenAI) {
+  logger.warn("No OpenAI API key found — AI endpoints will return mock responses. Set OPENAI_API_KEY to enable real AI features.");
+}
 
 export const openai = new OpenAI({
   apiKey:
@@ -13,6 +18,19 @@ export const openai = new OpenAI({
     "missing-openai-key",
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
+
+/**
+ * Guard middleware for AI endpoints — returns 503 with clear message
+ * when OpenAI key is missing, instead of crashing with an auth error.
+ */
+export function requireOpenAI(req: any, res: any, next: any) {
+  if (isMockOpenAI) {
+    return res.status(503).json({
+      message: "AI features are not available — OpenAI API key is not configured. Please contact the administrator.",
+    });
+  }
+  next();
+}
 
 // ---------------------------------------------------------------------------
 // Subscription helpers
