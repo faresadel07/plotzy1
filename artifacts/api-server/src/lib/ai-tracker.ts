@@ -64,5 +64,5 @@ export function trackAIUsage(params: TrackAIParams): void {
       completionTokens,
       estimatedCostCents: cost,
     })
-    .catch(() => {}); // Silent — never crash the request
+    .catch((err) => { /* non-blocking */ if (process.env.NODE_ENV !== "production") console.warn("AI tracker insert failed:", err?.message); });
 }

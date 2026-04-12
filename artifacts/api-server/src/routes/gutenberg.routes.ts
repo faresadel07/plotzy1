@@ -197,7 +197,7 @@ router.get("/api/gutenberg/books", async (req: any, res: any) => {
 
     if (totalInDB < CATALOG_MIN_BOOKS) {
       // Catalog not yet loaded — trigger background sync and return empty with a hint
-      if (!catalogSyncRunning) syncGutenbergCatalog().catch(() => {});
+      if (!catalogSyncRunning) syncGutenbergCatalog().catch((err) => logger.error({ err }, "Background catalog sync failed"));
       return res.json({ count: 0, next: null, previous: null, results: [], syncing: true });
     }
 
@@ -335,13 +335,13 @@ router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
 
     if (!textUrl || !textResp) {
       // Mark this book as unavailable so the UI can hide it
-      if (row) await db.update(gutenbergBooks).set({ textUrl: null }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
+      if (row) await db.update(gutenbergBooks).set({ textUrl: null }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch((err) => logger.error({ err }, "Gutenberg DB update failed"));
       return res.status(404).json({ error: "No plain-text version available for this book" });
     }
 
     // Save the working textUrl back to DB if it changed
     if (row?.textUrl !== textUrl) {
-      await db.update(gutenbergBooks).set({ textUrl }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch(() => {});
+      await db.update(gutenbergBooks).set({ textUrl }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch((err) => logger.error({ err }, "Gutenberg DB update failed"));
     }
 
     if (!textResp.ok) return res.status(502).json({ error: "Failed to fetch book text" });

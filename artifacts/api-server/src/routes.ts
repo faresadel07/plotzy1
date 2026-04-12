@@ -832,8 +832,13 @@ export async function registerRoutes(
   // ─── Chapters ──────────────────────────────────────────────────────────────
 
   app.get(api.chapters.list.path, async (req, res) => {
-    const chapters = await storage.getChapters(Number(req.params.bookId));
-    res.json(chapters);
+    try {
+      const chapters = await storage.getChapters(Number(req.params.bookId));
+      res.json(chapters);
+    } catch (err) {
+      logger.error({ err }, "Failed to fetch chapters");
+      res.status(500).json({ message: "Failed to fetch chapters" });
+    }
   });
 
   app.post(api.chapters.create.path, async (req, res) => {
@@ -1895,7 +1900,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   app.use(socialRouter);
 
   // Trigger catalog sync in background on startup (non-blocking)
-  setImmediate(() => syncGutenbergCatalog().catch(() => {}));
+  setImmediate(() => syncGutenbergCatalog().catch((err) => logger.error({ err }, "Gutenberg catalog sync failed")));
 
   return httpServer;
 }

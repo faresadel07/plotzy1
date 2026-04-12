@@ -33,7 +33,7 @@ export function apiLogger(req: Request, res: Response, next: NextFunction) {
         durationMs,
         userId,
       })
-      .catch(() => {}); // Silently ignore insert failures
+      .catch(() => { /* non-blocking — never crash the request for logging failures */ });
   });
 
   next();

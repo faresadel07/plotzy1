@@ -6,14 +6,24 @@ import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CEN
 import { api } from "../../../../lib/shared/src/routes";
 import { isSubscriptionActive } from "./helpers";
 import { logger } from "../lib/logger";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
+
+// Rate limit payment endpoints — 5 attempts per 15 min per IP
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many payment attempts. Please try again later." },
+});
 
 const BOOK_PRICE_CENTS = 499;
 
 // ─── Payments (Stripe one-time) ─────────────────────────────────────────────
 
-router.post(api.payments.createIntent.path, async (req, res) => {
+router.post(api.payments.createIntent.path, paymentLimiter, async (req, res) => {
   try {
     const { bookId } = api.payments.createIntent.input.parse(req.body);
 
@@ -101,7 +111,7 @@ router.get("/api/subscription/status", async (req, res) => {
   });
 });
 
-router.post("/api/subscription/create-checkout", async (req, res) => {
+router.post("/api/subscription/create-checkout", paymentLimiter, async (req, res) => {
   try {
     const { plan } = z.object({ plan: z.enum(["monthly", "yearly"]) }).parse(req.body);
     const stripe = await getUncachableStripeClient();
@@ -291,7 +301,7 @@ function planToTier(plan: PayPalPlan): "pro" | "premium" {
 // Create a PayPal order for a subscription plan
 const paypalPlanSchema = z.enum(["pro_monthly", "pro_yearly", "premium_monthly", "premium_yearly", "monthly", "yearly_monthly", "yearly_annual"]);
 
-router.post("/api/paypal/create-order", async (req, res) => {
+router.post("/api/paypal/create-order", paymentLimiter, async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
   const parsed = paypalPlanSchema.safeParse(req.body?.plan);
   if (!parsed.success) return res.status(400).json({ message: "Invalid plan" });
@@ -323,7 +333,7 @@ router.post("/api/paypal/create-order", async (req, res) => {
 });
 
 // Capture the approved PayPal order and activate subscription
-router.post("/api/paypal/capture-order", async (req, res) => {
+router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
   const captureSchema = z.object({ orderId: z.string().min(1), plan: paypalPlanSchema });
   const parsed = captureSchema.safeParse(req.body);

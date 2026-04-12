@@ -28,4 +28,20 @@ if (Number.isNaN(port) || port <= 0) {
   httpServer.listen({ port, host: "0.0.0.0" }, () => {
     logger.info({ port }, "Server listening");
   });
+
+  // Graceful shutdown — drain connections before exit
+  const shutdown = (signal: string) => {
+    logger.info({ signal }, "Shutdown signal received, draining connections...");
+    httpServer.close(() => {
+      logger.info("Server closed gracefully");
+      process.exit(0);
+    });
+    // Force exit after 10s if connections don't drain
+    setTimeout(() => {
+      logger.warn("Forcing shutdown after timeout");
+      process.exit(1);
+    }, 10_000);
+  };
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 })();
