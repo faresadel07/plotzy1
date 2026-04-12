@@ -340,14 +340,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     {ar ? "تذكّرني" : "Remember me"}
                   </span>
                 </label>
-                <button type="button"
-                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.5)", padding: 0, fontWeight: 500, letterSpacing: "-0.01em" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#f5f5f5")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
-                  onClick={() => setGlobalError(ar ? "ميزة استعادة كلمة المرور قيد التطوير." : "Password reset coming soon.")}
-                >
-                  {ar ? "نسيت كلمة المرور؟" : "Forgot password?"}
-                </button>
+                <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.25)", fontFamily: SF }}>
+                  {ar ? "نسيت كلمة المرور؟ تواصل مع الدعم" : "Forgot password? Contact support"}
+                </span>
               </div>
             )}
 
@@ -407,11 +402,6 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
               alt="Apple" label={ar ? "المتابعة عبر Apple" : "Continue with Apple"}
               href="/auth/apple" enabled={providers.apple}
-            />
-            <SocialBtn
-              src="https://www.svgrepo.com/show/303615/github-icon-1-logo.svg"
-              alt="GitHub" label={ar ? "المتابعة عبر GitHub" : "Continue with GitHub"}
-              href="/auth/github" enabled={false}
             />
           </div>
 

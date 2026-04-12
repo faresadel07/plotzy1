@@ -224,7 +224,7 @@ router.get("/auth/linkedin", (req, res) => {
   if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
     return res.redirect("/?auth=error&msg=linkedin-not-configured");
   }
-  const state = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const state = require("crypto").randomBytes(32).toString("hex");
   (req.session as any).linkedinOAuthState = state;
   const params = new URLSearchParams({
     response_type: "code",

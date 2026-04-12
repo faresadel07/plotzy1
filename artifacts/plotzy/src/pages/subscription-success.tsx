@@ -20,7 +20,7 @@ export default function SubscriptionSuccess() {
       return;
     }
 
-    fetch(`/api/subscription/verify?session_id=${sessionId}`)
+    fetch(`/api/subscription/verify?session_id=${sessionId}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (data.success) {
