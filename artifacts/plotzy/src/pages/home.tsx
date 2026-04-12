@@ -91,9 +91,9 @@ const COVER_PALETTES = [
 
 /* ── Book pages ────────────────────────────────────────────── */
 const BOOK_FONT  = "'Merriweather', 'Lora', Georgia, serif";
-const PAGE_BG    = "#111";
-const PAGE_TEXT  = "rgba(255,255,255,0.85)";
-const PAGE_FAINT = "rgba(255,255,255,0.35)";
+const PAGE_BG    = "#F2ECD8";
+const PAGE_TEXT  = "#1a1209";
+const PAGE_FAINT = "#7a6a55";
 
 const LEFT_PARAGRAPHS = [
   "Every great book begins not with a plot or a character, but with a single decision: to sit down and write. Plotzy was built around that moment: the fragile instant before the first word appears on the page.",
@@ -132,7 +132,7 @@ function BookPages() {
 
   const page: React.CSSProperties = {
     flex: 1, height: "100%",
-    background: `linear-gradient(180deg, ${PAGE_BG} 0%, #0a0a0a 100%)`,
+    background: `linear-gradient(180deg, ${PAGE_BG} 0%, #EDE5CC 100%)`,
     position: "relative", overflow: "hidden",
     display: "flex", flexDirection: "column",
     padding: "20px 56px 42px", boxSizing: "border-box",
