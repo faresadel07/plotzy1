@@ -1,7 +1,10 @@
 import { Router } from "express";
+import multer from "multer";
 import { storage } from "../storage";
+import { logger } from "../lib/logger";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB max
 
 // ── Social: Author Profiles, Follows, Notifications, Messages ─────────
 
@@ -272,6 +275,40 @@ router.post("/api/messages/:userId", async (req, res) => {
     res.json(message);
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// POST /api/messages/:userId/attachment — send image/file as base64 message
+router.post("/api/messages/:userId/attachment", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const receiverId = Number(req.params.userId);
+    if (isNaN(receiverId)) return res.status(400).json({ message: "Invalid user ID" });
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+
+    const { originalname, mimetype, buffer } = req.file;
+    const base64 = buffer.toString("base64");
+    const isImage = mimetype.startsWith("image/");
+    // Store as special content format: [FILE:type:name:data] or [IMG:data]
+    const content = isImage
+      ? `[IMG:${mimetype}:${originalname}:${base64}]`
+      : `[FILE:${mimetype}:${originalname}:${base64}]`;
+
+    const message = await storage.sendMessage(req.user.id, receiverId, content);
+
+    const sender = await storage.getUserById(req.user.id);
+    await storage.createNotification({
+      userId: receiverId,
+      type: "message",
+      title: `${sender?.displayName || "Someone"} sent you ${isImage ? "an image" : "a file"}`,
+      body: originalname,
+      actorId: req.user.id,
+    });
+
+    res.json(message);
+  } catch (err) {
+    logger.error({ err }, "Attachment upload error");
+    res.status(500).json({ message: "Failed to send attachment" });
   }
 });
 
