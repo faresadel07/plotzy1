@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { storage } from "../storage";
 import { requireAdmin, requireBookOwner } from "../middleware/auth";
 import { db } from "../db";
@@ -485,13 +486,22 @@ router.get("/api/marketplace/professionals/:id", async (req, res) => {
   }
 });
 
+const quoteRequestSchema = z.object({
+  professionalId: z.number({ coerce: true }).int().positive(),
+  authorName: z.string().min(1).max(200),
+  authorEmail: z.string().email(),
+  bookTitle: z.string().min(1).max(500),
+  wordCount: z.number({ coerce: true }).int().positive().optional().nullable(),
+  genre: z.string().max(100).optional().nullable(),
+  description: z.string().max(5000).optional().nullable(),
+  deadline: z.string().max(100).optional().nullable(),
+  service: z.string().min(1).max(100),
+});
+
 router.post("/api/marketplace/quote-requests", async (req, res) => {
   try {
-    const { professionalId, authorName, authorEmail, bookTitle, wordCount, genre, description, deadline, service } = req.body;
-    if (!professionalId || !authorName || !authorEmail || !bookTitle || !service) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-    const [created] = await db.insert(quoteRequests).values({ professionalId: parseInt(professionalId), authorName, authorEmail, bookTitle, wordCount: wordCount ? parseInt(wordCount) : null, genre, description, deadline, service }).returning();
+    const data = quoteRequestSchema.parse(req.body);
+    const [created] = await db.insert(quoteRequests).values({ professionalId: data.professionalId, authorName: data.authorName, authorEmail: data.authorEmail, bookTitle: data.bookTitle, wordCount: data.wordCount ?? null, genre: data.genre ?? null, description: data.description ?? null, deadline: data.deadline ?? null, service: data.service }).returning();
     res.status(201).json(created);
   } catch (err) {
     res.status(500).json({ message: "Failed to submit quote request" });
@@ -511,10 +521,21 @@ router.get("/api/books/:bookId/research", requireBookOwner, async (req, res) => 
   }
 });
 
+const researchItemSchema = z.object({
+  type: z.enum(["note", "link", "image"]).default("note"),
+  title: z.string().max(500).optional().nullable(),
+  content: z.string().max(50000).default(""),
+  previewImageUrl: z.string().url().optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  color: z.string().max(50).default("default"),
+});
+
 router.post("/api/books/:bookId/research", requireBookOwner, async (req, res) => {
   const bookId = parseInt(req.params.bookId);
   if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
-  const { type = "note", title, content = "", previewImageUrl, description, color } = req.body;
+  const parsed = researchItemSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: "Invalid input" });
+  const { type, title, content, previewImageUrl, description, color } = parsed.data;
   try {
     const [item] = await db.insert(researchItemsTable).values({ bookId, type, title, content, previewImageUrl, description, color }).returning();
     res.status(201).json(item);
@@ -590,9 +611,12 @@ router.post("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: an
 router.patch("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, res: any) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-  const { status } = req.body as { status?: string };
+  const statusSchema = z.object({ status: z.enum(["sent", "opened", "reviewed", "declined"]).default("sent") });
+  const parsed = statusSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: "Invalid status" });
+  const { status } = parsed.data;
   try {
-    const [row] = await db.update(arcRecipientsTable).set({ status: status ?? "sent" }).where(eq(arcRecipientsTable.id, id)).returning();
+    const [row] = await db.update(arcRecipientsTable).set({ status }).where(eq(arcRecipientsTable.id, id)).returning();
     res.json(row);
   } catch {
     res.status(500).json({ message: "Failed to update ARC recipient" });

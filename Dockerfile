@@ -35,6 +35,14 @@ COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/artifacts/api-server/package.json ./artifacts/api-server/package.json
 
 ENV NODE_ENV=production
+
+# Run as non-root user for security
+RUN useradd -m -u 1001 appuser
+USER appuser
+
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD node -e "const h=require('http');h.get('http://localhost:8080/healthz',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
 
 CMD ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]

@@ -815,9 +815,15 @@ export async function registerRoutes(
         res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.epub"`);
         const stream = fs.createReadStream(tmpPath);
         stream.pipe(res);
-        stream.on("end", () => {
+        const cleanupTmp = () => {
           try { fs.unlinkSync(tmpPath); } catch { }
           if (coverTmpPath) { try { fs.unlinkSync(coverTmpPath); } catch { } }
+        };
+        stream.on("end", cleanupTmp);
+        stream.on("error", (err) => {
+          logger.error({ err }, "EPUB stream error");
+          cleanupTmp();
+          if (!res.headersSent) res.status(500).json({ message: "Export failed" });
         });
         return;
       }
