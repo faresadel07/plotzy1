@@ -22,9 +22,13 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ message: "Authentication required" });
   }
   const user = req.user as any;
+  // Primary: check DB role
   if (user.role === "admin") return next();
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail && user.email === adminEmail) return next();
+  // Fallback: ADMIN_EMAIL env var (dev/initial setup only)
+  if (process.env.NODE_ENV !== "production") {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail && user.email === adminEmail) return next();
+  }
   return res.status(403).json({ message: "Forbidden" });
 }
 
@@ -60,15 +64,12 @@ export async function requireBookOwner(req: Request, res: Response, next: NextFu
       return next();
     }
 
-    // Unauthenticated guest flow
+    // Unauthenticated guest flow — only trust server-side session, never query params
     if (book.userId === null) {
       const sess = req.session as any;
       const sessionGuestIds: number[] = sess?.guestBookIds || [];
-      const rawQuery = (req.query.guestIds as string) || "";
-      const queryGuestIds = rawQuery.split(",").filter(Boolean).map(Number).filter(n => !isNaN(n) && n > 0);
-      const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
 
-      if (allGuestIds.includes(bookId)) {
+      if (sessionGuestIds.includes(bookId)) {
         req.ownerBook = book;
         return next();
       }

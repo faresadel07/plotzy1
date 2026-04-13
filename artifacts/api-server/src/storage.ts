@@ -726,8 +726,13 @@ export class DatabaseStorage implements IStorage {
   // ── Social: Follows ─────────────────────────────────────────────────────────
 
   async followUser(followerId: number, followeeId: number): Promise<Follow> {
-    const [follow] = await db.insert(follows).values({ followerId, followeeId }).returning();
-    // Notify the followee
+    const [follow] = await db.insert(follows).values({ followerId, followeeId }).onConflictDoNothing().returning();
+    if (!follow) {
+      // Already following — return existing record
+      const [existing] = await db.select().from(follows).where(and(eq(follows.followerId, followerId), eq(follows.followeeId, followeeId)));
+      return existing;
+    }
+    // Notify the followee (only on new follow)
     const follower = await this.getUserById(followerId);
     await this.createNotification({
       userId: followeeId,

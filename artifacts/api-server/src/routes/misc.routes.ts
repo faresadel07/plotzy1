@@ -414,9 +414,16 @@ router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
 router.get("/api/admin/export/users.csv", requireAdmin, async (req, res) => {
   try {
     const users = await storage.getAllUsers();
+    // Escape CSV values: prevent formula injection (=, +, -, @) and quote fields with commas/quotes
+    const esc = (v: any) => {
+      let s = String(v ?? "");
+      if (/^[=+\-@]/.test(s)) s = "'" + s; // prevent formula injection
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
     const header = "id,email,display_name,role,subscription_tier,subscription_status,subscription_plan,created_at,suspended";
     const rows = (users as any[]).map(u =>
-      [u.id, u.email || "", (u.displayName || "").replace(/,/g, ""), u.role || "user", u.subscriptionTier || "free", u.subscriptionStatus || "free_trial", u.subscriptionPlan || "", u.createdAt || "", u.suspended ? "true" : "false"].join(",")
+      [u.id, esc(u.email), esc(u.displayName), esc(u.role || "user"), esc(u.subscriptionTier || "free"), esc(u.subscriptionStatus || "free_trial"), esc(u.subscriptionPlan), esc(u.createdAt), u.suspended ? "true" : "false"].join(",")
     );
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", "attachment; filename=plotzy-users.csv");
@@ -432,7 +439,7 @@ router.get("/api/admin/export/analytics.csv", requireAdmin, async (req, res) => 
     const days = Math.min(90, Math.max(7, Number(req.query.days) || 30));
     const signups = await db.execute(sql`
       SELECT to_char(created_at::date, 'YYYY-MM-DD') as date, count(*)::int as signups
-      FROM users WHERE created_at >= now() - ${days + ' days'}::interval
+      FROM users WHERE created_at >= now() - make_interval(days => ${days})
       GROUP BY created_at::date ORDER BY date
     `);
     const header = "date,signups";

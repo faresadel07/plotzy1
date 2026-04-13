@@ -4,7 +4,20 @@ import { storage } from "../storage";
 import { logger } from "../lib/logger";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB max
+const ALLOWED_FILE_TYPES = new Set([
+  "image/jpeg", "image/png", "image/webp", "image/gif",
+  "application/pdf",
+  "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain", "application/epub+zip", "application/rtf",
+]);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_FILE_TYPES.has(file.mimetype)) cb(null, true);
+    else cb(new Error("File type not allowed"));
+  },
+});
 
 // ── Social: Author Profiles, Follows, Notifications, Messages ─────────
 

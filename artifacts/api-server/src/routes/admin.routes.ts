@@ -86,7 +86,7 @@ router.get("/api/admin/analytics/signups", async (req, res) => {
     const rows = await db.execute(sql`
       SELECT DATE(created_at) as day, COUNT(*) as count
       FROM users
-      WHERE created_at >= NOW() - ${days + ' days'}::interval
+      WHERE created_at >= NOW() - make_interval(days => ${days})
       GROUP BY DATE(created_at)
       ORDER BY day
     `);
@@ -103,7 +103,7 @@ router.get("/api/admin/analytics/writing-activity", async (req, res) => {
     const rows = await db.execute(sql`
       SELECT DATE(created_at) as day, COALESCE(SUM(word_count), 0) as words
       FROM daily_progress
-      WHERE created_at >= NOW() - ${days + ' days'}::interval
+      WHERE created_at >= NOW() - make_interval(days => ${days})
       GROUP BY DATE(created_at)
       ORDER BY day
     `);

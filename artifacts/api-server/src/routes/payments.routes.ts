@@ -68,8 +68,14 @@ router.post(api.payments.confirm.path, async (req, res) => {
       }
     }
 
+    // Idempotency: check if already processed
+    const existingTx = await storage.getTransaction(paymentIntentId);
+    if (existingTx && existingTx.status === "succeeded") {
+      return res.json({ success: true, alreadyProcessed: true });
+    }
+
     await storage.updateBook(bookId, { isPaid: true });
-    const tx = await storage.getTransaction(paymentIntentId);
+    const tx = existingTx;
     if (tx) {
       await storage.updateTransaction(tx.id, { status: "succeeded" });
     }
@@ -346,8 +352,12 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
     if (!captureRes.ok) {
-      const err = await captureRes.text();
-      logger.error({ err }, "PayPal capture error");
+      const errText = await captureRes.text();
+      // Handle already-captured orders gracefully
+      if (errText.includes("ORDER_ALREADY_CAPTURED") || errText.includes("UNPROCESSABLE_ENTITY")) {
+        return res.json({ success: true, alreadyProcessed: true });
+      }
+      logger.error({ err: errText }, "PayPal capture error");
       return res.status(502).json({ message: "Failed to capture PayPal order" });
     }
     const capture = await captureRes.json() as { status: string };
