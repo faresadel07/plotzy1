@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/language-context";
 import {
   ArrowLeft, BookOpen, Loader2, Sun, Moon, Minus, Plus,
   List, X, Download, Settings, ChevronLeft, ChevronRight,
-  AlignJustify, Copy, Search, LayoutGrid,
+  AlignJustify, Copy, Search, LayoutGrid, Bookmark, Type,
 } from "lucide-react";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -69,10 +69,11 @@ function useMeasuredPages(
   fontSize: number,
   lineHeight: number,
   twoPage: boolean,
+  fontFamily: string = "Georgia, serif",
 ): { pages: string[][]; measuring: boolean } {
   const [pages, setPages] = useState<string[][]>([[""]]);
   const [measuring, setMeasuring] = useState(false);
-  const depsKey = `${paragraphs.length}|${pageW.toFixed(0)}|${pageH.toFixed(0)}|${fontSize}|${lineHeight}|${twoPage}`;
+  const depsKey = `${paragraphs.length}|${pageW.toFixed(0)}|${pageH.toFixed(0)}|${fontSize}|${lineHeight}|${twoPage}|${fontFamily}`;
   const prevKey = useRef("");
 
   useEffect(() => {
@@ -95,7 +96,7 @@ function useMeasuredPages(
         "position:fixed", "visibility:hidden", "pointer-events:none",
         "z-index:-9999", "top:0", "left:0",
         `width:${textW}px`,
-        `font-family:Georgia,'Times New Roman',serif`,
+        `font-family:${fontFamily || "Georgia, serif"}`,
         `font-size:${fontSize}px`,
         `line-height:${lineHeight}`,
         "text-align:justify",
@@ -198,6 +199,22 @@ export default function GutenbergReader() {
   const [selBubble, setSelBubble] = useState<{ text: string; x: number; y: number } | null>(null);
   const [copiedSel, setCopiedSel] = useState(false);
 
+  // Search within book
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<number[]>([]);
+  const [searchResultIdx, setSearchResultIdx] = useState(0);
+
+  // Bookmarks
+  const [bookmarks, setBookmarks] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem(`plotzy_bookmarks_${gutId}`) || "[]"); } catch { return []; }
+  });
+
+  // Font family
+  const [fontFamily, setFontFamily] = useState(() => {
+    try { return localStorage.getItem("plotzy_reader_font") || "Georgia, serif"; } catch { return "Georgia, serif"; }
+  });
+
   // Layout measurements
   const readingRef = useRef<HTMLDivElement>(null);
   const [readingSize, setReadingSize] = useState({ w: 900, h: 600 });
@@ -227,7 +244,7 @@ export default function GutenbergReader() {
 
   // ── Derived data ──────────────────────────────────────────────────────────
   const paragraphs = useMemo(() => rawText ? parseParagraphs(rawText) : [], [rawText]);
-  const { pages, measuring } = useMeasuredPages(paragraphs, PAGE_W, PAGE_H, fontSize, lineHeight, twoPage);
+  const { pages, measuring } = useMeasuredPages(paragraphs, PAGE_W, PAGE_H, fontSize, lineHeight, twoPage, fontFamily);
   const chapters = useMemo(() => detectChapters(paragraphs), [paragraphs]);
 
   const totalPages = pages.length;
@@ -333,6 +350,50 @@ export default function GutenbergReader() {
     setSelBubble({ text, x: rect.left + rect.width / 2, y: rect.top - 8 });
     setCopiedSel(false);
   }, []);
+
+  const goToPage = useCallback((pageIdx: number) => {
+    setSpreadIdx(twoPage ? Math.floor(pageIdx / 2) : pageIdx);
+  }, [twoPage]);
+
+  // ── Search within book ──────────────────────────────────────────────────
+  const handleSearch = useCallback((q: string) => {
+    setSearchQuery(q);
+    if (!q.trim() || !pages.length) { setSearchResults([]); return; }
+    const lower = q.toLowerCase();
+    const matches: number[] = [];
+    pages.forEach((paras, idx) => {
+      if (paras && paras.some(p => p.toLowerCase().includes(lower))) matches.push(idx);
+    });
+    setSearchResults(matches);
+    setSearchResultIdx(0);
+    if (matches.length > 0) goToPage(matches[0]);
+  }, [pages]);
+
+  const nextSearchResult = () => {
+    if (searchResults.length === 0) return;
+    const next = (searchResultIdx + 1) % searchResults.length;
+    setSearchResultIdx(next);
+    goToPage(searchResults[next]);
+  };
+
+  const prevSearchResult = () => {
+    if (searchResults.length === 0) return;
+    const prev = (searchResultIdx - 1 + searchResults.length) % searchResults.length;
+    setSearchResultIdx(prev);
+    goToPage(searchResults[prev]);
+  };
+
+  // ── Bookmarks ─────────────────────────────────────────────────────────────
+  const toggleBookmark = () => {
+    setBookmarks(prev => {
+      const page = leftPageIdx;
+      const next = prev.includes(page) ? prev.filter(p => p !== page) : [...prev, page].sort((a, b) => a - b);
+      try { localStorage.setItem(`plotzy_bookmarks_${gutId}`, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const isBookmarked = bookmarks.includes(leftPageIdx);
 
   function handleCopySel() {
     if (!selBubble) return;
@@ -474,6 +535,10 @@ export default function GutenbergReader() {
           </div>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
+          <IconBtn onClick={() => setShowSearch(v => !v)} title="Search" color={showSearch ? accent : fgMuted}><Search className="w-4 h-4" /></IconBtn>
+          <IconBtn onClick={toggleBookmark} title={isBookmarked ? "Remove bookmark" : "Bookmark"} color={isBookmarked ? accent : fgMuted}>
+            <Bookmark className="w-4 h-4" style={{ fill: isBookmarked ? accent : "none" }} />
+          </IconBtn>
           <IconBtn onClick={handleDownload} title="Download" color={fgMuted}><Download className="w-4 h-4" /></IconBtn>
           {chapters.length > 0 && (
             <IconBtn onClick={() => setShowToc(v => !v)} title="Contents" color={fgMuted}><List className="w-4 h-4" /></IconBtn>
@@ -491,6 +556,46 @@ export default function GutenbergReader() {
           </IconBtn>
         </div>
       </div>
+
+      {/* ══ SEARCH BAR ═══════════════════════════════════════════════════════ */}
+      {showSearch && (
+        <div className="flex items-center gap-2 px-4 py-2 shrink-0 z-30" style={{ background: barBg, borderBottom: `1px solid ${border}` }}>
+          <Search className="w-3.5 h-3.5 shrink-0" style={{ color: fgMuted }} />
+          <input
+            autoFocus value={searchQuery}
+            onChange={e => handleSearch(e.target.value)}
+            placeholder={ar ? "ابحث في الكتاب..." : "Search in book..."}
+            className="flex-1 bg-transparent border-none outline-none text-sm"
+            style={{ color: fg, fontFamily }}
+          />
+          {searchResults.length > 0 && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs" style={{ color: fgMuted }}>{searchResultIdx + 1}/{searchResults.length}</span>
+              <button onClick={prevSearchResult} className="w-6 h-6 rounded flex items-center justify-center" style={{ color: fgMuted }}><ChevronLeft className="w-3.5 h-3.5" /></button>
+              <button onClick={nextSearchResult} className="w-6 h-6 rounded flex items-center justify-center" style={{ color: fgMuted }}><ChevronRight className="w-3.5 h-3.5" /></button>
+            </div>
+          )}
+          {searchQuery && searchResults.length === 0 && (
+            <span className="text-xs shrink-0" style={{ color: fgMuted }}>{ar ? "لا نتائج" : "No results"}</span>
+          )}
+          <button onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} style={{ color: fgMuted }}><X className="w-3.5 h-3.5" /></button>
+        </div>
+      )}
+
+      {/* ══ BOOKMARKS BAR (if any) ════════════════════════════════════════════ */}
+      {bookmarks.length > 0 && !showSearch && (
+        <div className="flex items-center gap-2 px-4 py-1.5 shrink-0 z-30 overflow-x-auto" style={{ background: barBg, borderBottom: `1px solid ${border}` }}>
+          <Bookmark className="w-3 h-3 shrink-0" style={{ color: accent }} />
+          <span className="text-[10px] shrink-0" style={{ color: fgMuted }}>{ar ? "العلامات:" : "Bookmarks:"}</span>
+          {bookmarks.map(page => (
+            <button key={page} onClick={() => goToPage(page)}
+              className="text-[11px] px-2 py-0.5 rounded-lg shrink-0 transition-all"
+              style={{ background: leftPageIdx === page ? accent : "rgba(128,128,128,0.15)", color: leftPageIdx === page ? "#000" : fgMuted, fontWeight: 600 }}>
+              {page + 1}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ══ PROGRESS BAR ═════════════════════════════════════════════════════ */}
       <div className="h-[2px] shrink-0" style={{ background: border }}>
@@ -546,7 +651,7 @@ export default function GutenbergReader() {
               style={{
                 flex: 1,
                 padding: pagePad,
-                fontFamily: "'Georgia','Times New Roman',serif",
+                fontFamily,
                 fontSize,
                 lineHeight,
                 color: fg,
@@ -594,7 +699,7 @@ export default function GutenbergReader() {
                   style={{
                     flex: 1,
                     padding: pageRPad,
-                    fontFamily: "'Georgia','Times New Roman',serif",
+                    fontFamily,
                     fontSize,
                     lineHeight,
                     color: fg,
@@ -917,6 +1022,20 @@ export default function GutenbergReader() {
                 <span className="text-sm w-7 text-center font-mono" style={{ color: fg }}>{fontSize}</span>
                 <StepBtn onClick={() => setFontSize(f => Math.min(24, f + 1))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
               </div>
+            </SettingRow>
+            <SettingRow label={ar ? "نوع الخط" : "Font"} icon={<Type className="w-4 h-4" style={{ color: fgMuted }} />}>
+              <select value={fontFamily} onChange={e => { setFontFamily(e.target.value); try { localStorage.setItem("plotzy_reader_font", e.target.value); } catch {} }}
+                className="text-sm rounded-lg px-2 py-1 outline-none"
+                style={{ background: "rgba(128,128,128,0.15)", border: `1px solid ${border}`, color: fg, fontFamily }}>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Merriweather', serif">Merriweather</option>
+                <option value="'Lora', serif">Lora</option>
+                <option value="'Crimson Text', serif">Crimson Text</option>
+                <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+                <option value="'Inter', sans-serif">Inter</option>
+                <option value="'Source Serif 4', serif">Source Serif</option>
+                <option value="'Courier Prime', monospace">Courier Prime</option>
+              </select>
             </SettingRow>
             <SettingRow label={ar ? "تباعد الأسطر" : "Line Spacing"} icon={<AlignJustify className="w-4 h-4" style={{ color: fgMuted }} />}>
               <div className="flex items-center gap-3">
