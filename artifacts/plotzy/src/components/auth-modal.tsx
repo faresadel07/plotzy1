@@ -9,7 +9,7 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-type Tab = "signin" | "signup";
+type Tab = "signin" | "signup" | "forgot";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
@@ -146,6 +146,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [success, setSuccess] = useState(false);
   const [providers, setProviders] = useState({ google: false, apple: false, email: true });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -340,9 +343,14 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     {ar ? "تذكّرني" : "Remember me"}
                   </span>
                 </label>
-                <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.25)", fontFamily: SF }}>
-                  {ar ? "نسيت كلمة المرور؟ تواصل مع الدعم" : "Forgot password? Contact support"}
-                </span>
+                <button type="button"
+                  onClick={() => { setTab("forgot"); setForgotEmail(email); setForgotSent(false); setGlobalError(""); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.4)", padding: 0 }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                >
+                  {ar ? "نسيت كلمة المرور؟" : "Forgot password?"}
+                </button>
               </div>
             )}
 
@@ -405,19 +413,63 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             />
           </div>
 
+          {/* Forgot Password Form */}
+          {tab === "forgot" && (
+            <div style={{ marginTop: 20 }}>
+              {!forgotSent ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>
+                    {ar ? "أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور" : "Enter your email and we'll send you a link to reset your password"}
+                  </p>
+                  <input value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder={ar ? "البريد الإلكتروني" : "Email address"} type="email"
+                    style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontFamily: SF, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  <button disabled={forgotLoading || !forgotEmail.includes("@")}
+                    onClick={async () => {
+                      setForgotLoading(true);
+                      try {
+                        await fetch("/api/auth/forgot-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail }) });
+                        setForgotSent(true);
+                      } catch {} finally { setForgotLoading(false); }
+                    }}
+                    style={{ width: "100%", padding: "12px 0", borderRadius: 10, background: "#fff", color: "#000", fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", opacity: forgotLoading ? 0.5 : 1 }}>
+                    {forgotLoading ? (ar ? "جارٍ الإرسال..." : "Sending...") : (ar ? "إرسال رابط إعادة التعيين" : "Send Reset Link")}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(74,222,128,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                    <span style={{ fontSize: 24 }}>✓</span>
+                  </div>
+                  <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: "#fff", marginBottom: 8 }}>
+                    {ar ? "تم إرسال الرابط!" : "Reset link sent!"}
+                  </p>
+                  <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                    {ar ? `تحقق من بريدك ${forgotEmail}` : `Check your inbox at ${forgotEmail}`}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Switch tab */}
           <p style={{ fontFamily: SF, fontSize: 12.5, textAlign: "center", color: "rgba(255,255,255,0.35)", margin: "20px 0 0" }}>
-            {tab === "signin"
-              ? (ar ? "ليس لديك حساب؟ " : "Don't have an account? ")
-              : (ar ? "لديك حساب بالفعل؟ " : "Already have an account? ")}
-            <button
-              onClick={() => { setTab(tab === "signin" ? "signup" : "signin"); setGlobalError(""); setFieldErrors({}); }}
-              style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0, letterSpacing: "-0.01em" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.75)")}
-            >
-              {tab === "signin" ? (ar ? "أنشئ حساباً" : "Create one") : (ar ? "سجّل الدخول" : "Sign in")}
-            </button>
+            {tab === "forgot" ? (
+              <button onClick={() => { setTab("signin"); setGlobalError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0 }}>
+                {ar ? "← العودة لتسجيل الدخول" : "← Back to sign in"}
+              </button>
+            ) : (
+              <>
+                {tab === "signin" ? (ar ? "ليس لديك حساب؟ " : "Don't have an account? ") : (ar ? "لديك حساب بالفعل؟ " : "Already have an account? ")}
+                <button
+                  onClick={() => { setTab(tab === "signin" ? "signup" : "signin"); setGlobalError(""); setFieldErrors({}); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0, letterSpacing: "-0.01em" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.75)")}
+                >
+                  {tab === "signin" ? (ar ? "أنشئ حساباً" : "Create one") : (ar ? "سجّل الدخول" : "Sign in")}
+                </button>
+              </>
+            )}
           </p>
 
           {/* Legal */}

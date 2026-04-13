@@ -441,6 +441,17 @@ export const contentFlags = pgTable("content_flags", {
   index("idx_content_flags_book_id").on(t.bookId),
 ]);
 
+// ── Password Reset Tokens ────────────────────────────────────────────────
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ── Book Collaborators ───────────────────────────────────────────────────
 
 export const bookCollaborators = pgTable("book_collaborators", {

@@ -78,6 +78,61 @@ function OAuthCallbackHandler() {
   return null;
 }
 
+function ResetPasswordHandler() {
+  const { toast } = useToast();
+  const [token] = useState(() => new URLSearchParams(window.location.search).get("reset"));
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  if (!token) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", padding: 24 }}>
+      <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 400 }}>
+        {done ? (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Password updated!</h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>You can now sign in with your new password.</p>
+            <button onClick={() => { window.history.replaceState({}, "", "/"); window.location.reload(); }}
+              style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+              Sign In
+            </button>
+          </div>
+        ) : (
+          <>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Set new password</h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>Enter your new password below.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="New password (min 8 characters)"
+                style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 14, outline: "none" }} />
+              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirm password"
+                style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 14, outline: "none" }} />
+              {password && confirm && password !== confirm && <p style={{ fontSize: 12, color: "#f87171" }}>Passwords don't match</p>}
+              <button disabled={loading || password.length < 8 || password !== confirm}
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const res = await fetch("/api/auth/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, password }) });
+                    const data = await res.json();
+                    if (data.success) { setDone(true); }
+                    else toast({ title: data.message || "Reset failed", variant: "destructive" });
+                  } catch { toast({ title: "Connection error", variant: "destructive" }); }
+                  finally { setLoading(false); }
+                }}
+                style={{ padding: "12px 0", borderRadius: 10, background: password.length >= 8 && password === confirm ? "#fff" : "rgba(255,255,255,0.06)", color: password.length >= 8 && password === confirm ? "#000" : "rgba(255,255,255,0.3)", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", opacity: loading ? 0.5 : 1 }}>
+                {loading ? "Updating..." : "Update Password"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Router() {
   const [location] = useLocation();
   const isFullscreen = location.startsWith("/discover/");
@@ -136,6 +191,7 @@ function App() {
               <TooltipProvider>
                 <ScrollToTop />
                 <OAuthCallbackHandler />
+                <ResetPasswordHandler />
                 <Router />
                 <QuickDropNotepad />
                 <Toaster />

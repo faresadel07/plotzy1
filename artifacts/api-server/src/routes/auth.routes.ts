@@ -7,6 +7,10 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
+import crypto from "crypto";
+import { db } from "../db";
+import { passwordResetTokens } from "../../../../lib/db/src/schema";
+import { eq, and, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -328,6 +332,93 @@ router.get("/auth/linkedin/callback", async (req, res) => {
   } catch (err) {
     logger.error({ err }, "LinkedIn callback error");
     res.redirect("/?auth=error");
+  }
+});
+
+// ─── Forgot Password (send reset link) ──────────────────────────────────────
+
+router.post("/api/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = z.object({ email: z.string().email() }).parse(req.body);
+    const user = await storage.getUserByEmail(email);
+
+    // Always return success (don't reveal if email exists)
+    if (!user) return res.json({ success: true });
+
+    // Generate token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Delete old tokens for this user
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, user.id));
+
+    // Save new token
+    await db.insert(passwordResetTokens).values({ userId: user.id, token, expiresAt });
+
+    // Send email
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
+      ? `https://${process.env.APP_DOMAIN || "localhost"}`
+      : "http://localhost:5173");
+    const resetLink = `${frontendUrl}/?reset=${token}`;
+
+    try {
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: "Plotzy <onboarding@resend.dev>",
+        to: email,
+        subject: "Reset your Plotzy password",
+        html: `
+          <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+            <h2 style="color: #111; margin-bottom: 16px;">Reset your password</h2>
+            <p style="color: #555; line-height: 1.6;">You requested a password reset for your Plotzy account. Click the button below to set a new password:</p>
+            <a href="${resetLink}" style="display: inline-block; margin: 24px 0; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Reset Password</a>
+            <p style="color: #999; font-size: 13px; line-height: 1.5;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+            <p style="color: #bbb; font-size: 11px;">Plotzy — The modern platform for writers</p>
+          </div>
+        `,
+      });
+      logger.info({ email }, "Password reset email sent");
+    } catch (emailErr) {
+      logger.error({ err: emailErr }, "Failed to send reset email");
+    }
+
+    res.json({ success: true });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid email" });
+    logger.error({ err }, "Forgot password error");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ─── Reset Password (with token) ────────────────────────────────────────────
+
+router.post("/api/auth/reset-password", async (req, res) => {
+  try {
+    const { token, password } = z.object({
+      token: z.string().min(1),
+      password: z.string().min(8),
+    }).parse(req.body);
+
+    // Find valid token
+    const [resetToken] = await db.select().from(passwordResetTokens)
+      .where(and(eq(passwordResetTokens.token, token), sql`used_at IS NULL AND expires_at > NOW()`));
+
+    if (!resetToken) return res.status(400).json({ message: "Invalid or expired reset link. Please request a new one." });
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(password, 12);
+    await storage.updateUser(resetToken.userId, { passwordHash } as any);
+
+    // Mark token as used
+    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, resetToken.id));
+
+    res.json({ success: true });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Password must be at least 8 characters" });
+    logger.error({ err }, "Reset password error");
+    res.status(500).json({ message: "Internal error" });
   }
 });
 
