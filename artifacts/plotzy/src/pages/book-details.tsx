@@ -1181,7 +1181,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             </div>
 
             {/* Collaborators list */}
-            <CollaboratorsList bookId={bookId} lang={lang} toast={toast} />
+            <CollaboratorsList bookId={bookId} lang={lang} />
           </div>
         </div>,
         document.body
@@ -1191,8 +1191,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 }
 
 /* ── Collaborators List Component ── */
-function CollaboratorsList({ bookId, lang, toast }: { bookId: number; lang: string; toast: any }) {
+function CollaboratorsList({ bookId, lang }: { bookId: number; lang: string }) {
   const ar = lang === "ar";
+  const { toast } = useToast();
   const qc = useQueryClient();
   const { data } = useQuery<{ collaborators: any[]; pendingInvites: any[] }>({
     queryKey: ["/api/books", bookId, "collaborators"],
