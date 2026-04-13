@@ -103,7 +103,7 @@ export default function CoverDesigner() {
   const [coverSettings, setCoverSettings] = useState<CoverSettings>({
     front: { background: "linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)" },
     back: { background: "linear-gradient(135deg,#232526,#414345)" },
-    spine: { background: "#7c3aed" },
+    spine: { background: "#1a1a2e" },
   });
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -277,7 +277,7 @@ export default function CoverDesigner() {
       id: nanoid(), type: "shape", face: activeFace,
       x: 80, y: 150, width: 120, height: 120,
       zIndex: elements.length + 1, visible: true, locked: false,
-      shapeType, fill: "#7c3aed", stroke: "transparent", strokeWidth: 0,
+      shapeType, fill: "#ffffff", stroke: "transparent", strokeWidth: 0,
     };
     updateElements([...elements, el]);
     setSelectedId(el.id);
@@ -834,11 +834,11 @@ export default function CoverDesigner() {
           <input
             type="color"
             className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
-            value={coverSettings[activeFace].background.startsWith("#") ? coverSettings[activeFace].background : "#7c3aed"}
+            value={coverSettings[activeFace].background.startsWith("#") ? coverSettings[activeFace].background : "#1a1a2e"}
             onChange={(e) => setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: e.target.value } }))}
           />
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {["#7c3aed","#1e1b4b","#0f172a","#111827","#1a1a2e","#3b0764","#164e63","#14532d","#7f1d1d","#ffffff","#000000","#f8fafc"].map((c) => (
+            {["#1a1a2e","#0f172a","#111827","#16213e","#0f3460","#1e1b4b","#3b0764","#164e63","#14532d","#7f1d1d","#000000","#ffffff"].map((c) => (
               <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform"
                 onClick={() => setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: c } }))} />
             ))}
@@ -954,7 +954,7 @@ export default function CoverDesigner() {
             <div>
               <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Fill Color</p>
               <input type="color" className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
-                value={selected.fill || "#7c3aed"}
+                value={selected.fill || "#ffffff"}
                 onChange={(e) => commitUpdate(selected.id, { fill: e.target.value })}
               />
             </div>
