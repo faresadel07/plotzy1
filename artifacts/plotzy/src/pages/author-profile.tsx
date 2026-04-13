@@ -348,9 +348,9 @@ export default function AuthorProfile() {
           )}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)" }} />
           {/* Back button on banner */}
-          <button onClick={() => navigate(-1 as any)}
+          <button onClick={() => navigate("/")}
             style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.7)", padding: "6px 14px", borderRadius: 8 }}>
-            <ArrowLeft size={13} /> Back
+            <ArrowLeft size={13} /> Home
           </button>
           {/* Banner upload button for own profile */}
           {isOwnProfile && (
