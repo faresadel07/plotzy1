@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
-import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2 } from "lucide-react";
+import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users } from "lucide-react";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
 import { format } from "date-fns";
@@ -664,14 +664,31 @@ export default function Home() {
                     </button>
                   </Link>
                   {user && (
-                    <button
-                      onClick={() => setIsOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                      style={{ background: '#ffffff', color: '#111111' }}
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      New Project
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          const code = prompt("Enter invite code:");
+                          if (!code?.trim()) return;
+                          fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: code.trim() }) })
+                            .then(r => r.json())
+                            .then(data => { if (data.success) { alert(`Joined "${data.bookTitle}" as ${data.role}!`); window.location.reload(); } else alert(data.message || "Invalid code"); })
+                            .catch(() => alert("Failed to join"));
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      >
+                        <Users className="w-3.5 h-3.5" />
+                        Join a Book
+                      </button>
+                      <button
+                        onClick={() => setIsOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                        style={{ background: '#ffffff', color: '#111111' }}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        New Project
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
