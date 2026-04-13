@@ -332,6 +332,10 @@ export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [title, setTitle] = useState("");
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState("");
   const [summary, setSummary] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [bookLang, setBookLang] = useState(lang);
@@ -666,14 +670,7 @@ export default function Home() {
                   {user && (
                     <>
                       <button
-                        onClick={() => {
-                          const code = prompt("Enter invite code:");
-                          if (!code?.trim()) return;
-                          fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: code.trim() }) })
-                            .then(r => r.json())
-                            .then(data => { if (data.success) { alert(`Joined "${data.bookTitle}" as ${data.role}!`); window.location.reload(); } else alert(data.message || "Invalid code"); })
-                            .catch(() => alert("Failed to join"));
-                        }}
+                        onClick={() => { setShowJoinModal(true); setJoinCode(""); setJoinError(""); }}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                         style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
                       >
@@ -1238,6 +1235,48 @@ export default function Home() {
             }
           `}</style>
         </section>
+
+      {/* ── Join a Book Modal ── */}
+      {showJoinModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.65)" }}
+          onClick={e => { if (e.target === e.currentTarget) setShowJoinModal(false); }}>
+          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)" }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "#fff" }}>
+                <Users className="w-5 h-5" /> Join a Book
+              </h3>
+              <button onClick={() => setShowJoinModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>✕</button>
+            </div>
+            <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Enter the invite code you received from the book owner
+            </p>
+            <input
+              autoFocus value={joinCode} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(""); }}
+              placeholder="PLOT-XXXXXX"
+              className="w-full text-center text-xl font-mono font-bold tracking-[0.2em] py-3 rounded-xl mb-3 outline-none"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", letterSpacing: "0.15em" }}
+              onKeyDown={e => { if (e.key === "Enter" && joinCode.trim()) document.getElementById("join-btn")?.click(); }}
+            />
+            {joinError && <p className="text-xs mb-3" style={{ color: "#f87171" }}>{joinError}</p>}
+            <button id="join-btn" disabled={!joinCode.trim() || joinLoading}
+              onClick={async () => {
+                setJoinLoading(true); setJoinError("");
+                try {
+                  const res = await fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: joinCode.trim() }) });
+                  const data = await res.json();
+                  if (data.success) { setShowJoinModal(false); window.location.reload(); }
+                  else setJoinError(data.message || "Invalid invite code");
+                } catch { setJoinError("Connection error. Try again."); }
+                finally { setJoinLoading(false); }
+              }}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: joinCode.trim() ? "#fff" : "rgba(255,255,255,0.06)", color: joinCode.trim() ? "#000" : "rgba(255,255,255,0.3)", opacity: joinLoading ? 0.5 : 1 }}>
+              {joinLoading ? "Joining..." : "Join Book"}
+            </button>
+          </div>
+        </div>
+      )}
 
       </Layout>
 
