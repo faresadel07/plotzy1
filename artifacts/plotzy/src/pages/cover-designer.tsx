@@ -217,7 +217,13 @@ export default function CoverDesigner() {
       const dx = (e.clientX - startMX) / zoom;
       const dy = (e.clientY - startMY) / zoom;
       setElements((els) =>
-        els.map((el) => el.id === id ? { ...el, x: Math.max(0, origX + dx), y: Math.max(0, origY + dy) } : el)
+        els.map((el) => {
+          if (el.id !== id) return el;
+          const faceW = FACE_W[el.face];
+          const newX = Math.max(-el.width / 2, Math.min(faceW - el.width / 2, origX + dx));
+          const newY = Math.max(-el.height / 2, Math.min(FACE_H - el.height / 2, origY + dy));
+          return { ...el, x: newX, y: newY };
+        })
       );
     }
     // Resize
@@ -228,11 +234,12 @@ export default function CoverDesigner() {
       setElements((els) =>
         els.map((el) => {
           if (el.id !== id) return el;
+          const faceW = FACE_W[el.face];
           let { x, y, width, height } = el;
-          if (handle.includes("e")) width = Math.max(20, origW + dx);
-          if (handle.includes("s")) height = Math.max(20, origH + dy);
-          if (handle.includes("w")) { x = origX + dx; width = Math.max(20, origW - dx); }
-          if (handle.includes("n")) { y = origY + dy; height = Math.max(20, origH - dy); }
+          if (handle.includes("e")) width = Math.min(faceW - x, Math.max(20, origW + dx));
+          if (handle.includes("s")) height = Math.min(FACE_H - y, Math.max(20, origH + dy));
+          if (handle.includes("w")) { x = Math.max(0, origX + dx); width = Math.max(20, origW - dx); }
+          if (handle.includes("n")) { y = Math.max(0, origY + dy); height = Math.max(20, origH - dy); }
           return { ...el, x, y, width, height };
         })
       );
