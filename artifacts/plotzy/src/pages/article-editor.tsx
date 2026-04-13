@@ -613,16 +613,7 @@ export default function ArticleEditor() {
     } finally { setSaving(false); }
   }, [updateArticle, toast]);
 
-  /* ── auto-save (debounced, does not cause re-render loops) ── */
-  const scheduleAutoSave = useCallback(() => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => saveNow(true), 3000);
-  }, [saveNow]);
-
-  useEffect(() => {
-    if (!initialized.current) return;
-    scheduleAutoSave();
-  }, [title, content, category, tags, featuredImage, floatingImages]);
+  // Auto-save disabled — users save manually
 
   /* ── keep floatingImagesRef in sync ── */
   useEffect(() => { floatingImagesRef.current = floatingImages; }, [floatingImages]);

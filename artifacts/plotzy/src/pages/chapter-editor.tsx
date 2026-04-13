@@ -967,34 +967,7 @@ export default function ChapterEditor() {
     await performSave({ silent: false });
   };
 
-  // ── Debounced Auto-Save: triggers 3 seconds after the last edit ─────────
-  useEffect(() => {
-    if (!isDirty || !chapterId || !bookId) return;
-
-    // Clear any existing timer
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-
-    autoSaveTimerRef.current = setTimeout(() => {
-      performSave({ silent: true });
-    }, 3000);
-
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, [isDirty, richPages, title, floatingImages, chapterId, bookId, performSave]);
-
-  // Save on unmount / navigation away if there are unsaved changes
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, []);
+  // Auto-save disabled — users save manually with Ctrl+S or Save button
 
   // Warn on browser close/refresh if there are unsaved changes
   useEffect(() => {
