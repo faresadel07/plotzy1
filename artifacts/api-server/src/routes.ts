@@ -1076,31 +1076,10 @@ export async function registerRoutes(
 
   // ─── Generate Inline Image ─────────────────────────────────────────────────
 
-  app.post("/api/generate-image", imageGenLimiter, tierAiLimiter, async (req, res) => {
-    try {
-      const { prompt } = z.object({ prompt: z.string().min(3) }).parse(req.body);
-
-      if (isMockOpenAI) {
-        await new Promise(r => setTimeout(r, 1400));
-        const seeds = ["abstract-art","nature","technology","architecture","fantasy"];
-        const seed = seeds[Math.floor(Math.random()*seeds.length)];
-        return res.json({ url: `https://images.unsplash.com/photo-1682695799225-2e97fb25a5ec?w=1024&q=80&fit=crop&topic=${seed}` });
-      }
-
-      const response = await openai.images.generate({
-        model: "gpt-image-1",
-        prompt: prompt.trim(),
-        size: "1024x1024",
-      });
-
-      const b64 = response?.data?.[0]?.b64_json;
-      if (!b64) return res.status(500).json({ message: "No image data returned" });
-
-      res.json({ url: `data:image/png;base64,${b64}` });
-    } catch (err) {
-      logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Image generation failed" });
-    }
+  // Inline image generation removed — users upload their own images.
+  // AI image generation is only available for book covers (generateCover endpoint).
+  app.post("/api/generate-image", (_req, res) => {
+    res.status(410).json({ message: "AI image generation has been moved to the Cover Designer. Please upload your own images for chapters." });
   });
 
   // ─── Lore ──────────────────────────────────────────────────────────────────
