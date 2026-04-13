@@ -1064,36 +1064,29 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             )}
 
             {activeTab === "tools" && (
-              <section className="p-4 space-y-8 relative">
-                {/* ── AI Writing Tools ── */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 pb-1 border-b border-border/20">
-                    <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      {lang === "ar" ? "تحليل ذكي" : "AI Analysis"}
-                    </span>
-                  </div>
-                  <AIAnalysisTools bookId={bookId} />
-                </div>
+              <section className="p-4 space-y-6 relative">
+                {/* AI Analysis — the component has its own header */}
+                <AIAnalysisTools bookId={bookId} />
 
-                {/* ── Publishing Tools ── */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 pb-1 border-b border-border/20">
-                    <BookOpen className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      {lang === "ar" ? "النشر والتوزيع" : "Publishing"}
-                    </span>
-                  </div>
-                  <BookPublishingTools bookId={bookId} bookTitle={book.title} currentIsbn={(book as any).isbn} />
-                </div>
+                {/* Divider */}
+                <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
 
-                {/* ── Import ── */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 pb-1 border-b border-border/20">
-                    <Upload className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      {lang === "ar" ? "استيراد" : "Import"}
-                    </span>
+                {/* Publishing */}
+                <BookPublishingTools bookId={bookId} bookTitle={book.title} currentIsbn={(book as any).isbn} />
+
+                {/* Divider */}
+                <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+                {/* Import */}
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="rounded-xl p-2" style={{ background: "rgba(255,255,255,0.04)" }}>
+                      <Upload className="w-4 h-4" style={{ color: "rgba(255,255,255,0.5)" }} />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-[13px] block">{lang === "ar" ? "استيراد مخطوطة" : "Import Manuscript"}</span>
+                      <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "استيراد ملف PDF أو Word موجود" : "Import an existing PDF or Word file"}</span>
+                    </div>
                   </div>
                   <LegacyImporter bookId={bookId} />
                 </div>
