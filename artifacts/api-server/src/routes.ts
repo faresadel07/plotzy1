@@ -125,6 +125,30 @@ export async function registerRoutes(
     res.json(books);
   });
 
+  // IMPORTANT: /api/books/shared-with-me MUST be before /api/books/:id
+  // otherwise Express matches "shared-with-me" as an :id parameter
+  app.get("/api/books/shared-with-me", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const userId = (req.user as any).id;
+      const { db: dbConn } = await import("./db");
+      const { bookCollaborators, books, users } = await import("../../../lib/db/src/schema");
+      const { eq } = await import("drizzle-orm");
+      const rows = await dbConn.select({
+        id: books.id, title: books.title, coverImage: books.coverImage,
+        role: bookCollaborators.role, joinedAt: bookCollaborators.joinedAt,
+        ownerName: users.displayName,
+      }).from(bookCollaborators)
+        .innerJoin(books, eq(bookCollaborators.bookId, books.id))
+        .leftJoin(users, eq(books.userId, users.id))
+        .where(eq(bookCollaborators.userId, userId));
+      res.json(rows);
+    } catch (err) {
+      logger.error({ err }, "Failed to fetch shared books");
+      res.json([]);
+    }
+  });
+
   app.get(api.books.get.path, async (req, res) => {
     const book = await storage.getBook(Number(req.params.id));
     if (!book) return res.status(404).json({ message: "Book not found" });
