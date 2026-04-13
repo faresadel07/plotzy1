@@ -1065,12 +1065,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
             {activeTab === "tools" && (
               <section className="p-4 space-y-6 relative">
-                {/* AI Analysis — the component has its own header */}
-                <AIAnalysisTools bookId={bookId} />
-
-                {/* Divider */}
-                <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-
                 {/* Publishing */}
                 <BookPublishingTools bookId={bookId} bookTitle={book.title} currentIsbn={(book as any).isbn} />
 
