@@ -259,38 +259,18 @@ export class DatabaseStorage implements IStorage {
 
   async reorderStoryBeats(updates: { id: number; columnId: string; order: number }[]): Promise<void> {
     if (updates.length === 0) return;
-
-    // Bulk update in a single SQL statement using CASE expressions.
-    // Replaces the N+1 loop that issued one UPDATE per beat.
-    const ids = updates.map((u) => u.id);
-    const orderCases = updates.map((u) => `WHEN id = ${Number(u.id)} THEN ${Number(u.order)}`).join(" ");
-    const columnCases = updates.map((u) => {
-      // Sanitize columnId to one of the allowed values
-      const safe = ["act1", "act2", "act3"].includes(u.columnId) ? u.columnId : "act1";
-      return `WHEN id = ${Number(u.id)} THEN '${safe}'`;
-    }).join(" ");
-
-    await db.execute(sql`
-      UPDATE story_beats
-      SET "order"     = CASE ${sql.raw(orderCases)} END,
-          "column_id" = CASE ${sql.raw(columnCases)} END
-      WHERE id IN (${sql.raw(ids.join(","))})
-    `);
+    const VALID_COLUMNS = ["act1", "act2", "act3"];
+    for (const u of updates) {
+      const safeCol = VALID_COLUMNS.includes(u.columnId) ? u.columnId : "act1";
+      await db.execute(sql`UPDATE story_beats SET "order" = ${Number(u.order)}, "column_id" = ${safeCol} WHERE id = ${Number(u.id)}`);
+    }
   }
 
   async reorderChapters(updates: { id: number; order: number }[]): Promise<void> {
     if (updates.length === 0) return;
-
-    // Bulk update in a single SQL statement using a CASE expression.
-    // Replaces the N+1 loop that issued one UPDATE per chapter.
-    const ids = updates.map((u) => u.id);
-    const cases = updates.map((u) => `WHEN id = ${Number(u.id)} THEN ${Number(u.order)}`).join(" ");
-
-    await db.execute(sql`
-      UPDATE chapters
-      SET "order" = CASE ${sql.raw(cases)} END
-      WHERE id IN (${sql.raw(ids.join(","))})
-    `);
+    for (const u of updates) {
+      await db.execute(sql`UPDATE chapters SET "order" = ${Number(u.order)} WHERE id = ${Number(u.id)}`);
+    }
   }
 
   // ─── Chapters ──────────────────────────────────────────────────────────────
@@ -637,17 +617,9 @@ export class DatabaseStorage implements IStorage {
 
   async reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void> {
     if (updates.length === 0) return;
-
-    // Bulk update in a single SQL statement using a CASE expression.
-    // Replaces the N+1 loop that issued one UPDATE per book.
-    const ids = updates.map((u) => u.bookId);
-    const cases = updates.map((u) => `WHEN id = ${Number(u.bookId)} THEN ${Number(u.seriesOrder)}`).join(" ");
-
-    await db.execute(sql`
-      UPDATE books
-      SET "series_order" = CASE ${sql.raw(cases)} END
-      WHERE id IN (${sql.raw(ids.join(","))})
-    `);
+    for (const u of updates) {
+      await db.execute(sql`UPDATE books SET "series_order" = ${Number(u.seriesOrder)} WHERE id = ${Number(u.bookId)}`);
+    }
   }
 
   // ── Admin ────────────────────────────────────────────────────────────────────

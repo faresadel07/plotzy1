@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRoute, Link } from "wouter";
+import { sanitizeHtml } from "@/lib/sanitize";
 import {
   usePublishedBook, usePublishedBookChapters, useIncrementBookView,
   useBookRatingStats, useRateBook, useBookComments, useAddBookComment,
@@ -276,7 +277,7 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
           <div
             className="book-reader-content"
             style={{ fontFamily: fontFam, fontSize: 14, lineHeight: 1.85, color: "#1c1410", textAlign: "justify", letterSpacing: isRTL ? "0" : "0.008em", hyphens: "auto" as any }}
-            dangerouslySetInnerHTML={{ __html: html }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
           />
         ) : (
           <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
@@ -752,7 +753,7 @@ export default function ReadBook() {
                         color: "#1c1410", textAlign: "justify",
                         letterSpacing: isRTL ? "0" : "0.01em",
                       }}
-                      dangerouslySetInnerHTML={{ __html: html }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
                     />
                   ) : (
                     <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>

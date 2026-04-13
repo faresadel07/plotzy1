@@ -109,3 +109,16 @@ export const publicReadLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Too many requests. Please slow down." },
 });
+
+// ---------------------------------------------------------------------------
+// Write endpoints — prevent spam creation/deletion
+//   30 writes per minute per user/IP
+// ---------------------------------------------------------------------------
+export const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { message: "Too many write operations. Please slow down." },
+});

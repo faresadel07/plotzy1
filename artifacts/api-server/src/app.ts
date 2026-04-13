@@ -8,7 +8,7 @@ import { registerRoutes } from "./routes";
 import { WebhookHandlers } from "./webhook-handlers";
 import { setupPassport } from "./auth";
 import { logger } from "./lib/logger";
-import { generalLimiter, authLimiter, publicReadLimiter } from "./middleware/rate-limit";
+import { generalLimiter, authLimiter, publicReadLimiter, writeLimiter } from "./middleware/rate-limit";
 import { apiLogger } from "./middleware/api-logger";
 
 declare module "http" {
@@ -144,6 +144,13 @@ app.use("/auth", authLimiter);
 app.use("/api/public", publicReadLimiter);
 app.use("/api/gutenberg", publicReadLimiter);
 app.use("/api/authors", publicReadLimiter);
+// Write limiter on all POST/PUT/PATCH/DELETE — prevents spam
+app.use("/api", (req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD" && req.method !== "OPTIONS") {
+    return writeLimiter(req, res, next);
+  }
+  next();
+});
 
 // API request logging for admin System Health dashboard
 app.use(apiLogger);

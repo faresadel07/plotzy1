@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRoute, Link } from "wouter";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Layout } from "@/components/layout";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
@@ -912,7 +913,7 @@ export default function ArticleEditor() {
               </div>
             </div>
           )}
-          <div className="article-preview-body" dir={isRTL?"rtl":"ltr"} dangerouslySetInnerHTML={{__html: content||"<p><em>No content yet.</em></p>"}}/>
+          <div className="article-preview-body" dir={isRTL?"rtl":"ltr"} dangerouslySetInnerHTML={{__html: sanitizeHtml(content||"<p><em>No content yet.</em></p>")}}/>
           {tags.length > 0 && (
             <div style={{display:"flex",flexWrap:"wrap",gap:8,marginTop:56,paddingTop:32,borderTop:`1px solid ${B}`}}>
               {tags.map(tag => <span key={tag} style={{fontFamily:SF,fontSize:12,color:TD,padding:"5px 12px",borderRadius:20,background:C2,border:`1px solid ${B}`}}>#{tag}</span>)}

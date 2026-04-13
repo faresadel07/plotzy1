@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useRoute, Link, useLocation } from "wouter";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
@@ -1275,7 +1276,7 @@ export default function ChapterEditor() {
     return (
       <div
         className={isFirstPage ? 'pv-page-first' : 'pv-page'}
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
         style={{ fontFamily: fontStyle.fontFamily || "Georgia, 'Times New Roman', serif" }}
       />
     );
