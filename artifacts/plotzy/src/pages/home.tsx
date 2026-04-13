@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
 import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
 import { format } from "date-fns";
@@ -323,6 +324,11 @@ function BookPages() {
 export default function Home() {
   const [, setLocation] = useLocation();
   const { data: books, isLoading } = useBooks();
+  const { data: sharedBooks = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerName: string | null }[]>({
+    queryKey: ["/api/books/shared-with-me"],
+    queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
+    enabled: !!user,
+  });
   const createBook = useCreateBook();
   const generateCover = useGenerateCover();
   const trashBook = useTrashBook();
@@ -937,6 +943,46 @@ export default function Home() {
 
 
 
+
+        {/* ===== SHARED WITH ME ===== */}
+        {user && sharedBooks.length > 0 && (
+          <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
+                <Users className="w-4 h-4" style={{ color: "#60a5fa" }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Shared with you</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Books other writers invited you to collaborate on</p>
+              </div>
+            </div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+              {sharedBooks.map(sb => (
+                <div key={sb.id} onClick={() => setLocation(`/books/${sb.id}`)}
+                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02]"
+                  style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.1)" }}>
+                  {/* Mini cover */}
+                  <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(96,165,250,0.08)" }}>
+                    {sb.coverImage ? (
+                      <img src={sb.coverImage} alt="" className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <BookOpen className="w-4 h-4" style={{ color: "rgba(96,165,250,0.5)" }} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{sb.title}</p>
+                    <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      by {sb.ownerName || "Unknown"} · {sb.role === "editor" ? "Can edit" : "View only"}
+                    </p>
+                  </div>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: sb.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: sb.role === "editor" ? "#4ade80" : "#60a5fa" }}>
+                    {sb.role === "editor" ? "EDITOR" : "VIEWER"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ===== BOOK SERIES ===== */}
         {user && !isLoading && (
