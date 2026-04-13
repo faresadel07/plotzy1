@@ -1154,9 +1154,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               </p>
               <div className="flex gap-2">
                 <select value={inviteRole} onChange={e => setInviteRole(e.target.value as any)}
-                  className="rounded-xl text-sm px-3 py-2" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}>
-                  <option value="editor">{lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)"}</option>
-                  <option value="viewer">{lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)"}</option>
+                  className="rounded-xl text-sm px-3 py-2" style={{ background: "#222", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}>
+                  <option value="editor" style={{ background: "#222", color: "#fff" }}>{lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)"}</option>
+                  <option value="viewer" style={{ background: "#222", color: "#fff" }}>{lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)"}</option>
                 </select>
                 <button onClick={async () => {
                   try {
