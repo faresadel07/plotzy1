@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
 import {
-  BookOpen, Bell, Mail, PenTool, Send, Library, Plus,
+  BookOpen, Bell, Mail, PenTool, Send, Library, Plus, Users,
   FileText, Loader2, Clock,
 } from "lucide-react";
 import type { Book } from "@/shared/schema";
@@ -236,6 +236,33 @@ export default function DashboardDemo() {
                     <Plus style={{ width: 22, height: 22, color: TS }} />
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 600, color: TS }}>Create New Book</span>
+                </div>
+
+                {/* Join Book card */}
+                <div
+                  onClick={() => {
+                    const code = prompt("Enter invite code:");
+                    if (!code?.trim()) return;
+                    fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: code.trim() }) })
+                      .then(r => r.json())
+                      .then(data => {
+                        if (data.success) { alert(`Joined "${data.bookTitle}" as ${data.role}!`); window.location.reload(); }
+                        else alert(data.message || "Failed to join");
+                      }).catch(() => alert("Failed to join book"));
+                  }}
+                  style={{
+                    background: C1, border: `1px dashed ${B}`, borderRadius: 12, padding: 20,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    minHeight: 240, cursor: "pointer", transition: "border-color 0.2s, background 0.2s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.background = C2; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = C1; }}
+                >
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                    <Users style={{ width: 22, height: 22, color: TS }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TS }}>Join a Book</span>
+                  <span style={{ fontSize: 11, color: TD, marginTop: 4 }}>Enter invite code</span>
                 </div>
               </div>
             )}

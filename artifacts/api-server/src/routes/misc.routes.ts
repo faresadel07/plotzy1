@@ -4,9 +4,10 @@ import { storage } from "../storage";
 import { requireAdmin, requireBookOwner } from "../middleware/auth";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs } from "../../../../lib/db/src/schema";
-import { desc, sql } from "drizzle-orm";
+import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
+import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import crypto from "crypto";
 
 const router = Router();
 
@@ -480,6 +481,148 @@ router.get("/api/admin/export/analytics.csv", requireAdmin, async (req, res) => 
     res.send([header, ...rows].join("\n"));
   } catch (err) {
     res.status(500).json({ message: "Export failed" });
+  }
+});
+
+// ─── Book Collaboration ─────────────────────────────────────────────────────
+
+function generateInviteCode(): string {
+  return "PLOT-" + crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 6);
+}
+
+// Create invite code (owner only)
+router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (req, res) => {
+  try {
+    const bookId = Number(req.params.bookId);
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can invite collaborators" });
+
+    const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).parse(req.body);
+    const code = generateInviteCode();
+
+    // Store the invite as a placeholder (no userId yet — they'll join with the code)
+    await db.insert(bookCollaborators).values({ bookId, userId: (req.user as any).id, role, inviteCode: code }).onConflictDoNothing();
+
+    // Actually we want a pending invite — let's just return the code
+    // We store it differently: inviteCode on a row with a temp userId (owner),
+    // when someone joins, we update the row
+    res.json({ code, role });
+  } catch (err) {
+    logger.error({ err }, "Failed to create invite");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// Join book with invite code (any authenticated user)
+router.post("/api/books/join", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const { code } = z.object({ code: z.string().min(1) }).parse(req.body);
+    const userId = (req.user as any).id;
+
+    // Find the invite
+    const [invite] = await db.select().from(bookCollaborators).where(eq(bookCollaborators.inviteCode, code.toUpperCase().trim()));
+    if (!invite) return res.status(404).json({ message: "Invalid invite code" });
+
+    const book = await storage.getBook(invite.bookId);
+    if (!book) return res.status(404).json({ message: "Book not found" });
+    if (book.userId === userId) return res.status(400).json({ message: "You already own this book" });
+
+    // Check if already a collaborator
+    const [existing] = await db.select().from(bookCollaborators).where(and(eq(bookCollaborators.bookId, invite.bookId), eq(bookCollaborators.userId, userId)));
+    if (existing) return res.status(400).json({ message: "You're already a collaborator on this book" });
+
+    // Add as collaborator
+    const [collab] = await db.insert(bookCollaborators).values({ bookId: invite.bookId, userId, role: invite.role, inviteCode: null }).returning();
+
+    // Delete the invite code (one-time use)
+    await db.delete(bookCollaborators).where(eq(bookCollaborators.id, invite.id));
+
+    res.json({ success: true, bookId: invite.bookId, bookTitle: book.title, role: invite.role });
+  } catch (err) {
+    logger.error({ err }, "Failed to join book");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// List collaborators for a book (owner only)
+router.get("/api/books/:bookId/collaborators", requireBookOwner, async (req, res) => {
+  try {
+    const bookId = Number(req.params.bookId);
+    const rows = await db.select({
+      id: bookCollaborators.id,
+      userId: bookCollaborators.userId,
+      role: bookCollaborators.role,
+      inviteCode: bookCollaborators.inviteCode,
+      joinedAt: bookCollaborators.joinedAt,
+      displayName: users.displayName,
+      email: users.email,
+      avatarUrl: users.avatarUrl,
+    }).from(bookCollaborators)
+      .leftJoin(users, eq(bookCollaborators.userId, users.id))
+      .where(eq(bookCollaborators.bookId, bookId));
+
+    // Filter: real collaborators (not pending invites from owner)
+    const book = await storage.getBook(bookId);
+    const collabs = rows.filter(r => r.userId !== book?.userId);
+    const pendingInvites = rows.filter(r => r.inviteCode && r.userId === book?.userId);
+
+    res.json({ collaborators: collabs, pendingInvites });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// Remove a collaborator (owner only)
+router.delete("/api/books/:bookId/collaborators/:collabId", requireBookOwner, async (req, res) => {
+  try {
+    const bookId = Number(req.params.bookId);
+    const collabId = Number(req.params.collabId);
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the owner can remove collaborators" });
+
+    await db.delete(bookCollaborators).where(and(eq(bookCollaborators.id, collabId), eq(bookCollaborators.bookId, bookId)));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// Update collaborator role (owner only)
+router.patch("/api/books/:bookId/collaborators/:collabId", requireBookOwner, async (req, res) => {
+  try {
+    const bookId = Number(req.params.bookId);
+    const collabId = Number(req.params.collabId);
+    const { role } = z.object({ role: z.enum(["editor", "viewer"]) }).parse(req.body);
+    const book = await storage.getBook(bookId);
+    if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the owner can change roles" });
+
+    const [updated] = await db.update(bookCollaborators).set({ role }).where(and(eq(bookCollaborators.id, collabId), eq(bookCollaborators.bookId, bookId))).returning();
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// Get books I'm collaborating on (for dashboard)
+router.get("/api/books/shared-with-me", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const userId = (req.user as any).id;
+    const rows = await db.select({
+      id: books.id,
+      title: books.title,
+      coverImage: books.coverImage,
+      role: bookCollaborators.role,
+      joinedAt: bookCollaborators.joinedAt,
+      ownerName: users.displayName,
+    }).from(bookCollaborators)
+      .innerJoin(books, eq(bookCollaborators.bookId, books.id))
+      .leftJoin(users, eq(books.userId, users.id))
+      .where(eq(bookCollaborators.userId, userId));
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
   }
 });
 

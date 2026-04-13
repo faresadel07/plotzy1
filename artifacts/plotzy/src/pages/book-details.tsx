@@ -21,7 +21,7 @@ import {
   FileText, Image as ImageIcon, Loader2, Plus, Wand2, Calendar, Sparkles,
   BookOpen, Palette, PenLine, Zap, Download, FileDown, Upload, Globe,
   BarChart3, ScrollText, Check, Edit3, Target, ChevronDown, Quote, User, Eye, EyeOff,
-  GripVertical, BookMarked
+  GripVertical, BookMarked, Users, Copy, Trash2, X as XIcon
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import type { BookPages } from "@/shared/schema";
@@ -160,6 +160,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const [goalDraft, setGoalDraft] = useState("");
   // Finish & Publish confirmation dialog
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  // Collaboration
+  const [showCollabModal, setShowCollabModal] = useState(false);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   if (isLoadingBook || isLoadingChapters) {
@@ -548,6 +552,15 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 flex-shrink-0 pb-2">
+              <button onClick={() => setShowCollabModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.80)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.50)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{lang === "ar" ? "تعاون" : "Collaborate"}</span>
+              </button>
               <Link href="/marketplace">
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -1122,6 +1135,115 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       )}
 
       <AuthModal open={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      {/* ── Collaboration Modal ── */}
+      {showCollabModal && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={e => { if (e.target === e.currentTarget) setShowCollabModal(false); }}>
+          <div className="bg-background rounded-2xl shadow-2xl w-full max-w-md border border-border p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5" />{lang === "ar" ? "التعاون" : "Collaborate"}</h3>
+              <button onClick={() => setShowCollabModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-foreground/5" style={{ color: "rgba(255,255,255,0.4)" }}><XIcon className="w-4 h-4" /></button>
+            </div>
+
+            {/* Generate invite code */}
+            <div className="space-y-3">
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                {lang === "ar" ? "ابعث هاد الكود لصاحبك عشان يقدر يدخل على كتابك" : "Share this code with someone to give them access to your book"}
+              </p>
+              <div className="flex gap-2">
+                <select value={inviteRole} onChange={e => setInviteRole(e.target.value as any)}
+                  className="rounded-xl text-sm px-3 py-2" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}>
+                  <option value="editor">{lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)"}</option>
+                  <option value="viewer">{lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)"}</option>
+                </select>
+                <button onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/books/${bookId}/collaborators/invite`, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ role: inviteRole }) });
+                    const data = await res.json();
+                    if (data.code) setInviteCode(data.code);
+                  } catch { toast({ title: "Failed to generate code", variant: "destructive" }); }
+                }} className="flex-1 rounded-xl text-sm font-semibold py-2" style={{ background: "#fff", color: "#000" }}>
+                  {lang === "ar" ? "إنشاء كود دعوة" : "Generate Invite Code"}
+                </button>
+              </div>
+
+              {inviteCode && (
+                <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <span className="text-xl font-mono font-bold flex-1 text-center tracking-widest">{inviteCode}</span>
+                  <button onClick={() => { navigator.clipboard.writeText(inviteCode); toast({ title: lang === "ar" ? "تم النسخ!" : "Code copied!" }); }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Collaborators list */}
+            <CollaboratorsList bookId={bookId} lang={lang} toast={toast} />
+          </div>
+        </div>,
+        document.body
+      )}
     </Layout>
+  );
+}
+
+/* ── Collaborators List Component ── */
+function CollaboratorsList({ bookId, lang, toast }: { bookId: number; lang: string; toast: any }) {
+  const ar = lang === "ar";
+  const qc = useQueryClient();
+  const { data } = useQuery<{ collaborators: any[]; pendingInvites: any[] }>({
+    queryKey: ["/api/books", bookId, "collaborators"],
+    queryFn: () => fetch(`/api/books/${bookId}/collaborators`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  const removeMut = useMutation({
+    mutationFn: (collabId: number) => fetch(`/api/books/${bookId}/collaborators/${collabId}`, { method: "DELETE", credentials: "include" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/books", bookId, "collaborators"] }); toast({ title: ar ? "تمت الإزالة" : "Collaborator removed" }); },
+  });
+
+  const collabs = data?.collaborators || [];
+  const pending = data?.pendingInvites || [];
+
+  if (collabs.length === 0 && pending.length === 0) {
+    return (
+      <div className="text-center py-4" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+        <p className="text-sm">{ar ? "لا يوجد متعاونين بعد" : "No collaborators yet"}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>
+        {ar ? "المتعاونون" : "Collaborators"} ({collabs.length})
+      </p>
+      {collabs.map((c: any) => (
+        <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+            {(c.displayName || c.email || "?")[0].toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-medium">{c.displayName || c.email}</span>
+            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(74,222,128,0.15)" : "rgba(96,165,250,0.15)", color: c.role === "editor" ? "#4ade80" : "#60a5fa" }}>
+              {c.role === "editor" ? (ar ? "محرر" : "Editor") : (ar ? "قارئ" : "Viewer")}
+            </span>
+          </div>
+          <button onClick={() => removeMut.mutate(c.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ color: "rgba(255,255,255,0.25)" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.background = "rgba(248,113,113,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.25)"; e.currentTarget.style.background = "transparent"; }}>
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      {pending.map((p: any) => (
+        <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}>
+          <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.4)" }}>{p.inviteCode}</span>
+          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>{ar ? "بانتظار القبول" : "Pending"}</span>
+        </div>
+      ))}
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { books, chapters, loreEntries, storyBeats, researchItems, arcRecipients } from "../../../../lib/db/src/schema";
-import { eq } from "drizzle-orm";
+import { books, chapters, loreEntries, storyBeats, researchItems, arcRecipients, bookCollaborators } from "../../../../lib/db/src/schema";
+import { eq, and } from "drizzle-orm";
 
 // ---------------------------------------------------------------------------
 // 1) requireAuth — reject unauthenticated requests
@@ -54,14 +54,28 @@ export async function requireBookOwner(req: Request, res: Response, next: NextFu
     const [book] = await db.select().from(books).where(eq(books.id, bookId));
     if (!book) return res.status(404).json({ message: "Book not found" });
 
-    // Authenticated user owns this book
+    // Authenticated user owns this book OR is a collaborator
     if (req.isAuthenticated() && req.user) {
       const userId = (req.user as any).id;
-      if (book.userId !== null && book.userId !== userId) {
+      if (book.userId === userId) {
+        req.ownerBook = book;
+        return next();
+      }
+      // Check if user is a collaborator with editor role
+      const [collab] = await db.select().from(bookCollaborators)
+        .where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, userId)));
+      if (collab && collab.role === "editor") {
+        req.ownerBook = book;
+        return next();
+      }
+      if (collab && collab.role === "viewer") {
+        // Viewers can read but not modify — allow GET only
+        if (req.method === "GET") { req.ownerBook = book; return next(); }
+        return res.status(403).json({ message: "You have read-only access to this book" });
+      }
+      if (book.userId !== null) {
         return res.status(403).json({ message: "You do not own this book" });
       }
-      req.ownerBook = book;
-      return next();
     }
 
     // Unauthenticated guest flow — only trust server-side session, never query params

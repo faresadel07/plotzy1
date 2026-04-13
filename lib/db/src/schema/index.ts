@@ -441,6 +441,24 @@ export const contentFlags = pgTable("content_flags", {
   index("idx_content_flags_book_id").on(t.bookId),
 ]);
 
+// ── Book Collaborators ───────────────────────────────────────────────────
+
+export const bookCollaborators = pgTable("book_collaborators", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull().default("editor"), // editor | viewer
+  inviteCode: text("invite_code"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (t) => [
+  uniqueIndex("uq_book_collaborator").on(t.bookId, t.userId),
+  index("idx_collaborators_book_id").on(t.bookId),
+  index("idx_collaborators_user_id").on(t.userId),
+  uniqueIndex("uq_invite_code").on(t.inviteCode),
+]);
+
+export type BookCollaborator = typeof bookCollaborators.$inferSelect;
+
 // ── Admin Audit Logs ──────────────────────────────────────────────────────
 
 export const adminAuditLogs = pgTable("admin_audit_logs", {
