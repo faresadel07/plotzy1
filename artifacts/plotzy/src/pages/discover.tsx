@@ -73,6 +73,7 @@ interface RecentBook {
   author: string;
   coverUrl: string | null;
   page: number;
+  totalPages?: number;
   ts: number;
 }
 
@@ -133,7 +134,7 @@ function BookCard({ book, size = "normal" }: { book: GutBook; size?: "normal" | 
 function RecentCard({ book }: { book: RecentBook }) {
   const [imgErr, setImgErr] = useState(false);
   const hasImg = book.coverUrl && !imgErr;
-  const pct = book.page > 0 ? Math.min(99, Math.round((book.page / Math.max(1, book.page + 10)) * 60)) : 0;
+  const pct = book.page > 0 ? Math.min(99, Math.round((book.page / Math.max(1, book.totalPages || book.page + 20)) * 100)) : 0;
 
   return (
     <Link href={`/discover/${book.id}`}>

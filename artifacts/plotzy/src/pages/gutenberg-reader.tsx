@@ -24,6 +24,7 @@ interface RecentBook {
   author: string;
   coverUrl: string | null;
   page: number;
+  totalPages?: number;
   ts: number;
 }
 
@@ -32,7 +33,7 @@ function formatAuthor(a: { name: string }): string {
   return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
 }
 
-function saveRecent(book: BookMeta, page: number) {
+function saveRecent(book: BookMeta, page: number, totalPages?: number) {
   try {
     const list: RecentBook[] = JSON.parse(localStorage.getItem(LS_RECENT) || "[]");
     const filtered = list.filter(b => b.id !== book.id);
@@ -42,6 +43,7 @@ function saveRecent(book: BookMeta, page: number) {
       author: book.authors[0] ? formatAuthor(book.authors[0]) : "",
       coverUrl: book.coverUrl,
       page,
+      totalPages,
       ts: Date.now(),
     });
     localStorage.setItem(LS_RECENT, JSON.stringify(filtered.slice(0, 24)));
@@ -178,7 +180,7 @@ export default function GutenbergReader() {
   const [error, setError] = useState("");
 
   // Reading settings
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => { try { return localStorage.getItem("plotzy_reader_dark") !== "false"; } catch { return true; } });
   const [fontSize, setFontSize] = useState(16);
   const [lineHeight, setLineHeight] = useState(1.82);
   const [showSettings, setShowSettings] = useState(false);
@@ -288,7 +290,7 @@ export default function GutenbergReader() {
   useEffect(() => {
     if (!gutId || !pages.length) return;
     try { localStorage.setItem(LS_POS(gutId), String(leftPageIdx)); } catch { /* noop */ }
-    if (meta) saveRecent(meta, leftPageIdx);
+    if (meta) saveRecent(meta, leftPageIdx, pages.length);
   }, [gutId, leftPageIdx, pages.length, meta]);
 
   // ── Spread navigation ─────────────────────────────────────────────────────
@@ -484,7 +486,7 @@ export default function GutenbergReader() {
             <LayoutGrid className="w-4 h-4" />
           </IconBtn>
           <IconBtn onClick={() => setShowSettings(v => !v)} title="Settings" color={fgMuted}><Settings className="w-4 h-4" /></IconBtn>
-          <IconBtn onClick={() => setDark(d => !d)} title={dark ? "Light" : "Dark"} color={fgMuted}>
+          <IconBtn onClick={() => setDark(d => { const next = !d; try { localStorage.setItem("plotzy_reader_dark", String(next)); } catch {} return next; })} title={dark ? "Light" : "Dark"} color={fgMuted}>
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </IconBtn>
         </div>
