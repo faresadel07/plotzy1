@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings2, Menu, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -100,6 +101,43 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
 const SF_FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
 const FOOTER_LINK_STYLE: React.CSSProperties = { fontSize: 13.5, color: 'rgba(255,255,255,0.48)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4, cursor: 'pointer' };
+
+/* ── Social media SVG icons (inline, no external deps) ────────── */
+const SocialSvg = {
+  instagram: (p: any) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
+  linkedin: (p: any) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>,
+  youtube: (p: any) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>,
+  twitter: (p: any) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+  tiktok: (p: any) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.89a8.23 8.23 0 004.77 1.52V7a4.85 4.85 0 01-1-.31z"/></svg>,
+};
+
+function FooterSocialIcons() {
+  const { data: links } = useQuery<Record<string, string>>({
+    queryKey: ["/api/social-links"],
+    queryFn: () => fetch("/api/social-links").then(r => r.ok ? r.json() : {}),
+    staleTime: 5 * 60 * 1000,
+  });
+  if (!links || Object.keys(links).length === 0) return null;
+  const entries = Object.entries(links).filter(([, url]) => !!url);
+  if (entries.length === 0) return null;
+  return (
+    <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+      {entries.map(([key, url]) => {
+        const Icon = SocialSvg[key as keyof typeof SocialSvg];
+        if (!Icon) return null;
+        return (
+          <a key={key} href={url} target="_blank" rel="noopener noreferrer"
+            style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", transition: "all 0.2s", textDecoration: "none" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            <Icon style={{ width: 16, height: 16 }} />
+          </a>
+        );
+      })}
+    </div>
+  );
+}
 
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
@@ -573,6 +611,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               <p style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)', margin: 0, paddingTop: 2, borderLeft: '2px solid rgba(255,255,255,0.08)', paddingLeft: 10 }}>
                 "Every great story begins with a blank page."
               </p>
+              <FooterSocialIcons />
             </div>
 
             {/* Write */}

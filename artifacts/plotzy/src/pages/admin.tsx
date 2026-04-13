@@ -1731,7 +1731,63 @@ function AuditLogTab() {
   );
 }
 
-type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials" | "audit";
+// ─── Social Links Tab ────────────────────────────────────────────────────────
+
+function SocialLinksTab() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ instagram: "", linkedin: "", youtube: "", twitter: "", tiktok: "" });
+  const [loaded, setLoaded] = useState(false);
+
+  const { data } = useQuery<Record<string, string>>({
+    queryKey: ["/api/social-links"],
+    queryFn: () => fetch("/api/social-links", { credentials: "include" }).then(r => r.json()),
+  });
+
+  // Load current values once
+  if (data && !loaded) {
+    setForm({ instagram: data.instagram || "", linkedin: data.linkedin || "", youtube: data.youtube || "", twitter: data.twitter || "", tiktok: data.tiktok || "" });
+    setLoaded(true);
+  }
+
+  const save = useMutation({
+    mutationFn: () => fetch("/api/admin/social-links", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(form) }).then(r => r.json()),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/social-links"] }); toast({ title: "Social links saved" }); },
+  });
+
+  const lbl: React.CSSProperties = { fontSize: 12, color: "rgba(255,255,255,0.5)", display: "block", marginBottom: 6, fontWeight: 500 };
+  const fields = [
+    { key: "instagram", label: "Instagram URL", placeholder: "https://instagram.com/plotzy" },
+    { key: "linkedin", label: "LinkedIn URL", placeholder: "https://linkedin.com/company/plotzy" },
+    { key: "youtube", label: "YouTube URL", placeholder: "https://youtube.com/@plotzy" },
+    { key: "twitter", label: "X (Twitter) URL", placeholder: "https://x.com/plotzy" },
+    { key: "tiktok", label: "TikTok URL", placeholder: "https://tiktok.com/@plotzy" },
+  ] as const;
+
+  return (
+    <div style={{ maxWidth: 500 }}>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.6 }}>
+        Set your social media links. These will appear as icons in the site footer. Leave a field empty to hide that icon.
+      </p>
+      {fields.map(f => (
+        <div key={f.key} style={{ marginBottom: 16 }}>
+          <label style={lbl}>{f.label}</label>
+          <input
+            value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+            placeholder={f.placeholder}
+            style={inputStyle}
+          />
+        </div>
+      ))}
+      <button onClick={() => save.mutate()} disabled={save.isPending}
+        style={{ ...S.btn("default"), padding: "10px 24px", background: "#fff", color: "#000", fontWeight: 700, fontSize: 13, marginTop: 8 }}>
+        {save.isPending ? "Saving..." : "Save Social Links"}
+      </button>
+    </div>
+  );
+}
+
+type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials" | "audit" | "social";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -1799,6 +1855,7 @@ export default function AdminPage() {
           <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
           <TabBtn label="Tutorials" active={tab === "tutorials"} onClick={() => setTab("tutorials")} />
           <TabBtn label="Audit Log" active={tab === "audit"} onClick={() => setTab("audit")} />
+          <TabBtn label="Social Links" active={tab === "social"} onClick={() => setTab("social")} />
         </div>
 
         {tab === "analytics"  && <AnalyticsTab />}
@@ -1834,6 +1891,7 @@ export default function AdminPage() {
         {tab === "banner"   && <BannerTab />}
         {tab === "tutorials" && <TutorialsTab />}
         {tab === "audit" && <AuditLogTab />}
+        {tab === "social" && <SocialLinksTab />}
       </div>
     </div>
   );

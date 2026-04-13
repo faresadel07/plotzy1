@@ -266,6 +266,37 @@ router.get("/api/banner", async (req, res) => {
   }
 });
 
+// ── Social Links (public GET + admin POST) ──────────────────────────────
+const SOCIAL_KEYS = ["social_instagram", "social_linkedin", "social_youtube", "social_twitter", "social_tiktok"];
+
+router.get("/api/social-links", async (_req, res) => {
+  try {
+    const links: Record<string, string> = {};
+    for (const key of SOCIAL_KEYS) {
+      const val = await storage.getSetting(key);
+      if (val) links[key.replace("social_", "")] = val;
+    }
+    res.json(links);
+  } catch {
+    res.json({});
+  }
+});
+
+router.post("/api/admin/social-links", requireAdmin, async (req, res) => {
+  try {
+    const { instagram, linkedin, youtube, twitter, tiktok } = req.body;
+    await storage.setSetting("social_instagram", instagram?.trim() || null);
+    await storage.setSetting("social_linkedin", linkedin?.trim() || null);
+    await storage.setSetting("social_youtube", youtube?.trim() || null);
+    await storage.setSetting("social_twitter", twitter?.trim() || null);
+    await storage.setSetting("social_tiktok", tiktok?.trim() || null);
+    await logAdminAction((req.user as any).id, "social_links_update", "settings", null, { instagram, linkedin, youtube, twitter, tiktok });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
 // ── Admin: banner management ─────────────────────────────────────────────
 router.post("/api/admin/banner", requireAdmin, async (req, res) => {
   try {
