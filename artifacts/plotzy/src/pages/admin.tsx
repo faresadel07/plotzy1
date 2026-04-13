@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
+import { Users, BookOpen, Globe, FileText, Ticket, Settings, ArrowLeft } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -201,10 +202,10 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
+function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }) {
   return (
     <div style={S.statCard}>
-      <div style={{ fontSize: 22, marginBottom: 8 }}>{icon}</div>
+      <Icon className="w-5 h-5" style={{ color: "rgba(255,255,255,0.35)", marginBottom: 8 }} />
       <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-1px", marginBottom: 4 }}>
         {value.toLocaleString()}
       </div>
@@ -1823,39 +1824,46 @@ export default function AdminPage() {
     <div style={S.page}>
       <div style={S.header}>
         <div style={S.title}>
-          <span>⚙️ Admin Panel</span>
-          <span style={S.badge}>Plotzy</span>
+          <Settings className="w-5 h-5" style={{ color: "rgba(255,255,255,0.5)" }} />
+          <span>Admin Panel</span>
+          <span style={S.badge}>PLOTZY</span>
         </div>
-        <button onClick={() => setLocation("/")} style={{ ...S.btn("ghost"), fontSize: 13 }}>← Back to App</button>
+        <button onClick={() => setLocation("/")} style={{ ...S.btn("ghost"), fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to App
+        </button>
       </div>
 
       <div style={S.body}>
         {stats && (
           <div className="admin-stats-grid" style={S.statsGrid}>
-            <StatCard label="Total Users" value={stats.totalUsers} icon="👤" />
-            <StatCard label="Total Books" value={stats.totalBooks} icon="📚" />
-            <StatCard label="Published" value={stats.publishedBooks} icon="🌐" />
-            <StatCard label="Chapters" value={stats.totalChapters} icon="📄" />
-            <StatCard label="Open Tickets" value={stats.openSupportTickets} icon="🎫" />
+            <StatCard label="Total Users" value={stats.totalUsers} icon={Users} />
+            <StatCard label="Total Books" value={stats.totalBooks} icon={BookOpen} />
+            <StatCard label="Published" value={stats.publishedBooks} icon={Globe} />
+            <StatCard label="Chapters" value={stats.totalChapters} icon={FileText} />
+            <StatCard label="Open Tickets" value={stats.openSupportTickets} icon={Ticket} />
           </div>
         )}
 
-        <div style={{ ...S.tabs, flexWrap: "wrap", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        {/* Tabs — grouped logically */}
+        <div style={{ ...S.tabs, flexWrap: "wrap", overflowX: "auto", WebkitOverflowScrolling: "touch", gap: 2 }}>
+          {/* Analytics group */}
           <TabBtn label="Analytics" active={tab === "analytics"} onClick={() => setTab("analytics")} />
           <TabBtn label="Revenue" active={tab === "revenue"} onClick={() => setTab("revenue")} />
-          <TabBtn label="Moderation" active={tab === "moderation"} onClick={() => setTab("moderation")} />
           <TabBtn label="Engagement" active={tab === "engagement"} onClick={() => setTab("engagement")} />
           <TabBtn label="System" active={tab === "system"} onClick={() => setTab("system")} />
-          <span style={{ width: 1, background: "rgba(255,255,255,0.1)", margin: "4px 4px" }} />
-          <TabBtn label={`Users${stats ? ` (${stats.totalUsers})` : ""}`} active={tab === "users"} onClick={() => setTab("users")} />
-          <TabBtn label={`Books${stats ? ` (${stats.publishedBooks})` : ""}`} active={tab === "books"} onClick={() => setTab("books")} />
-          <TabBtn label={`Support${stats && stats.openSupportTickets > 0 ? ` (${stats.openSupportTickets})` : ""}`} active={tab === "support"} onClick={() => setTab("support")} />
-          <TabBtn label="Activity" active={tab === "activity"} onClick={() => setTab("activity")} />
-          <TabBtn label="Banner" active={tab === "banner"} onClick={() => setTab("banner")} />
-          <TabBtn label="Overview" active={tab === "overview"} onClick={() => setTab("overview")} />
+          <span style={{ width: 1, background: "rgba(255,255,255,0.08)", margin: "4px 6px" }} />
+          {/* Management group */}
+          <TabBtn label={`Users (${stats?.totalUsers ?? 0})`} active={tab === "users"} onClick={() => setTab("users")} />
+          <TabBtn label={`Books (${stats?.publishedBooks ?? 0})`} active={tab === "books"} onClick={() => setTab("books")} />
+          <TabBtn label="Moderation" active={tab === "moderation"} onClick={() => setTab("moderation")} />
+          <TabBtn label="Support" active={tab === "support"} onClick={() => setTab("support")} />
+          <span style={{ width: 1, background: "rgba(255,255,255,0.08)", margin: "4px 6px" }} />
+          {/* Config group */}
           <TabBtn label="Tutorials" active={tab === "tutorials"} onClick={() => setTab("tutorials")} />
-          <TabBtn label="Audit Log" active={tab === "audit"} onClick={() => setTab("audit")} />
+          <TabBtn label="Banner" active={tab === "banner"} onClick={() => setTab("banner")} />
           <TabBtn label="Social Links" active={tab === "social"} onClick={() => setTab("social")} />
+          <TabBtn label="Audit Log" active={tab === "audit"} onClick={() => setTab("audit")} />
+          <TabBtn label="Activity" active={tab === "activity"} onClick={() => setTab("activity")} />
         </div>
 
         {tab === "analytics"  && <AnalyticsTab />}
