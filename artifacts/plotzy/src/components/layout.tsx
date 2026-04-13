@@ -404,23 +404,9 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowDisplayName(true)} className="gap-2 cursor-pointer" data-testid="menuitem-edit-display-name">
-                    <User className="w-4 h-4" />
-                    {t("changeDisplayName")}
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate(`/authors/${user.id}`)} className="gap-2 cursor-pointer">
                     <User className="w-4 h-4" />
                     My Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={uploadingAvatar}
-                    onSelect={() => {
-                      setTimeout(() => avatarInputRef.current?.click(), 150);
-                    }}
-                    className="gap-2 cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4" />
-                    {uploadingAvatar ? "Uploading..." : "Change profile picture"}
                   </DropdownMenuItem>
                   {user.isAdmin && (
                     <>
