@@ -404,9 +404,9 @@ export default function CoverDesigner() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Capture front face thumbnail (3rd child of bookRef: back, spine, front)
+      // Capture front face thumbnail by data attribute (safe, no magic index)
       let coverImage: string | undefined;
-      const frontEl = bookRef.current?.children[2] as HTMLElement | undefined;
+      const frontEl = bookRef.current?.querySelector('[data-face="front"]') as HTMLElement | undefined;
       if (frontEl) {
         try {
           const thumbCanvas = await html2canvas(frontEl, { scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: null });
@@ -601,6 +601,7 @@ export default function CoverDesigner() {
     const isSpine = face === "spine";
     return (
       <div
+        data-face={face}
         style={{ position: "relative", width: w, height: FACE_H, background: bg, overflow: "hidden", flexShrink: 0 }}
         onClick={() => { setActiveFace(face); setSelectedId(null); }}
       >
