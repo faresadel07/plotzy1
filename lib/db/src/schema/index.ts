@@ -27,6 +27,7 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   suspended: boolean("suspended").default(false),
   role: text("role").default("user").notNull(), // user | admin | moderator
+  bannerUrl: text("banner_url"),
 });
 
 export const siteSettings = pgTable("site_settings", {

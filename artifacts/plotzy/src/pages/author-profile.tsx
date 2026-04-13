@@ -40,6 +40,7 @@ interface AuthorProfileData {
   id: number;
   displayName: string | null;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   bio: string | null;
   website: string | null;
   twitterHandle: string | null;
@@ -57,7 +58,9 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
   const { toast } = useToast();
   const qc = useQueryClient();
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
   const [form, setForm] = useState({
     displayName: profile.displayName || "",
     bio: profile.bio || "",
@@ -106,6 +109,26 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
       setUploading(false);
       toast({ title: "Upload failed", variant: "destructive" });
     }
+  };
+
+  const handleBannerUpload = async (file: File) => {
+    setBannerUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const res = await fetch("/api/me/profile", {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          credentials: "include", body: JSON.stringify({ bannerUrl: dataUrl }),
+        });
+        if (res.ok) {
+          qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
+          toast({ title: "Cover photo updated!" });
+        }
+        setBannerUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch { setBannerUploading(false); toast({ title: "Upload failed", variant: "destructive" }); }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -158,6 +181,25 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
             <div style={{ fontFamily: SF, fontSize: 11, color: TD }}>Click the avatar to upload any image</div>
           </div>
           <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
+        </div>
+
+        {/* Banner upload */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Cover Photo</div>
+          <div
+            onClick={() => bannerInputRef.current?.click()}
+            style={{
+              position: "relative", width: "100%", height: 120, borderRadius: 12, overflow: "hidden",
+              background: profile.bannerUrl ? `url(${profile.bannerUrl}) center/cover` : `linear-gradient(135deg, ${C3} 0%, #1a1a2e 100%)`,
+              border: `1px solid ${B}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <div style={{ background: "rgba(0,0,0,0.4)", borderRadius: 8, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 12, fontWeight: 500 }}>
+              {bannerUploading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={14} />}
+              {profile.bannerUrl ? "Change Cover" : "Add Cover Photo"}
+            </div>
+          </div>
+          <input ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerUpload(f); e.target.value = ""; }} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -297,28 +339,40 @@ export default function AuthorProfile() {
 
         {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} />}
 
+        {/* ── Banner ── */}
+        <div style={{ position: "relative", width: "100%", height: profile.bannerUrl ? 220 : 140, overflow: "hidden" }}>
+          {profile.bannerUrl ? (
+            <img src={profile.bannerUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #0a0a0a 0%, #111 50%, #1a1a2e 100%)" }} />
+          )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)" }} />
+          {/* Back button on banner */}
+          <button onClick={() => navigate(-1 as any)}
+            style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.7)", padding: "6px 14px", borderRadius: 8 }}>
+            <ArrowLeft size={13} /> Back
+          </button>
+          {/* Banner upload button for own profile */}
+          {isOwnProfile && (
+            <button onClick={() => setEditOpen(true)}
+              style={{ position: "absolute", bottom: 16, right: 16, display: "flex", alignItems: "center", gap: 5, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.7)", padding: "6px 12px", borderRadius: 8 }}>
+              <Camera size={12} /> {profile.bannerUrl ? "Change Cover" : "Add Cover"}
+            </button>
+          )}
+        </div>
+
         {/* ── Hero Section ── */}
         <div style={{ borderBottom: `1px solid ${B}`, background: C1 }}>
-          <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px 36px" }}>
-
-            {/* Back button */}
-            <button
-              onClick={() => navigate(-1 as any)}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 13, color: TD, marginBottom: 28, padding: 0 }}
-              onMouseEnter={e => { e.currentTarget.style.color = TS; }}
-              onMouseLeave={e => { e.currentTarget.style.color = TD; }}
-            >
-              <ArrowLeft size={14} /> Back
-            </button>
+          <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px 36px", marginTop: -40 }}>
 
             {/* Profile row */}
             <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
 
-              {/* Avatar — clickable for owner to upload photo */}
+              {/* Avatar — overlapping banner */}
               <div
                 style={{
                   position: "relative", width: 100, height: 100, borderRadius: "50%", flexShrink: 0,
-                  background: C3, border: `2px solid rgba(255,255,255,0.12)`,
+                  background: C3, border: `4px solid ${BG}`,
                   overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: isOwnProfile ? "pointer" : "default",
                 }}
@@ -368,9 +422,13 @@ export default function AuthorProfile() {
                 </div>
 
                 {/* Bio */}
-                {profile.bio && (
+                {profile.bio ? (
                   <p style={{ fontSize: 14, color: TS, lineHeight: 1.7, margin: "0 0 12px", maxWidth: 520 }}>{profile.bio}</p>
-                )}
+                ) : isOwnProfile ? (
+                  <p onClick={() => setEditOpen(true)} style={{ fontSize: 13, color: TD, lineHeight: 1.7, margin: "0 0 12px", cursor: "pointer", fontStyle: "italic" }}>
+                    Add a bio to tell readers about yourself...
+                  </p>
+                ) : null}
 
                 {/* Social links */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 16 }}>

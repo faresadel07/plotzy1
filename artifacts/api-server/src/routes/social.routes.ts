@@ -64,7 +64,7 @@ router.patch("/api/me/profile", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    const { displayName, bio, website, twitterHandle, instagramHandle, avatarUrl } = req.body;
+    const { displayName, bio, website, twitterHandle, instagramHandle, avatarUrl, bannerUrl } = req.body;
     const updates: Record<string, any> = {};
     if (displayName !== undefined) updates.displayName = displayName;
     if (bio !== undefined) updates.bio = bio;
@@ -72,6 +72,7 @@ router.patch("/api/me/profile", async (req, res) => {
     if (twitterHandle !== undefined) updates.twitterHandle = twitterHandle;
     if (instagramHandle !== undefined) updates.instagramHandle = instagramHandle;
     if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+    if (bannerUrl !== undefined) updates.bannerUrl = bannerUrl;
 
     const updated = await storage.updateUser(req.user.id, updates);
     const { passwordHash, ...safeUser } = updated;
