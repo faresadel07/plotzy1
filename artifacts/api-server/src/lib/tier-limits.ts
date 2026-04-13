@@ -1,7 +1,7 @@
 import {
-  FREE_MAX_BOOKS, FREE_MAX_CHAPTERS_PER_BOOK, FREE_MAX_WORDS, FREE_MAX_AI_CALLS_PER_DAY, FREE_MAX_PUBLISHED_BOOKS,
-  PRO_MAX_BOOKS, PRO_MAX_CHAPTERS_PER_BOOK, PRO_MAX_WORDS, PRO_MAX_AI_CALLS_PER_DAY, PRO_MAX_PUBLISHED_BOOKS,
-  PREMIUM_MAX_BOOKS, PREMIUM_MAX_CHAPTERS_PER_BOOK, PREMIUM_MAX_WORDS, PREMIUM_MAX_AI_CALLS_PER_DAY, PREMIUM_MAX_PUBLISHED_BOOKS,
+  FREE_MAX_BOOKS, FREE_MAX_CHAPTERS_PER_BOOK, FREE_MAX_WORDS, FREE_MAX_AI_CALLS_PER_DAY, FREE_MAX_PUBLISHED_BOOKS, FREE_MAX_IMAGES_PER_DAY, FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
+  PRO_MAX_BOOKS, PRO_MAX_CHAPTERS_PER_BOOK, PRO_MAX_WORDS, PRO_MAX_AI_CALLS_PER_DAY, PRO_MAX_PUBLISHED_BOOKS, PRO_MAX_IMAGES_PER_DAY, PRO_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
+  PREMIUM_MAX_BOOKS, PREMIUM_MAX_CHAPTERS_PER_BOOK, PREMIUM_MAX_WORDS, PREMIUM_MAX_AI_CALLS_PER_DAY, PREMIUM_MAX_PUBLISHED_BOOKS, PREMIUM_MAX_IMAGES_PER_DAY, PREMIUM_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
 } from "../../../../lib/db/src/schema";
 import { db } from "../db";
 import { dailyAiUsage } from "../../../../lib/db/src/schema";
@@ -15,6 +15,8 @@ interface TierLimits {
   maxWords: number;
   maxAiCallsPerDay: number;
   maxPublishedBooks: number;
+  maxImagesPerDay: number;
+  maxAudiobookExportsPerMonth: number;
   maxMarketplacePerMonth: number;
   canExportPdf: boolean;
   canExportEpub: boolean;
@@ -34,6 +36,8 @@ const LIMITS: Record<Tier, TierLimits> = {
     maxWords: FREE_MAX_WORDS,
     maxAiCallsPerDay: FREE_MAX_AI_CALLS_PER_DAY,
     maxPublishedBooks: FREE_MAX_PUBLISHED_BOOKS,
+    maxImagesPerDay: FREE_MAX_IMAGES_PER_DAY,
+    maxAudiobookExportsPerMonth: FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
     canExportPdf: false,
     canExportEpub: false,
     canUseAudiobook: false,
@@ -51,6 +55,8 @@ const LIMITS: Record<Tier, TierLimits> = {
     maxWords: PRO_MAX_WORDS,
     maxAiCallsPerDay: PRO_MAX_AI_CALLS_PER_DAY,
     maxPublishedBooks: PRO_MAX_PUBLISHED_BOOKS,
+    maxImagesPerDay: PRO_MAX_IMAGES_PER_DAY,
+    maxAudiobookExportsPerMonth: PRO_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
     canExportPdf: true,
     canExportEpub: true,
     canUseAudiobook: true,
@@ -68,6 +74,8 @@ const LIMITS: Record<Tier, TierLimits> = {
     maxWords: PREMIUM_MAX_WORDS,
     maxAiCallsPerDay: PREMIUM_MAX_AI_CALLS_PER_DAY,
     maxPublishedBooks: PREMIUM_MAX_PUBLISHED_BOOKS,
+    maxImagesPerDay: PREMIUM_MAX_IMAGES_PER_DAY,
+    maxAudiobookExportsPerMonth: PREMIUM_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
     canExportPdf: true,
     canExportEpub: true,
     canUseAudiobook: true,
@@ -150,6 +158,36 @@ export async function checkMarketplaceLimit(userId: number, tier: Tier): Promise
   const used = await getMarketplaceUsageThisMonth(userId);
   const remaining = Math.max(0, limits.maxMarketplacePerMonth - used);
   return { allowed: used < limits.maxMarketplacePerMonth, remaining, limit: limits.maxMarketplacePerMonth, used };
+}
+
+// ── Image Generation Limits (daily) ──────────────────────────────────────
+
+export async function checkImageLimit(userId: number, tier: Tier): Promise<{ allowed: boolean; remaining: number; limit: number; used: number }> {
+  const limits = getTierLimits(tier);
+  const today = new Date().toISOString().slice(0, 10);
+  const result = await db.execute(sql`
+    SELECT COALESCE(SUM(CASE WHEN endpoint LIKE '%image%' OR endpoint LIKE '%cover%' THEN 1 ELSE 0 END), 0)::int as cnt
+    FROM ai_usage_logs WHERE user_id = ${userId} AND created_at::date = ${today}::date
+  `);
+  const used = Number((result as any).rows?.[0]?.cnt ?? 0);
+  const remaining = Math.max(0, limits.maxImagesPerDay - used);
+  return { allowed: used < limits.maxImagesPerDay, remaining, limit: limits.maxImagesPerDay, used };
+}
+
+// ── Audiobook Export Limits (monthly) ────────────────────────────────────
+
+export async function checkAudiobookLimit(userId: number, tier: Tier): Promise<{ allowed: boolean; remaining: number; limit: number; used: number }> {
+  const limits = getTierLimits(tier);
+  if (limits.maxAudiobookExportsPerMonth === 0) return { allowed: false, remaining: 0, limit: 0, used: 0 };
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  const result = await db.execute(sql`
+    SELECT COUNT(*)::int as cnt FROM ai_usage_logs
+    WHERE user_id = ${userId} AND endpoint LIKE '%audiobook/export%' AND created_at >= ${monthStart}::date
+  `);
+  const used = Number((result as any).rows?.[0]?.cnt ?? 0);
+  const remaining = Math.max(0, limits.maxAudiobookExportsPerMonth - used);
+  return { allowed: used < limits.maxAudiobookExportsPerMonth, remaining, limit: limits.maxAudiobookExportsPerMonth, used };
 }
 
 /** Get user's marketplace history. */

@@ -532,6 +532,8 @@ export const FREE_MAX_CHAPTERS_PER_BOOK = 3;
 export const FREE_MAX_WORDS = 5000;
 export const FREE_MAX_AI_CALLS_PER_DAY = 10;
 export const FREE_MAX_PUBLISHED_BOOKS = 1;
+export const FREE_MAX_IMAGES_PER_DAY = 2;
+export const FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 0;
 
 // ── Pro Tier Limits ──
 export const PRO_MAX_BOOKS = 50;
@@ -539,13 +541,17 @@ export const PRO_MAX_CHAPTERS_PER_BOOK = 100;
 export const PRO_MAX_WORDS = 500000;
 export const PRO_MAX_AI_CALLS_PER_DAY = 100;
 export const PRO_MAX_PUBLISHED_BOOKS = 20;
+export const PRO_MAX_IMAGES_PER_DAY = 10;
+export const PRO_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 3;
 
-// ── Premium Tier Limits (effectively unlimited) ──
+// ── Premium Tier Limits ──
 export const PREMIUM_MAX_BOOKS = 9999;
 export const PREMIUM_MAX_CHAPTERS_PER_BOOK = 9999;
 export const PREMIUM_MAX_WORDS = 99999999;
-export const PREMIUM_MAX_AI_CALLS_PER_DAY = 500;
+export const PREMIUM_MAX_AI_CALLS_PER_DAY = 200;
 export const PREMIUM_MAX_PUBLISHED_BOOKS = 9999;
+export const PREMIUM_MAX_IMAGES_PER_DAY = 25;
+export const PREMIUM_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 10;
 
 // ── Pricing (cents) ──
 export const PRO_MONTHLY_CENTS = 999;           // $9.99/month
