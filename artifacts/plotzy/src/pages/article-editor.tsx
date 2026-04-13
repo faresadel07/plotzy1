@@ -1165,22 +1165,8 @@ export default function ArticleEditor() {
             <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
           </div>
 
-          {/* Far right: AI Image + AI Writing Assistant grouped together */}
+          {/* Far right: AI Writing Assistant */}
           <div style={{marginLeft:"auto",flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
-            <button
-              onMouseDown={e=>{e.preventDefault();setShowImgAI(true);}}
-              title="Generate image with AI"
-              style={{
-                display:"flex",alignItems:"center",gap:5,
-                padding:"5px 12px",borderRadius:7,
-                background:`${ACC}12`,border:`1px solid ${ACC}30`,
-                cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap",
-              }}
-              onMouseEnter={e=>{e.currentTarget.style.background=`${ACC}22`;}}
-              onMouseLeave={e=>{e.currentTarget.style.background=`${ACC}12`;}}
-            >
-              <Sparkles size={11}/> AI Image
-            </button>
             <button
               onMouseDown={e=>{e.preventDefault();setShowAI(true);}}
               style={{
@@ -1682,52 +1668,6 @@ export default function ArticleEditor() {
           </div>
         )}
 
-        {/* ── AI IMAGE GENERATION MODAL ── */}
-        {showImgAI && createPortal(
-          <div style={{position:"fixed",inset:0,zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.78)",backdropFilter:"blur(8px)"}} onClick={()=>setShowImgAI(false)}>
-            <div style={{background:"#111117",border:`1px solid rgba(124,106,247,0.3)`,borderRadius:18,padding:28,width:"min(480px,90vw)",boxShadow:"0 20px 60px rgba(0,0,0,0.8)"}} onClick={e=>e.stopPropagation()}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-                <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <Sparkles size={16} color={ACC}/>
-                </div>
-                <div>
-                  <div style={{fontFamily:SF,fontSize:15,fontWeight:700,color:T}}>Generate Image with AI</div>
-                  <div style={{fontFamily:SF,fontSize:11,color:TD}}>Describe what you want to see</div>
-                </div>
-                <button onClick={()=>setShowImgAI(false)} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",color:TD,display:"flex"}}><X size={16}/></button>
-              </div>
-
-              <textarea
-                value={imgPrompt}
-                onChange={e=>setImgPrompt(e.target.value)}
-                placeholder="e.g. A cozy coffee shop at night, warm lighting, rain on windows, photorealistic..."
-                rows={4}
-                autoFocus
-                onKeyDown={e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))generateInlineImage();}}
-                style={{width:"100%",resize:"none",background:"rgba(255,255,255,0.05)",border:`1px solid rgba(255,255,255,0.1)`,borderRadius:10,padding:14,fontFamily:SF,fontSize:13,color:T,outline:"none",lineHeight:1.6,boxSizing:"border-box"}}
-              />
-
-              {/* Quick prompts */}
-              <div style={{display:"flex",flexWrap:"wrap",gap:6,margin:"12px 0"}}>
-                {["Abstract art","Dark forest","City at night","Ocean waves","Mountain peak","Vintage library"].map(p=>(
-                  <button key={p} onClick={()=>setImgPrompt(p)}
-                    style={{fontFamily:SF,fontSize:11,padding:"4px 11px",borderRadius:20,background:`${ACC}12`,border:`1px solid ${ACC}30`,cursor:"pointer",color:ACC+"cc",transition:"all 0.15s"}}
-                    onMouseEnter={e=>{e.currentTarget.style.background=`${ACC}22`;}}
-                    onMouseLeave={e=>{e.currentTarget.style.background=`${ACC}12`;}}
-                  >{p}</button>
-                ))}
-              </div>
-
-              <div style={{display:"flex",gap:10,marginTop:4}}>
-                <button onClick={()=>setShowImgAI(false)} style={{flex:1,padding:"10px 0",borderRadius:10,background:"transparent",border:`1px solid rgba(255,255,255,0.1)`,cursor:"pointer",fontFamily:SF,fontSize:13,fontWeight:500,color:TS}}>Cancel</button>
-                <button onClick={generateInlineImage} disabled={!imgPrompt.trim()||imgGenLoading}
-                  style={{flex:2,padding:"10px 0",borderRadius:10,background:(!imgPrompt.trim()||imgGenLoading)?`${ACC}40`:ACC,border:"none",cursor:(!imgPrompt.trim()||imgGenLoading)?"default":"pointer",fontFamily:SF,fontSize:13,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",gap:7,transition:"background 0.2s"}}>
-                  {imgGenLoading?<><Loader2 size={14} style={{animation:"spin 1s linear infinite"}}/> Generating…</>:<><Sparkles size={14}/> Generate Image</>}
-                </button>
-              </div>
-            </div>
-          </div>
-        , document.body)}
 
         {/* ── AI ASSISTANT PANEL ── */}
         {showAI && (

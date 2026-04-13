@@ -1076,11 +1076,6 @@ export async function registerRoutes(
 
   // ─── Generate Inline Image ─────────────────────────────────────────────────
 
-  // Inline image generation removed — users upload their own images.
-  // AI image generation is only available for book covers (generateCover endpoint).
-  app.post("/api/generate-image", (_req, res) => {
-    res.status(410).json({ message: "AI image generation has been moved to the Cover Designer. Please upload your own images for chapters." });
-  });
 
   // ─── Lore ──────────────────────────────────────────────────────────────────
 
