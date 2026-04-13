@@ -537,7 +537,8 @@ router.post("/api/books/join", async (req, res) => {
     await db.delete(bookCollaborators).where(eq(bookCollaborators.id, invite.id));
 
     res.json({ success: true, bookId: invite.bookId, bookTitle: book.title, role: invite.role });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Please enter a valid invite code" });
     logger.error({ err }, "Failed to join book");
     res.status(500).json({ message: "Internal error" });
   }

@@ -44,6 +44,20 @@ declare global {
   }
 }
 
+// Strict owner only — no collaborators allowed (for delete, publish, export)
+export async function requireBookOwnerStrict(req: Request, res: Response, next: NextFunction) {
+  const bookId = Number(req.params.id || req.params.bookId);
+  if (!bookId || isNaN(bookId)) return res.status(400).json({ message: "Invalid book id" });
+  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Authentication required" });
+  try {
+    const [book] = await db.select().from(books).where(eq(books.id, bookId));
+    if (!book) return res.status(404).json({ message: "Book not found" });
+    if (book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can do this" });
+    req.ownerBook = book;
+    return next();
+  } catch { return res.status(500).json({ message: "Internal error" }); }
+}
+
 export async function requireBookOwner(req: Request, res: Response, next: NextFunction) {
   const bookId = Number(req.params.id || req.params.bookId);
   if (!bookId || isNaN(bookId)) {

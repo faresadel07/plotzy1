@@ -12,7 +12,7 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable } from "../../../lib/db/src/schema";
-import { requireAdmin, requireBookOwner, requireChapterOwner, requireChildOwner } from "./middleware/auth";
+import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner } from "./middleware/auth";
 import { aiLimiter, imageGenLimiter, tierAiLimiter } from "./middleware/rate-limit";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
@@ -188,7 +188,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch(api.books.trash.path, requireBookOwner, async (req, res) => {
+  app.patch(api.books.trash.path, requireBookOwnerStrict, async (req, res) => {
     try {
       const book = await storage.updateBook(Number(req.params.id), { isDeleted: true } as any);
       res.json(book);
@@ -197,7 +197,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch(api.books.restore.path, requireBookOwner, async (req, res) => {
+  app.patch(api.books.restore.path, requireBookOwnerStrict, async (req, res) => {
     try {
       const book = await storage.updateBook(Number(req.params.id), { isDeleted: false } as any);
       res.json(book);
@@ -206,7 +206,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete(api.books.delete.path, requireBookOwner, async (req, res) => {
+  app.delete(api.books.delete.path, requireBookOwnerStrict, async (req, res) => {
     try {
       await storage.deleteBook(Number(req.params.id));
       res.status(204).send();
