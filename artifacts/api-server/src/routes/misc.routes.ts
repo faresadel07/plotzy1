@@ -500,12 +500,10 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
     const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).parse(req.body);
     const code = generateInviteCode();
 
-    // Store the invite as a placeholder (no userId yet — they'll join with the code)
-    await db.insert(bookCollaborators).values({ bookId, userId: (req.user as any).id, role, inviteCode: code }).onConflictDoNothing();
+    // Delete any existing pending invite for this book by owner, then insert new one
+    await db.delete(bookCollaborators).where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, (req.user as any).id), sql`invite_code IS NOT NULL`));
+    await db.insert(bookCollaborators).values({ bookId, userId: (req.user as any).id, role, inviteCode: code });
 
-    // Actually we want a pending invite — let's just return the code
-    // We store it differently: inviteCode on a row with a temp userId (owner),
-    // when someone joins, we update the row
     res.json({ code, role });
   } catch (err) {
     logger.error({ err }, "Failed to create invite");
