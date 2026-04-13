@@ -324,11 +324,6 @@ function BookPages() {
 export default function Home() {
   const [, setLocation] = useLocation();
   const { data: books, isLoading } = useBooks();
-  const { data: sharedBooks = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerName: string | null }[]>({
-    queryKey: ["/api/books/shared-with-me"],
-    queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
-    enabled: !!user,
-  });
   const createBook = useCreateBook();
   const generateCover = useGenerateCover();
   const trashBook = useTrashBook();
@@ -435,6 +430,11 @@ export default function Home() {
   };
 
   const { user } = useAuth();
+  const { data: sharedBooks = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerName: string | null }[]>({
+    queryKey: ["/api/books/shared-with-me"],
+    queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
+    enabled: !!user,
+  });
   const firstName = user?.displayName ? user.displayName.trim().split(/\s+/)[0] : null;
   const [showAuthModal, setShowAuthModal] = useState(false);
 
