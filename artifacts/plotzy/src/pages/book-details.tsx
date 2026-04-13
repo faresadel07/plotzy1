@@ -846,141 +846,132 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               const totalWords = (chapters || []).reduce((acc, ch) => acc + countChapterWords(ch.content), 0);
               const goal = (book as any).wordGoal || 0;
               const goalPct = goal > 0 ? Math.min(100, Math.round((totalWords / goal) * 100)) : 0;
+              const chapterCount = (chapters || []).length;
+
+              // Count completed sections
+              const allSections = ["copyright", "dedication", "epigraph", "aboutAuthor"] as const;
+              const completedCount = allSections.filter(k => !!pages[k as keyof BookPages]).length;
 
               const FRONT_MATTER = [
-                {
-                  key: "copyright",
-                  label: lang === "ar" ? "حقوق النشر" : "Copyright",
-                  icon: FileText,
-                  placeholder: `© ${new Date().getFullYear()} ${book.authorName || "Your Name"}. All rights reserved.\n\nPublished by Plotzy.\n\nNo part of this publication may be reproduced without permission.`,
-                  desc: lang === "ar" ? "تُضاف تلقائياً في كل PDF تصدره" : "Auto-added to every PDF export",
-                  hint: lang === "ar" ? "تظهر مباشرة بعد صفحة الغلاف" : "Appears right after the cover page",
-                },
-                {
-                  key: "dedication",
-                  label: lang === "ar" ? "الإهداء" : "Dedication",
-                  icon: Quote,
-                  placeholder: lang === "ar" ? "إلى كل من آمن بهذه القصة قبلي..." : "For everyone who believed in this story before I did.",
-                  desc: lang === "ar" ? "كلمة شكر أو إهداء شخصي" : "A personal note or dedication",
-                  hint: lang === "ar" ? "تظهر قبل الفصل الأول" : "Appears before Chapter 1",
-                },
-                {
-                  key: "epigraph",
-                  label: lang === "ar" ? "الاقتباس الافتتاحي" : "Epigraph",
-                  icon: BookMarked,
-                  placeholder: lang === "ar" ? "\"البداية دائماً اليوم.\"\n— ماري شيلي" : "\"The beginning is always today.\"\n— Mary Shelley",
-                  desc: lang === "ar" ? "اقتباس يحدد نبرة الكتاب" : "A quote that sets the tone of your book",
-                  hint: lang === "ar" ? "تظهر قبل الفصل الأول" : "Appears before Chapter 1",
-                },
+                { key: "copyright", label: lang === "ar" ? "حقوق النشر" : "Copyright", icon: FileText, placeholder: `© ${new Date().getFullYear()} ${book.authorName || "Your Name"}. All rights reserved.\n\nPublished by Plotzy.\n\nNo part of this publication may be reproduced without permission.`, desc: lang === "ar" ? "تُضاف تلقائياً في كل PDF تصدره" : "Auto-added to every PDF export" },
+                { key: "dedication", label: lang === "ar" ? "الإهداء" : "Dedication", icon: Quote, placeholder: lang === "ar" ? "إلى كل من آمن بهذه القصة قبلي..." : "For everyone who believed in this story before I did.", desc: lang === "ar" ? "كلمة شكر أو إهداء شخصي" : "A personal note or dedication" },
+                { key: "epigraph", label: lang === "ar" ? "الاقتباس الافتتاحي" : "Epigraph", icon: BookMarked, placeholder: lang === "ar" ? "\"البداية دائماً اليوم.\"\n— ماري شيلي" : "\"The beginning is always today.\"\n— Mary Shelley", desc: lang === "ar" ? "اقتباس يحدد نبرة الكتاب" : "A quote that sets the tone of your book" },
               ] as const;
 
               const BACK_MATTER = [
-                {
-                  key: "aboutAuthor",
-                  label: lang === "ar" ? "نبذة عن الكاتب" : "About the Author",
-                  icon: User,
-                  placeholder: lang === "ar" ? `${book.authorName || "اسمك"} كاتب يقيم في...` : `${book.authorName || "Your name"} is a writer based in...`,
-                  desc: lang === "ar" ? "نبذة مختصرة عنك كمؤلف" : "A short bio about you as an author",
-                  hint: lang === "ar" ? "تظهر في نهاية الكتاب" : "Appears at the end of the book",
-                },
+                { key: "aboutAuthor", label: lang === "ar" ? "نبذة عن الكاتب" : "About the Author", icon: User, placeholder: lang === "ar" ? `${book.authorName || "اسمك"} كاتب يقيم في...` : `${book.authorName || "Your name"} is a writer based in...`, desc: lang === "ar" ? "نبذة مختصرة عنك كمؤلف" : "A short bio about you as an author" },
               ] as const;
 
               const renderSection = (sections: typeof FRONT_MATTER | typeof BACK_MATTER) =>
-                sections.map(({ key, label, icon: Icon, placeholder, desc, hint }) => {
+                sections.map(({ key, label, icon: Icon, placeholder, desc }) => {
                   const content = pages[key as keyof BookPages] || "";
                   const isEditing = editingSection === key;
                   const filled = !!content;
                   return (
-                    <div key={key} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                      {/* Header */}
-                      <div className="flex items-start justify-between px-5 pt-4 pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5 rounded-lg p-2" style={{ background: filled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)" }}>
-                            <Icon className="w-4 h-4" style={{ color: filled ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)" }} />
+                    <div key={key} className="rounded-2xl overflow-hidden transition-all" style={{ background: "rgba(255,255,255,0.02)", border: filled ? "1px solid rgba(255,255,255,0.1)" : "1px dashed rgba(255,255,255,0.08)" }}>
+                      <div className="flex items-center justify-between px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-xl p-2.5" style={{ background: filled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)" }}>
+                            <Icon className="w-4 h-4" style={{ color: filled ? "#fff" : "rgba(255,255,255,0.3)" }} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-sm">{label}</span>
-                              {filled && (
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>
-                                  {lang === "ar" ? "مكتمل" : "Added"}
-                                </span>
-                              )}
+                              <span className="font-semibold text-[13px]" style={{ color: filled ? "#fff" : "rgba(255,255,255,0.6)" }}>{label}</span>
+                              {filled && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#4ade80" }} />}
                             </div>
-                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
-                            <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                              <BookOpen className="w-3 h-3" />{hint}
-                            </p>
+                            <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{desc}</p>
                           </div>
                         </div>
-                        {!isEditing ? (
-                          <Button
-                            size="sm"
-                            variant={filled ? "outline" : "default"}
-                            className="h-8 rounded-xl text-xs px-4 shrink-0"
-                            style={filled ? {} : { background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.85)" }}
+                        {!isEditing && (
+                          <button
+                            className="text-[12px] font-medium px-4 py-1.5 rounded-lg transition-all"
+                            style={{ background: filled ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)", color: filled ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.08)" }}
                             onClick={() => { setEditingSection(key); setSectionDraft(content || placeholder); }}
                           >
-                            {filled ? (lang === "ar" ? "تعديل" : "Edit") : (lang === "ar" ? "+ إضافة" : "+ Add")}
-                          </Button>
-                        ) : (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Button size="sm" className="h-8 rounded-xl text-xs px-3 text-[#111] border-0" style={{ background: "#EFEFEF" }} onClick={() => {
+                            {filled ? (lang === "ar" ? "تعديل" : "Edit") : (lang === "ar" ? "إضافة" : "Add")}
+                          </button>
+                        )}
+                        {isEditing && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button className="text-[12px] font-semibold px-4 py-1.5 rounded-lg" style={{ background: "#fff", color: "#000" }} onClick={() => {
                               const updated = { ...pages, [key]: sectionDraft };
                               updateBook.mutate({ id: bookId, bookPages: updated } as any);
                               setEditingSection(null);
                               toast({ title: lang === "ar" ? "تم الحفظ" : "Saved!" });
                             }}>
-                              <Check className="w-3 h-3 mr-1" />{lang === "ar" ? "حفظ" : "Save"}
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-8 rounded-xl text-xs px-2" onClick={() => setEditingSection(null)}>
+                              {lang === "ar" ? "حفظ" : "Save"}
+                            </button>
+                            <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "rgba(255,255,255,0.4)" }} onClick={() => setEditingSection(null)}>
                               {lang === "ar" ? "إلغاء" : "Cancel"}
-                            </Button>
+                            </button>
                           </div>
                         )}
                       </div>
 
-                      {/* Content area */}
-                      <div className="px-5 pb-4">
-                        {isEditing ? (
-                          <Textarea
-                            autoFocus
-                            value={sectionDraft}
-                            onChange={e => setSectionDraft(e.target.value)}
-                            className="min-h-[110px] resize-none text-sm rounded-xl"
-                            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
-                            dir={isRTL ? "rtl" : "ltr"}
-                          />
-                        ) : filled ? (
-                          <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.55)" }}>{content}</p>
-                          </div>
-                        ) : (
-                          <div className="rounded-xl px-4 py-3 border border-dashed" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                            <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.2)" }}>{placeholder}</p>
-                          </div>
-                        )}
-                      </div>
+                      {/* Content */}
+                      {(isEditing || filled) && (
+                        <div className="px-5 pb-4">
+                          {isEditing ? (
+                            <Textarea autoFocus value={sectionDraft} onChange={e => setSectionDraft(e.target.value)}
+                              className="min-h-[120px] resize-none text-sm rounded-xl" dir={isRTL ? "rtl" : "ltr"}
+                              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", lineHeight: 1.7 }} />
+                          ) : (
+                            <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)" }}>
+                              <p className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Georgia', serif" }}>{content}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 });
 
               return (
-                <div className="space-y-6">
+                <div className="space-y-8 pb-8">
+
+                  {/* Completion Summary */}
+                  <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div className="flex items-center justify-between mb-5">
+                      <div>
+                        <h3 className="text-base font-bold mb-1">{lang === "ar" ? "جاهزية الكتاب" : "Book Readiness"}</h3>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{lang === "ar" ? "أكمل هذه الأقسام لتحضير كتابك للنشر" : "Complete these sections to prepare your book for publishing"}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold">{completedCount}</span>
+                        <span className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>/4</span>
+                      </div>
+                    </div>
+                    {/* Mini stats row */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div className="text-lg font-bold">{chapterCount}</div>
+                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "فصول" : "Chapters"}</div>
+                      </div>
+                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div className="text-lg font-bold">{totalWords.toLocaleString()}</div>
+                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "كلمات" : "Words"}</div>
+                      </div>
+                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div className="text-lg font-bold">{completedCount}/4</div>
+                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "أقسام" : "Sections"}</div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Writing Goal */}
-                  <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.06)" }}>
                           <Target className="w-4 h-4" style={{ color: "rgba(255,255,255,0.7)" }} />
                         </div>
                         <div>
-                          <span className="font-semibold text-sm block">{lang === "ar" ? "هدف الكتابة" : "Writing Goal"}</span>
-                          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{lang === "ar" ? "حدد عدد الكلمات الذي تريد الوصول إليه" : "Set a word count target to track your progress"}</span>
+                          <span className="font-semibold text-[13px] block">{lang === "ar" ? "هدف الكتابة" : "Writing Goal"}</span>
+                          <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "حدد عدد الكلمات" : "Track your word count progress"}</span>
                         </div>
                       </div>
                       {!editingGoal && (
-                        <button onClick={() => { setEditingGoal(true); setGoalDraft(String(goal || "")); }} className="text-xs transition-colors rounded-lg p-2 hover:bg-foreground/5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        <button onClick={() => { setEditingGoal(true); setGoalDraft(String(goal || "")); }} className="text-xs transition-colors rounded-lg p-2" style={{ color: "rgba(255,255,255,0.3)" }}>
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -988,55 +979,64 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     {editingGoal ? (
                       <div className="flex items-center gap-2 mt-2">
                         <Input type="number" autoFocus value={goalDraft} onChange={e => setGoalDraft(e.target.value)} placeholder={lang === "ar" ? "مثال: 80000" : "e.g. 80000"} className="h-9 text-sm rounded-xl" />
-                        <Button size="sm" className="h-9 rounded-xl px-4 text-[#111] border-0" style={{ background: "#EFEFEF" }} onClick={() => { updateBook.mutate({ id: bookId, wordGoal: parseInt(goalDraft) || 0 } as any); setEditingGoal(false); }}>
+                        <button className="h-9 rounded-xl px-4 text-[12px] font-semibold" style={{ background: "#fff", color: "#000" }} onClick={() => { updateBook.mutate({ id: bookId, wordGoal: parseInt(goalDraft) || 0 } as any); setEditingGoal(false); }}>
                           <Check className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-9 rounded-xl px-3" onClick={() => setEditingGoal(false)}>✕</Button>
+                        </button>
+                        <button className="h-9 rounded-xl px-3 text-[12px]" style={{ color: "rgba(255,255,255,0.4)" }} onClick={() => setEditingGoal(false)}>✕</button>
                       </div>
                     ) : goal > 0 ? (
-                      <div className="space-y-2 mt-2">
-                        <div className="flex items-center justify-between text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-                          <span>{totalWords.toLocaleString()} {lang === "ar" ? "كلمة مكتوبة" : "words written"}</span>
-                          <span>{goalPct}% {lang === "ar" ? `من ${goal.toLocaleString()}` : `of ${goal.toLocaleString()}`}</span>
+                      <div className="space-y-3 mt-3">
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <span className="text-2xl font-bold">{totalWords.toLocaleString()}</span>
+                            <span className="text-xs ml-1" style={{ color: "rgba(255,255,255,0.3)" }}>/ {goal.toLocaleString()}</span>
+                          </div>
+                          <span className="text-sm font-semibold" style={{ color: goalPct >= 100 ? "#4ade80" : "rgba(255,255,255,0.5)" }}>{goalPct}%</span>
                         </div>
-                        <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
-                          <div className="h-full rounded-full transition-all" style={{ width: `${goalPct}%`, background: goalPct >= 100 ? "#4ade80" : "rgba(255,255,255,0.7)" }} />
+                        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${goalPct}%`, background: goalPct >= 100 ? "#4ade80" : "linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.8))" }} />
                         </div>
+                        {goalPct >= 100 && <p className="text-xs font-medium" style={{ color: "#4ade80" }}>{lang === "ar" ? "تهانينا! حققت هدفك" : "Congratulations! You've reached your goal"}</p>}
                       </div>
                     ) : (
-                      <button onClick={() => { setEditingGoal(true); setGoalDraft(""); }} className="mt-2 w-full rounded-xl py-2.5 text-sm border border-dashed transition-colors hover:border-foreground/20 text-left px-4" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.35)" }}>
-                        {lang === "ar" ? "اضغط لتعيين هدف الكلمات..." : "Click to set a word count goal..."}
+                      <button onClick={() => { setEditingGoal(true); setGoalDraft(""); }} className="mt-2 w-full rounded-xl py-3 text-sm border border-dashed transition-all hover:border-foreground/15 text-center" style={{ borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }}>
+                        {lang === "ar" ? "اضغط لتعيين هدف الكلمات" : "Set a word count goal"}
                       </button>
                     )}
                   </div>
 
-                  {/* Book flow visual */}
+                  {/* Book Structure Flow */}
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
-                      {lang === "ar" ? "ترتيب صفحات الكتاب" : "Book Structure"}
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      {lang === "ar" ? "ترتيب الكتاب" : "Book Structure"}
                     </p>
-                    <div className="flex items-center gap-1 flex-wrap text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    <div className="flex items-center gap-0.5 flex-wrap">
                       {[
-                        { label: lang === "ar" ? "الغلاف" : "Cover", filled: true },
-                        { label: lang === "ar" ? "حقوق النشر" : "Copyright", filled: !!pages.copyright },
-                        { label: lang === "ar" ? "الإهداء" : "Dedication", filled: !!pages.dedication },
-                        { label: lang === "ar" ? "الاقتباس" : "Epigraph", filled: !!pages.epigraph },
-                        { label: lang === "ar" ? "الفصول" : "Chapters", filled: true },
-                        { label: lang === "ar" ? "نبذة الكاتب" : "About Author", filled: !!pages.aboutAuthor },
+                        { label: lang === "ar" ? "الغلاف" : "Cover", done: true },
+                        { label: lang === "ar" ? "حقوق النشر" : "Copyright", done: !!pages.copyright },
+                        { label: lang === "ar" ? "الإهداء" : "Dedication", done: !!pages.dedication },
+                        { label: lang === "ar" ? "الاقتباس" : "Epigraph", done: !!pages.epigraph },
+                        { label: `${lang === "ar" ? "فصول" : "Chapters"} (${chapterCount})`, done: chapterCount > 0 },
+                        { label: lang === "ar" ? "نبذة الكاتب" : "About Author", done: !!pages.aboutAuthor },
                       ].map((step, i, arr) => (
-                        <span key={step.label} className="flex items-center gap-1">
-                          <span className="px-2 py-1 rounded-lg" style={{ background: step.filled ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)", color: step.filled ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)", border: step.filled ? "1px solid rgba(255,255,255,0.12)" : "1px dashed rgba(255,255,255,0.1)" }}>
+                        <div key={step.label} className="flex items-center">
+                          <span className="text-[11px] font-medium px-3 py-1.5 rounded-lg" style={{
+                            background: step.done ? "rgba(255,255,255,0.08)" : "transparent",
+                            color: step.done ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.2)",
+                            border: step.done ? "1px solid rgba(255,255,255,0.1)" : "1px dashed rgba(255,255,255,0.08)",
+                          }}>
+                            {step.done && <span className="inline-block w-1 h-1 rounded-full mr-1.5" style={{ background: "#4ade80", verticalAlign: "middle" }} />}
                             {step.label}
                           </span>
-                          {i < arr.length - 1 && <span style={{ color: "rgba(255,255,255,0.2)" }}>›</span>}
-                        </span>
+                          {i < arr.length - 1 && <span className="mx-1 text-[10px]" style={{ color: "rgba(255,255,255,0.15)" }}>→</span>}
+                        </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Front matter */}
                   <div className="space-y-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.25)" }}>
                       {lang === "ar" ? "الصفحات الأمامية" : "Front Matter"}
                     </p>
                     {renderSection(FRONT_MATTER)}
@@ -1044,7 +1044,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Back matter */}
                   <div className="space-y-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.25)" }}>
                       {lang === "ar" ? "الصفحات الخلفية" : "Back Matter"}
                     </p>
                     {renderSection(BACK_MATTER)}
