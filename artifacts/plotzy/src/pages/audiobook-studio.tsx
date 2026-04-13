@@ -473,21 +473,6 @@ export default function AudiobookStudio() {
 
       <div className="min-h-screen" style={{ background: "#0a0a0a", color: "#f5f5f5" }}>
 
-        {/* ── Floating dots background ── */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-          {[...Array(14)].map((_, i) => (
-            <div key={i} style={{
-              position: "absolute",
-              width: 6 + (i % 4) * 4,
-              height: 6 + (i % 4) * 4,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.12)",
-              left: `${(i * 7.3) % 100}%`,
-              top: `${(i * 13.1) % 100}%`,
-              animation: `floatDot ${3 + (i % 3)}s ${i * 0.4}s ease-in-out infinite`,
-            }} />
-          ))}
-        </div>
 
         {/* ── Header ── */}
         <div className="sticky top-0 z-30 backdrop-blur-xl" style={{ borderBottom: "1px solid #252525", background: "rgba(10,10,10,0.92)" }}>
@@ -519,11 +504,7 @@ export default function AudiobookStudio() {
               {ar ? "مدعوم بالذكاء الاصطناعي" : "AI-Powered"}
             </div>
             <h1 className="text-4xl sm:text-5xl font-black mb-3 leading-tight" style={{
-              background: "linear-gradient(90deg, #fff 0%, #aaa 35%, #fff 60%, #ccc 100%)",
-              backgroundSize: "200% auto",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              animation: "shimmerText 4s linear infinite",
+              color: "#fff",
               letterSpacing: "-0.03em",
             }}>
               {ar ? `${book?.title || "..."} — استوديو` : `${book?.title || "Your Book"} — Audiobook`}
