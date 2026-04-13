@@ -1265,7 +1265,7 @@ export default function Home() {
                 try {
                   const res = await fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: joinCode.trim() }) });
                   const data = await res.json();
-                  if (data.success) { setShowJoinModal(false); window.location.reload(); }
+                  if (data.success) { setShowJoinModal(false); window.location.href = `/books/${data.bookId}`; }
                   else setJoinError(data.message || "Invalid invite code");
                 } catch { setJoinError("Connection error. Try again."); }
                 finally { setJoinLoading(false); }
