@@ -493,7 +493,7 @@ export async function registerRoutes(
       if (!book) return res.status(404).json({ message: "Book not found" });
 
       const chapters = await storage.getChapters(bookId);
-      const safeTitle = book.title.replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, "").trim().replace(/\s+/g, "_") || "book";
+      const safeTitle = book.title.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
 
       if (format === "txt") {
         const lines: string[] = [
@@ -772,9 +772,17 @@ export async function registerRoutes(
           }
         }
 
+        // Generate a minimal 1x1 PNG placeholder if no cover exists (nodepub requires it)
+        if (!coverTmpPath) {
+          coverTmpPath = path.join(os.tmpdir(), `plotzy-cover-${bookId}-${Date.now()}.png`);
+          // Minimal valid PNG (1x1 dark pixel)
+          const pngBuf = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+          fs.writeFileSync(coverTmpPath, pngBuf);
+        }
+
         const metadata = {
           id: `plotzy-book-${bookId}`,
-          cover: coverTmpPath || "",
+          cover: coverTmpPath,
           title: book.title,
           series: "",
           sequence: 1,
@@ -808,8 +816,10 @@ export async function registerRoutes(
           doc.addSection(ch.title, `<h2>Chapter ${i + 1}: ${escapeHtml(ch.title)}</h2><div class="chapter-content">${pageHtml}</div>`);
         });
 
-        const tmpPath = path.join(os.tmpdir(), `plotzy-${bookId}-${Date.now()}.epub`);
-        await doc.compose(tmpPath);
+        const tmpDir = os.tmpdir();
+        const tmpName = `plotzy-${bookId}-${Date.now()}`;
+        await doc.writeEPUB(tmpDir, tmpName);
+        const tmpPath = path.join(tmpDir, `${tmpName}.epub`);
 
         res.setHeader("Content-Type", "application/epub+zip");
         res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.epub"`);
