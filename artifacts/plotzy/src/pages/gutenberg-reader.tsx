@@ -395,6 +395,20 @@ export default function GutenbergReader() {
 
   const isBookmarked = bookmarks.includes(leftPageIdx);
 
+  // ── Highlight search matches in text ──────────────────────────────────────
+  const highlightText = useCallback((text: string) => {
+    if (!searchQuery || searchQuery.length < 2) return text;
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escaped})`, "gi");
+    const parts = text.split(regex);
+    if (parts.length <= 1) return text;
+    return parts.map((part, i) =>
+      regex.test(part)
+        ? <mark key={i} style={{ background: "rgba(218,178,106,0.4)", color: "inherit", borderRadius: 2, padding: "0 1px" }}>{part}</mark>
+        : part
+    );
+  }, [searchQuery]);
+
   function handleCopySel() {
     if (!selBubble) return;
     navigator.clipboard.writeText(selBubble.text).then(() => {
@@ -661,7 +675,7 @@ export default function GutenbergReader() {
             >
               {leftParas.map((para, i) => (
                 <p key={i} style={{ marginBottom: "0.78em", textAlign: "justify", textIndent: "1.5em", hyphens: "auto" } as React.CSSProperties}>
-                  {para}
+                  {highlightText(para)}
                 </p>
               ))}
             </div>
@@ -709,7 +723,7 @@ export default function GutenbergReader() {
                 >
                   {rightParas.map((para, i) => (
                     <p key={i} style={{ marginBottom: "0.78em", textAlign: "justify", textIndent: "1.5em", hyphens: "auto" } as React.CSSProperties}>
-                      {para}
+                      {highlightText(para)}
                     </p>
                   ))}
                 </div>
