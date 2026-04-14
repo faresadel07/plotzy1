@@ -342,6 +342,53 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Book Comments & Ratings (public) ──────────────────────────────────────
+
+  app.get("/api/public/books/:id/comments", async (req, res) => {
+    try {
+      const bookId = Number(req.params.id);
+      const comments = await storage.getBookComments(bookId);
+      res.json(comments);
+    } catch { res.json([]); }
+  });
+
+  app.post("/api/public/books/:id/comments", async (req, res) => {
+    try {
+      const bookId = Number(req.params.id);
+      const { content, authorName } = req.body;
+      if (!content?.trim()) return res.status(400).json({ message: "Comment is required" });
+      const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
+      const name = authorName?.trim() || (req.user as any)?.displayName || "Anonymous";
+      const comment = await storage.addBookComment({ bookId, userId, authorName: name, content: content.trim() });
+      res.status(201).json(comment);
+    } catch (err) {
+      logger.error({ err }, "Failed to post comment");
+      res.status(500).json({ message: "Failed to post comment" });
+    }
+  });
+
+  app.get("/api/public/books/:id/ratings", async (req, res) => {
+    try {
+      const bookId = Number(req.params.id);
+      const stats = await storage.getBookRatingStats(bookId);
+      res.json(stats);
+    } catch { res.json({ avg: 0, count: 0 }); }
+  });
+
+  app.post("/api/public/books/:id/rate", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Login to rate" });
+      const bookId = Number(req.params.id);
+      const { rating } = req.body;
+      if (!rating || rating < 1 || rating > 5) return res.status(400).json({ message: "Rating must be 1-5" });
+      await storage.rateBook(bookId, (req.user as any).id, rating);
+      res.json({ success: true });
+    } catch (err) {
+      logger.error({ err }, "Failed to rate");
+      res.status(500).json({ message: "Failed to rate" });
+    }
+  });
+
   // ─── Generate Book Front Cover (portrait) ──────────────────────────────────
 
   app.post(api.books.generateCover.path, imageGenLimiter, tierAiLimiter, async (req, res) => {

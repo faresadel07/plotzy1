@@ -3,7 +3,7 @@ import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzl
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
-  follows, notifications, directMessages, bookLikes,
+  follows, notifications, directMessages, bookLikes, bookComments, bookRatings,
   type Book, type InsertBook,
   type Chapter, type InsertChapter,
   type Transaction, type InsertTransaction,
@@ -855,6 +855,25 @@ export class DatabaseStorage implements IStorage {
   async getBookLikesCount(bookId: number): Promise<number> {
     const [result] = await db.select({ count: count() }).from(bookLikes).where(eq(bookLikes.bookId, bookId));
     return Number(result?.count ?? 0);
+  }
+
+  async getBookComments(bookId: number): Promise<any[]> {
+    return await db.select().from(bookComments).where(eq(bookComments.bookId, bookId)).orderBy(desc(bookComments.createdAt));
+  }
+
+  async addBookComment(data: { bookId: number; userId: number | null; authorName: string; content: string }): Promise<any> {
+    const [comment] = await db.insert(bookComments).values(data).returning();
+    return comment;
+  }
+
+  async getBookRatingStats(bookId: number): Promise<{ avg: number; count: number }> {
+    const result = await db.execute(sql`SELECT COALESCE(AVG(rating), 0)::float as avg, COUNT(*)::int as count FROM book_ratings WHERE book_id = ${bookId}`);
+    const row = (result as any).rows?.[0];
+    return { avg: Number(row?.avg ?? 0), count: Number(row?.count ?? 0) };
+  }
+
+  async rateBook(bookId: number, userId: number, rating: number): Promise<void> {
+    await db.execute(sql`INSERT INTO book_ratings (book_id, user_id, rating) VALUES (${bookId}, ${userId}, ${rating}) ON CONFLICT (book_id, user_id) DO UPDATE SET rating = ${rating}`);
   }
 
   async getAuthorTotalLikes(userId: number): Promise<number> {
