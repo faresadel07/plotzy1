@@ -28,6 +28,7 @@ export const users = pgTable("users", {
   suspended: boolean("suspended").default(false),
   role: text("role").default("user").notNull(), // user | admin | moderator
   bannerUrl: text("banner_url"),
+  emailVerified: boolean("email_verified").default(false),
 });
 
 export const siteSettings = pgTable("site_settings", {
@@ -440,6 +441,16 @@ export const contentFlags = pgTable("content_flags", {
 }, (t) => [
   index("idx_content_flags_book_id").on(t.bookId),
 ]);
+
+// ── Email Verification Tokens ────────────────────────────────────────────
+
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 // ── Password Reset Tokens ────────────────────────────────────────────────
 

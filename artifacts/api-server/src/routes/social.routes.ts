@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { storage } from "../storage";
 import { logger } from "../lib/logger";
+import { sendNotificationEmail } from "../lib/email";
 
 const router = Router();
 const ALLOWED_FILE_TYPES = new Set([
@@ -93,6 +94,14 @@ router.post("/api/authors/:userId/follow", async (req, res) => {
     if (targetId === req.user.id) return res.status(400).json({ message: "Cannot follow yourself" });
 
     await storage.followUser(req.user.id, targetId);
+
+    // Email notification on new follower
+    const follower = await storage.getUserById(req.user.id);
+    const target = await storage.getUserById(targetId);
+    if (target?.email) {
+      sendNotificationEmail(target.email, `${follower?.displayName || "Someone"} started following you`, `You have a new follower on Plotzy! Check out their profile.`).catch(() => {});
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -278,13 +287,20 @@ router.post("/api/messages/:userId", async (req, res) => {
 
     // Notify the receiver
     const sender = await storage.getUserById(req.user.id);
+    const senderName = sender?.displayName || "Someone";
     await storage.createNotification({
       userId: receiverId,
       type: "message",
-      title: `New message from ${sender?.displayName || "Someone"}`,
+      title: `New message from ${senderName}`,
       body: content.trim().substring(0, 100),
       actorId: req.user.id,
     });
+
+    // Send email notification
+    const receiver = await storage.getUserById(receiverId);
+    if (receiver?.email) {
+      sendNotificationEmail(receiver.email, `New message from ${senderName}`, `${senderName} sent you a message: "${content.trim().substring(0, 200)}"`).catch(() => {});
+    }
 
     res.json(message);
   } catch (err) {

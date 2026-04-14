@@ -41,6 +41,47 @@ const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 const Messages = lazy(() => import("@/pages/messages"));
 
+function EmailVerifyHandler() {
+  const { toast } = useToast();
+  const [token] = useState(() => new URLSearchParams(window.location.search).get("verify"));
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/auth/verify-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) })
+      .then(r => r.json())
+      .then(d => { if (d.success) setStatus("success"); else setStatus("error"); })
+      .catch(() => setStatus("error"));
+  }, [token]);
+
+  if (!token) return null;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.8)", padding: 24 }}>
+      <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 400, textAlign: "center" }}>
+        {status === "loading" && <p style={{ color: "rgba(255,255,255,0.5)" }}>Verifying...</p>}
+        {status === "success" && (
+          <>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Email verified!</h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>Your account is now fully activated.</p>
+            <button onClick={() => { window.history.replaceState({}, "", "/"); window.location.reload(); }}
+              style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>Continue</button>
+          </>
+        )}
+        {status === "error" && (
+          <>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Verification failed</h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>This link may have expired. Try signing in again.</p>
+            <button onClick={() => { window.history.replaceState({}, "", "/"); window.location.reload(); }}
+              style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>Go Home</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function LazyFallback() {
   return (
     <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -192,6 +233,7 @@ function App() {
                 <ScrollToTop />
                 <OAuthCallbackHandler />
                 <ResetPasswordHandler />
+                <EmailVerifyHandler />
                 <Router />
                 <QuickDropNotepad />
                 <Toaster />

@@ -27,8 +27,8 @@ export default defineConfig({
         name: "Plotzy — Write Your Story",
         short_name: "Plotzy",
         description: "A full-featured book writing platform with AI-assisted tools",
-        theme_color: "#1a1a2e",
-        background_color: "#ffffff",
+        theme_color: "#000000",
+        background_color: "#000000",
         display: "standalone",
         start_url: "/",
         icons: [

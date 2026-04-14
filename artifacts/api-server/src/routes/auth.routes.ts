@@ -9,7 +9,7 @@ import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpFor
 import { logger } from "../lib/logger";
 import crypto from "crypto";
 import { db } from "../db";
-import { passwordResetTokens } from "../../../../lib/db/src/schema";
+import { passwordResetTokens, emailVerificationTokens } from "../../../../lib/db/src/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 const router = Router();
@@ -110,6 +110,21 @@ router.post("/api/auth/register", async (req, res) => {
       await storage.claimGuestBooks(guestIds, user.id);
       (req.session as any).guestBookIds = [];
     }
+
+    // Send verification email
+    try {
+      const verifyToken = crypto.randomBytes(32).toString("hex");
+      await db.insert(emailVerificationTokens).values({ userId: user.id, token: verifyToken, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) });
+      const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? `https://${process.env.APP_DOMAIN || "localhost"}` : "http://localhost:5173");
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: "Plotzy <onboarding@resend.dev>",
+        to: email,
+        subject: "Verify your Plotzy account",
+        html: `<div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:40px 20px;"><h2 style="color:#111;">Welcome to Plotzy!</h2><p style="color:#555;line-height:1.6;">Please verify your email to get full access:</p><a href="${frontendUrl}/?verify=${verifyToken}" style="display:inline-block;margin:24px 0;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;">Verify Email</a><p style="color:#999;font-size:13px;">This link expires in 24 hours.</p></div>`,
+      });
+    } catch (emailErr) { logger.error({ err: emailErr }, "Failed to send verification email"); }
 
     const { id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
     return res.status(201).json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
@@ -332,6 +347,22 @@ router.get("/auth/linkedin/callback", async (req, res) => {
   } catch (err) {
     logger.error({ err }, "LinkedIn callback error");
     res.redirect("/?auth=error");
+  }
+});
+
+// ─── Verify Email ───────────────────────────────────────────────────────────
+
+router.post("/api/auth/verify-email", async (req, res) => {
+  try {
+    const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
+    const [vt] = await db.select().from(emailVerificationTokens).where(and(eq(emailVerificationTokens.token, token), sql`expires_at > NOW()`));
+    if (!vt) return res.status(400).json({ message: "Invalid or expired verification link" });
+    await storage.updateUser(vt.userId, { emailVerified: true } as any);
+    await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, vt.userId));
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Email verification error");
+    res.status(500).json({ message: "Verification failed" });
   }
 });
 

@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
-import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users } from "lucide-react";
+import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
@@ -333,6 +333,7 @@ export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [title, setTitle] = useState("");
+  const [bookSearch, setBookSearch] = useState("");
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [joinLoading, setJoinLoading] = useState(false);
@@ -657,6 +658,13 @@ export default function Home() {
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">Workspace</p>
                   <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Your Projects</h2>
+                  {books && books.length > 3 && (
+                    <div className="mt-2 flex items-center gap-2 rounded-lg px-3 py-1.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", maxWidth: 240 }}>
+                      <Search className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.25)" }} />
+                      <input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder="Search your books..."
+                        className="bg-transparent border-none outline-none text-xs w-full" style={{ color: "#fff" }} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   {books && books.length > 0 && (
@@ -790,7 +798,7 @@ export default function Home() {
                   <div className="mt-2.5 px-0.5 h-7" />
                 </motion.div>
 
-                {books.map((book, bookIndex) => {
+                {books.filter(b => !bookSearch.trim() || b.title.toLowerCase().includes(bookSearch.toLowerCase())).map((book, bookIndex) => {
                       const langInfo = getBookLangInfo(book.language || "en");
                       const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];
                       const titleLen = book.title.length;
