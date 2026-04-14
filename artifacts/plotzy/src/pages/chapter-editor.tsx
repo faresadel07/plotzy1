@@ -13,7 +13,7 @@ import { RichChapterEditor } from "@/components/RichChapterEditor";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search } from "lucide-react";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { PrintPreview } from "@/components/chapter-editor/PrintPreview";
 import { DrawingCanvas } from "@/components/chapter-editor/DrawingCanvas";
@@ -322,6 +322,9 @@ export default function ChapterEditor() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveInFlightRef = useRef(false);
   const [showAI, setShowAI] = useState(false);
+  const [showEditorSearch, setShowEditorSearch] = useState(false);
+  const [editorSearchQuery, setEditorSearchQuery] = useState("");
+  const [editorSearchCount, setEditorSearchCount] = useState(0);
   const [showStoryBible, setShowStoryBible] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showPageStylePicker, setShowPageStylePicker] = useState(false);
@@ -570,6 +573,85 @@ export default function ChapterEditor() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isPrintView, maxSpread]);
+
+  /* ── Ctrl+F search in editor ── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        setShowEditorSearch(true);
+      }
+      if (e.key === "Escape" && showEditorSearch) {
+        setShowEditorSearch(false);
+        setEditorSearchQuery("");
+        setEditorSearchCount(0);
+        // Remove highlights
+        document.querySelectorAll("mark[data-search-highlight]").forEach(el => {
+          const parent = el.parentNode;
+          if (parent) { parent.replaceChild(document.createTextNode(el.textContent || ""), el); parent.normalize(); }
+        });
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showEditorSearch]);
+
+  /* ── Apply search highlights ── */
+  useEffect(() => {
+    // Clear old highlights
+    document.querySelectorAll("mark[data-search-highlight]").forEach(el => {
+      const parent = el.parentNode;
+      if (parent) { parent.replaceChild(document.createTextNode(el.textContent || ""), el); parent.normalize(); }
+    });
+
+    if (!editorSearchQuery || editorSearchQuery.length < 2) { setEditorSearchCount(0); return; }
+
+    // Find and highlight in editor content
+    const editorEl = document.querySelector(".ProseMirror");
+    if (!editorEl) return;
+
+    const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
+    const textNodes: Text[] = [];
+    let node;
+    while ((node = walker.nextNode())) textNodes.push(node as Text);
+
+    const query = editorSearchQuery.toLowerCase();
+    let count = 0;
+
+    textNodes.forEach(textNode => {
+      const text = textNode.textContent || "";
+      const lower = text.toLowerCase();
+      let idx = lower.indexOf(query);
+      if (idx === -1) return;
+
+      const frag = document.createDocumentFragment();
+      let lastIdx = 0;
+      while (idx !== -1) {
+        frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
+        const mark = document.createElement("mark");
+        mark.setAttribute("data-search-highlight", "true");
+        mark.style.background = "rgba(250,204,21,0.4)";
+        mark.style.color = "inherit";
+        mark.style.borderRadius = "2px";
+        mark.style.padding = "0 1px";
+        mark.textContent = text.slice(idx, idx + query.length);
+        frag.appendChild(mark);
+        count++;
+        lastIdx = idx + query.length;
+        idx = lower.indexOf(query, lastIdx);
+      }
+      frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+      textNode.parentNode?.replaceChild(frag, textNode);
+    });
+
+    setEditorSearchCount(count);
+
+    // Scroll to first highlight
+    if (count > 0) {
+      const first = document.querySelector("mark[data-search-highlight]");
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [editorSearchQuery]);
 
   useEffect(() => {
     if (book?.bookPreferences) setPrefs(book.bookPreferences as BookPreferences);
@@ -1427,8 +1509,22 @@ export default function ChapterEditor() {
             </Button>
           </div>
 
-          {/* ── Right: AI + Save ── */}
+          {/* ── Right: Search + AI + Save ── */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Search toggle */}
+            <button
+              className="h-8 px-2.5 rounded-lg text-xs flex items-center gap-1 transition-all"
+              style={{ background: showEditorSearch ? "rgba(250,204,21,0.15)" : "transparent", color: showEditorSearch ? "#fbbf24" : "rgba(255,255,255,0.4)", border: showEditorSearch ? "1px solid rgba(250,204,21,0.3)" : "1px solid transparent" }}
+              onClick={() => {
+                if (showEditorSearch) {
+                  setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0);
+                  document.querySelectorAll("mark[data-search-highlight]").forEach(el => { const p = el.parentNode; if (p) { p.replaceChild(document.createTextNode(el.textContent || ""), el); p.normalize(); } });
+                } else { setShowEditorSearch(true); }
+              }}
+              title="Search (Ctrl+F)"
+            >
+              <Search className="w-3.5 h-3.5" />
+            </button>
             <button
               className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 hidden sm:flex items-center transition-all hover:opacity-90 hover:-translate-y-px active:translate-y-0"
               style={{ background: "linear-gradient(135deg, #d4a017 0%, #f5c518 50%, #e8a020 100%)", color: "#5a3a00", boxShadow: "0 2px 8px rgba(212,160,23,0.45)" }}
@@ -1487,6 +1583,29 @@ export default function ChapterEditor() {
             handleSavePrefs(np);
           }}
         />
+      )}
+
+      {/* ── Editor Search Bar ── */}
+      {showEditorSearch && (
+        <div className="flex items-center gap-2 px-4 py-2 shrink-0 z-30" style={{ background: "rgba(0,0,0,0.9)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <Search className="w-3.5 h-3.5 shrink-0" style={{ color: "rgba(255,255,255,0.3)" }} />
+          <input
+            autoFocus value={editorSearchQuery}
+            onChange={e => setEditorSearchQuery(e.target.value)}
+            placeholder={ar ? "ابحث في النص..." : "Search in text..."}
+            className="flex-1 bg-transparent border-none outline-none text-sm"
+            style={{ color: "#fff" }}
+            onKeyDown={e => { if (e.key === "Escape") { setShowEditorSearch(false); setEditorSearchQuery(""); } }}
+          />
+          {editorSearchCount > 0 && (
+            <span className="text-xs shrink-0" style={{ color: "rgba(250,204,21,0.8)" }}>{editorSearchCount} {ar ? "نتيجة" : "found"}</span>
+          )}
+          {editorSearchQuery && editorSearchCount === 0 && (
+            <span className="text-xs shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "لا نتائج" : "No results"}</span>
+          )}
+          <button onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); document.querySelectorAll("mark[data-search-highlight]").forEach(el => { const p = el.parentNode; if (p) { p.replaceChild(document.createTextNode(el.textContent || ""), el); p.normalize(); } }); }}
+            style={{ color: "rgba(255,255,255,0.3)" }}><X className="w-3.5 h-3.5" /></button>
+        </div>
       )}
 
       {/* Body: editor + reference panel side by side */}

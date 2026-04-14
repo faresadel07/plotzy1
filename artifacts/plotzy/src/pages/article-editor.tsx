@@ -25,7 +25,7 @@ import {
   Bold, Italic, Underline as UIcon, Strikethrough,
   List, ListOrdered, Quote, Code, Minus,
   Link as LinkIcon, Undo2, Redo2, ChevronDown,
-  Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical,
+  Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical, Search,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
@@ -424,6 +424,9 @@ export default function ArticleEditor() {
   const [aiLoading, setAiLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showAI, setShowAI]           = useState(false);
+  const [showArticleSearch, setShowArticleSearch] = useState(false);
+  const [articleSearchQuery, setArticleSearchQuery] = useState("");
+  const [articleSearchCount, setArticleSearchCount] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dragOver, setDragOver]   = useState(false);
@@ -614,6 +617,44 @@ export default function ArticleEditor() {
   }, [updateArticle, toast]);
 
   // Auto-save disabled — users save manually
+
+  /* ── Ctrl+F search ── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") { e.preventDefault(); setShowArticleSearch(true); }
+      if (e.key === "Escape" && showArticleSearch) {
+        setShowArticleSearch(false); setArticleSearchQuery(""); setArticleSearchCount(0);
+        document.querySelectorAll("mark[data-search-highlight]").forEach(el => { const p = el.parentNode; if (p) { p.replaceChild(document.createTextNode(el.textContent || ""), el); p.normalize(); } });
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showArticleSearch]);
+
+  useEffect(() => {
+    document.querySelectorAll("mark[data-search-highlight]").forEach(el => { const p = el.parentNode; if (p) { p.replaceChild(document.createTextNode(el.textContent || ""), el); p.normalize(); } });
+    if (!articleSearchQuery || articleSearchQuery.length < 2) { setArticleSearchCount(0); return; }
+    const editorEl = document.querySelector(".ProseMirror");
+    if (!editorEl) return;
+    const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = []; let n; while ((n = walker.nextNode())) nodes.push(n as Text);
+    const q = articleSearchQuery.toLowerCase(); let count = 0;
+    nodes.forEach(node => {
+      const text = node.textContent || ""; const lower = text.toLowerCase(); let idx = lower.indexOf(q); if (idx === -1) return;
+      const frag = document.createDocumentFragment(); let last = 0;
+      while (idx !== -1) {
+        frag.appendChild(document.createTextNode(text.slice(last, idx)));
+        const mark = document.createElement("mark"); mark.setAttribute("data-search-highlight", "true");
+        mark.style.cssText = "background:rgba(250,204,21,0.4);color:inherit;border-radius:2px;padding:0 1px";
+        mark.textContent = text.slice(idx, idx + q.length); frag.appendChild(mark); count++;
+        last = idx + q.length; idx = lower.indexOf(q, last);
+      }
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode?.replaceChild(frag, node);
+    });
+    setArticleSearchCount(count);
+    if (count > 0) document.querySelector("mark[data-search-highlight]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [articleSearchQuery]);
 
   /* ── keep floatingImagesRef in sync ── */
   useEffect(() => { floatingImagesRef.current = floatingImages; }, [floatingImages]);
@@ -1156,8 +1197,13 @@ export default function ArticleEditor() {
             <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
           </div>
 
-          {/* Far right: AI Writing Assistant */}
+          {/* Far right: Search + AI Writing Assistant */}
           <div style={{marginLeft:"auto",flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
+            <button
+              onMouseDown={e=>{e.preventDefault(); setShowArticleSearch(s => !s); if(showArticleSearch){setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}}}
+              title="Search (Ctrl+F)"
+              style={{display:"flex",alignItems:"center",padding:"5px 8px",borderRadius:7,background:showArticleSearch?"rgba(250,204,21,0.15)":"transparent",border:showArticleSearch?"1px solid rgba(250,204,21,0.3)":"1px solid transparent",color:showArticleSearch?"#fbbf24":"rgba(255,255,255,0.4)",cursor:"pointer"}}
+            ><Search size={14}/></button>
             <button
               onMouseDown={e=>{e.preventDefault();setShowAI(true);}}
               style={{
@@ -1430,6 +1476,19 @@ export default function ArticleEditor() {
           <p style={{fontFamily:SF,fontSize:11,color:TD,marginBottom:28,opacity:0.6}}>
             {title.length > 0 ? `${title.length} chars` : "Add a compelling title"}
           </p>
+
+          {/* Search bar */}
+          {showArticleSearch && (
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"rgba(0,0,0,0.6)",borderRadius:10,marginBottom:12,border:"1px solid rgba(255,255,255,0.08)"}}>
+              <Search size={14} style={{color:"rgba(255,255,255,0.3)",flexShrink:0}}/>
+              <input autoFocus value={articleSearchQuery} onChange={e=>setArticleSearchQuery(e.target.value)}
+                placeholder="Search in article..." style={{flex:1,background:"transparent",border:"none",outline:"none",color:"#fff",fontSize:13,fontFamily:SF}}
+                onKeyDown={e=>{if(e.key==="Escape"){setShowArticleSearch(false);setArticleSearchQuery("");}}}/>
+              {articleSearchCount>0&&<span style={{fontSize:11,color:"rgba(250,204,21,0.8)",flexShrink:0}}>{articleSearchCount} found</span>}
+              {articleSearchQuery&&articleSearchCount===0&&<span style={{fontSize:11,color:"rgba(255,255,255,0.3)",flexShrink:0}}>No results</span>}
+              <button onClick={()=>{setShowArticleSearch(false);setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}} style={{color:"rgba(255,255,255,0.3)"}}><X size={14}/></button>
+            </div>
+          )}
 
           {/* TipTap editor with floating image overlay */}
           <div ref={editorContainerRef} style={{ position: "relative" }}>
