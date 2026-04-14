@@ -210,7 +210,7 @@ function CommentsSection({ bookId }: { bookId: number }) {
       <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
         <div style={{ background: "#f9f7f4", border: "1px solid #e4ddd4", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
           {!user && <Input placeholder="Your name (optional)" value={guestName} onChange={e => setGuestName(e.target.value)} style={{ borderColor: "#ddd5c8", background: "#fff", fontFamily: "Georgia, serif", fontSize: 14 }} maxLength={50} />}
-          <Textarea placeholder="Share your thoughts…" value={content} onChange={e => setContent(e.target.value)} style={{ borderColor: "#ddd5c8", background: "#fff", fontFamily: "Georgia, serif", fontSize: 14, minHeight: 88, resize: "none" }} maxLength={1000} />
+          <Textarea placeholder="Share your thoughts…" value={content} onChange={e => setContent(e.target.value)} style={{ borderColor: "rgba(255,255,255,0.1)", background: "#111", color: "#fff", fontFamily: "Georgia, serif", fontSize: 14, minHeight: 88, resize: "none" }} maxLength={1000} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 11, color: "#aaa" }}>{content.length}/1000</span>
             <button type="submit" disabled={!content.trim() || addComment.isPending}
