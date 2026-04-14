@@ -1362,7 +1362,7 @@ export default function ChapterEditor() {
       {/* Editor Header */}
       <header
         className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
-        style={{ backgroundColor: isFocusMode ? undefined : "#1a1a1a" }}
+        style={{ backgroundColor: isFocusMode ? undefined : "#2a2a2a" }}
       >
         <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between relative z-10 gap-2">
 
@@ -1546,9 +1546,10 @@ export default function ChapterEditor() {
                 justSaved
                   ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 cursor-default"
                   : updateChapter.isPending
-                    ? "bg-primary/80 text-white cursor-wait"
-                    : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-px"
+                    ? "cursor-wait"
+                    : "hover:-translate-y-px"
               }`}
+              style={{ background: justSaved ? undefined : "#fff", color: justSaved ? "#fff" : "#000" }}
               onClick={updateChapter.isPending || justSaved ? undefined : handleSave}
               disabled={updateChapter.isPending}
               data-testid="button-save"
