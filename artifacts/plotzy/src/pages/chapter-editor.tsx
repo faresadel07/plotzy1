@@ -1362,7 +1362,7 @@ export default function ChapterEditor() {
       {/* Editor Header */}
       <header
         className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
-        style={{ backgroundColor: isFocusMode ? undefined : resolvedBgColor ? `${resolvedBgColor}ee` : "rgba(20,20,20,0.95)" }}
+        style={{ backgroundColor: isFocusMode ? undefined : "#1a1a1a" }}
       >
         <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between relative z-10 gap-2">
 
