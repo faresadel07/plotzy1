@@ -760,7 +760,22 @@ export default function ReadBook() {
                       This chapter has no content yet.
                     </p>
                   )}
+
+                  {/* Page footer with chapter number */}
+                  <div style={{ marginTop: 40, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>{book?.authorName || book?.title}</span>
+                    <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>Page {i + 1} of {sortedChapters.length}</span>
+                  </div>
                 </div>
+
+                {/* Page separator between chapters */}
+                {i < sortedChapters.length - 1 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "32px auto", maxWidth: 200 }}>
+                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                    <span style={{ fontSize: 16, color: "rgba(255,255,255,0.15)" }}>◆</span>
+                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                  </div>
+                )}
               );
             })}
 
