@@ -585,40 +585,63 @@ export default function ChapterEditor() {
         setShowEditorSearch(false);
         setEditorSearchQuery("");
         setEditorSearchCount(0);
-        // Remove highlights
-        document.querySelectorAll("mark[data-search-highlight]").forEach(el => {
-          const parent = el.parentNode;
-          if (parent) { parent.replaceChild(document.createTextNode(el.textContent || ""), el); parent.normalize(); }
-        });
+        if ((CSS as any).highlights) (CSS as any).highlights.clear();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [showEditorSearch]);
 
-  /* ── Apply search highlights using CSS Custom Highlight API or fallback ── */
+  /* ── Search highlights using CSS Custom Highlight API ── */
   useEffect(() => {
+    // Clear previous highlights
+    if ((CSS as any).highlights) (CSS as any).highlights.clear();
+
     if (!editorSearchQuery || editorSearchQuery.length < 2 || !showEditorSearch) { setEditorSearchCount(0); return; }
 
     const editorEl = document.querySelector(".ProseMirror");
     if (!editorEl) return;
 
-    // Count matches only (don't modify DOM — TipTap owns it)
-    const text = editorEl.textContent || "";
-    const lower = text.toLowerCase();
     const query = editorSearchQuery.toLowerCase();
     const isWordChar = (c: string) => /\w/.test(c);
-    let count = 0;
-    let idx = lower.indexOf(query);
-    while (idx !== -1) {
-      const cb = idx > 0 ? lower[idx - 1] : " ";
-      const ca = idx + query.length < lower.length ? lower[idx + query.length] : " ";
-      if (!isWordChar(cb) && !isWordChar(ca)) count++;
-      idx = lower.indexOf(query, idx + 1);
+    const ranges: Range[] = [];
+
+    // Walk all text nodes in editor
+    const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
+    let textNode;
+    while ((textNode = walker.nextNode())) {
+      const text = textNode.textContent || "";
+      const lower = text.toLowerCase();
+      let idx = lower.indexOf(query);
+      while (idx !== -1) {
+        const cb = idx > 0 ? lower[idx - 1] : " ";
+        const ca = idx + query.length < lower.length ? lower[idx + query.length] : " ";
+        if (!isWordChar(cb) && !isWordChar(ca)) {
+          const range = new Range();
+          range.setStart(textNode, idx);
+          range.setEnd(textNode, idx + query.length);
+          ranges.push(range);
+        }
+        idx = lower.indexOf(query, idx + 1);
+      }
     }
 
-    setEditorSearchCount(count);
-  }, [editorSearchQuery, showEditorSearch]);
+    setEditorSearchCount(ranges.length);
+
+    // Apply CSS Custom Highlight
+    if (ranges.length > 0 && (CSS as any).highlights) {
+      const highlight = new (window as any).Highlight(...ranges);
+      (CSS as any).highlights.set("editor-search", highlight);
+    }
+
+    // Scroll to first match
+    if (ranges.length > 0) {
+      const rect = ranges[0].getBoundingClientRect();
+      if (rect.top < 0 || rect.top > window.innerHeight) {
+        ranges[0].startContainer.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [editorSearchQuery, showEditorSearch, richPages]);
 
   useEffect(() => {
     if (book?.bookPreferences) setPrefs(book.bookPreferences as BookPreferences);
@@ -1485,7 +1508,7 @@ export default function ChapterEditor() {
               onClick={() => {
                 if (showEditorSearch) {
                   setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0);
-                  document.querySelectorAll("mark[data-search-highlight]").forEach(el => { const p = el.parentNode; if (p) { p.replaceChild(document.createTextNode(el.textContent || ""), el); p.normalize(); } });
+                  if ((CSS as any).highlights) (CSS as any).highlights.clear();
                 } else { setShowEditorSearch(true); }
               }}
               title="Search (Ctrl+F)"
@@ -1553,6 +1576,9 @@ export default function ChapterEditor() {
         />
       )}
 
+      {/* CSS for search highlights */}
+      <style>{`::highlight(editor-search) { background: rgba(250, 204, 21, 0.4); color: inherit; }`}</style>
+
       {/* ── Editor Search Bar ── */}
       {showEditorSearch && (
         <div className="flex items-center gap-2 px-4 py-2 shrink-0 z-30" style={{ background: "rgba(0,0,0,0.9)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1583,7 +1609,7 @@ export default function ChapterEditor() {
           {editorSearchQuery && editorSearchCount === 0 && (
             <span className="text-xs shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "لا نتائج" : "No results"}</span>
           )}
-          <button onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); }}
+          <button onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); if ((CSS as any).highlights) (CSS as any).highlights.clear(); }}
             style={{ color: "rgba(255,255,255,0.3)" }}><X className="w-3.5 h-3.5" /></button>
         </div>
       )}
