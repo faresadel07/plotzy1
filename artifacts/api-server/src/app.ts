@@ -1,4 +1,24 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, Response, NextFunction, type RequestHandler } from "express";
+
+// Wrap async route handlers to catch errors and pass to Express error handler
+// This prevents unhandled promise rejections from crashing the server
+function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>): RequestHandler {
+  return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+// Monkey-patch Express app methods to auto-wrap async handlers
+const origGet = express.application.get;
+const origPost = express.application.post;
+const origPut = express.application.put;
+const origPatch = express.application.patch;
+const origDelete = express.application.delete;
+function wrapArgs(args: any[]) {
+  return args.map(a => typeof a === "function" && a.constructor.name === "AsyncFunction" ? asyncHandler(a) : a);
+}
+express.application.get = function (...args: any[]) { return origGet.apply(this, wrapArgs(args)); } as any;
+express.application.post = function (...args: any[]) { return origPost.apply(this, wrapArgs(args)); } as any;
+express.application.put = function (...args: any[]) { return origPut.apply(this, wrapArgs(args)); } as any;
+express.application.patch = function (...args: any[]) { return origPatch.apply(this, wrapArgs(args)); } as any;
+express.application.delete = function (...args: any[]) { return origDelete.apply(this, wrapArgs(args)); } as any;
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import passport from "passport";
