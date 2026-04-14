@@ -722,7 +722,8 @@ export default function ReadBook() {
                 : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
 
               return (
-                <div key={ch.id} id={`chapter-${ch.id}`} style={{
+                <div key={ch.id}>
+                <div id={`chapter-${ch.id}`} style={{
                   background: "#faf7f2",
                   border: "1px solid rgba(0,0,0,0.08)",
                   borderRadius: 4,
@@ -776,6 +777,7 @@ export default function ReadBook() {
                     <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
                   </div>
                 )}
+                </div>
               );
             })}
 
