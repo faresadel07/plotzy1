@@ -1363,7 +1363,7 @@ export default function ChapterEditor() {
               <span className="hidden sm:block">{t("backToBook")}</span>
             </Link>
             <span className="text-[10px] text-muted-foreground/40 hidden sm:block whitespace-nowrap">
-              {totalWords} {ar ? "كلمة" : "w"}
+              {totalWords} {ar ? "كلمة" : "w"} · {richPages.length} {ar ? "ص" : "pg"}
             </span>
           </div>
 
