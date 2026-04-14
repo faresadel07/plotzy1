@@ -596,70 +596,29 @@ export default function ChapterEditor() {
     return () => window.removeEventListener("keydown", handler);
   }, [showEditorSearch]);
 
-  /* ── Apply search highlights ── */
+  /* ── Apply search highlights using CSS Custom Highlight API or fallback ── */
   useEffect(() => {
-    // Clear old highlights
-    document.querySelectorAll("mark[data-search-highlight]").forEach(el => {
-      const parent = el.parentNode;
-      if (parent) { parent.replaceChild(document.createTextNode(el.textContent || ""), el); parent.normalize(); }
-    });
+    if (!editorSearchQuery || editorSearchQuery.length < 2 || !showEditorSearch) { setEditorSearchCount(0); return; }
 
-    if (!editorSearchQuery || editorSearchQuery.length < 2) { setEditorSearchCount(0); return; }
-
-    // Find and highlight in editor content
     const editorEl = document.querySelector(".ProseMirror");
     if (!editorEl) return;
 
-    const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
-    const textNodes: Text[] = [];
-    let node;
-    while ((node = walker.nextNode())) textNodes.push(node as Text);
-
+    // Count matches only (don't modify DOM — TipTap owns it)
+    const text = editorEl.textContent || "";
+    const lower = text.toLowerCase();
     const query = editorSearchQuery.toLowerCase();
     const isWordChar = (c: string) => /\w/.test(c);
     let count = 0;
-
-    textNodes.forEach(textNode => {
-      const text = textNode.textContent || "";
-      const lower = text.toLowerCase();
-      let idx = lower.indexOf(query);
-      if (idx === -1) return;
-
-      const frag = document.createDocumentFragment();
-      let lastIdx = 0;
-      while (idx !== -1) {
-        // Word boundary check: only highlight if match is a whole word
-        const charBefore = idx > 0 ? lower[idx - 1] : " ";
-        const charAfter = idx + query.length < lower.length ? lower[idx + query.length] : " ";
-        const isWholeWord = !isWordChar(charBefore) && !isWordChar(charAfter);
-
-        if (isWholeWord) {
-          frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
-          const mark = document.createElement("mark");
-          mark.setAttribute("data-search-highlight", "true");
-          mark.style.background = "rgba(250,204,21,0.4)";
-          mark.style.color = "inherit";
-          mark.style.borderRadius = "2px";
-          mark.style.padding = "0 1px";
-          mark.textContent = text.slice(idx, idx + query.length);
-          frag.appendChild(mark);
-          count++;
-          lastIdx = idx + query.length;
-        }
-        idx = lower.indexOf(query, idx + 1);
-      }
-      frag.appendChild(document.createTextNode(text.slice(lastIdx)));
-      textNode.parentNode?.replaceChild(frag, textNode);
-    });
+    let idx = lower.indexOf(query);
+    while (idx !== -1) {
+      const cb = idx > 0 ? lower[idx - 1] : " ";
+      const ca = idx + query.length < lower.length ? lower[idx + query.length] : " ";
+      if (!isWordChar(cb) && !isWordChar(ca)) count++;
+      idx = lower.indexOf(query, idx + 1);
+    }
 
     setEditorSearchCount(count);
-
-    // Scroll to first highlight
-    if (count > 0) {
-      const first = document.querySelector("mark[data-search-highlight]");
-      first?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [editorSearchQuery]);
+  }, [editorSearchQuery, showEditorSearch]);
 
   useEffect(() => {
     if (book?.bookPreferences) setPrefs(book.bookPreferences as BookPreferences);
@@ -1604,15 +1563,27 @@ export default function ChapterEditor() {
             placeholder={ar ? "ابحث في النص..." : "Search in text..."}
             className="flex-1 bg-transparent border-none outline-none text-sm"
             style={{ color: "#fff" }}
-            onKeyDown={e => { if (e.key === "Escape") { setShowEditorSearch(false); setEditorSearchQuery(""); } }}
+            onKeyDown={e => {
+              if (e.key === "Escape") { setShowEditorSearch(false); setEditorSearchQuery(""); }
+              if (e.key === "Enter" && editorSearchQuery.length >= 2) {
+                // Use browser native find to jump to and highlight
+                (window as any).find(editorSearchQuery, false, false, true);
+              }
+            }}
           />
           {editorSearchCount > 0 && (
-            <span className="text-xs shrink-0" style={{ color: "rgba(250,204,21,0.8)" }}>{editorSearchCount} {ar ? "نتيجة" : "found"}</span>
+            <>
+              <span className="text-xs shrink-0" style={{ color: "rgba(250,204,21,0.8)" }}>{editorSearchCount} {ar ? "نتيجة" : "found"}</span>
+              <button onClick={() => (window as any).find(editorSearchQuery, false, false, true)}
+                className="text-xs px-2 py-0.5 rounded" style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)" }}>
+                {ar ? "التالي" : "Next"} ↓
+              </button>
+            </>
           )}
           {editorSearchQuery && editorSearchCount === 0 && (
             <span className="text-xs shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "لا نتائج" : "No results"}</span>
           )}
-          <button onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); document.querySelectorAll("mark[data-search-highlight]").forEach(el => { const p = el.parentNode; if (p) { p.replaceChild(document.createTextNode(el.textContent || ""), el); p.normalize(); } }); }}
+          <button onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); }}
             style={{ color: "rgba(255,255,255,0.3)" }}><X className="w-3.5 h-3.5" /></button>
         </div>
       )}
