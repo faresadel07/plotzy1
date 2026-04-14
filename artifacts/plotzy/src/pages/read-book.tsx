@@ -519,6 +519,7 @@ export default function ReadBook() {
   const [totalSpreads, setTotalSpreads] = useState(1);
   const [showToc, setShowToc] = useState(false);
   const [viewCounted, setViewCounted] = useState(false);
+  const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [showPageNav, setShowPageNav] = useState(false);
   const [jumpInput, setJumpInput] = useState("");
   const [jumpEditing, setJumpEditing] = useState(false);
@@ -683,10 +684,10 @@ export default function ReadBook() {
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#444", textTransform: "uppercase", marginBottom: 10, fontFamily: "Georgia, serif" }}>Chapters</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {sortedChapters.map((ch, i) => (
-                    <button key={ch.id} onClick={() => setShowToc(false)}
-                      style={{ textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 10, border: "none", background: "transparent", color: "#555", cursor: "pointer", fontFamily: "Georgia, serif" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "#ccc")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "#555")}
+                    <button key={ch.id} onClick={() => { setCurrentChapterIdx(i); setShowToc(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      style={{ textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 10, border: "none", background: currentChapterIdx === i ? "rgba(255,255,255,0.08)" : "transparent", color: currentChapterIdx === i ? "#fff" : "#555", cursor: "pointer", fontFamily: "Georgia, serif" }}
+                      onMouseEnter={e => { if (currentChapterIdx !== i) e.currentTarget.style.color = "#ccc"; }}
+                      onMouseLeave={e => { if (currentChapterIdx !== i) e.currentTarget.style.color = "#555"; }}
                     >
                       <span style={{ fontSize: 10, opacity: 0.35, width: 18, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
                       <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.title}</span>
@@ -709,77 +710,106 @@ export default function ReadBook() {
           </div>
         ) : (
           <>
-            {/* Chapters rendered as scrollable pages */}
-            {sortedChapters.map((ch, i) => {
+            {/* Single chapter view with pagination */}
+            {(() => {
+              const ch = sortedChapters[currentChapterIdx];
+              if (!ch) return null;
               const html = parseContentAsHtml(ch?.content);
               const plainText = parseContent(ch?.content);
               const isRTL = isArabicText(plainText);
               const titleIsNumber = ch?.title && /^\d+$/.test(ch.title.trim());
-              const chapterLabel = titleIsNumber ? `Chapter ${ch.title}` : `Chapter ${i + 1}`;
+              const chapterLabel = titleIsNumber ? `Chapter ${ch.title}` : `Chapter ${currentChapterIdx + 1}`;
               const showTitle = ch?.title && !titleIsNumber;
               const fontFam = isRTL
                 ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
                 : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
 
               return (
-                <div key={ch.id}>
-                <div id={`chapter-${ch.id}`} style={{
-                  background: "#faf7f2",
-                  border: "1px solid rgba(0,0,0,0.08)",
-                  borderRadius: 4,
-                  padding: "40px clamp(16px, 5vw, 56px) 32px",
-                  marginTop: i === 0 ? 32 : 24,
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
-                  direction: isRTL ? "rtl" : "ltr",
-                }}>
-                  {/* Chapter header */}
-                  <div style={{ textAlign: "center", marginBottom: 36 }}>
-                    <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
-                      {chapterLabel}
-                    </p>
-                    {showTitle && (
-                      <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.3, margin: "0 0 16px" }}>
-                        {ch.title}
-                      </h2>
+                <div>
+                  <div id={`chapter-${ch.id}`} style={{
+                    background: "#faf7f2",
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    borderRadius: 4,
+                    padding: "40px clamp(16px, 5vw, 56px) 32px",
+                    marginTop: 32,
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+                    direction: isRTL ? "rtl" : "ltr",
+                    minHeight: "60vh",
+                  }}>
+                    {/* Chapter header */}
+                    <div style={{ textAlign: "center", marginBottom: 36 }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
+                        {chapterLabel}
+                      </p>
+                      {showTitle && (
+                        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.3, margin: "0 0 16px" }}>
+                          {ch.title}
+                        </h2>
+                      )}
+                      <div style={{ width: 36, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+                    </div>
+
+                    {/* Chapter content */}
+                    {html ? (
+                      <div
+                        className="book-reader-content"
+                        style={{
+                          fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
+                          color: "#1c1410", textAlign: "justify",
+                          letterSpacing: isRTL ? "0" : "0.01em",
+                        }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
+                      />
+                    ) : (
+                      <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
+                        This chapter has no content yet.
+                      </p>
                     )}
-                    <div style={{ width: 36, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+
+                    {/* Page footer */}
+                    <div style={{ marginTop: 40, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>{book?.authorName || book?.title}</span>
+                      <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>
+                        {currentChapterIdx + 1} / {sortedChapters.length}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Chapter content */}
-                  {html ? (
-                    <div
-                      className="book-reader-content"
+                  {/* Navigation buttons */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "24px 0 40px", gap: 12 }}>
+                    <button
+                      disabled={currentChapterIdx === 0}
+                      onClick={() => { setCurrentChapterIdx(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                       style={{
-                        fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
-                        color: "#1c1410", textAlign: "justify",
-                        letterSpacing: isRTL ? "0" : "0.01em",
-                      }}
-                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
-                    />
-                  ) : (
-                    <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
-                      This chapter has no content yet.
-                    </p>
-                  )}
+                        display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10,
+                        background: currentChapterIdx === 0 ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.08)", color: currentChapterIdx === 0 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.6)",
+                        fontSize: 13, fontWeight: 500, cursor: currentChapterIdx === 0 ? "default" : "pointer",
+                        fontFamily: "Georgia, serif",
+                      }}>
+                      <ChevronLeft style={{ width: 16, height: 16 }} /> Previous
+                    </button>
 
-                  {/* Page footer with chapter number */}
-                  <div style={{ marginTop: 40, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>{book?.authorName || book?.title}</span>
-                    <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>Page {i + 1} of {sortedChapters.length}</span>
-                  </div>
-                </div>
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "Georgia, serif" }}>
+                      Chapter {currentChapterIdx + 1} of {sortedChapters.length}
+                    </span>
 
-                {/* Page separator between chapters */}
-                {i < sortedChapters.length - 1 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "32px auto", maxWidth: 200 }}>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-                    <span style={{ fontSize: 16, color: "rgba(255,255,255,0.15)" }}>◆</span>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                    <button
+                      disabled={currentChapterIdx >= sortedChapters.length - 1}
+                      onClick={() => { setCurrentChapterIdx(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10,
+                        background: currentChapterIdx >= sortedChapters.length - 1 ? "rgba(255,255,255,0.03)" : "#fff",
+                        border: "none", color: currentChapterIdx >= sortedChapters.length - 1 ? "rgba(255,255,255,0.15)" : "#000",
+                        fontSize: 13, fontWeight: 600, cursor: currentChapterIdx >= sortedChapters.length - 1 ? "default" : "pointer",
+                        fontFamily: "Georgia, serif",
+                      }}>
+                      Next <ChevronRight style={{ width: 16, height: 16 }} />
+                    </button>
                   </div>
-                )}
                 </div>
               );
-            })}
+            })()}
 
             {/* Rating & Comments */}
             <div style={{ maxWidth: 600, margin: "40px auto", paddingBottom: 64 }}>
