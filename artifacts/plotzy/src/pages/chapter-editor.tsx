@@ -616,6 +616,7 @@ export default function ChapterEditor() {
     while ((node = walker.nextNode())) textNodes.push(node as Text);
 
     const query = editorSearchQuery.toLowerCase();
+    const isWordChar = (c: string) => /\w/.test(c);
     let count = 0;
 
     textNodes.forEach(textNode => {
@@ -627,18 +628,25 @@ export default function ChapterEditor() {
       const frag = document.createDocumentFragment();
       let lastIdx = 0;
       while (idx !== -1) {
-        frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
-        const mark = document.createElement("mark");
-        mark.setAttribute("data-search-highlight", "true");
-        mark.style.background = "rgba(250,204,21,0.4)";
-        mark.style.color = "inherit";
-        mark.style.borderRadius = "2px";
-        mark.style.padding = "0 1px";
-        mark.textContent = text.slice(idx, idx + query.length);
-        frag.appendChild(mark);
-        count++;
-        lastIdx = idx + query.length;
-        idx = lower.indexOf(query, lastIdx);
+        // Word boundary check: only highlight if match is a whole word
+        const charBefore = idx > 0 ? lower[idx - 1] : " ";
+        const charAfter = idx + query.length < lower.length ? lower[idx + query.length] : " ";
+        const isWholeWord = !isWordChar(charBefore) && !isWordChar(charAfter);
+
+        if (isWholeWord) {
+          frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
+          const mark = document.createElement("mark");
+          mark.setAttribute("data-search-highlight", "true");
+          mark.style.background = "rgba(250,204,21,0.4)";
+          mark.style.color = "inherit";
+          mark.style.borderRadius = "2px";
+          mark.style.padding = "0 1px";
+          mark.textContent = text.slice(idx, idx + query.length);
+          frag.appendChild(mark);
+          count++;
+          lastIdx = idx + query.length;
+        }
+        idx = lower.indexOf(query, idx + 1);
       }
       frag.appendChild(document.createTextNode(text.slice(lastIdx)));
       textNode.parentNode?.replaceChild(frag, textNode);

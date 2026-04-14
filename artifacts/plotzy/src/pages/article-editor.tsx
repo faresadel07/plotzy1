@@ -638,16 +638,20 @@ export default function ArticleEditor() {
     if (!editorEl) return;
     const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
     const nodes: Text[] = []; let n; while ((n = walker.nextNode())) nodes.push(n as Text);
-    const q = articleSearchQuery.toLowerCase(); let count = 0;
+    const q = articleSearchQuery.toLowerCase(); const isW = (c: string) => /\w/.test(c); let count = 0;
     nodes.forEach(node => {
       const text = node.textContent || ""; const lower = text.toLowerCase(); let idx = lower.indexOf(q); if (idx === -1) return;
       const frag = document.createDocumentFragment(); let last = 0;
       while (idx !== -1) {
+        const cb = idx > 0 ? lower[idx-1] : " "; const ca = idx+q.length < lower.length ? lower[idx+q.length] : " ";
+        if (!isW(cb) && !isW(ca)) {
         frag.appendChild(document.createTextNode(text.slice(last, idx)));
         const mark = document.createElement("mark"); mark.setAttribute("data-search-highlight", "true");
         mark.style.cssText = "background:rgba(250,204,21,0.4);color:inherit;border-radius:2px;padding:0 1px";
         mark.textContent = text.slice(idx, idx + q.length); frag.appendChild(mark); count++;
-        last = idx + q.length; idx = lower.indexOf(q, last);
+        last = idx + q.length;
+        }
+        idx = lower.indexOf(q, idx + 1);
       }
       frag.appendChild(document.createTextNode(text.slice(last)));
       node.parentNode?.replaceChild(frag, node);
