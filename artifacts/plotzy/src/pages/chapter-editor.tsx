@@ -293,6 +293,9 @@ export default function ChapterEditor() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { t, lang, isRTL } = useLanguage();
+
+  // Track last accessed for sorting on home page
+  useEffect(() => { if (bookId) try { localStorage.setItem(`plotzy_book_accessed_${bookId}`, String(Date.now())); } catch {} }, [bookId]);
   const { resolvedTheme } = useTheme();
   const ar = lang === "ar";
 

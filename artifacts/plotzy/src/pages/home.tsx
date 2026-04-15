@@ -799,7 +799,14 @@ export default function Home() {
                   <div className="mt-2.5 px-0.5 h-7" />
                 </motion.div>
 
-                {[...books].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).filter(b => !bookSearch.trim() || b.title.toLowerCase().includes(bookSearch.toLowerCase())).map((book, bookIndex) => {
+                {[...books].sort((a, b) => {
+                  // Sort by last accessed (stored in localStorage), then by createdAt
+                  const getLastAccessed = (id: number) => { try { return Number(localStorage.getItem(`plotzy_book_accessed_${id}`) || 0); } catch { return 0; } };
+                  const aTime = getLastAccessed(a.id);
+                  const bTime = getLastAccessed(b.id);
+                  if (aTime !== bTime) return bTime - aTime;
+                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                }).filter(b => !bookSearch.trim() || b.title.toLowerCase().includes(bookSearch.toLowerCase())).map((book, bookIndex) => {
                       const langInfo = getBookLangInfo(book.language || "en");
                       const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];
                       const titleLen = book.title.length;

@@ -192,6 +192,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
   const bookRTL = RTL_LANGS.includes(book.language || "");
 
+  // Track last accessed time for sorting on home page
+  useEffect(() => { try { localStorage.setItem(`plotzy_book_accessed_${bookId}`, String(Date.now())); } catch {} }, [bookId]);
+
   const handleGenerateCover = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coverPrompt.trim()) return;
