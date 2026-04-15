@@ -128,6 +128,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const { data: chapters, isLoading: isLoadingChapters, error: chaptersError } = useChapters(bookId);
   const { user, refetch: refetchAuth } = useAuth();
   const publishBook = usePublishBook();
+  const isOwner = !!(user && book && (book as any).userId === (user as any).id);
 
   const generateCover = useGenerateCover();
   const generateBlurb = useGenerateBlurb();
@@ -425,8 +426,8 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Action Buttons — owner only */}
+          {isOwner && <div className="grid grid-cols-2 gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -511,6 +512,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }} />
             </div>
           </Link>
+          }
 
         </div>
 
@@ -524,13 +526,13 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             <div className="flex items-center gap-0 -mb-px">
               {(
                 [
-                  { key: "chapters",  icon: BookOpen,   label: lang === "ar" ? "الفصول"       : "Chapters"   },
-                  { key: "pages",     icon: ScrollText,  label: lang === "ar" ? "صفحات الكتاب" : "Book Pages" },
-                  { key: "research",  icon: BookMarked,  label: lang === "ar" ? "البحث"        : "Research"   },
-                  { key: "analytics", icon: BarChart3,   label: lang === "ar" ? "الإحصائيات"  : "Analytics"  },
-                  { key: "tools",     icon: Sparkles,    label: lang === "ar" ? "أدوات"        : "Tools"      },
+                  { key: "chapters",  icon: BookOpen,   label: lang === "ar" ? "الفصول"       : "Chapters",  ownerOnly: false },
+                  { key: "pages",     icon: ScrollText,  label: lang === "ar" ? "صفحات الكتاب" : "Book Pages", ownerOnly: true },
+                  { key: "research",  icon: BookMarked,  label: lang === "ar" ? "البحث"        : "Research",  ownerOnly: false },
+                  { key: "analytics", icon: BarChart3,   label: lang === "ar" ? "الإحصائيات"  : "Analytics", ownerOnly: true },
+                  { key: "tools",     icon: Sparkles,    label: lang === "ar" ? "أدوات"        : "Tools",     ownerOnly: true },
                 ] as const
-              ).map(({ key, icon: Icon, label }) => {
+              ).filter(t => !t.ownerOnly || isOwner).map(({ key, icon: Icon, label }) => {
                 const active = activeTab === key;
                 return (
                   <button
@@ -551,9 +553,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               })}
             </div>
 
-            {/* Action buttons */}
+            {/* Action buttons — owner only for most */}
             <div className="flex items-center gap-2 flex-shrink-0 pb-2">
-              <button onClick={() => setShowCollabModal(true)}
+              {isOwner && <button onClick={() => setShowCollabModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                 style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
                 onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.80)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
@@ -561,8 +563,8 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               >
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{lang === "ar" ? "تعاون" : "Collaborate"}</span>
-              </button>
-              <Link href="/marketplace">
+              </button>}
+              {isOwner && <Link href="/marketplace">
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                   style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
@@ -572,9 +574,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{lang === "ar" ? "مجموعة الذكاء" : "AI Suite"}</span>
                 </button>
-              </Link>
+              </Link>}
 
-              {book && (
+              {isOwner && book && (
                 (book as any).isPublished ? (
                   <div className="flex items-center gap-1.5">
                     <Link href={`/read/${bookId}`}>

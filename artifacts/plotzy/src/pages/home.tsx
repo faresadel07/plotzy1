@@ -967,7 +967,19 @@ export default function Home() {
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
               {sharedBooks.map(sb => (
-                <div key={sb.id} onClick={() => setLocation(`/books/${sb.id}`)}
+                <div key={sb.id} onClick={async () => {
+                  // Go directly to first chapter (writing page)
+                  try {
+                    const res = await fetch(`/api/books/${sb.id}/chapters`, { credentials: "include" });
+                    const chapters = await res.json();
+                    if (chapters && chapters.length > 0) {
+                      const sorted = chapters.sort((a: any, b: any) => a.order - b.order);
+                      setLocation(`/books/${sb.id}/chapters/${sorted[0].id}`);
+                    } else {
+                      setLocation(`/books/${sb.id}`);
+                    }
+                  } catch { setLocation(`/books/${sb.id}`); }
+                }}
                   className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02]"
                   style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.1)" }}>
                   {/* Mini cover */}
