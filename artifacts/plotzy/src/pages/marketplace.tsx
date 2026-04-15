@@ -162,8 +162,8 @@ const SERVICES: AIService[] = [
     icon: <Palette className="w-5 h-5" />,
     name: "AI Cover Generator",
     tagline: "Professional covers from your blurb",
-    description: "Generates 4 professionally composed book covers based on your genre, title, and synopsis -- following publishing industry standards.",
-    features: ["4 unique cover concepts", "Genre-appropriate styling", "High-res export (3000x4500 px)"],
+    description: "Generates a professional AI book cover based on your description, genre, and title — ready for publishing.",
+    features: ["AI-generated artwork", "Genre-appropriate styling", "Front & back cover support"],
     delivery: "~45 sec", badge: "Popular",
   },
   {
