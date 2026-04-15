@@ -427,7 +427,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           </div>
 
           {/* Action Buttons — owner only */}
-          {isOwner && <div className="grid grid-cols-2 gap-2">
+          {isOwner && <><div className="grid grid-cols-2 gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -512,7 +512,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }} />
             </div>
           </Link>
-          }
+          </>}
 
         </div>
 
