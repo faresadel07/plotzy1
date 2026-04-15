@@ -55,17 +55,30 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
         </div>
 
         {!editing ? (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 px-3 py-2 rounded-xl min-h-[36px]" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              {isbn ? (
-                <span className="text-sm font-mono font-medium">{isbn}</span>
-              ) : (
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>{ar ? "لم يُحدَّد بعد" : "Not set yet"}</span>
-              )}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 px-3 py-2 rounded-xl min-h-[36px]" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                {isbn ? (
+                  <span className="text-sm font-mono font-medium">{isbn}</span>
+                ) : (
+                  <span className="text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>{ar ? "لم يُحدَّد بعد" : "Not set yet"}</span>
+                )}
+              </div>
+              <button onClick={() => setEditing(true)} className="text-[12px] font-medium px-4 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                {ar ? "تعديل" : "Edit"}
+              </button>
             </div>
-            <button onClick={() => setEditing(true)} className="text-[12px] font-medium px-4 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              {ar ? "تعديل" : "Edit"}
-            </button>
+            {/* Barcode preview + download */}
+            {isbn && isbn.replace(/[-\s]/g, "").length === 13 && (
+              <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <img src={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}`} alt="ISBN Barcode" style={{ margin: "0 auto", maxHeight: 80, borderRadius: 4, background: "#fff", padding: 8 }} />
+                <div className="flex justify-center gap-2 mt-2">
+                  <a href={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}/download`} download className="text-[11px] font-medium px-3 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}>
+                    ↓ {ar ? "تحميل الباركود" : "Download Barcode"}
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-2">
