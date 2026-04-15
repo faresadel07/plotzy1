@@ -788,14 +788,14 @@ router.get("/api/isbn/barcode/:isbn", async (req, res) => {
   const isbn = req.params.isbn.replace(/[-\s]/g, "");
   if (!/^\d{13}$/.test(isbn)) return res.status(400).json({ message: "ISBN-13 required for barcode" });
   try {
-    const { createCanvas } = await import("canvas");
     const JsBarcode = (await import("jsbarcode")).default;
-    const canvas = createCanvas(400, 160);
-    JsBarcode(canvas, isbn, { format: "EAN13", width: 2, height: 80, displayValue: true, fontSize: 14, margin: 10 });
-    const buf = canvas.toBuffer("image/png");
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader("Content-Disposition", `inline; filename=isbn-${isbn}.png`);
-    res.send(buf);
+    const { DOMImplementation, XMLSerializer } = await import("@xmldom/xmldom");
+    const doc = new DOMImplementation().createDocument("http://www.w3.org/1999/xhtml", "html", null);
+    const svgEl = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+    JsBarcode(svgEl, isbn, { xmlDocument: doc, format: "EAN13", width: 2, height: 80, displayValue: true, fontSize: 14, margin: 10, background: "#ffffff" });
+    const svgStr = new XMLSerializer().serializeToString(svgEl);
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.send(svgStr);
   } catch (err) {
     logger.error({ err }, "Barcode generation failed");
     res.status(500).json({ message: "Barcode generation failed" });
@@ -806,14 +806,15 @@ router.get("/api/isbn/barcode/:isbn/download", async (req, res) => {
   const isbn = req.params.isbn.replace(/[-\s]/g, "");
   if (!/^\d{13}$/.test(isbn)) return res.status(400).json({ message: "ISBN-13 required" });
   try {
-    const { createCanvas } = await import("canvas");
     const JsBarcode = (await import("jsbarcode")).default;
-    const canvas = createCanvas(600, 240);
-    JsBarcode(canvas, isbn, { format: "EAN13", width: 3, height: 120, displayValue: true, fontSize: 18, margin: 20 });
-    const buf = canvas.toBuffer("image/png");
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader("Content-Disposition", `attachment; filename=isbn-barcode-${isbn}.png`);
-    res.send(buf);
+    const { DOMImplementation, XMLSerializer } = await import("@xmldom/xmldom");
+    const doc = new DOMImplementation().createDocument("http://www.w3.org/1999/xhtml", "html", null);
+    const svgEl = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+    JsBarcode(svgEl, isbn, { xmlDocument: doc, format: "EAN13", width: 3, height: 120, displayValue: true, fontSize: 18, margin: 20, background: "#ffffff" });
+    const svgStr = new XMLSerializer().serializeToString(svgEl);
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Content-Disposition", `attachment; filename=isbn-barcode-${isbn}.svg`);
+    res.send(svgStr);
   } catch (err) {
     logger.error({ err }, "Barcode download failed");
     res.status(500).json({ message: "Barcode generation failed" });

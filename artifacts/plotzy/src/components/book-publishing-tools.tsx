@@ -79,7 +79,7 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
                   <a href={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}/download`} download
                     className="text-[12px] font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
                     style={{ background: "#fff", color: "#000", textDecoration: "none" }}>
-                    ↓ {ar ? "تحميل الباركود" : "Download Barcode PNG"}
+                    ↓ {ar ? "تحميل الباركود" : "Download Barcode SVG"}
                   </a>
                 </div>
                 <p className="text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.2)" }}>
