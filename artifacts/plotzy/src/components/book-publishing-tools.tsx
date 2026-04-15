@@ -68,17 +68,61 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
                 {ar ? "تعديل" : "Edit"}
               </button>
             </div>
+
             {/* Barcode preview + download */}
-            {isbn && isbn.replace(/[-\s]/g, "").length === 13 && (
-              <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <img src={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}`} alt="ISBN Barcode" style={{ margin: "0 auto", maxHeight: 80, borderRadius: 4, background: "#fff", padding: 8 }} />
-                <div className="flex justify-center gap-2 mt-2">
-                  <a href={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}/download`} download className="text-[11px] font-medium px-3 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}>
-                    ↓ {ar ? "تحميل الباركود" : "Download Barcode"}
+            {isbn && isbn.replace(/[-\s]/g, "").length === 13 && /^\d{13}$/.test(isbn.replace(/[-\s]/g, "")) && (
+              <div className="rounded-xl p-4 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <img src={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}`} alt="ISBN Barcode"
+                  style={{ margin: "0 auto", maxHeight: 90, borderRadius: 6, background: "#fff", padding: 12 }}
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                <div className="flex justify-center gap-2 mt-3">
+                  <a href={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}/download`} download
+                    className="text-[12px] font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
+                    style={{ background: "#fff", color: "#000", textDecoration: "none" }}>
+                    ↓ {ar ? "تحميل الباركود" : "Download Barcode PNG"}
                   </a>
                 </div>
+                <p className="text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.2)" }}>
+                  {ar ? "استخدم هذا الباركود على ظهر غلاف كتابك" : "Use this barcode on the back of your book cover"}
+                </p>
               </div>
             )}
+
+            {/* Invalid ISBN warning */}
+            {isbn && isbn.replace(/[-\s]/g, "").length > 0 && (isbn.replace(/[-\s]/g, "").length !== 13 || !/^\d{13}$/.test(isbn.replace(/[-\s]/g, ""))) && (
+              <p className="text-[11px]" style={{ color: "#f87171" }}>
+                {ar ? "رقم ISBN غير صالح. يجب أن يكون 13 رقماً (ISBN-13)" : "Invalid ISBN. Must be exactly 13 digits (ISBN-13 format: 978-...)"}
+              </p>
+            )}
+
+            {/* How to get ISBN — always visible */}
+            <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.06)" }}>
+              <p className="text-[11px] font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                {ar ? "كيف تحصل على رقم ISBN؟" : "How to get an ISBN?"}
+              </p>
+              <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.25)" }}>
+                {ar
+                  ? "رقم ISBN هو معرّف دولي فريد لكتابك. يُطلب عند البيع في المكتبات وAmazon. يمكنك الحصول عليه من وكالة ISBN في بلدك أو شراؤه من:"
+                  : "An ISBN is a unique identifier required for selling on Amazon, bookstores, and libraries. Get one from your country's ISBN agency or purchase from:"}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <a href="https://www.isbn.org" target="_blank" rel="noopener noreferrer"
+                  className="text-[10px] font-medium px-2 py-1 rounded"
+                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.06)", textDecoration: "none" }}>
+                  isbn.org →
+                </a>
+                <a href="https://www.myidentifiers.com" target="_blank" rel="noopener noreferrer"
+                  className="text-[10px] font-medium px-2 py-1 rounded"
+                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.06)", textDecoration: "none" }}>
+                  myidentifiers.com →
+                </a>
+              </div>
+              <p className="text-[9px] mt-2" style={{ color: "rgba(255,255,255,0.15)" }}>
+                {ar
+                  ? "ملاحظة: Amazon KDP يوفر رقم ISBN مجاني إذا نشرت عبرهم حصرياً."
+                  : "Note: Amazon KDP provides a free ISBN if you publish exclusively through them."}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
