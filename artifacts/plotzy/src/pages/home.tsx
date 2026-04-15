@@ -799,7 +799,7 @@ export default function Home() {
                   <div className="mt-2.5 px-0.5 h-7" />
                 </motion.div>
 
-                {books.filter(b => !bookSearch.trim() || b.title.toLowerCase().includes(bookSearch.toLowerCase())).map((book, bookIndex) => {
+                {[...books].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).filter(b => !bookSearch.trim() || b.title.toLowerCase().includes(bookSearch.toLowerCase())).map((book, bookIndex) => {
                       const langInfo = getBookLangInfo(book.language || "en");
                       const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];
                       const titleLen = book.title.length;
