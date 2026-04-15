@@ -435,6 +435,7 @@ export default function Home() {
     queryKey: ["/api/books/shared-with-me"],
     queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
     enabled: !!user,
+    staleTime: 0,
   });
   const firstName = user?.displayName ? user.displayName.trim().split(/\s+/)[0] : null;
   const [showAuthModal, setShowAuthModal] = useState(false);
