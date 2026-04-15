@@ -784,41 +784,49 @@ router.get("/api/isbn/validate/:isbn", (req, res) => {
   res.json({ valid: false, isbn, type: "Unknown" });
 });
 
-router.get("/api/isbn/barcode/:isbn", async (req, res) => {
+// Pure EAN-13 barcode SVG generator (no DOM dependency)
+function generateEAN13SVG(isbn: string, opts: { width?: number; height?: number; barHeight?: number } = {}): string {
+  const w = opts.width || 2;
+  const h = opts.barHeight || 80;
+  const PATTERNS_L = ["0001101","0011001","0010011","0111101","0100011","0110001","0101111","0111011","0110111","0001011"];
+  const PATTERNS_R = ["1110010","1100110","1101100","1000010","1011100","1001110","1010000","1000100","1001000","1110100"];
+  const PATTERNS_G = ["0100111","0110011","0011011","0100001","0011101","0111001","0000101","0010001","0001001","0010111"];
+  const PARITY = ["LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL"];
+  const digits = isbn.split("").map(Number);
+  const parity = PARITY[digits[0]];
+  let bars = "101"; // Start guard
+  for (let i = 1; i <= 6; i++) bars += parity[i-1] === "L" ? PATTERNS_L[digits[i]] : PATTERNS_G[digits[i]];
+  bars += "01010"; // Center guard
+  for (let i = 7; i <= 12; i++) bars += PATTERNS_R[digits[i]];
+  bars += "101"; // End guard
+  const totalW = bars.length * w + 20;
+  const totalH = h + 30;
+  let svgBars = "";
+  for (let i = 0; i < bars.length; i++) {
+    if (bars[i] === "1") svgBars += `<rect x="${10 + i * w}" y="5" width="${w}" height="${h}" fill="black"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
+    <rect width="100%" height="100%" fill="white"/>
+    ${svgBars}
+    <text x="${totalW/2}" y="${h + 22}" text-anchor="middle" font-family="monospace" font-size="14" fill="black">${isbn}</text>
+  </svg>`;
+}
+
+router.get("/api/isbn/barcode/:isbn", (req, res) => {
   const isbn = req.params.isbn.replace(/[-\s]/g, "");
   if (!/^\d{13}$/.test(isbn)) return res.status(400).json({ message: "ISBN-13 required for barcode" });
-  try {
-    const JsBarcode = (await import("jsbarcode")).default;
-    const { DOMImplementation, XMLSerializer } = await import("@xmldom/xmldom");
-    const doc = new DOMImplementation().createDocument("http://www.w3.org/1999/xhtml", "html", null);
-    const svgEl = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-    JsBarcode(svgEl, isbn, { xmlDocument: doc, format: "EAN13", width: 2, height: 80, displayValue: true, fontSize: 14, margin: 10, background: "#ffffff" });
-    const svgStr = new XMLSerializer().serializeToString(svgEl);
-    res.setHeader("Content-Type", "image/svg+xml");
-    res.send(svgStr);
-  } catch (err) {
-    logger.error({ err }, "Barcode generation failed");
-    res.status(500).json({ message: "Barcode generation failed" });
-  }
+  const svg = generateEAN13SVG(isbn);
+  res.setHeader("Content-Type", "image/svg+xml");
+  res.send(svg);
 });
 
-router.get("/api/isbn/barcode/:isbn/download", async (req, res) => {
+router.get("/api/isbn/barcode/:isbn/download", (req, res) => {
   const isbn = req.params.isbn.replace(/[-\s]/g, "");
   if (!/^\d{13}$/.test(isbn)) return res.status(400).json({ message: "ISBN-13 required" });
-  try {
-    const JsBarcode = (await import("jsbarcode")).default;
-    const { DOMImplementation, XMLSerializer } = await import("@xmldom/xmldom");
-    const doc = new DOMImplementation().createDocument("http://www.w3.org/1999/xhtml", "html", null);
-    const svgEl = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-    JsBarcode(svgEl, isbn, { xmlDocument: doc, format: "EAN13", width: 3, height: 120, displayValue: true, fontSize: 18, margin: 20, background: "#ffffff" });
-    const svgStr = new XMLSerializer().serializeToString(svgEl);
-    res.setHeader("Content-Type", "image/svg+xml");
-    res.setHeader("Content-Disposition", `attachment; filename=isbn-barcode-${isbn}.svg`);
-    res.send(svgStr);
-  } catch (err) {
-    logger.error({ err }, "Barcode download failed");
-    res.status(500).json({ message: "Barcode generation failed" });
-  }
+  const svg = generateEAN13SVG(isbn, { width: 3, barHeight: 120 });
+  res.setHeader("Content-Type", "image/svg+xml");
+  res.setHeader("Content-Disposition", `attachment; filename=isbn-barcode-${isbn}.svg`);
+  res.send(svg);
 });
 
 // ─── ARC Recipients ────────────────────────────────────────────────────────
