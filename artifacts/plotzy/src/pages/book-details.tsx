@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -168,6 +168,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
+  // Track last accessed for home page sorting (must be before early returns)
+  useEffect(() => { if (bookId) try { localStorage.setItem(`plotzy_book_accessed_${bookId}`, String(Date.now())); } catch {} }, [bookId]);
+
   if (isLoadingBook || isLoadingChapters) {
     return (
       <Layout isFullDark>
@@ -191,9 +194,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   }
 
   const bookRTL = RTL_LANGS.includes(book.language || "");
-
-  // Track last accessed time for sorting on home page
-  useEffect(() => { try { localStorage.setItem(`plotzy_book_accessed_${bookId}`, String(Date.now())); } catch {} }, [bookId]);
 
   const handleGenerateCover = async (e: React.FormEvent) => {
     e.preventDefault();
