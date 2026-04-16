@@ -76,21 +76,23 @@ const FAQ = [
 type BillingCycle = "monthly" | "yearly";
 
 export default function Pricing() {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [showFaq, setShowFaq] = useState(false);
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
   const isYearly = billingCycle === "yearly";
 
-  const proPrice = isYearly ? 79.99 : 9.99;
+  const proPrice = isYearly ? 79.99 : 8.99;
+  const proOriginalPrice = isYearly ? 108.00 : 11.99;
   const proPriceSuffix = isYearly ? "/yr" : "/mo";
-  const proLabel = isYearly ? "Billed $79.99 per year" : "Billed $9.99 every month";
+  const proLabel = isYearly ? "Billed $79.99 per year" : "Billed $8.99 every month";
   const proPlan: PayPalPlan = isYearly ? "pro_yearly" : "pro_monthly";
 
-  const premiumPrice = isYearly ? 159.99 : 19.99;
+  const premiumPrice = isYearly ? 159.99 : 16.99;
+  const premiumOriginalPrice = isYearly ? 240.00 : 20.00;
   const premiumPriceSuffix = isYearly ? "/yr" : "/mo";
-  const premiumLabel = isYearly ? "Billed $159.99 per year" : "Billed $19.99 every month";
+  const premiumLabel = isYearly ? "Billed $159.99 per year" : "Billed $16.99 every month";
   const premiumPlan: PayPalPlan = isYearly ? "premium_yearly" : "premium_monthly";
 
   /* ── Shared styles ── */
@@ -293,7 +295,7 @@ export default function Pricing() {
 
                 <div style={{ padding: "24px 24px 20px", position: "relative" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TS, textTransform: "uppercase" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#60a5fa", textTransform: "uppercase" }}>
                       Pro
                     </p>
                     <span
@@ -311,7 +313,12 @@ export default function Pricing() {
                     </span>
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                    {proOriginalPrice && (
+                      <span style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.25)", textDecoration: "line-through" }}>
+                        ${proOriginalPrice.toFixed(2)}
+                      </span>
+                    )}
                     <NumberFlow
                       value={proPrice}
                       prefix="$"
@@ -321,6 +328,11 @@ export default function Pricing() {
                     <span style={{ fontSize: 16, color: TS }}>{proPriceSuffix}</span>
                   </div>
 
+                  {proOriginalPrice && (
+                    <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
+                      Save {Math.round((1 - proPrice / proOriginalPrice) * 100)}% — Limited offer
+                    </p>
+                  )}
                   {isYearly && (
                     <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
                       $6.67/mo — Save 33%
@@ -393,11 +405,16 @@ export default function Pricing() {
               />
 
               <div style={{ padding: "24px 24px 20px", position: "relative" }}>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TD, textTransform: "uppercase", marginBottom: 14 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#c084fc", textTransform: "uppercase", marginBottom: 14 }}>
                   Premium
                 </p>
 
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                  {premiumOriginalPrice && (
+                    <span style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.25)", textDecoration: "line-through" }}>
+                      ${premiumOriginalPrice.toFixed(2)}
+                    </span>
+                  )}
                   <NumberFlow
                     value={premiumPrice}
                     prefix="$"
@@ -407,6 +424,11 @@ export default function Pricing() {
                   <span style={{ fontSize: 16, color: TS }}>{premiumPriceSuffix}</span>
                 </div>
 
+                {premiumOriginalPrice && (
+                  <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
+                    Save {Math.round((1 - premiumPrice / premiumOriginalPrice) * 100)}% — Limited offer
+                  </p>
+                )}
                 {isYearly && (
                   <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
                     $13.33/mo — Save 33%

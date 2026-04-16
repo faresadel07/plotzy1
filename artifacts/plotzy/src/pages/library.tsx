@@ -76,7 +76,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <Link href={`/read/${book.id}`}>
+    <Link href={book.contentType === "article" ? `/blog/${book.id}` : `/read/${book.id}`}>
       <div
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => { setHover(false); setConfirmDelete(false); }}
@@ -178,6 +178,16 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
 
         {/* Info below cover */}
         <div style={{ padding: "10px 2px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+              padding: "2px 6px", borderRadius: 4, fontFamily: SF,
+              background: book.contentType === "article" ? "rgba(124,106,247,0.15)" : "rgba(255,255,255,0.06)",
+              color: book.contentType === "article" ? "#a78bfa" : "rgba(255,255,255,0.35)",
+            }}>
+              {book.contentType === "article" ? "Article" : "Book"}
+            </span>
+          </div>
           <p style={{
             fontFamily: SF, fontSize: 13, fontWeight: 600, color: T, lineHeight: 1.4,
             overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box",
@@ -239,7 +249,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
   const { data: rating } = useBookRatingStats(book.id);
 
   return (
-    <Link href={`/read/${book.id}`}>
+    <Link href={book.contentType === "article" ? `/blog/${book.id}` : `/read/${book.id}`}>
       <div style={{
         position: "relative", borderRadius: 16, overflow: "hidden", cursor: "pointer",
         background: C1, border: `1px solid ${B}`, marginBottom: 40,

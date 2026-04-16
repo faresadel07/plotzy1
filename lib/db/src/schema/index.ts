@@ -125,7 +125,9 @@ export const chapterSnapshots = pgTable("chapter_snapshots", {
   content: text("content").notNull(),
   label: text("label"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_chapter_snapshots_chapter_id").on(t.chapterId),
+]);
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
@@ -136,7 +138,9 @@ export const transactions = pgTable("transactions", {
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   paymentMethod: text("payment_method").default("card"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_transactions_book_id").on(t.bookId),
+]);
 
 export const loreEntries = pgTable("lore_entries", {
   id: serial("id").primaryKey(),
@@ -145,7 +149,9 @@ export const loreEntries = pgTable("lore_entries", {
   category: text("category").notNull(), // character, location, item, magic, other
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_lore_entries_book_id").on(t.bookId),
+]);
 
 export type BookPreferences = {
   fontFamily?: string;
@@ -273,6 +279,33 @@ export const bookComments = pgTable("book_comments", {
   index("idx_book_comments_book_id").on(t.bookId),
 ]);
 
+// ── Inline Reader Comments (text-anchored) ─────────────────────────────────
+
+export const inlineComments = pgTable("inline_comments", {
+  id: serial("id").primaryKey(),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  authorName: text("author_name").notNull().default("Anonymous"),
+  authorAvatarUrl: text("author_avatar_url"),
+  // Text anchor — the exact selected text + surrounding context for fuzzy matching
+  selectedText: text("selected_text").notNull(),
+  // Character offset range within the chapter's sanitized HTML text content
+  startOffset: integer("start_offset").notNull(),
+  endOffset: integer("end_offset").notNull(),
+  // The comment itself
+  content: text("content").notNull(),
+  // Resolved = author marked as addressed
+  resolved: boolean("resolved").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("idx_inline_comments_book_id").on(t.bookId),
+  index("idx_inline_comments_chapter_id").on(t.chapterId),
+]);
+
+export type InlineComment = typeof inlineComments.$inferSelect;
+export type InsertInlineComment = typeof inlineComments.$inferInsert;
+
 export const bookLikes = pgTable("book_likes", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
@@ -317,7 +350,9 @@ export const researchItems = pgTable("research_items", {
   color: text("color").default("default"),
   position: integer("position").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_research_items_book_id").on(t.bookId),
+]);
 
 
 export const arcRecipients = pgTable('arc_recipients', {
@@ -329,7 +364,9 @@ export const arcRecipients = pgTable('arc_recipients', {
   note: text('note'),
   sentAt: timestamp('sent_at').defaultNow(),
   createdAt: timestamp('created_at').defaultNow(),
-});
+}, (t) => [
+  index("idx_arc_recipients_book_id").on(t.bookId),
+]);
 
 export type ResearchItem = typeof researchItems.$inferSelect;
 
@@ -427,7 +464,10 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
   completionTokens: integer("completion_tokens").default(0),
   estimatedCostCents: integer("estimated_cost_cents").default(0),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_ai_usage_logs_user_id").on(t.userId),
+  index("idx_ai_usage_logs_created_at").on(t.createdAt),
+]);
 
 export const contentFlags = pgTable("content_flags", {
   id: serial("id").primaryKey(),
@@ -450,7 +490,9 @@ export const emailVerificationTokens = pgTable("email_verification_tokens", {
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_email_verification_tokens_user_id").on(t.userId),
+]);
 
 // ── Password Reset Tokens ────────────────────────────────────────────────
 
@@ -461,7 +503,9 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_password_reset_tokens_user_id").on(t.userId),
+]);
 
 // ── Book Collaborators ───────────────────────────────────────────────────
 
@@ -480,6 +524,18 @@ export const bookCollaborators = pgTable("book_collaborators", {
 ]);
 
 export type BookCollaborator = typeof bookCollaborators.$inferSelect;
+
+// ── Login Attempts (brute-force protection) ─────────────────────────────
+
+export const loginAttempts = pgTable("login_attempts", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  ip: text("ip"),
+  success: boolean("success").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("idx_login_attempts_email_created").on(t.email, t.createdAt),
+]);
 
 // ── Admin Audit Logs ──────────────────────────────────────────────────────
 

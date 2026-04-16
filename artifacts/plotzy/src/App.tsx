@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, useRoute } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -40,6 +40,8 @@ const GutenbergReader = lazy(() => import("@/pages/gutenberg-reader"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 const Messages = lazy(() => import("@/pages/messages"));
+const Blog = lazy(() => import("@/pages/blog"));
+const ArticleView = lazy(() => import("@/pages/article-view"));
 
 function EmailVerifyHandler() {
   const { toast } = useToast();
@@ -119,26 +121,45 @@ function OAuthCallbackHandler() {
   return null;
 }
 
-function ResetPasswordHandler() {
+/** Password reset page — reached via /reset-password/:token (POST-based, token not in query string) */
+function ResetPasswordPage() {
   const { toast } = useToast();
-  const [token] = useState(() => new URLSearchParams(window.location.search).get("reset"));
+  const [, params] = useRoute("/reset-password/:token");
+  const token = params?.token || "";
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null); // null = checking
+  const [, navigate] = useLocation();
 
-  if (!token) return null;
+  // Verify token via POST on mount (token never stays in browser history as query param)
+  useEffect(() => {
+    if (!token) { setTokenValid(false); return; }
+    fetch("/api/auth/verify-reset-token", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) })
+      .then(r => r.json()).then(d => setTokenValid(!!d.valid)).catch(() => setTokenValid(false));
+  }, [token]);
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", padding: 24 }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 24 }}>
       <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 400 }}>
-        {done ? (
+        {tokenValid === null ? (
+          <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Verifying link...</div>
+        ) : tokenValid === false ? (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>&#10007;</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Invalid or expired link</h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>This password reset link has expired or already been used. Please request a new one.</p>
+            <button onClick={() => navigate("/")} style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+              Back to Home
+            </button>
+          </div>
+        ) : done ? (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>&#10003;</div>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Password updated!</h3>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>You can now sign in with your new password.</p>
-            <button onClick={() => { window.history.replaceState({}, "", "/"); window.location.reload(); }}
-              style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+            <button onClick={() => navigate("/")} style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
               Sign In
             </button>
           </div>
@@ -184,7 +205,10 @@ function Router() {
       <Switch>
         {/* ── Public routes ── */}
         <Route path="/" component={Home} />
+        <Route path="/reset-password/:token" component={ResetPasswordPage} />
         <Route path="/pricing" component={Pricing} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:id" component={ArticleView} />
         <Route path="/library" component={Library} />
         <Route path="/read/:id" component={ReadBook} />
         <Route path="/discover" component={DiscoverPage} />
@@ -232,7 +256,6 @@ function App() {
               <TooltipProvider>
                 <ScrollToTop />
                 <OAuthCallbackHandler />
-                <ResetPasswordHandler />
                 <EmailVerifyHandler />
                 <Router />
                 <QuickDropNotepad />

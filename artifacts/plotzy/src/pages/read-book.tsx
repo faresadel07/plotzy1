@@ -1,15 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRoute, Link } from "wouter";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useRoute, Link, useLocation } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
   usePublishedBook, usePublishedBookChapters, useIncrementBookView,
   useBookRatingStats, useRateBook, useBookComments, useAddBookComment,
+  useBookInlineComments, useDeleteInlineComment, useResolveInlineComment,
+  type InlineComment,
 } from "@/hooks/use-public-library";
+import { InlineCommentsLayer } from "@/components/InlineCommentsLayer";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
   BookOpen, ChevronLeft, ChevronRight, ArrowLeft, Eye,
-  Loader2, Star, MessageSquare, Send, List, X, BookMarked,
+  Loader2, Star, MessageSquare, MessageSquarePlus, Send, List, X, BookMarked, Check, Trash2, Highlighter,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -306,6 +309,7 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
         {html ? (
           <div
             className="book-reader-content"
+            data-chapter-id={ch.id}
             style={{ fontFamily: fontFam, fontSize: 14, lineHeight: 1.85, color: "#1c1410", textAlign: "justify", letterSpacing: isRTL ? "0" : "0.008em", hyphens: "auto" as any }}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
           />
@@ -555,6 +559,20 @@ export default function ReadBook() {
   const [jumpInput, setJumpInput] = useState("");
   const [jumpEditing, setJumpEditing] = useState(false);
   const scrubberRef = useRef<HTMLDivElement>(null);
+  const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
+  const [commentHintDismissed, setCommentHintDismissed] = useState(false);
+  const { data: inlineComments = [] } = useBookInlineComments(bookId);
+  const deleteInlineComment = useDeleteInlineComment();
+  const resolveInlineComment = useResolveInlineComment();
+
+  const [, navigate] = useLocation();
+
+  // Redirect articles to /blog/:id
+  useEffect(() => {
+    if (book && (book as any).contentType === "article") {
+      navigate(`/blog/${bookId}`, { replace: true });
+    }
+  }, [book, bookId, navigate]);
 
   useEffect(() => {
     if (book && !viewCounted) { incrementView.mutate(bookId); setViewCounted(true); }
@@ -606,6 +624,23 @@ export default function ReadBook() {
   const rightPage = spreadIndex * 2 + 2;
   const totalPages = totalSpreads * 2;
   const pct = totalSpreads > 1 ? Math.round((spreadIndex / (totalSpreads - 1)) * 100) : 100;
+
+  /* ─── Collect chapter content DOM refs for inline comments ─── */
+  const [chapterRefs, setChapterRefs] = useState<Map<number, HTMLElement>>(new Map());
+  const chapterIds = useMemo(() => sortedChapters.map(ch => ch.id), [sortedChapters]);
+
+  useEffect(() => {
+    // Collect all .book-reader-content[data-chapter-id] elements
+    const timer = setTimeout(() => {
+      const map = new Map<number, HTMLElement>();
+      document.querySelectorAll<HTMLElement>(".book-reader-content[data-chapter-id]").forEach(el => {
+        const id = Number(el.dataset.chapterId);
+        if (id && !map.has(id)) map.set(id, el);
+      });
+      if (map.size > 0) setChapterRefs(map);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [sortedChapters, spreadIndex]);
 
   if (bookLoading || chaptersLoading) {
     return (
@@ -679,6 +714,21 @@ export default function ReadBook() {
             {showToc ? <X style={{ width: 15, height: 15 }} /> : <List style={{ width: 15, height: 15 }} />}
             <span>Contents</span>
           </button>
+
+          {/* Inline comments sidebar toggle */}
+          <button onClick={() => setShowCommentsSidebar(!showCommentsSidebar)}
+            style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, background: showCommentsSidebar ? "rgba(250,204,21,0.12)" : "none", border: "none", color: showCommentsSidebar ? "#facc15" : "#666", cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 6, flexShrink: 0 }}
+            onMouseEnter={e => { if (!showCommentsSidebar) e.currentTarget.style.color = "#bbb"; }}
+            onMouseLeave={e => { if (!showCommentsSidebar) e.currentTarget.style.color = "#666"; }}
+          >
+            <MessageSquarePlus style={{ width: 15, height: 15 }} />
+            <span>Notes</span>
+            {inlineComments.length > 0 && (
+              <span style={{ background: "#facc15", color: "#000", fontSize: 9, fontWeight: 700, borderRadius: 10, padding: "1px 5px", minWidth: 16, textAlign: "center" }}>
+                {inlineComments.length}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -727,6 +777,127 @@ export default function ReadBook() {
                 </div>
               </div>
             </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Inline Comments Sidebar ── */}
+      <AnimatePresence>
+        {showCommentsSidebar && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowCommentsSidebar(false)}
+              style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.4)" }} />
+            <motion.div
+              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              style={{
+                position: "fixed", top: 0, right: 0, bottom: 0, width: 360, zIndex: 61,
+                background: "#1a1815", borderLeft: "1px solid rgba(255,255,255,0.08)",
+                display: "flex", flexDirection: "column", overflow: "hidden",
+              }}
+            >
+              {/* Header */}
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <MessageSquarePlus style={{ width: 16, height: 16, color: "#facc15" }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif" }}>
+                    Reader Notes
+                  </span>
+                  <span style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>({inlineComments.length})</span>
+                </div>
+                <button onClick={() => setShowCommentsSidebar(false)}
+                  style={{ background: "none", border: "none", color: "#555", cursor: "pointer", padding: 4 }}>
+                  <X style={{ width: 16, height: 16 }} />
+                </button>
+              </div>
+
+              {/* Comments list */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
+                {inlineComments.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "48px 20px", color: "#444" }}>
+                    <MessageSquare style={{ width: 32, height: 32, margin: "0 auto 12px", opacity: 0.3 }} />
+                    <p style={{ fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.6 }}>
+                      No notes yet.<br />Select any text to add a comment.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {inlineComments.map((c: InlineComment) => {
+                      const chapter = sortedChapters.find(ch => ch.id === c.chapterId);
+                      return (
+                        <div key={c.id} style={{
+                          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+                          borderRadius: 12, padding: 14, transition: "border-color 0.15s",
+                        }}
+                          onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(250,204,21,0.2)")}
+                          onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
+                        >
+                          {/* Author + chapter */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              {c.authorAvatarUrl ? (
+                                <img src={c.authorAvatarUrl} alt="" style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
+                              ) : (
+                                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(250,204,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#facc15" }}>
+                                  {c.authorName[0]?.toUpperCase()}
+                                </div>
+                              )}
+                              <span style={{ fontSize: 11, fontWeight: 600, color: "#bbb" }}>{c.authorName}</span>
+                            </div>
+                            {chapter && (
+                              <span style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                Ch. {sortedChapters.indexOf(chapter) + 1}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Quoted text */}
+                          <div style={{
+                            background: "rgba(250,204,21,0.06)", borderLeft: "2px solid rgba(250,204,21,0.3)",
+                            borderRadius: "0 6px 6px 0", padding: "6px 10px", marginBottom: 8,
+                            fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, fontStyle: "italic",
+                            maxHeight: 40, overflow: "hidden",
+                          }}>
+                            &ldquo;{c.selectedText.length > 80 ? c.selectedText.slice(0, 80) + "..." : c.selectedText}&rdquo;
+                          </div>
+
+                          {/* Comment content */}
+                          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 8 }}>
+                            {c.content}
+                          </p>
+
+                          {/* Footer: date + actions */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 10, color: "#444" }}>
+                              {new Date(c.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            </span>
+                            <div style={{ display: "flex", gap: 4 }}>
+                              <button onClick={() => resolveInlineComment.mutate({ bookId, commentId: c.id })}
+                                title="Resolve"
+                                style={{ background: "none", border: "none", color: "rgba(34,197,94,0.5)", cursor: "pointer", padding: 3, borderRadius: 4 }}
+                                onMouseEnter={e => (e.currentTarget.style.color = "#22c55e")}
+                                onMouseLeave={e => (e.currentTarget.style.color = "rgba(34,197,94,0.5)")}
+                              >
+                                <Check style={{ width: 13, height: 13 }} />
+                              </button>
+                              <button onClick={() => deleteInlineComment.mutate({ bookId, commentId: c.id })}
+                                title="Delete"
+                                style={{ background: "none", border: "none", color: "rgba(239,68,68,0.4)", cursor: "pointer", padding: 3, borderRadius: 4 }}
+                                onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
+                                onMouseLeave={e => (e.currentTarget.style.color = "rgba(239,68,68,0.4)")}
+                              >
+                                <Trash2 style={{ width: 13, height: 13 }} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
@@ -819,6 +990,7 @@ export default function ReadBook() {
                     {pageHtml ? (
                       <div
                         className="book-reader-content"
+                        data-chapter-id={ch.id}
                         style={{
                           fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
                           color: "#1c1410", textAlign: "justify",
@@ -894,6 +1066,7 @@ export default function ReadBook() {
         div:hover > .page-nav-hint { opacity: 1 !important; }
 
         /* Book reader content styles — preserves formatting from the editor */
+        .book-reader-content { user-select: none; -webkit-user-select: none; cursor: text; }
         .book-reader-content p { margin: 0 0 1.1em; text-indent: 1.8em; orphans: 2; widows: 2; }
         .book-reader-content p:first-child { text-indent: 0; }
         .book-reader-content p:first-child::first-letter { font-size: 1.8em; font-weight: 700; line-height: 1; float: left; margin-right: 0.08em; }
@@ -912,7 +1085,46 @@ export default function ReadBook() {
         .book-reader-content hr { border: none; border-top: 1px solid #d4ccc2; margin: 2em auto; width: 40%; }
         .book-reader-content a { color: #4a5568; text-decoration: underline; }
         .book-reader-content img { max-width: 100%; height: auto; border-radius: 6px; margin: 1em 0; }
+        .inline-comment-highlight { background: rgba(250, 204, 21, 0.25) !important; border-bottom: 2px solid rgba(250, 204, 21, 0.5); cursor: pointer; border-radius: 2px; padding: 0 1px; transition: background 0.15s; }
+        .inline-comment-highlight:hover { background: rgba(250, 204, 21, 0.4) !important; }
       `}</style>
+
+      {/* Inline Comments Layer */}
+      {bookId > 0 && chapterRefs.size > 0 && (
+        <InlineCommentsLayer bookId={bookId} chapterRefs={chapterRefs} chapterIds={chapterIds} onFirstSelection={() => setCommentHintDismissed(true)} />
+      )}
+
+      {/* Margin hint — select text to comment */}
+      {sortedChapters.length > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            right: 24,
+            top: 80,
+            opacity: commentHintDismissed ? 0 : 1,
+            transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+            background: "rgba(250,204,21,0.06)",
+            border: "1px solid rgba(250,204,21,0.15)",
+            borderRadius: 14,
+            padding: "14px 18px",
+            maxWidth: 170,
+          }}
+          className="hidden xl:block"
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(250,204,21,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Highlighter style={{ width: 14, height: 14, color: "#facc15" }} />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#d4c89a", letterSpacing: "0.02em" }}>
+              Reader Notes
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, margin: 0 }}>
+            Select any text on the page to leave a note or comment.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

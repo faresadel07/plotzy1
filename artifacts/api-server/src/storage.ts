@@ -3,8 +3,8 @@ import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzl
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
-  follows, notifications, directMessages, bookLikes, bookComments, bookRatings,
-  type Book, type InsertBook,
+  follows, notifications, directMessages, bookLikes, bookComments, bookRatings, inlineComments,
+  type Book, type InsertBook, type InlineComment, type InsertInlineComment,
   type Chapter, type InsertChapter,
   type Transaction, type InsertTransaction,
   type User, type InsertUser,
@@ -380,9 +380,13 @@ export class DatabaseStorage implements IStorage {
 
   async publishBook(id: number, publish: boolean): Promise<Book> {
     if (publish) {
-      const bookChapters = await this.getChapters(id);
-      if (bookChapters.length === 0) {
-        throw new Error("EMPTY_BOOK");
+      const [bookData] = await db.select().from(books).where(eq(books.id, id));
+      if (bookData?.contentType === "article") {
+        // Articles need articleContent, not chapters
+        if (!bookData.articleContent?.trim()) throw new Error("EMPTY_ARTICLE");
+      } else {
+        const bookChapters = await this.getChapters(id);
+        if (bookChapters.length === 0) throw new Error("EMPTY_BOOK");
       }
     }
     const [book] = await db
@@ -406,6 +410,16 @@ export class DatabaseStorage implements IStorage {
       .from(books)
       .leftJoin(users, eq(books.userId, users.id))
       .where(and(eq(books.isPublished, true), eq(books.isDeleted, false)))
+      .orderBy(desc(books.publishedAt));
+    return rows as PublishedBook[];
+  }
+
+  async getPublishedArticles(): Promise<PublishedBook[]> {
+    const rows = await db
+      .select({ ...books, authorDisplayName: users.displayName, authorAvatarUrl: users.avatarUrl })
+      .from(books)
+      .leftJoin(users, eq(books.userId, users.id))
+      .where(and(eq(books.isPublished, true), eq(books.isDeleted, false), eq(books.contentType, "article")))
       .orderBy(desc(books.publishedAt));
     return rows as PublishedBook[];
   }
@@ -613,6 +627,29 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(books)
       .where(and(eq(books.isDeleted, false), eq(books.seriesId as any, seriesId)))
       .orderBy(asc(books.seriesOrder as any));
+  }
+
+  /** Fetch all series for a user with their books in 2 queries (avoids N+1) */
+  async getUserSeriesWithBooks(userId: number): Promise<(BookSeries & { books: Book[] })[]> {
+    const seriesList = await db.select().from(bookSeries)
+      .where(eq(bookSeries.userId, userId))
+      .orderBy(desc(bookSeries.createdAt));
+    if (seriesList.length === 0) return [];
+    const seriesIds = seriesList.map(s => s.id);
+    const allBooks = await db.select().from(books)
+      .where(and(
+        eq(books.isDeleted, false),
+        inArray(books.seriesId as any, seriesIds),
+      ))
+      .orderBy(asc(books.seriesOrder as any));
+    // Group books by seriesId
+    const booksBySeries = new Map<number, Book[]>();
+    for (const b of allBooks) {
+      const sid = (b as any).seriesId as number;
+      if (!booksBySeries.has(sid)) booksBySeries.set(sid, []);
+      booksBySeries.get(sid)!.push(b);
+    }
+    return seriesList.map(s => ({ ...s, books: booksBySeries.get(s.id) || [] }));
   }
 
   async reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void> {
@@ -883,6 +920,34 @@ export class DatabaseStorage implements IStorage {
       WHERE b.user_id = ${userId} AND b.is_published = true AND b.is_deleted = false
     `);
     return Number((result as any).rows?.[0]?.total ?? 0);
+  }
+
+  // ── Inline Comments ──────────────────────────────────────────────────────
+
+  async getInlineComments(chapterId: number): Promise<InlineComment[]> {
+    return await db.select().from(inlineComments)
+      .where(and(eq(inlineComments.chapterId, chapterId), eq(inlineComments.resolved, false)))
+      .orderBy(asc(inlineComments.startOffset));
+  }
+
+  async getBookInlineComments(bookId: number): Promise<InlineComment[]> {
+    return await db.select().from(inlineComments)
+      .where(eq(inlineComments.bookId, bookId))
+      .orderBy(asc(inlineComments.chapterId), asc(inlineComments.startOffset));
+  }
+
+  async addInlineComment(data: InsertInlineComment): Promise<InlineComment> {
+    const [c] = await db.insert(inlineComments).values(data).returning();
+    return c;
+  }
+
+  async deleteInlineComment(id: number): Promise<void> {
+    await db.delete(inlineComments).where(eq(inlineComments.id, id));
+  }
+
+  async resolveInlineComment(id: number): Promise<InlineComment> {
+    const [c] = await db.update(inlineComments).set({ resolved: true }).where(eq(inlineComments.id, id)).returning();
+    return c;
   }
 }
 

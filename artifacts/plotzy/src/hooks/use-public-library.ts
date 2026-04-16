@@ -228,3 +228,69 @@ export function useAddBookComment() {
     },
   });
 }
+
+// ── Inline Comments ─────────────────────────────────────────────────────────
+
+export type InlineComment = {
+  id: number;
+  bookId: number;
+  chapterId: number;
+  userId: number | null;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  selectedText: string;
+  startOffset: number;
+  endOffset: number;
+  content: string;
+  resolved: boolean;
+  createdAt: string;
+};
+
+export function useBookInlineComments(bookId: number) {
+  return useQuery<InlineComment[]>({
+    queryKey: ["inline-comments", bookId],
+    queryFn: async () => {
+      const res = await fetch(`/api/books/${bookId}/inline-comments`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!bookId,
+    refetchInterval: 15000, // Poll every 15s for real-time-ish updates
+  });
+}
+
+export function useAddInlineComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { bookId: number; chapterId: number; selectedText: string; startOffset: number; endOffset: number; content: string; authorName?: string }) => {
+      const res = await fetch(`/api/books/${data.bookId}/chapters/${data.chapterId}/inline-comments`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to add comment");
+      return res.json();
+    },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ["inline-comments", v.bookId] }); },
+  });
+}
+
+export function useDeleteInlineComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bookId, commentId }: { bookId: number; commentId: number }) => {
+      await fetch(`/api/books/${bookId}/inline-comments/${commentId}`, { method: "DELETE", credentials: "include" });
+    },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ["inline-comments", v.bookId] }); },
+  });
+}
+
+export function useResolveInlineComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bookId, commentId }: { bookId: number; commentId: number }) => {
+      await fetch(`/api/books/${bookId}/inline-comments/${commentId}/resolve`, { method: "PATCH", credentials: "include" });
+    },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ["inline-comments", v.bookId] }); },
+  });
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
@@ -293,6 +294,9 @@ export default function ChapterEditor() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { t, lang, isRTL } = useLanguage();
+
+  // Load editor fonts lazily (40+ fonts, only when editor opens)
+  useEffect(() => { loadEditorFonts(); }, []);
 
   // Track last accessed for sorting on home page
   useEffect(() => { if (bookId) try { localStorage.setItem(`plotzy_book_accessed_${bookId}`, String(Date.now())); } catch {} }, [bookId]);

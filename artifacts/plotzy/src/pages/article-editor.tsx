@@ -25,9 +25,10 @@ import {
   Bold, Italic, Underline as UIcon, Strikethrough,
   List, ListOrdered, Quote, Code, Minus,
   Link as LinkIcon, Undo2, Redo2, ChevronDown,
-  Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical, Search,
+  Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical, Search, Globe, Send as SendIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
 import { AIAssistant } from "@/components/ai-assistant";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
@@ -616,6 +617,33 @@ export default function ArticleEditor() {
     } finally { setSaving(false); }
   }, [updateArticle, toast]);
 
+  const [publishing, setPublishing] = useState(false);
+
+  const handlePublish = useCallback(async () => {
+    // Save first
+    await saveNow(true);
+    setPublishing(true);
+    try {
+      const isCurrentlyPublished = (article as any)?.isPublished;
+      const res = await fetch(`/api/books/${idRef.current}/publish`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publish: !isCurrentlyPublished }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ variant: "destructive", title: err.message || "Publish failed" });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: [`/api/books/${idRef.current}`] });
+      toast({ title: isCurrentlyPublished ? "Article unpublished" : "Article published!" });
+    } catch {
+      toast({ variant: "destructive", title: "Publish failed" });
+    } finally {
+      setPublishing(false);
+    }
+  }, [saveNow, article, toast]);
+
   // Auto-save disabled — users save manually
 
   /* ── Ctrl+F search ── */
@@ -966,96 +994,123 @@ export default function ArticleEditor() {
     <Layout isLanding darkNav>
       <div style={{background:BG,minHeight:"100vh",fontFamily:SF}}>
 
-        {/* ── TOP BAR — Ultra-minimal, 52px ── */}
+        {/* ── TOP BAR — fixed below Layout navbar (44px), always visible ── */}
         <div style={{
-          position:"sticky",top:0,zIndex:50,
+          position:"fixed",top:44,left:0,right:0,zIndex:50,
           background:"rgba(10,10,10,0.98)",backdropFilter:"blur(20px)",
           borderBottom:`1px solid ${B}`,
-          padding:"0 20px",height:52,
-          display:"flex",alignItems:"center",justifyContent:"space-between",
+          padding:"0 16px",height:48,
+          display:"flex",alignItems:"center",justifyContent:"center",gap:6,
         }}>
-          {/* Left: back arrow + label */}
-          <div style={{display:"flex",alignItems:"center",gap:12,minWidth:180}}>
-            <Link href="/">
-              <button style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:13,color:TS,padding:"4px 0"}}>
-                <ArrowLeft size={15}/>
-              </button>
-            </Link>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <FileText size={12} color={TD}/>
-              <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:TD}}>Blog Post</span>
+          {/* Back */}
+          <Link href="/">
+            <button style={{display:"flex",alignItems:"center",background:"none",border:"none",cursor:"pointer",color:TS,padding:4,borderRadius:6,flexShrink:0}}
+              onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.06)")}
+              onMouseLeave={e=>(e.currentTarget.style.background="none")}>
+              <ArrowLeft size={15}/>
+            </button>
+          </Link>
+
+          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+
+          {/* Label */}
+          <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+            <FileText size={11} color={TD}/>
+            <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:TD}}>Blog Post</span>
+          </div>
+
+          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+
+          {/* Stats */}
+          <span style={{fontSize:11,color:TD,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{words.toLocaleString()} w</span>
+          <span style={{fontSize:9,color:"rgba(255,255,255,0.1)",flexShrink:0}}>·</span>
+          <span style={{fontSize:11,color:TD,flexShrink:0}}>{readTime} min</span>
+
+          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+
+          {/* Soundscape */}
+          <AmbientSoundscape />
+
+          {/* Mic */}
+          {isTranscribing ? (
+            <div style={{display:"flex",alignItems:"center",gap:4,padding:"0 8px",height:30,borderRadius:7,background:`${ACC}15`,border:`1px solid ${ACC}35`,fontSize:11,color:ACC,flexShrink:0}}>
+              <Loader2 size={11} style={{animation:"spin 1s linear infinite"}}/> Processing…
             </div>
-          </div>
-
-          {/* Center: save status */}
-          <div style={{display:"flex",alignItems:"center",gap:5,position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
-            {saving
-              ? <><Loader2 size={11} color={TD} style={{animation:"spin 1s linear infinite"}}/><span style={{fontSize:11,color:TD}}>Saving…</span></>
-              : justSaved
-                ? <><CheckCircle2 size={11} color="#34d399"/><span style={{fontSize:11,color:"#34d399"}}>Saved</span></>
-                : null
-            }
-          </div>
-
-          {/* Right: word count, preview, settings gear, save */}
-          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:180,justifyContent:"flex-end"}}>
-            <span style={{fontSize:11,color:TD}}>{words.toLocaleString()} words</span>
-            <span style={{fontSize:10,color:"rgba(255,255,255,0.12)"}}>|</span>
-            <span style={{fontSize:11,color:TD,marginRight:2}}>{readTime} min</span>
-
-            {/* Ambient Soundscape */}
-            <AmbientSoundscape />
-
-            {/* Mic / Recording button */}
-            {isTranscribing ? (
-              <div style={{display:"flex",alignItems:"center",gap:5,padding:"0 10px",height:32,borderRadius:8,background:`${ACC}15`,border:`1px solid ${ACC}35`,fontFamily:SF,fontSize:12,color:ACC}}>
-                <Loader2 size={12} style={{animation:"spin 1s linear infinite"}}/> Processing…
-              </div>
-            ) : isRecording ? (
-              <button onClick={stopRecording}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"0 10px",height:32,borderRadius:8,background:"#ef444420",border:"1px solid #ef444455",cursor:"pointer",fontFamily:SF,fontSize:12,fontWeight:600,color:"#ef4444",animation:"pulse 1.5s ease-in-out infinite"}}>
-                <Square size={11} style={{fill:"#ef4444"}}/> <span style={{fontFamily:"monospace"}}>{formatTime(recordingTime)}</span>
-              </button>
-            ) : (
-              <button onClick={startRecording} title="Voice dictation"
-                style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
-                <Mic size={14}/>
-              </button>
-            )}
-
-            <button onClick={() => setFocusMode(f=>!f)} title="Focus mode"
-              style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
-              {focusMode ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}
+          ) : isRecording ? (
+            <button onClick={stopRecording}
+              style={{display:"flex",alignItems:"center",gap:4,padding:"0 8px",height:30,borderRadius:7,background:"#ef444420",border:"1px solid #ef444455",cursor:"pointer",fontSize:11,fontWeight:600,color:"#ef4444",animation:"pulse 1.5s ease-in-out infinite",flexShrink:0}}>
+              <Square size={10} style={{fill:"#ef4444"}}/> <span style={{fontFamily:"monospace",fontSize:10}}>{formatTime(recordingTime)}</span>
             </button>
-
-            <button onClick={() => setShowPreview(true)} title="Preview"
-              style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
-              <Eye size={14}/>
+          ) : (
+            <button onClick={startRecording} title="Voice dictation"
+              style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
+              <Mic size={13}/>
             </button>
+          )}
 
-            <button onClick={() => setDrawerOpen(true)} title="Settings"
-              style={{display:"flex",alignItems:"center",justifyContent:"center",width:34,height:34,borderRadius:8,background:drawerOpen?"rgba(255,255,255,0.1)":"none",border:`1px solid ${B}`,cursor:"pointer",color:TS}}>
-              <BarChart2 size={14}/>
-            </button>
+          {/* Focus */}
+          <button onClick={() => setFocusMode(f=>!f)} title="Focus mode"
+            style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
+            {focusMode ? <Minimize2 size={13}/> : <Maximize2 size={13}/>}
+          </button>
 
-            <button onClick={() => saveNow(false)} disabled={saving}
-              style={{display:"flex",alignItems:"center",gap:6,padding:"7px 18px",borderRadius:8,cursor:"pointer",background:justSaved?"#34d399":"#fff",border:"none",fontFamily:SF,fontSize:13,fontWeight:600,color:justSaved?"#fff":"#000",transition:"all 0.2s"}}>
-              {saving ? <><Loader2 size={13} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
-                : justSaved ? <><CheckCircle2 size={13}/> Saved</>
-                : <><Save size={13}/> Save</>}
-            </button>
-          </div>
+          {/* Preview */}
+          <button onClick={() => setShowPreview(true)} title="Preview"
+            style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
+            <Eye size={13}/>
+          </button>
+
+          {/* Settings */}
+          <button onClick={() => setDrawerOpen(true)} title="Settings"
+            style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:drawerOpen?"rgba(255,255,255,0.1)":"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
+            <BarChart2 size={13}/>
+          </button>
+
+          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+
+          {/* Save status */}
+          {(saving || justSaved) && (
+            <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
+              {saving
+                ? <><Loader2 size={10} color={TD} style={{animation:"spin 1s linear infinite"}}/><span style={{fontSize:10,color:TD}}>Saving…</span></>
+                : <><CheckCircle2 size={10} color="#34d399"/><span style={{fontSize:10,color:"#34d399"}}>Saved</span></>
+              }
+            </div>
+          )}
+
+          {/* Save button */}
+          <button onClick={() => saveNow(false)} disabled={saving}
+            style={{display:"flex",alignItems:"center",gap:5,padding:"6px 14px",borderRadius:7,cursor:"pointer",background:justSaved?"#34d399":"#fff",border:"none",fontFamily:SF,fontSize:12,fontWeight:600,color:justSaved?"#fff":"#000",transition:"all 0.2s",flexShrink:0}}>
+            {saving ? <><Loader2 size={12} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
+              : justSaved ? <><CheckCircle2 size={12}/> Saved</>
+              : <><Save size={12}/> Save</>}
+          </button>
+
+          {/* Publish button */}
+          <button onClick={handlePublish} disabled={publishing}
+            style={{display:"flex",alignItems:"center",gap:5,padding:"6px 14px",borderRadius:7,cursor:"pointer",
+              background:(article as any)?.isPublished ? "rgba(239,68,68,0.15)" : `${ACC}`,
+              border:(article as any)?.isPublished ? "1px solid rgba(239,68,68,0.3)" : "none",
+              fontFamily:SF,fontSize:12,fontWeight:600,
+              color:(article as any)?.isPublished ? "#f87171" : "#fff",
+              transition:"all 0.2s",flexShrink:0,opacity:publishing?0.5:1}}>
+            {publishing ? <Loader2 size={12} style={{animation:"spin 1s linear infinite"}}/>
+              : (article as any)?.isPublished ? <><Globe size={12}/> Unpublish</>
+              : <><SendIcon size={12}/> Publish</>}
+          </button>
         </div>
+        {/* Spacer for fixed top bar */}
+        <div style={{height:48}}/>
 
-        {/* ── FORMATTING TOOLBAR — Sticky below top bar, reorganized groups ── */}
+        {/* ── FORMATTING TOOLBAR — Sticky below fixed top bar (44+48=92), centered ── */}
         {!focusMode && (
         <div
           style={{
-            position:"sticky",top:52,zIndex:49,
+            position:"sticky",top:92,zIndex:49, /* 44px Layout nav + 48px top bar */
             background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
             padding:"0 14px",height:44,
-            display:"flex",alignItems:"center",gap:2,
+            display:"flex",alignItems:"center",justifyContent:"center",gap:2,
             overflowX:"auto",scrollbarWidth:"none",
           }}
           onMouseDown={e => e.preventDefault()}
@@ -1201,8 +1256,9 @@ export default function ArticleEditor() {
             <input ref={inlineImgInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)insertImageFromFile(f);e.target.value="";}}/>
           </div>
 
-          {/* Far right: Search + AI Writing Assistant */}
-          <div style={{marginLeft:"auto",flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
+          <Sep/>
+          {/* Search + AI Writing Assistant */}
+          <div style={{flexShrink:0,display:"flex",alignItems:"center",gap:5}}>
             <button
               onMouseDown={e=>{e.preventDefault(); setShowArticleSearch(s => !s); if(showArticleSearch){setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}}}
               title="Search (Ctrl+F)"

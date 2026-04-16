@@ -73,7 +73,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://accounts.google.com"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'", // Required for Vite-injected scripts
+        ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
+        "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://accounts.google.com",
+      ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
@@ -130,7 +135,7 @@ if (process.env.NODE_ENV === "production" && !sessionSecret) {
   throw new Error("SESSION_SECRET is required in production");
 }
 if (process.env.NODE_ENV === "production" && sessionSecret && sessionSecret.length < 32) {
-  logger.warn("SESSION_SECRET is too short — use at least 32 random characters for production security");
+  throw new Error("SESSION_SECRET must be at least 32 characters in production");
 }
 
 app.use(
@@ -142,7 +147,9 @@ app.use(
           createTableIfMissing: true,
         })
       : undefined,
-    secret: sessionSecret || "plotzy-dev-secret",
+    secret: sessionSecret || (process.env.NODE_ENV === "production"
+      ? (() => { throw new Error("SESSION_SECRET required"); })()
+      : "plotzy-dev-secret-not-for-production"),
     resave: false,
     saveUninitialized: false,
     cookie: {

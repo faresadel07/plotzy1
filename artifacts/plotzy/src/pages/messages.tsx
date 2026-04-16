@@ -154,7 +154,7 @@ export default function Messages() {
       const fd = new FormData(); fd.append("file", file);
       return fetch(`/api/messages/${selectedUserId}/attachment`, { method: "POST", credentials: "include", body: fd });
     },
-    onSuccess: () => { setPreviewFile(null); qc.invalidateQueries({ queryKey: ["/api/messages", selectedUserId] }); qc.invalidateQueries({ queryKey: ["/api/messages/conversations"] }); },
+    onSuccess: () => { if (previewFile?.url) URL.revokeObjectURL(previewFile.url); setPreviewFile(null); qc.invalidateQueries({ queryKey: ["/api/messages", selectedUserId] }); qc.invalidateQueries({ queryKey: ["/api/messages/conversations"] }); },
   });
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -328,7 +328,7 @@ export default function Messages() {
                     <div style={{ fontSize: 12.5, color: T, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{previewFile.file.name}</div>
                     <div style={{ fontSize: 11, color: TD }}>{(previewFile.file.size / 1024).toFixed(0)} KB</div>
                   </div>
-                  <button onClick={() => setPreviewFile(null)} style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "rgba(255,255,255,0.06)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TS }}>
+                  <button onClick={() => { if (previewFile?.url) URL.revokeObjectURL(previewFile.url); setPreviewFile(null); }} style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "rgba(255,255,255,0.06)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TS }}>
                     <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>

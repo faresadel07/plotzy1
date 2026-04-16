@@ -226,9 +226,8 @@ export async function registerRoutes(
       const sess = req.session as any;
       const isAuthenticated = req.isAuthenticated() && req.user;
       const sessionGuestIds: number[] = sess.guestBookIds || [];
-      const bodyGuestIds: number[] = Array.isArray(req.body?.guestIds) ? req.body.guestIds : [];
-      const allGuestIds = [...new Set([...sessionGuestIds, ...bodyGuestIds])];
-      const isGuestOwner = !isAuthenticated && (book.userId === null) && allGuestIds.includes(bookId);
+      // Only trust session-stored guest IDs — never accept from request body
+      const isGuestOwner = !isAuthenticated && (book.userId === null) && sessionGuestIds.includes(bookId);
 
       if (!isAuthenticated && !isGuestOwner) {
         return res.status(401).json({ message: "Not authenticated" });
@@ -266,6 +265,9 @@ export async function registerRoutes(
       if (err.message === "EMPTY_BOOK") {
         return res.status(400).json({ message: "Book must have at least one chapter to publish" });
       }
+      if (err.message === "EMPTY_ARTICLE") {
+        return res.status(400).json({ message: "Article has no content to publish" });
+      }
       res.status(500).json({ message: "Internal error" });
     }
   });
@@ -291,6 +293,14 @@ export async function registerRoutes(
     } catch (err) {
       res.status(500).json({ message: "Internal error" });
     }
+  });
+
+  // ── Published articles ──
+  app.get("/api/public/articles", async (_req, res) => {
+    try {
+      const articles = await storage.getPublishedArticles();
+      res.json(articles);
+    } catch { res.json([]); }
   });
 
   app.get("/api/public/books", async (_req, res) => {
@@ -365,6 +375,64 @@ export async function registerRoutes(
       logger.error({ err }, "Failed to post comment");
       res.status(500).json({ message: "Failed to post comment" });
     }
+  });
+
+  // ── Inline Comments (text-anchored) ──────────────────────────────────────
+
+  app.get("/api/books/:bookId/chapters/:chapterId/inline-comments", async (req, res) => {
+    try {
+      const comments = await storage.getInlineComments(Number(req.params.chapterId));
+      res.json(comments);
+    } catch { res.json([]); }
+  });
+
+  app.get("/api/books/:bookId/inline-comments", async (req, res) => {
+    try {
+      const comments = await storage.getBookInlineComments(Number(req.params.bookId));
+      res.json(comments);
+    } catch { res.json([]); }
+  });
+
+  app.post("/api/books/:bookId/chapters/:chapterId/inline-comments", async (req, res) => {
+    try {
+      const { selectedText, startOffset, endOffset, content } = req.body;
+      if (!selectedText?.trim() || !content?.trim()) return res.status(400).json({ message: "Text selection and comment are required" });
+      if (typeof startOffset !== "number" || typeof endOffset !== "number") return res.status(400).json({ message: "Offsets required" });
+
+      const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
+      const authorName = (req.user as any)?.displayName || req.body.authorName || "Anonymous";
+      const authorAvatarUrl = (req.user as any)?.avatarUrl || null;
+
+      const comment = await storage.addInlineComment({
+        bookId: Number(req.params.bookId),
+        chapterId: Number(req.params.chapterId),
+        userId,
+        authorName,
+        authorAvatarUrl,
+        selectedText: selectedText.trim(),
+        startOffset,
+        endOffset,
+        content: content.trim(),
+      });
+      res.status(201).json(comment);
+    } catch (err) {
+      logger.error({ err }, "Failed to add inline comment");
+      res.status(500).json({ message: "Failed to add inline comment" });
+    }
+  });
+
+  app.delete("/api/books/:bookId/inline-comments/:commentId", async (req, res) => {
+    try {
+      await storage.deleteInlineComment(Number(req.params.commentId));
+      res.json({ success: true });
+    } catch { res.status(500).json({ message: "Failed to delete" }); }
+  });
+
+  app.patch("/api/books/:bookId/inline-comments/:commentId/resolve", async (req, res) => {
+    try {
+      const comment = await storage.resolveInlineComment(Number(req.params.commentId));
+      res.json(comment);
+    } catch { res.status(500).json({ message: "Failed to resolve" }); }
   });
 
   app.get("/api/public/books/:id/ratings", async (req, res) => {

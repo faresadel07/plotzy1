@@ -172,12 +172,9 @@ router.post("/api/books/:id/publish", async (req, res) => {
     const sess = req.session as any;
     const isAuthenticated = req.isAuthenticated() && req.user;
     const sessionGuestIds: number[] = sess.guestBookIds || [];
-    const bodyGuestIds: number[] = Array.isArray(req.body?.guestIds)
-      ? req.body.guestIds
-      : [];
-    const allGuestIds = [...new Set([...sessionGuestIds, ...bodyGuestIds])];
+    // Only trust session-stored guest IDs — never accept from request body
     const isGuestOwner =
-      !isAuthenticated && book.userId === null && allGuestIds.includes(bookId);
+      !isAuthenticated && book.userId === null && sessionGuestIds.includes(bookId);
 
     if (!isAuthenticated && !isGuestOwner) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -222,6 +219,9 @@ router.post("/api/books/:id/publish", async (req, res) => {
   } catch (err: any) {
     if (err.message === "EMPTY_BOOK") {
       return res.status(400).json({ message: "Book must have at least one chapter to publish" });
+    }
+    if (err.message === "EMPTY_ARTICLE") {
+      return res.status(400).json({ message: "Article has no content to publish" });
     }
     res.status(500).json({ message: "Internal error" });
   }

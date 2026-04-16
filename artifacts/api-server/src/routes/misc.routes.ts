@@ -33,14 +33,7 @@ router.get("/api/series", async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
     const userId = (req.user as any).id;
-    const seriesList = await storage.getUserSeries(userId);
-    // Attach books to each series
-    const withBooks = await Promise.all(
-      seriesList.map(async (s) => {
-        const seriesBooks = await storage.getSeriesBooks(s.id);
-        return { ...s, books: seriesBooks };
-      })
-    );
+    const withBooks = await storage.getUserSeriesWithBooks(userId);
     return res.json(withBooks);
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
@@ -409,14 +402,18 @@ router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
     if (!Array.isArray(userIds) || userIds.length === 0) return res.status(400).json({ message: "userIds required" });
     if (userIds.length > 50) return res.status(400).json({ message: "Max 50 users at once" });
     let count = 0;
+    const failed: number[] = [];
     for (const id of userIds) {
       try {
         await storage.suspendUser(Number(id), !!suspended);
         count++;
-      } catch {}
+      } catch (e) {
+        failed.push(Number(id));
+        console.error(`Failed to ${suspended ? "suspend" : "unsuspend"} user ${id}:`, e);
+      }
     }
-    await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count });
-    res.json({ success: true, count });
+    await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count, failed });
+    res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
   }
@@ -429,14 +426,18 @@ router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
     if (!Array.isArray(userIds) || userIds.length === 0) return res.status(400).json({ message: "userIds required" });
     if (userIds.length > 20) return res.status(400).json({ message: "Max 20 users at once" });
     let count = 0;
+    const failed: number[] = [];
     for (const id of userIds) {
       try {
         await storage.deleteUser(Number(id));
         count++;
-      } catch {}
+      } catch (e) {
+        failed.push(Number(id));
+        console.error(`Failed to delete user ${id}:`, e);
+      }
     }
-    await logAdminAction((req.user as any).id, "bulk_delete", "user", null, { userIds, count });
-    res.json({ success: true, count });
+    await logAdminAction((req.user as any).id, "bulk_delete", "user", null, { userIds, count, failed });
+    res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
   }

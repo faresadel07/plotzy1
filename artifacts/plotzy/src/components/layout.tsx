@@ -41,18 +41,18 @@ const NAV_ITEMS: { href: string; key: string }[] = [
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-const NAV_SPAN_STYLE = (active: boolean, dark = false): React.CSSProperties => ({
+const NAV_SPAN_STYLE = (active: boolean, _dark = false): React.CSSProperties => ({
   display: "inline-block",
   padding: "4px 10px",
   borderRadius: 6,
   fontFamily: SF,
   fontSize: 13,
   fontWeight: active ? 600 : 400,
-  color: dark ? (active ? "#fff" : "rgba(255,255,255,0.7)") : "#111",
+  color: active ? "#000" : "#444",
   letterSpacing: "-0.015em",
   cursor: "pointer",
   transition: "color 0.15s, background 0.15s",
-  background: active ? (dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)") : "transparent",
+  background: active ? "rgba(0,0,0,0.06)" : "transparent",
   userSelect: "none",
   textDecoration: "none",
 });
@@ -62,8 +62,8 @@ function NavLink({ href, label, active, dark }: { href: string; label: string; a
     <Link href={href} style={{ textDecoration: "none" }}>
       <span
         style={NAV_SPAN_STYLE(active, dark)}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)"; } }}
-        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; } }}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(0,0,0,0.04)"; (e.currentTarget as HTMLSpanElement).style.color = "#000"; } }}
+        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = "#444"; } }}
       >
         {label}
       </span>
@@ -89,8 +89,8 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
     <a href="/" onClick={handleClick} style={{ textDecoration: "none" }}>
       <span
         style={NAV_SPAN_STYLE(active, dark)}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)"; } }}
-        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; } }}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(0,0,0,0.04)"; (e.currentTarget as HTMLSpanElement).style.color = "#000"; } }}
+        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = "#444"; } }}
       >
         {label ?? "Library"}
       </span>
@@ -265,14 +265,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         top: 0, left: 0, right: 0,
         zIndex: 100,
         height: 44,
-        background: darkNav
-          ? (scrolled ? "rgba(8,8,8,0.96)" : "rgba(8,8,8,0.88)")
-          : (scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)"),
+        background: scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)",
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderBottom: darkNav
-          ? `1px solid ${scrolled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)"}`
-          : `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
+        borderBottom: `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
         transition: "background 0.3s ease, border-color 0.3s ease",
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
@@ -299,7 +295,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             fontWeight: 700,
             fontSize: 14,
             letterSpacing: "-0.04em",
-            color: darkNav ? "#fff" : "#111",
+            color: "#111",
           }}>PLOTZY</span>
         </Link>
 
@@ -328,7 +324,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             border: "none",
             background: "transparent",
             cursor: "pointer",
-            color: darkNav ? "#fff" : "#111",
+            color: "#111",
             justifySelf: "center",
           }}
           aria-label="Toggle menu"
@@ -340,13 +336,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
 
           {/* Notifications */}
-          {user && <NotificationBell darkNav={!!darkNav} />}
+          {user && <NotificationBell darkNav={false} />}
 
           {/* Language */}
           <LanguagePicker />
 
           {/* Divider */}
-          <div style={{ width: 1, height: 16, background: darkNav ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", margin: "0 2px" }} />
+          <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
 
           {/* User */}
           {!isLoading && (
@@ -357,29 +353,29 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px 3px 4px",
                     borderRadius: 20,
-                    border: darkNav ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.1)",
+                    border: "1px solid rgba(0,0,0,0.1)",
                     background: "transparent", cursor: "pointer",
                     transition: "background 0.15s",
                   }}
-                    onMouseEnter={e => (e.currentTarget.style.background = darkNav ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <Avatar className="w-[22px] h-[22px]">
                       <AvatarImage src={user.avatarUrl || undefined} />
-                      <AvatarFallback style={{ background: darkNav ? "#333" : "#111", color: "#fff", fontSize: 9, fontWeight: 700 }}>
+                      <AvatarFallback style={{ background: "#111", color: "#fff", fontSize: 9, fontWeight: 700 }}>
                         {getInitials(user.displayName, user.email)}
                       </AvatarFallback>
                     </Avatar>
                     <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: darkNav ? "rgba(255,255,255,0.8)" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {user.displayName || user.email?.split("@")[0] || "Me"}
                       </span>
                       {user.isAdmin && (
                         <span style={{
                           fontFamily: SF, fontSize: 9, fontWeight: 700,
                           letterSpacing: "0.06em", textTransform: "uppercase",
-                          color: darkNav ? "#000" : "#fff",
-                          background: darkNav ? "#fff" : "#111",
+                          color: "#fff",
+                          background: "#111",
                           borderRadius: 4, padding: "1px 5px",
                           lineHeight: 1.6, flexShrink: 0,
                         }}>Admin</span>
@@ -441,8 +437,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                 style={{
                   padding: "5px 14px",
                   borderRadius: 20,
-                  background: darkNav ? "rgba(255,255,255,0.1)" : "#111",
-                  border: darkNav ? "1px solid rgba(255,255,255,0.15)" : "none",
+                  background: "#111",
+                  border: "none",
                   cursor: "pointer",
                   fontFamily: SF,
                   fontSize: 12.5, fontWeight: 600, color: "#fff",

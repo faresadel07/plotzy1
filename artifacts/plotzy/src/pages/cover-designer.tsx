@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
+import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Type, ImageIcon, Square, Layers, Palette,
@@ -56,13 +57,44 @@ interface CoverSettings {
   front: { background: string };
   back: { background: string };
   spine: { background: string };
+  spineSync: boolean; // auto-sync spine color with front/back
 }
 
 const FONTS = ["Inter", "Playfair Display", "Merriweather", "Oswald", "Lato", "Montserrat", "Georgia", "Times New Roman", "Courier New", "Impact"];
 
-const FACE_W = { front: 300, back: 300, spine: 48 };
+const SPINE_MIN = 32;
+const SPINE_MAX = 72;
+const SPINE_DEFAULT = 48;
 const FACE_H = 450;
-const FACE_OFFSET = { back: 0, spine: 300, front: 348 };
+
+/* ─── Color helpers ─── */
+/** Parse a CSS color (#hex or rgb) to {r,g,b}. Gradients return the first color. */
+function parseColor(css: string): { r: number; g: number; b: number } {
+  // Extract first hex color from any string (gradient or solid)
+  const hexMatch = css.match(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/);
+  if (hexMatch) {
+    let hex = hexMatch[1];
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
+  }
+  return { r: 26, g: 26, b: 46 }; // fallback dark
+}
+
+/** Blend two colors by a ratio (0=a, 1=b) and return hex string */
+function blendColors(a: string, b: string, ratio = 0.5): string {
+  const ca = parseColor(a), cb = parseColor(b);
+  const r = Math.round(ca.r + (cb.r - ca.r) * ratio);
+  const g = Math.round(ca.g + (cb.g - ca.g) * ratio);
+  const bl = Math.round(ca.b + (cb.b - ca.b) * ratio);
+  return `#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${bl.toString(16).padStart(2,"0")}`;
+}
+
+/** Darken a color by a factor (0=black, 1=unchanged) */
+function darkenColor(css: string, factor: number): string {
+  const c = parseColor(css);
+  const r = Math.round(c.r * factor), g = Math.round(c.g * factor), b = Math.round(c.b * factor);
+  return `#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${b.toString(16).padStart(2,"0")}`;
+}
 
 const GRADIENTS = [
   "linear-gradient(135deg,#0f0c29,#302b63,#24243e)",
@@ -88,6 +120,8 @@ export default function CoverDesigner() {
   const { data: book, isLoading } = useBook(bookId);
   const updateBook = useUpdateBook();
 
+  useEffect(() => { loadEditorFonts(); }, []);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,11 +134,18 @@ export default function CoverDesigner() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeFace, setActiveFace] = useState<Face>("front");
   const [activePanel, setActivePanel] = useState<"text" | "images" | "shapes" | "layers" | "background" | "ai">("text");
+  const [spineWidth, setSpineWidth] = useState(SPINE_DEFAULT);
   const [coverSettings, setCoverSettings] = useState<CoverSettings>({
     front: { background: "linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)" },
     back: { background: "linear-gradient(135deg,#232526,#414345)" },
     spine: { background: "#1a1a2e" },
+    spineSync: true,
   });
+
+  // Dynamic face widths/offsets based on spineWidth
+  const FACE_W = { front: 300, back: 300, spine: spineWidth };
+  const FACE_OFFSET = { back: 0, spine: 300, front: 300 + spineWidth };
+  const TOTAL_BOOK_W = 300 + spineWidth + 300;
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -148,10 +189,22 @@ export default function CoverDesigner() {
     pushHistory(els);
   };
 
+  /* ─── Auto-sync spine color when front/back change ─── */
+  useEffect(() => {
+    if (!coverSettings.spineSync) return;
+    const blended = blendColors(coverSettings.front.background, coverSettings.back.background, 0.5);
+    // Slightly darken the blend to give a subtle spine crease feel
+    const spineColor = darkenColor(blended, 0.85);
+    setCoverSettings((s) => {
+      if (s.spine.background === spineColor) return s;
+      return { ...s, spine: { background: spineColor } };
+    });
+  }, [coverSettings.front.background, coverSettings.back.background, coverSettings.spineSync]);
+
   /* ─── Init elements — restore saved design or use defaults ─── */
   useEffect(() => {
     if (!book) return;
-    const saved = (book as any).coverData as { elements?: CoverElement[]; settings?: CoverSettings } | null | undefined;
+    const saved = (book as any).coverData as { elements?: CoverElement[]; settings?: CoverSettings; spineWidth?: number } | null | undefined;
 
     if (saved?.elements && saved.elements.length > 0) {
       // Saved data found — apply it once
@@ -160,7 +213,8 @@ export default function CoverDesigner() {
       defaultAppliedRef.current = `${book.id}:saved`;
       setElements(saved.elements);
       setHistory([saved.elements]);
-      if (saved.settings) setCoverSettings(saved.settings);
+      if (saved.settings) setCoverSettings({ spineSync: true, ...saved.settings });
+      if (saved.spineWidth) setSpineWidth(saved.spineWidth);
       return;
     }
 
@@ -326,40 +380,101 @@ export default function CoverDesigner() {
     updateElements(newEls);
   };
 
-  /* ─── Image upload ─── */
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  /* ─── Image: shared processor (used by file input AND drag-drop) ─── */
+  const addImageFile = useCallback((file: File, targetFace?: Face) => {
+    if (!file.type.startsWith("image/")) return;
+    const face = targetFace ?? activeFace;
     const reader = new FileReader();
     reader.onload = (ev) => {
       const src = ev.target?.result as string;
       const img = new Image();
       img.onload = () => {
-        const faceW = FACE_W[activeFace];
+        const faceW = FACE_W[face];
         const faceH = FACE_H;
         const naturalW = img.naturalWidth;
         const naturalH = img.naturalHeight;
-        // Scale to fit within face while preserving aspect ratio
         const scale = Math.min(faceW / naturalW, faceH / naturalH, 1);
         const displayW = Math.round(naturalW * scale);
         const displayH = Math.round(naturalH * scale);
-        // Center on face
         const x = Math.round((faceW - displayW) / 2);
         const y = Math.round((faceH - displayH) / 2);
         const el: CoverElement = {
-          id: nanoid(), type: "image", face: activeFace,
+          id: nanoid(), type: "image", face,
           x, y, width: displayW, height: displayH,
           zIndex: elements.length + 1, visible: true, locked: false,
           src, objectFit: "fill", opacity: 1, borderRadius: 0,
         };
         updateElements([...elements, el]);
         setSelectedId(el.id);
+        setActiveFace(face);
       };
       img.src = src;
     };
     reader.readAsDataURL(file);
+  }, [activeFace, elements, spineWidth, updateElements]);
+
+  /* ─── Image upload (file input) ─── */
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    addImageFile(file);
     e.target.value = "";
   };
+
+  /* ─── Drag & Drop ─── */
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDraggingOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDraggingOver(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  /** Detect which face the drop landed on by checking cursor position against face rects */
+  const detectFaceFromDrop = useCallback((e: React.DragEvent): Face => {
+    const bookEl = bookRef.current;
+    if (!bookEl) return activeFace;
+    const rect = bookEl.getBoundingClientRect();
+    const relX = (e.clientX - rect.left) / zoom;
+    // back: 0..300, spine: 300..300+spineWidth, front: 300+spineWidth..600+spineWidth
+    if (relX < 300) return "back";
+    if (relX < 300 + spineWidth) return "spine";
+    return "front";
+  }, [activeFace, zoom, spineWidth]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    dragCounterRef.current = 0;
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+
+    const targetFace = detectFaceFromDrop(e);
+    // Add first image (multiple images would overlap — just take the first)
+    addImageFile(imageFiles[0], targetFace);
+  }, [detectFaceFromDrop, addImageFile]);
 
   /* ─── Inline text editing ─── */
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -379,7 +494,11 @@ export default function CoverDesigner() {
   /* ─── Export ─── */
   const handleExport = async () => {
     if (!bookRef.current) return;
+    const prevSelected = selectedId;
+    setSelectedId(null); // hide selection outlines before capture
     setExporting(true);
+    // Wait one frame for React to remove outlines
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
       const canvas = await html2canvas(bookRef.current, {
         scale: 3,
@@ -397,12 +516,16 @@ export default function CoverDesigner() {
       toast({ title: "Export failed", variant: "destructive" });
     } finally {
       setExporting(false);
+      setSelectedId(prevSelected);
     }
   };
 
   /* ─── Save ─── */
   const handleSave = async () => {
+    const prevSelected = selectedId;
+    setSelectedId(null); // hide selection outlines before thumbnail capture
     setSaving(true);
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
       // Capture front face thumbnail by data attribute (safe, no magic index)
       let coverImage: string | undefined;
@@ -417,7 +540,7 @@ export default function CoverDesigner() {
       await updateBook.mutateAsync({
         id: bookId,
         spineColor: coverSettings.spine.background,
-        coverData: { elements, settings: coverSettings },
+        coverData: { elements, settings: coverSettings, spineWidth },
         ...(coverImage ? { coverImage } : {}),
       } as any);
       toast({ title: "Design saved!" });
@@ -425,6 +548,7 @@ export default function CoverDesigner() {
       toast({ title: "Save failed", variant: "destructive" });
     } finally {
       setSaving(false);
+      setSelectedId(prevSelected);
     }
   };
 
@@ -453,7 +577,7 @@ export default function CoverDesigner() {
         try {
           await updateBook.mutateAsync({
             id: bookId,
-            coverData: { elements: newEls, settings: coverSettings },
+            coverData: { elements: newEls, settings: coverSettings, spineWidth },
           } as any);
         } catch { /* auto-save failure is non-fatal */ }
         toast({ title: `✨ ${aiCoverSide === "front" ? "Front" : "Back"} cover generated!` });
@@ -599,18 +723,40 @@ export default function CoverDesigner() {
     const faceElements = sortedElements.filter((e) => e.face === face);
     const bg = coverSettings[face].background;
     const isSpine = face === "spine";
+
+    // Build gradient edge overlays for visual blending between spine and covers
+    const spineEdgeLeft = isSpine ? `linear-gradient(to right, ${darkenColor(coverSettings.back.background, 0.6)}33 0%, transparent 40%)` : undefined;
+    const spineEdgeRight = isSpine ? `linear-gradient(to left, ${darkenColor(coverSettings.front.background, 0.6)}33 0%, transparent 40%)` : undefined;
+
     return (
       <div
         data-face={face}
         style={{ position: "relative", width: w, height: FACE_H, background: bg, overflow: "hidden", flexShrink: 0 }}
         onClick={() => { setActiveFace(face); setSelectedId(null); }}
       >
+        {/* Spine blend overlays — subtle gradient edges to connect with front/back */}
+        {isSpine && (
+          <>
+            <div style={{ position: "absolute", inset: 0, background: spineEdgeLeft, pointerEvents: "none", zIndex: 0 }} />
+            <div style={{ position: "absolute", inset: 0, background: spineEdgeRight, pointerEvents: "none", zIndex: 0 }} />
+            {/* Subtle inner shadow for book crease feel */}
+            <div style={{ position: "absolute", inset: 0, boxShadow: "inset 2px 0 6px rgba(0,0,0,0.3), inset -2px 0 6px rgba(0,0,0,0.3)", pointerEvents: "none", zIndex: 1 }} />
+          </>
+        )}
+        {/* Edge shadow on cover sides adjacent to spine */}
+        {face === "back" && (
+          <div style={{ position: "absolute", top: 0, right: 0, width: 12, height: "100%", background: "linear-gradient(to left, rgba(0,0,0,0.25), transparent)", pointerEvents: "none", zIndex: 9990 }} />
+        )}
+        {face === "front" && (
+          <div style={{ position: "absolute", top: 0, left: 0, width: 12, height: "100%", background: "linear-gradient(to right, rgba(0,0,0,0.25), transparent)", pointerEvents: "none", zIndex: 9990 }} />
+        )}
+
         {/* Spine text is rotated */}
         {faceElements.map((el) =>
           face === "spine" ? (
             <div
               key={el.id}
-              style={{ position: "absolute", left: el.x, top: el.y, width: el.width, height: el.height, zIndex: el.zIndex, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", outline: selectedId === el.id ? "2px solid #3b82f6" : "none", outlineOffset: 1, boxSizing: "border-box" }}
+              style={{ position: "absolute", left: el.x, top: el.y, width: el.width, height: el.height, zIndex: el.zIndex + 2, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", outline: selectedId === el.id ? "2px solid #3b82f6" : "none", outlineOffset: 1, boxSizing: "border-box" }}
               onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -721,17 +867,63 @@ export default function CoverDesigner() {
               </button>
             ))}
           </div>
+
+          {/* Spine sync toggle */}
+          <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5 border border-white/8">
+            <div>
+              <p className="text-xs text-white/70 font-medium">Auto-sync spine</p>
+              <p className="text-[10px] text-white/30 mt-0.5">Blend front & back colors</p>
+            </div>
+            <button
+              onClick={() => setCoverSettings((s) => ({ ...s, spineSync: !s.spineSync }))}
+              className={`relative w-9 h-5 rounded-full transition-colors ${coverSettings.spineSync ? "bg-blue-600" : "bg-white/15"}`}
+            >
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${coverSettings.spineSync ? "left-[18px]" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          {/* Spine width slider */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs text-white/30">Spine Width</p>
+              <span className="text-xs text-white/50 font-mono">{spineWidth}px</span>
+            </div>
+            <input type="range" min={SPINE_MIN} max={SPINE_MAX} value={spineWidth} className="w-full accent-blue-500"
+              onChange={(e) => setSpineWidth(parseInt(e.target.value))} />
+            <p className="text-[10px] text-white/20 mt-1">Adjust based on page count — thin for novellas, wide for thick novels</p>
+          </div>
+
+          <div className="border-t border-white/8" />
+
           <p className="text-xs text-white/30">Solid Color</p>
           <input type="color" className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
             value={coverSettings[activeFace].background.startsWith("#") ? coverSettings[activeFace].background : "#1a1a2e"}
-            onChange={(e) => setCoverSettings((s) => ({ ...s, [activeFace]: { background: e.target.value } }))}
+            onChange={(e) => {
+              setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: e.target.value } }));
+              // If manually editing spine, turn off sync
+              if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
+            }}
           />
           <p className="text-xs text-white/30 mt-2">Gradient Presets</p>
           <div className="grid grid-cols-2 gap-2">
             {GRADIENTS.map((g, i) => (
-              <button key={i} style={{ background: g }} className="h-12 rounded-xl border border-white/10 hover:scale-105 transition-transform" onClick={() => setCoverSettings((s) => ({ ...s, [activeFace]: { background: g } }))} />
+              <button key={i} style={{ background: g }} className="h-12 rounded-xl border border-white/10 hover:scale-105 transition-transform"
+                onClick={() => {
+                  setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: g } }));
+                  if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
+                }} />
             ))}
           </div>
+
+          {/* Quick match spine button (when sync is off) */}
+          {!coverSettings.spineSync && activeFace === "spine" && (
+            <button
+              onClick={() => setCoverSettings((s) => ({ ...s, spineSync: true }))}
+              className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white/70 text-xs font-medium rounded-xl px-3 py-2.5 transition-colors"
+            >
+              <Palette className="w-3.5 h-3.5" /> Match spine to covers
+            </button>
+          )}
         </div>
       );
 
@@ -839,16 +1031,25 @@ export default function CoverDesigner() {
         {/* Face background color */}
         <div>
           <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2 capitalize">{activeFace} Background</p>
+          {activeFace === "spine" && coverSettings.spineSync && (
+            <p className="text-[10px] text-blue-400/60 mb-2">Auto-synced — change from Background panel to override</p>
+          )}
           <input
             type="color"
             className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
             value={coverSettings[activeFace].background.startsWith("#") ? coverSettings[activeFace].background : "#1a1a2e"}
-            onChange={(e) => setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: e.target.value } }))}
+            onChange={(e) => {
+              if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
+              setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: e.target.value } }));
+            }}
           />
           <div className="flex flex-wrap gap-1.5 mt-2">
             {["#1a1a2e","#0f172a","#111827","#16213e","#0f3460","#1e1b4b","#3b0764","#164e63","#14532d","#7f1d1d","#000000","#ffffff"].map((c) => (
               <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform"
-                onClick={() => setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: c } }))} />
+                onClick={() => {
+                  if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
+                  setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: c } }));
+                }} />
             ))}
           </div>
         </div>
@@ -993,7 +1194,6 @@ export default function CoverDesigner() {
     );
   };
 
-  const TOTAL_BOOK_W = 300 + 48 + 300; // 648
   const scaledW = TOTAL_BOOK_W * zoom;
   const scaledH = FACE_H * zoom;
 
@@ -1066,9 +1266,27 @@ export default function CoverDesigner() {
           </div>
         </div>
 
-        {/* ── Canvas ── */}
-        <div ref={canvasRef} className="flex-1 overflow-auto flex items-center justify-center bg-[#111]" style={{ backgroundImage: "radial-gradient(circle, #1e1e1e 1px, transparent 1px)", backgroundSize: "24px 24px" }}
-          onClick={() => setSelectedId(null)}>
+        {/* ── Canvas (drop zone) ── */}
+        <div
+          ref={canvasRef}
+          className="flex-1 overflow-auto flex items-center justify-center bg-[#111] relative"
+          style={{ backgroundImage: "radial-gradient(circle, #1e1e1e 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+          onClick={() => setSelectedId(null)}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {/* Drag overlay */}
+          {isDraggingOver && (
+            <div className="absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ background: "rgba(59,130,246,0.12)", backdropFilter: "blur(2px)" }}>
+              <div className="flex flex-col items-center gap-3 bg-[#1a1a2e]/90 border-2 border-dashed border-blue-500/60 rounded-2xl px-10 py-8">
+                <ImageIcon className="w-10 h-10 text-blue-400 animate-bounce" />
+                <p className="text-sm text-blue-300 font-semibold">Drop image here</p>
+                <p className="text-xs text-white/40">Image will be added to the cover face under your cursor</p>
+              </div>
+            </div>
+          )}
           {/* Book */}
           <div style={{ transform: `scale(${zoom})`, transformOrigin: "center center", transition: "transform 0.15s ease" }}>
             <div

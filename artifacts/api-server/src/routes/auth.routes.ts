@@ -9,8 +9,34 @@ import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpFor
 import { logger } from "../lib/logger";
 import crypto from "crypto";
 import { db } from "../db";
-import { passwordResetTokens, emailVerificationTokens } from "../../../../lib/db/src/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
+import { eq, and, sql, gt, count } from "drizzle-orm";
+
+/* ─── Brute-force protection constants ─── */
+const MAX_FAILED_ATTEMPTS = 5;          // lock after 5 failures
+const LOCKOUT_WINDOW_MINUTES = 15;      // within a 15-minute window
+const LOCKOUT_DURATION_MINUTES = 15;    // lock for 15 minutes
+
+async function recordLoginAttempt(email: string, ip: string | undefined, success: boolean) {
+  await db.insert(loginAttempts).values({ email: email.toLowerCase(), ip: ip || null, success });
+}
+
+async function isAccountLocked(email: string): Promise<{ locked: boolean; minutesLeft: number }> {
+  const windowStart = new Date(Date.now() - LOCKOUT_WINDOW_MINUTES * 60_000);
+  const [result] = await db.select({ cnt: count() }).from(loginAttempts)
+    .where(and(
+      eq(loginAttempts.email, email.toLowerCase()),
+      eq(loginAttempts.success, false),
+      gt(loginAttempts.createdAt, windowStart),
+    ));
+  const failCount = result?.cnt ?? 0;
+  if (failCount >= MAX_FAILED_ATTEMPTS) {
+    // Check when the most recent failure was to calculate time remaining
+    const minutesLeft = LOCKOUT_DURATION_MINUTES; // simplified — full window from now
+    return { locked: true, minutesLeft };
+  }
+  return { locked: false, minutesLeft: 0 };
+}
 
 const router = Router();
 
@@ -138,14 +164,33 @@ router.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = z.object({
       email: z.string().email(),
-      password: z.string().min(1),
+      password: z.string().min(8, "Password must be at least 8 characters"),
     }).parse(req.body);
 
+    // Check if account is locked due to too many failed attempts
+    const lockStatus = await isAccountLocked(email);
+    if (lockStatus.locked) {
+      return res.status(429).json({
+        message: `Too many failed login attempts. Please try again in ${lockStatus.minutesLeft} minutes.`,
+        lockedUntilMinutes: lockStatus.minutesLeft,
+      });
+    }
+
+    const clientIp = req.ip || req.headers["x-forwarded-for"]?.toString();
     const user = await storage.getUserByEmail(email);
-    if (!user || !user.passwordHash) return res.status(401).json({ message: "Invalid email or password." });
+    if (!user || !user.passwordHash) {
+      await recordLoginAttempt(email, clientIp, false);
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) return res.status(401).json({ message: "Invalid email or password." });
+    if (!valid) {
+      await recordLoginAttempt(email, clientIp, false);
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    // Successful login — record it and clear old attempts
+    await recordLoginAttempt(email, clientIp, true);
 
     // Capture guest book IDs before the session may change
     const guestIds: number[] = (req.session as any).guestBookIds || [];
@@ -184,9 +229,9 @@ router.patch("/api/auth/avatar", async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
     const { avatarUrl } = z.object({
-      avatarUrl: z.string().max(10_000_000).refine(
-        (v: string) => v.startsWith("data:image/") || v.startsWith("http"),
-        { message: "Must be a valid image" }
+      avatarUrl: z.string().max(250_000).refine(
+        (v: string) => v.startsWith("data:image/") || (v.startsWith("http") && v.length < 2048),
+        { message: "Must be a valid image (data URI max ~200KB, or a URL)" }
       ),
     }).parse(req.body);
     const updated = await storage.updateUser(req.user.id, { avatarUrl });
@@ -390,7 +435,7 @@ router.post("/api/auth/forgot-password", async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
       ? `https://${process.env.APP_DOMAIN || "localhost"}`
       : "http://localhost:5173");
-    const resetLink = `${frontendUrl}/?reset=${token}`;
+    const resetLink = `${frontendUrl}/reset-password/${token}`;
 
     try {
       const { Resend } = await import("resend");
@@ -420,6 +465,20 @@ router.post("/api/auth/forgot-password", async (req, res) => {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid email" });
     logger.error({ err }, "Forgot password error");
     res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ─── Verify Reset Token (POST-based, no URL exposure) ──────────────────────
+
+router.post("/api/auth/verify-reset-token", async (req, res) => {
+  try {
+    const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
+    const [resetToken] = await db.select().from(passwordResetTokens)
+      .where(and(eq(passwordResetTokens.token, token), sql`used_at IS NULL AND expires_at > NOW()`));
+    if (!resetToken) return res.status(400).json({ valid: false, message: "Invalid or expired reset link." });
+    return res.json({ valid: true });
+  } catch {
+    return res.status(400).json({ valid: false });
   }
 });
 
