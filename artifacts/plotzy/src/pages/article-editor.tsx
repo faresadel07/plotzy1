@@ -1107,6 +1107,7 @@ export default function ArticleEditor() {
         <div
           style={{
             position:"sticky",top:92,zIndex:49, /* 44px Layout nav + 48px top bar */
+            scrollbarWidth:"none" as any,
             background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
             padding:"0 14px",height:44,

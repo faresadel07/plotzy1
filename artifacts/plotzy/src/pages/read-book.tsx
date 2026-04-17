@@ -903,7 +903,7 @@ export default function ReadBook() {
       </AnimatePresence>
 
       {/* ── Reading area — scrollable pages ── */}
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
+      <div className="read-book-container" style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
 
         {!sortedChapters.length ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#555" }}>

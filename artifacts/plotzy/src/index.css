@@ -622,3 +622,97 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL RESPONSIVE — Mobile & Tablet
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤1024px) ── */
+@media (max-width: 1024px) {
+  /* Pricing cards: stack vertically */
+  .pricing-cards-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 20px !important;
+  }
+  .pricing-cards-row > * {
+    width: 100% !important;
+    max-width: 420px !important;
+  }
+  /* Chapter editor: allow toolbar scroll */
+  .chapter-toolbar-row {
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .chapter-toolbar-row::-webkit-scrollbar { display: none; }
+}
+
+/* ── Mobile (≤768px) ── */
+@media (max-width: 768px) {
+  /* Home page feature cards */
+  #platform-features {
+    padding: 40px 0 60px !important;
+  }
+
+  /* Book details: stack layout */
+  .book-details-layout {
+    flex-direction: column !important;
+  }
+  .book-details-sidebar {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Messages: hide sidebar by default */
+  .messages-sidebar {
+    position: fixed !important;
+    z-index: 60 !important;
+    width: 280px !important;
+  }
+
+  /* Read book: reduce padding */
+  .book-reader-content {
+    font-size: 15px !important;
+    line-height: 1.75 !important;
+  }
+  .read-book-container {
+    padding: 0 14px !important;
+  }
+  .read-book-container > div > div {
+    padding: 24px clamp(12px, 4vw, 32px) 20px !important;
+  }
+
+  /* Cover designer: not usable on mobile, show message */
+  .cover-designer-mobile-warn {
+    display: flex !important;
+  }
+
+  /* Editor toolbars: horizontal scroll */
+  .editor-formatting-bar {
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    justify-content: flex-start !important;
+    padding: 0 8px !important;
+  }
+  .editor-formatting-bar::-webkit-scrollbar { display: none; }
+
+  /* Library cards: smaller grid */
+  .library-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── Small phone (≤480px) ── */
+@media (max-width: 480px) {
+  .library-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Pricing: full width */
+  .pricing-cards-row > * {
+    max-width: 100% !important;
+  }
+}

@@ -208,6 +208,7 @@ export default function Pricing() {
 
           {/* ── Cards grid ── */}
           <div
+            className="pricing-cards-row"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",

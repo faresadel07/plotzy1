@@ -1199,7 +1199,21 @@ export default function CoverDesigner() {
 
   /* ─── Render ─── */
   return (
-    <div className="flex flex-col h-screen bg-[#111] text-white overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+    <>
+    {/* Mobile warning — cover designer needs desktop */}
+    <div className="md:hidden flex flex-col items-center justify-center h-screen p-8 text-center bg-[#111] text-white" style={{ fontFamily: "Inter, sans-serif" }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>🖥️</div>
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Desktop Required</h2>
+      <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 320 }}>
+        The Cover Designer needs more screen space. Please open this page on a tablet or desktop for the best experience.
+      </p>
+      <Link href={`/books/${bookId}`}>
+        <button style={{ marginTop: 24, padding: "10px 20px", borderRadius: 10, background: "#fff", color: "#000", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          Back to Book
+        </button>
+      </Link>
+    </div>
+    <div className="hidden md:flex flex-col h-screen bg-[#111] text-white overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
 
       {/* ── Top Bar ── */}
       <div className="flex items-center gap-3 px-4 h-12 bg-[#1a1a1a] border-b border-white/8 flex-shrink-0 z-50">
@@ -1315,5 +1329,6 @@ export default function CoverDesigner() {
       {/* keyboard shortcut: Delete */}
       <input type="text" className="sr-only" onKeyDown={(e) => { if (e.key === "Delete" || e.key === "Backspace") deleteSelected(); }} />
     </div>
+    </>
   );
 }

@@ -488,7 +488,7 @@ export default function Library() {
               </p>
             </div>
           ) : (
-            <div style={{
+            <div className="library-grid" style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
               gap: 24,

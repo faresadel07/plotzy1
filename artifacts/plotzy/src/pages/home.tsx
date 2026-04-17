@@ -1352,6 +1352,43 @@ export default function Home() {
         </div>
       )}
 
+      {/* ── Global responsive overrides ── */}
+      <style>{`
+        @media (max-width: 768px) {
+          /* Hero section */
+          .home-hero-title { font-size: clamp(2rem, 8vw, 3.5rem) !important; }
+          .home-hero-subtitle { font-size: 14px !important; padding: 0 16px !important; }
+          .home-hero-buttons { flex-direction: column !important; gap: 10px !important; width: 100% !important; padding: 0 20px !important; }
+          .home-hero-buttons button, .home-hero-buttons a { width: 100% !important; justify-content: center !important; }
+
+          /* Feature cards grid */
+          #platform-features > div { padding: 0 16px !important; }
+          #platform-features .grid { grid-template-columns: 1fr !important; }
+
+          /* Stats section */
+          .home-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+
+          /* CTA section */
+          .home-cta-title { font-size: clamp(1.5rem, 6vw, 2.5rem) !important; }
+          .home-cta-buttons { flex-direction: column !important; gap: 10px !important; width: 100% !important; padding: 0 20px !important; }
+          .home-cta-buttons button, .home-cta-buttons a { width: 100% !important; }
+
+          /* Book cards */
+          .home-book-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; }
+
+          /* General containers */
+          .home-section-container { padding-left: 16px !important; padding-right: 16px !important; }
+
+          /* Shared books row */
+          .home-shared-books { flex-wrap: wrap !important; }
+        }
+
+        @media (max-width: 480px) {
+          .home-stats-grid { grid-template-columns: 1fr !important; }
+          .home-book-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
+
       </Layout>
 
       <OnboardingWizard open={showWizard} onClose={() => setShowWizard(false)} onCreateBook={handleCreateWizardBook} />

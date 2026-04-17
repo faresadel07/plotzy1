@@ -1375,7 +1375,7 @@ export default function ChapterEditor() {
           </div>
 
           {/* ── Center: tool icons ── */}
-          <div className="flex items-center gap-0.5 flex-1 justify-center">
+          <div className="flex items-center gap-0.5 flex-1 justify-center overflow-x-auto" style={{ scrollbarWidth: "none" }}>
 
             {/* Undo / Redo */}
             <Button
