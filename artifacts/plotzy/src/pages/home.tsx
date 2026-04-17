@@ -136,7 +136,8 @@ function BookPages() {
     background: `linear-gradient(180deg, ${PAGE_BG} 0%, #EDE5CC 100%)`,
     position: "relative", overflow: "hidden",
     display: "flex", flexDirection: "column",
-    padding: "20px 56px 42px", boxSizing: "border-box",
+    padding: "clamp(10px, 2vw, 20px) clamp(16px, 5vw, 56px) clamp(20px, 4vw, 42px)",
+    boxSizing: "border-box",
   };
 
   /* small-caps running header */
@@ -172,7 +173,7 @@ function BookPages() {
 
   const chapterHeading: React.CSSProperties = {
     fontFamily: BOOK_FONT,
-    fontSize: "1.32rem",
+    fontSize: "clamp(0.8rem, 2.4vw, 1.32rem)",
     fontWeight: "bold",
     fontStyle: "normal",
     color: PAGE_TEXT,
@@ -214,7 +215,7 @@ function BookPages() {
 
   const para: React.CSSProperties = {
     fontFamily: BOOK_FONT,
-    fontSize: "0.82rem",
+    fontSize: "clamp(0.55rem, 1.6vw, 0.82rem)",
     lineHeight: 1.9,
     fontStyle: "normal",
     fontWeight: "normal",

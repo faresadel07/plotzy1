@@ -35,7 +35,7 @@ export const ContainerScroll = ({
 
   return (
     <div
-      className="h-[52rem] md:h-[68rem] flex items-center justify-center relative p-2 md:p-4"
+      className="h-[36rem] md:h-[68rem] flex items-center justify-center relative p-2 md:p-4"
       style={{ position: "relative" }}
       ref={containerRef}
     >
@@ -81,7 +81,7 @@ export const Card = ({
         boxShadow:
           "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003",
       }}
-      className="max-w-5xl -mt-12 mx-auto h-[36rem] md:h-[46rem] w-full shadow-2xl relative"
+      className="max-w-5xl -mt-8 md:-mt-12 mx-auto h-[18rem] sm:h-[24rem] md:h-[46rem] w-full shadow-2xl relative"
     >
       {/* Cover boards */}
       <div

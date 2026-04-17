@@ -627,6 +627,16 @@
    GLOBAL RESPONSIVE — Mobile & Tablet
    ═══════════════════════════════════════════════════════════════════ */
 
+/* Prevent horizontal scroll across the entire app */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* ── Tablet (≤1024px) ── */
 @media (max-width: 1024px) {
   /* Pricing cards: stack vertically */

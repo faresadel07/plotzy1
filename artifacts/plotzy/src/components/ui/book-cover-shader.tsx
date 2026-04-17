@@ -24,7 +24,16 @@ function isWebGLSupported(): boolean {
   }
 }
 
-const webGLSupported = typeof window !== "undefined" && isWebGLSupported();
+function isTouchOrSmallDevice(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  // iPad reports as Mac in modern Safari, so check touch points too
+  const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isMobileUA = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
+  const isSmallScreen = window.innerWidth < 1280;
+  return isTouch || isMobileUA || isSmallScreen;
+}
+
+const webGLSupported = typeof window !== "undefined" && isWebGLSupported() && !isTouchOrSmallDevice();
 
 interface BookCoverShaderProps {
   bookId: number;
