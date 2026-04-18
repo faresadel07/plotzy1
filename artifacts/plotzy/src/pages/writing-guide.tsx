@@ -396,10 +396,10 @@ const sections = [
 
 function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; title: string; subtitle: string; accent?: string }) {
   return (
-    <div className="mb-8 text-center" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
+    <div className="mb-8 text-center px-2 sm:px-0" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">{label}</p>
-      <h2 className="text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-3 leading-[1.1] tracking-[-0.025em]">{title}</h2>
-      <p className="text-muted-foreground text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">{subtitle}</p>
+      <h2 className="text-[1.5rem] sm:text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-3 leading-[1.15] md:leading-[1.1] tracking-[-0.02em] md:tracking-[-0.025em]">{title}</h2>
+      <p className="text-muted-foreground text-[13px] sm:text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">{subtitle}</p>
     </div>
   );
 }
@@ -501,13 +501,13 @@ export default function WritingGuide() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-4">
             The Plotzy Writing Guide
           </p>
-          <h1 className="text-[2.25rem] md:text-[3.5rem] font-bold text-foreground mb-4 leading-[1.05] tracking-[-0.035em]">
+          <h1 className="text-[1.875rem] sm:text-[2.25rem] md:text-[3.5rem] font-bold text-foreground mb-4 leading-[1.1] md:leading-[1.05] tracking-[-0.03em] md:tracking-[-0.035em] px-2 sm:px-0">
             From blank page to <span className="bg-gradient-to-br from-white to-white/55 bg-clip-text text-transparent">finished book</span>.
           </h1>
-          <p className="text-foreground/60 text-[14px] md:text-[15px] max-w-xl mx-auto leading-[1.65]">
+          <p className="text-foreground/60 text-[13px] sm:text-[14px] md:text-[15px] max-w-xl mx-auto leading-[1.65] px-2 sm:px-0">
             A professional, end-to-end handbook for the craft of writing. Seven sections distilled from decades of published work: genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
           </p>
-          <div className="mt-5 inline-flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
+          <div className="mt-5 inline-flex items-center flex-wrap justify-center gap-x-2.5 gap-y-1 text-[10px] text-muted-foreground/70 px-4">
             <span className="font-mono">20 min read</span>
             <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40" />
             <span>7 sections</span>
@@ -518,13 +518,16 @@ export default function WritingGuide() {
       </motion.header>
 
       {/* ── Sticky Nav ── */}
-      <div className="sticky top-[44px] z-20 mb-10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50">
-        <div className="flex items-center justify-center gap-1 overflow-x-auto scrollbar-none max-w-5xl mx-auto">
+      <div
+        className="sticky top-[44px] z-20 mb-8 md:mb-10 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-2 md:py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50"
+        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
+      >
+        <div className="flex items-center gap-1 overflow-x-auto max-w-5xl mx-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" as any }}>
           {sections.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => scrollTo(id)}
-              className={`flex-shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex-shrink-0 px-3 md:px-3.5 py-1.5 rounded-lg text-[11px] md:text-xs font-semibold whitespace-nowrap transition-all ${
                 activeSection === id
                   ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
@@ -533,7 +536,7 @@ export default function WritingGuide() {
               {label}
             </button>
           ))}
-          <span className="flex-shrink-0 ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-foreground/[0.04] border border-border/50 whitespace-nowrap">
+          <span className="hidden sm:inline-flex flex-shrink-0 ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-foreground/[0.04] border border-border/50 whitespace-nowrap">
             {readSections.size}/7 sections read
           </span>
         </div>
@@ -858,25 +861,25 @@ export default function WritingGuide() {
                 key={principle.title} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
                 className="border border-border rounded-2xl bg-card overflow-hidden"
               >
-                <div className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-foreground/6 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-foreground/70" />
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-start gap-3 sm:gap-4 mb-4">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-foreground/6 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground/70" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-foreground mb-1">{principle.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{principle.description}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-foreground mb-1 text-[15px] sm:text-base">{principle.title}</h3>
+                      <p className="text-[13px] sm:text-sm text-muted-foreground leading-relaxed">{principle.description}</p>
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">❌ Weak</p>
-                      <p className="text-sm text-foreground/70 font-mono leading-relaxed whitespace-pre-line">{principle.bad}</p>
+                    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-400 mb-2">✗ Weak</p>
+                      <p className="text-[12px] sm:text-sm text-foreground/70 font-mono leading-relaxed whitespace-pre-line break-words">{principle.bad}</p>
                     </div>
-                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">✓ Strong</p>
-                      <p className="text-sm text-foreground/70 font-mono leading-relaxed whitespace-pre-line">{principle.good}</p>
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">✓ Strong</p>
+                      <p className="text-[12px] sm:text-sm text-foreground/70 font-mono leading-relaxed whitespace-pre-line break-words">{principle.good}</p>
                     </div>
                   </div>
                 </div>
@@ -904,17 +907,17 @@ export default function WritingGuide() {
             return (
               <motion.div
                 key={phase.phase} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-                className={`rounded-2xl border p-6 ${phase.bg} ${phase.border}`}
+                className={`rounded-2xl border p-4 sm:p-6 ${phase.bg} ${phase.border}`}
               >
-                <div className="flex items-start gap-5">
+                <div className="flex items-start gap-3 sm:gap-5">
                   <div className="flex-shrink-0 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-background/60 border border-border flex items-center justify-center mb-1">
-                      <Icon className={`w-5 h-5 ${phase.color}`} />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-background/60 border border-border flex items-center justify-center mb-1">
+                      <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${phase.color}`} />
                     </div>
-                    <span className={`text-xs font-bold ${phase.color}`}>{phase.phase}</span>
+                    <span className={`text-[10px] sm:text-xs font-bold ${phase.color}`}>{phase.phase}</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-foreground mb-2">{phase.title}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base sm:text-lg text-foreground mb-2">{phase.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">{phase.description}</p>
                     <div className="space-y-2">
                       {phase.actions.map((action) => (
@@ -997,14 +1000,14 @@ export default function WritingGuide() {
           {beginnerMistakes.map((item, i) => (
             <motion.div
               key={item.mistake} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-              className="border border-border rounded-2xl bg-card p-5 flex gap-4"
+              className="border border-border rounded-2xl bg-card p-4 sm:p-5 flex gap-3 sm:gap-4"
             >
-              <div className="w-10 h-10 rounded-xl bg-foreground/6 flex items-center justify-center flex-shrink-0 text-sm font-bold text-muted-foreground">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-foreground/6 flex items-center justify-center flex-shrink-0 text-xs sm:text-sm font-bold text-muted-foreground">
                 {item.icon}
               </div>
-              <div>
+              <div className="min-w-0">
                 <h4 className="font-bold text-foreground mb-1.5 text-sm">"{item.mistake}"</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.fix}</p>
+                <p className="text-[13px] sm:text-sm text-muted-foreground leading-relaxed">{item.fix}</p>
               </div>
             </motion.div>
           ))}
