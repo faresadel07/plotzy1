@@ -396,22 +396,22 @@ const sections = [
 
 function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; title: string; subtitle: string; accent?: string }) {
   return (
-    <div className="mb-16 text-center">
-      <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-5">{label}</p>
-      <h2 className="text-[2rem] md:text-[3rem] font-bold text-foreground mb-5 leading-[1.1] tracking-[-0.03em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{title}</h2>
-      <p className="text-muted-foreground text-[15px] md:text-base max-w-xl leading-[1.8] mx-auto">{subtitle}</p>
+    <div className="mb-8 text-center" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">{label}</p>
+      <h2 className="text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-3 leading-[1.1] tracking-[-0.025em]">{title}</h2>
+      <p className="text-muted-foreground text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">{subtitle}</p>
     </div>
   );
 }
 
 function Divider() {
   return (
-    <div className="my-28 flex items-center justify-center gap-3" aria-hidden>
-      <span className="w-12 h-px bg-border" />
-      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-      <span className="w-12 h-px bg-border" />
+    <div className="my-12 flex items-center justify-center gap-2" aria-hidden>
+      <span className="w-8 h-px bg-border" />
+      <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+      <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+      <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+      <span className="w-8 h-px bg-border" />
     </div>
   );
 }
@@ -494,32 +494,31 @@ export default function WritingGuide() {
       {/* ── Hero ── */}
       <motion.header
         initial="hidden" animate="visible" variants={fadeUp}
-        className="relative pt-20 pb-14 md:pt-28 md:pb-16 mb-6 border-b border-border/40"
+        className="relative pt-10 pb-8 md:pt-14 md:pb-10 border-b border-border/40"
+        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
       >
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-4">
             The Plotzy Writing Guide
           </p>
-          <h1 className="text-[2.75rem] md:text-[5rem] font-bold text-foreground mb-8 leading-[1.02] tracking-[-0.04em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            From blank page to <em className="not-italic bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">finished book</em>.
+          <h1 className="text-[2.25rem] md:text-[3.5rem] font-bold text-foreground mb-4 leading-[1.05] tracking-[-0.035em]">
+            From blank page to <span className="bg-gradient-to-br from-white to-white/55 bg-clip-text text-transparent">finished book</span>.
           </h1>
-          <p className="text-foreground/60 text-base md:text-[17px] max-w-xl mx-auto leading-[1.7]">
-            A professional, end-to-end handbook for the craft of writing. Seven sections, distilled from decades of published work — genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
+          <p className="text-foreground/60 text-[14px] md:text-[15px] max-w-xl mx-auto leading-[1.65]">
+            A professional, end-to-end handbook for the craft of writing. Seven sections distilled from decades of published work — genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
           </p>
-
-          {/* Reading time + author chip */}
-          <div className="mt-10 inline-flex items-center gap-3 text-[11px] text-muted-foreground/70">
+          <div className="mt-5 inline-flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
             <span className="font-mono">20 min read</span>
-            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+            <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40" />
             <span>7 sections</span>
-            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+            <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40" />
             <span>For writers at every level</span>
           </div>
         </div>
       </motion.header>
 
       {/* ── Sticky Nav ── */}
-      <div className="sticky top-[44px] z-20 mb-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50">
+      <div className="sticky top-[44px] z-20 mb-10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center justify-center gap-1 overflow-x-auto scrollbar-none max-w-5xl mx-auto">
           {sections.map(({ id, label }) => (
             <button
@@ -1011,14 +1010,15 @@ export default function WritingGuide() {
         {/* Author Wisdom */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-          className="mt-20 mb-4"
+          className="mt-12 mb-4"
+          style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
         >
-          <div className="text-center mb-14">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-5">From the Masters</p>
-            <h2 className="text-[2rem] md:text-[3rem] font-bold text-foreground mb-5 leading-[1.1] tracking-[-0.03em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <div className="text-center mb-8">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">From the Masters</p>
+            <h2 className="text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-3 leading-[1.1] tracking-[-0.025em]">
               What the greats learned.
             </h2>
-            <p className="text-muted-foreground text-[15px] md:text-base max-w-xl leading-[1.8] mx-auto">
+            <p className="text-muted-foreground text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">
               Eight writers whose books have shaped how we read and write — each with a single piece of advice and a concrete way to apply it.
             </p>
           </div>
@@ -1126,27 +1126,28 @@ export default function WritingGuide() {
         {/* Final CTA — Closing */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-          className="mt-20 mb-8 text-center max-w-2xl mx-auto"
+          className="mt-12 mb-4 text-center max-w-2xl mx-auto"
+          style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
         >
-          <div className="w-[1px] h-10 bg-border mx-auto mb-8" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-6">
+          <div className="w-px h-6 bg-border mx-auto mb-4" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">
             A Closing Note
           </p>
-          <h3 className="text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-5 leading-[1.15] tracking-[-0.02em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <h3 className="text-[1.5rem] md:text-[1.875rem] font-bold text-foreground mb-3 leading-[1.15] tracking-[-0.02em]">
             The only way to write a book is to write it.
           </h3>
-          <p className="text-muted-foreground max-w-xl mx-auto leading-[1.8] text-[15px] mb-8">
+          <p className="text-muted-foreground max-w-xl mx-auto leading-[1.65] text-[14px] md:text-[15px] mb-5">
             Every framework in this guide is secondary to one irreplaceable act — showing up at the page. Read this guide once. Come back to it when stuck. But don't mistake reading about writing for writing itself. The writers who finish books are the ones who write imperfectly, every day, until they're done.
           </p>
-          <blockquote className="border-l-2 border-foreground/20 pl-5 py-1 max-w-md mx-auto text-left">
-            <p className="text-[15px] italic text-foreground/80 leading-relaxed mb-2">
+          <blockquote className="border-l-2 border-foreground/20 pl-4 py-0.5 max-w-md mx-auto text-left">
+            <p className="text-[14px] italic text-foreground/80 leading-relaxed mb-1">
               "The first draft of anything is garbage."
             </p>
-            <cite className="text-[11px] not-italic font-semibold tracking-wider uppercase text-muted-foreground/70">
+            <cite className="text-[10px] not-italic font-semibold tracking-wider uppercase text-muted-foreground/70">
               — Ernest Hemingway
             </cite>
           </blockquote>
-          <div className="w-[1px] h-10 bg-border mx-auto mt-10" />
+          <div className="w-px h-6 bg-border mx-auto mt-6" />
         </motion.div>
       </section>
 
