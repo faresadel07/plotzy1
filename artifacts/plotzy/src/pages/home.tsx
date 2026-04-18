@@ -315,6 +315,22 @@ function BookPages() {
         </div>
       </div>
 
+      {/* ── CENTER SPINE ── perfectly centered fold line */}
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          bottom: 0,
+          width: 1,
+          transform: "translateX(-50%)",
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 20%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0.18) 80%, rgba(0,0,0,0) 100%)",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      />
+
     </div>
   );
 }
