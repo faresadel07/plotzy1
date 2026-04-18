@@ -56,8 +56,8 @@ export function CardStack<T extends CardStackItem>({
   items,
   initialIndex = 0,
   maxVisible = 7,
-  cardWidth = 480,
-  cardHeight = 300,
+  cardWidth: cardWidthProp = 480,
+  cardHeight: cardHeightProp = 300,
   overlap = 0.48,
   spreadDeg = 44,
   perspectivePx = 1100,
@@ -79,6 +79,21 @@ export function CardStack<T extends CardStackItem>({
 }: CardStackProps<T>) {
   const reduceMotion = useReducedMotion();
   const len = items.length;
+
+  // Responsive card dimensions — scale down on small screens
+  const [viewportW, setViewportW] = React.useState(() => typeof window !== "undefined" ? window.innerWidth : 1200);
+  React.useEffect(() => {
+    const onResize = () => setViewportW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  // On mobile, shrink card to fit viewport with margins
+  const cardWidth = viewportW < 640
+    ? Math.min(cardWidthProp, viewportW - 40)
+    : cardWidthProp;
+  const cardHeight = viewportW < 640
+    ? Math.round(cardHeightProp * (cardWidth / cardWidthProp))
+    : cardHeightProp;
 
   const [active, setActive] = React.useState(() => wrapIndex(initialIndex, len));
   const [hovering, setHovering] = React.useState(false);
