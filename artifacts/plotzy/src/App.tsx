@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
 import QuickDropNotepad from "@/components/QuickDropNotepad";
 import MobileBlocker from "@/components/MobileBlocker";
+import GoogleOneTap from "@/components/GoogleOneTap";
 
 /* Eager: landing page (must load instantly) */
 import Home from "@/pages/home";
@@ -260,6 +261,7 @@ function App() {
                 <ScrollToTop />
                 <OAuthCallbackHandler />
                 <EmailVerifyHandler />
+                <GoogleOneTap />
                 <Router />
                 <QuickDropNotepad />
                 <Toaster />

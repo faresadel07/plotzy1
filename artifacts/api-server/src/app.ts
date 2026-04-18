@@ -82,7 +82,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "https://api.openai.com", "https://www.paypal.com", "https://www.sandbox.paypal.com", "wss:", "ws:"],
+      connectSrc: ["'self'", "https://api.openai.com", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://accounts.google.com", "wss:", "ws:"],
       frameSrc: ["'self'", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://accounts.google.com", "https://www.youtube.com", "https://player.vimeo.com"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],

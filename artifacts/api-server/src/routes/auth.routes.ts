@@ -3,6 +3,7 @@ import express from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import passport from "passport";
+import { OAuth2Client } from "google-auth-library";
 import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
@@ -11,6 +12,16 @@ import crypto from "crypto";
 import { db } from "../db";
 import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
 import { eq, and, sql, gt, count } from "drizzle-orm";
+
+// Lazily-initialised verifier for Google One Tap ID tokens. google-auth-library
+// fetches and caches Google's public JWKS internally, so a single client per
+// process is both correct and efficient.
+let googleOneTapClient: OAuth2Client | null = null;
+function getGoogleOneTapClient(): OAuth2Client | null {
+  if (!process.env.GOOGLE_CLIENT_ID) return null;
+  if (!googleOneTapClient) googleOneTapClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  return googleOneTapClient;
+}
 
 /* ─── Brute-force protection constants ─── */
 const MAX_FAILED_ATTEMPTS = 5;          // lock after 5 failures
@@ -252,6 +263,81 @@ router.patch("/api/auth/display-name", async (req, res) => {
     res.json(updated);
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ─── Google One Tap ────────────────────────────────────────────────────────
+// Public endpoint so the frontend can pick up the client ID without requiring
+// a VITE_ env var (the client ID is public information by design).
+router.get("/api/auth/google/config", (_req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || null;
+  res.json({ clientId, enabled: !!clientId });
+});
+
+// Verify a Google ID token produced by the One Tap flow and sign the user in.
+// The credential is a JWT signed by Google; we verify it against Google's
+// public keys and the client ID we control, so a forged token cannot log in.
+router.post("/api/auth/google/one-tap", async (req, res) => {
+  try {
+    const { credential } = z.object({ credential: z.string().min(10) }).parse(req.body);
+
+    const client = getGoogleOneTapClient();
+    if (!client || !process.env.GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ message: "Google sign-in is not configured." });
+    }
+
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      logger.warn({ err }, "Google One Tap token verification failed");
+      return res.status(401).json({ message: "Invalid Google credential." });
+    }
+
+    if (!payload || !payload.sub) {
+      return res.status(401).json({ message: "Invalid Google credential." });
+    }
+    // Extra defence-in-depth: google-auth-library already checks iss/exp/aud,
+    // but asserting iss explicitly guards against library behaviour changes.
+    if (payload.iss !== "https://accounts.google.com" && payload.iss !== "accounts.google.com") {
+      return res.status(401).json({ message: "Invalid token issuer." });
+    }
+
+    const googleId = payload.sub;
+    const email = payload.email || null;
+    const displayName = payload.name || null;
+    const avatarUrl = payload.picture || null;
+
+    // Find-or-create user, mirroring the passport Google strategy above.
+    let user = await storage.getUserByGoogleId(googleId);
+    if (!user && email) {
+      user = await storage.getUserByEmail(email);
+      if (user) user = await storage.updateUser(user.id, { googleId });
+    }
+    if (!user) {
+      user = await storage.createUser({ googleId, email, displayName, avatarUrl });
+    }
+
+    // Preserve any guest books started before login.
+    const guestIds: number[] = (req.session as any).guestBookIds || [];
+    await new Promise<void>((resolve, reject) =>
+      req.login(user!, (err) => (err ? reject(err) : resolve()))
+    );
+    if (guestIds.length > 0) {
+      await storage.claimGuestBooks(guestIds, user.id);
+      (req.session as any).guestBookIds = [];
+    }
+
+    const { id, email: e, displayName: d, avatarUrl: a, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
+    return res.json({ id, email: e, displayName: d, avatarUrl: a, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid request" });
+    logger.error({ err }, "Google One Tap error");
+    return res.status(500).json({ message: "Sign-in failed" });
   }
 });
 

@@ -41,6 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
+    // Prevent Google One Tap from silently re-authenticating the user they
+    // just logged out from.
+    try {
+      (window as any).google?.accounts?.id?.disableAutoSelect?.();
+    } catch {}
     queryClient.setQueryData(["/api/auth/user"], null);
     queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
