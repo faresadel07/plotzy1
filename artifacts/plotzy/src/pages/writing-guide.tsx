@@ -396,19 +396,22 @@ const sections = [
 
 function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; title: string; subtitle: string; accent?: string }) {
   return (
-    <div className="mb-14 text-center">
-      <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-3">{label}</p>
-      <h2 className="text-3xl md:text-[2.5rem] font-bold text-foreground mb-4 leading-[1.15] tracking-tight">{title}</h2>
-      <div className="w-12 h-[2px] bg-foreground/15 mb-5 mx-auto" />
-      <p className="text-muted-foreground text-base max-w-2xl leading-relaxed mx-auto">{subtitle}</p>
+    <div className="mb-16 text-center">
+      <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-5">{label}</p>
+      <h2 className="text-[2rem] md:text-[3rem] font-bold text-foreground mb-5 leading-[1.1] tracking-[-0.03em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{title}</h2>
+      <p className="text-muted-foreground text-[15px] md:text-base max-w-xl leading-[1.8] mx-auto">{subtitle}</p>
     </div>
   );
 }
 
 function Divider() {
   return (
-    <div className="my-24">
-      <div className="border-t border-border/40" />
+    <div className="my-28 flex items-center justify-center gap-3" aria-hidden>
+      <span className="w-12 h-px bg-border" />
+      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+      <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+      <span className="w-12 h-px bg-border" />
     </div>
   );
 }
@@ -489,26 +492,31 @@ export default function WritingGuide() {
 
       <div className="dark px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* ── Hero ── */}
-      <motion.div
+      <motion.header
         initial="hidden" animate="visible" variants={fadeUp}
-        className="relative pt-12 pb-2 md:pt-16 md:pb-3 mb-4 overflow-hidden"
+        className="relative pt-20 pb-14 md:pt-28 md:pb-16 mb-6 border-b border-border/40"
       >
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-foreground/[0.03] rounded-full blur-[80px] -translate-y-1/2" />
-        </div>
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">
-            Complete Writing Guide
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-8">
+            The Plotzy Writing Guide
           </p>
-          <h1 className="text-5xl md:text-[4.5rem] font-bold text-foreground mb-6 leading-[1.08] tracking-tight">
-            From Blank Page<br />
-            <span className="text-foreground">to Finished Book</span>
+          <h1 className="text-[2.75rem] md:text-[5rem] font-bold text-foreground mb-8 leading-[1.02] tracking-[-0.04em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            From blank page to <em className="not-italic bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">finished book</em>.
           </h1>
-          <p className="text-foreground/55 text-lg max-w-xl mx-auto leading-relaxed mb-10">
-            A professional, end-to-end guide covering everything a new writer needs to know, from choosing a genre to writing, revising, and publishing a complete book.
+          <p className="text-foreground/60 text-base md:text-[17px] max-w-xl mx-auto leading-[1.7]">
+            A professional, end-to-end handbook for the craft of writing. Seven sections, distilled from decades of published work — genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
           </p>
+
+          {/* Reading time + author chip */}
+          <div className="mt-10 inline-flex items-center gap-3 text-[11px] text-muted-foreground/70">
+            <span className="font-mono">20 min read</span>
+            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+            <span>7 sections</span>
+            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+            <span>For writers at every level</span>
+          </div>
         </div>
-      </motion.div>
+      </motion.header>
 
       {/* ── Sticky Nav ── */}
       <div className="sticky top-[44px] z-20 mb-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50">
@@ -573,9 +581,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="genres" className="scroll-mt-20">
         <SectionHeader
-          icon={BookOpen} label="Section 01: Genres"
-          title="Understanding Book Genres"
-          subtitle="Every story belongs to a genre: a category that tells readers what kind of experience to expect. Choosing your genre is one of the most important decisions you'll make as a writer."
+          icon={BookOpen} label="01 — Genres"
+          title="Find your genre."
+          subtitle="Every story belongs to a genre — a promise to the reader about what kind of experience to expect. This is one of the most important decisions you'll make: it shapes your characters, your pacing, your voice, and even who will read you."
         />
 
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -660,26 +668,9 @@ export default function WritingGuide() {
             );
           })}
         </div>
-        <p className="text-center text-sm text-muted-foreground">Tap any genre to expand its full breakdown.</p>
-
-        {/* CTA: Genres */}
-        <div style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: "32px 24px",
-          textAlign: "center",
-          margin: "32px 0 48px",
-        }}>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Choose your genre and begin your first chapter</p>
-          <button onClick={() => navigate("/")} style={{
-            padding: "10px 28px", borderRadius: 10,
-            background: "#fff", color: "#000", border: "none",
-            fontSize: 14, fontWeight: 600, cursor: "pointer",
-          }}>
-            Start Writing in Your Genre
-          </button>
-        </div>
+        <p className="text-center text-xs text-muted-foreground/60 mt-6 italic">
+          Click any genre to reveal its conventions, writing tips, and notable examples.
+        </p>
       </section>
 
       <Divider />
@@ -689,9 +680,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="structure" className="scroll-mt-20">
         <SectionHeader
-          icon={Layers} label="Section 02: Structure"
-          title="Three Proven Story Structures"
-          subtitle="Professional authors don't write randomly: they follow proven frameworks that readers are unconsciously wired to find satisfying. Learn all three, then choose what fits your story."
+          icon={Layers} label="02 — Structure"
+          title="Shape the story."
+          subtitle="Professional authors don't write in straight lines. They follow frameworks that readers are unconsciously wired to find satisfying. Learn all three — then choose the one that fits the story you're actually telling."
         />
 
         {/* Structure tabs */}
@@ -770,24 +761,6 @@ export default function WritingGuide() {
           </motion.div>
         </AnimatePresence>
 
-        {/* CTA: Structure */}
-        <div style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: "32px 24px",
-          textAlign: "center",
-          margin: "32px 0 48px",
-        }}>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Use our Story Beats board to plan your narrative</p>
-          <button onClick={() => navigate("/")} style={{
-            padding: "10px 28px", borderRadius: 10,
-            background: "#fff", color: "#000", border: "none",
-            fontSize: 14, fontWeight: 600, cursor: "pointer",
-          }}>
-            Create Your Story Outline
-          </button>
-        </div>
       </section>
 
       <Divider />
@@ -797,9 +770,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="characters" className="scroll-mt-20">
         <SectionHeader
-          icon={Users} label="Section 03: Characters"
-          title="Building Unforgettable Characters"
-          subtitle="Plot is what happens. Character is why we care. The most memorable stories are remembered through the people in them: their flaws, their growth, and their choices under pressure."
+          icon={Users} label="03 — Character"
+          title="Write people, not placeholders."
+          subtitle="Plot is what happens. Character is why we care. The stories that live longest in memory aren't remembered for their events — they're remembered for the people who lived through them, flawed and changing."
         />
 
         <div className="mb-12">
@@ -861,24 +834,6 @@ export default function WritingGuide() {
           </div>
         </div>
 
-        {/* CTA: Characters */}
-        <div style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: "32px 24px",
-          textAlign: "center",
-          margin: "32px 0 48px",
-        }}>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Document your characters in the Story Bible</p>
-          <button onClick={() => navigate("/")} style={{
-            padding: "10px 28px", borderRadius: 10,
-            background: "#fff", color: "#000", border: "none",
-            fontSize: 14, fontWeight: 600, cursor: "pointer",
-          }}>
-            Build Your Character Bible
-          </button>
-        </div>
       </section>
 
       <Divider />
@@ -888,9 +843,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="dialogue" className="scroll-mt-20">
         <SectionHeader
-          icon={Mic2} label="Section 04: Dialogue"
-          title="Writing Dialogue That Feels Real"
-          subtitle="Dialogue is one of the fastest ways to reveal character, create conflict, and advance the plot: all at once. These principles separate amateur dialogue from professional-grade conversation."
+          icon={Mic2} label="04 — Dialogue"
+          title="Make them talk — like people."
+          subtitle="Dialogue is the fastest way to reveal character, create conflict, and advance plot — all in the same breath. These four principles separate amateur dialogue from the kind that carries a scene."
         />
 
         <div className="space-y-5">
@@ -936,9 +891,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="process" className="scroll-mt-20">
         <SectionHeader
-          icon={Map} label="Section 05: The Process"
-          title="The Complete Writing Process"
-          subtitle="Writing a book is a multi-phase project. Understanding what phase you're in: and what that phase demands of you: is the key to staying productive and finishing what you start."
+          icon={Map} label="05 — Process"
+          title="From idea to published book."
+          subtitle="Writing a book is a multi-phase project. Understanding which phase you're in — and what that phase actually demands of you — is the difference between writers who finish and writers who don't."
         />
 
         <div className="space-y-4">
@@ -982,9 +937,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="editing" className="scroll-mt-20">
         <SectionHeader
-          icon={Scissors} label="Section 06: Editing"
-          title="The Self-Editing Checklist"
-          subtitle="Professional authors revise 3–7 times before submitting. Each pass focuses on a different layer. Use this checklist to systematically strengthen your manuscript."
+          icon={Scissors} label="06 — Editing"
+          title="Writing is rewriting."
+          subtitle="Published authors revise three to seven times before a manuscript is ready. Each pass focuses on a different layer — structure, character, prose, pacing. Use this checklist as your map through the work."
         />
 
         <div className="space-y-4">
@@ -1031,9 +986,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="mistakes" className="scroll-mt-20 pb-20">
         <SectionHeader
-          icon={Lightbulb} label="Section 07: Common Mistakes"
-          title="8 Mistakes Every Beginner Makes"
-          subtitle="These are the most predictable traps new writers fall into: and the most straightforward to fix once you know to look for them."
+          icon={Lightbulb} label="07 — Pitfalls"
+          title="The eight mistakes every beginner makes."
+          subtitle="These are the most predictable traps new writers fall into — and the easiest to fix once you know to look for them. Most aren't talent problems. They're awareness problems."
         />
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -1058,13 +1013,13 @@ export default function WritingGuide() {
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
           className="mt-20 mb-4"
         >
-          <div className="text-center mb-12">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">Words From the Masters</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-4">
-              Advice From the World's Greatest Writers
+          <div className="text-center mb-14">
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-5">From the Masters</p>
+            <h2 className="text-[2rem] md:text-[3rem] font-bold text-foreground mb-5 leading-[1.1] tracking-[-0.03em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              What the greats learned.
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              These authors have written some of the most beloved books in history. Here is what they learned.
+            <p className="text-muted-foreground text-[15px] md:text-base max-w-xl leading-[1.8] mx-auto">
+              Eight writers whose books have shaped how we read and write — each with a single piece of advice and a concrete way to apply it.
             </p>
           </div>
 
@@ -1168,21 +1123,30 @@ export default function WritingGuide() {
           </div>
         </motion.div>
 
-        {/* Final CTA */}
+        {/* Final CTA — Closing */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-          className="mt-16 rounded-3xl border border-border bg-card p-10 text-center"
+          className="mt-20 mb-8 text-center max-w-2xl mx-auto"
         >
-          <div className="w-14 h-14 rounded-2xl bg-foreground/6 flex items-center justify-center mx-auto mb-5">
-            <Award className="w-7 h-7 text-foreground/70" />
-          </div>
-          <h3 className="text-2xl font-bold text-foreground mb-3">There's Only One Way to Learn to Write</h3>
-          <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed mb-6">
-            Every framework, tip, and checklist in this guide is secondary to one irreplaceable activity: sitting down and writing. Knowledge without practice is just theory. The writers who finish books are the ones who show up, imperfectly, every day.
+          <div className="w-[1px] h-10 bg-border mx-auto mb-8" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground/70 mb-6">
+            A Closing Note
           </p>
-          <p className="text-sm font-semibold text-foreground/50 italic">
-            "The first draft of anything is garbage.": Ernest Hemingway
+          <h3 className="text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-5 leading-[1.15] tracking-[-0.02em]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            The only way to write a book is to write it.
+          </h3>
+          <p className="text-muted-foreground max-w-xl mx-auto leading-[1.8] text-[15px] mb-8">
+            Every framework in this guide is secondary to one irreplaceable act — showing up at the page. Read this guide once. Come back to it when stuck. But don't mistake reading about writing for writing itself. The writers who finish books are the ones who write imperfectly, every day, until they're done.
           </p>
+          <blockquote className="border-l-2 border-foreground/20 pl-5 py-1 max-w-md mx-auto text-left">
+            <p className="text-[15px] italic text-foreground/80 leading-relaxed mb-2">
+              "The first draft of anything is garbage."
+            </p>
+            <cite className="text-[11px] not-italic font-semibold tracking-wider uppercase text-muted-foreground/70">
+              — Ernest Hemingway
+            </cite>
+          </blockquote>
+          <div className="w-[1px] h-10 bg-border mx-auto mt-10" />
         </motion.div>
       </section>
 
