@@ -74,11 +74,12 @@ const S = {
 
   header: {
     borderBottom: "1px solid rgba(255,255,255,0.08)",
-    padding: "24px 40px",
+    padding: "20px clamp(14px, 4vw, 40px)",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 16,
+    flexWrap: "wrap" as any,
   } as React.CSSProperties,
 
   title: {
@@ -106,7 +107,7 @@ const S = {
   body: {
     maxWidth: 1200,
     margin: "0 auto",
-    padding: "32px 40px",
+    padding: "24px clamp(14px, 4vw, 40px) 48px",
   } as React.CSSProperties,
 
   tabs: {
@@ -115,6 +116,8 @@ const S = {
     marginBottom: 32,
     borderBottom: "1px solid rgba(255,255,255,0.08)",
     paddingBottom: 0,
+    overflowX: "auto" as any,
+    scrollbarWidth: "none" as any,
   } as React.CSSProperties,
 
   statsGrid: {
@@ -896,7 +899,7 @@ function AnalyticsTab() {
         </a>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         <ChartCard title={`Daily Sign-ups (${days}d)`}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={signups.map((r: any) => ({ day: r.day?.slice(5, 10), count: Number(r.count) }))}>
@@ -1145,7 +1148,7 @@ function EngagementTab() {
             <MiniStat label="Completion Tokens" value={ai.totals.completionTokens.toLocaleString()} />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+          <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
             <ChartCard title="Daily AI Cost (30d)">
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={(ai.dailyCost || []).map((r: any) => ({ day: r.day?.slice(5, 10), cost: (Number(r.cost_cents) / 100) }))}>
@@ -1527,7 +1530,7 @@ function TutorialsTab() {
           </div>
 
           {/* Form fields */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <div>
               <label style={lbl}>Title *</label>
               <input style={inputStyle} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. How to Write Your First Chapter" />

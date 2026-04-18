@@ -111,7 +111,7 @@ export default function DashboardDemo() {
         fontFamily: SF,
         color: T,
       }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 64px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px clamp(14px, 4vw, 24px) 48px" }}>
 
           {/* ── Welcome Header ──────────────────────────────── */}
           <div style={{ marginBottom: 32 }}>

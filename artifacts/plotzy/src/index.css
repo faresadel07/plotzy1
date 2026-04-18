@@ -675,6 +675,11 @@ html, body {
   .pricing-faq-grid { grid-template-columns: 1fr !important; }
 }
 
+/* ── Admin: two-column sections stack on mobile ── */
+@media (max-width: 640px) {
+  .admin-two-col { grid-template-columns: 1fr !important; }
+}
+
 /* ── Terms + Privacy — stack TOC above content on mobile ── */
 @media (max-width: 768px) {
   .terms-grid {
