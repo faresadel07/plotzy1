@@ -289,8 +289,7 @@ function BookPages() {
       </div>
 
 
-      {/* ── RIGHT PAGE — hidden on mobile, single-page book ── */}
-      <div className="book-right-page-wrapper">
+      {/* ── RIGHT PAGE ── */}
       <div style={{ ...page, boxShadow: rightPageShadow }}>
         <p style={runHeader}>Plotzy · The Writer's Platform</p>
 
@@ -315,13 +314,6 @@ function BookPages() {
           <span style={pageNumDash}>—</span>
         </div>
       </div>
-      </div>{/* end book-right-page-wrapper */}
-
-      <style>{`
-        @media (max-width: 640px) {
-          .book-right-page-wrapper { display: none !important; }
-        }
-      `}</style>
 
     </div>
   );
