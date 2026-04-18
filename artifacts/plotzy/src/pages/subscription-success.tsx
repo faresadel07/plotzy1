@@ -53,7 +53,7 @@ export default function SubscriptionSuccess() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="rounded-2xl p-10 max-w-md w-full text-center"
+        className="rounded-2xl p-6 sm:p-10 max-w-md w-full text-center"
         style={{
           backgroundColor: "rgba(255,255,255,0.03)",
           border: "1px solid rgba(255,255,255,0.10)",

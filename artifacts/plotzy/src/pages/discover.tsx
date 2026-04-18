@@ -293,7 +293,7 @@ export default function DiscoverPage() {
       <div className="min-h-screen" style={{ background: "#080808" }}>
 
         {/* ══ HERO ══════════════════════════════════════════════════════════ */}
-        <div className="relative pt-16 pb-12 px-6 text-center overflow-hidden">
+        <div className="relative pt-10 sm:pt-16 pb-8 sm:pb-12 px-4 sm:px-6 text-center overflow-hidden">
           {/* Glow background */}
           <div className="absolute inset-0 pointer-events-none"
             style={{ background: "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255,255,255,0.05) 0%, transparent 65%)" }} />
@@ -342,7 +342,7 @@ export default function DiscoverPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-24">
 
           {/* ══ RECENTLY READ ════════════════════════════════════════════════ */}
           {recent.length > 0 && !debouncedSearch && !topic && (

@@ -542,7 +542,7 @@ export default function GutenbergReader() {
           </Link>
           <div className="w-px h-4 shrink-0" style={{ background: border }} />
           <div className="min-w-0">
-            <p className="text-sm font-semibold truncate leading-tight" style={{ color: fg, maxWidth: 260 }}>{title}</p>
+            <p className="text-sm font-semibold truncate leading-tight" style={{ color: fg, maxWidth: "min(260px, calc(100vw - 180px))" }}>{title}</p>
             {currentChapterName && (
               <p className="text-xs truncate leading-tight mt-0.5" style={{ color: fgMuted }}>{currentChapterName}</p>
             )}

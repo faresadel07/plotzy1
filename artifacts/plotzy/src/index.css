@@ -675,6 +675,19 @@ html, body {
   .pricing-faq-grid { grid-template-columns: 1fr !important; }
 }
 
+/* ── Terms + Privacy — stack TOC above content on mobile ── */
+@media (max-width: 768px) {
+  .terms-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+/* ── Support page — stack two-column form fields on mobile ── */
+@media (max-width: 640px) {
+  .support-two-col { grid-template-columns: 1fr !important; }
+}
+
 /* ── Author Profile — stack + smaller banner/avatar on mobile ── */
 @media (max-width: 640px) {
   .author-banner { height: 140px !important; }

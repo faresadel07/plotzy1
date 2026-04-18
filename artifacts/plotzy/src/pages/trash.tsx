@@ -40,7 +40,7 @@ export default function Trash() {
 
       <Layout isFullDark>
         <div style={{ minHeight: "100vh", background: "#080808", paddingTop: 72, paddingBottom: 60 }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 clamp(14px, 4vw, 24px)" }}>
 
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 48 }}>
