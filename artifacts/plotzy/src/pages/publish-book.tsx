@@ -282,7 +282,7 @@ export default function PublishBook() {
   return (
     <Layout isFullDark>
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF, color: TEXT }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 20px 60px" }} dir={isRTL ? "rtl" : "ltr"}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 14px 48px" }} dir={isRTL ? "rtl" : "ltr"}>
 
           {/* ── Header ───────────────────────────────────────────────── */}
           <div style={{ marginBottom: 28 }}>

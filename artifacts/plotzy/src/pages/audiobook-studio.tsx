@@ -476,11 +476,11 @@ export default function AudiobookStudio() {
 
         {/* ── Header ── */}
         <div className="sticky top-0 z-30 backdrop-blur-xl" style={{ borderBottom: "1px solid #252525", background: "rgba(10,10,10,0.92)" }}>
-          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
+          <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-4">
             <Link href={`/books/${bookId}`}>
               <button className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-50 font-medium" style={{ background: "none", border: "none", cursor: "pointer", color: "#888" }}>
                 <ArrowLeft className="w-4 h-4" />
-                {ar ? "العودة للكتاب" : "Back to Book"}
+                <span className="hidden sm:inline">{ar ? "العودة للكتاب" : "Back to Book"}</span>
               </button>
             </Link>
             <div className="flex-1" />
@@ -488,13 +488,13 @@ export default function AudiobookStudio() {
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#fff" }}>
                 <Headphones className="w-3.5 h-3.5 text-black" />
               </div>
-              <span className="font-bold text-sm" style={{ color: "#fff" }}>{ar ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}</span>
+              <span className="font-bold text-xs sm:text-sm" style={{ color: "#fff" }}>{ar ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}</span>
             </div>
             <div className="flex-1" />
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 py-10 relative z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 relative z-10">
 
           {/* ── Hero ── */}
           <div className="text-center mb-12 anim-fade-up">
@@ -503,7 +503,7 @@ export default function AudiobookStudio() {
               <Sparkles className="w-3 h-3" />
               {ar ? "مدعوم بالذكاء الاصطناعي" : "AI-Powered"}
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black mb-3 leading-tight" style={{
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black mb-3 leading-tight" style={{
               color: "#fff",
               letterSpacing: "-0.03em",
             }}>
@@ -516,7 +516,7 @@ export default function AudiobookStudio() {
             </p>
 
             {/* Stats */}
-            <div className="inline-flex items-center gap-6 mt-6 px-6 py-3 rounded-2xl" style={{ background: "#1a1a1a", border: "1px solid #252525" }}>
+            <div className="inline-flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-6 px-4 sm:px-6 py-3 rounded-2xl max-w-full" style={{ background: "#1a1a1a", border: "1px solid #252525" }}>
               <div className="text-center">
                 <p className="text-2xl font-black" style={{ color: "#fff" }}>{chapters.length}</p>
                 <p className="text-[11px] text-gray-400">{ar ? "فصل" : "Chapters"}</p>

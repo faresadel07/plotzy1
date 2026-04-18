@@ -340,7 +340,7 @@ export default function AuthorProfile() {
         {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} />}
 
         {/* ── Banner ── */}
-        <div style={{ position: "relative", width: "100%", height: profile.bannerUrl ? 220 : 140, overflow: "hidden" }}>
+        <div className="author-banner" style={{ position: "relative", width: "100%", height: profile.bannerUrl ? 220 : 140, overflow: "hidden" }}>
           {profile.bannerUrl ? (
             <img src={profile.bannerUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
@@ -363,13 +363,14 @@ export default function AuthorProfile() {
 
         {/* ── Hero Section ── */}
         <div style={{ borderBottom: `1px solid ${B}`, background: C1 }}>
-          <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px 36px", marginTop: -40 }}>
+          <div className="author-hero-wrap" style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px 36px", marginTop: -40 }}>
 
             {/* Profile row */}
-            <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+            <div className="author-profile-row" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
 
               {/* Avatar — overlapping banner */}
               <div
+                className="author-avatar"
                 style={{
                   position: "relative", width: 100, height: 100, borderRadius: "50%", flexShrink: 0,
                   background: C3, border: `4px solid ${BG}`,

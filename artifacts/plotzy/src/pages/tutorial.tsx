@@ -424,7 +424,7 @@ export default function TutorialPage() {
         </div>
 
         {/* ─── Content ─── */}
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 28px 80px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px clamp(14px, 4vw, 28px) 60px" }}>
 
           {loading ? (
             <div style={{ textAlign: "center", padding: "80px 0", color: TD }}>

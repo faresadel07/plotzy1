@@ -675,6 +675,14 @@ html, body {
   .pricing-faq-grid { grid-template-columns: 1fr !important; }
 }
 
+/* ── Author Profile — stack + smaller banner/avatar on mobile ── */
+@media (max-width: 640px) {
+  .author-banner { height: 140px !important; }
+  .author-hero-wrap { padding: 0 16px 24px !important; margin-top: -32px !important; }
+  .author-profile-row { flex-direction: column !important; align-items: center !important; gap: 14px !important; text-align: center; }
+  .author-avatar { width: 80px !important; height: 80px !important; }
+}
+
 /* ── Library page featured banner — stack on mobile ── */
 @media (max-width: 640px) {
   .featured-banner-inner {
