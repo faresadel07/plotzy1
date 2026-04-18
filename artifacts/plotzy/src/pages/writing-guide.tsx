@@ -505,7 +505,7 @@ export default function WritingGuide() {
             From blank page to <span className="bg-gradient-to-br from-white to-white/55 bg-clip-text text-transparent">finished book</span>.
           </h1>
           <p className="text-foreground/60 text-[14px] md:text-[15px] max-w-xl mx-auto leading-[1.65]">
-            A professional, end-to-end handbook for the craft of writing. Seven sections distilled from decades of published work — genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
+            A professional, end-to-end handbook for the craft of writing. Seven sections distilled from decades of published work: genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
           </p>
           <div className="mt-5 inline-flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
             <span className="font-mono">20 min read</span>
@@ -583,9 +583,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="genres" className="scroll-mt-20">
         <SectionHeader
-          icon={BookOpen} label="01 — Genres"
+          icon={BookOpen} label="01. Genres"
           title="Find your genre."
-          subtitle="Every story belongs to a genre — a promise to the reader about what kind of experience to expect. This is one of the most important decisions you'll make: it shapes your characters, your pacing, your voice, and even who will read you."
+          subtitle="Every story belongs to a genre. It's a promise to the reader about what kind of experience to expect, and it shapes your characters, your pacing, your voice, and even who will read you."
         />
 
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -682,9 +682,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="structure" className="scroll-mt-20">
         <SectionHeader
-          icon={Layers} label="02 — Structure"
+          icon={Layers} label="02. Structure"
           title="Shape the story."
-          subtitle="Professional authors don't write in straight lines. They follow frameworks that readers are unconsciously wired to find satisfying. Learn all three — then choose the one that fits the story you're actually telling."
+          subtitle="Professional authors don't write in straight lines. They follow frameworks that readers are unconsciously wired to find satisfying. Learn all three, then choose the one that fits the story you're actually telling."
         />
 
         {/* Structure tabs */}
@@ -772,9 +772,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="characters" className="scroll-mt-20">
         <SectionHeader
-          icon={Users} label="03 — Character"
+          icon={Users} label="03. Character"
           title="Write people, not placeholders."
-          subtitle="Plot is what happens. Character is why we care. The stories that live longest in memory aren't remembered for their events — they're remembered for the people who lived through them, flawed and changing."
+          subtitle="Plot is what happens. Character is why we care. The stories that live longest in memory aren't remembered for their events. They're remembered for the people who lived through them, flawed and changing."
         />
 
         <div className="mb-12">
@@ -845,9 +845,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="dialogue" className="scroll-mt-20">
         <SectionHeader
-          icon={Mic2} label="04 — Dialogue"
-          title="Make them talk — like people."
-          subtitle="Dialogue is the fastest way to reveal character, create conflict, and advance plot — all in the same breath. These four principles separate amateur dialogue from the kind that carries a scene."
+          icon={Mic2} label="04. Dialogue"
+          title="Make them talk like people."
+          subtitle="Dialogue is the fastest way to reveal character, create conflict, and advance plot, all in the same breath. These four principles separate amateur dialogue from the kind that carries a scene."
         />
 
         <div className="space-y-5">
@@ -893,9 +893,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="process" className="scroll-mt-20">
         <SectionHeader
-          icon={Map} label="05 — Process"
+          icon={Map} label="05. Process"
           title="From idea to published book."
-          subtitle="Writing a book is a multi-phase project. Understanding which phase you're in — and what that phase actually demands of you — is the difference between writers who finish and writers who don't."
+          subtitle="Writing a book is a multi-phase project. Understanding which phase you're in, and what that phase actually demands of you, is the difference between writers who finish and writers who don't."
         />
 
         <div className="space-y-4">
@@ -939,9 +939,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="editing" className="scroll-mt-20">
         <SectionHeader
-          icon={Scissors} label="06 — Editing"
+          icon={Scissors} label="06. Editing"
           title="Writing is rewriting."
-          subtitle="Published authors revise three to seven times before a manuscript is ready. Each pass focuses on a different layer — structure, character, prose, pacing. Use this checklist as your map through the work."
+          subtitle="Published authors revise three to seven times before a manuscript is ready. Each pass focuses on a different layer: structure, character, prose, pacing. Use this checklist as your map through the work."
         />
 
         <div className="space-y-4">
@@ -988,9 +988,9 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       <section id="mistakes" className="scroll-mt-20 pb-20">
         <SectionHeader
-          icon={Lightbulb} label="07 — Pitfalls"
+          icon={Lightbulb} label="07. Pitfalls"
           title="The eight mistakes every beginner makes."
-          subtitle="These are the most predictable traps new writers fall into — and the easiest to fix once you know to look for them. Most aren't talent problems. They're awareness problems."
+          subtitle="These are the most predictable traps new writers fall into, and the easiest to fix once you know to look for them. Most aren't talent problems. They're awareness problems."
         />
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -1022,7 +1022,7 @@ export default function WritingGuide() {
               What the greats learned.
             </h2>
             <p className="text-muted-foreground text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">
-              Eight writers whose books have shaped how we read and write — each with a single piece of advice and a concrete way to apply it.
+              Eight writers whose books have shaped how we read and write, each with a single piece of advice and a concrete way to apply it.
             </p>
           </div>
 
@@ -1129,28 +1129,26 @@ export default function WritingGuide() {
         {/* Final CTA — Closing */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-          className="mt-12 mb-4 text-center max-w-2xl mx-auto"
+          className="mt-12 mb-4 text-center max-w-xl mx-auto"
           style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
         >
-          <div className="w-px h-6 bg-border mx-auto mb-4" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">
             A Closing Note
           </p>
-          <h3 className="text-[1.5rem] md:text-[1.875rem] font-bold text-foreground mb-3 leading-[1.15] tracking-[-0.02em]">
+          <h3 className="text-[1.5rem] md:text-[1.875rem] font-bold text-foreground mb-4 leading-[1.2] tracking-[-0.02em]">
             The only way to write a book is to write it.
           </h3>
-          <p className="text-muted-foreground max-w-xl mx-auto leading-[1.65] text-[14px] md:text-[15px] mb-5">
-            Every framework in this guide is secondary to one irreplaceable act — showing up at the page. Read this guide once. Come back to it when stuck. But don't mistake reading about writing for writing itself. The writers who finish books are the ones who write imperfectly, every day, until they're done.
+          <p className="text-muted-foreground leading-[1.65] text-[14px] md:text-[15px] mb-6">
+            Every framework in this guide is secondary to one irreplaceable act: showing up at the page. Read this guide once. Come back to it when stuck. But don&apos;t mistake reading about writing for writing itself. The writers who finish books are the ones who write imperfectly, every day, until they&apos;re done.
           </p>
-          <blockquote className="border-l-2 border-foreground/20 pl-4 py-0.5 max-w-md mx-auto text-left">
-            <p className="text-[14px] italic text-foreground/80 leading-relaxed mb-1">
-              "The first draft of anything is garbage."
+          <blockquote className="mt-6 py-4 px-5 rounded-xl border border-border/60 bg-foreground/[0.02] max-w-sm mx-auto">
+            <p className="text-[14px] italic text-foreground/85 leading-relaxed mb-2">
+              &ldquo;The first draft of anything is garbage.&rdquo;
             </p>
-            <cite className="text-[10px] not-italic font-semibold tracking-wider uppercase text-muted-foreground/70">
-              — Ernest Hemingway
+            <cite className="text-[10px] not-italic font-semibold tracking-[0.15em] uppercase text-muted-foreground/70">
+              Ernest Hemingway
             </cite>
           </blockquote>
-          <div className="w-px h-6 bg-border mx-auto mt-6" />
         </motion.div>
       </section>
 
