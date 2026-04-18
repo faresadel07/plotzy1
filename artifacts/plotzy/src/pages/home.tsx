@@ -545,8 +545,62 @@ export default function Home() {
       */}
       <Layout isLanding>
 
-        {/* ===== HERO SECTION — ContainerScroll 3D ===== */}
-        <div className="bg-[#080808]">
+        {/* ===== HERO SECTION — Mobile: simple title only ===== */}
+        <div className="bg-[#080808] sm:hidden">
+          <div style={{ padding: "64px 20px 48px", textAlign: "center" }}>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+              style={{
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+                fontSize: "1.125rem",
+                fontWeight: 400,
+                letterSpacing: "0.01em",
+                color: "rgba(255,255,255,0.7)",
+                margin: "0 0 8px",
+              }}
+            >
+              write your first book with
+            </motion.p>
+            <motion.h1
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+                fontSize: "clamp(3.5rem, 17vw, 5rem)",
+                fontWeight: 800,
+                lineHeight: 1,
+                letterSpacing: "-0.055em",
+                color: "#EFEFEF",
+                margin: 0,
+                userSelect: "none",
+              }}
+            >
+              PLOTZY
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+              style={{
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+                fontSize: "0.875rem",
+                fontWeight: 400,
+                color: "rgba(255,255,255,0.45)",
+                margin: "20px auto 0",
+                maxWidth: 300,
+                lineHeight: 1.55,
+              }}
+            >
+              The professional writing platform for modern authors.
+            </motion.p>
+          </div>
+        </div>
+
+        {/* ===== HERO SECTION — Desktop/Tablet: ContainerScroll 3D ===== */}
+        <div className="bg-[#080808] hidden sm:block">
           <ContainerScroll
             titleComponent={
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
