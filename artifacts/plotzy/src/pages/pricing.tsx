@@ -228,7 +228,7 @@ export default function Pricing() {
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TD, textTransform: "uppercase", marginBottom: 14 }}>
                   Free
                 </p>
-                <p style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, marginBottom: 4, color: T }}>$0</p>
+                <p className="price-big" style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, marginBottom: 4, color: T }}>$0</p>
                 <p style={{ fontSize: 13, color: TD, marginBottom: 20 }}>No credit card needed</p>
                 <button
                   onClick={() => navigate("/")}
@@ -316,14 +316,14 @@ export default function Pricing() {
 
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                     {proOriginalPrice && (
-                      <span style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.25)", textDecoration: "line-through" }}>
+                      <span className="price-strikethrough" style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.25)", textDecoration: "line-through" }}>
                         ${proOriginalPrice.toFixed(2)}
                       </span>
                     )}
                     <NumberFlow
                       value={proPrice}
                       prefix="$"
-                      style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: T }}
+                      className="price-big" style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: T }}
                       format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
                     />
                     <span style={{ fontSize: 16, color: TS }}>{proPriceSuffix}</span>
@@ -412,14 +412,14 @@ export default function Pricing() {
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                   {premiumOriginalPrice && (
-                    <span style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.25)", textDecoration: "line-through" }}>
+                    <span className="price-strikethrough" style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.25)", textDecoration: "line-through" }}>
                       ${premiumOriginalPrice.toFixed(2)}
                     </span>
                   )}
                   <NumberFlow
                     value={premiumPrice}
                     prefix="$"
-                    style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: T }}
+                    className="price-big" style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, color: T }}
                     format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
                   />
                   <span style={{ fontSize: 16, color: TS }}>{premiumPriceSuffix}</span>
@@ -515,6 +515,7 @@ export default function Pricing() {
                 style={{ overflow: "hidden" }}
               >
                 <div
+                  className="pricing-faq-grid"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",

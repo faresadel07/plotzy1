@@ -658,6 +658,36 @@ html, body {
   .chapter-toolbar-row::-webkit-scrollbar { display: none; }
 }
 
+/* ── Pricing: responsive prices ── */
+@media (max-width: 640px) {
+  .price-big { font-size: 36px !important; }
+  .price-strikethrough { font-size: 18px !important; }
+  .pricing-faq-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── Library page featured banner — stack on mobile ── */
+@media (max-width: 640px) {
+  .featured-banner-inner {
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 20px !important;
+    align-items: stretch !important;
+  }
+  .featured-banner-cover {
+    width: 96px !important;
+    margin: 0 auto !important;
+  }
+  .featured-banner-read-btn {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 12px 0 !important;
+  }
+  .library-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+
 /* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
   /* Home page feature cards */
@@ -683,14 +713,15 @@ html, body {
 
   /* Read book: reduce padding */
   .book-reader-content {
-    font-size: 15px !important;
-    line-height: 1.75 !important;
+    font-size: 16px !important;
+    line-height: 1.7 !important;
   }
   .read-book-container {
-    padding: 0 14px !important;
+    padding: 0 8px !important;
   }
   .read-book-container > div > div {
-    padding: 24px clamp(12px, 4vw, 32px) 20px !important;
+    padding: 20px 18px !important;
+    margin-top: 16px !important;
   }
 
   /* Cover designer: not usable on mobile, show message */

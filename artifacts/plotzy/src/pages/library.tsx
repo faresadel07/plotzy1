@@ -6,7 +6,7 @@ import type { PublishedBook } from "@/hooks/use-public-library";
 import { useAuth } from "@/contexts/auth-context";
 import {
   BookOpen, Search, Eye, User, Loader2, Star, Heart,
-  Trophy, Trash2, X, ChevronDown,
+  Trophy, Trash2, X, ChevronDown, Layers,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -263,9 +263,9 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
             : "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%)",
         }} />
 
-        <div style={{ position: "relative", display: "flex", gap: 28, padding: "28px 32px", alignItems: "center", width: "100%" }}>
+        <div className="featured-banner-inner" style={{ position: "relative", display: "flex", gap: 28, padding: "28px 32px", alignItems: "center", width: "100%" }}>
           {/* Cover */}
-          <div style={{
+          <div className="featured-banner-cover" style={{
             width: 120, flexShrink: 0, aspectRatio: "2/3", borderRadius: 10, overflow: "hidden",
             boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
           }}>
@@ -316,7 +316,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
           </div>
 
           {/* Read button */}
-          <div style={{
+          <div className="featured-banner-read-btn" style={{
             padding: "10px 24px", borderRadius: 10, background: "#fff", color: "#000",
             fontFamily: SF, fontSize: 14, fontWeight: 600, flexShrink: 0,
           }}>
@@ -337,8 +337,24 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
 }
 
 /* ── Main Page ─────────────────────────────────────────────── */
+type PublicSeries = {
+  id: number;
+  name: string;
+  description: string | null;
+  coverImage: string | null;
+  publishedAt: string | null;
+  ownerName: string | null;
+  ownerAvatarUrl: string | null;
+  books: { id: number; coverImage: string | null; title: string }[];
+  bookCount: number;
+};
+
 export default function Library() {
   const { data: books, isLoading } = usePublishedBooks();
+  const { data: publicSeries = [] } = useQuery<PublicSeries[]>({
+    queryKey: ["/api/public/series"],
+    queryFn: () => fetch("/api/public/series").then(r => r.ok ? r.json() : []),
+  });
   const { data: featuredBook } = useFeaturedBook();
   const { user } = useAuth();
   const isAdmin = !!(user?.isAdmin);
@@ -377,6 +393,76 @@ export default function Library() {
           {/* Featured Book */}
           {user && featuredBook && !hasFilter && (
             <FeaturedBanner book={featuredBook} isAdmin={isAdmin} />
+          )}
+
+          {/* Published Series */}
+          {user && publicSeries.length > 0 && !hasFilter && (
+            <div style={{ marginBottom: 40 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,106,247,0.12)", border: "1px solid rgba(124,106,247,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Layers style={{ width: 14, height: 14, color: "#a78bfa" }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T, margin: 0 }}>Book Series</h3>
+                  <p style={{ fontSize: 11, color: TD, margin: 0 }}>Collections of books by our writers</p>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+                {publicSeries.map(s => (
+                  <Link key={s.id} href={`/series/${s.id}`}>
+                    <div style={{
+                      background: "rgba(124,106,247,0.04)",
+                      border: "1px solid rgba(124,106,247,0.12)",
+                      borderRadius: 12,
+                      padding: 14,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "flex-start",
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,106,247,0.3)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(124,106,247,0.12)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                    >
+                      {/* Mini stacked covers */}
+                      <div style={{ position: "relative", width: 48, height: 64, flexShrink: 0 }}>
+                        {s.books.slice(0, 3).reverse().map((b, i) => (
+                          <div key={b.id} style={{
+                            position: "absolute",
+                            top: i * 3, left: i * 4,
+                            width: 44, height: 60,
+                            borderRadius: 4,
+                            background: b.coverImage ? "transparent" : "rgba(124,106,247,0.15)",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                            overflow: "hidden",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                          }}>
+                            {b.coverImage ? (
+                              <img src={b.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                              <BookOpen style={{ width: 16, height: 16, color: "#a78bfa", opacity: 0.5, margin: "auto", display: "block", marginTop: 22 }} />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4 style={{ fontSize: 14, fontWeight: 700, color: T, margin: "0 0 3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {s.name}
+                        </h4>
+                        <p style={{ fontSize: 11, color: TD, margin: "0 0 6px" }}>
+                          by {s.ownerName || "Unknown"} · {s.bookCount} {s.bookCount === 1 ? "book" : "books"}
+                        </p>
+                        {s.description && (
+                          <p style={{ fontSize: 11, color: TS, margin: 0, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
+                            {s.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Search + Filters — only when signed in */}

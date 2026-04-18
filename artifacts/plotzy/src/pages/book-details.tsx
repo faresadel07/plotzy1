@@ -59,12 +59,12 @@ function BookCoverWrap({ book }: { book: Book }) {
 
   return (
     <div
-      className="flex items-center justify-center py-8"
+      className="flex items-center justify-center py-6 md:py-8 book-details-cover-wrap"
       style={{ background: `linear-gradient(160deg, ${spineColor}18 0%, ${spineColor}08 100%)` }}
     >
       {/* Book wrapper — spine + front cover side by side, no overflow */}
       <div
-        className="relative flex rounded-sm overflow-hidden"
+        className="relative flex rounded-sm overflow-hidden book-details-cover"
         style={{
           boxShadow: "6px 8px 28px rgba(0,0,0,0.28), 2px 3px 10px rgba(0,0,0,0.14)",
           height: "230px",
@@ -370,7 +370,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       >
 
         {/* ── Left Column ── */}
-        <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto px-6 pt-6 pb-10" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
           {/* Cover Card */}
           <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
@@ -520,7 +520,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         </div>
 
         {/* Right Column */}
-        <div className="lg:col-span-8 h-full overflow-y-auto px-6 pt-6 pb-10 space-y-5">
+        <div className="lg:col-span-8 h-full overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10 space-y-5">
 
           {/* ── Top bar: underline tabs + action buttons ── */}
           <div className="flex items-center justify-between gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>

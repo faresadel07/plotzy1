@@ -295,7 +295,7 @@ export default function Messages() {
                         <div key={msg.id} style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start", padding: "2px 20px", gap: 8, alignItems: "flex-end" }}>
                           {!isMine && <div style={{ width: 28, flexShrink: 0 }}>{showAvatar && <Avatar url={selectedConvo?.partnerAvatarUrl ?? null} name={selectedConvo?.partnerDisplayName ?? null} size={28} />}</div>}
                           <div style={{
-                            maxWidth: "65%", padding: "10px 14px", borderRadius: 16,
+                            maxWidth: "80%", padding: "10px 14px", borderRadius: 16, wordBreak: "break-word",
                             borderBottomRightRadius: isMine ? 4 : 16, borderBottomLeftRadius: isMine ? 16 : 4,
                             background: isMine ? SENT_BG : RECV_BG, color: isMine ? SENT_TEXT : RECV_TEXT,
                             fontSize: 14, lineHeight: 1.55, fontFamily: SF, wordBreak: "break-word",

@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
-import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, Search } from "lucide-react";
+import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, UserPlus, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
@@ -215,8 +215,8 @@ function BookPages() {
 
   const para: React.CSSProperties = {
     fontFamily: BOOK_FONT,
-    fontSize: "clamp(0.55rem, 1.6vw, 0.82rem)",
-    lineHeight: 1.9,
+    fontSize: "clamp(0.72rem, 1.6vw, 0.82rem)",
+    lineHeight: 1.85,
     fontStyle: "normal",
     fontWeight: "normal",
     color: PAGE_TEXT,
@@ -289,7 +289,8 @@ function BookPages() {
       </div>
 
 
-      {/* ── RIGHT PAGE ── */}
+      {/* ── RIGHT PAGE — hidden on mobile, single-page book ── */}
+      <div className="book-right-page-wrapper">
       <div style={{ ...page, boxShadow: rightPageShadow }}>
         <p style={runHeader}>Plotzy · The Writer's Platform</p>
 
@@ -314,6 +315,13 @@ function BookPages() {
           <span style={pageNumDash}>—</span>
         </div>
       </div>
+      </div>{/* end book-right-page-wrapper */}
+
+      <style>{`
+        @media (max-width: 640px) {
+          .book-right-page-wrapper { display: none !important; }
+        }
+      `}</style>
 
     </div>
   );
@@ -435,6 +443,12 @@ export default function Home() {
   const { data: sharedBooks = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerName: string | null }[]>({
     queryKey: ["/api/books/shared-with-me"],
     queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
+    enabled: !!user,
+    staleTime: 0,
+  });
+  const { data: sharedByMe = [] } = useQuery<{ id: number; title: string; coverImage: string | null; collaborators: { userId: number; name: string | null; avatarUrl: string | null; role: string; joinedAt: string }[] }[]>({
+    queryKey: ["/api/books/shared-by-me"],
+    queryFn: () => fetch("/api/books/shared-by-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
     enabled: !!user,
     staleTime: 0,
   });
@@ -1007,6 +1021,67 @@ export default function Home() {
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: sb.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: sb.role === "editor" ? "#4ade80" : "#60a5fa" }}>
                     {sb.role === "editor" ? "EDITOR" : "VIEWER"}
                   </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ===== SHARED BY ME ===== */}
+        {user && sharedByMe.length > 0 && (
+          <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)" }}>
+                <UserPlus className="w-4 h-4" style={{ color: "#a78bfa" }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">You shared</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Books you invited others to collaborate on</p>
+              </div>
+            </div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+              {sharedByMe.map(book => (
+                <div key={book.id} onClick={() => setLocation(`/books/${book.id}`)}
+                  className="p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+                  style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.1)" }}>
+                  {/* Book header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ background: "rgba(167,139,250,0.08)" }}>
+                      {book.coverImage ? (
+                        <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <BookOpen className="w-4 h-4" style={{ color: "rgba(167,139,250,0.5)" }} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{book.title}</p>
+                      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        {book.collaborators.length} {book.collaborators.length === 1 ? "collaborator" : "collaborators"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Collaborators list */}
+                  <div className="flex flex-col gap-1.5">
+                    {book.collaborators.slice(0, 3).map((c) => (
+                      <div key={c.userId} className="flex items-center gap-2 px-2 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
+                        {c.avatarUrl ? (
+                          <img src={c.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
+                            {(c.name || "?")[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>{c.name || "Unknown"}</span>
+                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: c.role === "editor" ? "#4ade80" : "#60a5fa" }}>
+                          {c.role === "editor" ? "EDITOR" : "VIEWER"}
+                        </span>
+                      </div>
+                    ))}
+                    {book.collaborators.length > 3 && (
+                      <span className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.3)" }}>+ {book.collaborators.length - 3} more</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
