@@ -995,12 +995,14 @@ export default function ArticleEditor() {
       <div style={{background:BG,minHeight:"100vh",fontFamily:SF}}>
 
         {/* ── TOP BAR — fixed below Layout navbar (44px), always visible ── */}
-        <div style={{
+        <div className="article-editor-topbar" style={{
           position:"fixed",top:44,left:0,right:0,zIndex:50,
           background:"rgba(10,10,10,0.98)",backdropFilter:"blur(20px)",
           borderBottom:`1px solid ${B}`,
           padding:"0 16px",height:48,
           display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+          overflowX:"auto" as any,
+          scrollbarWidth:"none" as any,
         }}>
           {/* Back */}
           <Link href="/">
@@ -1011,25 +1013,25 @@ export default function ArticleEditor() {
             </button>
           </Link>
 
-          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+          <div className="topbar-hide-mobile" style={{width:1,height:14,background:B,flexShrink:0}}/>
 
-          {/* Label */}
-          <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+          {/* Label — hidden on mobile */}
+          <div className="topbar-hide-mobile" style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
             <FileText size={11} color={TD}/>
             <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:TD}}>Blog Post</span>
           </div>
 
-          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+          <div className="topbar-hide-mobile" style={{width:1,height:14,background:B,flexShrink:0}}/>
 
-          {/* Stats */}
-          <span style={{fontSize:11,color:TD,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{words.toLocaleString()} w</span>
-          <span style={{fontSize:9,color:"rgba(255,255,255,0.1)",flexShrink:0}}>·</span>
-          <span style={{fontSize:11,color:TD,flexShrink:0}}>{readTime} min</span>
+          {/* Stats — hidden on mobile to save space */}
+          <span className="topbar-hide-mobile" style={{fontSize:11,color:TD,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{words.toLocaleString()} w</span>
+          <span className="topbar-hide-mobile" style={{fontSize:9,color:"rgba(255,255,255,0.1)",flexShrink:0}}>·</span>
+          <span className="topbar-hide-mobile" style={{fontSize:11,color:TD,flexShrink:0}}>{readTime} min</span>
 
-          <div style={{width:1,height:14,background:B,flexShrink:0}}/>
+          <div className="topbar-hide-mobile" style={{width:1,height:14,background:B,flexShrink:0}}/>
 
-          {/* Soundscape */}
-          <AmbientSoundscape />
+          {/* Soundscape — hidden on mobile */}
+          <div className="topbar-hide-mobile"><AmbientSoundscape /></div>
 
           {/* Mic */}
           {isTranscribing ? (
@@ -1049,13 +1051,13 @@ export default function ArticleEditor() {
           )}
 
           {/* Focus */}
-          <button onClick={() => setFocusMode(f=>!f)} title="Focus mode"
+          <button className="topbar-hide-mobile" onClick={() => setFocusMode(f=>!f)} title="Focus mode"
             style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
             {focusMode ? <Minimize2 size={13}/> : <Maximize2 size={13}/>}
           </button>
 
           {/* Preview */}
-          <button onClick={() => setShowPreview(true)} title="Preview"
+          <button className="topbar-hide-mobile" onClick={() => setShowPreview(true)} title="Preview"
             style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
             <Eye size={13}/>
           </button>

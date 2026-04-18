@@ -658,6 +658,16 @@ html, body {
   .chapter-toolbar-row::-webkit-scrollbar { display: none; }
 }
 
+/* ── Article/Chapter Editor topbar — hide non-essential items on mobile ── */
+@media (max-width: 640px) {
+  .topbar-hide-mobile { display: none !important; }
+}
+
+/* ── Blog + Article View — smaller images on mobile ── */
+@media (max-width: 640px) {
+  .article-featured-img { max-height: 220px !important; }
+}
+
 /* ── Pricing: responsive prices ── */
 @media (max-width: 640px) {
   .price-big { font-size: 36px !important; }

@@ -383,15 +383,23 @@ export default function ChapterEditor() {
     const frame = requestAnimationFrame(() => {
       if (!mainRef.current) return;
       const containerH = mainRef.current.clientHeight;
+      const containerW = mainRef.current.clientWidth;
       if (containerH < 100) return;
-      // Calculate page height inline (same as getPageDimensions but no dep on pageDims)
+      // Calculate page dimensions inline (same as getPageDimensions)
       const PAPER_H: Record<string, number> = { a5: 794, pocket: 680, trade: 864, a4: 1123 };
+      const PAPER_W: Record<string, number> = { a5: 559, pocket: 416, trade: 576, a4: 794 };
       const pageH = PAPER_H[paperSizeForZoom] ?? 864;
+      const pageW = PAPER_W[paperSizeForZoom] ?? 576;
       const titleAreaH = 120;
       const pagePaddingV = 80;
-      const available = containerH - titleAreaH - pagePaddingV;
-      const fitPct = Math.floor((available / pageH) * 100);
-      const optimal = Math.max(60, Math.min(95, fitPct));
+      const availableH = containerH - titleAreaH - pagePaddingV;
+      const fitByHeight = Math.floor((availableH / pageH) * 100);
+      // On mobile, also fit by width (minus some padding)
+      const availableW = containerW - 32;
+      const fitByWidth = Math.floor((availableW / pageW) * 100);
+      // Use the smaller of the two to ensure page fits entirely
+      const fitPct = Math.min(fitByHeight, fitByWidth);
+      const optimal = Math.max(40, Math.min(95, fitPct));
       setZoom(optimal);
       autoZoomApplied.current = true;
     });

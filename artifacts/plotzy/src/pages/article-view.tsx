@@ -90,24 +90,23 @@ export default function ArticleView() {
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
       {/* Nav */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px", height: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 16px", height: 48, display: "flex", alignItems: "center", gap: 10 }}>
         <Link href="/blog">
-          <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 13, padding: "4px 8px", borderRadius: 6 }}>
-            <ArrowLeft size={15} /> Blog
+          <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 13, padding: "4px 6px", borderRadius: 6, flexShrink: 0 }}>
+            <ArrowLeft size={15} /> <span className="hidden sm:inline">Blog</span>
           </button>
         </Link>
-        <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)" }} />
-        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 400 }}>
+        <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
           {article.title}
         </span>
-        <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{article.viewCount || 0} views</span>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{article.viewCount || 0} views</span>
       </header>
 
       {/* Featured Image */}
       {featuredImg && (
         <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 20px 0" }}>
-          <img src={featuredImg} alt="" style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 400 }} />
+          <img src={featuredImg} alt="" className="article-featured-img" style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 400 }} />
         </div>
       )}
 
