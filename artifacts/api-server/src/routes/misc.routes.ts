@@ -73,6 +73,122 @@ router.patch("/api/series/:id", async (req, res) => {
   }
 });
 
+// POST /api/series/:id/publish — publish or unpublish a series (atomic)
+router.post("/api/series/:id/publish", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = (req.user as any).id;
+    const seriesId = Number(req.params.id);
+    if (!Number.isInteger(seriesId)) return res.status(400).json({ message: "Invalid ID" });
+    const { publish } = req.body;
+    if (typeof publish !== "boolean") return res.status(400).json({ message: "publish must be boolean" });
+
+    const { bookSeries } = await import("../../../../lib/db/src/schema");
+
+    // Atomic: ownership check and update in a single transaction
+    const updated = await db.transaction(async (tx) => {
+      const [existing] = await tx.select().from(bookSeries).where(eq(bookSeries.id, seriesId));
+      if (!existing || existing.userId !== userId) throw new Error("NOT_FOUND");
+      const [row] = await tx.update(bookSeries)
+        .set({
+          isPublished: publish,
+          publishedAt: publish ? new Date() : null,
+        } as any)
+        .where(eq(bookSeries.id, seriesId))
+        .returning();
+      return row;
+    });
+    return res.json(updated);
+  } catch (err: any) {
+    if (err?.message === "NOT_FOUND") return res.status(404).json({ message: "Not found" });
+    logger.error({ err }, "Failed to publish series");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// GET /api/public/series — list all published series
+router.get("/api/public/series", async (_req, res) => {
+  try {
+    const { db: dbConn } = await import("../db");
+    const { bookSeries: bs, users: usersTable, books: booksTable } = await import("../../../../lib/db/src/schema");
+    const { eq, desc, and, inArray } = await import("drizzle-orm");
+
+    const rows = await dbConn.select({
+      id: bs.id,
+      userId: bs.userId,
+      name: bs.name,
+      description: bs.description,
+      coverImage: bs.coverImage,
+      publishedAt: bs.publishedAt,
+      createdAt: bs.createdAt,
+      ownerName: usersTable.displayName,
+      ownerAvatarUrl: usersTable.avatarUrl,
+    }).from(bs)
+      .leftJoin(usersTable, eq(bs.userId, usersTable.id))
+      .where(eq(bs.isPublished, true))
+      .orderBy(desc(bs.publishedAt));
+
+    if (rows.length === 0) return res.json([]);
+
+    // For each series, fetch its published books (to show the first cover as series cover fallback)
+    const seriesIds = rows.map(r => r.id);
+    const bookRows = await dbConn.select({
+      id: booksTable.id,
+      seriesId: booksTable.seriesId,
+      coverImage: booksTable.coverImage,
+      title: booksTable.title,
+    }).from(booksTable)
+      .where(and(
+        eq(booksTable.isPublished, true),
+        eq(booksTable.isDeleted, false),
+        inArray(booksTable.seriesId as any, seriesIds),
+      ));
+
+    const booksBySeries = new Map<number, any[]>();
+    for (const b of bookRows) {
+      const sid = b.seriesId as number;
+      if (!booksBySeries.has(sid)) booksBySeries.set(sid, []);
+      booksBySeries.get(sid)!.push(b);
+    }
+
+    const result = rows.map(s => ({
+      ...s,
+      books: booksBySeries.get(s.id) || [],
+      bookCount: (booksBySeries.get(s.id) || []).length,
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("Failed to fetch public series:", err);
+    res.json([]);
+  }
+});
+
+// GET /api/public/series/:id — public series view (for readers)
+router.get("/api/public/series/:id", async (req, res) => {
+  try {
+    const seriesId = Number(req.params.id);
+    const series = await storage.getSeries(seriesId);
+    if (!series || !(series as any).isPublished) return res.status(404).json({ message: "Series not found" });
+
+    // Get all books in the series (only published ones)
+    const allBooks = await storage.getSeriesBooks(seriesId);
+    const publishedBooks = allBooks.filter((b: any) => b.isPublished);
+
+    // Get owner info
+    const owner = await storage.getUserById((series as any).userId);
+
+    return res.json({
+      ...series,
+      books: publishedBooks,
+      ownerName: owner?.displayName || null,
+      ownerAvatarUrl: owner?.avatarUrl || null,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
 // DELETE /api/series/:id — delete series (unlinks books, doesn't delete them)
 router.delete("/api/series/:id", async (req, res) => {
   try {
@@ -604,27 +720,8 @@ router.patch("/api/books/:bookId/collaborators/:collabId", requireBookOwner, asy
   }
 });
 
-// Get books I'm collaborating on (for dashboard)
-router.get("/api/books/shared-with-me", async (req, res) => {
-  try {
-    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
-    const userId = (req.user as any).id;
-    const rows = await db.select({
-      id: books.id,
-      title: books.title,
-      coverImage: books.coverImage,
-      role: bookCollaborators.role,
-      joinedAt: bookCollaborators.joinedAt,
-      ownerName: users.displayName,
-    }).from(bookCollaborators)
-      .innerJoin(books, eq(bookCollaborators.bookId, books.id))
-      .leftJoin(users, eq(books.userId, users.id))
-      .where(eq(bookCollaborators.userId, userId));
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ message: "Internal error" });
-  }
-});
+// NOTE: /api/books/shared-with-me and /api/books/shared-by-me are registered
+// in routes.ts (BEFORE /api/books/:id) to avoid route conflicts.
 
 // ─── Marketplace ───────────────────────────────────────────────────────────
 

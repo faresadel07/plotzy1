@@ -234,16 +234,6 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
       return;
     }
 
-    // ── DEBUG LOG ──
-    console.log("=== INLINE COMMENT DEBUG ===");
-    console.log("anchorOffset:", anchorOffset.current);
-    console.log("focusOffset (raw):", currentEnd.current === end ? end : currentStart.current);
-    console.log("sOff (after swap):", start);
-    console.log("eOff (after swap):", end);
-    console.log("selectedText:", JSON.stringify(selectedText));
-    console.log("============================");
-    // ── END DEBUG ──
-
     assertOffsetsConsistent(container, start);
     assertOffsetsConsistent(container, end);
 

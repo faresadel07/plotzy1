@@ -630,7 +630,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   /** Fetch all series for a user with their books in 2 queries (avoids N+1) */
-  async getUserSeriesWithBooks(userId: number): Promise<(BookSeries & { books: Book[] })[]> {
+  async getUserSeriesWithBooks(userId: number): Promise<(BookSeries & { books: Book[]; stats: { totalChapters: number; totalWords: number; totalWordGoal: number } })[]> {
     const seriesList = await db.select().from(bookSeries)
       .where(eq(bookSeries.userId, userId))
       .orderBy(desc(bookSeries.createdAt));
@@ -642,6 +642,7 @@ export class DatabaseStorage implements IStorage {
         inArray(books.seriesId as any, seriesIds),
       ))
       .orderBy(asc(books.seriesOrder as any));
+
     // Group books by seriesId
     const booksBySeries = new Map<number, Book[]>();
     for (const b of allBooks) {
@@ -649,7 +650,36 @@ export class DatabaseStorage implements IStorage {
       if (!booksBySeries.has(sid)) booksBySeries.set(sid, []);
       booksBySeries.get(sid)!.push(b);
     }
-    return seriesList.map(s => ({ ...s, books: booksBySeries.get(s.id) || [] }));
+
+    // Fetch chapters for all books in one query, then aggregate stats
+    const allBookIds = allBooks.map(b => b.id);
+    const chapterRows = allBookIds.length > 0
+      ? await db.select({
+          bookId: chapters.bookId,
+          content: chapters.content,
+        }).from(chapters).where(inArray(chapters.bookId, allBookIds))
+      : [];
+
+    // Compute words per book
+    const wordsByBook = new Map<number, number>();
+    const chaptersByBook = new Map<number, number>();
+    for (const ch of chapterRows) {
+      chaptersByBook.set(ch.bookId, (chaptersByBook.get(ch.bookId) || 0) + 1);
+      const text = ch.content ? String(ch.content).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "";
+      const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+      wordsByBook.set(ch.bookId, (wordsByBook.get(ch.bookId) || 0) + words);
+    }
+
+    return seriesList.map(s => {
+      const seriesBooks = booksBySeries.get(s.id) || [];
+      let totalChapters = 0, totalWords = 0, totalWordGoal = 0;
+      for (const b of seriesBooks) {
+        totalChapters += chaptersByBook.get(b.id) || 0;
+        totalWords += wordsByBook.get(b.id) || 0;
+        totalWordGoal += (b as any).wordGoal || 0;
+      }
+      return { ...s, books: seriesBooks, stats: { totalChapters, totalWords, totalWordGoal } };
+    });
   }
 
   async reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void> {
@@ -923,6 +953,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ── Inline Comments ──────────────────────────────────────────────────────
+
+  async getInlineCommentById(id: number): Promise<InlineComment | undefined> {
+    const [c] = await db.select().from(inlineComments).where(eq(inlineComments.id, id));
+    return c;
+  }
+
+  async isBookAccessible(bookId: number, userId: number): Promise<boolean> {
+    // Owner or collaborator
+    const [book] = await db.select({ userId: books.userId }).from(books).where(eq(books.id, bookId));
+    if (!book) return false;
+    if (book.userId === userId) return true;
+    // Check collaborator
+    const { bookCollaborators } = await import("../../../lib/db/src/schema");
+    const [collab] = await db.select().from(bookCollaborators)
+      .where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, userId)));
+    return !!collab;
+  }
 
   async getInlineComments(chapterId: number): Promise<InlineComment[]> {
     return await db.select().from(inlineComments)

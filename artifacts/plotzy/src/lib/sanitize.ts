@@ -1,8 +1,19 @@
 import DOMPurify from "dompurify";
 
+// Hook: force rel="noopener noreferrer" on any link with target="_blank"
+// Runs once at module load (DOMPurify is a singleton).
+if (typeof window !== "undefined" && (DOMPurify as any).addHook) {
+  (DOMPurify as any).addHook("afterSanitizeAttributes", function (node: Element) {
+    if (node.nodeName === "A" && node.getAttribute("target") === "_blank") {
+      node.setAttribute("rel", "noopener noreferrer");
+    }
+  });
+}
+
 /**
  * Sanitize HTML content to prevent XSS attacks.
  * Allows safe formatting tags (p, br, em, strong, etc.) but strips scripts.
+ * Automatically adds rel="noopener noreferrer" to any target="_blank" links.
  */
 export function sanitizeHtml(dirty: string): string {
   return DOMPurify.sanitize(dirty, {

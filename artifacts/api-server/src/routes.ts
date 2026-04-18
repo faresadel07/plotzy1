@@ -149,6 +149,44 @@ export async function registerRoutes(
     }
   });
 
+  // Books the current user owns that have collaborators (they shared with others)
+  app.get("/api/books/shared-by-me", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const userId = (req.user as any).id;
+      const { db: dbConn } = await import("./db");
+      const { bookCollaborators, books, users } = await import("../../../lib/db/src/schema");
+      const { eq } = await import("drizzle-orm");
+      const rows = await dbConn.select({
+        bookId: books.id,
+        bookTitle: books.title,
+        bookCoverImage: books.coverImage,
+        collabUserId: bookCollaborators.userId,
+        collabRole: bookCollaborators.role,
+        collabJoinedAt: bookCollaborators.joinedAt,
+        collabName: users.displayName,
+        collabAvatarUrl: users.avatarUrl,
+      }).from(bookCollaborators)
+        .innerJoin(books, eq(bookCollaborators.bookId, books.id))
+        .leftJoin(users, eq(bookCollaborators.userId, users.id))
+        .where(eq(books.userId, userId));
+      const grouped = new Map<number, any>();
+      for (const r of rows) {
+        if (!grouped.has(r.bookId)) {
+          grouped.set(r.bookId, { id: r.bookId, title: r.bookTitle, coverImage: r.bookCoverImage, collaborators: [] });
+        }
+        grouped.get(r.bookId).collaborators.push({
+          userId: r.collabUserId, name: r.collabName, avatarUrl: r.collabAvatarUrl,
+          role: r.collabRole, joinedAt: r.collabJoinedAt,
+        });
+      }
+      res.json(Array.from(grouped.values()));
+    } catch (err) {
+      logger.error({ err }, "Failed to fetch shared-by-me");
+      res.json([]);
+    }
+  });
+
   app.get(api.books.get.path, async (req, res) => {
     const book = await storage.getBook(Number(req.params.id));
     if (!book) return res.status(404).json({ message: "Book not found" });
@@ -379,40 +417,94 @@ export async function registerRoutes(
 
   // ── Inline Comments (text-anchored) ──────────────────────────────────────
 
+  // Helper: check user has access (owner or collaborator) to the book
+  async function checkBookAccess(bookId: number, req: any): Promise<{ ok: boolean; userId?: number; publicBook?: boolean }> {
+    // For published books, allow public read access
+    const book = await storage.getBook(bookId);
+    if (!book) return { ok: false };
+    if (!req.isAuthenticated() || !req.user) {
+      // Allow anonymous access only on published books (readers can comment)
+      return book.isPublished ? { ok: true, publicBook: true } : { ok: false };
+    }
+    const userId = (req.user as any).id;
+    const hasAccess = await storage.isBookAccessible(bookId, userId);
+    if (hasAccess) return { ok: true, userId };
+    // If published, allow read by any authenticated user
+    if (book.isPublished) return { ok: true, userId, publicBook: true };
+    return { ok: false };
+  }
+
   app.get("/api/books/:bookId/chapters/:chapterId/inline-comments", async (req, res) => {
     try {
-      const comments = await storage.getInlineComments(Number(req.params.chapterId));
+      const bookId = Number(req.params.bookId);
+      const chapterId = Number(req.params.chapterId);
+      if (!Number.isInteger(bookId) || !Number.isInteger(chapterId)) return res.status(400).json({ message: "Invalid ID" });
+      const access = await checkBookAccess(bookId, req);
+      if (!access.ok) return res.status(403).json({ message: "Access denied" });
+      const comments = await storage.getInlineComments(chapterId);
       res.json(comments);
-    } catch { res.json([]); }
+    } catch (err) {
+      logger.error({ err }, "Failed to fetch inline comments");
+      res.json([]);
+    }
   });
 
   app.get("/api/books/:bookId/inline-comments", async (req, res) => {
     try {
-      const comments = await storage.getBookInlineComments(Number(req.params.bookId));
+      const bookId = Number(req.params.bookId);
+      if (!Number.isInteger(bookId)) return res.status(400).json({ message: "Invalid ID" });
+      const access = await checkBookAccess(bookId, req);
+      if (!access.ok) return res.status(403).json({ message: "Access denied" });
+      const comments = await storage.getBookInlineComments(bookId);
       res.json(comments);
-    } catch { res.json([]); }
+    } catch (err) {
+      logger.error({ err }, "Failed to fetch inline comments");
+      res.json([]);
+    }
   });
 
   app.post("/api/books/:bookId/chapters/:chapterId/inline-comments", async (req, res) => {
     try {
-      const { selectedText, startOffset, endOffset, content } = req.body;
-      if (!selectedText?.trim() || !content?.trim()) return res.status(400).json({ message: "Text selection and comment are required" });
-      if (typeof startOffset !== "number" || typeof endOffset !== "number") return res.status(400).json({ message: "Offsets required" });
+      const bookId = Number(req.params.bookId);
+      const chapterId = Number(req.params.chapterId);
+      if (!Number.isInteger(bookId) || !Number.isInteger(chapterId)) return res.status(400).json({ message: "Invalid ID" });
 
-      const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
-      const authorName = (req.user as any)?.displayName || req.body.authorName || "Anonymous";
-      const authorAvatarUrl = (req.user as any)?.avatarUrl || null;
+      const { selectedText, startOffset, endOffset, content } = req.body;
+      if (!selectedText || typeof selectedText !== "string" || !selectedText.trim())
+        return res.status(400).json({ message: "Selected text is required" });
+      if (!content || typeof content !== "string" || !content.trim())
+        return res.status(400).json({ message: "Comment content is required" });
+      if (!Number.isFinite(startOffset) || !Number.isFinite(endOffset) || !Number.isInteger(startOffset) || !Number.isInteger(endOffset))
+        return res.status(400).json({ message: "Offsets must be integers" });
+      if (startOffset < 0 || endOffset < 0 || startOffset >= endOffset)
+        return res.status(400).json({ message: "Invalid offset range" });
+      if (endOffset - startOffset > 50000)
+        return res.status(400).json({ message: "Selection too large" });
+      if (selectedText.length > 5000 || content.length > 5000)
+        return res.status(400).json({ message: "Text too long" });
+
+      const access = await checkBookAccess(bookId, req);
+      if (!access.ok) return res.status(403).json({ message: "Access denied" });
+
+      // Only authenticated users can use their real identity
+      const userId = access.userId || null;
+      const authorName = req.isAuthenticated() && req.user
+        ? ((req.user as any).displayName || "Anonymous")
+        : "Anonymous";
+      const authorAvatarUrl = req.isAuthenticated() && req.user
+        ? ((req.user as any).avatarUrl || null)
+        : null;
 
       const comment = await storage.addInlineComment({
-        bookId: Number(req.params.bookId),
-        chapterId: Number(req.params.chapterId),
+        bookId,
+        chapterId,
         userId,
         authorName,
         authorAvatarUrl,
-        selectedText: selectedText.trim(),
+        selectedText: selectedText.trim().slice(0, 5000),
         startOffset,
         endOffset,
-        content: content.trim(),
+        content: content.trim().slice(0, 5000),
       });
       res.status(201).json(comment);
     } catch (err) {
@@ -423,16 +515,41 @@ export async function registerRoutes(
 
   app.delete("/api/books/:bookId/inline-comments/:commentId", async (req, res) => {
     try {
-      await storage.deleteInlineComment(Number(req.params.commentId));
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const userId = (req.user as any).id;
+      const commentId = Number(req.params.commentId);
+      if (!Number.isInteger(commentId)) return res.status(400).json({ message: "Invalid ID" });
+      const comment = await storage.getInlineCommentById(commentId);
+      if (!comment) return res.status(404).json({ message: "Not found" });
+      // Only the comment author OR the book owner can delete
+      const book = await storage.getBook(comment.bookId);
+      const canDelete = comment.userId === userId || book?.userId === userId;
+      if (!canDelete) return res.status(403).json({ message: "Access denied" });
+      await storage.deleteInlineComment(commentId);
       res.json({ success: true });
-    } catch { res.status(500).json({ message: "Failed to delete" }); }
+    } catch (err) {
+      logger.error({ err }, "Failed to delete inline comment");
+      res.status(500).json({ message: "Failed to delete" });
+    }
   });
 
   app.patch("/api/books/:bookId/inline-comments/:commentId/resolve", async (req, res) => {
     try {
-      const comment = await storage.resolveInlineComment(Number(req.params.commentId));
-      res.json(comment);
-    } catch { res.status(500).json({ message: "Failed to resolve" }); }
+      if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+      const userId = (req.user as any).id;
+      const commentId = Number(req.params.commentId);
+      if (!Number.isInteger(commentId)) return res.status(400).json({ message: "Invalid ID" });
+      const comment = await storage.getInlineCommentById(commentId);
+      if (!comment) return res.status(404).json({ message: "Not found" });
+      // Only book owner OR collaborator can resolve
+      const hasAccess = await storage.isBookAccessible(comment.bookId, userId);
+      if (!hasAccess) return res.status(403).json({ message: "Access denied" });
+      const updated = await storage.resolveInlineComment(commentId);
+      res.json(updated);
+    } catch (err) {
+      logger.error({ err }, "Failed to resolve inline comment");
+      res.status(500).json({ message: "Failed to resolve" });
+    }
   });
 
   app.get("/api/public/books/:id/ratings", async (req, res) => {

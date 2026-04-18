@@ -49,9 +49,14 @@ export const bookSeries = pgTable("book_series", {
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
+  coverImage: text("cover_image"),
+  isPublished: boolean("is_published").default(false).notNull(),
+  publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_book_series_user_id").on(t.userId),
+  index("idx_book_series_is_published").on(t.isPublished),
+  index("idx_book_series_published_at").on(t.publishedAt),
 ]);
 
 export type BookSeries = typeof bookSeries.$inferSelect;
@@ -301,6 +306,7 @@ export const inlineComments = pgTable("inline_comments", {
 }, (t) => [
   index("idx_inline_comments_book_id").on(t.bookId),
   index("idx_inline_comments_chapter_id").on(t.chapterId),
+  index("idx_inline_comments_user_id").on(t.userId),
 ]);
 
 export type InlineComment = typeof inlineComments.$inferSelect;
