@@ -12,6 +12,7 @@ import { ProtectedRoute, AdminRoute } from "@/components/protected-route";
 import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
 import QuickDropNotepad from "@/components/QuickDropNotepad";
+import MobileBlocker from "@/components/MobileBlocker";
 
 /* Eager: landing page (must load instantly) */
 import Home from "@/pages/home";
@@ -42,6 +43,7 @@ const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 const Messages = lazy(() => import("@/pages/messages"));
 const Blog = lazy(() => import("@/pages/blog"));
 const ArticleView = lazy(() => import("@/pages/article-view"));
+const SeriesView = lazy(() => import("@/pages/series-view"));
 
 function EmailVerifyHandler() {
   const { toast } = useToast();
@@ -209,6 +211,7 @@ function Router() {
         <Route path="/pricing" component={Pricing} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:id" component={ArticleView} />
+        <Route path="/series/:id" component={SeriesView} />
         <Route path="/library" component={Library} />
         <Route path="/read/:id" component={ReadBook} />
         <Route path="/discover" component={DiscoverPage} />
@@ -260,6 +263,7 @@ function App() {
                 <Router />
                 <QuickDropNotepad />
                 <Toaster />
+                <MobileBlocker />
               </TooltipProvider>
             </AuthProvider>
           </LanguageProvider>
