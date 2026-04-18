@@ -541,9 +541,12 @@ export default function WritingGuide() {
 
       {/* ── Flex wrapper for sidebar + content ── */}
       <div className="flex gap-0 lg:gap-8">
-        {/* ── Sticky Sidebar TOC (Desktop Only) ── */}
-        <aside className="hidden lg:block flex-shrink-0" style={{ width: 200 }}>
-          <div className="sticky top-[100px]" style={{ width: 200 }}>
+        {/* ── Fixed Sidebar TOC (Desktop Only) — locked to viewport, always visible ── */}
+        <aside className="hidden lg:block flex-shrink-0" style={{ width: 200 }} aria-hidden>
+          {/* Placeholder to reserve grid space */}
+        </aside>
+        <aside className="hidden lg:block" style={{ position: "fixed", top: 120, left: "max(24px, calc((100vw - 1280px) / 2 + 24px))", width: 200, zIndex: 30 }}>
+          <div style={{ width: 200 }}>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">Table of Contents</p>
             <nav className="space-y-1">
               {sections.map((sec, i) => {
