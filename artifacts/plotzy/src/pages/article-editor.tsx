@@ -1884,6 +1884,30 @@ function ArticleShareButton({
   const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif";
   const B = "rgba(255,255,255,0.08)";
 
+  const btnRef = useRef<HTMLButtonElement>(null);
+  // The dropdown must render outside the toolbar — the toolbar uses
+  // `overflow-x: auto` for horizontal scrolling, which implicitly clips the
+  // y-axis and swallows any absolutely-positioned children. Portal to
+  // document.body and pin coordinates to the button's bounding rect.
+  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const compute = () => {
+      const el = btnRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setCoords({ top: r.bottom + 6, right: window.innerWidth - r.right });
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    window.addEventListener("scroll", compute, true);
+    return () => {
+      window.removeEventListener("resize", compute);
+      window.removeEventListener("scroll", compute, true);
+    };
+  }, [open]);
+
   const url = typeof window !== "undefined"
     ? `${window.location.origin}/blog/${articleId}`
     : "";
@@ -1908,8 +1932,9 @@ function ArticleShareButton({
   };
 
   return (
-    <div style={{ position: "relative", flexShrink: 0 }}>
+    <>
       <button
+        ref={btnRef}
         onClick={() => onOpenChange(!open)}
         title="Share this article"
         style={{
@@ -1917,25 +1942,25 @@ function ArticleShareButton({
           padding: "6px 12px", borderRadius: 7, cursor: "pointer",
           background: "rgba(255,255,255,0.06)", border: `1px solid ${B}`,
           fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)",
-          transition: "all 0.2s",
+          transition: "all 0.2s", flexShrink: 0,
         }}
       >
         <Share2 size={12} /> Share
       </button>
 
-      {open && (
+      {open && coords && createPortal(
         <>
-          {/* click-outside backdrop */}
           <div
             onClick={() => onOpenChange(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 50, background: "transparent" }}
+            style={{ position: "fixed", inset: 0, zIndex: 10000, background: "transparent" }}
           />
           <div
+            role="menu"
             style={{
-              position: "absolute", top: "calc(100% + 6px)", right: 0,
-              minWidth: 220, zIndex: 51,
+              position: "fixed", top: coords.top, right: coords.right,
+              minWidth: 240, zIndex: 10001,
               background: "#15151a", border: `1px solid ${B}`, borderRadius: 10,
-              boxShadow: "0 12px 32px rgba(0,0,0,0.5)", padding: 6,
+              boxShadow: "0 12px 32px rgba(0,0,0,0.6)", padding: 6,
               fontFamily: SF,
             }}
           >
@@ -1943,7 +1968,7 @@ function ArticleShareButton({
               Share this article
             </div>
 
-            <ShareItem onClick={copyLink} accent="#fff">
+            <ShareItem onClick={copyLink}>
               {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} color="rgba(255,255,255,0.6)" />}
               <span style={{ color: copied ? "#34d399" : "rgba(255,255,255,0.85)" }}>
                 {copied ? "Link copied" : "Copy link"}
@@ -1955,12 +1980,12 @@ function ArticleShareButton({
               <span style={{ color: "rgba(255,255,255,0.85)" }}>Post on X</span>
             </ShareItem>
 
-            <ShareItem onClick={shareTo.whatsapp} accent="#25d366">
+            <ShareItem onClick={shareTo.whatsapp}>
               <span style={{ width: 13, textAlign: "center", color: "#25d366", fontWeight: 700, fontSize: 12 }}>✓</span>
               <span style={{ color: "rgba(255,255,255,0.85)" }}>WhatsApp</span>
             </ShareItem>
 
-            <ShareItem onClick={shareTo.linkedin} accent="#0a66c2">
+            <ShareItem onClick={shareTo.linkedin}>
               <span style={{ width: 13, textAlign: "center", color: "#0a66c2", fontWeight: 700, fontSize: 12 }}>in</span>
               <span style={{ color: "rgba(255,255,255,0.85)" }}>LinkedIn</span>
             </ShareItem>
@@ -1969,9 +1994,10 @@ function ArticleShareButton({
               {url.replace(/^https?:\/\//, "")}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
 
