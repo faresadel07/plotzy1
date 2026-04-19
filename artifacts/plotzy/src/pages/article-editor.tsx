@@ -26,6 +26,7 @@ import {
   List, ListOrdered, Quote, Code, Minus,
   Link as LinkIcon, Undo2, Redo2, ChevronDown,
   Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical, Search, Globe, Send as SendIcon,
+  Share2, Copy, Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -430,6 +431,8 @@ export default function ArticleEditor() {
   const [articleSearchCount, setArticleSearchCount] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [dragOver, setDragOver]   = useState(false);
   const [wordGoal, setWordGoal]   = useState(1000);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
@@ -1090,6 +1093,18 @@ export default function ArticleEditor() {
               : (article as any)?.isPublished ? <><Globe size={12}/> Unpublish</>
               : <><SendIcon size={12}/> Publish</>}
           </button>
+
+          {/* Share button — only when the article is actually published */}
+          {(article as any)?.isPublished && (
+            <ArticleShareButton
+              articleId={id}
+              title={(article as any)?.title || ""}
+              open={showShareMenu}
+              onOpenChange={setShowShareMenu}
+              copied={shareCopied}
+              onCopiedChange={setShareCopied}
+            />
+          )}
         </div>
         {/* Spacer for fixed top bar */}
         <div style={{height:48}}/>
@@ -1844,5 +1859,143 @@ export default function ArticleEditor() {
         `}</style>
       </div>
     </Layout>
+  );
+}
+
+// ── Share dropdown rendered next to the Publish button in the editor.
+// Author-only affordance — Copy Link / X / WhatsApp / LinkedIn. The reader
+// page intentionally does not have its own share bar; only the author sees
+// this control.
+function ArticleShareButton({
+  articleId,
+  title,
+  open,
+  onOpenChange,
+  copied,
+  onCopiedChange,
+}: {
+  articleId: string;
+  title: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  copied: boolean;
+  onCopiedChange: (v: boolean) => void;
+}) {
+  const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif";
+  const B = "rgba(255,255,255,0.08)";
+
+  const url = typeof window !== "undefined"
+    ? `${window.location.origin}/blog/${articleId}`
+    : "";
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      onCopiedChange(true);
+      setTimeout(() => onCopiedChange(false), 2000);
+    } catch {}
+  };
+
+  const openExternal = (href: string) => {
+    window.open(href, "_blank", "noopener,noreferrer");
+    onOpenChange(false);
+  };
+
+  const shareTo = {
+    x: () => openExternal(`https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`),
+    whatsapp: () => openExternal(`https://wa.me/?text=${encodeURIComponent((title || "") + " " + url)}`),
+    linkedin: () => openExternal(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`),
+  };
+
+  return (
+    <div style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        onClick={() => onOpenChange(!open)}
+        title="Share this article"
+        style={{
+          display: "flex", alignItems: "center", gap: 5,
+          padding: "6px 12px", borderRadius: 7, cursor: "pointer",
+          background: "rgba(255,255,255,0.06)", border: `1px solid ${B}`,
+          fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)",
+          transition: "all 0.2s",
+        }}
+      >
+        <Share2 size={12} /> Share
+      </button>
+
+      {open && (
+        <>
+          {/* click-outside backdrop */}
+          <div
+            onClick={() => onOpenChange(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 50, background: "transparent" }}
+          />
+          <div
+            style={{
+              position: "absolute", top: "calc(100% + 6px)", right: 0,
+              minWidth: 220, zIndex: 51,
+              background: "#15151a", border: `1px solid ${B}`, borderRadius: 10,
+              boxShadow: "0 12px 32px rgba(0,0,0,0.5)", padding: 6,
+              fontFamily: SF,
+            }}
+          >
+            <div style={{ padding: "8px 10px 6px", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
+              Share this article
+            </div>
+
+            <ShareItem onClick={copyLink} accent="#fff">
+              {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} color="rgba(255,255,255,0.6)" />}
+              <span style={{ color: copied ? "#34d399" : "rgba(255,255,255,0.85)" }}>
+                {copied ? "Link copied" : "Copy link"}
+              </span>
+            </ShareItem>
+
+            <ShareItem onClick={shareTo.x}>
+              <span style={{ width: 13, textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>𝕏</span>
+              <span style={{ color: "rgba(255,255,255,0.85)" }}>Post on X</span>
+            </ShareItem>
+
+            <ShareItem onClick={shareTo.whatsapp} accent="#25d366">
+              <span style={{ width: 13, textAlign: "center", color: "#25d366", fontWeight: 700, fontSize: 12 }}>✓</span>
+              <span style={{ color: "rgba(255,255,255,0.85)" }}>WhatsApp</span>
+            </ShareItem>
+
+            <ShareItem onClick={shareTo.linkedin} accent="#0a66c2">
+              <span style={{ width: 13, textAlign: "center", color: "#0a66c2", fontWeight: 700, fontSize: 12 }}>in</span>
+              <span style={{ color: "rgba(255,255,255,0.85)" }}>LinkedIn</span>
+            </ShareItem>
+
+            <div style={{ padding: "8px 10px 4px", fontSize: 10, color: "rgba(255,255,255,0.3)", wordBreak: "break-all" }}>
+              {url.replace(/^https?:\/\//, "")}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ShareItem({
+  onClick, children, accent,
+}: {
+  onClick: () => void; children: React.ReactNode; accent?: string;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 10, width: "100%",
+        padding: "8px 10px", borderRadius: 7, border: "none", cursor: "pointer",
+        background: hover ? "rgba(255,255,255,0.05)" : "transparent",
+        fontSize: 13, textAlign: "left", fontFamily: "inherit",
+        transition: "background 0.15s",
+        color: accent || "rgba(255,255,255,0.85)",
+      }}
+    >
+      {children}
+    </button>
   );
 }

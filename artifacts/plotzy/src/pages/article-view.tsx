@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { ArrowLeft, Calendar, Clock, Eye, Heart, Share2, Copy, Check, BookOpen, User } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Eye, Heart, BookOpen, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
@@ -25,7 +25,6 @@ export default function ArticleView() {
   const [, params] = useRoute("/blog/:id");
   const articleId = Number(params?.id);
   const { toast } = useToast();
-  const [copied, setCopied] = useState(false);
 
   const { data: article, isLoading } = useQuery<any>({
     queryKey: ["public-article", articleId],
@@ -55,17 +54,6 @@ export default function ArticleView() {
   const category = article?.articleCategory;
   const tags: string[] = article?.tags || [];
   const featuredImg = article?.featuredImage || article?.coverImage;
-  const url = typeof window !== "undefined" ? window.location.href : "";
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const shareX = () => window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(article?.title || "")}&url=${encodeURIComponent(url)}`, "_blank");
-  const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent((article?.title || "") + " " + url)}`, "_blank");
-  const shareLinkedIn = () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, "_blank");
 
   if (isLoading) {
     return (
@@ -171,33 +159,6 @@ export default function ArticleView() {
           ))}
         </div>
       )}
-
-      {/* Share Bar */}
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 20px 48px" }}>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Share</span>
-
-          <button onClick={handleCopyLink}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 12, color: copied ? "#34d399" : "rgba(255,255,255,0.5)", transition: "all 0.15s" }}>
-            {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy Link</>}
-          </button>
-
-          <button onClick={shareX}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-            𝕏 Post
-          </button>
-
-          <button onClick={shareWhatsApp}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: "rgba(37,211,102,0.08)", border: "1px solid rgba(37,211,102,0.2)", cursor: "pointer", fontSize: 12, color: "#25d366" }}>
-            WhatsApp
-          </button>
-
-          <button onClick={shareLinkedIn}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, background: "rgba(10,102,194,0.08)", border: "1px solid rgba(10,102,194,0.2)", cursor: "pointer", fontSize: 12, color: "#0a66c2" }}>
-            LinkedIn
-          </button>
-        </div>
-      </div>
 
       {/* Article content styles */}
       <style>{`
