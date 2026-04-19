@@ -81,7 +81,6 @@ export default function GoogleOneTap() {
     if (isLoading) return;
     if (user) return;                  // Don't prompt signed-in users
     if (promptedRef.current) return;   // Prompt once per mount
-    // Respect user-dismissed cool-off
     try {
       const until = Number(localStorage.getItem(DISMISSED_KEY) || 0);
       if (until && Date.now() < until) return;
@@ -91,8 +90,6 @@ export default function GoogleOneTap() {
 
     (async () => {
       try {
-        // Fetch the client ID from the backend so we don't have to duplicate
-        // it as a VITE_ env var — the backend already owns it.
         const cfgRes = await fetch("/api/auth/google/config", { credentials: "include" });
         if (!cfgRes.ok) return;
         const cfg = (await cfgRes.json()) as { clientId: string | null; enabled: boolean };
@@ -126,7 +123,6 @@ export default function GoogleOneTap() {
                 });
                 return;
               }
-              // Refresh auth state so the rest of the app sees the new session.
               await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
               await refetch();
               toast({ title: "Welcome back!", description: "You're signed in." });
@@ -141,17 +137,15 @@ export default function GoogleOneTap() {
         });
 
         window.google.accounts.id.prompt((notification) => {
-          // If the user dismisses the prompt, remember that for a day so we
-          // don't spam them with it.
-          if (notification?.isDismissedMoment?.()) {
-            try {
+          try {
+            if (notification?.isDismissedMoment?.()) {
               localStorage.setItem(DISMISSED_KEY, String(Date.now() + DISMISS_COOLOFF_MS));
-            } catch {}
-          }
+            }
+          } catch {}
         });
         promptedRef.current = true;
-      } catch {
-        // Silent-fail — One Tap is an enhancement, not a hard dependency.
+      } catch (err) {
+        log("init threw", err);
       }
     })();
 
