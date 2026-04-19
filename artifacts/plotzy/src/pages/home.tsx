@@ -1081,7 +1081,7 @@ export default function Home() {
                           </div>
                         )}
                         <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>{c.name || "Unknown"}</span>
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: c.role === "editor" ? "#4ade80" : "#60a5fa" }}>
+                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.06)", color: c.role === "editor" ? "#a78bfa" : "rgba(255,255,255,0.55)", border: "1px solid", borderColor: c.role === "editor" ? "rgba(167,139,250,0.25)" : "rgba(255,255,255,0.10)" }}>
                           {c.role === "editor" ? "EDITOR" : "VIEWER"}
                         </span>
                       </div>
