@@ -1109,11 +1109,14 @@ export default function ArticleEditor() {
         {/* Spacer for fixed top bar */}
         <div style={{height:48}}/>
 
-        {/* ── FORMATTING TOOLBAR — Sticky below fixed top bar (44+48=92), centered ── */}
+        {/* ── FORMATTING TOOLBAR — Fixed below the (also fixed) top bar so it
+             stays visible regardless of scroll position or parent stacking
+             contexts. Sticky occasionally failed here because of Layout's
+             flex wrappers; fixed is the reliable fix. ── */}
         {!focusMode && (
         <div
           style={{
-            position:"sticky",top:92,zIndex:49, /* 44px Layout nav + 48px top bar */
+            position:"fixed",top:92,left:0,right:0,zIndex:49, /* 44px Layout nav + 48px top bar */
             scrollbarWidth:"none" as any,
             background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
@@ -1286,6 +1289,8 @@ export default function ArticleEditor() {
           </div>
         </div>
         )}
+        {/* Spacer so content below doesn't hide behind the now-fixed toolbar */}
+        {!focusMode && <div style={{height:44}}/>}
 
         {/* ── DROPDOWNS (portaled into body via fixed positioning) ── */}
 
