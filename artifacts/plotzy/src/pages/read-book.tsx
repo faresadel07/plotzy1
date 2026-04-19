@@ -584,6 +584,45 @@ export default function ReadBook() {
 
   const authorName = book?.authorName || (book as any)?.authorDisplayName || "Anonymous";
 
+  // ── Reader units: front matter + chapters + back matter ────────────────
+  // The author's bookPages (copyright / dedication / epigraph / aboutAuthor)
+  // are rendered as dedicated reader pages wrapped around the chapters so
+  // the online experience matches the PDF export — not just plain chapters.
+  type ReaderUnit =
+    | { kind: "chapter"; chapter: typeof sortedChapters[number]; chapterIndex: number }
+    | { kind: "front-copyright"; content: string }
+    | { kind: "front-dedication"; content: string }
+    | { kind: "front-epigraph"; content: string }
+    | { kind: "back-about-author"; content: string };
+
+  const bookPages = ((book as any)?.bookPages || {}) as {
+    copyright?: string;
+    dedication?: string;
+    epigraph?: string;
+    aboutAuthor?: string;
+  };
+
+  const readerUnits: ReaderUnit[] = [];
+  if (bookPages.copyright?.trim())  readerUnits.push({ kind: "front-copyright",  content: bookPages.copyright });
+  if (bookPages.dedication?.trim()) readerUnits.push({ kind: "front-dedication", content: bookPages.dedication });
+  if (bookPages.epigraph?.trim())   readerUnits.push({ kind: "front-epigraph",   content: bookPages.epigraph });
+  sortedChapters.forEach((ch, i) => readerUnits.push({ kind: "chapter", chapter: ch, chapterIndex: i }));
+  if (bookPages.aboutAuthor?.trim()) readerUnits.push({ kind: "back-about-author", content: bookPages.aboutAuthor });
+
+  // Labels used in both the TOC and the current-chapter footer line.
+  const unitLabel = (unit: ReaderUnit): string => {
+    if (unit.kind === "chapter") {
+      const ch = unit.chapter;
+      const titleIsNumber = ch.title && /^\d+$/.test(ch.title.trim());
+      if (titleIsNumber) return `Chapter ${ch.title}`;
+      return ch.title?.trim() || `Chapter ${unit.chapterIndex + 1}`;
+    }
+    if (unit.kind === "front-copyright")   return "Copyright";
+    if (unit.kind === "front-dedication")  return "Dedication";
+    if (unit.kind === "front-epigraph")    return "Epigraph";
+    return "About the Author";
+  };
+
   const goSpread = useCallback((idx: number) => {
     setSpreadIndex(Math.max(0, Math.min(idx, totalSpreads - 1)));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -762,18 +801,24 @@ export default function ReadBook() {
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
               <div>
-                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#444", textTransform: "uppercase", marginBottom: 10, fontFamily: "Georgia, serif" }}>Chapters</p>
+                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#444", textTransform: "uppercase", marginBottom: 10, fontFamily: "Georgia, serif" }}>Contents</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  {sortedChapters.map((ch, i) => (
-                    <button key={ch.id} onClick={() => { setCurrentChapterIdx(i); setShowToc(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      style={{ textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 10, border: "none", background: currentChapterIdx === i ? "rgba(255,255,255,0.08)" : "transparent", color: currentChapterIdx === i ? "#fff" : "#555", cursor: "pointer", fontFamily: "Georgia, serif" }}
-                      onMouseEnter={e => { if (currentChapterIdx !== i) e.currentTarget.style.color = "#ccc"; }}
-                      onMouseLeave={e => { if (currentChapterIdx !== i) e.currentTarget.style.color = "#555"; }}
-                    >
-                      <span style={{ fontSize: 10, opacity: 0.35, width: 18, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
-                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.title}</span>
-                    </button>
-                  ))}
+                  {readerUnits.map((unit, i) => {
+                    const isActive = currentChapterIdx === i;
+                    const isMatter = unit.kind !== "chapter";
+                    // For chapter units keep the running number; for front/back matter show a dash.
+                    const numberCell = unit.kind === "chapter" ? String(unit.chapterIndex + 1) : "—";
+                    return (
+                      <button key={i} onClick={() => { setCurrentChapterIdx(i); setCurrentPageInChapter(0); setShowToc(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        style={{ textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 10, border: "none", background: isActive ? "rgba(255,255,255,0.08)" : "transparent", color: isActive ? "#fff" : "#555", cursor: "pointer", fontFamily: "Georgia, serif", fontStyle: isMatter ? "italic" : "normal" }}
+                        onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = "#ccc"; }}
+                        onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = "#555"; }}
+                      >
+                        <span style={{ fontSize: 10, opacity: 0.35, width: 18, textAlign: "right", flexShrink: 0 }}>{numberCell}</span>
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{unitLabel(unit)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </motion.aside>
@@ -905,40 +950,47 @@ export default function ReadBook() {
       {/* ── Reading area — scrollable pages ── */}
       <div className="read-book-container" style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
 
-        {!sortedChapters.length ? (
+        {!readerUnits.length ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#555" }}>
             <BookOpen style={{ width: 48, height: 48, margin: "0 auto 16px", opacity: 0.3 }} />
             <p style={{ fontFamily: "Georgia, serif", fontSize: 16 }}>This book has no chapters yet.</p>
           </div>
         ) : (
           <>
-            {/* Single chapter view with pagination */}
+            {/* One "unit" at a time — front matter, chapter, or back matter. */}
             {(() => {
-              const ch = sortedChapters[currentChapterIdx];
-              if (!ch) return null;
-              const html = parseContentAsHtml(ch?.content);
-              const plainText = parseContent(ch?.content);
+              const unit = readerUnits[Math.min(currentChapterIdx, readerUnits.length - 1)];
+              if (!unit) return null;
+
+              const isChapter = unit.kind === "chapter";
+
+              // For chapter units, split into pages. Matter pages are
+              // single-page, so totalPagesInChapter is 1 and pageIdx is 0.
+              const ch = isChapter ? unit.chapter : null;
+              const html = isChapter ? parseContentAsHtml(ch!.content) : "";
+              const plainText = isChapter ? parseContent(ch!.content) : (unit.kind !== "chapter" ? unit.content : "");
               const isRTL = isArabicText(plainText);
-              const titleIsNumber = ch?.title && /^\d+$/.test(ch.title.trim());
-              const chapterLabel = titleIsNumber ? `Chapter ${ch.title}` : `Chapter ${currentChapterIdx + 1}`;
-              const showTitle = ch?.title && !titleIsNumber;
+              const titleIsNumber = isChapter && ch!.title && /^\d+$/.test(ch!.title.trim());
+              const chapterLabel = isChapter
+                ? (titleIsNumber ? `Chapter ${ch!.title}` : `Chapter ${unit.chapterIndex + 1}`)
+                : unitLabel(unit);
+              const showTitle = isChapter && ch!.title && !titleIsNumber;
               const fontFam = isRTL
                 ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
                 : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
 
-              // Split chapter into pages
-              const chapterPages = html ? splitHtmlIntoPages(html, 250) : [];
-              const pageIdx = Math.min(currentPageInChapter, chapterPages.length - 1);
-              const pageHtml = chapterPages[pageIdx] || "";
-              const totalPagesInChapter = chapterPages.length;
+              const chapterPages = isChapter && html ? splitHtmlIntoPages(html, 250) : [""];
+              const pageIdx = isChapter ? Math.min(currentPageInChapter, chapterPages.length - 1) : 0;
+              const pageHtml = isChapter ? (chapterPages[pageIdx] || "") : "";
+              const totalPagesInChapter = Math.max(1, chapterPages.length);
               const isFirstPage = pageIdx === 0;
               const isLastPage = pageIdx >= totalPagesInChapter - 1;
 
               const goNextPage = () => {
-                if (!isLastPage) {
+                if (isChapter && !isLastPage) {
                   setCurrentPageInChapter(p => p + 1);
                   window.scrollTo({ top: 0, behavior: "smooth" });
-                } else if (currentChapterIdx < sortedChapters.length - 1) {
+                } else if (currentChapterIdx < readerUnits.length - 1) {
                   setCurrentChapterIdx(p => p + 1);
                   setCurrentPageInChapter(0);
                   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -946,72 +998,78 @@ export default function ReadBook() {
               };
 
               const goPrevPage = () => {
-                if (!isFirstPage) {
+                if (isChapter && !isFirstPage) {
                   setCurrentPageInChapter(p => p - 1);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 } else if (currentChapterIdx > 0) {
                   setCurrentChapterIdx(p => p - 1);
-                  setCurrentPageInChapter(999); // will clamp to last page
+                  setCurrentPageInChapter(999); // clamps to last page of previous unit
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }
               };
 
               const isVeryFirst = currentChapterIdx === 0 && isFirstPage;
-              const isVeryLast = currentChapterIdx >= sortedChapters.length - 1 && isLastPage;
+              const isVeryLast = currentChapterIdx >= readerUnits.length - 1 && isLastPage;
+
+              // Shared page-shell styles used by both chapter and matter pages.
+              const pageShell: React.CSSProperties = {
+                background: "#faf7f2",
+                border: "1px solid rgba(0,0,0,0.08)",
+                borderRadius: 4,
+                padding: "40px clamp(16px, 5vw, 56px) 32px",
+                marginTop: 32,
+                boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+                direction: isRTL ? "rtl" : "ltr",
+                minHeight: "60vh",
+              };
 
               return (
                 <div>
-                  <div id={`chapter-${ch.id}`} style={{
-                    background: "#faf7f2",
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    borderRadius: 4,
-                    padding: "40px clamp(16px, 5vw, 56px) 32px",
-                    marginTop: 32,
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
-                    direction: isRTL ? "rtl" : "ltr",
-                    minHeight: "60vh",
-                  }}>
-                    {/* Chapter header — only on first page of chapter */}
-                    {isFirstPage && (
-                      <div style={{ textAlign: "center", marginBottom: 36 }}>
-                        <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
-                          {chapterLabel}
+                  {isChapter ? (
+                    <div id={`chapter-${ch!.id}`} style={pageShell}>
+                      {/* Chapter header — only on first page of chapter */}
+                      {isFirstPage && (
+                        <div style={{ textAlign: "center", marginBottom: 36 }}>
+                          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
+                            {chapterLabel}
+                          </p>
+                          {showTitle && (
+                            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.3, margin: "0 0 16px" }}>
+                              {ch!.title}
+                            </h2>
+                          )}
+                          <div style={{ width: 36, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+                        </div>
+                      )}
+
+                      {pageHtml ? (
+                        <div
+                          className="book-reader-content"
+                          data-chapter-id={ch!.id}
+                          style={{
+                            fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
+                            color: "#1c1410", textAlign: "justify",
+                            letterSpacing: isRTL ? "0" : "0.01em",
+                          }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(pageHtml) }}
+                        />
+                      ) : (
+                        <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
+                          This chapter has no content yet.
                         </p>
-                        {showTitle && (
-                          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.3, margin: "0 0 16px" }}>
-                            {ch.title}
-                          </h2>
-                        )}
-                        <div style={{ width: 36, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+                      )}
+
+                      {/* Page footer */}
+                      <div style={{ marginTop: 40, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>{book?.authorName || book?.title}</span>
+                        <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>
+                          {chapterLabel} · Page {pageIdx + 1} of {totalPagesInChapter}
+                        </span>
                       </div>
-                    )}
-
-                    {/* Page content */}
-                    {pageHtml ? (
-                      <div
-                        className="book-reader-content"
-                        data-chapter-id={ch.id}
-                        style={{
-                          fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
-                          color: "#1c1410", textAlign: "justify",
-                          letterSpacing: isRTL ? "0" : "0.01em",
-                        }}
-                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(pageHtml) }}
-                      />
-                    ) : (
-                      <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
-                        This chapter has no content yet.
-                      </p>
-                    )}
-
-                    {/* Page footer */}
-                    <div style={{ marginTop: 40, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>{book?.authorName || book?.title}</span>
-                      <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>
-                        {chapterLabel} · Page {pageIdx + 1} of {totalPagesInChapter}
-                      </span>
                     </div>
-                  </div>
+                  ) : (
+                    <MatterPage unit={unit} fontFam={fontFam} authorName={authorName} pageShell={pageShell} />
+                  )}
 
                   {/* Navigation */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "24px 0 40px", gap: 12 }}>
@@ -1026,7 +1084,7 @@ export default function ReadBook() {
                     </button>
 
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "Georgia, serif", textAlign: "center" }}>
-                      {chapterLabel} · {pageIdx + 1}/{totalPagesInChapter}
+                      {isChapter ? `${chapterLabel} · ${pageIdx + 1}/${totalPagesInChapter}` : chapterLabel}
                     </span>
 
                     <button disabled={isVeryLast} onClick={goNextPage}
@@ -1125,6 +1183,107 @@ export default function ReadBook() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Front / Back matter page renderer ───────────────────────────────────
+// Copyright, Dedication, Epigraph, and About-the-Author each get their own
+// full page. Typography is tuned per page type to match how these sections
+// appear in a professionally typeset print book.
+function MatterPage({
+  unit,
+  fontFam,
+  authorName,
+  pageShell,
+}: {
+  unit:
+    | { kind: "front-copyright"; content: string }
+    | { kind: "front-dedication"; content: string }
+    | { kind: "front-epigraph"; content: string }
+    | { kind: "back-about-author"; content: string };
+  fontFam: string;
+  authorName: string;
+  pageShell: React.CSSProperties;
+}) {
+  const GEORGIA = "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
+  // Preserve line breaks but keep simple text-only rendering — these fields
+  // are plain-text inputs.
+  const lines = (unit.content || "").split("\n");
+
+  if (unit.kind === "front-copyright") {
+    return (
+      <div style={{ ...pageShell, display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "center" }}>
+        <div style={{ maxWidth: 420, textAlign: "center" }}>
+          {lines.map((line, i) => (
+            <p key={i} style={{ fontFamily: GEORGIA, fontSize: 11.5, color: "#6b5c4a", lineHeight: 1.85, margin: line.trim() ? "0 0 6px" : "0 0 14px" }}>
+              {line || "\u00A0"}
+            </p>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (unit.kind === "front-dedication") {
+    return (
+      <div style={{ ...pageShell, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ maxWidth: 420, textAlign: "center" }}>
+          {lines.map((line, i) => (
+            <p key={i} style={{ fontFamily: fontFam, fontSize: 17, fontStyle: "italic", color: "#2a1e12", lineHeight: 1.75, margin: "0 0 6px", letterSpacing: "0.01em" }}>
+              {line || "\u00A0"}
+            </p>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (unit.kind === "front-epigraph") {
+    // Last line beginning with "—" / "--" is conventionally the citation.
+    const nonEmpty = lines.filter(l => l.length > 0);
+    const last = nonEmpty[nonEmpty.length - 1] || "";
+    const isCitation = /^\s*(—|--)/.test(last);
+    const body = isCitation ? nonEmpty.slice(0, -1) : nonEmpty;
+
+    return (
+      <div style={{ ...pageShell, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ maxWidth: 460, textAlign: "center" }}>
+          <span style={{ fontFamily: GEORGIA, fontSize: 38, color: "#c8bfb3", lineHeight: 1, display: "block", marginBottom: 12 }}>“</span>
+          {body.map((line, i) => (
+            <p key={i} style={{ fontFamily: fontFam, fontSize: 16, fontStyle: "italic", color: "#3a2b1c", lineHeight: 1.7, margin: "0 0 8px" }}>
+              {line}
+            </p>
+          ))}
+          {isCitation && (
+            <p style={{ fontFamily: GEORGIA, fontSize: 12, color: "#7a6a55", marginTop: 18, letterSpacing: "0.04em" }}>
+              {last.replace(/^\s*(—|--)\s*/, "— ")}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // back-about-author
+  return (
+    <div style={{ ...pageShell }}>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: GEORGIA, marginBottom: 12 }}>
+          About the Author
+        </p>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.25, margin: "0 0 14px" }}>
+          {authorName}
+        </h2>
+        <div style={{ width: 36, height: 1, background: "#c8bfb3", margin: "0 auto" }} />
+      </div>
+      <div style={{ maxWidth: 560, margin: "0 auto" }}>
+        {lines.map((line, i) => (
+          <p key={i} style={{ fontFamily: fontFam, fontSize: 15, lineHeight: 1.85, color: "#2a1e12", margin: line.trim() ? "0 0 14px" : "0 0 8px", textAlign: "justify", letterSpacing: "0.01em" }}>
+            {line || "\u00A0"}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
