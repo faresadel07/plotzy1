@@ -564,7 +564,7 @@ export default function WritingGuide() {
       </nav>
 
       {/* ── Main content — centered column ── */}
-      <div className="pt-8 md:pt-12 max-w-3xl mx-auto">
+      <div className="pt-8 md:pt-12 max-w-4xl mx-auto">
         <div className="flex-1 min-w-0">
 
       {/* ══════════════════════════════════════════════ */}
@@ -677,22 +677,22 @@ export default function WritingGuide() {
         />
 
         {/* Structure tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6">
           {structures.map((s, i) => {
             const Icon = s.icon;
             return (
               <button
                 key={s.name}
                 onClick={() => { setActiveStructure(i); setExpandedAct(null); }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap border transition-all flex-shrink-0 ${
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all text-left ${
                   activeStructure === i
                     ? `bg-foreground text-background border-foreground`
-                    : `bg-card border-border text-muted-foreground hover:text-foreground`
+                    : `bg-card border-border text-muted-foreground hover:text-foreground hover:border-foreground/30`
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                {s.name}
-                <span className={`text-xs px-2 py-0.5 rounded-full ${activeStructure === i ? "bg-background/20" : "bg-foreground/8"}`}>{s.tag}</span>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate flex-1 min-w-0">{s.name}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${activeStructure === i ? "bg-background/20" : "bg-foreground/8"}`}>{s.tag}</span>
               </button>
             );
           })}
