@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen, Plus, Pencil, Trash2, X, Check, ChevronRight, ChevronLeft, Layers
+  BookOpen, Plus, Pencil, Trash2, X, Check, ChevronRight, ChevronLeft, Layers,
+  ChevronDown, ChevronUp, FileText, Type, Target, Send, Globe, Share2, Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +16,7 @@ import { BookCoverShader } from "@/components/ui/book-cover-shader";
 import {
   useSeries, useCreateSeries, useUpdateSeries, useDeleteSeries,
   useAddBookToSeries, useRemoveBookFromSeries, useReorderSeriesBooks,
+  usePublishSeries,
   type BookSeriesWithBooks,
 } from "@/hooks/use-series";
 import type { Book } from "@/hooks/use-books";
@@ -23,13 +26,47 @@ type Props = { books: Book[] | undefined };
 // Book cover matching the original library style
 function MiniCover({ book, onClick }: { book: { id: number; title: string; coverImage?: string | null; spineColor?: string | null; genre?: string | null }; onClick: () => void }) {
   const spine = book.spineColor ?? "#1a1a2e";
+  const [hover, setHover] = useState(false);
+  const { data: chapterCount } = useQuery<number>({
+    queryKey: ["book-chapter-count", book.id],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/books/${book.id}/chapters`, { credentials: "include" });
+        if (!res.ok) return 0;
+        const chs = await res.json();
+        return Array.isArray(chs) ? chs.length : 0;
+      } catch { return 0; }
+    },
+    enabled: hover,
+    staleTime: 60_000,
+  });
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 focus:outline-none text-left"
-      title={book.title}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="flex-shrink-0 focus:outline-none text-left relative"
       style={{ width: 90 }}
     >
+      {/* Custom tooltip */}
+      {hover && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 -top-16 z-50 px-3 py-2 rounded-lg shadow-xl pointer-events-none whitespace-nowrap"
+          style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)" }}
+        >
+          <p className="text-xs font-semibold text-white mb-0.5">{book.title}</p>
+          <p className="text-[10px] text-white/40">
+            {chapterCount !== undefined
+              ? `${chapterCount} ${chapterCount === 1 ? "chapter" : "chapters"}`
+              : "Loading..."}
+          </p>
+          {/* Arrow */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 rotate-45"
+            style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", borderTop: "none", borderLeft: "none" }}
+          />
+        </div>
+      )}
       <PerspectiveBook spineColor={spine}>
         {/* Shader background (same as original — no coverImage) */}
         {!book.coverImage && (
@@ -140,17 +177,52 @@ function SeriesCard({
   const updateSeries = useUpdateSeries();
   const deleteSeries = useDeleteSeries();
   const reorder = useReorderSeriesBooks();
+  const publishSeries = usePublishSeries();
+  const [shareCopied, setShareCopied] = useState(false);
 
   const [editingName, setEditingName] = useState(false);
   const [nameVal, setNameVal] = useState(series.name);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descVal, setDescVal] = useState(series.description || "");
   const [manageOpen, setManageOpen] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  // Collapse empty series by default, but auto-expand if they have books
+  const [expanded, setExpanded] = useState(series.books.length > 0);
 
   async function saveName() {
     if (!nameVal.trim() || nameVal.trim() === series.name) { setEditingName(false); return; }
     await updateSeries.mutateAsync({ id: series.id, name: nameVal.trim() });
     setEditingName(false);
     toast({ title: "Series renamed" });
+  }
+
+  async function saveDesc() {
+    if (descVal.trim() === (series.description || "")) { setEditingDesc(false); return; }
+    await updateSeries.mutateAsync({ id: series.id, description: descVal.trim() });
+    setEditingDesc(false);
+    toast({ title: "Description updated" });
+  }
+
+  // Series stats (coming from backend)
+  const stats = (series as any).stats as { totalChapters: number; totalWords: number; totalWordGoal: number } | undefined;
+  const isEmpty = series.books.length === 0;
+  const isPublished = !!series.isPublished;
+
+  async function togglePublish() {
+    try {
+      await publishSeries.mutateAsync({ id: series.id, publish: !isPublished });
+      toast({ title: isPublished ? "Series unpublished" : "Series published!" });
+    } catch {
+      toast({ title: "Failed to update", variant: "destructive" });
+    }
+  }
+
+  function copyShareLink() {
+    const url = `${window.location.origin}/series/${series.id}`;
+    navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+    toast({ title: "Link copied!" });
   }
 
   async function handleDelete() {
@@ -177,10 +249,14 @@ function SeriesCard({
       className="group/card relative rounded-2xl border border-white/8 bg-white/[0.025] hover:border-white/15 transition-all duration-300 p-5 overflow-visible"
     >
       {/* Header row */}
-      <div className="flex items-start gap-3 mb-5">
-        <div className="w-8 h-8 rounded-lg bg-white/8 border border-white/12 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Layers className="w-4 h-4 text-white/50" />
-        </div>
+      <div className="flex items-start gap-3 mb-3">
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="w-8 h-8 rounded-lg bg-white/8 border border-white/12 flex items-center justify-center flex-shrink-0 mt-0.5 hover:bg-white/12 transition-colors"
+          title={expanded ? "Collapse" : "Expand"}
+        >
+          {expanded ? <ChevronUp className="w-4 h-4 text-white/50" /> : <ChevronDown className="w-4 h-4 text-white/50" />}
+        </button>
         <div className="flex-1 min-w-0">
           {editingName ? (
             <form onSubmit={(e) => { e.preventDefault(); saveName(); }} className="flex items-center gap-2">
@@ -197,41 +273,117 @@ function SeriesCard({
           ) : (
             <h3 className="text-base font-semibold text-white leading-tight truncate">{series.name}</h3>
           )}
-          {series.description && !editingName && (
-            <p className="text-xs text-white/35 mt-0.5 line-clamp-1">{series.description}</p>
-          )}
           <p className="text-[10px] text-white/25 mt-1 font-medium tracking-wider uppercase">
-            {series.books.length === 0 ? "No books" : `${series.books.length} book${series.books.length !== 1 ? "s" : ""}`}
+            {isEmpty ? "No books yet" : `${series.books.length} book${series.books.length !== 1 ? "s" : ""}`}
+            {stats && stats.totalChapters > 0 && ` · ${stats.totalChapters} ${stats.totalChapters === 1 ? "chapter" : "chapters"}`}
+            {stats && stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
           </p>
         </div>
         {/* Action buttons */}
-        <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-          <button
-            onClick={() => setEditingName(true)}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
-            title="Rename"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setManageOpen(true)}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
-            title="Manage books"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setShowConfirmDelete(true)}
-            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
-            title="Delete series"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex items-center gap-1">
+          {/* Published badge — always visible when published */}
+          {isPublished && (
+            <span className="hidden sm:flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ background: "rgba(124,106,247,0.15)", color: "#a78bfa", border: "1px solid rgba(124,106,247,0.3)" }}>
+              <Globe className="w-2.5 h-2.5" /> Live
+            </span>
+          )}
+          {/* Share link button — only when published */}
+          {isPublished && (
+            <button
+              onClick={copyShareLink}
+              className="p-1.5 rounded-lg text-white/40 hover:text-violet-400 hover:bg-violet-500/10 transition-all"
+              title="Copy public link"
+            >
+              {shareCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+            </button>
+          )}
+          <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+            <button
+              onClick={() => setEditingName(true)}
+              className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
+              title="Rename"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setManageOpen(true)}
+              className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
+              title="Manage books"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setShowConfirmDelete(true)}
+              className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
+              title="Delete series"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Book shelf */}
-      {series.books.length === 0 ? (
+      {/* Description section — editable */}
+      {expanded && (
+        <div className="mb-4">
+          {editingDesc ? (
+            <div className="space-y-2">
+              <Textarea
+                autoFocus
+                value={descVal}
+                onChange={(e) => setDescVal(e.target.value)}
+                placeholder="Describe your series — genre, setting, characters, themes..."
+                rows={3}
+                className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-white/30 resize-none text-sm"
+              />
+              <div className="flex gap-2 justify-end">
+                <button type="button" onClick={() => { setDescVal(series.description || ""); setEditingDesc(false); }} className="text-xs text-white/40 hover:text-white/70 px-3 py-1">Cancel</button>
+                <button type="button" onClick={saveDesc} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-md border border-white/15">Save</button>
+              </div>
+            </div>
+          ) : series.description ? (
+            <div onClick={() => setEditingDesc(true)} className="group/desc cursor-pointer p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all">
+              <p className="text-sm text-white/60 leading-relaxed">{series.description}</p>
+              <span className="text-[10px] text-white/25 mt-1 block opacity-0 group-hover/desc:opacity-100 transition-opacity">Click to edit</span>
+            </div>
+          ) : (
+            <button onClick={() => setEditingDesc(true)} className="w-full text-left text-xs text-white/30 hover:text-white/60 transition-colors border border-dashed border-white/10 hover:border-white/20 rounded-lg px-3 py-2">
+              + Add description
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Stats row — only when expanded and has stats */}
+      {expanded && stats && series.books.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase tracking-wider font-semibold">
+              <FileText className="w-3 h-3" /> Chapters
+            </div>
+            <p className="text-base font-bold text-white mt-0.5">{stats.totalChapters.toLocaleString()}</p>
+          </div>
+          <div className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase tracking-wider font-semibold">
+              <Type className="w-3 h-3" /> Words
+            </div>
+            <p className="text-base font-bold text-white mt-0.5">{stats.totalWords.toLocaleString()}</p>
+          </div>
+          <div className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
+            <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase tracking-wider font-semibold">
+              <Target className="w-3 h-3" /> Progress
+            </div>
+            <p className="text-base font-bold text-white mt-0.5">
+              {stats.totalWordGoal > 0
+                ? `${Math.min(100, Math.round((stats.totalWords / stats.totalWordGoal) * 100))}%`
+                : "—"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Book shelf — only when expanded */}
+      {!expanded ? null : series.books.length === 0 ? (
         <button
           onClick={() => setManageOpen(true)}
           className="w-full h-24 rounded-xl border border-dashed border-white/10 flex items-center justify-center gap-2 text-white/25 hover:text-white/40 hover:border-white/20 transition-all text-sm"
@@ -284,6 +436,37 @@ function SeriesCard({
       )}
 
       <div className="mt-4 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+      {/* Publish section — only show when expanded and series has books */}
+      {expanded && !isEmpty && (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-white/70">
+              {isPublished ? "Published as a series" : "Publish this series"}
+            </p>
+            <p className="text-[11px] text-white/35 mt-0.5">
+              {isPublished
+                ? "Readers can discover & share all books together"
+                : "Share one link that shows all your books in order"}
+            </p>
+          </div>
+          <button
+            onClick={togglePublish}
+            disabled={publishSeries.isPending}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              isPublished
+                ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                : "bg-violet-500/15 text-violet-300 hover:bg-violet-500/25 border border-violet-500/30"
+            }`}
+          >
+            {isPublished ? (
+              <><Globe className="w-3 h-3" /> Unpublish</>
+            ) : (
+              <><Send className="w-3 h-3" /> Publish Series</>
+            )}
+          </button>
+        </div>
+      )}
 
       <ManageBooksDialog
         series={series}

@@ -15,8 +15,16 @@ export type BookSeriesWithBooks = {
   userId: number;
   name: string;
   description?: string | null;
+  coverImage?: string | null;
+  isPublished?: boolean;
+  publishedAt?: string | null;
   createdAt?: string | null;
   books: SeriesBook[];
+  stats?: {
+    totalChapters: number;
+    totalWords: number;
+    totalWordGoal: number;
+  };
 };
 
 const SERIES_KEY = "/api/series";
@@ -119,6 +127,23 @@ export function useRemoveBookFromSeries() {
       qc.invalidateQueries({ queryKey: [SERIES_KEY] });
       qc.invalidateQueries({ queryKey: ["/api/books"] });
     },
+  });
+}
+
+export function usePublishSeries() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, publish }: { id: number; publish: boolean }) => {
+      const res = await fetch(`${SERIES_KEY}/${id}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publish }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to publish");
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [SERIES_KEY] }),
   });
 }
 
