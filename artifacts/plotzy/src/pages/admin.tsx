@@ -668,6 +668,7 @@ function SupportTab() {
   const { toast } = useToast();
   const [expanded, setExpanded] = useState<number | null>(null);
   const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
+  const [search, setSearch] = useState("");
 
   const { data: messages = [], isLoading } = useQuery<SupportMessage[]>({
     queryKey: ["/api/admin/support"],
@@ -684,9 +685,14 @@ function SupportTab() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/support"] }),
   });
 
-  const filtered = messages.filter(m =>
-    filter === "all" ? true : filter === "open" ? m.status === "open" : m.status !== "open"
-  );
+  const q = search.trim().toLowerCase();
+  const filtered = messages.filter(m => {
+    const statusOk = filter === "all" ? true : filter === "open" ? m.status === "open" : m.status !== "open";
+    if (!statusOk) return false;
+    if (!q) return true;
+    const hay = `${m.name || ""} ${m.email || ""} ${m.subject || ""}`.toLowerCase();
+    return hay.includes(q);
+  });
 
   if (isLoading) return <Spinner />;
 
@@ -695,6 +701,48 @@ function SupportTab() {
 
   return (
     <div>
+      {/* Search bar */}
+      <div style={{ position: "relative", marginBottom: 12 }}>
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search by name, email, or subject…"
+          style={{
+            width: "100%",
+            padding: "10px 36px 10px 36px",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 10,
+            color: "#fff",
+            fontSize: 13,
+            fontFamily: "inherit",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+          onFocus={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)")}
+          onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            aria-label="Clear search"
+            style={{
+              position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+              background: "transparent", border: "none", color: "rgba(255,255,255,0.4)",
+              cursor: "pointer", fontSize: 16, padding: 6, lineHeight: 1,
+            }}
+          >×</button>
+        )}
+      </div>
+
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {(["all", "open", "closed"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{
@@ -706,6 +754,7 @@ function SupportTab() {
         ))}
         <span style={{ marginLeft: "auto", color: "rgba(255,255,255,0.3)", fontSize: 13, alignSelf: "center" }}>
           {filtered.length} ticket{filtered.length !== 1 ? "s" : ""}
+          {q && <span style={{ color: "rgba(255,255,255,0.2)", marginLeft: 6 }}>matching "{search}"</span>}
         </span>
       </div>
 
