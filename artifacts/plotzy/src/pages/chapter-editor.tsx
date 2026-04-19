@@ -1508,9 +1508,9 @@ export default function ChapterEditor() {
 
             <div className="w-px h-5 bg-border/40 mx-1" />
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors relative ${showVersionHistory ? "text-violet-500 bg-violet-500/10" : "text-muted-foreground hover:bg-violet-500/10 hover:text-violet-500"}`} onClick={() => setShowVersionHistory(v => !v)} title={ar ? "سجل الإصدارات" : "Version History"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors relative ${showVersionHistory ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`} onClick={() => setShowVersionHistory(v => !v)} title={ar ? "سجل الإصدارات" : "Version History"}>
               <History className="w-4 h-4" />
-              {versions.length > 0 && <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-violet-500" />}
+              {versions.length > 0 && <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white" />}
             </Button>
           </div>
 
@@ -2852,10 +2852,10 @@ export default function ChapterEditor() {
             {/* Header */}
             <div className="h-14 border-b border-border/20 px-4 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-violet-500" />
+                <History className="w-4 h-4 text-foreground" />
                 <span className="font-semibold text-sm">{ar ? "سجل الإصدارات" : "Version History"}</span>
                 {versions.length > 0 && (
-                  <span className="text-[10px] bg-violet-500/10 text-violet-500 rounded-full px-1.5 py-0.5 font-medium">{versions.length}</span>
+                  <span className="text-[10px] bg-white/10 text-foreground rounded-full px-1.5 py-0.5 font-medium border border-white/10">{versions.length}</span>
                 )}
               </div>
               <Button variant="ghost" size="icon" className="rounded-lg h-8 w-8" onClick={() => setShowVersionHistory(false)}>
@@ -2864,7 +2864,7 @@ export default function ChapterEditor() {
             </div>
 
             {/* Info bar */}
-            <div className="px-4 py-2.5 bg-violet-500/5 border-b border-violet-500/10 flex-shrink-0">
+            <div className="px-4 py-2.5 bg-white/[0.03] border-b border-white/5 flex-shrink-0">
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 {ar
                   ? "يُحفظ إصدار جديد تلقائياً في كل مرة تضغط حفظ. يمكنك الرجوع لأي إصدار سابق."
@@ -2885,13 +2885,13 @@ export default function ChapterEditor() {
                 versions.map((snap, i) => (
                   <div
                     key={snap.id}
-                    className="group relative p-3 rounded-xl border border-border/30 hover:border-violet-500/30 hover:bg-violet-500/5 transition-all"
+                    className="group relative p-3 rounded-xl border border-border/30 hover:border-white/20 hover:bg-white/[0.03] transition-all"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           {i === 0 && (
-                            <span className="text-[9px] bg-violet-500 text-white rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-wide">
+                            <span className="text-[9px] bg-white text-black rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-wide">
                               {ar ? "الأحدث" : "Latest"}
                             </span>
                           )}
@@ -2921,7 +2921,7 @@ export default function ChapterEditor() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10"
+                          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10"
                           title={ar ? "الرجوع لهذا الإصدار" : "Restore this version"}
                           disabled={restoringSnapId === snap.id || restoreVersion.isPending}
                           onClick={async () => {
@@ -2948,7 +2948,7 @@ export default function ChapterEditor() {
             <div className="p-3 border-t border-border/20 flex-shrink-0">
               <Button
                 variant="outline"
-                className="w-full rounded-xl text-xs gap-2 border-violet-500/30 text-violet-600 hover:bg-violet-500/10 hover:border-violet-500"
+                className="w-full rounded-xl text-xs gap-2 border-white/20 text-foreground hover:bg-white/10 hover:border-white/30"
                 onClick={() => {
                   const label = prompt(ar ? "اسم هذا الإصدار (اختياري):" : "Label for this version (optional):", "");
                   const content = serializePages(pages);

@@ -11,7 +11,7 @@ import path from "path";
 import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable, chapterSnapshots } from "../../../lib/db/src/schema";
 import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner } from "./middleware/auth";
 import { aiLimiter, imageGenLimiter, tierAiLimiter } from "./middleware/rate-limit";
 import socialRouter from "./routes/social.routes";
@@ -1181,6 +1181,38 @@ export async function registerRoutes(
 
       const chapter = await storage.updateChapter(Number(req.params.id), input);
 
+      // Auto-snapshot: every save produces a version so the author can roll
+      // back. Fire-and-forget — the save response must not block on it.
+      if (input.content) {
+        const chapterId = Number(req.params.id);
+        (async () => {
+          try {
+            const { db: dbConn } = await import("./db");
+            const { desc, eq } = await import("drizzle-orm");
+            await dbConn.insert(chapterSnapshots).values({
+              chapterId,
+              content: input.content as string,
+              label: null,
+            });
+            // Cap at 30 snapshots per chapter — drop the oldest once over.
+            const existing = await dbConn
+              .select({ id: chapterSnapshots.id })
+              .from(chapterSnapshots)
+              .where(eq(chapterSnapshots.chapterId, chapterId))
+              .orderBy(desc(chapterSnapshots.createdAt));
+            if (existing.length > 30) {
+              const idsToTrim = existing.slice(30).map(r => r.id);
+              if (idsToTrim.length) {
+                const { inArray } = await import("drizzle-orm");
+                await dbConn.delete(chapterSnapshots).where(inArray(chapterSnapshots.id, idsToTrim));
+              }
+            }
+          } catch (err) {
+            logger.warn({ err, chapterId }, "Auto-snapshot failed");
+          }
+        })();
+      }
+
       // Gamification: track words written and streak
       if (userId && input.content) {
         try {
@@ -1202,6 +1234,124 @@ export async function registerRoutes(
   app.delete(api.chapters.delete.path, requireChapterOwner, async (req, res) => {
     await storage.deleteChapter(Number(req.params.id));
     res.status(204).send();
+  });
+
+  // ─── Chapter Version History (snapshots) ──────────────────────────────────
+  // Every save produces an auto-snapshot (see PUT handler above). The author
+  // can also create a labelled snapshot manually, list their history, restore
+  // a past version, or delete any snapshot. Ownership is enforced per-route
+  // via requireChapterOwner so one user can't read or touch another user's
+  // chapter history.
+
+  app.get("/api/chapters/:id/snapshots", requireChapterOwner, async (req, res) => {
+    try {
+      const chapterId = Number(req.params.id);
+      const { db: dbConn } = await import("./db");
+      const { eq, desc } = await import("drizzle-orm");
+      const rows = await dbConn
+        .select()
+        .from(chapterSnapshots)
+        .where(eq(chapterSnapshots.chapterId, chapterId))
+        .orderBy(desc(chapterSnapshots.createdAt))
+        .limit(50);
+      res.json(rows);
+    } catch (err) {
+      logger.error({ err }, "Failed to list chapter snapshots");
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.post("/api/chapters/:id/snapshots", requireChapterOwner, async (req, res) => {
+    try {
+      const chapterId = Number(req.params.id);
+      const { content, label } = z.object({
+        content: z.string().min(1),
+        label:   z.string().trim().min(1).max(80).optional(),
+      }).parse(req.body);
+
+      const { db: dbConn } = await import("./db");
+      const { eq, desc } = await import("drizzle-orm");
+
+      const [snap] = await dbConn.insert(chapterSnapshots).values({
+        chapterId,
+        content,
+        label: label ?? null,
+      }).returning();
+
+      // Enforce the 30-snapshot cap here too — manual saves shouldn't bypass it.
+      const existing = await dbConn
+        .select({ id: chapterSnapshots.id })
+        .from(chapterSnapshots)
+        .where(eq(chapterSnapshots.chapterId, chapterId))
+        .orderBy(desc(chapterSnapshots.createdAt));
+      if (existing.length > 30) {
+        const idsToTrim = existing.slice(30).map(r => r.id);
+        if (idsToTrim.length) {
+          const { inArray } = await import("drizzle-orm");
+          await dbConn.delete(chapterSnapshots).where(inArray(chapterSnapshots.id, idsToTrim));
+        }
+      }
+
+      res.status(201).json(snap);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      logger.error({ err }, "Failed to save chapter snapshot");
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.post("/api/chapters/:id/snapshots/:snapId/restore", requireChapterOwner, async (req, res) => {
+    try {
+      const chapterId = Number(req.params.id);
+      const snapId    = Number(req.params.snapId);
+      if (!Number.isInteger(snapId)) return res.status(400).json({ message: "Invalid snapshot id" });
+
+      const { db: dbConn } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+
+      const [snap] = await dbConn.select().from(chapterSnapshots).where(
+        and(eq(chapterSnapshots.id, snapId), eq(chapterSnapshots.chapterId, chapterId))
+      );
+      if (!snap) return res.status(404).json({ message: "Snapshot not found" });
+
+      // Before overwriting, capture the current chapter content as its own
+      // snapshot so "restore" is itself reversible.
+      const current = await storage.getChapters(Number(req.params.bookId));
+      const live = current.find(c => c.id === chapterId);
+      if (live && live.content && live.content !== snap.content) {
+        try {
+          await dbConn.insert(chapterSnapshots).values({
+            chapterId,
+            content: live.content,
+            label: "Before restore",
+          });
+        } catch { /* non-blocking */ }
+      }
+
+      const updated = await storage.updateChapter(chapterId, { content: snap.content } as any);
+      res.json(updated);
+    } catch (err) {
+      logger.error({ err }, "Failed to restore chapter snapshot");
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.delete("/api/chapters/:id/snapshots/:snapId", requireChapterOwner, async (req, res) => {
+    try {
+      const chapterId = Number(req.params.id);
+      const snapId    = Number(req.params.snapId);
+      if (!Number.isInteger(snapId)) return res.status(400).json({ message: "Invalid snapshot id" });
+
+      const { db: dbConn } = await import("./db");
+      const { eq, and } = await import("drizzle-orm");
+      const result = await dbConn.delete(chapterSnapshots).where(
+        and(eq(chapterSnapshots.id, snapId), eq(chapterSnapshots.chapterId, chapterId))
+      );
+      res.status(204).send();
+    } catch (err) {
+      logger.error({ err }, "Failed to delete chapter snapshot");
+      res.status(500).json({ message: "Internal error" });
+    }
   });
 
   app.patch('/api/books/:bookId/chapters/reorder', requireBookOwner, async (req, res) => {
