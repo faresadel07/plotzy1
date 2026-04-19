@@ -26,7 +26,7 @@ import {
   List, ListOrdered, Quote, Code, Minus,
   Link as LinkIcon, Undo2, Redo2, ChevronDown,
   Highlighter, Type, Indent, Outdent, Mic, Square, GripVertical, Search, Globe, Send as SendIcon,
-  Share2, Copy, Check,
+  Share2, Copy, Check, Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -1098,7 +1098,7 @@ export default function ArticleEditor() {
           {(article as any)?.isPublished && (
             <ArticleShareButton
               articleId={id}
-              title={(article as any)?.title || ""}
+              article={article}
               open={showShareMenu}
               onOpenChange={setShowShareMenu}
               copied={shareCopied}
@@ -1868,19 +1868,20 @@ export default function ArticleEditor() {
 // this control.
 function ArticleShareButton({
   articleId,
-  title,
+  article,
   open,
   onOpenChange,
   copied,
   onCopiedChange,
 }: {
   articleId: string;
-  title: string;
+  article: any;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   copied: boolean;
   onCopiedChange: (v: boolean) => void;
 }) {
+  const title = article?.title || "";
   const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif";
   const B = "rgba(255,255,255,0.08)";
 
@@ -1931,6 +1932,11 @@ function ArticleShareButton({
     linkedin: () => openExternal(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`),
   };
 
+  const downloadPdf = () => {
+    onOpenChange(false);
+    openArticleAsPdf(article, url);
+  };
+
   return (
     <>
       <button
@@ -1975,6 +1981,13 @@ function ArticleShareButton({
               </span>
             </ShareItem>
 
+            <ShareItem onClick={downloadPdf}>
+              <Download size={13} color="rgba(255,255,255,0.6)" />
+              <span style={{ color: "rgba(255,255,255,0.85)" }}>Download as PDF</span>
+            </ShareItem>
+
+            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 6px" }} />
+
             <ShareItem onClick={shareTo.x}>
               <span style={{ width: 13, textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>𝕏</span>
               <span style={{ color: "rgba(255,255,255,0.85)" }}>Post on X</span>
@@ -1999,6 +2012,215 @@ function ArticleShareButton({
       )}
     </>
   );
+}
+
+// Opens the article in a popup styled for print and invokes the browser's
+// native Print dialog, where "Save as PDF" is available as a destination.
+// This keeps output text-based (searchable, selectable) and preserves inline
+// images in order — far higher quality than rasterizing via html2canvas.
+function openArticleAsPdf(article: any, publicUrl: string) {
+  if (!article) return;
+
+  // articleContent may be raw HTML or a JSON wrapper ({ v: 2, html, ... }).
+  let html = "";
+  try {
+    const raw = article.articleContent;
+    if (typeof raw === "string") {
+      if (raw.trim().startsWith("{")) {
+        const parsed = JSON.parse(raw);
+        html = parsed?.html || raw;
+      } else {
+        html = raw;
+      }
+    }
+  } catch {
+    html = article.articleContent || "";
+  }
+
+  const escape = (s: string) =>
+    s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+  const title = article.title || "Untitled";
+  const author = article.authorName || article.authorDisplayName || "";
+  const date = article.publishedAt
+    ? new Date(article.publishedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
+    : "";
+  const featured = article.featuredImage || article.coverImage || "";
+
+  const doc = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>${escape(title)}</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Georgia", "Iowan Old Style", "Times New Roman", serif;
+    color: #1a1a1a;
+    background: #fff;
+    line-height: 1.75;
+    font-size: 12pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 0;
+  }
+  header.meta {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+  }
+  header.meta .eyebrow {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #888;
+    margin: 0 0 10px;
+  }
+  h1.title {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    font-size: 28pt;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #111;
+    margin: 0 0 14px;
+  }
+  header.meta .byline {
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10pt;
+    color: #666;
+  }
+  header.meta .byline strong { color: #222; font-weight: 600; }
+  .featured {
+    margin: 0 0 28px;
+    text-align: center;
+  }
+  .featured img {
+    max-width: 100%;
+    max-height: 360px;
+    height: auto;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+  .article-body h1 { font-size: 20pt; font-weight: 800; margin: 1.4em 0 0.5em; color: #111; }
+  .article-body h2 { font-size: 16pt; font-weight: 700; margin: 1.3em 0 0.45em; color: #111; }
+  .article-body h3 { font-size: 13pt; font-weight: 700; margin: 1.2em 0 0.4em; color: #222; }
+  .article-body p  { margin: 0 0 1.1em; orphans: 3; widows: 3; }
+  .article-body blockquote {
+    border-left: 3px solid #111;
+    margin: 1.3em 0;
+    padding: 0.35em 0 0.35em 1.2em;
+    color: #444;
+    font-style: italic;
+    page-break-inside: avoid;
+  }
+  .article-body ul, .article-body ol { margin: 0.8em 0 1.2em; padding-left: 1.8em; }
+  .article-body li { margin-bottom: 0.4em; }
+  .article-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.6em auto;
+    border-radius: 4px;
+    page-break-inside: avoid;
+  }
+  .article-body figure { page-break-inside: avoid; margin: 1.6em 0; }
+  .article-body a { color: #1a5fc8; text-decoration: underline; }
+  .article-body code {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 0.9em;
+    background: #f3f3f3;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .article-body pre {
+    background: #f6f6f6;
+    border: 1px solid #e3e3e3;
+    border-radius: 6px;
+    padding: 12px 14px;
+    overflow: auto;
+    page-break-inside: avoid;
+  }
+  .article-body pre code { background: transparent; padding: 0; }
+  footer.src {
+    margin-top: 36px;
+    padding-top: 14px;
+    border-top: 1px solid #ddd;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    font-size: 9pt;
+    color: #999;
+    text-align: center;
+  }
+  footer.src a { color: inherit; text-decoration: none; }
+  @media print {
+    .no-print { display: none !important; }
+    body { background: #fff !important; }
+  }
+  .no-print-banner {
+    position: sticky; top: 0; z-index: 5;
+    background: #111; color: #fff;
+    padding: 10px 16px; text-align: center;
+    font-family: -apple-system, "SF Pro Text", sans-serif; font-size: 13px;
+  }
+  .no-print-banner button {
+    margin-left: 10px; padding: 5px 14px; font-size: 12px; font-weight: 600;
+    background: #fff; color: #111; border: 0; border-radius: 6px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="no-print-banner no-print">
+    Preparing your PDF… choose <b>"Save as PDF"</b> as the destination in the print dialog.
+    <button onclick="window.print()">Open print dialog</button>
+  </div>
+  <div class="wrap">
+    <header class="meta">
+      <p class="eyebrow">Plotzy${article.articleCategory ? " · " + escape(article.articleCategory) : ""}</p>
+      <h1 class="title">${escape(title)}</h1>
+      <p class="byline">
+        ${author ? `By <strong>${escape(author)}</strong>` : ""}
+        ${date ? `${author ? " · " : ""}${escape(date)}` : ""}
+      </p>
+    </header>
+    ${featured ? `<div class="featured"><img src="${escape(featured)}" alt="" /></div>` : ""}
+    <div class="article-body">${html}</div>
+    <footer class="src">
+      <a href="${escape(publicUrl)}">${escape(publicUrl)}</a>
+    </footer>
+  </div>
+  <script>
+    // Wait for images to load before triggering print so they render in the PDF.
+    (function () {
+      var imgs = Array.prototype.slice.call(document.images);
+      var pending = imgs.filter(function (img) { return !img.complete; });
+      if (pending.length === 0) return setTimeout(function () { window.print(); }, 200);
+      var remaining = pending.length;
+      pending.forEach(function (img) {
+        img.addEventListener("load", done, { once: true });
+        img.addEventListener("error", done, { once: true });
+      });
+      function done() { if (--remaining === 0) setTimeout(function () { window.print(); }, 200); }
+    })();
+  </script>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    // Popup blocked — fallback: navigate the current tab. User can hit back.
+    alert("Please allow popups for this site to download the PDF.");
+    return;
+  }
+  win.document.open();
+  win.document.write(doc);
+  win.document.close();
 }
 
 function ShareItem({
