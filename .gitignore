@@ -51,3 +51,6 @@ Thumbs.db
 # Environment
 .env
 .env.*
+
+# Local runtime logs (frontend / backend dev servers)
+*.log
