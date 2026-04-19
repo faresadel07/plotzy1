@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
+import { clearGuestBookIds } from "@/hooks/use-books";
 
 interface AuthUser {
   id: number;
@@ -40,13 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     // Prevent Google One Tap from silently re-authenticating the user they
     // just logged out from.
     try {
       (window as any).google?.accounts?.id?.disableAutoSelect?.();
     } catch {}
+    // SECURITY: purge any book IDs the previous session left behind so the
+    // next (unauthenticated) visitor cannot request them from the backend.
+    clearGuestBookIds();
     queryClient.setQueryData(["/api/auth/user"], null);
+    queryClient.removeQueries({ queryKey: ["/api/books"] });
     queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
   };

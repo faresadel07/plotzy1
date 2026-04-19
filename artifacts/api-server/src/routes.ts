@@ -111,13 +111,15 @@ export async function registerRoutes(
     const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
 
     if (allGuestIds.length > 0) {
-      const guestBooks = await storage.getBooksByIds(allGuestIds);
+      // SECURITY: only return books that are still owner-less. A stale or
+      // forged guest ID must never expose a user-owned book.
+      const guestBooks = await storage.getGuestBooksByIds(allGuestIds);
       return res.json(guestBooks);
     }
 
-    // First visit with no IDs — return all null-user books as bootstrap
-    const allGuestBooks = await storage.getGuestBooks();
-    return res.json(allGuestBooks);
+    // Unauthenticated and no guest IDs: return empty, never leak every orphan
+    // book in the database.
+    return res.json([]);
   });
 
   app.get(api.books.trashList.path, async (req, res) => {

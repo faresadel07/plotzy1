@@ -58,12 +58,16 @@ router.get(api.books.list.path, async (req, res) => {
     const allGuestIds = [...new Set([...sessionGuestIds, ...queryGuestIds])];
 
     if (allGuestIds.length > 0) {
-      const guestBooks = await storage.getBooksByIds(allGuestIds);
+      // SECURITY: only return books that are still owner-less — a stale or
+      // forged guest ID must not expose a user-owned book.
+      const guestBooks = await storage.getGuestBooksByIds(allGuestIds);
       return res.json(guestBooks);
     }
 
-    const allGuestBooks = await storage.getGuestBooks();
-    return res.json(allGuestBooks);
+    // Unauthenticated and no guest IDs: do NOT leak every orphan book in the
+    // database. Return an empty list; guest books can only be recovered via
+    // the IDs in the user's own session/localStorage.
+    return res.json([]);
   } catch (err) {
     res.status(500).json({ message: "Internal error" });
   }

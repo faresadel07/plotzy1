@@ -35,6 +35,7 @@ export interface IStorage {
   getUserBooks(userId: number): Promise<Book[]>;
   getGuestBooks(): Promise<Book[]>;
   getBooksByIds(ids: number[]): Promise<Book[]>;
+  getGuestBooksByIds(ids: number[]): Promise<Book[]>;
   claimGuestBooks(bookIds: number[], userId: number): Promise<void>;
   getDeletedBooks(): Promise<Book[]>;
   getBook(id: number): Promise<Book | undefined>;
@@ -169,6 +170,16 @@ export class DatabaseStorage implements IStorage {
     if (ids.length === 0) return [];
     return await db.select().from(books).where(
       and(eq(books.isDeleted, false), inArray(books.id, ids))
+    );
+  }
+
+  // Only returns books that are genuinely owner-less (guest-created). Used by
+  // the unauthenticated `GET /api/books` path so stale or forged guest IDs
+  // cannot expose books that now belong to a real user.
+  async getGuestBooksByIds(ids: number[]): Promise<Book[]> {
+    if (ids.length === 0) return [];
+    return await db.select().from(books).where(
+      and(eq(books.isDeleted, false), inArray(books.id, ids), isNull(books.userId))
     );
   }
 

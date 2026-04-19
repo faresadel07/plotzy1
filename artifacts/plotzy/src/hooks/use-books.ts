@@ -30,10 +30,22 @@ function removeGuestBookId(id: number): void {
   localStorage.setItem(LS_KEY, JSON.stringify(ids));
 }
 
-function seedGuestBookIds(books: { id: number }[]): void {
+// Only seed IDs of actual guest books (userId === null). Seeding a signed-in
+// user's book IDs used to leak them across sessions: after logout the IDs
+// lingered in localStorage and the backend would happily return the books to
+// the next visitor.
+function seedGuestBookIds(books: { id: number; userId?: number | null }[]): void {
+  const guestOnly = books.filter((b) => b.userId == null).map((b) => b.id);
+  if (guestOnly.length === 0) return;
   const existing = getGuestBookIds();
-  const merged = [...new Set([...existing, ...books.map((b) => b.id)])];
+  const merged = [...new Set([...existing, ...guestOnly])];
   localStorage.setItem(LS_KEY, JSON.stringify(merged));
+}
+
+export function clearGuestBookIds(): void {
+  try {
+    localStorage.removeItem(LS_KEY);
+  } catch {}
 }
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
