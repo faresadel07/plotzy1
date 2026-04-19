@@ -2026,20 +2026,42 @@ function ArticleShareButton({
 function openArticleAsPdf(article: any, publicUrl: string) {
   if (!article) return;
 
-  // articleContent may be raw HTML or a JSON wrapper ({ v: 2, html, ... }).
+  // articleContent may be raw HTML or a JSON wrapper
+  // ({ v: 2, html, floatingImages }). Extract both — the HTML covers inline
+  // images inserted via the toolbar; floatingImages covers drag-and-drop
+  // images that live on the canvas overlay.
   let html = "";
+  let floatingImages: Array<{ src: string; width?: number; height?: number }> = [];
   try {
     const raw = article.articleContent;
     if (typeof raw === "string") {
       if (raw.trim().startsWith("{")) {
         const parsed = JSON.parse(raw);
         html = parsed?.html || raw;
+        if (Array.isArray(parsed?.floatingImages)) {
+          floatingImages = parsed.floatingImages;
+        }
       } else {
         html = raw;
       }
     }
   } catch {
     html = article.articleContent || "";
+  }
+
+  // If the article has floating images (pasted/dropped onto the canvas),
+  // append them to the end of the HTML as regular <img> tags so they land
+  // in the printed PDF. Without this they'd be silently dropped — they're
+  // absolutely-positioned in the editor and don't exist in the HTML.
+  if (floatingImages.length > 0) {
+    const imgsHtml = floatingImages
+      .filter(fi => fi && typeof fi.src === "string" && fi.src.length > 0)
+      .map(fi => {
+        const w = fi.width && fi.width > 0 ? ` width="${fi.width}"` : "";
+        return `<figure class="floating-img"><img src="${fi.src}"${w} alt="" /></figure>`;
+      })
+      .join("\n");
+    if (imgsHtml) html += `\n<hr class="images-divider" />\n${imgsHtml}`;
   }
 
   const escape = (s: string) =>
@@ -2136,7 +2158,14 @@ function openArticleAsPdf(article: any, publicUrl: string) {
     border-radius: 4px;
     page-break-inside: avoid;
   }
-  .article-body figure { page-break-inside: avoid; margin: 1.6em 0; }
+  .article-body figure { page-break-inside: avoid; margin: 1.6em 0; text-align: center; }
+  .article-body figure.floating-img img { max-width: 100%; height: auto; display: inline-block; border-radius: 4px; }
+  .article-body hr.images-divider {
+    border: 0;
+    border-top: 1px solid #ddd;
+    margin: 2.4em auto 1.4em;
+    width: 40%;
+  }
   .article-body a { color: #1a5fc8; text-decoration: underline; }
   .article-body code {
     font-family: "SF Mono", "Menlo", "Consolas", monospace;

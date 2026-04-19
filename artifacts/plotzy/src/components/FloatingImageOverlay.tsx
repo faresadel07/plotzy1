@@ -191,10 +191,13 @@ export function FloatingImageOverlay({ images, pageWidth, pageHeight, zoom, onUp
               height: img.height,
               pointerEvents: "all",
               cursor: img.locked ? "default" : "move",
+              // Neutral selection outline — dashed white so it reads as a
+              // selection affordance without competing with the image's own
+              // colors.
               outline: isSel
-                ? "2px solid #7c6af7"
-                : "2px solid transparent",
-              outlineOffset: 1,
+                ? "1px dashed rgba(255,255,255,0.7)"
+                : "1px dashed transparent",
+              outlineOffset: 2,
               userSelect: "none",
               boxSizing: "border-box",
             }}
@@ -242,7 +245,9 @@ export function FloatingImageOverlay({ images, pageWidth, pageHeight, zoom, onUp
 
             {isSel && (
               <>
-                {/* ── Toolbar ── */}
+                {/* ── Toolbar — when locked, only the Unlock button shows
+                     (no Delete). Editing controls and handles are hidden so
+                     the image stays truly protected. ── */}
                 <div
                   style={{
                     position: "absolute",
@@ -279,77 +284,80 @@ export function FloatingImageOverlay({ images, pageWidth, pageHeight, zoom, onUp
                     </span>
                   </ToolbarBtn>
 
-                  <Divider />
-
-                  <ToolbarBtn
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteImage(img.id);
-                    }}
-                    title={ar ? "حذف" : "Delete"}
-                  >
-                    <Trash2 size={13} color="#ef4444" />
-                    <span style={{ color: "#ef4444", fontSize: 11, marginLeft: 3 }}>
-                      {ar ? "حذف" : "Delete"}
-                    </span>
-                  </ToolbarBtn>
+                  {!img.locked && (
+                    <>
+                      <Divider />
+                      <ToolbarBtn
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteImage(img.id);
+                        }}
+                        title={ar ? "حذف" : "Delete"}
+                      >
+                        <Trash2 size={13} color="#ef4444" />
+                        <span style={{ color: "#ef4444", fontSize: 11, marginLeft: 3 }}>
+                          {ar ? "حذف" : "Delete"}
+                        </span>
+                      </ToolbarBtn>
+                    </>
+                  )}
                 </div>
 
-                {/* ── Dimension inputs ── */}
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: -46,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    background: "#1a1a2e",
-                    borderRadius: 8,
-                    padding: "4px 8px",
-                    boxShadow: "0 2px 10px rgba(0,0,0,0.4)",
-                    pointerEvents: "all",
-                    zIndex: 20,
-                  }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  <DimInput
-                    label="W"
-                    value={img.width}
-                    disabled={img.locked}
-                    onChange={(val) => {
-                      const newW = Math.max(20, val);
-                      if (linkedAspect && img.aspectRatio > 0) {
-                        updateImage(img.id, { width: newW, height: Math.round(newW / img.aspectRatio) });
-                      } else {
-                        updateImage(img.id, { width: newW });
-                      }
+                {/* ── Dimension inputs — only when unlocked ── */}
+                {!img.locked && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: -46,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      background: "#1a1a2e",
+                      borderRadius: 8,
+                      padding: "4px 8px",
+                      boxShadow: "0 2px 10px rgba(0,0,0,0.4)",
+                      pointerEvents: "all",
+                      zIndex: 20,
                     }}
-                  />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setLinkedAspect((v) => !v); }}
-                    style={{ color: linkedAspect ? "#7c6af7" : "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: "0 2px" }}
-                    title={linkedAspect ? "Unlink aspect ratio" : "Link aspect ratio"}
+                    onMouseDown={(e) => e.stopPropagation()}
                   >
-                    {linkedAspect ? <Link2 size={11} /> : <Link2Off size={11} />}
-                  </button>
-                  <DimInput
-                    label="H"
-                    value={img.height}
-                    disabled={img.locked}
-                    onChange={(val) => {
-                      const newH = Math.max(20, val);
-                      if (linkedAspect && img.aspectRatio > 0) {
-                        updateImage(img.id, { height: newH, width: Math.round(newH * img.aspectRatio) });
-                      } else {
-                        updateImage(img.id, { height: newH });
-                      }
-                    }}
-                  />
-                </div>
+                    <DimInput
+                      label="W"
+                      value={img.width}
+                      onChange={(val) => {
+                        const newW = Math.max(20, val);
+                        if (linkedAspect && img.aspectRatio > 0) {
+                          updateImage(img.id, { width: newW, height: Math.round(newW / img.aspectRatio) });
+                        } else {
+                          updateImage(img.id, { width: newW });
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setLinkedAspect((v) => !v); }}
+                      style={{ color: linkedAspect ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: "0 2px" }}
+                      title={linkedAspect ? "Unlink aspect ratio" : "Link aspect ratio"}
+                    >
+                      {linkedAspect ? <Link2 size={11} /> : <Link2Off size={11} />}
+                    </button>
+                    <DimInput
+                      label="H"
+                      value={img.height}
+                      onChange={(val) => {
+                        const newH = Math.max(20, val);
+                        if (linkedAspect && img.aspectRatio > 0) {
+                          updateImage(img.id, { height: newH, width: Math.round(newH * img.aspectRatio) });
+                        } else {
+                          updateImage(img.id, { height: newH });
+                        }
+                      }}
+                    />
+                  </div>
+                )}
 
-                {/* ── 8 Resize handles ── */}
+                {/* ── 8 Resize handles — neutral white, only when unlocked ── */}
                 {!img.locked &&
                   (["nw", "n", "ne", "e", "se", "s", "sw", "w"] as HandleDir[]).map(
                     (dir) => {
@@ -362,9 +370,9 @@ export function FloatingImageOverlay({ images, pageWidth, pageHeight, zoom, onUp
                             width: isCorner ? 10 : 8,
                             height: isCorner ? 10 : 8,
                             background: "#fff",
-                            border: "2px solid #7c6af7",
+                            border: "1px solid rgba(0,0,0,0.35)",
                             borderRadius: isCorner ? 2 : "50%",
-                            boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
                             zIndex: 15,
                             pointerEvents: "all",
                             ...HANDLE_POSITIONS[dir],
