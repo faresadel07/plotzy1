@@ -11,8 +11,10 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
-// All routes require admin
-router.use(requireAdmin);
+// All routes require admin. Scope the middleware to the /api/admin/ prefix
+// so mounting this router at the app root (via app.use(adminRouter)) doesn't
+// accidentally gate unrelated paths like /api/auth/providers.
+router.use("/api/admin", requireAdmin);
 
 // ─── 1. ANALYTICS: Enhanced Stats ───────────────────────────────────────────
 
