@@ -2969,6 +2969,7 @@ export default function ChapterEditor() {
           onSave={handleSavePrefs}
           onPreview={(p) => setPreviewPrefs(p)}
           onClose={() => { setShowCustomizer(false); setPreviewPrefs(null); }}
+          liveSample={getPageText(pages[activePageIndex] ?? "")}
         />
       )}
 
