@@ -2097,8 +2097,10 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
     font-family: "Georgia", "Iowan Old Style", "Times New Roman", serif;
     color: #1a1a1a;
     background: #fff;
-    line-height: 1.75;
-    font-size: 12pt;
+    /* Match editor typography so the vertical flow (and therefore the
+       relative position of floating images to the text) is preserved. */
+    line-height: 2.0;
+    font-size: 13pt;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
@@ -2157,10 +2159,14 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
     border-radius: 6px;
     object-fit: cover;
   }
-  .article-body h1 { font-size: 20pt; font-weight: 800; margin: 1.4em 0 0.5em; color: #111; }
-  .article-body h2 { font-size: 16pt; font-weight: 700; margin: 1.3em 0 0.45em; color: #111; }
-  .article-body h3 { font-size: 13pt; font-weight: 700; margin: 1.2em 0 0.4em; color: #222; }
-  .article-body p  { margin: 0 0 1.1em; orphans: 3; widows: 3; }
+  /* Editor uses Georgia 1.08rem (~17px), line-height 2.0, so these match.
+     Paragraph margin is 0.9em to match .ProseMirror p in the editor. */
+  .article-body h1 { font-size: 2rem; font-weight: 800; margin: 1.4em 0 0.4em; line-height: 1.2; color: #111; }
+  .article-body h2 { font-size: 1.5rem; font-weight: 700; margin: 1.2em 0 0.35em; line-height: 1.25; color: #111; }
+  .article-body h3 { font-size: 1.2rem; font-weight: 700; margin: 1.1em 0 0.3em; color: #222; }
+  .article-body h4 { font-size: 1.05rem; font-weight: 700; margin: 1em 0 0.3em; color: #222; }
+  .article-body p  { margin: 0 0 0.9em; orphans: 3; widows: 3; }
+  .article-body > * + * { margin-top: 0.8em; }
   .article-body blockquote {
     border-left: 3px solid #111;
     margin: 1.3em 0;
