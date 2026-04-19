@@ -263,6 +263,21 @@ export type SupportMessage = typeof supportMessages.$inferSelect;
 export type InsertSupportMessage = typeof supportMessages.$inferInsert;
 export const insertSupportMessageSchema = createInsertSchema(supportMessages).omit({ id: true, createdAt: true, read: true, status: true });
 
+export const supportReplies = pgTable("support_replies", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").notNull().references(() => supportMessages.id, { onDelete: "cascade" }),
+  senderType: text("sender_type").notNull(), // "admin" | "user"
+  senderUserId: integer("sender_user_id").references(() => users.id, { onDelete: "set null" }),
+  senderName: text("sender_name"),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("idx_support_replies_ticket_id").on(t.ticketId),
+]);
+
+export type SupportReply = typeof supportReplies.$inferSelect;
+export type InsertSupportReply = typeof supportReplies.$inferInsert;
+
 export const bookRatings = pgTable("book_ratings", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),

@@ -758,24 +758,30 @@ function SupportTab() {
 
             {expanded === m.id && (
               <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "16px 18px" }}>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.75)", whiteSpace: "pre-wrap", margin: "0 0 16px" }}>
-                  {m.message}
-                </p>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {m.status === "open" && (
+                {/* Original message */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>
+                    {m.name}  ·  {m.createdAt ? new Date(m.createdAt).toLocaleString() : ""}
+                  </div>
+                  <p style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(255,255,255,0.75)", whiteSpace: "pre-wrap", margin: 0 }}>
+                    {m.message}
+                  </p>
+                </div>
+
+                <AdminSupportThread ticketId={m.id} />
+
+                <AdminReplyBox ticketId={m.id} ticketStatus={m.status} />
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  {m.status !== "closed" ? (
                     <button style={S.btn("ghost")} onClick={() => update.mutate({ id: m.id, status: "closed" })}>
                       Mark Closed
                     </button>
-                  )}
-                  {m.status !== "open" && (
+                  ) : (
                     <button style={S.btn("ghost")} onClick={() => update.mutate({ id: m.id, status: "open" })}>
                       Reopen
                     </button>
                   )}
-                  <a
-                    href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject)}`}
-                    style={{ ...S.btn("default"), textDecoration: "none", display: "inline-flex", alignItems: "center" }}
-                  >Reply via Email</a>
                 </div>
               </div>
             )}
@@ -793,6 +799,179 @@ function SupportTab() {
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
+
+// ─── Support reply thread + composer (admin) ───────────────────────────────
+
+interface SupportReply {
+  id: number;
+  ticketId: number;
+  senderType: "admin" | "user";
+  senderUserId: number | null;
+  senderName: string | null;
+  body: string;
+  createdAt: string | null;
+}
+
+function AdminSupportThread({ ticketId }: { ticketId: number }) {
+  const { data, isLoading } = useQuery<{ ticket: SupportMessage; replies: SupportReply[] }>({
+    queryKey: [`/api/support/tickets/${ticketId}/thread`],
+    queryFn: () => fetch(`/api/support/tickets/${ticketId}/thread`, { credentials: "include" }).then(r => r.json()),
+    staleTime: 5_000,
+  });
+
+  if (isLoading) {
+    return <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", padding: "8px 0" }}>Loading conversation…</div>;
+  }
+  const replies = data?.replies || [];
+  if (replies.length === 0) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      {replies.map(r => {
+        const isAdmin = r.senderType === "admin";
+        return (
+          <div
+            key={r.id}
+            style={{
+              alignSelf: isAdmin ? "flex-end" : "flex-start",
+              maxWidth: "85%",
+              background: isAdmin ? "rgba(74,158,255,0.12)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${isAdmin ? "rgba(74,158,255,0.25)" : "rgba(255,255,255,0.08)"}`,
+              borderRadius: 12,
+              padding: "10px 14px",
+            }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: isAdmin ? "#7db5ff" : "rgba(255,255,255,0.45)", marginBottom: 4 }}>
+              {isAdmin ? "You" : r.senderName || "User"}  ·  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
+            </div>
+            <p style={{ fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap", margin: 0 }}>
+              {r.body}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const QUICK_REPLIES = [
+  { label: "Thanks", body: "Thanks for reaching out — we appreciate the feedback. Is there anything else we can help you with?" },
+  { label: "Investigating", body: "Thanks for flagging this. We're looking into it now and will follow up as soon as we have more information." },
+  { label: "Resolved", body: "This should now be resolved on our end. Please let us know if you run into it again and we'll dig in further." },
+  { label: "Need more info", body: "Could you share a few more details — ideally a screenshot and the steps you took right before this happened? That'll help us reproduce it." },
+];
+
+function AdminReplyBox({ ticketId, ticketStatus }: { ticketId: number; ticketStatus: string | null }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [body, setBody] = useState("");
+
+  const send = useMutation({
+    mutationFn: async (text: string) => {
+      const res = await fetch(`/api/admin/support/${ticketId}/reply`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: text }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || "Failed to send reply");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setBody("");
+      toast({ title: "Reply sent", description: "The user has been emailed and notified in-app." });
+      qc.invalidateQueries({ queryKey: [`/api/support/tickets/${ticketId}/thread`] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/support"] });
+    },
+    onError: (err: Error) => toast({ title: "Reply failed", description: err.message, variant: "destructive" }),
+  });
+
+  if (ticketStatus === "closed") {
+    return (
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)", margin: 0 }}>
+        Ticket is closed. Reopen it to reply.
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginRight: 6, alignSelf: "center" }}>
+          Quick reply:
+        </span>
+        {QUICK_REPLIES.map(q => (
+          <button
+            key={q.label}
+            type="button"
+            onClick={() => setBody(prev => (prev ? prev + "\n\n" : "") + q.body)}
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "4px 10px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+            }}
+          >
+            {q.label}
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        value={body}
+        onChange={e => setBody(e.target.value)}
+        placeholder="Write a reply — will be emailed to the user and saved to the thread."
+        rows={4}
+        style={{
+          width: "100%",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 10,
+          padding: "10px 12px",
+          color: "#fff",
+          fontFamily: "inherit",
+          fontSize: 13,
+          lineHeight: 1.6,
+          resize: "vertical",
+          outline: "none",
+          boxSizing: "border-box",
+        }}
+      />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+          {body.length} / 5000
+        </span>
+        <button
+          onClick={() => {
+            const t = body.trim();
+            if (!t) return;
+            send.mutate(t);
+          }}
+          disabled={send.isPending || !body.trim()}
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            padding: "8px 20px",
+            borderRadius: 8,
+            background: body.trim() && !send.isPending ? "#fff" : "rgba(255,255,255,0.1)",
+            color: body.trim() && !send.isPending ? "#000" : "rgba(255,255,255,0.4)",
+            border: "none",
+            cursor: body.trim() && !send.isPending ? "pointer" : "not-allowed",
+          }}
+        >
+          {send.isPending ? "Sending…" : "Send reply"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function Spinner() {
   return (

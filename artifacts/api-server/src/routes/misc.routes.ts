@@ -291,6 +291,196 @@ router.get("/api/support/my-tickets", async (req, res) => {
   }
 });
 
+// ── Support: get thread (ticket + all replies) ──────────────────────────
+// Admins can access any ticket; users can only see their own.
+router.get("/api/support/tickets/:id/thread", async (req, res) => {
+  try {
+    const ticketId = Number(req.params.id);
+    if (!Number.isFinite(ticketId)) return res.status(400).json({ message: "Invalid ticket id" });
+
+    const { supportMessages, supportReplies } = await import("../../../../lib/db/src/schema");
+    const { eq, asc } = await import("drizzle-orm");
+
+    const [ticket] = await db.select().from(supportMessages).where(eq(supportMessages.id, ticketId));
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+
+    const isAdmin = req.isAuthenticated() && req.user && ((req.user as any).role === "admin" ||
+      (process.env.ADMIN_EMAIL && (req.user as any).email === process.env.ADMIN_EMAIL));
+    const isOwner = req.isAuthenticated() && req.user && ticket.userId === (req.user as any).id;
+    if (!isAdmin && !isOwner) return res.status(403).json({ message: "Forbidden" });
+
+    const replies = await db.select().from(supportReplies)
+      .where(eq(supportReplies.ticketId, ticketId))
+      .orderBy(asc(supportReplies.createdAt));
+
+    res.json({ ticket, replies });
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch support thread");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ── Support: admin replies to a ticket ──────────────────────────────────
+// - Persists the reply to support_replies
+// - Emails the user via Resend (fire-and-forget; DB is the source of truth)
+// - Creates an in-app notification for the user (if they have an account)
+// - Marks the ticket status as "replied"
+router.post("/api/admin/support/:id/reply", requireAdmin, async (req, res) => {
+  try {
+    const ticketId = Number(req.params.id);
+    if (!Number.isFinite(ticketId)) return res.status(400).json({ message: "Invalid ticket id" });
+
+    const { body } = z.object({ body: z.string().trim().min(1, "Reply cannot be empty").max(5000) }).parse(req.body);
+
+    const { supportMessages, supportReplies, notifications } = await import("../../../../lib/db/src/schema");
+    const { eq } = await import("drizzle-orm");
+
+    const [ticket] = await db.select().from(supportMessages).where(eq(supportMessages.id, ticketId));
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+
+    const adminUser = req.user as any;
+    const adminName = adminUser?.displayName || "Plotzy Support";
+
+    // 1. Persist the reply.
+    const [saved] = await db.insert(supportReplies).values({
+      ticketId,
+      senderType: "admin",
+      senderUserId: adminUser?.id ?? null,
+      senderName: adminName,
+      body,
+    }).returning();
+
+    // 2. Mark ticket as replied (if still open) and as read.
+    await db.update(supportMessages)
+      .set({ status: ticket.status === "closed" ? "closed" : "replied", read: true })
+      .where(eq(supportMessages.id, ticketId));
+
+    // 3. In-app notification — only if the ticket is from a signed-in user.
+    if (ticket.userId) {
+      try {
+        await db.insert(notifications).values({
+          userId: ticket.userId,
+          type: "support_reply",
+          title: `Re: ${ticket.subject}`,
+          body: body.length > 160 ? body.slice(0, 157) + "…" : body,
+          linkUrl: "/support",
+          actorId: adminUser?.id ?? null,
+          entityId: ticketId,
+        });
+      } catch (nerr) {
+        logger.error({ err: nerr }, "Failed to insert support notification");
+      }
+    }
+
+    // 4. Email the user. Fire-and-forget — the reply is already saved.
+    (async () => {
+      try {
+        if (!process.env.RESEND_API_KEY) return;
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: "Plotzy Support <onboarding@resend.dev>",
+          to: ticket.email,
+          replyTo: process.env.ADMIN_EMAIL || "onboarding@resend.dev",
+          subject: `Re: ${ticket.subject}`,
+          html: `
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#111;">
+              <div style="border-bottom:1px solid #eee;padding-bottom:16px;margin-bottom:24px;">
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#888;">Plotzy Support</p>
+                <h2 style="margin:8px 0 0;font-size:18px;font-weight:700;color:#111;">Reply to your ticket</h2>
+              </div>
+              <p style="margin:0 0 6px;font-size:12px;color:#888;">Hi ${ticket.name || "there"},</p>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#444;">
+                We replied to your support ticket about <strong>"${ticket.subject}"</strong>:
+              </p>
+              <div style="background:#f7f7f7;border-left:3px solid #111;padding:16px 18px;border-radius:6px;margin-bottom:20px;">
+                <p style="margin:0;font-size:14px;line-height:1.7;color:#222;white-space:pre-wrap;">${escapeHtml(body)}</p>
+              </div>
+              <p style="margin:0 0 18px;font-size:13px;line-height:1.65;color:#555;">
+                You can continue the conversation by opening your ticket in Plotzy — just reply directly from the Support page.
+              </p>
+              <p style="margin:24px 0 0;font-size:12px;color:#999;">— ${escapeHtml(adminName)}, Plotzy team</p>
+            </div>
+          `,
+        });
+      } catch (emailErr) {
+        logger.error({ err: emailErr }, "Failed to send support reply email");
+      }
+    })();
+
+    await logAdminAction(adminUser.id, "support_reply", "support_ticket", ticketId, { length: body.length });
+    res.json({ success: true, reply: saved });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: err.errors?.[0]?.message || "Invalid reply" });
+    logger.error({ err }, "Support reply error");
+    res.status(500).json({ message: "Failed to send reply" });
+  }
+});
+
+// ── Support: user replies to their own ticket ───────────────────────────
+router.post("/api/support/tickets/:id/reply", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+    const ticketId = Number(req.params.id);
+    if (!Number.isFinite(ticketId)) return res.status(400).json({ message: "Invalid ticket id" });
+
+    const { body } = z.object({ body: z.string().trim().min(1).max(5000) }).parse(req.body);
+
+    const { supportMessages, supportReplies, notifications } = await import("../../../../lib/db/src/schema");
+    const { eq } = await import("drizzle-orm");
+
+    const user = req.user as any;
+    const [ticket] = await db.select().from(supportMessages).where(eq(supportMessages.id, ticketId));
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    if (ticket.userId !== user.id) return res.status(403).json({ message: "Forbidden" });
+
+    const [saved] = await db.insert(supportReplies).values({
+      ticketId,
+      senderType: "user",
+      senderUserId: user.id,
+      senderName: user.displayName || ticket.name,
+      body,
+    }).returning();
+
+    // Re-open the ticket so admins see it comes back to their queue.
+    await db.update(supportMessages)
+      .set({ status: "open", read: false })
+      .where(eq(supportMessages.id, ticketId));
+
+    // Notify admin(s) — anyone with role="admin" or matching ADMIN_EMAIL.
+    try {
+      const admins = await db.select().from(users).where(eq(users.role, "admin"));
+      const adminEmail = process.env.ADMIN_EMAIL || null;
+      const extra = adminEmail ? await db.select().from(users).where(eq(users.email, adminEmail)) : [];
+      const recipientIds = new Set<number>([...admins.map(a => a.id), ...extra.map(a => a.id)]);
+      for (const id of recipientIds) {
+        await db.insert(notifications).values({
+          userId: id,
+          type: "support_reply",
+          title: `New reply: ${ticket.subject}`,
+          body: body.length > 160 ? body.slice(0, 157) + "…" : body,
+          linkUrl: "/admin",
+          actorId: user.id,
+          entityId: ticketId,
+        });
+      }
+    } catch (nerr) {
+      logger.error({ err: nerr }, "Failed to notify admins of user support reply");
+    }
+
+    res.json({ success: true, reply: saved });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Reply cannot be empty" });
+    logger.error({ err }, "User support reply error");
+    res.status(500).json({ message: "Failed to send reply" });
+  }
+});
+
+// Minimal HTML escaper for email bodies. Keeps newlines (handled via white-space: pre-wrap).
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 // ── Admin: stats ────────────────────────────────────────────────────────
 router.get("/api/admin/stats", requireAdmin, async (req, res) => {
   try {

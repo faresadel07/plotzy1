@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown, Search, Send, CheckCircle2, Clock, Zap,
   BookOpen, CreditCard, Shield, Cpu, Settings, Users,
@@ -176,7 +176,210 @@ const STATUS_COLORS: Record<string, string> = {
   open: "#4ade80",
   closed: "#6b7280",
   pending: "#f59e0b",
+  replied: "#60a5fa",
 };
+
+interface ThreadReply {
+  id: number;
+  ticketId: number;
+  senderType: "admin" | "user";
+  senderName: string | null;
+  body: string;
+  createdAt: string | null;
+}
+
+function UserTicketCard({ ticket }: { ticket: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const [replyBody, setReplyBody] = useState("");
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
+  const thread = useQuery<{ ticket: any; replies: ThreadReply[] }>({
+    queryKey: [`/api/support/tickets/${ticket.id}/thread`],
+    queryFn: () => fetch(`/api/support/tickets/${ticket.id}/thread`, { credentials: "include" }).then(r => r.json()),
+    enabled: expanded,
+    staleTime: 5_000,
+  });
+
+  const send = useMutation({
+    mutationFn: async (text: string) => {
+      const res = await fetch(`/api/support/tickets/${ticket.id}/reply`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: text }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || "Failed to send reply");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setReplyBody("");
+      toast({ title: "Reply sent", description: "The support team has been notified." });
+      qc.invalidateQueries({ queryKey: [`/api/support/tickets/${ticket.id}/thread`] });
+      qc.invalidateQueries({ queryKey: ["my-tickets"] });
+    },
+    onError: (err: Error) => toast({ title: "Reply failed", description: err.message, variant: "destructive" }),
+  });
+
+  const isClosed = ticket.status === "closed";
+
+  return (
+    <div style={{
+      background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: 10, padding: "16px 20px",
+    }}>
+      <div
+        style={{ cursor: "pointer" }}
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+          <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", flex: 1 }}>
+            {ticket.subject}
+          </span>
+          <span style={{
+            fontFamily: SF, fontSize: 11, fontWeight: 600,
+            color: STATUS_COLORS[ticket.status] || "#6b7280",
+            background: `${STATUS_COLORS[ticket.status] || "#6b7280"}18`,
+            padding: "3px 10px", borderRadius: 12,
+            textTransform: "capitalize",
+          }}>
+            {ticket.status}
+          </span>
+          <ChevronDown
+            size={14}
+            style={{
+              color: "rgba(255,255,255,0.3)",
+              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s ease",
+            }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {ticket.category && (
+            <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+              {ticket.category}
+            </span>
+          )}
+          {ticket.priority && (
+            <span style={{
+              fontFamily: SF, fontSize: 11, fontWeight: 500,
+              color: PRIORITY_COLORS[ticket.priority] || "rgba(255,255,255,0.35)",
+            }}>
+              {ticket.priority} priority
+            </span>
+          )}
+          {ticket.createdAt && (
+            <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+              {new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {/* Original message */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>
+              You  ·  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : ""}
+            </div>
+            <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.65, color: "rgba(255,255,255,0.75)", whiteSpace: "pre-wrap", margin: 0 }}>
+              {ticket.message}
+            </p>
+          </div>
+
+          {/* Replies thread */}
+          {thread.isLoading && (
+            <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)", padding: "4px 0" }}>Loading conversation…</div>
+          )}
+          {thread.data && thread.data.replies.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+              {thread.data.replies.map(r => {
+                const isYou = r.senderType === "user";
+                return (
+                  <div
+                    key={r.id}
+                    style={{
+                      alignSelf: isYou ? "flex-end" : "flex-start",
+                      maxWidth: "90%",
+                      background: isYou ? "rgba(255,255,255,0.05)" : "rgba(74,158,255,0.1)",
+                      border: `1px solid ${isYou ? "rgba(255,255,255,0.08)" : "rgba(74,158,255,0.22)"}`,
+                      borderRadius: 12,
+                      padding: "10px 14px",
+                    }}
+                  >
+                    <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: isYou ? "rgba(255,255,255,0.45)" : "#7db5ff", marginBottom: 4 }}>
+                      {isYou ? "You" : r.senderName || "Plotzy Support"}  ·  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
+                    </div>
+                    <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap", margin: 0 }}>
+                      {r.body}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Reply composer */}
+          {isClosed ? (
+            <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginTop: 14, marginBottom: 0 }}>
+              This ticket is closed. If you need further help, please open a new ticket.
+            </p>
+          ) : (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+              <textarea
+                value={replyBody}
+                onChange={e => setReplyBody(e.target.value)}
+                placeholder="Write a reply to the support team…"
+                rows={3}
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  color: "#fff",
+                  fontFamily: SF,
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  resize: "vertical",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                <button
+                  onClick={() => {
+                    const t = replyBody.trim();
+                    if (!t) return;
+                    send.mutate(t);
+                  }}
+                  disabled={send.isPending || !replyBody.trim()}
+                  style={{
+                    fontFamily: SF,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: "8px 20px",
+                    borderRadius: 8,
+                    background: replyBody.trim() && !send.isPending ? "#fff" : "rgba(255,255,255,0.1)",
+                    color: replyBody.trim() && !send.isPending ? "#000" : "rgba(255,255,255,0.4)",
+                    border: "none",
+                    cursor: replyBody.trim() && !send.isPending ? "pointer" : "not-allowed",
+                  }}
+                >
+                  {send.isPending ? "Sending…" : "Send reply"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ─── Main ─── */
 export default function SupportPage() {
@@ -672,61 +875,7 @@ export default function SupportPage() {
             {ticketsQuery.data && ticketsQuery.data.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {ticketsQuery.data.map((ticket: any) => (
-                  <div key={ticket.id || ticket._id} style={{
-                    background: "#111", border: "1px solid rgba(255,255,255,0.07)",
-                    borderRadius: 10, padding: "16px 20px",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                      <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", flex: 1 }}>
-                        {ticket.subject}
-                      </span>
-                      <span style={{
-                        fontFamily: SF, fontSize: 11, fontWeight: 600,
-                        color: STATUS_COLORS[ticket.status] || "#6b7280",
-                        background: `${STATUS_COLORS[ticket.status] || "#6b7280"}18`,
-                        padding: "3px 10px", borderRadius: 12,
-                        textTransform: "capitalize",
-                      }}>
-                        {ticket.status}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                      {ticket.category && (
-                        <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
-                          {ticket.category}
-                        </span>
-                      )}
-                      {ticket.priority && (
-                        <span style={{
-                          fontFamily: SF, fontSize: 11, fontWeight: 500,
-                          color: PRIORITY_COLORS[ticket.priority] || "rgba(255,255,255,0.35)",
-                        }}>
-                          {ticket.priority} priority
-                        </span>
-                      )}
-                      {ticket.createdAt && (
-                        <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
-                          {new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </span>
-                      )}
-                    </div>
-                    {ticket.reply && (
-                      <div style={{
-                        marginTop: 12, paddingTop: 12,
-                        borderTop: "1px solid rgba(255,255,255,0.06)",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                          <MessageSquare size={11} color="rgba(255,255,255,0.3)" />
-                          <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>
-                            Admin Reply
-                          </span>
-                        </div>
-                        <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.6 }}>
-                          {ticket.reply}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  <UserTicketCard key={ticket.id || ticket._id} ticket={ticket} />
                 ))}
               </div>
             )}
