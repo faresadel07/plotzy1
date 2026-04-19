@@ -1144,7 +1144,7 @@ export default function Home() {
                     A distraction-free editor for serious authors. Outline chapters, structure your plot, and write in Arabic or English with full RTL support.
                   </p>
                 </div>
-                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <WritingAnimation />
                 </div>
                 <ul className="space-y-2">
@@ -1178,7 +1178,7 @@ export default function Home() {
                     Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice.
                   </p>
                 </div>
-                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <AIAssistantAnimation />
                 </div>
                 <ul className="space-y-2">
@@ -1212,7 +1212,7 @@ export default function Home() {
                     Cover design, formatting, and distribution: Plotzy's professional tools take your story to the finish line.
                   </p>
                 </div>
-                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <MarketplaceMockup />
                 </div>
                 <ul className="space-y-2">
@@ -1246,7 +1246,7 @@ export default function Home() {
                     With one click, Plotzy's AI narrates your entire book. Choose from 10 distinct voices, preview each chapter, and export.
                   </p>
                 </div>
-                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4" }}>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <AudiobookMockup />
                 </div>
                 <ul className="space-y-2">

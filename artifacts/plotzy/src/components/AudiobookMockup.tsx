@@ -100,7 +100,7 @@ export function AudiobookMockup() {
     <div
       ref={containerRef}
       className="rounded-xl overflow-hidden select-none"
-      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)", height: "100%", display: "flex", flexDirection: "column" }}
     >
       {/* ── Top bar ── */}
       <div
@@ -125,7 +125,7 @@ export function AudiobookMockup() {
       </div>
 
       {/* ── Two-pane body ── */}
-      <div className="flex" style={{ minHeight: 230 }}>
+      <div className="flex" style={{ flex: 1, minHeight: 0 }}>
 
         {/* ── Left: Voices ── */}
         <div

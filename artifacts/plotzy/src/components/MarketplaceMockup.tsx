@@ -81,7 +81,7 @@ export function MarketplaceMockup() {
     <div
       ref={containerRef}
       className="rounded-xl overflow-hidden select-none"
-      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)", height: "100%", display: "flex", flexDirection: "column" }}
     >
       {/* ── Browser bar ── */}
       <div
@@ -126,7 +126,7 @@ export function MarketplaceMockup() {
       </div>
 
       {/* ── Service card ── */}
-      <div className="p-3" style={{ minHeight: 180 }}>
+      <div className="p-3" style={{ flex: 1, minHeight: 0 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeCard}

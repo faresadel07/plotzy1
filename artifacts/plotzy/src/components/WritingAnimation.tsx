@@ -133,7 +133,7 @@ export function WritingAnimation() {
     <div
       ref={containerRef}
       className="rounded-xl overflow-hidden select-none"
-      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)", height: "100%", display: "flex", flexDirection: "column" }}
     >
       {/* ── Top nav bar ── */}
       <div
@@ -200,7 +200,7 @@ export function WritingAnimation() {
       </div>
 
       {/* ── Editor body ── */}
-      <div className="flex relative" style={{ minHeight: 200, transition: "opacity 0.65s ease", opacity }}>
+      <div className="flex relative" style={{ flex: 1, minHeight: 0, transition: "opacity 0.65s ease", opacity }}>
         {/* Left dark panel */}
         <div style={{ width: "12%", background: "#0d0d0d", flexShrink: 0 }} />
 

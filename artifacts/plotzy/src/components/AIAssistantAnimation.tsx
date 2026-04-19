@@ -74,7 +74,7 @@ export function AIAssistantAnimation() {
     <div
       ref={containerRef}
       className="rounded-xl overflow-hidden select-none"
-      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "#0d0d0d", border: "1px solid rgba(255,255,255,0.07)", height: "100%", display: "flex", flexDirection: "column" }}
     >
       {/* ── Top nav bar (matches WritingAnimation style) ── */}
       <div
@@ -97,7 +97,7 @@ export function AIAssistantAnimation() {
       {/* ── Chat area ── */}
       <div
         className="flex flex-col justify-end gap-3 p-4"
-        style={{ minHeight: 200, transition: "opacity 0.65s ease", opacity }}
+        style={{ flex: 1, minHeight: 0, transition: "opacity 0.65s ease", opacity }}
       >
         {/* User bubble */}
         {showUser && (
