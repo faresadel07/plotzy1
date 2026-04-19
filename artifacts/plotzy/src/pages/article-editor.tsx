@@ -1099,6 +1099,7 @@ export default function ArticleEditor() {
             <ArticleShareButton
               articleId={id}
               article={article}
+              canvasWidth={containerW}
               open={showShareMenu}
               onOpenChange={setShowShareMenu}
               copied={shareCopied}
@@ -1874,6 +1875,7 @@ export default function ArticleEditor() {
 function ArticleShareButton({
   articleId,
   article,
+  canvasWidth,
   open,
   onOpenChange,
   copied,
@@ -1881,6 +1883,7 @@ function ArticleShareButton({
 }: {
   articleId: string;
   article: any;
+  canvasWidth: number;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   copied: boolean;
@@ -1939,7 +1942,7 @@ function ArticleShareButton({
 
   const downloadPdf = () => {
     onOpenChange(false);
-    openArticleAsPdf(article, url);
+    openArticleAsPdf(article, url, canvasWidth);
   };
 
   return (
@@ -2023,7 +2026,7 @@ function ArticleShareButton({
 // native Print dialog, where "Save as PDF" is available as a destination.
 // This keeps output text-based (searchable, selectable) and preserves inline
 // images in order — far higher quality than rasterizing via html2canvas.
-function openArticleAsPdf(article: any, publicUrl: string) {
+function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: number) {
   if (!article) return;
 
   // articleContent may be raw HTML or a JSON wrapper
@@ -2052,10 +2055,10 @@ function openArticleAsPdf(article: any, publicUrl: string) {
 
   // Reconstruct the canvas layout: absolutely-positioned floating images at
   // their original (x, y) coordinates, overlaid on the natural text flow.
-  // Editor canvas is ~620px wide; the PDF body is scaled to that so x/y
-  // values remain meaningful. Without this, floating images would end up on
-  // their own page — not where the author placed them.
-  const CANVAS_WIDTH = 620;
+  // We receive the live canvas width from the editor so the PDF canvas
+  // matches what the author currently sees — x/y are in pixels relative to
+  // that width, so any mismatch would shift every image horizontally.
+  const CANVAS_WIDTH = Math.max(320, Math.min(1040, Math.round(editorCanvasWidth || 620)));
   const validFloating = floatingImages.filter(
     fi => fi && typeof fi.src === "string" && fi.src.length > 0
   );
@@ -2110,7 +2113,7 @@ function openArticleAsPdf(article: any, publicUrl: string) {
     filter: none !important;
   }
   .wrap {
-    max-width: 680px;
+    max-width: ${Math.max(680, CANVAS_WIDTH)}px;
     margin: 0 auto;
     padding: 24px 0;
   }
@@ -2237,7 +2240,7 @@ function openArticleAsPdf(article: any, publicUrl: string) {
 </head>
 <body>
   <div class="no-print-banner no-print">
-    Preparing your PDF… choose <b>"Save as PDF"</b> as the destination in the print dialog.
+    Preparing your PDF… choose <b>"Save as PDF"</b> as destination and make sure <b>"Color"</b> is selected (not Black &amp; White).
     <button onclick="window.print()">Open print dialog</button>
   </div>
   <div class="wrap">
