@@ -18,6 +18,7 @@ import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
 import gutenbergRouter, { syncGutenbergCatalog } from "./routes/gutenberg.routes";
+import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import { logger } from "./lib/logger";
 
@@ -1950,6 +1951,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── Payments & Subscription routes (extracted to ./routes/payments.routes.ts) ──
   app.use(paymentsRouter);
+  app.use(adminRouter);
 
   // ─── Audiobook Studio ───────────────────────────────────────────────────────
 

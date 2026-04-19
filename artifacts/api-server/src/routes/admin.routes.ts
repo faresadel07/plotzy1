@@ -4,7 +4,7 @@ import { db } from "../db";
 import { sql, eq, desc, and, gte, count, sum } from "drizzle-orm";
 import {
   users, books, chapters, userStats, aiUsageLogs, apiLogs,
-  contentFlags, dailyProgress, supportMessages,
+  contentFlags, dailyProgress, supportMessages, pageViews,
 } from "../../../../lib/db/src/schema";
 import { requireAdmin } from "../middleware/auth";
 import { logger } from "../lib/logger";
@@ -416,6 +416,162 @@ router.get("/api/admin/analytics/system-health", async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Admin route error");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ─── ANALYTICS: Device & traffic ────────────────────────────────────────────
+
+/**
+ * Top-level device/traffic snapshot.
+ *
+ * Returns unique-device counts for today / last 7 days / last 30 days, plus
+ * total page views over the same windows. Uniqueness is by deviceHash so one
+ * device counted once no matter how many pages they visited.
+ *
+ * Bots (classified by the tracker) are excluded so the numbers reflect real
+ * humans using the product.
+ */
+router.get("/api/admin/analytics/devices", async (_req, res) => {
+  try {
+    const now = new Date();
+    const day1 = new Date(now); day1.setDate(day1.getDate() - 1);
+    const day7 = new Date(now); day7.setDate(day7.getDate() - 7);
+    const day30 = new Date(now); day30.setDate(day30.getDate() - 30);
+
+    const humans = sql`${pageViews.deviceType} IS DISTINCT FROM 'bot'`;
+
+    const [uniq1, uniq7, uniq30, views1, views7, views30, total] = await Promise.all([
+      db.execute(sql`SELECT COUNT(DISTINCT device_hash)::int AS c FROM page_views WHERE device_type IS DISTINCT FROM 'bot' AND created_at >= ${day1}`),
+      db.execute(sql`SELECT COUNT(DISTINCT device_hash)::int AS c FROM page_views WHERE device_type IS DISTINCT FROM 'bot' AND created_at >= ${day7}`),
+      db.execute(sql`SELECT COUNT(DISTINCT device_hash)::int AS c FROM page_views WHERE device_type IS DISTINCT FROM 'bot' AND created_at >= ${day30}`),
+      db.select({ c: count() }).from(pageViews).where(and(humans, gte(pageViews.createdAt, day1))),
+      db.select({ c: count() }).from(pageViews).where(and(humans, gte(pageViews.createdAt, day7))),
+      db.select({ c: count() }).from(pageViews).where(and(humans, gte(pageViews.createdAt, day30))),
+      db.select({ c: count() }).from(pageViews).where(humans),
+    ]);
+
+    res.json({
+      uniqueDevices: {
+        day:   (uniq1.rows[0] as any)?.c ?? 0,
+        week:  (uniq7.rows[0] as any)?.c ?? 0,
+        month: (uniq30.rows[0] as any)?.c ?? 0,
+      },
+      pageViews: {
+        day:   views1[0]?.c ?? 0,
+        week:  views7[0]?.c ?? 0,
+        month: views30[0]?.c ?? 0,
+        total: total[0]?.c ?? 0,
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, "devices analytics error");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+/**
+ * Breakdown of unique devices by device type, browser, and OS — useful for
+ * deciding what to prioritise (e.g., is mobile traffic large enough to
+ * unblock?). Defaults to a 30-day window, overridable via ?days=.
+ */
+router.get("/api/admin/analytics/devices/breakdown", async (req, res) => {
+  try {
+    const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const [byType, byBrowser, byOs] = await Promise.all([
+      db.execute(sql`
+        SELECT COALESCE(device_type, 'unknown') AS label, COUNT(DISTINCT device_hash)::int AS count
+        FROM page_views
+        WHERE created_at >= ${since}
+        GROUP BY COALESCE(device_type, 'unknown')
+        ORDER BY count DESC
+      `),
+      db.execute(sql`
+        SELECT COALESCE(browser, 'unknown') AS label, COUNT(DISTINCT device_hash)::int AS count
+        FROM page_views
+        WHERE created_at >= ${since} AND device_type IS DISTINCT FROM 'bot'
+        GROUP BY COALESCE(browser, 'unknown')
+        ORDER BY count DESC
+        LIMIT 10
+      `),
+      db.execute(sql`
+        SELECT COALESCE(os, 'unknown') AS label, COUNT(DISTINCT device_hash)::int AS count
+        FROM page_views
+        WHERE created_at >= ${since} AND device_type IS DISTINCT FROM 'bot'
+        GROUP BY COALESCE(os, 'unknown')
+        ORDER BY count DESC
+        LIMIT 10
+      `),
+    ]);
+
+    res.json({
+      days,
+      deviceType: byType.rows,
+      browser:    byBrowser.rows,
+      os:         byOs.rows,
+    });
+  } catch (err) {
+    logger.error({ err }, "devices breakdown error");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+/**
+ * Top visited paths over the given window. Aggregated as (path, views,
+ * uniqueDevices), limited to the top N so the payload stays small.
+ */
+router.get("/api/admin/analytics/top-pages", async (req, res) => {
+  try {
+    const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 15));
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const result = await db.execute(sql`
+      SELECT
+        path,
+        COUNT(*)::int AS views,
+        COUNT(DISTINCT device_hash)::int AS unique_devices
+      FROM page_views
+      WHERE created_at >= ${since} AND device_type IS DISTINCT FROM 'bot'
+      GROUP BY path
+      ORDER BY views DESC
+      LIMIT ${limit}
+    `);
+
+    res.json({ days, rows: result.rows });
+  } catch (err) {
+    logger.error({ err }, "top pages error");
+    res.status(500).json({ message: "Internal error" });
+  }
+});
+
+/**
+ * Daily unique devices + page views for plotting a traffic chart.
+ */
+router.get("/api/admin/analytics/daily-traffic", async (req, res) => {
+  try {
+    const days = Math.min(365, Math.max(1, Number(req.query.days) || 30));
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const result = await db.execute(sql`
+      SELECT
+        DATE_TRUNC('day', created_at)::date AS day,
+        COUNT(*)::int AS views,
+        COUNT(DISTINCT device_hash)::int AS unique_devices
+      FROM page_views
+      WHERE created_at >= ${since} AND device_type IS DISTINCT FROM 'bot'
+      GROUP BY DATE_TRUNC('day', created_at)
+      ORDER BY day ASC
+    `);
+
+    res.json({ days, rows: result.rows });
+  } catch (err) {
+    logger.error({ err }, "daily traffic error");
     res.status(500).json({ message: "Internal error" });
   }
 });

@@ -1156,6 +1156,200 @@ function AnalyticsTab() {
   );
 }
 
+// ─── 1b. DEVICES / TRAFFIC TAB ─────────────────────────────────────────────
+// Shows unique-device counts, device/browser/OS breakdowns, top pages,
+// and a daily traffic chart. Bots are filtered out server-side so the
+// numbers reflect real humans.
+
+const DEVICE_COLORS: Record<string, string> = {
+  desktop: "#818cf8",
+  mobile:  "#34d399",
+  tablet:  "#fbbf24",
+  bot:     "#f87171",
+  unknown: "rgba(255,255,255,0.35)",
+};
+
+function deviceColor(label: string): string {
+  return DEVICE_COLORS[(label || "").toLowerCase()] || "rgba(255,255,255,0.5)";
+}
+
+function DevicesTab() {
+  const [days, setDays] = useState(30);
+
+  const { data: overview } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/devices"],
+    queryFn: () => fetch("/api/admin/analytics/devices", { credentials: "include" }).then(r => r.json()),
+    refetchInterval: 60_000, // live refresh every minute
+  });
+
+  const { data: breakdown } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/devices/breakdown", days],
+    queryFn: () => fetch(`/api/admin/analytics/devices/breakdown?days=${days}`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  const { data: topPages } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/top-pages", days],
+    queryFn: () => fetch(`/api/admin/analytics/top-pages?days=${days}&limit=15`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  const { data: daily } = useQuery<any>({
+    queryKey: ["/api/admin/analytics/daily-traffic", days],
+    queryFn: () => fetch(`/api/admin/analytics/daily-traffic?days=${days}`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  if (!overview) return <Spinner />;
+
+  const byType    = (breakdown?.deviceType as Array<{ label: string; count: number }>) || [];
+  const byBrowser = (breakdown?.browser    as Array<{ label: string; count: number }>) || [];
+  const byOs      = (breakdown?.os         as Array<{ label: string; count: number }>) || [];
+  const dailyRows = (daily?.rows           as Array<{ day: string; views: number; unique_devices: number }>) || [];
+  const topRows   = (topPages?.rows        as Array<{ path: string; views: number; unique_devices: number }>) || [];
+
+  return (
+    <div>
+      {/* Hero stats — unique devices. These are what the user asked for:
+          "how many devices have accessed the site". */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
+        <MiniStat label="Devices today"      value={overview.uniqueDevices.day}   sub="Last 24h" />
+        <MiniStat label="Devices this week"  value={overview.uniqueDevices.week}  sub="Last 7d" />
+        <MiniStat label="Devices this month" value={overview.uniqueDevices.month} sub="Last 30d" />
+      </div>
+
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <MiniStat label="Page views today"   value={Number(overview.pageViews.day  ).toLocaleString()} />
+        <MiniStat label="Page views 7d"      value={Number(overview.pageViews.week ).toLocaleString()} />
+        <MiniStat label="Page views 30d"     value={Number(overview.pageViews.month).toLocaleString()} />
+        <MiniStat label="Page views (all)"   value={Number(overview.pageViews.total).toLocaleString()} sub="All time" />
+      </div>
+
+      {/* Range selector shared by breakdown + top pages + daily chart */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, alignItems: "center" }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginRight: 4 }}>Range:</span>
+        {[7, 30, 60, 90].map(d => (
+          <button key={d} onClick={() => setDays(d)}
+            style={{ padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", border: days === d ? "none" : "1px solid rgba(255,255,255,0.08)", background: days === d ? "#fff" : "transparent", color: days === d ? "#000" : "rgba(255,255,255,0.4)", transition: "all 0.15s" }}
+          >{d}d</button>
+        ))}
+      </div>
+
+      {/* Daily traffic chart */}
+      <ChartCard title={`Daily traffic (${days}d)`}>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={dailyRows.map(r => ({
+            day: r.day ? String(r.day).slice(5, 10) : "",
+            views: Number(r.views),
+            devices: Number(r.unique_devices),
+          }))}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+            <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} />
+            <Tooltip contentStyle={chartTooltipStyle} />
+            <Area type="monotone" dataKey="views" name="Page views" stroke="#818cf8" fill="rgba(129,140,248,0.18)" strokeWidth={2} />
+            <Area type="monotone" dataKey="devices" name="Unique devices" stroke="#34d399" fill="rgba(52,211,153,0.18)" strokeWidth={2} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      {/* Breakdown: device type / browser / OS side-by-side */}
+      <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginTop: 20 }}>
+        <ChartCard title={`Device type (${days}d)`}>
+          {byType.length === 0 ? (
+            <EmptyNote />
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={byType.map(r => ({ name: r.label, value: Number(r.count) }))}
+                     dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(e: any) => `${e.name}`}>
+                  {byType.map((r, i) => (
+                    <Cell key={i} fill={deviceColor(r.label)} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={chartTooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard title={`Top browsers (${days}d)`}>
+          {byBrowser.length === 0 ? <EmptyNote /> : <HorizontalBars rows={byBrowser} accent="#60a5fa" />}
+        </ChartCard>
+
+        <ChartCard title={`Top OS (${days}d)`}>
+          {byOs.length === 0 ? <EmptyNote /> : <HorizontalBars rows={byOs} accent="#a78bfa" />}
+        </ChartCard>
+      </div>
+
+      {/* Top pages */}
+      <div style={{ marginTop: 20 }}>
+        <ChartCard title={`Most visited pages (${days}d)`}>
+          {topRows.length === 0 ? <EmptyNote /> : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {topRows.map((row, i) => {
+                const maxViews = Math.max(...topRows.map(r => Number(r.views) || 0));
+                const pct = maxViews > 0 ? (Number(row.views) / maxViews) * 100 : 0;
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 8px", borderRadius: 6, background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: "rgba(255,255,255,0.78)", fontFamily: "ui-monospace, SFMono-Regular, monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {row.path || "/"}
+                    </span>
+                    <div style={{ flex: "0 0 160px", height: 6, borderRadius: 3, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: "#818cf8" }} />
+                    </div>
+                    <span style={{ width: 60, textAlign: "right", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
+                      {Number(row.views).toLocaleString()}
+                    </span>
+                    <span title="Unique devices" style={{ width: 50, textAlign: "right", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                      {Number(row.unique_devices).toLocaleString()}
+                    </span>
+                  </div>
+                );
+              })}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px", fontSize: 10, color: "rgba(255,255,255,0.3)", borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 4 }}>
+                <span style={{ flex: 1 }}>path</span>
+                <span style={{ flex: "0 0 160px" }}/>
+                <span style={{ width: 60, textAlign: "right" }}>views</span>
+                <span style={{ width: 50, textAlign: "right" }}>devices</span>
+              </div>
+            </div>
+          )}
+        </ChartCard>
+      </div>
+    </div>
+  );
+}
+
+function EmptyNote() {
+  return (
+    <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+      Not enough data yet
+    </div>
+  );
+}
+
+function HorizontalBars({ rows, accent }: { rows: Array<{ label: string; count: number }>; accent: string }) {
+  const max = Math.max(...rows.map(r => Number(r.count) || 0));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: 4 }}>
+      {rows.slice(0, 8).map((r, i) => {
+        const pct = max > 0 ? (Number(r.count) / max) * 100 : 0;
+        return (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ flex: "0 0 90px", fontSize: 12, color: "rgba(255,255,255,0.75)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {r.label}
+            </span>
+            <div style={{ flex: 1, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: accent }} />
+            </div>
+            <span style={{ width: 38, textAlign: "right", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
+              {Number(r.count).toLocaleString()}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── 2. REVENUE TAB ───────────────────────────────────────────────────────────
 
 function RevenueTab() {
@@ -2019,7 +2213,7 @@ function SocialLinksTab() {
   );
 }
 
-type Tab = "overview" | "analytics" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials" | "audit" | "social";
+type Tab = "overview" | "analytics" | "devices" | "revenue" | "moderation" | "engagement" | "system" | "users" | "books" | "support" | "activity" | "banner" | "tutorials" | "audit" | "social";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -2079,6 +2273,7 @@ export default function AdminPage() {
         <div style={{ ...S.tabs, flexWrap: "wrap", overflowX: "auto", WebkitOverflowScrolling: "touch", gap: 2 }}>
           {/* Analytics group */}
           <TabBtn label="Analytics" active={tab === "analytics"} onClick={() => setTab("analytics")} />
+          <TabBtn label="Devices" active={tab === "devices"} onClick={() => setTab("devices")} />
           <TabBtn label="Revenue" active={tab === "revenue"} onClick={() => setTab("revenue")} />
           <TabBtn label="Engagement" active={tab === "engagement"} onClick={() => setTab("engagement")} />
           <TabBtn label="System" active={tab === "system"} onClick={() => setTab("system")} />
@@ -2098,6 +2293,7 @@ export default function AdminPage() {
         </div>
 
         {tab === "analytics"  && <AnalyticsTab />}
+        {tab === "devices"    && <DevicesTab />}
         {tab === "revenue"    && <RevenueTab />}
         {tab === "moderation" && <ModerationTab />}
         {tab === "engagement" && <EngagementTab />}

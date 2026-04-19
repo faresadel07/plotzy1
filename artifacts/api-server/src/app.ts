@@ -30,6 +30,7 @@ import { setupPassport } from "./auth";
 import { logger } from "./lib/logger";
 import { generalLimiter, authLimiter, publicReadLimiter, writeLimiter } from "./middleware/rate-limit";
 import { apiLogger } from "./middleware/api-logger";
+import { pageViewTracker } from "./middleware/page-view-tracker";
 
 declare module "http" {
   interface IncomingMessage {
@@ -181,6 +182,9 @@ app.use("/api", (req, res, next) => {
 
 // API request logging for admin System Health dashboard
 app.use(apiLogger);
+
+// Admin analytics — track unique devices / pages / browsers. Fire-and-forget.
+app.use(pageViewTracker);
 
 app.use((req, res, next) => {
   const start = Date.now();

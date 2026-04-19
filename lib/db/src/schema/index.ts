@@ -278,6 +278,31 @@ export const supportReplies = pgTable("support_replies", {
 export type SupportReply = typeof supportReplies.$inferSelect;
 export type InsertSupportReply = typeof supportReplies.$inferInsert;
 
+// Lightweight page-view log for admin analytics. One row per rendered page
+// (not per API call or asset), so row count grows with traffic, not request
+// noise. deviceHash is sha256(ip + user-agent) so we can count unique
+// devices without storing full IPs in a way that identifies the person.
+export const pageViews = pgTable("page_views", {
+  id: serial("id").primaryKey(),
+  deviceHash: text("device_hash").notNull(),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  deviceType: text("device_type"), // "mobile" | "tablet" | "desktop" | "bot"
+  browser: text("browser"),        // e.g. "Chrome", "Safari"
+  os: text("os"),                  // e.g. "Windows", "iOS"
+  path: text("path").notNull(),
+  referrer: text("referrer"),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("idx_page_views_device_hash").on(t.deviceHash),
+  index("idx_page_views_created_at").on(t.createdAt),
+  index("idx_page_views_path").on(t.path),
+]);
+
+export type PageView = typeof pageViews.$inferSelect;
+export type InsertPageView = typeof pageViews.$inferInsert;
+
 export const bookRatings = pgTable("book_ratings", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
