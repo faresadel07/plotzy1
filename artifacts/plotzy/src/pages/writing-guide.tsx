@@ -395,14 +395,14 @@ const sections = [
 /* ─── COMPONENTS ─── */
 
 function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; title: string; subtitle: string; accent?: string }) {
-  // The TOC on the left already shows the numbered list, so strip the "01."
-  // prefix here — keep only the section name to avoid duplicating the number.
+  // The floating TOC on the right already shows the numbered list, so strip
+  // the "01." prefix here — keep only the section name.
   const cleanLabel = label.replace(/^\d+\.\s*/, "");
   return (
-    <div className="mb-8 text-left px-0" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
+    <div className="mb-8 text-center px-2 sm:px-0" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">{cleanLabel}</p>
       <h2 className="text-[1.5rem] sm:text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-3 leading-[1.15] md:leading-[1.1] tracking-[-0.02em] md:tracking-[-0.025em]">{title}</h2>
-      <p className="text-muted-foreground text-[13px] sm:text-[14px] md:text-[15px] max-w-xl leading-[1.65]">{subtitle}</p>
+      <p className="text-muted-foreground text-[13px] sm:text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">{subtitle}</p>
     </div>
   );
 }
@@ -520,44 +520,51 @@ export default function WritingGuide() {
         </div>
       </motion.header>
 
-      {/* ── Flex wrapper for sidebar + content ── */}
-      <div className="flex gap-10 lg:gap-14 pt-6 md:pt-8">
-        {/* ── Sticky Sidebar TOC (Desktop Only) — stays within the flex column,
-             naturally aligned with the content ── */}
-        <aside className="hidden lg:block flex-shrink-0 w-[200px]">
-          <div className="sticky top-[72px]">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Table of Contents</p>
-              <span className="text-[10px] font-mono text-muted-foreground/60">{readSections.size}/7</span>
-            </div>
-            <nav className="space-y-0.5">
-              {sections.map((sec, i) => {
-                const isActive = activeSection === sec.id;
-                const isRead = readSections.has(sec.id);
-                return (
-                  <button
-                    key={sec.id}
-                    onClick={() => scrollTo(sec.id)}
-                    className="w-full flex items-center gap-2.5 py-1.5 text-left transition-all group"
+      {/* ── Floating TOC dots (Desktop Only) — vertical progress indicator
+           on the right edge. Compact, non-blocking; expands on hover to show
+           the section names. ── */}
+      <nav
+        aria-label="Guide sections"
+        className="hidden lg:block"
+        style={{ position: "fixed", top: "50%", right: 24, transform: "translateY(-50%)", zIndex: 30 }}
+      >
+        <ul className="group/toc flex flex-col items-end gap-3">
+          {sections.map((sec, i) => {
+            const isActive = activeSection === sec.id;
+            const isRead = readSections.has(sec.id);
+            return (
+              <li key={sec.id}>
+                <button
+                  onClick={() => scrollTo(sec.id)}
+                  className="flex items-center gap-2.5"
+                  aria-label={sec.label}
+                  aria-current={isActive ? "true" : undefined}
+                >
+                  <span
+                    className={`text-[11px] font-medium whitespace-nowrap transition-all duration-200 opacity-0 group-hover/toc:opacity-100 translate-x-2 group-hover/toc:translate-x-0 ${
+                      isActive ? "text-white" : "text-muted-foreground"
+                    }`}
                   >
-                    <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full transition-all ${isActive ? "bg-white scale-125" : "bg-transparent"}`} />
-                    <span className={`text-xs font-mono ${isActive ? "text-white font-bold" : "text-muted-foreground group-hover:text-foreground/70"}`}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className={`text-xs flex-1 truncate transition-colors ${isActive ? "text-white font-semibold" : "text-muted-foreground group-hover:text-foreground/70"}`}>
-                      {sec.label}
-                    </span>
-                    {isRead && !isActive && (
-                      <svg className="w-3 h-3 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </aside>
+                    {String(i + 1).padStart(2, "0")}  ·  {sec.label}
+                  </span>
+                  <span
+                    className={`block rounded-full transition-all duration-200 ${
+                      isActive
+                        ? "w-2 h-2 bg-white"
+                        : isRead
+                        ? "w-1.5 h-1.5 bg-white/50"
+                        : "w-1.5 h-1.5 bg-white/20 hover:bg-white/40"
+                    }`}
+                  />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
-        {/* ── Main content area ── */}
+      {/* ── Main content — centered column ── */}
+      <div className="pt-8 md:pt-12 max-w-3xl mx-auto">
         <div className="flex-1 min-w-0">
 
       {/* ══════════════════════════════════════════════ */}
@@ -1135,7 +1142,7 @@ export default function WritingGuide() {
       </section>
 
         </div>{/* end main content area */}
-      </div>{/* end flex wrapper */}
+      </div>{/* end centered column wrapper */}
 
       </div>
     </Layout>
