@@ -2031,7 +2031,8 @@ function openArticleAsPdf(article: any, publicUrl: string) {
   // images inserted via the toolbar; floatingImages covers drag-and-drop
   // images that live on the canvas overlay.
   let html = "";
-  let floatingImages: Array<{ src: string; width?: number; height?: number }> = [];
+  type FloatingImg = { src: string; x?: number; y?: number; width?: number; height?: number };
+  let floatingImages: FloatingImg[] = [];
   try {
     const raw = article.articleContent;
     if (typeof raw === "string") {
@@ -2049,20 +2050,27 @@ function openArticleAsPdf(article: any, publicUrl: string) {
     html = article.articleContent || "";
   }
 
-  // If the article has floating images (pasted/dropped onto the canvas),
-  // append them to the end of the HTML as regular <img> tags so they land
-  // in the printed PDF. Without this they'd be silently dropped — they're
-  // absolutely-positioned in the editor and don't exist in the HTML.
-  if (floatingImages.length > 0) {
-    const imgsHtml = floatingImages
-      .filter(fi => fi && typeof fi.src === "string" && fi.src.length > 0)
-      .map(fi => {
-        const w = fi.width && fi.width > 0 ? ` width="${fi.width}"` : "";
-        return `<figure class="floating-img"><img src="${fi.src}"${w} alt="" /></figure>`;
-      })
-      .join("\n");
-    if (imgsHtml) html += `\n<hr class="images-divider" />\n${imgsHtml}`;
-  }
+  // Reconstruct the canvas layout: absolutely-positioned floating images at
+  // their original (x, y) coordinates, overlaid on the natural text flow.
+  // Editor canvas is ~620px wide; the PDF body is scaled to that so x/y
+  // values remain meaningful. Without this, floating images would end up on
+  // their own page — not where the author placed them.
+  const CANVAS_WIDTH = 620;
+  const validFloating = floatingImages.filter(
+    fi => fi && typeof fi.src === "string" && fi.src.length > 0
+  );
+  const maxBottom = validFloating.reduce((acc, fi) => {
+    const bottom = (fi.y ?? 0) + (fi.height ?? 0);
+    return bottom > acc ? bottom : acc;
+  }, 0);
+  const canvasMinHeight = maxBottom > 0 ? maxBottom + 32 : 0;
+  const floatingHtml = validFloating.map(fi => {
+    const x = Math.max(0, Math.round(fi.x ?? 0));
+    const y = Math.max(0, Math.round(fi.y ?? 0));
+    const w = fi.width && fi.width > 0 ? Math.round(fi.width) : 200;
+    const h = fi.height && fi.height > 0 ? ` height:${Math.round(fi.height)}px;` : "";
+    return `<img class="floating" src="${fi.src}" alt="" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;${h}" />`;
+  }).join("\n");
 
   const escape = (s: string) =>
     s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
@@ -2090,6 +2098,16 @@ function openArticleAsPdf(article: any, publicUrl: string) {
     font-size: 12pt;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  /* Preserve original image colors in print — some browsers / printer drivers
+     otherwise desaturate raster images unless we explicitly opt in. */
+  img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+    image-rendering: auto;
+    filter: none !important;
   }
   .wrap {
     max-width: 680px;
@@ -2159,12 +2177,20 @@ function openArticleAsPdf(article: any, publicUrl: string) {
     page-break-inside: avoid;
   }
   .article-body figure { page-break-inside: avoid; margin: 1.6em 0; text-align: center; }
-  .article-body figure.floating-img img { max-width: 100%; height: auto; display: inline-block; border-radius: 4px; }
-  .article-body hr.images-divider {
-    border: 0;
-    border-top: 1px solid #ddd;
-    margin: 2.4em auto 1.4em;
-    width: 40%;
+  /* Canvas reconstruction: holds the natural text flow AND absolutely-
+     positioned floating images at their original (x, y) from the editor. */
+  .canvas {
+    position: relative;
+    width: ${CANVAS_WIDTH}px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  .canvas img.floating {
+    position: absolute;
+    max-width: ${CANVAS_WIDTH}px;
+    height: auto;
+    border-radius: 4px;
+    z-index: 1;
   }
   .article-body a { color: #1a5fc8; text-decoration: underline; }
   .article-body code {
@@ -2224,7 +2250,10 @@ function openArticleAsPdf(article: any, publicUrl: string) {
       </p>
     </header>
     ${featured ? `<div class="featured"><img src="${escape(featured)}" alt="" /></div>` : ""}
-    <div class="article-body">${html}</div>
+    <div class="canvas"${canvasMinHeight > 0 ? ` style="min-height:${canvasMinHeight}px"` : ""}>
+      <div class="article-body">${html}</div>
+      ${floatingHtml}
+    </div>
     <footer class="src">
       <a href="${escape(publicUrl)}">${escape(publicUrl)}</a>
     </footer>
