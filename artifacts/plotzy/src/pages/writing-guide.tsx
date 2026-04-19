@@ -395,11 +395,14 @@ const sections = [
 /* ─── COMPONENTS ─── */
 
 function SectionHeader({ label, title, subtitle }: { icon?: any; label: string; title: string; subtitle: string; accent?: string }) {
+  // The TOC on the left already shows the numbered list, so strip the "01."
+  // prefix here — keep only the section name to avoid duplicating the number.
+  const cleanLabel = label.replace(/^\d+\.\s*/, "");
   return (
-    <div className="mb-8 text-center px-2 sm:px-0" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">{label}</p>
+    <div className="mb-8 text-left px-0" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">{cleanLabel}</p>
       <h2 className="text-[1.5rem] sm:text-[1.75rem] md:text-[2.25rem] font-bold text-foreground mb-3 leading-[1.15] md:leading-[1.1] tracking-[-0.02em] md:tracking-[-0.025em]">{title}</h2>
-      <p className="text-muted-foreground text-[13px] sm:text-[14px] md:text-[15px] max-w-xl leading-[1.65] mx-auto">{subtitle}</p>
+      <p className="text-muted-foreground text-[13px] sm:text-[14px] md:text-[15px] max-w-xl leading-[1.65]">{subtitle}</p>
     </div>
   );
 }
@@ -494,20 +497,20 @@ export default function WritingGuide() {
       {/* ── Hero ── */}
       <motion.header
         initial="hidden" animate="visible" variants={fadeUp}
-        className="relative pt-10 pb-8 md:pt-14 md:pb-10 border-b border-border/40"
+        className="relative pt-8 pb-6 md:pt-10 md:pb-8 border-b border-border/40"
         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
       >
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/70 mb-3">
             The Plotzy Writing Guide
           </p>
-          <h1 className="text-[1.875rem] sm:text-[2.25rem] md:text-[3.5rem] font-bold text-foreground mb-4 leading-[1.1] md:leading-[1.05] tracking-[-0.03em] md:tracking-[-0.035em] px-2 sm:px-0">
+          <h1 className="text-[1.5rem] sm:text-[1.75rem] md:text-[2.5rem] font-bold text-foreground mb-3 leading-[1.15] md:leading-[1.1] tracking-[-0.025em] md:tracking-[-0.03em] px-2 sm:px-0">
             From blank page to <span className="bg-gradient-to-br from-white to-white/55 bg-clip-text text-transparent">finished book</span>.
           </h1>
-          <p className="text-foreground/60 text-[13px] sm:text-[14px] md:text-[15px] max-w-xl mx-auto leading-[1.65] px-2 sm:px-0">
-            A professional, end-to-end handbook for the craft of writing. Seven sections distilled from decades of published work: genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
+          <p className="text-foreground/60 text-[12px] sm:text-[13px] md:text-[14px] max-w-xl mx-auto leading-[1.6] px-2 sm:px-0">
+            A professional, end-to-end handbook for the craft of writing. Seven sections: genre, structure, character, dialogue, process, revision, and the mistakes that kill first drafts.
           </p>
-          <div className="mt-5 inline-flex items-center flex-wrap justify-center gap-x-2.5 gap-y-1 text-[10px] text-muted-foreground/70 px-4">
+          <div className="mt-4 inline-flex items-center flex-wrap justify-center gap-x-2.5 gap-y-1 text-[10px] text-muted-foreground/70 px-4">
             <span className="font-mono">20 min read</span>
             <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40" />
             <span>7 sections</span>
@@ -517,41 +520,17 @@ export default function WritingGuide() {
         </div>
       </motion.header>
 
-      {/* ── Sticky Nav ── */}
-      <div
-        className="sticky top-[44px] z-20 mb-8 md:mb-10 -mx-4 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-2 md:py-2.5 bg-background/90 backdrop-blur-md border-b border-border/50"
-        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif" }}
-      >
-        <div className="flex items-center gap-1 overflow-x-auto max-w-5xl mx-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" as any }}>
-          {sections.map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => scrollTo(id)}
-              className={`flex-shrink-0 px-3 md:px-3.5 py-1.5 rounded-lg text-[11px] md:text-xs font-semibold whitespace-nowrap transition-all ${
-                activeSection === id
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-          <span className="hidden sm:inline-flex flex-shrink-0 ml-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-foreground/[0.04] border border-border/50 whitespace-nowrap">
-            {readSections.size}/7 sections read
-          </span>
-        </div>
-      </div>
-
       {/* ── Flex wrapper for sidebar + content ── */}
-      <div className="flex gap-0 lg:gap-8">
-        {/* ── Fixed Sidebar TOC (Desktop Only) — locked to viewport, always visible ── */}
-        <aside className="hidden lg:block flex-shrink-0" style={{ width: 200 }} aria-hidden>
-          {/* Placeholder to reserve grid space */}
-        </aside>
-        <aside className="hidden lg:block" style={{ position: "fixed", top: 120, left: "max(24px, calc((100vw - 1280px) / 2 + 24px))", width: 200, zIndex: 30 }}>
-          <div style={{ width: 200 }}>
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">Table of Contents</p>
-            <nav className="space-y-1">
+      <div className="flex gap-10 lg:gap-14 pt-6 md:pt-8">
+        {/* ── Sticky Sidebar TOC (Desktop Only) — stays within the flex column,
+             naturally aligned with the content ── */}
+        <aside className="hidden lg:block flex-shrink-0 w-[200px]">
+          <div className="sticky top-[72px]">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Table of Contents</p>
+              <span className="text-[10px] font-mono text-muted-foreground/60">{readSections.size}/7</span>
+            </div>
+            <nav className="space-y-0.5">
               {sections.map((sec, i) => {
                 const isActive = activeSection === sec.id;
                 const isRead = readSections.has(sec.id);
