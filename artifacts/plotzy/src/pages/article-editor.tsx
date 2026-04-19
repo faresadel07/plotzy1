@@ -1070,17 +1070,7 @@ export default function ArticleEditor() {
 
           <div style={{width:1,height:14,background:B,flexShrink:0}}/>
 
-          {/* Save status */}
-          {(saving || justSaved) && (
-            <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-              {saving
-                ? <><Loader2 size={10} color={TD} style={{animation:"spin 1s linear infinite"}}/><span style={{fontSize:10,color:TD}}>Saving…</span></>
-                : <><CheckCircle2 size={10} color="#34d399"/><span style={{fontSize:10,color:"#34d399"}}>Saved</span></>
-              }
-            </div>
-          )}
-
-          {/* Save button */}
+          {/* Save button (shows Save / Saving… / Saved in place) */}
           <button onClick={() => saveNow(false)} disabled={saving}
             style={{display:"flex",alignItems:"center",gap:5,padding:"6px 14px",borderRadius:7,cursor:"pointer",background:justSaved?"#34d399":"#fff",border:"none",fontFamily:SF,fontSize:12,fontWeight:600,color:justSaved?"#fff":"#000",transition:"all 0.2s",flexShrink:0}}>
             {saving ? <><Loader2 size={12} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
