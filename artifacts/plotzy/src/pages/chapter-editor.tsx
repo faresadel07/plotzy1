@@ -350,6 +350,71 @@ export default function ChapterEditor() {
   const [isTypewriterMode, setIsTypewriterMode] = useState(() =>
     localStorage.getItem("plotzy-typewriter-mode") === "true"
   );
+
+  // ── Typewriter mode: keep caret centred in every editor ────────────────
+  // Works across TipTap (contenteditable), <textarea>, and any other focusable
+  // editable surface by listening to the document-level selectionchange event
+  // and computing the caret's viewport position from window.getSelection().
+  // One rAF-throttled write per change keeps scrolling smooth.
+  useEffect(() => {
+    if (!isTypewriterMode) return;
+
+    let rafId: number | null = null;
+    let lastY = -1;
+
+    const centreCaret = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+
+        const anchor = sel.anchorNode;
+        if (!anchor) return;
+        const parent = anchor.nodeType === Node.TEXT_NODE
+          ? (anchor.parentElement as Element | null)
+          : (anchor as Element);
+        if (!parent) return;
+
+        // Only react when the caret is inside an editable region. We don't
+        // want the document to scroll just because the user clicked on
+        // regular text somewhere.
+        const editable = parent.closest('[contenteditable="true"], textarea, input[type="text"]');
+        if (!editable) return;
+
+        const range = sel.getRangeAt(0).cloneRange();
+        range.collapse(true);
+        let rect = range.getBoundingClientRect();
+        if (!rect || (rect.top === 0 && rect.height === 0)) {
+          // Empty line — fall back to the surrounding element's rect.
+          rect = parent.getBoundingClientRect();
+        }
+        if (rect.top === 0 && rect.height === 0) return;
+
+        const lineHeight = parseFloat(getComputedStyle(parent).lineHeight) || 28;
+        const targetY = window.scrollY + rect.top - window.innerHeight / 2 + lineHeight / 2;
+        const clamped = Math.max(0, targetY);
+        if (Math.abs(clamped - lastY) < 4) return; // avoid fighting with smooth scroll
+        lastY = clamped;
+        window.scrollTo({ top: clamped, behavior: "smooth" });
+      });
+    };
+
+    document.addEventListener("selectionchange", centreCaret);
+    document.addEventListener("keyup", centreCaret);
+    document.addEventListener("click", centreCaret);
+
+    // Immediate centre on enable so the user sees the effect right away.
+    centreCaret();
+
+    return () => {
+      document.removeEventListener("selectionchange", centreCaret);
+      document.removeEventListener("keyup", centreCaret);
+      document.removeEventListener("click", centreCaret);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [isTypewriterMode]);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [restoringSnapId, setRestoringSnapId] = useState<number | null>(null);
   const [showRefPanel, setShowRefPanel] = useState(false);
@@ -432,16 +497,19 @@ export default function ChapterEditor() {
       localStorage.setItem("plotzy-typewriter-mode", String(next));
       toast({
         title: next
-          ? (ar ? "⌨️ وضع الآلة الكاتبة مفعّل" : "⌨️ Typewriter Mode ON")
-          : (ar ? "وضع الآلة الكاتبة معطّل" : "Typewriter Mode OFF"),
+          ? (ar ? "⌨️ تم تفعيل تمركز المؤشر" : "⌨️ Center Typing enabled")
+          : (ar ? "تم إيقاف تمركز المؤشر" : "Center Typing off"),
         description: next
-          ? (ar ? "المؤشر سيبقى في منتصف الشاشة أثناء الكتابة" : "Cursor stays centered while you type")
+          ? (ar ? "المؤشر يبقى في منتصف الشاشة والنص هو اللي بيتحرك — زي الآلة الكاتبة." : "Your cursor stays in the middle; the text scrolls beneath it as you write.")
           : undefined,
       });
       return next;
     });
   };
 
+  // Kept for plain <textarea> editors (comments / titles). The main rich
+  // editor (TipTap / contenteditable) is handled by the global effect below,
+  // which reacts to every caret move regardless of editor implementation.
   const scrollToCursorCenter = (el: HTMLTextAreaElement) => {
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 28;
     const selStart = el.selectionStart ?? 0;
@@ -1352,15 +1420,18 @@ export default function ChapterEditor() {
         <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.7)_100%)] z-[1]" />
       )}
 
-      {/* Typewriter Mode — fixed center guide line */}
+      {/* Typewriter Mode — subtle centre reference line. Neutral white so it
+          blends with the editor chrome instead of fighting with the text. */}
       {isTypewriterMode && (
-        <div className="fixed inset-x-0 pointer-events-none z-40 flex flex-col items-center" style={{ top: "50vh" }}>
+        <div className="fixed inset-x-0 pointer-events-none z-40" style={{ top: "50vh" }}>
           <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, transparent 0%, #f59e0b 15%, #f59e0b 85%, transparent 100%)", opacity: 0.45 }} />
+            <div
+              className="h-px w-full"
+              style={{
+                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 20%, rgba(255,255,255,0.15) 80%, transparent 100%)",
+              }}
+            />
           </div>
-          <span className="mt-1.5 text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full" style={{ color: "#f59e0b", opacity: 0.6, background: "rgba(245,158,11,0.08)" }}>
-            ⌨ Typewriter
-          </span>
         </div>
       )}
 
@@ -1480,7 +1551,7 @@ export default function ChapterEditor() {
               <Printer className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isTypewriterMode ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500"}`} onClick={toggleTypewriterMode} title={ar ? "وضع الآلة الكاتبة" : "Typewriter Mode"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isTypewriterMode ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`} onClick={toggleTypewriterMode} title={ar ? "تمركز المؤشر — النص يتحرك، المؤشر يبقى في منتصف الشاشة" : "Center Typing — keep the cursor in the middle of the screen as you type"}>
               <AlignCenter className="w-4 h-4" />
             </Button>
 
