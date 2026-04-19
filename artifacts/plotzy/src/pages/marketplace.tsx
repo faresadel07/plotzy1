@@ -1442,19 +1442,31 @@ export default function Marketplace() {
           {filtered.length} service{filtered.length !== 1 ? "s" : ""} available
         </p>
 
-        {/* Grid */}
+        {/* Flex-wrap so the last row centers instead of hugging the left
+             edge when the service count isn't a clean multiple of the
+             column count. Each card keeps a consistent width (flex-grow: 0). */}
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: TD }}>
             <p style={{ fontSize: 14 }}>No services match your search</p>
           </div>
         ) : (
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
             gap: 16,
           }}>
             {filtered.map((s, i) => (
-              <ServiceCard key={s.id} s={s} i={i} onLaunch={sv => setModal(sv)} />
+              <div
+                key={s.id}
+                style={{
+                  flex: "0 1 340px",
+                  minWidth: 280,
+                  maxWidth: 400,
+                }}
+              >
+                <ServiceCard s={s} i={i} onLaunch={sv => setModal(sv)} />
+              </div>
             ))}
           </div>
         )}
