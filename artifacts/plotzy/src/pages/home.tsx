@@ -1039,8 +1039,8 @@ export default function Home() {
         {user && sharedByMe.length > 0 && (
           <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)" }}>
-                <UserPlus className="w-4 h-4" style={{ color: "#a78bfa" }} />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <UserPlus className="w-4 h-4" style={{ color: "#ffffff" }} />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">You shared</h3>
