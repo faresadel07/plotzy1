@@ -31,6 +31,7 @@ import { logger } from "./lib/logger";
 import { generalLimiter, authLimiter, publicReadLimiter, writeLimiter } from "./middleware/rate-limit";
 import { apiLogger } from "./middleware/api-logger";
 import { pageViewTracker } from "./middleware/page-view-tracker";
+import { csrfOriginCheck } from "./middleware/csrf";
 
 declare module "http" {
   interface IncomingMessage {
@@ -181,6 +182,12 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+// SECURITY: Origin/Referer-based CSRF check for state-changing requests.
+// Runs AFTER session setup (so rejections don't touch the session store)
+// and AFTER the Stripe webhook route above (which is declared before this
+// and is therefore matched before this middleware runs).
+app.use(csrfOriginCheck);
 
 // Rate limiting — applied after auth so user id is available as key
 app.use("/api", generalLimiter);
