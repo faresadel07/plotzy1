@@ -14,10 +14,9 @@ import { RichChapterEditor } from "@/components/RichChapterEditor";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, PenTool, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search } from "lucide-react";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { PrintPreview } from "@/components/chapter-editor/PrintPreview";
-import { DrawingCanvas } from "@/components/chapter-editor/DrawingCanvas";
 import { PageSetupModal } from "@/components/chapter-editor/PageSetupModal";
 import { playTypewriterSound } from "@/hooks/use-audio";
 import { useToast } from "@/hooks/use-toast";
@@ -539,7 +538,6 @@ export default function ChapterEditor() {
 
   // Rich Media State
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showCanvas, setShowCanvas] = useState(false);
   const [drawingSize, setDrawingSize] = useState<DrawingSize>('large');
   const [selectedDrawingIdx, setSelectedDrawingIdx] = useState<number | null>(null);
   const [resizingDrawing, setResizingDrawing] = useState<{ idx: number, startX: number, startPct: number } | null>(null);
@@ -1511,9 +1509,6 @@ export default function ChapterEditor() {
               <ImageIcon className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex" onClick={() => setShowCanvas(true)} title={ar ? "رسم حر" : "Draw sketch"}>
-              <PenTool className="w-4 h-4" />
-            </Button>
 
             <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowCustomizer(true)} title={t("settings")}>
               <Palette className="w-4 h-4" />
@@ -3041,32 +3036,6 @@ export default function ChapterEditor() {
           onPreview={(p) => setPreviewPrefs(p)}
           onClose={() => { setShowCustomizer(false); setPreviewPrefs(null); }}
           liveSample={getPageText(pages[activePageIndex] ?? "")}
-        />
-      )}
-
-      {showCanvas && (
-        <DrawingCanvas
-          isDark={isDark}
-          ar={ar}
-          resolvedBgColor={resolvedBgColor}
-          onSaveDrawing={(base64) => {
-            setPages(prev => {
-              const next = [...prev];
-              const currentBlock = next[activePageIndex];
-              const block: PageBlock = { type: 'drawing', content: base64, size: drawingSize };
-              if (typeof currentBlock === 'string' && !currentBlock.trim() && pages.length === 1) {
-                next[activePageIndex] = block;
-              } else {
-                next.splice(activePageIndex + 1, 0, block);
-                next.splice(activePageIndex + 2, 0, "");
-                setTimeout(() => setActivePageIndex(activePageIndex + 2), 50);
-              }
-              return next;
-            });
-            setIsDirty(true);
-            setShowCanvas(false);
-          }}
-          onClose={() => { setShowCanvas(false); }}
         />
       )}
 
