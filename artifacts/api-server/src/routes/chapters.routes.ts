@@ -11,6 +11,7 @@ import { aiLimiter } from "../middleware/rate-limit";
 import {
   isMockOpenAI,
   openai,
+  AI_TEXT_MODEL,
   requireOpenAI,
   isSubscriptionActive,
   countWords,
@@ -252,7 +253,7 @@ router.post(
           : `You are an expert ghostwriter. Turn the following spoken story into a well-structured, polished literary book chapter written in ${langName}. Provide only the chapter text, starting with a descriptive title.`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: transcribedText },

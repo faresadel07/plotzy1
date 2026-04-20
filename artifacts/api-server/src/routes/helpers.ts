@@ -19,6 +19,12 @@ export const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
+// Default chat/completion model for AI features. Configurable via env so you
+// can switch providers (OpenAI, Groq, Anthropic-via-OpenAI-compat, local LLM)
+// without touching each route. Defaults to Groq's Llama 3.3 70B since we use
+// a Groq-compatible base URL by default in dev.
+export const AI_TEXT_MODEL = process.env.AI_TEXT_MODEL || "llama-3.3-70b-versatile";
+
 /**
  * Guard middleware for AI endpoints — returns 503 with clear message
  * when OpenAI key is missing, instead of crashing with an auth error.

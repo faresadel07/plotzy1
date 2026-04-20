@@ -16,6 +16,7 @@ import { logger } from "../lib/logger";
 import {
   isMockOpenAI,
   openai,
+  AI_TEXT_MODEL,
   isSubscriptionActive,
   getLangName,
   isRTL,
@@ -423,7 +424,7 @@ router.post(
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
@@ -909,7 +910,7 @@ Return a strict JSON object with these two arrays.`;
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: sampleText },

@@ -57,6 +57,10 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
+// Default chat/completion model — env-configurable so we can swap AI
+// providers (OpenAI, Groq, local LLM) without editing each call site.
+const AI_TEXT_MODEL = process.env.AI_TEXT_MODEL || "llama-3.3-70b-versatile";
+
 // Language name lookup (code -> English name)
 const LANGUAGE_NAMES: Record<string, string> = {
   en: "English", ar: "Arabic", fr: "French", es: "Spanish", de: "German",
@@ -675,7 +679,7 @@ export async function registerRoutes(
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: prompt.system },
           { role: "user", content: prompt.user },
@@ -726,7 +730,7 @@ export async function registerRoutes(
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent }
@@ -1413,7 +1417,7 @@ export async function registerRoutes(
         : `You are an expert ghostwriter. Turn the following spoken story into a well-structured, polished literary book chapter written in ${langName}. Provide only the chapter text, starting with a descriptive title.`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: transcribedText }
@@ -1522,7 +1526,7 @@ export async function registerRoutes(
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: fullText }
@@ -1623,7 +1627,7 @@ Return a strict JSON object with these two arrays.`;
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: sampleText }
@@ -1697,7 +1701,7 @@ Return a strict JSON object with these two arrays.`;
       systemPrompt += loreContext;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: text }
@@ -1734,7 +1738,7 @@ Return a strict JSON object with these two arrays.`;
       systemPrompt += loreContext;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: idea }
@@ -1771,7 +1775,7 @@ Return a strict JSON object with these two arrays.`;
       systemPrompt += loreContext;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: text }
@@ -1814,7 +1818,7 @@ Rules:
 - If the text is already showing well, return: {"findings":[]}`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: text }
@@ -1851,7 +1855,7 @@ Rules:
       systemPrompt += loreContext;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: text }
@@ -1888,7 +1892,7 @@ Rules:
       if (!manuscript.trim()) return res.json({ issues: [] });
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: AI_TEXT_MODEL,
         response_format: { type: "json_object" },
         messages: [
           {
@@ -1919,7 +1923,7 @@ Return an empty array if no issues found. Focus on real narrative problems, not 
       if (!manuscript.trim()) return res.json({ score: 0, feedback: "No content to analyze.", suggestions: [] });
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: AI_TEXT_MODEL,
         response_format: { type: "json_object" },
         messages: [
           {
@@ -1950,7 +1954,7 @@ Provide 2-4 specific suggestions with real examples from the text.`,
       if (!manuscript.trim()) return res.json({ overallPacing: "N/A", score: 0, summary: "No content.", chapters: [], recommendations: [] });
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: AI_TEXT_MODEL,
         response_format: { type: "json_object" },
         messages: [
           {
@@ -1987,7 +1991,7 @@ Cover all chapters. Give 2-3 recommendations.`,
       if (!manuscript.trim()) return res.json({ score: 0, characters: [], recommendation: "No content to analyze." });
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: AI_TEXT_MODEL,
         response_format: { type: "json_object" },
         messages: [
           {
@@ -2085,7 +2089,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       }
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
