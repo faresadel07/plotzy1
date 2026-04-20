@@ -98,7 +98,15 @@ function scheduleRepeating(minMs: number, maxMs: number, fn: () => void): Schedu
   let handle: ReturnType<typeof setTimeout> | null = null;
   const tick = () => {
     if (cancelled) return;
-    fn();
+    // Wrap fn() so an exception from a Web Audio call (e.g. on a closed
+    // AudioContext) doesn't break the timer chain and silently stop the
+    // whole soundscape.
+    try { fn(); } catch {}
+    // Re-check cancelled after fn runs — the user may have toggled the
+    // sound off during fn(). Without this, cancel()'s clearTimeout would
+    // race against the setTimeout being scheduled on the next line,
+    // leaking a live timer that keeps calling fn on a disposed context.
+    if (cancelled) return;
     const delay = minMs + Math.random() * (maxMs - minMs);
     handle = setTimeout(tick, delay);
   };
@@ -107,6 +115,7 @@ function scheduleRepeating(minMs: number, maxMs: number, fn: () => void): Schedu
     cancel: () => {
       cancelled = true;
       if (handle) clearTimeout(handle);
+      handle = null;
     },
   };
 }

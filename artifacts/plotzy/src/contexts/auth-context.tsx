@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { clearGuestBookIds } from "@/hooks/use-books";
@@ -14,6 +14,10 @@ interface AuthUser {
   subscriptionPlan?: string | null;
   subscriptionEndDate?: string | null;
   isAdmin?: boolean;
+  // The /api/auth/user response includes `suspended: boolean` — we expose
+  // it here so UI gates (e.g. read-only banners, locked account dialogs)
+  // can check it without casting through `as any`.
+  suspended?: boolean;
 }
 
 interface AuthContextValue {
@@ -40,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     // Prevent Google One Tap from silently re-authenticating the user they
     // just logged out from.
@@ -57,13 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // guaranteed source of leaks whenever a new query is added.
     queryClient.removeQueries();
     queryClient.setQueryData(["/api/auth/user"], null);
-  };
+  }, [queryClient]);
 
-  return (
-    <AuthContext.Provider value={{ user, isLoading, refetch, logout }}>
-      {children}
-    </AuthContext.Provider>
+  // Memoise the context value so every consumer only re-renders when user /
+  // isLoading actually change, not on every AuthProvider re-render. Without
+  // this, the `value` object was a fresh reference on every render, forcing
+  // every consumer (layouts, nav, editors, dialogs…) to re-render too.
+  const value = useMemo(
+    () => ({ user, isLoading, refetch, logout }),
+    [user, isLoading, refetch, logout],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

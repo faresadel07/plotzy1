@@ -100,13 +100,29 @@ export function useAudio() {
 
 // ───── Typewriter key-click (used by the chapter editor's Focus Mode) ─────
 // Synthesised mechanical typewriter thud — unchanged public API.
+//
+// Reuses a single AudioContext across every keystroke. Creating a fresh
+// context per keystroke (old behaviour) was wasteful and hit the browser's
+// hard cap of ~4-6 concurrent AudioContexts per tab during fast typing,
+// after which creation threw and the editor fell silent.
+let typewriterCtx: AudioContext | null = null;
+function getTypewriterCtx(): AudioContext | null {
+  if (typewriterCtx && typewriterCtx.state !== "closed") return typewriterCtx;
+  const AC: typeof AudioContext | undefined =
+    (window as any).AudioContext || (window as any).webkitAudioContext;
+  if (!AC) return null;
+  typewriterCtx = new AC();
+  return typewriterCtx;
+}
+
 export function playTypewriterSound(isFocusMode: boolean) {
   if (!isFocusMode) return;
   try {
-    const AC: typeof AudioContext =
-      window.AudioContext || (window as any).webkitAudioContext;
-    if (!AC) return;
-    const ctx = new AC();
+    const ctx = getTypewriterCtx();
+    if (!ctx) return;
+    // Browsers suspend AudioContext until a user gesture; keystrokes qualify.
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
@@ -127,7 +143,6 @@ export function playTypewriterSound(isFocusMode: boolean) {
 
     osc.start();
     osc.stop(ctx.currentTime + 0.04);
-    // Close the short-lived context once the note has faded.
-    setTimeout(() => { try { ctx.close(); } catch {} }, 100);
+    // Nodes disconnect themselves via GC once stopped — no manual teardown.
   } catch {}
 }

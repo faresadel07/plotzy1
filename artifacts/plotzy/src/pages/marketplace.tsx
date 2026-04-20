@@ -113,8 +113,12 @@ interface Scores {
   quality: number;
 }
 
+// Mirrors lib/tier-limits.ts plus the "admin" synthetic tier the API
+// returns on admin-bypass. Keep in sync with both.
+type Tier = "free" | "pro" | "premium" | "admin";
+
 interface UsageInfo {
-  tier: string;
+  tier: Tier;
   allowed: boolean;
   remaining: number;
   limit: number;
