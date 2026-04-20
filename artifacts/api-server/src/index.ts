@@ -1,17 +1,15 @@
+// STARTUP ORDER matters: parseEnv() validates every env var the app
+// reads and calls process.exit(1) on failure. It runs BEFORE we import
+// anything with side effects (app.ts opens the DB pool, configures
+// Passport, etc.) so a misconfigured deployment fails fast with a clear
+// error instead of crashing mid-request.
+import { parseEnv } from "./lib/env";
+const env = parseEnv();
+
 import app, { httpServer, setupApp } from "./app";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error("PORT environment variable is required but was not provided.");
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
+const port = env.PORT;
 
 (async () => {
   await setupApp();

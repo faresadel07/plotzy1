@@ -148,14 +148,10 @@ app.use(express.urlencoded({ extended: false }));
 setupPassport();
 const PgSession = ConnectPgSimple(session);
 
-// Validate SESSION_SECRET strength
+// SESSION_SECRET is validated at boot by lib/env.ts — in production it
+// is guaranteed to exist and be ≥32 chars, so we can read it directly
+// here. In development the fallback keeps local runs unblocked.
 const sessionSecret = process.env.SESSION_SECRET;
-if (process.env.NODE_ENV === "production" && !sessionSecret) {
-  throw new Error("SESSION_SECRET is required in production");
-}
-if (process.env.NODE_ENV === "production" && sessionSecret && sessionSecret.length < 32) {
-  throw new Error("SESSION_SECRET must be at least 32 characters in production");
-}
 
 app.use(
   session({
@@ -166,9 +162,7 @@ app.use(
           createTableIfMissing: true,
         })
       : undefined,
-    secret: sessionSecret || (process.env.NODE_ENV === "production"
-      ? (() => { throw new Error("SESSION_SECRET required"); })()
-      : "plotzy-dev-secret-not-for-production"),
+    secret: sessionSecret || "plotzy-dev-secret-not-for-production",
     resave: false,
     saveUninitialized: false,
     cookie: {
