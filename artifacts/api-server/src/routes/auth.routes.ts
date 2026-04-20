@@ -33,18 +33,26 @@ async function recordLoginAttempt(email: string, ip: string | undefined, success
   await db.insert(loginAttempts).values({ email: email.toLowerCase(), ip: ip || null, success });
 }
 
-async function isAccountLocked(email: string): Promise<{ locked: boolean; minutesLeft: number }> {
+async function isAccountLocked(email: string, ip: string | undefined): Promise<{ locked: boolean; minutesLeft: number }> {
+  // SECURITY: lock by (email ∧ ip), not email alone. Email-only lockouts
+  // let an attacker DoS any user by spamming failed logins against their
+  // address from any IP — the real owner then can't log in for 15 min.
+  // Scoping the lock to the offending IP means the attacker's IP burns
+  // out without affecting the legitimate user's IP. If the IP is unknown
+  // (shouldn't happen once trust proxy is set, but defensive) we fall
+  // back to email-only so a missing IP can't let brute-force through.
   const windowStart = new Date(Date.now() - LOCKOUT_WINDOW_MINUTES * 60_000);
+  const conditions = [
+    eq(loginAttempts.email, email.toLowerCase()),
+    eq(loginAttempts.success, false),
+    gt(loginAttempts.createdAt, windowStart),
+  ];
+  if (ip) conditions.push(eq(loginAttempts.ip, ip));
   const [result] = await db.select({ cnt: count() }).from(loginAttempts)
-    .where(and(
-      eq(loginAttempts.email, email.toLowerCase()),
-      eq(loginAttempts.success, false),
-      gt(loginAttempts.createdAt, windowStart),
-    ));
+    .where(and(...conditions));
   const failCount = result?.cnt ?? 0;
   if (failCount >= MAX_FAILED_ATTEMPTS) {
-    // Check when the most recent failure was to calculate time remaining
-    const minutesLeft = LOCKOUT_DURATION_MINUTES; // simplified — full window from now
+    const minutesLeft = LOCKOUT_DURATION_MINUTES;
     return { locked: true, minutesLeft };
   }
   return { locked: false, minutesLeft: 0 };
@@ -179,19 +187,19 @@ router.post("/api/auth/login", async (req, res) => {
       password: z.string().min(8, "Password must be at least 8 characters"),
     }).parse(req.body);
 
-    // Check if account is locked due to too many failed attempts
-    const lockStatus = await isAccountLocked(email);
+    // SECURITY: only read req.ip (resolved via app's `trust proxy` setting).
+    // Reading X-Forwarded-For directly lets anyone spoof their IP and fill
+    // the login_attempts table with someone else's fingerprint.
+    const clientIp = req.ip;
+
+    // Check if account is locked due to too many failed attempts from THIS IP.
+    const lockStatus = await isAccountLocked(email, clientIp);
     if (lockStatus.locked) {
       return res.status(429).json({
         message: `Too many failed login attempts. Please try again in ${lockStatus.minutesLeft} minutes.`,
         lockedUntilMinutes: lockStatus.minutesLeft,
       });
     }
-
-    // SECURITY: only read req.ip (resolved via app's `trust proxy` setting).
-    // Reading X-Forwarded-For directly lets anyone spoof their IP and fill
-    // the login_attempts table with someone else's fingerprint.
-    const clientIp = req.ip;
     const user = await storage.getUserByEmail(email);
     if (!user || !user.passwordHash) {
       await recordLoginAttempt(email, clientIp, false);
