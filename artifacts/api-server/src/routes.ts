@@ -912,8 +912,8 @@ export async function registerRoutes(
         const TEMPLATES: Record<string, { headingFont: string; accentColor: string; chapterBorder: string }> = {
           classic: {
             headingFont:   bodyFont,
-            accentColor:   "#8B6914",
-            chapterBorder: "2px solid #D4AF37",
+            accentColor:   "#1a1a1a",
+            chapterBorder: "2px solid #1a1a1a",
           },
           modern: {
             headingFont:   "'Playfair Display', Georgia, serif",
