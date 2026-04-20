@@ -25,6 +25,7 @@ import { useTheme } from "next-themes";
 import { type BookPreferences } from "@/shared/schema";
 import { PageStylePicker, PAGE_STYLES } from "@/components/page-style-picker";
 import { queryClient } from "@/lib/queryClient";
+import { saveDraft, loadDraft, clearDraft, type DraftEntry } from "@/lib/offline-drafts";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -327,6 +328,14 @@ export default function ChapterEditor() {
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveInFlightRef = useRef(false);
+  // Offline-draft recovery state — set when a local IndexedDB copy
+  // diverges from the server copy on mount, so we can offer the user
+  // the option to restore unsaved work.
+  const [recoverableDraft, setRecoverableDraft] = useState<DraftEntry | null>(null);
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Once the user has responded to the recovery banner for this chapter
+  // (restore OR discard), don't surface it again for the same mount.
+  const draftPromptResolvedRef = useRef(false);
   const [showAI, setShowAI] = useState(false);
   const [showEditorSearch, setShowEditorSearch] = useState(false);
   const [editorSearchQuery, setEditorSearchQuery] = useState("");
@@ -593,6 +602,26 @@ export default function ChapterEditor() {
       const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
       const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
       setRichPages(splitHtmlIntoPages(html, wpp));
+
+      // After loading the server copy, check IndexedDB for a local draft
+      // that was never flushed (e.g. the user lost network mid-save or
+      // closed the tab before save completed). If the draft differs from
+      // what the server has, offer to restore it.
+      if (!draftPromptResolvedRef.current) {
+        loadDraft(chapter.id).then(draft => {
+          if (!draft) return;
+          if (draftPromptResolvedRef.current) return;
+          if (draft.content === chapter.content && draft.title === chapter.title) {
+            // Draft matches what's on the server — no-op and clean up.
+            clearDraft(chapter.id).catch(() => {});
+            return;
+          }
+          setRecoverableDraft(draft);
+        }).catch(() => {
+          // IndexedDB may be unavailable (private mode, quota exceeded).
+          // Failure to load a draft is never blocking — the editor still works.
+        });
+      }
     }
   }, [chapter, isDirty]);
 
@@ -1095,6 +1124,11 @@ export default function ChapterEditor() {
       }
 
       setIsDirty(false);
+      // Server now has the canonical copy — drop the local draft so a
+      // future mount doesn't falsely prompt for recovery.
+      if (chapterId) {
+        clearDraft(chapterId).catch(() => {});
+      }
       if (!options.silent) {
         setJustSaved(true);
         setTimeout(() => setJustSaved(false), 2000);
@@ -1109,6 +1143,75 @@ export default function ChapterEditor() {
       setAutoSaving(false);
     }
   }, [richPages, richHtml, floatingImages, chapter, chapterId, bookId, title, ar, updateChapter, saveVersion, toast]);
+
+  // ── Offline draft persistence ─────────────────────────────────────────
+  // While the chapter is dirty (unsaved local changes), write the current
+  // state to IndexedDB every second so a network failure, tab crash, or
+  // accidental close doesn't lose work. Cleared on successful save.
+  useEffect(() => {
+    if (!chapterId || !bookId || !isDirty) return;
+    // Debounce so rapid typing doesn't thrash the DB.
+    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    draftSaveTimerRef.current = setTimeout(() => {
+      // Build the same v2 JSON shape we persist server-side so a restore
+      // round-trips without any lossy transform.
+      const htmlContent = richPages.join('\n<!-- PAGE_BREAK -->\n');
+      const content = JSON.stringify({ v: 2, pages: htmlContent, floatingImages });
+      saveDraft({
+        chapterId,
+        bookId,
+        title,
+        content,
+        savedAt: Date.now(),
+      }).catch(() => {
+        // IndexedDB may be unavailable — never block editing on a failed
+        // local-save. The server save path still provides durability.
+      });
+    }, 1000);
+    return () => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    };
+  }, [isDirty, chapterId, bookId, title, richPages, floatingImages]);
+
+  // Restore a locally-saved draft into editor state, then dismiss the banner.
+  const handleRestoreDraft = useCallback(() => {
+    if (!recoverableDraft) return;
+    draftPromptResolvedRef.current = true;
+
+    setTitle(recoverableDraft.title);
+    // Parse the draft's v2 content back into the UI's split page model.
+    let rawContent = recoverableDraft.content;
+    let loadedFloatingImages: Record<number, FloatingImage[]> = {};
+    try {
+      const obj = JSON.parse(rawContent);
+      if (obj && obj.v === 2 && typeof obj.pages === 'string') {
+        loadedFloatingImages = obj.floatingImages || {};
+        rawContent = JSON.stringify([{ type: 'text', content: obj.pages }]);
+      }
+    } catch {}
+    setFloatingImages(loadedFloatingImages);
+    const parsed = parsePages(rawContent);
+    setPages(parsed);
+    const html = pagesToHtml(parsed);
+    setRichHtml(html);
+    const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+    const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+    setRichPages(splitHtmlIntoPages(html, wpp));
+    // Mark as dirty so the user is nudged to save, and so the init
+    // effect doesn't immediately overwrite what we just restored with
+    // the stale server copy.
+    setIsDirty(true);
+    setRecoverableDraft(null);
+    toast({ title: ar ? "تم استرجاع المسودة" : "Draft restored — don't forget to save" });
+  }, [recoverableDraft, effectivePrefs.fontSize, dynDimsForHook, ar, toast]);
+
+  // Discard the local draft and keep the server version.
+  const handleDiscardDraft = useCallback(() => {
+    if (!recoverableDraft) return;
+    draftPromptResolvedRef.current = true;
+    clearDraft(recoverableDraft.chapterId).catch(() => {});
+    setRecoverableDraft(null);
+  }, [recoverableDraft]);
 
   // Manual save — creates version snapshot + shows toast
   const handleSave = async () => {
@@ -1413,6 +1516,57 @@ export default function ChapterEditor() {
       className="flex flex-col h-screen overflow-hidden transition-all duration-700"
       style={{ backgroundColor: "#000" }}
     >
+      {/* ── Draft-recovery banner — shown only when a local IndexedDB
+          copy diverges from the server copy on mount (e.g. the user
+          lost network mid-save or closed the tab before save). ── */}
+      {recoverableDraft && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)",
+            zIndex: 60, maxWidth: "min(560px, 92vw)", padding: "10px 14px",
+            display: "flex", alignItems: "center", gap: 12,
+            background: "#1c1c24", color: "#f4f4f5",
+            border: "1px solid rgba(234, 179, 8, 0.35)", borderRadius: 10,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+            fontSize: 13,
+          }}
+        >
+          <div style={{ flex: 1, lineHeight: 1.4 }}>
+            <div style={{ fontWeight: 600, marginBottom: 2 }}>
+              {ar ? "وجدنا نسخة محلية لم تُحفظ" : "Unsaved changes from earlier"}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
+              {ar
+                ? `محفوظة في متصفحك · ${new Date(recoverableDraft.savedAt).toLocaleString("ar")}`
+                : `Saved locally · ${new Date(recoverableDraft.savedAt).toLocaleString()}`}
+            </div>
+          </div>
+          <button
+            onClick={handleRestoreDraft}
+            style={{
+              padding: "6px 12px", borderRadius: 6, border: "none",
+              background: "#fff", color: "#111", cursor: "pointer",
+              fontSize: 12, fontWeight: 600,
+            }}
+          >
+            {ar ? "استرجاع" : "Restore"}
+          </button>
+          <button
+            onClick={handleDiscardDraft}
+            style={{
+              padding: "6px 10px", borderRadius: 6,
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "transparent", color: "rgba(255,255,255,0.7)",
+              cursor: "pointer", fontSize: 12,
+            }}
+          >
+            {ar ? "تجاهل" : "Discard"}
+          </button>
+        </div>
+      )}
+
       {/* Subtle vignette in focus mode */}
       {isFocusMode && (
         <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,rgba(0,0,0,0.7)_100%)] z-[1]" />
