@@ -519,16 +519,33 @@ export default function AuthorProfile() {
             style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "6px 14px", borderRadius: 8, fontWeight: 500 }}>
             <ArrowLeft size={13} /> {ar ? "الرئيسية" : "Home"}
           </button>
-          {/* Banner upload button for own profile — darker backdrop + white
-              text so it stays readable even over busy cover photos. */}
-          {isOwnProfile && (
-            <button onClick={() => setEditOpen(true)}
-              style={{ position: "absolute", bottom: 16, right: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}>
-              <Camera size={13} /> {profile.bannerUrl
-                ? (ar ? "تغيير الغلاف" : "Change Cover")
-                : (ar ? "إضافة غلاف" : "Add Cover")}
+          {/* Banner action cluster — all primary profile actions live up
+              here so they can never be pushed off-screen by a very long
+              display name or a narrow viewport. Share shown for every
+              viewer; Edit Profile and Change Cover only for the owner. */}
+          <div style={{ position: "absolute", bottom: 16, right: 16, display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", maxWidth: "calc(100% - 32px)" }}>
+            <button
+              onClick={handleShareProfile}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}
+              title={ar ? "مشاركة الملف" : "Share profile"}
+            >
+              <Share2 size={13} /> {ar ? "مشاركة" : "Share"}
             </button>
-          )}
+            {isOwnProfile && (
+              <>
+                <button onClick={() => setEditOpen(true)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#000", padding: "7px 14px", borderRadius: 8, fontWeight: 700 }}>
+                  <Edit3 size={13} /> {ar ? "تعديل الملف" : "Edit Profile"}
+                </button>
+                <button onClick={() => setEditOpen(true)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}>
+                  <Camera size={13} /> {profile.bannerUrl
+                    ? (ar ? "تغيير الغلاف" : "Change Cover")
+                    : (ar ? "إضافة غلاف" : "Add Cover")}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* ── Hero Section ── */}
@@ -584,37 +601,44 @@ export default function AuthorProfile() {
               {/* Name + Bio + Actions */}
               <div style={{ flex: 1, minWidth: 0 }}>
 
-                {/* Name row */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-                  <h1 style={{ fontSize: 24, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em" }}>
+                {/* Name row — the action buttons now live up in the
+                    banner so this row is purely identity, no risk of a
+                    very long display name pushing controls off-screen. */}
+                <div style={{ marginBottom: 6 }}>
+                  <h1 style={{
+                    fontSize: 24, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em",
+                    overflow: "hidden", textOverflow: "ellipsis",
+                    // Cap to 3 lines for extreme inputs, still readable.
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical" as any,
+                    wordBreak: "break-word",
+                  }}>
                     {profile.displayName || (ar ? "كاتب" : "Author")}
                   </h1>
-                  {isOwnProfile && (
-                    <button onClick={() => setEditOpen(true)}
-                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 12px", borderRadius: 20, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 11, fontWeight: 500, color: TS, cursor: "pointer" }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
-                    >
-                      <Edit3 size={11} /> {ar ? "تعديل الملف" : "Edit Profile"}
-                    </button>
-                  )}
-                  <button onClick={handleShareProfile}
-                    title={ar ? "مشاركة الملف" : "Share profile"}
-                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 12px", borderRadius: 20, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 11, fontWeight: 500, color: TS, cursor: "pointer" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
-                  >
-                    <Share2 size={11} /> {ar ? "مشاركة" : "Share"}
-                  </button>
                 </div>
 
-                {/* Bio */}
+                {/* Bio — dashed box for the owner-empty case so it reads
+                    as an invitation, not an afterthought. */}
                 {profile.bio ? (
                   <p style={{ fontSize: 14, color: TS, lineHeight: 1.7, margin: "0 0 12px", maxWidth: 520 }}>{profile.bio}</p>
                 ) : isOwnProfile ? (
-                  <p onClick={() => setEditOpen(true)} style={{ fontSize: 13, color: TD, lineHeight: 1.7, margin: "0 0 12px", cursor: "pointer", fontStyle: "italic" }}>
-                    {ar ? "أضف نبذة تعرّف القراء على نفسك..." : "Add a bio to tell readers about yourself..."}
-                  </p>
+                  <div
+                    onClick={() => setEditOpen(true)}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      fontSize: 13, color: TS, lineHeight: 1.6, margin: "0 0 14px",
+                      cursor: "pointer", fontStyle: "italic",
+                      padding: "8px 14px", borderRadius: 10,
+                      background: "rgba(255,255,255,0.04)",
+                      border: `1px dashed ${B}`,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
+                  >
+                    <Edit3 size={13} />
+                    {ar ? "اضغط لإضافة نبذة تعرّف القراء على نفسك" : "Add a bio to tell readers about yourself"}
+                  </div>
                 ) : null}
 
                 {/* Social links */}
