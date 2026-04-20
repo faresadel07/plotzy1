@@ -11,7 +11,7 @@ import path from "path";
 import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable, chapterSnapshots } from "../../../lib/db/src/schema";
+import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable, chapterSnapshots, bookCollaborators } from "../../../lib/db/src/schema";
 import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner } from "./middleware/auth";
 import { aiLimiter, imageGenLimiter, tierAiLimiter } from "./middleware/rate-limit";
 import socialRouter from "./routes/social.routes";
@@ -194,10 +194,41 @@ export async function registerRoutes(
     }
   });
 
+  // Public for published books, owner/collaborator/guest-session only for
+  // private drafts. Without this gate the entire Plotzy library leaks by
+  // id-enumeration. Returns 404 (not 403) on access failure so callers
+  // can't enumerate which ids exist.
   app.get(api.books.get.path, async (req, res) => {
-    const book = await storage.getBook(Number(req.params.id));
-    if (!book) return res.status(404).json({ message: "Book not found" });
-    res.json(book);
+    try {
+      const bookId = Number(req.params.id);
+      if (!bookId || isNaN(bookId)) return res.status(400).json({ message: "Invalid book id" });
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      if (book.isPublished) return res.json(book);
+
+      const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
+      if (userId && book.userId === userId) return res.json(book);
+
+      if (userId) {
+        const { db: dbConn } = await import("./db");
+        const { eq, and } = await import("drizzle-orm");
+        const [collab] = await dbConn.select().from(bookCollaborators)
+          .where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, userId)));
+        if (collab) return res.json(book);
+      }
+
+      // Guest session fallback for anonymous users who started the draft.
+      if (!userId && book.userId === null) {
+        const sess = req.session as any;
+        const guestIds: number[] = sess?.guestBookIds || [];
+        if (guestIds.includes(bookId)) return res.json(book);
+      }
+
+      return res.status(404).json({ message: "Book not found" });
+    } catch {
+      return res.status(500).json({ message: "Internal error" });
+    }
   });
 
   app.post(api.books.create.path, async (req, res) => {
@@ -748,7 +779,17 @@ export async function registerRoutes(
 
   // ─── Download Book ──────────────────────────────────────────────────────────
 
-  app.get("/api/books/:id/download", async (req, res) => {
+  // Public for published books; owner/collaborator only for unpublished drafts.
+  // Downloads include the full manuscript content so we can't let the
+  // endpoint run for anyone who guesses a numeric id.
+  app.get("/api/books/:id/download", async (req, res, next) => {
+    const bookId = Number(req.params.id);
+    if (!bookId || isNaN(bookId)) return res.status(400).json({ message: "Invalid book id" });
+    const book = await storage.getBook(bookId);
+    if (!book) return res.status(404).json({ message: "Book not found" });
+    if (book.isPublished) return next();
+    return requireBookOwner(req, res, next);
+  }, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
       const format = (req.query.format as string) || "txt";
@@ -1162,7 +1203,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.chapters.update.path, async (req, res) => {
+  app.put(api.chapters.update.path, requireChapterOwner, async (req, res) => {
     try {
       const input = api.chapters.update.input.parse(req.body);
       const userId = req.isAuthenticated() && req.user ? req.user.id : null;
@@ -1468,9 +1509,40 @@ export async function registerRoutes(
 
   // ─── Lore ──────────────────────────────────────────────────────────────────
 
+  // Lore contains spoilers / private worldbuilding notes, so mirror the
+  // same access rules as GET /api/books/:id. Published book → public;
+  // otherwise owner/collaborator/guest-session only.
   app.get(api.lore.list.path, async (req, res) => {
-    const entries = await storage.getLoreEntries(Number(req.params.bookId));
-    res.json(entries);
+    try {
+      const bookId = Number(req.params.bookId);
+      if (!bookId || isNaN(bookId)) return res.status(400).json({ message: "Invalid book id" });
+      const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      let allowed = book.isPublished;
+      if (!allowed) {
+        const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
+        if (userId && book.userId === userId) {
+          allowed = true;
+        } else if (userId) {
+          const { db: dbConn } = await import("./db");
+          const { eq, and } = await import("drizzle-orm");
+          const [collab] = await dbConn.select().from(bookCollaborators)
+            .where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, userId)));
+          if (collab) allowed = true;
+        } else if (book.userId === null) {
+          const sess = req.session as any;
+          const guestIds: number[] = sess?.guestBookIds || [];
+          if (guestIds.includes(bookId)) allowed = true;
+        }
+      }
+      if (!allowed) return res.status(404).json({ message: "Book not found" });
+
+      const entries = await storage.getLoreEntries(bookId);
+      res.json(entries);
+    } catch {
+      return res.status(500).json({ message: "Internal error" });
+    }
   });
 
   app.post(api.lore.create.path, requireBookOwner, async (req, res) => {

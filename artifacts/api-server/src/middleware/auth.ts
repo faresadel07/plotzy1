@@ -59,7 +59,13 @@ export async function requireBookOwnerStrict(req: Request, res: Response, next: 
 }
 
 export async function requireBookOwner(req: Request, res: Response, next: NextFunction) {
-  const bookId = Number(req.params.id || req.params.bookId);
+  // Prefer :bookId over :id. Upstream middleware (requireChapterOwner,
+  // requireChildOwner) sets params.bookId after looking up the child row,
+  // while params.id at that point is the *child* id (chapter/lore/etc) —
+  // if we read :id first, we look up a book whose primary key accidentally
+  // matches the child's id, bypassing the real ownership check.
+  const raw = req.params.bookId ?? req.params.id;
+  const bookId = Number(raw);
   if (!bookId || isNaN(bookId)) {
     return res.status(400).json({ message: "Invalid book id" });
   }
