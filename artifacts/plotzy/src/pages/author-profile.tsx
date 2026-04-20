@@ -196,70 +196,80 @@ function EditProfileModal({
       style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", padding: 24 }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: C2, border: `1px solid ${B}`, borderRadius: 20, width: "100%", maxWidth: 500, padding: 28 }} dir={ar ? "rtl" : "ltr"}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+      <div style={{ background: C2, border: `1px solid ${B}`, borderRadius: 20, width: "100%", maxWidth: 780, maxHeight: "90vh", overflowY: "auto", padding: 28 }} dir={ar ? "rtl" : "ltr"}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22 }}>
           <span style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: T }}>{ar ? "تعديل الملف" : "Edit Profile"}</span>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: TD }}><X size={18} /></button>
         </div>
 
-        {/* Avatar upload */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-          <div style={{ position: "relative", width: 72, height: 72, borderRadius: "50%", background: C3, border: `2px solid ${B}`, overflow: "hidden", flexShrink: 0 }}>
-            {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: SF, fontSize: 24, fontWeight: 700, color: TS }}>
-                {(profile.displayName || "?")[0].toUpperCase()}
-              </div>
-            )}
-            <button
-              onClick={() => avatarInputRef.current?.click()}
-              disabled={uploading}
-              style={{
-                position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = "0"; }}
-            >
-              {uploading ? <Loader2 size={18} color="#fff" style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={18} color="#fff" />}
-            </button>
-          </div>
+        {/* Two-column layout: media uploads on one side, text fields on the
+            other. Stacks to a single column on narrow viewports so mobile
+            users never get a cramped side-by-side. */}
+        <div className="edit-profile-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 260px) 1fr", gap: 24 }}>
+
+          {/* ── Media column ──────────────────────────────────── */}
           <div>
-            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: T, marginBottom: 2 }}>
-              {ar ? "الصورة الشخصية" : "Profile Photo"}
+            {/* Avatar upload */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                {ar ? "الصورة الشخصية" : "Profile Photo"}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ position: "relative", width: 72, height: 72, borderRadius: "50%", background: C3, border: `2px solid ${B}`, overflow: "hidden", flexShrink: 0 }}>
+                  {profile.avatarUrl ? (
+                    <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: SF, fontSize: 24, fontWeight: 700, color: TS }}>
+                      {(profile.displayName || "?")[0].toUpperCase()}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploading}
+                    style={{
+                      position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = "0"; }}
+                  >
+                    {uploading ? <Loader2 size={18} color="#fff" style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={18} color="#fff" />}
+                  </button>
+                </div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: TD, lineHeight: 1.5 }}>
+                  {ar ? "اضغط على الصورة لرفع صورة" : "Click avatar to upload"}
+                </div>
+                <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
+              </div>
             </div>
-            <div style={{ fontFamily: SF, fontSize: 11, color: TD }}>
-              {ar ? "اضغط على الصورة لرفع أي صورة" : "Click the avatar to upload any image"}
-            </div>
-          </div>
-          <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
-        </div>
 
-        {/* Banner upload */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-            {ar ? "صورة الغلاف" : "Cover Photo"}
-          </div>
-          <div
-            onClick={() => bannerInputRef.current?.click()}
-            style={{
-              position: "relative", width: "100%", height: 120, borderRadius: 12, overflow: "hidden",
-              background: profile.bannerUrl ? `url(${profile.bannerUrl}) center/cover` : `linear-gradient(135deg, ${C3} 0%, #1a1a2e 100%)`,
-              border: `1px solid ${B}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <div style={{ background: "rgba(0,0,0,0.65)", borderRadius: 8, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 12, fontWeight: 600 }}>
-              {bannerUploading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={14} />}
-              {profile.bannerUrl
-                ? (ar ? "تغيير الغلاف" : "Change Cover")
-                : (ar ? "إضافة صورة غلاف" : "Add Cover Photo")}
+            {/* Banner upload — slimmer now that it shares space with the
+                text column; full preview of the chosen image still shows. */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                {ar ? "صورة الغلاف" : "Cover Photo"}
+              </div>
+              <div
+                onClick={() => bannerInputRef.current?.click()}
+                style={{
+                  position: "relative", width: "100%", aspectRatio: "16/6", borderRadius: 10, overflow: "hidden",
+                  background: profile.bannerUrl ? `url(${profile.bannerUrl}) center/cover` : `linear-gradient(135deg, ${C3} 0%, #1a1a2e 100%)`,
+                  border: `1px solid ${B}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <div style={{ background: "rgba(0,0,0,0.65)", borderRadius: 8, padding: "5px 12px", display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 11, fontWeight: 600 }}>
+                  {bannerUploading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={12} />}
+                  {profile.bannerUrl
+                    ? (ar ? "تغيير الغلاف" : "Change Cover")
+                    : (ar ? "إضافة غلاف" : "Add Cover")}
+                </div>
+              </div>
+              <input ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerUpload(f); e.target.value = ""; }} />
             </div>
           </div>
-          <input ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerUpload(f); e.target.value = ""; }} />
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* ── Text fields column ────────────────────────────── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <label style={labelStyle}>{ar ? "اسم العرض" : "Display Name"}</label>
@@ -305,9 +315,10 @@ function EditProfileModal({
               <input value={form.instagramHandle} onChange={e => setForm(p => ({ ...p, instagramHandle: e.target.value }))} style={inputStyle} placeholder="@handle" />
             </div>
           </div>
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 22 }}>
           <button onClick={onClose} style={{ padding: "9px 20px", borderRadius: 10, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, fontWeight: 500, color: TS, cursor: "pointer" }}>
             {ar ? "إلغاء" : "Cancel"}
           </button>
@@ -318,6 +329,16 @@ function EditProfileModal({
               : (ar ? "حفظ التغييرات" : "Save Changes")}
           </button>
         </div>
+
+        {/* Collapse the two-column grid on narrow viewports so mobile
+            users don't see a cramped side-by-side. */}
+        <style>{`
+          @media (max-width: 640px) {
+            .edit-profile-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}</style>
       </div>
     </div>
   );
