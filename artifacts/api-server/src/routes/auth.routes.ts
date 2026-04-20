@@ -306,6 +306,15 @@ router.post("/api/auth/google/one-tap", async (req, res) => {
     if (payload.iss !== "https://accounts.google.com" && payload.iss !== "accounts.google.com") {
       return res.status(401).json({ message: "Invalid token issuer." });
     }
+    // Block account-takeover via unverified Google email: if we ever trust
+    // an unverified address here, an attacker with a Google account that
+    // *claims* the victim's email (possible via Workspace admins or a
+    // compromised Google project) would be auto-linked to that victim's
+    // Plotzy account. Require email_verified to be explicitly true.
+    if (payload.email && payload.email_verified !== true) {
+      logger.warn({ sub: payload.sub }, "One Tap rejected — email not verified");
+      return res.status(401).json({ message: "Email not verified by Google." });
+    }
 
     const googleId = payload.sub;
     const email = payload.email || null;
@@ -577,18 +586,27 @@ router.post("/api/auth/reset-password", async (req, res) => {
       password: z.string().min(8),
     }).parse(req.body);
 
-    // Find valid token
-    const [resetToken] = await db.select().from(passwordResetTokens)
-      .where(and(eq(passwordResetTokens.token, token), sql`used_at IS NULL AND expires_at > NOW()`));
+    // Atomic compare-and-swap: UPDATE...RETURNING succeeds for exactly one
+    // caller — the first one to flip used_at from NULL. A second concurrent
+    // caller with the same token gets zero rows and is rejected. This is
+    // what makes "single use token" actually single-use under concurrency;
+    // the old SELECT-then-UPDATE pattern was racey while bcrypt.hash ran.
+    const [consumed] = await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(and(
+        eq(passwordResetTokens.token, token),
+        sql`used_at IS NULL`,
+        sql`expires_at > NOW()`,
+      ))
+      .returning({ userId: passwordResetTokens.userId });
 
-    if (!resetToken) return res.status(400).json({ message: "Invalid or expired reset link. Please request a new one." });
+    if (!consumed) {
+      return res.status(400).json({ message: "Invalid or expired reset link. Please request a new one." });
+    }
 
-    // Hash new password
     const passwordHash = await bcrypt.hash(password, 12);
-    await storage.updateUser(resetToken.userId, { passwordHash } as any);
-
-    // Mark token as used
-    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, resetToken.id));
+    await storage.updateUser(consumed.userId, { passwordHash } as any);
 
     res.json({ success: true });
   } catch (err: any) {
