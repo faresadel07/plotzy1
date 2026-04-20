@@ -2059,9 +2059,31 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
   // matches what the author currently sees — x/y are in pixels relative to
   // that width, so any mismatch would shift every image horizontally.
   const CANVAS_WIDTH = Math.max(320, Math.min(1040, Math.round(editorCanvasWidth || 620)));
-  const validFloating = floatingImages.filter(
-    fi => fi && typeof fi.src === "string" && fi.src.length > 0
-  );
+
+  const escape = (s: string) =>
+    s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+  // SECURITY: articleContent is stored HTML; an attacker with a prior write
+  // path (TipTap bypass, stolen session, etc.) could plant <script> or event
+  // handlers. document.write() into a new-window popup executes inline
+  // scripts with full same-origin privileges — so sanitize before writing.
+  const safeHtml = sanitizeHtml(html);
+
+  // Only allow http(s) and data:image/ URLs for floating image src — blocks
+  // javascript: URIs (harmless on <img> in modern browsers but still) and
+  // avoids attribute-breakout via quotes, which the naive template literal
+  // below did not escape at all.
+  const safeImgSrc = (src: string): string | null => {
+    const trimmed = src.trim();
+    if (/^https?:\/\//i.test(trimmed) || /^data:image\//i.test(trimmed)) {
+      return escape(trimmed);
+    }
+    return null;
+  };
+  const validFloating = floatingImages
+    .filter(fi => fi && typeof fi.src === "string" && fi.src.length > 0)
+    .map(fi => ({ ...fi, safeSrc: safeImgSrc(fi.src) }))
+    .filter((fi): fi is FloatingImg & { safeSrc: string } => fi.safeSrc !== null);
   const maxBottom = validFloating.reduce((acc, fi) => {
     const bottom = (fi.y ?? 0) + (fi.height ?? 0);
     return bottom > acc ? bottom : acc;
@@ -2072,11 +2094,8 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
     const y = Math.max(0, Math.round(fi.y ?? 0));
     const w = fi.width && fi.width > 0 ? Math.round(fi.width) : 200;
     const h = fi.height && fi.height > 0 ? ` height:${Math.round(fi.height)}px;` : "";
-    return `<img class="floating" src="${fi.src}" alt="" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;${h}" />`;
+    return `<img class="floating" src="${fi.safeSrc}" alt="" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;${h}" />`;
   }).join("\n");
-
-  const escape = (s: string) =>
-    s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
   const title = article.title || "Untitled";
   const author = article.authorName || article.authorDisplayName || "";
@@ -2258,9 +2277,9 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
         ${date ? `${author ? " · " : ""}${escape(date)}` : ""}
       </p>
     </header>
-    ${featured ? `<div class="featured"><img src="${escape(featured)}" alt="" /></div>` : ""}
+    ${featured && safeImgSrc(featured) ? `<div class="featured"><img src="${safeImgSrc(featured)}" alt="" /></div>` : ""}
     <div class="canvas"${canvasMinHeight > 0 ? ` style="min-height:${canvasMinHeight}px"` : ""}>
-      <div class="article-body">${html}</div>
+      <div class="article-body">${safeHtml}</div>
       ${floatingHtml}
     </div>
     <footer class="src">
