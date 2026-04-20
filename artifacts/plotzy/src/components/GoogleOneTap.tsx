@@ -144,8 +144,8 @@ export default function GoogleOneTap() {
           } catch {}
         });
         promptedRef.current = true;
-      } catch (err) {
-        log("init threw", err);
+      } catch {
+        // Silent-fail — One Tap is an enhancement, not a hard dependency.
       }
     })();
 
