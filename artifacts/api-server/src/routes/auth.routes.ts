@@ -187,7 +187,10 @@ router.post("/api/auth/login", async (req, res) => {
       });
     }
 
-    const clientIp = req.ip || req.headers["x-forwarded-for"]?.toString();
+    // SECURITY: only read req.ip (resolved via app's `trust proxy` setting).
+    // Reading X-Forwarded-For directly lets anyone spoof their IP and fill
+    // the login_attempts table with someone else's fingerprint.
+    const clientIp = req.ip;
     const user = await storage.getUserByEmail(email);
     if (!user || !user.passwordHash) {
       await recordLoginAttempt(email, clientIp, false);

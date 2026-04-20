@@ -46,10 +46,9 @@ function shouldSkip(pathname: string): boolean {
 }
 
 function getClientIp(req: Request): string {
-  // express `trust proxy` must be enabled for req.ip to reflect X-Forwarded-For.
-  const xf = req.headers["x-forwarded-for"];
-  if (typeof xf === "string" && xf.length > 0) return xf.split(",")[0].trim();
-  if (Array.isArray(xf) && xf[0]) return xf[0].split(",")[0].trim();
+  // SECURITY: trust only req.ip (derived via Express's `trust proxy`
+  // setting). Reading the X-Forwarded-For header directly lets anyone spoof
+  // their IP in our analytics simply by sending the header on a request.
   return req.ip || req.socket?.remoteAddress || "0.0.0.0";
 }
 

@@ -70,6 +70,23 @@ async function initStripe() {
 const app = express();
 export const httpServer = createServer(app);
 
+// SECURITY: we sit behind a reverse proxy (Fly/Render/Cloudflare/etc.) in
+// prod, so req.ip and X-Forwarded-For parsing must opt in explicitly —
+// otherwise either (a) req.ip is always the proxy's IP (all users share one
+// rate-limit bucket; abuse logs are useless), or (b) attackers spoof
+// X-Forwarded-For because every request from untrusted sources is trusted.
+// `1` trusts exactly one hop (the first proxy in front of us). Tune via
+// env if the topology has multiple hops.
+const trustProxyEnv = process.env.TRUST_PROXY;
+if (trustProxyEnv) {
+  const n = Number(trustProxyEnv);
+  app.set("trust proxy", Number.isFinite(n) ? n : trustProxyEnv);
+} else if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+} else {
+  app.set("trust proxy", false);
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
