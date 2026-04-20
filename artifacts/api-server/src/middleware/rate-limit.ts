@@ -65,6 +65,16 @@ export async function tierAiLimiter(req: Request, res: Response, next: NextFunct
   const dbUser = await storage.getUserById(req.user.id);
   if (!dbUser) return res.status(401).json({ message: "User not found" });
 
+  // Admins bypass tier AI limits entirely — needed so the site owner can
+  // exercise every AI feature end-to-end without a paid plan.
+  const isAdmin = (dbUser as any).role === "admin" ||
+    (!!process.env.ADMIN_EMAIL && (dbUser as any).email === process.env.ADMIN_EMAIL);
+  if (isAdmin) {
+    await incrementAiUsage(req.user.id); // still track for analytics
+    (req as any).aiUsage = { tier: "admin", remaining: 9999, limit: 9999, used: 0 };
+    return next();
+  }
+
   const tier = getUserTier(dbUser as any);
   const { allowed, remaining, limit, used } = await checkAiLimit(req.user.id, tier);
 

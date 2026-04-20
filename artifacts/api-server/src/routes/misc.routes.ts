@@ -1183,12 +1183,21 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
 
 import { getUserTier, getTierLimits, checkMarketplaceLimit, recordMarketplaceUsage, getMarketplaceHistory } from "../lib/tier-limits";
 
-// GET /api/marketplace/usage — current user's marketplace usage + limits
+// GET /api/marketplace/usage — current user's marketplace usage + limits.
+// Admins bypass all tier enforcement so they can test the marketplace
+// end-to-end without a paid subscription.
 router.get("/api/marketplace/usage", async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const user = await storage.getUserById(req.user.id);
     if (!user) return res.status(401).json({ message: "User not found" });
+
+    const isAdmin = (user as any).role === "admin" ||
+      (!!process.env.ADMIN_EMAIL && (user as any).email === process.env.ADMIN_EMAIL);
+    if (isAdmin) {
+      return res.json({ tier: "admin", canUse: true, allowed: true, remaining: 9999, limit: 9999, used: 0 });
+    }
+
     const tier = getUserTier(user as any);
     const limits = getTierLimits(tier);
     const usage = await checkMarketplaceLimit(req.user.id, tier);
@@ -1215,9 +1224,15 @@ router.post("/api/marketplace/record", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const user = await storage.getUserById(req.user.id);
     if (!user) return res.status(401).json({ message: "User not found" });
-    const tier = getUserTier(user as any);
-    const { allowed } = await checkMarketplaceLimit(req.user.id, tier);
-    if (!allowed) return res.status(429).json({ message: "Monthly marketplace limit reached. Upgrade your plan for more analyses.", code: "MARKETPLACE_LIMIT" });
+
+    const isAdmin = (user as any).role === "admin" ||
+      (!!process.env.ADMIN_EMAIL && (user as any).email === process.env.ADMIN_EMAIL);
+    if (!isAdmin) {
+      const tier = getUserTier(user as any);
+      const { allowed } = await checkMarketplaceLimit(req.user.id, tier);
+      if (!allowed) return res.status(429).json({ message: "Monthly marketplace limit reached. Upgrade your plan for more analyses.", code: "MARKETPLACE_LIMIT" });
+    }
+
     const { serviceId, bookId } = req.body;
     await recordMarketplaceUsage(req.user.id, serviceId, bookId);
     res.json({ success: true });

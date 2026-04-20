@@ -10,6 +10,7 @@ import {
   Copy, AlertCircle, Lock, BarChart3,
 } from "lucide-react";
 import { useBooks } from "@/hooks/use-books";
+import { useAuth } from "@/contexts/auth-context";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -403,9 +404,12 @@ function LaunchModal({
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: myBooks } = useBooks();
 
-  // Check tier enforcement
-  const blocked = usage && !usage.canUse;
-  const limitReached = usage && !usage.allowed;
+  // Check tier enforcement — admins bypass every paywall so they can
+  // test the marketplace end-to-end without a subscription.
+  const { user } = useAuth();
+  const isAdmin = !!user?.isAdmin;
+  const blocked = !isAdmin && usage && !usage.canUse;
+  const limitReached = !isAdmin && usage && !usage.allowed;
 
   // Auto-select first book when books load
   useEffect(() => {
