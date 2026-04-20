@@ -151,16 +151,25 @@ export function RichWritingToolbar({
   const dropBorder = isDark || isFocusMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
 
   // ── Current state queries ──
-  const currentFontId = (editor?.getAttributes("textStyle")?.fontFamily || "")
+  // Match by first-family name case-insensitively. Earlier version hashed
+  // spaces into dashes and then ran .includes() against the raw family
+  // string — which never matched multi-word fonts like "Courier New"
+  // (lowercased to "courier new", not "courier-new"), so the toolbar
+  // always claimed the current font was EB Garamond.
+  const activeFamily = (editor?.getAttributes("textStyle")?.fontFamily || "")
     .replace(/['"]/g, "")
     .split(",")[0]
     .trim()
-    .toLowerCase()
-    .replace(/ /g, "-") || "eb-garamond";
+    .toLowerCase();
 
-  const currentFontObj = FONT_OPTIONS.find(f =>
-    f.fontFamily.toLowerCase().includes(currentFontId.toLowerCase())
-  ) || FONT_OPTIONS[0];
+  const currentFontObj = FONT_OPTIONS.find(f => {
+    const first = f.fontFamily
+      .replace(/['"]/g, "")
+      .split(",")[0]
+      .trim()
+      .toLowerCase();
+    return first === activeFamily;
+  }) || FONT_OPTIONS[0];
 
   const rawSize = editor?.getAttributes("textStyle")?.fontSize;
   const currentSize: number = rawSize ? Number(rawSize) : 18;
@@ -253,7 +262,7 @@ export function RichWritingToolbar({
         onMouseLeave={e => { if (isFocusMode) (e.currentTarget as HTMLDivElement).style.opacity = "0.08"; }}
       >
         <div
-          className="h-10 px-2 flex items-center gap-0.5 overflow-x-auto"
+          className="h-10 px-2 flex items-center justify-center gap-0.5 overflow-x-auto"
           style={{ scrollbarWidth: "none", color: fg }}
           dir="ltr"
         >
@@ -474,7 +483,7 @@ export function RichWritingToolbar({
               onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
               onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("highlight") ? activeBg : "transparent")}>
               <Highlighter className="w-3 h-3" style={{ color: fg }} />
-              <div className="w-4 h-1 rounded-sm" style={{ background: "#fef08a" }} />
+              <div className="w-4 h-1 rounded-sm" style={{ background: editor?.getAttributes("highlight")?.color || "#fef08a" }} />
             </button>
             <input id="rich-highlight-color" type="color"
               defaultValue="#fef08a"
@@ -540,15 +549,31 @@ export function RichWritingToolbar({
             <Quote className="w-3.5 h-3.5" />
           </button>
 
-          {/* ── Indent ── */}
-          <button onClick={() => editor?.chain().focus().indent?.().run?.()} style={btn()} title="Increase indent"
+          {/* ── Indent / Outdent (nest / un-nest a list item) ──
+              No standalone indent extension is loaded, so these use
+              ProseMirror's built-in list-item commands (from StarterKit).
+              They apply only when the cursor is inside a bulleted /
+              numbered list — elsewhere clicking is a no-op, which is
+              less surprising than the previous version where the
+              optional-chain silently swallowed every click. */}
+          <button
+            onClick={() => editor?.chain().focus().sinkListItem("listItem").run()}
+            style={btn()}
+            disabled={!editor?.can().sinkListItem("listItem")}
+            title="Indent list item (Tab)"
             onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
             <Indent className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => (editor?.chain().focus() as any).outdent?.().run?.()} style={btn()} title="Decrease indent"
+          <button
+            onClick={() => editor?.chain().focus().liftListItem("listItem").run()}
+            style={btn()}
+            disabled={!editor?.can().liftListItem("listItem")}
+            title="Outdent list item (Shift+Tab)"
             onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
             <Outdent className="w-3.5 h-3.5" />
           </button>
 
