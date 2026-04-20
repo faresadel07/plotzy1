@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { books, chapters, loreEntries, storyBeats, researchItems, arcRecipients, bookCollaborators } from "../../../../lib/db/src/schema";
 import { eq, and } from "drizzle-orm";
+import { isAdminUser } from "../lib/admin";
 
 // ---------------------------------------------------------------------------
 // 1) requireAuth — reject unauthenticated requests
@@ -15,20 +16,14 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
 // ---------------------------------------------------------------------------
 // 2) requireAdmin — reject non-admin users
-//    Checks DB role column first, falls back to ADMIN_EMAIL env var
+//    Delegates to isAdminUser() so every admin check in the app obeys the
+//    same rule (DB role is canonical; ADMIN_EMAIL is a dev-only fallback).
 // ---------------------------------------------------------------------------
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ message: "Authentication required" });
   }
-  const user = req.user as any;
-  // Primary: check DB role
-  if (user.role === "admin") return next();
-  // Fallback: ADMIN_EMAIL env var (dev/initial setup only)
-  if (process.env.NODE_ENV !== "production") {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (adminEmail && user.email === adminEmail) return next();
-  }
+  if (isAdminUser(req.user)) return next();
   return res.status(403).json({ message: "Forbidden" });
 }
 

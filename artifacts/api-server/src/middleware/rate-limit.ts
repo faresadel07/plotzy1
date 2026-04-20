@@ -57,6 +57,7 @@ export const authLimiter = rateLimit({
 import type { Request, Response, NextFunction } from "express";
 import { getUserTier, checkAiLimit, incrementAiUsage } from "../lib/tier-limits";
 import { storage } from "../storage";
+import { isAdminUser } from "../lib/admin";
 
 export async function tierAiLimiter(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated() || !req.user) {
@@ -67,9 +68,7 @@ export async function tierAiLimiter(req: Request, res: Response, next: NextFunct
 
   // Admins bypass tier AI limits entirely — needed so the site owner can
   // exercise every AI feature end-to-end without a paid plan.
-  const isAdmin = (dbUser as any).role === "admin" ||
-    (!!process.env.ADMIN_EMAIL && (dbUser as any).email === process.env.ADMIN_EMAIL);
-  if (isAdmin) {
+  if (isAdminUser(dbUser)) {
     await incrementAiUsage(req.user.id); // still track for analytics
     (req as any).aiUsage = { tier: "admin", remaining: 9999, limit: 9999, used: 0 };
     return next();

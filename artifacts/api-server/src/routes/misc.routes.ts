@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { isAdminUser } from "../lib/admin";
 import crypto from "crypto";
 
 const router = Router();
@@ -304,8 +305,7 @@ router.get("/api/support/tickets/:id/thread", async (req, res) => {
     const [ticket] = await db.select().from(supportMessages).where(eq(supportMessages.id, ticketId));
     if (!ticket) return res.status(404).json({ message: "Ticket not found" });
 
-    const isAdmin = req.isAuthenticated() && req.user && ((req.user as any).role === "admin" ||
-      (process.env.ADMIN_EMAIL && (req.user as any).email === process.env.ADMIN_EMAIL));
+    const isAdmin = req.isAuthenticated() && isAdminUser(req.user);
     const isOwner = req.isAuthenticated() && req.user && ticket.userId === (req.user as any).id;
     if (!isAdmin && !isOwner) return res.status(403).json({ message: "Forbidden" });
 
@@ -1192,9 +1192,7 @@ router.get("/api/marketplace/usage", async (req, res) => {
     const user = await storage.getUserById(req.user.id);
     if (!user) return res.status(401).json({ message: "User not found" });
 
-    const isAdmin = (user as any).role === "admin" ||
-      (!!process.env.ADMIN_EMAIL && (user as any).email === process.env.ADMIN_EMAIL);
-    if (isAdmin) {
+    if (isAdminUser(user)) {
       return res.json({ tier: "admin", canUse: true, allowed: true, remaining: 9999, limit: 9999, used: 0 });
     }
 
@@ -1225,9 +1223,7 @@ router.post("/api/marketplace/record", async (req, res) => {
     const user = await storage.getUserById(req.user.id);
     if (!user) return res.status(401).json({ message: "User not found" });
 
-    const isAdmin = (user as any).role === "admin" ||
-      (!!process.env.ADMIN_EMAIL && (user as any).email === process.env.ADMIN_EMAIL);
-    if (!isAdmin) {
+    if (!isAdminUser(user)) {
       const tier = getUserTier(user as any);
       const { allowed } = await checkMarketplaceLimit(req.user.id, tier);
       if (!allowed) return res.status(429).json({ message: "Monthly marketplace limit reached. Upgrade your plan for more analyses.", code: "MARKETPLACE_LIMIT" });

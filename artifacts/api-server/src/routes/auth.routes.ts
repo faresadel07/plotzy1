@@ -8,6 +8,7 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
+import { isAdminUser } from "../lib/admin";
 import crypto from "crypto";
 import { db } from "../db";
 import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
@@ -106,7 +107,7 @@ router.get("/api/auth/user", async (req, res) => {
       const dbUser = await storage.getUserById(req.user.id);
       if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
       const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
-      const isAdmin = (dbUser as any).role === "admin" || !!(process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL);
+      const isAdmin = isAdminUser(dbUser);
       return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin, suspended: !!suspended });
     }
     return res.status(401).json({ message: "Not authenticated" });
