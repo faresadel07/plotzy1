@@ -33,6 +33,7 @@ import { apiLogger } from "./middleware/api-logger";
 import { pageViewTracker } from "./middleware/page-view-tracker";
 import { csrfOriginCheck } from "./middleware/csrf";
 import { pool } from "./db";
+import { Sentry } from "./lib/sentry";
 
 declare module "http" {
   interface IncomingMessage {
@@ -250,8 +251,25 @@ app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
   logger.error({ err }, "Internal Server Error");
+  // Only ship real 5xx server failures to Sentry — 4xx are client errors
+  // (bad input, missing auth, validation) and would drown signal in noise.
+  if (status >= 500) {
+    Sentry.captureException(err);
+  }
   if (res.headersSent) return next(err);
   return res.status(status).json({ message });
+});
+
+// Final safety net: any unhandled rejection or uncaught exception in the
+// background (outside the request pipeline) — e.g. a fire-and-forget
+// promise — still reaches Sentry instead of being silently swallowed.
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection");
+  Sentry.captureException(reason);
+});
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught exception");
+  Sentry.captureException(err);
 });
 
 export async function setupApp() {

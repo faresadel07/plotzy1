@@ -6,6 +6,12 @@
 import { parseEnv } from "./lib/env";
 const env = parseEnv();
 
+// Sentry must be initialised AFTER env parsing (it reads SENTRY_DSN)
+// but BEFORE importing app.ts, so any error thrown during app setup
+// itself (DB connection, Stripe init, Passport wiring) is captured.
+import { initSentry } from "./lib/sentry";
+initSentry();
+
 import app, { httpServer, setupApp } from "./app";
 import { logger } from "./lib/logger";
 

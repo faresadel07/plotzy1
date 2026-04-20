@@ -92,6 +92,13 @@ const envSchema = z
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
+    // ── Error monitoring (Sentry) ──────────────────────────────────────
+    // DSN is optional — when absent the SDK is a no-op so dev/local runs
+    // never spam a real Sentry project with noise.
+    SENTRY_DSN: z.string().url().optional(),
+    SENTRY_ENVIRONMENT: z.string().optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).optional(),
+
     // ── Replit-specific (ignored elsewhere, just documented) ───────────
     REPL_ID: z.string().optional(),
     REPL_IDENTITY: z.string().optional(),
