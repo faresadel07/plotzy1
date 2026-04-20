@@ -7,7 +7,7 @@ import { Layout } from "@/components/layout";
 import {
   BookOpen, Users, UserPlus, UserCheck, Globe, Twitter, Instagram,
   Edit3, Check, X, Calendar, ArrowLeft, MessageCircle, Heart, Eye,
-  Camera, Loader2, Star,
+  Camera, Loader2, Star, Share2, PlusCircle, ChevronDown,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -67,6 +67,30 @@ function avatarGradient(seed: string): string {
 /* ── Field character limits ────────────────────────────────────────── */
 const MAX_DISPLAY_NAME = 50;
 const MAX_BIO = 200;
+
+/* ── URL safety: only render links for http(s) schemes. A stored value
+   of `javascript:…` or a missing scheme would otherwise become a live
+   click target — cheap way for someone's author website to become an
+   XSS vector or a phishing redirect. Returns null for unsafe values so
+   the caller can decide whether to hide the link or show plain text. */
+function safeExternalUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  try {
+    // URL constructor rejects malformed inputs and resolves relative
+    // forms against the current origin — we explicitly allow only
+    // http/https absolute URLs.
+    const u = new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+/* ── Book sort options ────────────────────────────────────────────── */
+type BookSort = "newest" | "liked" | "viewed";
 
 /* ── Edit Profile Modal ────────────────────────────────────────────── */
 function EditProfileModal({
@@ -299,6 +323,49 @@ function EditProfileModal({
   );
 }
 
+/* ── Profile skeleton — shown while the author data is loading.
+   Shape-matches the real layout so the transition to loaded state
+   doesn't cause a visible jump. ────────────────────────────────── */
+function ProfileSkeleton() {
+  const shimmer: React.CSSProperties = {
+    background: "linear-gradient(90deg, #151515 0%, #202020 50%, #151515 100%)",
+    backgroundSize: "200% 100%",
+    animation: "profileShimmer 1.4s infinite",
+  };
+  return (
+    <div style={{ background: BG, minHeight: "100vh" }}>
+      <div style={{ ...shimmer, width: "100%", height: 140 }} />
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px 36px", marginTop: -40 }}>
+        <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+          <div style={{ ...shimmer, width: 100, height: 100, borderRadius: "50%", border: `4px solid ${BG}`, flexShrink: 0 }} />
+          <div style={{ flex: 1, paddingTop: 48 }}>
+            <div style={{ ...shimmer, width: "40%", height: 22, borderRadius: 6, marginBottom: 10 }} />
+            <div style={{ ...shimmer, width: "80%", height: 12, borderRadius: 4, marginBottom: 6 }} />
+            <div style={{ ...shimmer, width: "60%", height: 12, borderRadius: 4, marginBottom: 18 }} />
+            <div style={{ display: "flex", gap: 24 }}>
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} style={{ ...shimmer, width: 50, height: 28, borderRadius: 6 }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "36px 24px" }}>
+        <div style={{ ...shimmer, width: 160, height: 18, borderRadius: 5, marginBottom: 24 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 20 }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i}>
+              <div style={{ ...shimmer, aspectRatio: "2/3", borderRadius: 12, marginBottom: 10 }} />
+              <div style={{ ...shimmer, width: "85%", height: 12, borderRadius: 4 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <style>{`@keyframes profileShimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`}</style>
+    </div>
+  );
+}
+
 /* ── Stat Pill ─────────────────────────────────────────────────────── */
 function StatPill({ icon, value, label }: { icon: React.ReactNode; value: string | number; label: string }) {
   return (
@@ -325,6 +392,36 @@ export default function AuthorProfile() {
   const [, navigate] = useLocation();
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bookSort, setBookSort] = useState<BookSort>("newest");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const sortBtnRef = useRef<HTMLButtonElement>(null);
+
+  const handleShareProfile = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    // Prefer the native share sheet on mobile (single-tap share to any
+    // app); fall back to clipboard copy on desktop with a toast so the
+    // user knows something happened.
+    if (typeof navigator !== "undefined" && (navigator as any).share) {
+      try {
+        await (navigator as any).share({
+          title: (profile?.displayName || "Plotzy author") + " · Plotzy",
+          url,
+        });
+        return;
+      } catch {
+        // User cancelled share sheet — fall through to clipboard copy.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: ar ? "تم نسخ الرابط" : "Link copied to clipboard" });
+    } catch {
+      toast({
+        title: ar ? "فشل نسخ الرابط" : "Couldn't copy link",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { data: profile, isLoading } = useQuery<AuthorProfileData>({
     queryKey: ["/api/authors", userId, "profile"],
@@ -388,9 +485,7 @@ export default function AuthorProfile() {
   /* ── Loading ── */
   if (isLoading) return (
     <Layout isLanding darkNav>
-      <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader2 size={24} color={TD} style={{ animation: "spin 1s linear infinite" }} />
-      </div>
+      <ProfileSkeleton />
     </Layout>
   );
 
@@ -503,6 +598,14 @@ export default function AuthorProfile() {
                       <Edit3 size={11} /> {ar ? "تعديل الملف" : "Edit Profile"}
                     </button>
                   )}
+                  <button onClick={handleShareProfile}
+                    title={ar ? "مشاركة الملف" : "Share profile"}
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 12px", borderRadius: 20, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 11, fontWeight: 500, color: TS, cursor: "pointer" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
+                  >
+                    <Share2 size={11} /> {ar ? "مشاركة" : "Share"}
+                  </button>
                 </div>
 
                 {/* Bio */}
@@ -516,12 +619,21 @@ export default function AuthorProfile() {
 
                 {/* Social links */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 16 }}>
-                  {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
-                      onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
-                      <Globe size={12} /> {profile.website.replace(/^https?:\/\//, "")}
-                    </a>
-                  )}
+                  {/* Validate the stored website URL before making it clickable
+                      — a pasted `javascript:…` would otherwise become a live
+                      XSS vector, and a missing scheme would produce a relative
+                      link to our own domain. */}
+                  {profile.website && (() => {
+                    const safe = safeExternalUrl(profile.website);
+                    if (!safe) return null;
+                    const display = safe.replace(/^https?:\/\//, "").replace(/\/$/, "");
+                    return (
+                      <a href={safe} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
+                        onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
+                        <Globe size={12} /> {display}
+                      </a>
+                    );
+                  })()}
                   {profile.twitterHandle && (
                     <a href={`https://twitter.com/${profile.twitterHandle.replace("@", "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
                       onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
@@ -598,16 +710,106 @@ export default function AuthorProfile() {
             <BookOpen size={15} color={TS} />
             <span style={{ fontSize: 15, fontWeight: 700, color: T }}>{ar ? "الأعمال المنشورة" : "Published Works"}</span>
             <span style={{ fontSize: 12, color: TD, marginLeft: 4 }}>({profile.books.length})</span>
+
+            {/* Sort dropdown — only renders when there are enough books to
+                make ordering meaningful. Below that threshold the control
+                is just noise. */}
+            {profile.books.length > 1 && (
+              <div style={{ marginLeft: "auto", position: "relative" }}>
+                <button
+                  ref={sortBtnRef}
+                  onClick={() => setSortMenuOpen(v => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "6px 12px", borderRadius: 20, cursor: "pointer",
+                    background: "transparent", border: `1px solid ${B}`,
+                    fontFamily: SF, fontSize: 11, fontWeight: 500, color: TS,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
+                >
+                  {bookSort === "newest" ? (ar ? "الأحدث" : "Newest")
+                    : bookSort === "liked" ? (ar ? "الأكثر إعجاباً" : "Most Liked")
+                    : (ar ? "الأكثر مشاهدة" : "Most Viewed")}
+                  <ChevronDown size={11} />
+                </button>
+                {sortMenuOpen && (
+                  <>
+                    <div onClick={() => setSortMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
+                    <div style={{
+                      position: "absolute", top: "100%", right: 0, marginTop: 6, zIndex: 41,
+                      background: C2, border: `1px solid ${B}`, borderRadius: 10,
+                      minWidth: 180, padding: 4, boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
+                    }}>
+                      {([
+                        ["newest", ar ? "الأحدث" : "Newest"],
+                        ["liked", ar ? "الأكثر إعجاباً" : "Most Liked"],
+                        ["viewed", ar ? "الأكثر مشاهدة" : "Most Viewed"],
+                      ] as const).map(([key, label]) => (
+                        <button key={key}
+                          onClick={() => { setBookSort(key); setSortMenuOpen(false); }}
+                          style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            width: "100%", padding: "8px 12px", borderRadius: 6,
+                            background: bookSort === key ? "rgba(255,255,255,0.06)" : "transparent",
+                            border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12,
+                            color: bookSort === key ? T : TS, textAlign: ar ? "right" : "left",
+                          }}
+                        >
+                          <span>{label}</span>
+                          {bookSort === key && <Check size={12} />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {profile.books.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px 0", color: TD }}>
-              <BookOpen size={32} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
-              <p style={{ fontSize: 14 }}>{ar ? "لا توجد كتب منشورة بعد" : "No published books yet"}</p>
+            // Empty state — different voice for own profile (call to
+            // action) vs visitor (read-only explanation). A first-time
+            // author seeing "No published books yet" with no next step
+            // is a dead end; show them the path forward instead.
+            <div style={{ textAlign: "center", padding: "60px 20px", color: TD, border: `1.5px dashed ${B}`, borderRadius: 16 }}>
+              <BookOpen size={34} style={{ margin: "0 auto 14px", opacity: 0.35 }} />
+              {isOwnProfile ? (
+                <>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: TS, margin: 0, marginBottom: 6 }}>
+                    {ar ? "قصتك الأولى تبدأ من هنا" : "Your first story starts here"}
+                  </p>
+                  <p style={{ fontSize: 12, margin: "0 0 18px", maxWidth: 360, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
+                    {ar
+                      ? "ابدأ كتاباً جديداً وعند النشر سيظهر هنا ليراه القرّاء والمتابعون."
+                      : "Start a new book — once you publish it, it will appear here for readers and followers."}
+                  </p>
+                  <button
+                    onClick={() => navigate("/")}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 7,
+                      padding: "9px 20px", borderRadius: 20, cursor: "pointer",
+                      background: "#fff", color: "#000", border: "none",
+                      fontFamily: SF, fontSize: 13, fontWeight: 600,
+                    }}
+                  >
+                    <PlusCircle size={14} /> {ar ? "ابدأ كتاباً" : "Start a book"}
+                  </button>
+                </>
+              ) : (
+                <p style={{ fontSize: 14, margin: 0 }}>
+                  {ar ? "لم ينشر هذا الكاتب أي أعمال بعد" : "This author hasn't published anything yet"}
+                </p>
+              )}
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 20 }}>
-              {profile.books.map(book => (
+              {[...profile.books].sort((a, b) => {
+                if (bookSort === "liked") return (b.likesCount ?? 0) - (a.likesCount ?? 0);
+                if (bookSort === "viewed") return (b.viewCount ?? 0) - (a.viewCount ?? 0);
+                // Default newest-first by createdAt.
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+              }).map(book => (
                 <Link key={book.id} href={`/read/${book.id}`}>
                   <div style={{ cursor: "pointer", transition: "transform 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; }}
