@@ -961,14 +961,14 @@ export async function registerRoutes(
         }).join("");
 
         // Build cover page — use image if available, else styled text
+        // When the user uploaded a cover image, show it as the entire
+        // first page with nothing on top — their cover already includes
+        // the title/author typography they designed. Overlaying another
+        // title on top just duplicates it and usually clashes visually.
         const coverPageContent = book.coverImage
           ? `
             <div class="cover-image-wrap">
               <img src="${book.coverImage}" alt="Book Cover" class="cover-img" />
-            </div>
-            <div class="cover-text">
-              <h1>${escapeHtml(book.title)}</h1>
-              ${book.authorName ? `<div class="author">by ${escapeHtml(book.authorName)}</div>` : ""}
             </div>`
           : `
             <h1>${escapeHtml(book.title)}</h1>
@@ -1000,16 +1000,18 @@ export async function registerRoutes(
       min-height: 100vh;
       page-break-after: always;
       text-align: center;
-      background: ${book.coverImage ? "#000" : "#fff"};
+      background: #fff;
       padding: 0;
       position: relative;
       overflow: hidden;
     }
+    /* When the user uploaded a cover image, it IS the cover — show it at
+       full fidelity (contain, not cover; opacity 1, no dark overlay, no
+       title stamped on top). Users who design a cover already include
+       the title in the artwork. */
     .cover-image-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-    .cover-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
-    .cover-text { position: relative; z-index: 2; padding: 40px; background: rgba(0,0,0,0.45); border-radius: 8px; }
-    .cover-text h1 { font-size: 2.2em; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); margin-bottom: 12px; }
-    .cover-text .author { font-size: 1.1em; color: rgba(255,255,255,0.85); font-style: italic; }
+    .cover-img { width: 100%; height: 100%; object-fit: contain; opacity: 1; }
+    /* Typography-only cover (no uploaded image) — unchanged. */
     .cover-page h1 { font-family: ${theme.headingFont}; font-size: 2em; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
     .cover-page .author { font-size: 1.1em; color: #666; font-style: italic; margin-bottom: 32px; }
     .cover-page .summary { color: #444; max-width: 500px; line-height: 1.7; margin: 0 auto; padding: 0 40px; }
