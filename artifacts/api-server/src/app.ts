@@ -32,6 +32,7 @@ import { generalLimiter, authLimiter, publicReadLimiter, writeLimiter } from "./
 import { apiLogger } from "./middleware/api-logger";
 import { pageViewTracker } from "./middleware/page-view-tracker";
 import { csrfOriginCheck } from "./middleware/csrf";
+import { pool } from "./db";
 
 declare module "http" {
   interface IncomingMessage {
@@ -127,6 +128,35 @@ app.use((req, res, next) => {
     return;
   }
   next();
+});
+
+// ── Health checks ──────────────────────────────────────────────────────
+// Mounted BEFORE body parsers / session / CSRF / rate limit so:
+//   - hosting probes aren't blocked by auth or origin checks,
+//   - frequent polls don't eat rate-limit budget,
+//   - a broken session store doesn't take the health check down with it.
+//
+// /livez  = "the process is alive" — flat 200. Used for restart decisions.
+// /healthz = "I can actually serve traffic" — pings the DB with a 3s
+//           timeout. Returns 503 if DB is unreachable so the load
+//           balancer pulls this pod out of rotation until it recovers.
+app.get("/livez", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+app.get("/healthz", async (_req, res) => {
+  // Race the DB ping against a short timer so a hung database can't hang
+  // the health check itself (hung health checks look like a healthy pod
+  // to most probers, which is the worst of all worlds).
+  const ping = pool.query("SELECT 1").then(() => true);
+  const timeout = new Promise<false>(resolve => setTimeout(() => resolve(false), 3000));
+  try {
+    const ok = await Promise.race([ping, timeout]);
+    if (ok) return res.status(200).json({ status: "ok", db: "ok" });
+    return res.status(503).json({ status: "degraded", db: "timeout" });
+  } catch (err: any) {
+    return res.status(503).json({ status: "degraded", db: "error", message: err?.message });
+  }
 });
 
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
