@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
@@ -53,8 +53,33 @@ interface AuthorProfileData {
   isFollowing: boolean;
 }
 
+/* ── Deterministic gradient per display name — gives every author a
+   distinct but consistent avatar placeholder so empty circles don't all
+   look identical. ─────────────────────────────────────────────────── */
+function avatarGradient(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  const hue1 = Math.abs(h) % 360;
+  const hue2 = (hue1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${hue1}, 55%, 40%) 0%, hsl(${hue2}, 55%, 25%) 100%)`;
+}
+
+/* ── Field character limits ────────────────────────────────────────── */
+const MAX_DISPLAY_NAME = 50;
+const MAX_BIO = 200;
+
 /* ── Edit Profile Modal ────────────────────────────────────────────── */
-function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfileData; onClose: () => void; userId: number }) {
+function EditProfileModal({
+  profile,
+  onClose,
+  userId,
+  ar,
+}: {
+  profile: AuthorProfileData;
+  onClose: () => void;
+  userId: number;
+  ar: boolean;
+}) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -147,9 +172,9 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
       style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", padding: 24 }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: C2, border: `1px solid ${B}`, borderRadius: 20, width: "100%", maxWidth: 500, padding: 28 }}>
+      <div style={{ background: C2, border: `1px solid ${B}`, borderRadius: 20, width: "100%", maxWidth: 500, padding: 28 }} dir={ar ? "rtl" : "ltr"}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <span style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: T }}>Edit Profile</span>
+          <span style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: T }}>{ar ? "تعديل الملف" : "Edit Profile"}</span>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: TD }}><X size={18} /></button>
         </div>
 
@@ -177,15 +202,21 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
             </button>
           </div>
           <div>
-            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: T, marginBottom: 2 }}>Profile Photo</div>
-            <div style={{ fontFamily: SF, fontSize: 11, color: TD }}>Click the avatar to upload any image</div>
+            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: T, marginBottom: 2 }}>
+              {ar ? "الصورة الشخصية" : "Profile Photo"}
+            </div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: TD }}>
+              {ar ? "اضغط على الصورة لرفع أي صورة" : "Click the avatar to upload any image"}
+            </div>
           </div>
           <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
         </div>
 
         {/* Banner upload */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Cover Photo</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+            {ar ? "صورة الغلاف" : "Cover Photo"}
+          </div>
           <div
             onClick={() => bannerInputRef.current?.click()}
             style={{
@@ -194,9 +225,11 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
               border: `1px solid ${B}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            <div style={{ background: "rgba(0,0,0,0.4)", borderRadius: 8, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 12, fontWeight: 500 }}>
+            <div style={{ background: "rgba(0,0,0,0.65)", borderRadius: 8, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, color: "#fff", fontSize: 12, fontWeight: 600 }}>
               {bannerUploading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Camera size={14} />}
-              {profile.bannerUrl ? "Change Cover" : "Add Cover Photo"}
+              {profile.bannerUrl
+                ? (ar ? "تغيير الغلاف" : "Change Cover")
+                : (ar ? "إضافة صورة غلاف" : "Add Cover Photo")}
             </div>
           </div>
           <input ref={bannerInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerUpload(f); e.target.value = ""; }} />
@@ -204,19 +237,38 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
-            <label style={labelStyle}>Display Name</label>
-            <input value={form.displayName} onChange={e => setForm(p => ({ ...p, displayName: e.target.value }))} style={inputStyle} placeholder="Your name" />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <label style={labelStyle}>{ar ? "اسم العرض" : "Display Name"}</label>
+              <span style={{ fontSize: 10, color: form.displayName.length > MAX_DISPLAY_NAME * 0.9 ? "#f59e0b" : TD }}>
+                {form.displayName.length}/{MAX_DISPLAY_NAME}
+              </span>
+            </div>
+            <input
+              value={form.displayName}
+              onChange={e => setForm(p => ({ ...p, displayName: e.target.value.slice(0, MAX_DISPLAY_NAME) }))}
+              maxLength={MAX_DISPLAY_NAME}
+              style={inputStyle}
+              placeholder={ar ? "اسمك" : "Your name"}
+            />
           </div>
           <div>
-            <label style={labelStyle}>Bio</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <label style={labelStyle}>{ar ? "نبذة" : "Bio"}</label>
+              <span style={{ fontSize: 10, color: form.bio.length > MAX_BIO * 0.9 ? "#f59e0b" : TD }}>
+                {form.bio.length}/{MAX_BIO}
+              </span>
+            </div>
             <textarea
-              value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
-              rows={3} placeholder="Tell readers about yourself..."
+              value={form.bio}
+              onChange={e => setForm(p => ({ ...p, bio: e.target.value.slice(0, MAX_BIO) }))}
+              maxLength={MAX_BIO}
+              rows={3}
+              placeholder={ar ? "عرّف القراء على نفسك..." : "Tell readers about yourself..."}
               style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
             />
           </div>
           <div>
-            <label style={labelStyle}>Website</label>
+            <label style={labelStyle}>{ar ? "الموقع الإلكتروني" : "Website"}</label>
             <input value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} style={inputStyle} placeholder="https://yoursite.com" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -232,10 +284,14 @@ function EditProfileModal({ profile, onClose, userId }: { profile: AuthorProfile
         </div>
 
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 24 }}>
-          <button onClick={onClose} style={{ padding: "9px 20px", borderRadius: 10, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, fontWeight: 500, color: TS, cursor: "pointer" }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: "9px 20px", borderRadius: 10, background: "transparent", border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, fontWeight: 500, color: TS, cursor: "pointer" }}>
+            {ar ? "إلغاء" : "Cancel"}
+          </button>
           <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
             style={{ padding: "9px 24px", borderRadius: 10, background: "#fff", border: "none", fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#000", cursor: "pointer", opacity: saveMutation.isPending ? 0.5 : 1 }}>
-            {saveMutation.isPending ? "Saving..." : "Save Changes"}
+            {saveMutation.isPending
+              ? (ar ? "جارٍ الحفظ..." : "Saving...")
+              : (ar ? "حفظ التغييرات" : "Save Changes")}
           </button>
         </div>
       </div>
@@ -313,6 +369,22 @@ export default function AuthorProfile() {
 
   const totalLikes = profile?.totalLikes ?? 0;
 
+  // Keep the browser tab + any meta-reading integrations in sync with the
+  // profile currently being viewed. Restores the app default on unmount.
+  useEffect(() => {
+    const name = profile?.displayName?.trim();
+    if (name) document.title = `${name} · Plotzy`;
+    return () => {
+      document.title = "Plotzy — Write Your Story";
+    };
+  }, [profile?.displayName]);
+
+  // Memoise the avatar gradient so it doesn't recompute every render.
+  const avatarBg = useMemo(
+    () => avatarGradient(profile?.displayName || String(userId)),
+    [profile?.displayName, userId],
+  );
+
   /* ── Loading ── */
   if (isLoading) return (
     <Layout isLanding darkNav>
@@ -325,9 +397,9 @@ export default function AuthorProfile() {
   if (!profile || (profile as any).message) return (
     <Layout isLanding darkNav>
       <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <p style={{ fontFamily: SF, color: TS, fontSize: 16 }}>Author not found</p>
+        <p style={{ fontFamily: SF, color: TS, fontSize: 16 }}>{ar ? "الكاتب غير موجود" : "Author not found"}</p>
         <button onClick={() => navigate("/")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 10, background: C3, border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, color: TS, cursor: "pointer" }}>
-          <ArrowLeft size={14} /> Go Back
+          <ArrowLeft size={14} /> {ar ? "رجوع" : "Go Back"}
         </button>
       </div>
     </Layout>
@@ -337,7 +409,7 @@ export default function AuthorProfile() {
     <Layout isLanding darkNav>
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 
-        {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} />}
+        {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} ar={ar} />}
 
         {/* ── Banner ── */}
         <div className="author-banner" style={{ position: "relative", width: "100%", height: profile.bannerUrl ? 220 : 140, overflow: "hidden" }}>
@@ -349,14 +421,17 @@ export default function AuthorProfile() {
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)" }} />
           {/* Back button on banner */}
           <button onClick={() => navigate("/")}
-            style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.7)", padding: "6px 14px", borderRadius: 8 }}>
-            <ArrowLeft size={13} /> Home
+            style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "6px 14px", borderRadius: 8, fontWeight: 500 }}>
+            <ArrowLeft size={13} /> {ar ? "الرئيسية" : "Home"}
           </button>
-          {/* Banner upload button for own profile */}
+          {/* Banner upload button for own profile — darker backdrop + white
+              text so it stays readable even over busy cover photos. */}
           {isOwnProfile && (
             <button onClick={() => setEditOpen(true)}
-              style={{ position: "absolute", bottom: 16, right: 16, display: "flex", alignItems: "center", gap: 5, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.7)", padding: "6px 12px", borderRadius: 8 }}>
-              <Camera size={12} /> {profile.bannerUrl ? "Change Cover" : "Add Cover"}
+              style={{ position: "absolute", bottom: 16, right: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}>
+              <Camera size={13} /> {profile.bannerUrl
+                ? (ar ? "تغيير الغلاف" : "Change Cover")
+                : (ar ? "إضافة غلاف" : "Add Cover")}
             </button>
           )}
         </div>
@@ -368,21 +443,29 @@ export default function AuthorProfile() {
             {/* Profile row */}
             <div className="author-profile-row" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
 
-              {/* Avatar — overlapping banner */}
+              {/* Avatar — overlapping banner. Placeholder uses a
+                  deterministic gradient derived from the display name
+                  so every author's circle looks distinct and the
+                  initial is readable (white, bold) instead of a
+                  low-contrast arc on near-black. */}
               <div
                 className="author-avatar"
                 style={{
                   position: "relative", width: 100, height: 100, borderRadius: "50%", flexShrink: 0,
-                  background: C3, border: `4px solid ${BG}`,
+                  background: profile.avatarUrl ? C3 : avatarBg,
+                  border: `4px solid ${BG}`,
                   overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: isOwnProfile ? "pointer" : "default",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
                 }}
                 onClick={() => { if (isOwnProfile) avatarFileRef.current?.click(); }}
               >
                 {profile.avatarUrl ? (
                   <img src={profile.avatarUrl} alt={profile.displayName || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <span style={{ fontSize: 36, fontWeight: 700, color: TS }}>{(profile.displayName || "?")[0].toUpperCase()}</span>
+                  <span style={{ fontSize: 42, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", textShadow: "0 2px 6px rgba(0,0,0,0.3)" }}>
+                    {(profile.displayName || "?").trim().charAt(0).toUpperCase() || "?"}
+                  </span>
                 )}
                 {/* Camera overlay for own profile */}
                 {isOwnProfile && (
@@ -396,7 +479,7 @@ export default function AuthorProfile() {
                   >
                     {avatarUploading
                       ? <Loader2 size={20} color="#fff" style={{ animation: "spin 1s linear infinite" }} />
-                      : <><Camera size={20} color="#fff" /><span style={{ fontFamily: SF, fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>UPLOAD</span></>
+                      : <><Camera size={20} color="#fff" /><span style={{ fontFamily: SF, fontSize: 9, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{ar ? "رفع" : "UPLOAD"}</span></>
                     }
                   </div>
                 )}
@@ -409,7 +492,7 @@ export default function AuthorProfile() {
                 {/* Name row */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
                   <h1 style={{ fontSize: 24, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em" }}>
-                    {profile.displayName || "Author"}
+                    {profile.displayName || (ar ? "كاتب" : "Author")}
                   </h1>
                   {isOwnProfile && (
                     <button onClick={() => setEditOpen(true)}
@@ -417,7 +500,7 @@ export default function AuthorProfile() {
                       onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
                     >
-                      <Edit3 size={11} /> Edit Profile
+                      <Edit3 size={11} /> {ar ? "تعديل الملف" : "Edit Profile"}
                     </button>
                   )}
                 </div>
@@ -427,7 +510,7 @@ export default function AuthorProfile() {
                   <p style={{ fontSize: 14, color: TS, lineHeight: 1.7, margin: "0 0 12px", maxWidth: 520 }}>{profile.bio}</p>
                 ) : isOwnProfile ? (
                   <p onClick={() => setEditOpen(true)} style={{ fontSize: 13, color: TD, lineHeight: 1.7, margin: "0 0 12px", cursor: "pointer", fontStyle: "italic" }}>
-                    Add a bio to tell readers about yourself...
+                    {ar ? "أضف نبذة تعرّف القراء على نفسك..." : "Add a bio to tell readers about yourself..."}
                   </p>
                 ) : null}
 
@@ -453,17 +536,17 @@ export default function AuthorProfile() {
                   )}
                   {profile.createdAt && (
                     <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TD }}>
-                      <Calendar size={12} /> Joined {new Date(profile.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
+                      <Calendar size={12} /> {ar ? "انضم" : "Joined"} {new Date(profile.createdAt).toLocaleDateString(ar ? "ar-EG" : "en-US", { year: "numeric", month: "short" })}
                     </span>
                   )}
                 </div>
 
                 {/* Stats row */}
                 <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-                  <StatPill icon={<Users size={14} color={TS} />} value={profile.followersCount} label="Followers" />
-                  <StatPill icon={<UserPlus size={14} color={TS} />} value={profile.followingCount} label="Following" />
-                  <StatPill icon={<BookOpen size={14} color={TS} />} value={profile.books.length} label="Books" />
-                  <StatPill icon={<Heart size={14} color={TS} />} value={totalLikes} label="Likes" />
+                  <StatPill icon={<Users size={14} color={TS} />} value={profile.followersCount} label={ar ? "متابعون" : "Followers"} />
+                  <StatPill icon={<UserPlus size={14} color={TS} />} value={profile.followingCount} label={ar ? "يتابع" : "Following"} />
+                  <StatPill icon={<BookOpen size={14} color={TS} />} value={profile.books.length} label={ar ? "كتب" : "Books"} />
+                  <StatPill icon={<Heart size={14} color={TS} />} value={totalLikes} label={ar ? "إعجابات" : "Likes"} />
 
                   {/* Action buttons */}
                   {!isOwnProfile && (
@@ -481,7 +564,9 @@ export default function AuthorProfile() {
                           transition: "all 0.15s",
                         }}
                       >
-                        {profile.isFollowing ? <><UserCheck size={13} /> Following</> : <><UserPlus size={13} /> Follow</>}
+                        {profile.isFollowing
+                          ? <><UserCheck size={13} /> {ar ? "تتابعه" : "Following"}</>
+                          : <><UserPlus size={13} /> {ar ? "متابعة" : "Follow"}</>}
                       </button>
                       {user && (
                         <button
@@ -496,7 +581,7 @@ export default function AuthorProfile() {
                           onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = T; }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.color = TS; }}
                         >
-                          <MessageCircle size={13} /> Message
+                          <MessageCircle size={13} /> {ar ? "رسالة" : "Message"}
                         </button>
                       )}
                     </div>
@@ -511,14 +596,14 @@ export default function AuthorProfile() {
         <div style={{ maxWidth: 800, margin: "0 auto", padding: "36px 24px 80px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
             <BookOpen size={15} color={TS} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: T }}>Published Works</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: T }}>{ar ? "الأعمال المنشورة" : "Published Works"}</span>
             <span style={{ fontSize: 12, color: TD, marginLeft: 4 }}>({profile.books.length})</span>
           </div>
 
           {profile.books.length === 0 ? (
             <div style={{ textAlign: "center", padding: "60px 0", color: TD }}>
               <BookOpen size={32} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
-              <p style={{ fontSize: 14 }}>No published books yet</p>
+              <p style={{ fontSize: 14 }}>{ar ? "لا توجد كتب منشورة بعد" : "No published books yet"}</p>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 20 }}>
