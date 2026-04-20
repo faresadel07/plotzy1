@@ -50,10 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // SECURITY: purge any book IDs the previous session left behind so the
     // next (unauthenticated) visitor cannot request them from the backend.
     clearGuestBookIds();
+    // SECURITY: nuke every cached query, not just a hand-picked list. Any
+    // user-scoped query (/api/users/me/stats, /api/notifications, lore,
+    // chapter snapshots, marketplace usage, admin data, …) is off-limits to
+    // the next visitor on this browser — whitelisting caches is a
+    // guaranteed source of leaks whenever a new query is added.
+    queryClient.removeQueries();
     queryClient.setQueryData(["/api/auth/user"], null);
-    queryClient.removeQueries({ queryKey: ["/api/books"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
   };
 
   return (

@@ -229,6 +229,18 @@ router.post("/api/auth/logout", (req, res) => {
   req.logout((err) => {
     if (err) return res.status(500).json({ message: "Logout failed" });
     req.session.destroy(() => {
+      // Explicitly invalidate the browser cookie too. req.session.destroy
+      // only deletes the server-side row — without clearCookie, connect.sid
+      // sticks around in the browser for the full maxAge (30 days) and is
+      // resurrected as a fresh empty session on the next request, which
+      // breaks invariants downstream (anti-CSRF, guest tracking).
+      // Cookie flags must match the options in app.ts session config or
+      // some browsers ignore the clear.
+      res.clearCookie("connect.sid", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.COOKIE_SAME_SITE === "none" ? "none" : "lax",
+      });
       res.json({ success: true });
     });
   });
