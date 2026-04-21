@@ -5,22 +5,68 @@ import { storage } from "../storage";
 import { logger } from "../lib/logger";
 import { sendNotificationEmail } from "../lib/email";
 
+// Extract the bare handle from any common paste form — bare handle,
+// @-prefixed, or a full profile URL with or without protocol. Keeps
+// what we store canonical (just the handle) so the display code
+// doesn't have to second-guess the format at render time.
+function extractHandle(raw: string, domain: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  // Full URL (twitter.com/x, x.com/y, instagram.com/y, with or without
+  // protocol, with or without www, with or without trailing slash and
+  // query string).
+  const urlRe = new RegExp(
+    `^(?:https?://)?(?:www\\.)?${domain}/+(?:@)?([^/?#\\s]+)`,
+    "i",
+  );
+  const m = trimmed.match(urlRe);
+  const handle = m ? m[1] : trimmed.replace(/^@/, "");
+  // Both platforms restrict handles to [A-Za-z0-9._]+
+  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
+  return handle;
+}
+
 // SECURITY: /api/me/profile accepts avatarUrl and bannerUrl as strings.
 // Without a schema, an authenticated user could post a 10MB (Express body
 // limit) data URI and inflate their row in the users table — or store a
 // javascript:... URL in `website` that any future integration trusting
 // the stored value would execute. These caps match the dedicated
 // /api/auth/avatar endpoint (250KB avatar) but allow a larger banner.
+//
+// Social handles accept up to 200 chars of input (room for full URLs
+// like `https://www.instagram.com/name/?utm_source=...`) but transform
+// to just the canonical handle before storage. Input that cannot be
+// parsed into a valid platform handle returns a clear error rather
+// than silently rejecting the whole profile save.
+const socialHandleSchema = (domain: "instagram.com" | "twitter.com" | "x.com") =>
+  z.string().max(200).transform((raw, ctx) => {
+    const h = extractHandle(raw, domain);
+    if (h === null) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Invalid ${domain.split(".")[0]} handle or URL` });
+      return z.NEVER;
+    }
+    return h;
+  });
+
 const profileUpdateSchema = z.object({
   displayName: z.string().trim().min(1).max(50).optional(),
   bio: z.string().max(200).optional(),
   website: z
     .string()
     .max(500)
-    .refine(v => !v || /^https?:\/\//i.test(v), "website must start with http:// or https://")
+    .transform(raw => {
+      const s = raw.trim();
+      if (!s) return s;
+      // Accept missing scheme — normalise so the stored value is always
+      // a safe http(s) URL. Matches what safeExternalUrl() does on the
+      // client so the round-trip is lossless.
+      if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return s;
+      return `https://${s}`;
+    })
+    .refine(v => !v || /^https?:\/\//i.test(v), "website must be an http or https URL")
     .optional(),
-  twitterHandle: z.string().max(30).optional(),
-  instagramHandle: z.string().max(30).optional(),
+  twitterHandle: z.union([socialHandleSchema("twitter.com"), socialHandleSchema("x.com")]).optional(),
+  instagramHandle: socialHandleSchema("instagram.com").optional(),
   avatarUrl: z
     .string()
     .max(250_000)

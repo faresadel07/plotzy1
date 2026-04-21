@@ -119,19 +119,35 @@ function EditProfileModal({
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => fetch("/api/me/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(form),
-    }).then(r => r.json()),
+    // Surface the actual server error message (Zod validation returns a
+    // human-readable reason) instead of the old "Save failed" dead-end
+    // that left the user guessing why their Instagram URL paste didn't
+    // stick.
+    mutationFn: async () => {
+      const res = await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || `Save failed (${res.status})`);
+      }
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
       qc.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({ title: "Profile updated!" });
+      toast({ title: ar ? "تم الحفظ!" : "Profile updated!" });
       onClose();
     },
-    onError: () => toast({ title: "Save failed", variant: "destructive" }),
+    onError: (err: Error) =>
+      toast({
+        title: ar ? "فشل الحفظ" : "Save failed",
+        description: err.message,
+        variant: "destructive",
+      }),
   });
 
   const handleAvatarUpload = async (file: File) => {
@@ -308,11 +324,23 @@ function EditProfileModal({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <label style={labelStyle}>Twitter / X</label>
-              <input value={form.twitterHandle} onChange={e => setForm(p => ({ ...p, twitterHandle: e.target.value }))} style={inputStyle} placeholder="@handle" />
+              <input
+                value={form.twitterHandle}
+                onChange={e => setForm(p => ({ ...p, twitterHandle: e.target.value }))}
+                maxLength={200}
+                style={inputStyle}
+                placeholder={ar ? "@handle أو رابط الملف" : "@handle or profile URL"}
+              />
             </div>
             <div>
               <label style={labelStyle}>Instagram</label>
-              <input value={form.instagramHandle} onChange={e => setForm(p => ({ ...p, instagramHandle: e.target.value }))} style={inputStyle} placeholder="@handle" />
+              <input
+                value={form.instagramHandle}
+                onChange={e => setForm(p => ({ ...p, instagramHandle: e.target.value }))}
+                maxLength={200}
+                style={inputStyle}
+                placeholder={ar ? "@handle أو رابط الملف" : "@handle or profile URL"}
+              />
             </div>
           </div>
           </div>
