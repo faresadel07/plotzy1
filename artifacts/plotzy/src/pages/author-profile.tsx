@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
 import {
-  BookOpen, Users, UserPlus, UserCheck, Globe, Twitter, Instagram,
+  BookOpen, Users, UserPlus, UserCheck, Globe, Twitter, Instagram, Linkedin,
   Edit3, Check, X, Calendar, ArrowLeft, MessageCircle, Heart, Eye,
   Camera, Loader2, Star, Share2, PlusCircle, ChevronDown,
 } from "lucide-react";
@@ -45,6 +45,7 @@ interface AuthorProfileData {
   website: string | null;
   twitterHandle: string | null;
   instagramHandle: string | null;
+  linkedinHandle: string | null;
   createdAt: string;
   books: AuthorBook[];
   followersCount: number;
@@ -116,6 +117,7 @@ function EditProfileModal({
     website: profile.website || "",
     twitterHandle: profile.twitterHandle || "",
     instagramHandle: profile.instagramHandle || "",
+    linkedinHandle: profile.linkedinHandle || "",
   });
 
   const saveMutation = useMutation({
@@ -342,6 +344,16 @@ function EditProfileModal({
                 placeholder={ar ? "@handle أو رابط الملف" : "@handle or profile URL"}
               />
             </div>
+          </div>
+          <div>
+            <label style={labelStyle}>LinkedIn</label>
+            <input
+              value={form.linkedinHandle}
+              onChange={e => setForm(p => ({ ...p, linkedinHandle: e.target.value }))}
+              maxLength={200}
+              style={inputStyle}
+              placeholder={ar ? "رابط ملفك الشخصي على لينكد إن" : "linkedin.com/in/your-handle"}
+            />
           </div>
           </div>
         </div>
@@ -717,6 +729,12 @@ export default function AuthorProfile() {
                     <a href={`https://instagram.com/${profile.instagramHandle.replace("@", "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
                       onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
                       <Instagram size={12} /> {profile.instagramHandle.startsWith("@") ? profile.instagramHandle : `@${profile.instagramHandle}`}
+                    </a>
+                  )}
+                  {profile.linkedinHandle && (
+                    <a href={`https://linkedin.com/in/${profile.linkedinHandle}`} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: TS, textDecoration: "none" }}
+                      onMouseEnter={e => { e.currentTarget.style.color = T; }} onMouseLeave={e => { e.currentTarget.style.color = TS; }}>
+                      <Linkedin size={12} /> {profile.linkedinHandle}
                     </a>
                   )}
                   {profile.createdAt && (

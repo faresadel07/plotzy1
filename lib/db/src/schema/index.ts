@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   website: text("website"),
   twitterHandle: text("twitter_handle"),
   instagramHandle: text("instagram_handle"),
+  linkedinHandle: text("linkedin_handle"),
   // Subscription fields
   subscriptionTier: text("subscription_tier").default("free").notNull(), // free | pro | premium
   subscriptionStatus: text("subscription_status").default("free_trial"), // free_trial | active | canceled | expired

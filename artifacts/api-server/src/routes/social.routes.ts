@@ -9,20 +9,28 @@ import { sendNotificationEmail } from "../lib/email";
 // @-prefixed, or a full profile URL with or without protocol. Keeps
 // what we store canonical (just the handle) so the display code
 // doesn't have to second-guess the format at render time.
-function extractHandle(raw: string, domain: string): string | null {
+//
+// `pathPrefix` lets us handle LinkedIn's /in/ segment (profile URLs
+// look like linkedin.com/in/some-name); Twitter/Instagram put the
+// handle directly at the root so the prefix is empty.
+//
+// `charset` differs per platform: Instagram and Twitter are A-Za-z0-9._
+// while LinkedIn handles allow hyphens too.
+function extractHandle(
+  raw: string,
+  domain: string,
+  opts: { pathPrefix?: string; charset?: RegExp; maxLen?: number } = {},
+): string | null {
+  const { pathPrefix = "", charset = /^[A-Za-z0-9._]+$/, maxLen = 30 } = opts;
   const trimmed = raw.trim();
   if (!trimmed) return "";
-  // Full URL (twitter.com/x, x.com/y, instagram.com/y, with or without
-  // protocol, with or without www, with or without trailing slash and
-  // query string).
   const urlRe = new RegExp(
-    `^(?:https?://)?(?:www\\.)?${domain}/+(?:@)?([^/?#\\s]+)`,
+    `^(?:https?://)?(?:[a-z]+\\.)?${domain}/+${pathPrefix}(?:@)?([^/?#\\s]+)`,
     "i",
   );
   const m = trimmed.match(urlRe);
   const handle = m ? m[1] : trimmed.replace(/^@/, "");
-  // Both platforms restrict handles to [A-Za-z0-9._]+
-  if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) return null;
+  if (handle.length > maxLen || !charset.test(handle)) return null;
   return handle;
 }
 
@@ -38,9 +46,12 @@ function extractHandle(raw: string, domain: string): string | null {
 // to just the canonical handle before storage. Input that cannot be
 // parsed into a valid platform handle returns a clear error rather
 // than silently rejecting the whole profile save.
-const socialHandleSchema = (domain: "instagram.com" | "twitter.com" | "x.com") =>
+const socialHandleSchema = (
+  domain: "instagram.com" | "twitter.com" | "x.com" | "linkedin.com",
+  opts: { pathPrefix?: string; charset?: RegExp; maxLen?: number } = {},
+) =>
   z.string().max(200).transform((raw, ctx) => {
-    const h = extractHandle(raw, domain);
+    const h = extractHandle(raw, domain, opts);
     if (h === null) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Invalid ${domain.split(".")[0]} handle or URL` });
       return z.NEVER;
@@ -67,6 +78,14 @@ const profileUpdateSchema = z.object({
     .optional(),
   twitterHandle: z.union([socialHandleSchema("twitter.com"), socialHandleSchema("x.com")]).optional(),
   instagramHandle: socialHandleSchema("instagram.com").optional(),
+  // LinkedIn handles live under /in/ and permit hyphens + longer names
+  // (up to ~100 chars in practice; the platform doesn't publish a spec
+  // but real handles like "fares-qadome-abc12345" occur).
+  linkedinHandle: socialHandleSchema("linkedin.com", {
+    pathPrefix: "in/",
+    charset: /^[A-Za-z0-9._-]+$/,
+    maxLen: 100,
+  }).optional(),
   avatarUrl: z
     .string()
     .max(250_000)
