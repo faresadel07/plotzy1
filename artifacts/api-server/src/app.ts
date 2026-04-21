@@ -214,9 +214,11 @@ app.use(passport.session());
 // and is therefore matched before this middleware runs).
 app.use(csrfOriginCheck);
 
-// Rate limiting — applied after auth so user id is available as key
+// Rate limiting — applied after auth so user id is available as key.
+// Trailing slash on "/auth/" so the limiter matches OAuth routes exactly
+// and doesn't bleed into /authors/* profile fetches.
 app.use("/api", generalLimiter);
-app.use("/auth", authLimiter);
+app.use("/auth/", authLimiter);
 // Tighter limit on public endpoints to prevent content scraping
 app.use("/api/public", publicReadLimiter);
 app.use("/api/gutenberg", publicReadLimiter);

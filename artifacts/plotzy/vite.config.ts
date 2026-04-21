@@ -113,7 +113,11 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
       },
-      "/auth": {
+      // Trailing slash matters: `/auth` (no slash) was matching `/authors/1`
+      // too, forwarding SPA routes to Express which 404'd them. `/auth/`
+      // matches only the OAuth callback paths (/auth/google, /auth/apple,
+      // /auth/linkedin, /auth/*/callback) and leaves /authors/* alone.
+      "/auth/": {
         target: "http://localhost:8080",
         changeOrigin: true,
         followRedirects: false,
