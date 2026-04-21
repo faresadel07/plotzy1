@@ -63,6 +63,12 @@ const router = Router();
 // ─── Auth Routes ────────────────────────────────────────────────────────────
 
 router.get("/api/auth/providers", (_req, res) => {
+  // Provider flags change when env vars change (a redeploy that turns
+  // Google on, for example) and must NEVER be served from the browser's
+  // HTTP cache — otherwise a user whose first visit happened before
+  // OAuth was configured will see the "SOON" fallback forever even
+  // after the admin enables it.
+  res.setHeader("Cache-Control", "no-store");
   res.json(getEnabledProviders());
 });
 
