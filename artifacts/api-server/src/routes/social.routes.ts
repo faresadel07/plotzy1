@@ -1,8 +1,43 @@
 import { Router } from "express";
 import multer from "multer";
+import { z } from "zod";
 import { storage } from "../storage";
 import { logger } from "../lib/logger";
 import { sendNotificationEmail } from "../lib/email";
+
+// SECURITY: /api/me/profile accepts avatarUrl and bannerUrl as strings.
+// Without a schema, an authenticated user could post a 10MB (Express body
+// limit) data URI and inflate their row in the users table — or store a
+// javascript:... URL in `website` that any future integration trusting
+// the stored value would execute. These caps match the dedicated
+// /api/auth/avatar endpoint (250KB avatar) but allow a larger banner.
+const profileUpdateSchema = z.object({
+  displayName: z.string().trim().min(1).max(50).optional(),
+  bio: z.string().max(200).optional(),
+  website: z
+    .string()
+    .max(500)
+    .refine(v => !v || /^https?:\/\//i.test(v), "website must start with http:// or https://")
+    .optional(),
+  twitterHandle: z.string().max(30).optional(),
+  instagramHandle: z.string().max(30).optional(),
+  avatarUrl: z
+    .string()
+    .max(250_000)
+    .refine(
+      v => v.startsWith("data:image/") || (v.startsWith("http") && v.length < 2048),
+      "avatar must be an image data URI (≤200KB) or a URL",
+    )
+    .optional(),
+  bannerUrl: z
+    .string()
+    .max(1_500_000)
+    .refine(
+      v => v.startsWith("data:image/") || (v.startsWith("http") && v.length < 2048),
+      "banner must be an image data URI (≤1MB) or a URL",
+    )
+    .optional(),
+});
 
 const router = Router();
 const ALLOWED_FILE_TYPES = new Set([
@@ -65,20 +100,18 @@ router.patch("/api/me/profile", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    const { displayName, bio, website, twitterHandle, instagramHandle, avatarUrl, bannerUrl } = req.body;
-    const updates: Record<string, any> = {};
-    if (displayName !== undefined) updates.displayName = displayName;
-    if (bio !== undefined) updates.bio = bio;
-    if (website !== undefined) updates.website = website;
-    if (twitterHandle !== undefined) updates.twitterHandle = twitterHandle;
-    if (instagramHandle !== undefined) updates.instagramHandle = instagramHandle;
-    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
-    if (bannerUrl !== undefined) updates.bannerUrl = bannerUrl;
-
+    // Zod strips unknown fields (no mass-assignment via role/email/stripe*)
+    // AND enforces every field's length + scheme, so the endpoint can no
+    // longer be used to stuff 10MB payloads or stored-javascript URLs
+    // into the user row.
+    const updates = profileUpdateSchema.parse(req.body);
     const updated = await storage.updateUser(req.user.id, updates);
     const { passwordHash, ...safeUser } = updated;
     res.json(safeUser);
   } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: err.errors[0].message });
+    }
     res.status(500).json({ message: "Internal error" });
   }
 });
