@@ -40,6 +40,35 @@ const profileUpdateSchema = z.object({
 });
 
 const router = Router();
+
+// SECURITY: per-(sender,recipient) message rate limit. Without this a
+// single authenticated account can spam any other user with up to
+// 6.7MB base64 attachments every request — quickly filling the
+// recipient's inbox UI and bloating the direct_messages table. We
+// cap at 20 messages / minute per direction. This is a process-local
+// sliding window; a proper solution uses Redis, but this blocks the
+// naive abuse path with zero infra cost.
+const MESSAGE_RATE_WINDOW_MS = 60_000;
+const MESSAGE_RATE_MAX = 20;
+const messageRateBuckets = new Map<string, number[]>();
+function allowMessage(senderId: number, recipientId: number): boolean {
+  const key = `${senderId}->${recipientId}`;
+  const now = Date.now();
+  const recent = (messageRateBuckets.get(key) ?? []).filter(
+    t => now - t < MESSAGE_RATE_WINDOW_MS,
+  );
+  if (recent.length >= MESSAGE_RATE_MAX) return false;
+  recent.push(now);
+  messageRateBuckets.set(key, recent);
+  // Occasionally purge stale keys so the map doesn't grow unbounded.
+  if (messageRateBuckets.size > 10_000) {
+    for (const [k, v] of messageRateBuckets) {
+      if (v.every(t => now - t >= MESSAGE_RATE_WINDOW_MS)) messageRateBuckets.delete(k);
+    }
+  }
+  return true;
+}
+
 const ALLOWED_FILE_TYPES = new Set([
   "image/jpeg", "image/png", "image/webp", "image/gif",
   "application/pdf",
@@ -311,6 +340,10 @@ router.post("/api/messages/:userId", async (req, res) => {
     const receiverId = Number(req.params.userId);
     if (isNaN(receiverId)) return res.status(400).json({ message: "Invalid user ID" });
 
+    if (!allowMessage(req.user.id, receiverId)) {
+      return res.status(429).json({ message: "Too many messages to this user. Slow down for a minute." });
+    }
+
     const { content } = req.body;
     if (!content || typeof content !== "string" || content.trim().length === 0) {
       return res.status(400).json({ message: "Message content is required" });
@@ -348,6 +381,10 @@ router.post("/api/messages/:userId/attachment", upload.single("file"), async (re
     const receiverId = Number(req.params.userId);
     if (isNaN(receiverId)) return res.status(400).json({ message: "Invalid user ID" });
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+
+    if (!allowMessage(req.user.id, receiverId)) {
+      return res.status(429).json({ message: "Too many messages to this user. Slow down for a minute." });
+    }
 
     const { originalname, mimetype, buffer } = req.file;
     const base64 = buffer.toString("base64");
