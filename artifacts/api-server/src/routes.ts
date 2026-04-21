@@ -1163,7 +1163,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post(api.chapters.create.path, async (req, res) => {
+  app.post(api.chapters.create.path, requireBookOwner, async (req, res) => {
     try {
       const input = api.chapters.create.input.parse(req.body);
       const userId = req.isAuthenticated() && req.user ? req.user.id : null;
@@ -1643,7 +1643,12 @@ export async function registerRoutes(
 
   // ─── Legacy Importer ───────────────────────────────────────────────────────
 
-  app.post("/api/books/:bookId/legacy-import", upload.single("file"), async (req, res) => {
+  // SECURITY: requireBookOwner verifies the caller owns (or co-edits) the
+  // book BEFORE multer buffers the upload — so a forged bookId can no
+  // longer use legacy-import to inject chapters/lore/beats into someone
+  // else's book. aiLimiter/tierAiLimiter also gate the OpenAI spend that
+  // the extraction pipeline performs downstream.
+  app.post("/api/books/:bookId/legacy-import", requireBookOwner, aiLimiter, tierAiLimiter, upload.single("file"), async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -2218,7 +2223,9 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   }
 
   // Preview: synthesize first ~500 chars of a chapter
-  app.post("/api/books/:id/audiobook/preview", async (req, res) => {
+  // SECURITY: audiobook preview both exposes chapter content (as TTS audio)
+  // and burns real money on every call. Gated on ownership + AI limits.
+  app.post("/api/books/:id/audiobook/preview", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.id);
       const { chapterId, voice = "nova", speed = 1.0, model = "tts-1" } = req.body as {
@@ -2269,7 +2276,11 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   });
 
   // Export: synthesize all (or selected) chapters, merge, return as single MP3 download
-  app.post("/api/books/:id/audiobook/export", async (req, res) => {
+  // SECURITY: export reads the ENTIRE book and produces a downloadable file
+  // — full content leak if unauthenticated. At tts-1-hd rates a 500k-char
+  // novel is ~$15 of OpenAI spend; without ownership + limits an attacker
+  // can burn arbitrary dollars on a loop across every bookId.
+  app.post("/api/books/:id/audiobook/export", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.id);
       const { voice = "nova", speed = 1.0, model = "tts-1", chapterIds } = req.body as {
