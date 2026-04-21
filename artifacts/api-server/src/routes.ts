@@ -1962,7 +1962,7 @@ Rules:
   }
 
   // Plot Hole Detector
-  app.post("/api/books/:bookId/ai/plot-holes", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/plot-holes", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -1993,7 +1993,7 @@ Return an empty array if no issues found. Focus on real narrative problems, not 
   });
 
   // Dialogue Coach
-  app.post("/api/books/:bookId/ai/dialogue-coach", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/dialogue-coach", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -2024,7 +2024,7 @@ Provide 2-4 specific suggestions with real examples from the text.`,
   });
 
   // Pacing Analyzer
-  app.post("/api/books/:bookId/ai/pacing", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/pacing", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -2061,7 +2061,7 @@ Cover all chapters. Give 2-3 recommendations.`,
   });
 
   // Character Voice Consistency
-  app.post("/api/books/:bookId/ai/voice-consistency", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/ai/voice-consistency", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
@@ -2093,7 +2093,7 @@ List 2-5 main characters. Issues array can be empty if consistent.`,
 
   // ─── Publisher Proposal ────────────────────────────────────────────────────
 
-  app.post("/api/books/:bookId/generate-proposal", largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post("/api/books/:bookId/generate-proposal", requireBookOwner, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.bookId);
       const book = await storage.getBook(bookId);
