@@ -22,6 +22,12 @@ export default defineConfig({
     runtimeErrorOverlay(),
     VitePWA({
       registerType: "autoUpdate",
+      // Disable the service worker in development. A registered SW in
+      // dev intercepts requests, caches JS/HTML/API responses, and
+      // makes config/env changes appear to have no effect until the
+      // SW updates — which happens on its own schedule. Keeping the
+      // PWA on only in production is the standard escape hatch.
+      devOptions: { enabled: false },
       includeAssets: ["favicon.png"],
       manifest: {
         name: "Plotzy — Write Your Story",
