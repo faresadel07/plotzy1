@@ -17,17 +17,18 @@ import { initSentry } from "./lib/sentry";
 // present) — a cheap, self-healing migration path that doesn't
 // require users to clear site data manually.
 if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-  const shouldCleanup = import.meta.env.DEV;
-  if (shouldCleanup) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      for (const r of regs) r.unregister();
-      // Also blow away any Cache Storage entries Workbox created so
-      // the next fetch actually hits the network.
-      if ("caches" in window) {
-        caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-      }
-    }).catch(() => {});
-  }
+  // Always run the cleanup on load — a stale Workbox SW from an earlier
+  // build can serve outdated API responses (e.g. /api/auth/providers)
+  // and even outdated JS bundles, which makes any subsequent config
+  // change appear to have no effect. Unregistering is idempotent and
+  // costs ~1ms; in production the SW will be re-registered by the PWA
+  // plugin's own bootstrap right after.
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    for (const r of regs) r.unregister();
+    if ("caches" in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  }).catch(() => {});
 }
 
 // Initialise Sentry BEFORE React renders so errors thrown during

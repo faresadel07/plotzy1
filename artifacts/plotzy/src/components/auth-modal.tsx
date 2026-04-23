@@ -152,7 +152,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   useEffect(() => {
     if (!open) return;
-    fetch("/api/auth/providers").then(r => r.json()).then(d => setProviders(d)).catch(() => {});
+    // Cache-bust so neither the browser's HTTP cache nor a stale Service
+    // Worker can return an old {google:false} response. Also set
+    // cache: "no-store" explicitly for belt-and-suspenders.
+    fetch(`/api/auth/providers?t=${Date.now()}`, { cache: "no-store" })
+      .then(r => r.json())
+      .then(d => setProviders(d))
+      .catch(() => {});
     setGlobalError(""); setSuccess(false); setFieldErrors({});
     setEmail(""); setPassword(""); setConfirmPw(""); setDisplayName("");
   }, [open]);
