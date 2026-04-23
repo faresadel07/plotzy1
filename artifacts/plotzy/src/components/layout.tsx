@@ -344,8 +344,20 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           {/* Divider */}
           <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
 
-          {/* User */}
-          {!isLoading && (
+          {/* User — show a placeholder while the /api/auth/user query is in
+              flight so the header doesn't visibly "pop in" 1–2 seconds after
+              load. Reserves the same horizontal space the final pill will
+              occupy, so there's no layout shift when the answer arrives. */}
+          {isLoading ? (
+            <div
+              aria-hidden
+              style={{
+                width: 88, height: 26, borderRadius: 20,
+                background: "rgba(0,0,0,0.06)",
+                animation: "authPulse 1.4s ease-in-out infinite",
+              }}
+            />
+          ) : (
             user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger className="outline-none" asChild>
@@ -673,6 +685,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         }
         @media (max-width: 480px) {
           .admin-stats-grid { grid-template-columns: 1fr !important; }
+        }
+        /* Skeleton pulse used by the auth-area placeholder while the
+           /api/auth/user query is in flight. */
+        @keyframes authPulse {
+          0%, 100% { opacity: 0.55; }
+          50%      { opacity: 0.85; }
         }
       `}</style>
     </div>
