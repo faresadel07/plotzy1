@@ -45,7 +45,7 @@ interface AuthorProfileData {
   website: string | null;
   twitterHandle: string | null;
   instagramHandle: string | null;
-  linkedinHandle: string | null;
+  linkedinHandle?: string | null;
   createdAt: string;
   books: AuthorBook[];
   followersCount: number;

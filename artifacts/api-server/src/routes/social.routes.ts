@@ -78,14 +78,11 @@ const profileUpdateSchema = z.object({
     .optional(),
   twitterHandle: z.union([socialHandleSchema("twitter.com"), socialHandleSchema("x.com")]).optional(),
   instagramHandle: socialHandleSchema("instagram.com").optional(),
-  // LinkedIn handles live under /in/ and permit hyphens + longer names
-  // (up to ~100 chars in practice; the platform doesn't publish a spec
-  // but real handles like "fares-qadome-abc12345" occur).
-  linkedinHandle: socialHandleSchema("linkedin.com", {
-    pathPrefix: "in/",
-    charset: /^[A-Za-z0-9._-]+$/,
-    maxLen: 100,
-  }).optional(),
+  // LinkedIn temporarily disabled — the schema column is pending a DB
+  // migration. Re-enable after running `pnpm drizzle-kit push`.
+  // linkedinHandle: socialHandleSchema("linkedin.com", {
+  //   pathPrefix: "in/", charset: /^[A-Za-z0-9._-]+$/, maxLen: 100,
+  // }).optional(),
   avatarUrl: z
     .string()
     .max(250_000)

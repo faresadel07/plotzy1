@@ -18,7 +18,14 @@ export const users = pgTable("users", {
   website: text("website"),
   twitterHandle: text("twitter_handle"),
   instagramHandle: text("instagram_handle"),
-  linkedinHandle: text("linkedin_handle"),
+  // linkedin_handle column is on the schema but NOT yet applied to the
+  // actual Postgres table — re-enable this line AFTER running:
+  //   ALTER TABLE users ADD COLUMN linkedin_handle TEXT;
+  // or `pnpm drizzle-kit push` from the workspace root. Leaving it in
+  // makes every SELECT * FROM users fail (Google sign-in, profile fetch,
+  // auth session restore), because Drizzle generates SELECTs from the
+  // TS schema and Postgres rejects the unknown column.
+  // linkedinHandle: text("linkedin_handle"),
   // Subscription fields
   subscriptionTier: text("subscription_tier").default("free").notNull(), // free | pro | premium
   subscriptionStatus: text("subscription_status").default("free_trial"), // free_trial | active | canceled | expired
