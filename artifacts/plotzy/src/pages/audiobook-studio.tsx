@@ -149,10 +149,38 @@ function MiniPlayer({
     if (!el) return;
     const onEnded = () => setPlaying(false);
     const onTime = () => setProgress(el.duration ? (el.currentTime / el.duration) * 100 : 0);
+    // Surface decode failures: Edge TTS occasionally produces a valid-
+    // looking MP3 that the browser can't open (e.g. when the chosen
+    // English voice reads pure Arabic — the audio comes back near-
+    // silent and some Chromium versions reject it). Without this
+    // handler the play button just toggles state with no sound and
+    // no clue why.
+    const onError = () => {
+      const err = el.error;
+      console.error("[audio] playback error", { code: err?.code, message: err?.message, src: el.currentSrc?.slice(0, 80) });
+      setPlaying(false);
+    };
     el.addEventListener("ended", onEnded);
     el.addEventListener("timeupdate", onTime);
-    return () => { el.removeEventListener("ended", onEnded); el.removeEventListener("timeupdate", onTime); };
+    el.addEventListener("error", onError);
+    return () => {
+      el.removeEventListener("ended", onEnded);
+      el.removeEventListener("timeupdate", onTime);
+      el.removeEventListener("error", onError);
+    };
   }, [isMock]);
+
+  // Click or drag on the progress bar to seek to that position. We
+  // ignore seeks while the metadata is still loading because
+  // currentTime assignment before duration is known is a no-op.
+  const seekFromEvent = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = audioRef.current;
+    if (!el || !el.duration || isNaN(el.duration)) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    el.currentTime = pct * el.duration;
+    setProgress(pct * 100);
+  };
 
   const startTtsProgress = (durationMs: number) => {
     ttsStartRef.current = Date.now();
@@ -250,9 +278,40 @@ function MiniPlayer({
       <WaveformBars playing={playing} />
 
       <div className="flex-1 min-w-0">
-        <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: "#2a2a2a" }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "#fff" }} />
-        </div>
+        {/* Scrubbable progress bar. Click anywhere to seek; held-down
+            drag scrubs continuously. Hit-target padded vertically so
+            users don't have to click the 3px-tall track exactly. The
+            visible track stays thin so the player still looks subtle.
+            Disabled (no cursor change) for browser TTS / mock mode
+            because SpeechSynthesis can't seek to a position. */}
+        {isMock ? (
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: "#2a2a2a" }}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "#fff" }} />
+          </div>
+        ) : (
+          <div
+            role="slider"
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progress)}
+            tabIndex={0}
+            onClick={seekFromEvent}
+            onMouseDown={(e) => {
+              seekFromEvent(e);
+              const onMove = (mv: MouseEvent) => seekFromEvent({ clientX: mv.clientX, currentTarget: e.currentTarget } as any);
+              const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+              window.addEventListener("mousemove", onMove);
+              window.addEventListener("mouseup", onUp);
+            }}
+            className="w-full rounded-full"
+            style={{ height: 14, padding: "5.5px 0", cursor: "pointer", touchAction: "none" }}
+          >
+            <div className="w-full rounded-full overflow-hidden relative" style={{ height: 3, background: "#2a2a2a" }}>
+              <div className="h-full rounded-full" style={{ width: `${progress}%`, background: "#fff", transition: playing ? "width 0.1s linear" : "none" }} />
+            </div>
+          </div>
+        )}
         {isMock && (
           <p className="text-[10px] mt-1 text-gray-400">Browser preview · Add OpenAI key for AI voices</p>
         )}
