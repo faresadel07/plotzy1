@@ -17,6 +17,29 @@ export function initSentry(): void {
   const env = getEnv();
   if (!env.SENTRY_DSN) return;
 
+  // includeLocalVariables captures every stack frame's local vars on
+  // crash. Triage gets much easier — but those vars can hold tokens,
+  // bcrypt password hashes, OAuth secrets, raw email bodies. Enable
+  // ONLY in dev where the failure mode is "the developer sees their
+  // own data". Production runs without it.
+  const includeLocals = env.NODE_ENV !== "production";
+  // Anything matching these is redacted from stack-frame variables and
+  // breadcrumb data via the regex check in beforeSend below.
+  const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|authorization|api[_-]?key|cookie|session|email|stripe|paypal|webhook|signature|otp|code)/i;
+  const REDACTED = "[REDACTED]" as any;
+
+  function redactObject(obj: unknown, depth = 0): void {
+    if (!obj || typeof obj !== "object" || depth > 6) return;
+    for (const key of Object.keys(obj as Record<string, unknown>)) {
+      const rec = obj as Record<string, unknown>;
+      if (SENSITIVE_KEY_RE.test(key)) {
+        rec[key] = REDACTED;
+      } else {
+        redactObject(rec[key], depth + 1);
+      }
+    }
+  }
+
   Sentry.init({
     dsn: env.SENTRY_DSN,
     environment: env.SENTRY_ENVIRONMENT || env.NODE_ENV,
@@ -25,14 +48,10 @@ export function initSentry(): void {
     tracesSampleRate:
       env.SENTRY_TRACES_SAMPLE_RATE ??
       (env.NODE_ENV === "production" ? 0.1 : 1.0),
-    // Capture the source context (filename + surrounding lines) for every
-    // stack frame so triage in the Sentry UI is much faster.
-    includeLocalVariables: true,
+    includeLocalVariables: includeLocals,
     sendDefaultPii: false,
-    // Scrub request bodies — writing / AI endpoints receive large chapter
-    // text that is absolutely not something we want shipped to a 3rd
-    // party error service. Leave query strings (useful for debugging).
     beforeSend(event) {
+      // 1) Request scrubbing — body, cookies, auth/cookie headers.
       if (event.request) {
         delete event.request.data;
         delete event.request.cookies;
@@ -41,6 +60,22 @@ export function initSentry(): void {
           delete event.request.headers.cookie;
         }
       }
+      // 2) Stack-frame variables — Sentry's `vars` field on each frame
+      //    can hold the closure's locals (passwords, tokens, raw user
+      //    content). Walk and redact by key name.
+      const frames = event.exception?.values?.flatMap(
+        v => v.stacktrace?.frames ?? [],
+      ) ?? [];
+      for (const f of frames) {
+        if ((f as any).vars) redactObject((f as any).vars);
+      }
+      // 3) Breadcrumb data — fetch URLs, query params, response bodies.
+      for (const b of event.breadcrumbs ?? []) {
+        if (b.data) redactObject(b.data);
+      }
+      // 4) Tags / extra — anything user-supplied that ended up there.
+      if (event.tags) redactObject(event.tags);
+      if (event.extra) redactObject(event.extra);
       return event;
     },
   });
