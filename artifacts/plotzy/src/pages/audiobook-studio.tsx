@@ -24,11 +24,13 @@ interface VoiceOption {
   emoji: string;
 }
 
-// Voice catalogue. The 10 OpenAI personality slots stay verbatim — the
-// backend now maps them to Microsoft Edge neural voices, but to the
-// frontend they look identical so the UI labels keep their meaning.
-// Six Arabic neural voices appended below cover Saudi/Egyptian/Jordanian
-// dialects so books written in Arabic finally have native narrators.
+// English-only voice catalogue. Edge TTS supports many Arabic voices
+// (and we kept the backend mapping for them) but Arabic narration
+// quality on user content has been inconsistent — bilingual chapters
+// produce near-silent or garbled audio. Until we ship per-chapter
+// language detection + voice auto-selection, the audiobook studio
+// only exposes English voices and a "English-only" notice greets
+// the user above the picker.
 const VOICES: VoiceOption[] = [
   { id: "nova",    name: "Nova",    nameAr: "نوفا",    gender: "Female",  accent: "American",  accentAr: "أمريكي",  tone: "Warm & Upbeat",        toneAr: "دافئ ومشرق",      emoji: "🌟" },
   { id: "alloy",   name: "Alloy",   nameAr: "ألوي",   gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Versatile & Clear",    toneAr: "متعدد الاستخدام", emoji: "⚡" },
@@ -40,13 +42,6 @@ const VOICES: VoiceOption[] = [
   { id: "ash",     name: "Ash",     nameAr: "آش",     gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Warm & Engaging",      toneAr: "دافئ وجذاب",      emoji: "🌿" },
   { id: "ballad",  name: "Ballad",  nameAr: "بالاد",  gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Expressive",           toneAr: "معبر",             emoji: "🎵" },
   { id: "sage",    name: "Sage",    nameAr: "سيج",    gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Calm & Thoughtful",    toneAr: "هادئ ومتأمل",     emoji: "🌿" },
-  // Arabic neural voices
-  { id: "ar-zariyah", name: "Zariyah", nameAr: "زاريا", gender: "Female", accent: "Saudi",     accentAr: "سعودي",   tone: "Warm Standard Arabic", toneAr: "فصحى دافئة",      emoji: "🌙" },
-  { id: "ar-hamed",   name: "Hamed",   nameAr: "حامد",  gender: "Male",   accent: "Saudi",     accentAr: "سعودي",   tone: "Clear Standard Arabic",toneAr: "فصحى واضحة",      emoji: "🕋" },
-  { id: "ar-salma",   name: "Salma",   nameAr: "سلمى",  gender: "Female", accent: "Egyptian",  accentAr: "مصري",    tone: "Egyptian Warm",        toneAr: "مصري دافئ",       emoji: "🌅" },
-  { id: "ar-shakir",  name: "Shakir",  nameAr: "شاكر",  gender: "Male",   accent: "Egyptian",  accentAr: "مصري",    tone: "Egyptian Resonant",    toneAr: "مصري رنان",       emoji: "🐪" },
-  { id: "ar-sana",    name: "Sana",    nameAr: "سناء",  gender: "Female", accent: "Jordanian", accentAr: "أردني",    tone: "Levantine Female",     toneAr: "أردنية شامية",    emoji: "🌷" },
-  { id: "ar-taim",    name: "Taim",    nameAr: "تيم",   gender: "Male",   accent: "Jordanian", accentAr: "أردني",    tone: "Levantine Male",       toneAr: "أردني شامي",      emoji: "⛰️" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -171,13 +166,19 @@ function MiniPlayer({
   }, [isMock]);
 
   // Click or drag on the progress bar to seek to that position. We
-  // ignore seeks while the metadata is still loading because
-  // currentTime assignment before duration is known is a no-op.
-  const seekFromEvent = (e: React.MouseEvent<HTMLDivElement>) => {
+  // resolve the bar's bounding rect from a real DOM ref (not the
+  // React synthetic event's currentTarget, which gets nulled when
+  // the event is recycled — that was the bug in the previous pass:
+  // mousemove handlers fired AFTER the event pool reuse and read
+  // null currentTarget, silently no-op'ing every drag).
+  const seekBarRef = useRef<HTMLDivElement>(null);
+  const seekToClientX = (clientX: number) => {
     const el = audioRef.current;
-    if (!el || !el.duration || isNaN(el.duration)) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const bar = seekBarRef.current;
+    if (!el || !bar) return;
+    if (!Number.isFinite(el.duration) || el.duration <= 0) return;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     el.currentTime = pct * el.duration;
     setProgress(pct * 100);
   };
@@ -290,22 +291,42 @@ function MiniPlayer({
           </div>
         ) : (
           <div
+            ref={seekBarRef}
             role="slider"
             aria-label="Seek"
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(progress)}
             tabIndex={0}
-            onClick={seekFromEvent}
             onMouseDown={(e) => {
-              seekFromEvent(e);
-              const onMove = (mv: MouseEvent) => seekFromEvent({ clientX: mv.clientX, currentTarget: e.currentTarget } as any);
-              const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+              // Initial seek on click + attach window-level listeners
+              // for drag scrubbing. Window listeners survive the user
+              // moving the cursor outside the bar mid-drag, which the
+              // previous element-scoped handlers did not.
+              seekToClientX(e.clientX);
+              const onMove = (mv: MouseEvent) => {
+                mv.preventDefault();
+                seekToClientX(mv.clientX);
+              };
+              const onUp = () => {
+                window.removeEventListener("mousemove", onMove);
+                window.removeEventListener("mouseup", onUp);
+              };
               window.addEventListener("mousemove", onMove);
               window.addEventListener("mouseup", onUp);
             }}
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              if (!t) return;
+              seekToClientX(t.clientX);
+            }}
+            onTouchMove={(e) => {
+              const t = e.touches[0];
+              if (!t) return;
+              seekToClientX(t.clientX);
+            }}
             className="w-full rounded-full"
-            style={{ height: 14, padding: "5.5px 0", cursor: "pointer", touchAction: "none" }}
+            style={{ height: 14, padding: "5.5px 0", cursor: "pointer", touchAction: "none", userSelect: "none" }}
           >
             <div className="w-full rounded-full overflow-hidden relative" style={{ height: 3, background: "#2a2a2a" }}>
               <div className="h-full rounded-full" style={{ width: `${progress}%`, background: "#fff", transition: playing ? "width 0.1s linear" : "none" }} />
@@ -612,9 +633,25 @@ export default function AudiobookStudio() {
 
               {/* Voice Selection */}
               <div className="rounded-2xl p-5 anim-fade-up-1" style={{ background: "#111111", border: "1px solid #252525" }}>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-2">
                   <Mic2 className="w-4 h-4" style={{ color: "#fff" }} />
                   <h3 className="text-sm font-bold">{ar ? "اختر الصوت" : "Choose Voice"}</h3>
+                </div>
+
+                {/* English-only notice. Edge TTS supports Arabic but the
+                    output on bilingual / heavy-Arabic content is
+                    inconsistent today — better to set the expectation
+                    than to surprise the user with silent playback. */}
+                <div
+                  className="mb-4 px-3 py-2 rounded-lg flex items-start gap-2"
+                  style={{ background: "rgba(250, 204, 21, 0.06)", border: "1px solid rgba(250, 204, 21, 0.18)" }}
+                >
+                  <span style={{ fontSize: 13 }}>🌐</span>
+                  <p className="text-[11px] leading-relaxed" style={{ color: "rgba(250, 204, 21, 0.85)" }}>
+                    {ar
+                      ? "الكتاب الصوتي متاح حالياً للنصوص الإنجليزية فقط. دعم العربية قريباً."
+                      : "Audiobook generation is currently English-only. Arabic narration is coming soon."}
+                  </p>
                 </div>
 
                 {/* Gender filter tabs */}
