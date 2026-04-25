@@ -1248,7 +1248,11 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.chapters.update.path, requireChapterOwner, async (req, res) => {
+  // Chapter saves can include embedded base64 images via the rich
+  // editor; opt out of the tightened 2MB global default with a 10MB
+  // limit just for this route.
+  const chapterBodyParser = express.json({ limit: "10mb" });
+  app.put(api.chapters.update.path, chapterBodyParser, requireChapterOwner, async (req, res) => {
     try {
       const input = api.chapters.update.input.parse(req.body);
       const userId = req.isAuthenticated() && req.user ? req.user.id : null;

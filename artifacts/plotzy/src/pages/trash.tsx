@@ -100,28 +100,11 @@ export default function Trash() {
                 {trashedBooks.map((book, index) => (
                   <motion.div
                     key={book.id}
+                    className="trash-card"
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
                     style={{ position: "relative" }}
-                    onMouseEnter={e => {
-                      const card = e.currentTarget;
-                      const img = card.querySelector<HTMLImageElement>("img");
-                      const dimOverlay = card.querySelector<HTMLElement>("[data-dim]");
-                      const actionOverlay = card.querySelector<HTMLElement>("[data-actions]");
-                      if (img) img.style.filter = "none";
-                      if (dimOverlay) dimOverlay.style.opacity = "0";
-                      if (actionOverlay) actionOverlay.style.opacity = "1";
-                    }}
-                    onMouseLeave={e => {
-                      const card = e.currentTarget;
-                      const img = card.querySelector<HTMLImageElement>("img");
-                      const dimOverlay = card.querySelector<HTMLElement>("[data-dim]");
-                      const actionOverlay = card.querySelector<HTMLElement>("[data-actions]");
-                      if (img) img.style.filter = "grayscale(60%) brightness(0.55) sepia(15%)";
-                      if (dimOverlay) dimOverlay.style.opacity = "1";
-                      if (actionOverlay) actionOverlay.style.opacity = "0";
-                    }}
                   >
                     {/* Portrait card */}
                     <div style={{
@@ -273,6 +256,20 @@ export default function Trash() {
 
           </div>
         </div>
+        {/* Hover state via CSS instead of JS DOM mutation. Replaces the
+            previous onMouseEnter/Leave handlers that mutated style on
+            three child nodes via querySelector — fragile if React
+            re-rendered the card mid-hover (e.g. after a sibling card
+            was restored). Pure CSS is also smoother and doesn't
+            allocate. */}
+        <style>{`
+          .trash-card img { transition: filter 0.4s ease; }
+          .trash-card:hover img { filter: none !important; }
+          .trash-card [data-dim] { transition: opacity 0.4s ease; }
+          .trash-card:hover [data-dim] { opacity: 0 !important; }
+          .trash-card [data-actions] { transition: opacity 0.3s ease; }
+          .trash-card:hover [data-actions] { opacity: 1 !important; }
+        `}</style>
       </Layout>
     </>
   );

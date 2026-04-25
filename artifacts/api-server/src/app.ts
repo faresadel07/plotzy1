@@ -173,8 +173,14 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async
   }
 });
 
-app.use(express.json({ limit: "10mb", verify: (req, _res, buf) => { req.rawBody = buf; } }));
-app.use(express.urlencoded({ extended: false }));
+// Default JSON body limit. Tightened from 10mb → 2mb so generic
+// endpoints (login, comment, follow, profile, etc.) can't be used to
+// pump tens of megabytes through the parser. Routes that legitimately
+// need more (chapter content, audio transcription, AI prompt
+// expansion) opt in explicitly via per-route audioBodyParser /
+// largeBodyParser. URL-encoded form bodies are also clamped.
+app.use(express.json({ limit: "2mb", verify: (req, _res, buf) => { req.rawBody = buf; } }));
+app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 
 setupPassport();
 const PgSession = ConnectPgSimple(session);
