@@ -241,6 +241,42 @@ export async function registerRoutes(
         if (collab) return res.json(book);
       }
 
+      // Late-claim path. A user who started a draft as a guest then
+      // signed in (or navigated directly to /books/:id without going
+      // through the books-list endpoint that normally auto-claims)
+      // would otherwise get locked out of their own work — book.userId
+      // is null but the user is authenticated, so neither the
+      // owner-by-userId branch above nor the guest-session branch
+      // below matches. Trust either:
+      //   (a) the session.guestBookIds list, OR
+      //   (b) a guestIds=… query parameter (frontend reads localStorage
+      //       and forwards it; same trust model as the books-list
+      //       endpoint at line ~127).
+      // If either source vouches that THIS bookId belongs to THIS user
+      // and the book is still ownerless, claim it inline + return.
+      if (userId && book.userId === null) {
+        const sess = req.session as any;
+        const sessionGuestIds: number[] = sess?.guestBookIds || [];
+        const rawQueryIds = (req.query.guestIds as string) || "";
+        const queryGuestIds: number[] = rawQueryIds
+          .split(",")
+          .filter(Boolean)
+          .map(Number)
+          .filter(n => !isNaN(n) && n > 0);
+        if (sessionGuestIds.includes(bookId) || queryGuestIds.includes(bookId)) {
+          await storage.claimGuestBooks([bookId], userId);
+          // Drop the now-claimed id from session so subsequent loads
+          // don't try to re-claim. Query-supplied IDs are stateless.
+          if (sessionGuestIds.includes(bookId)) {
+            sess.guestBookIds = sessionGuestIds.filter(id => id !== bookId);
+          }
+          // Re-fetch so userId is the current user and the response
+          // shape is consistent.
+          const claimed = await storage.getBook(bookId);
+          if (claimed) return res.json(claimed);
+        }
+      }
+
       // Guest session fallback for anonymous users who started the draft.
       if (!userId && book.userId === null) {
         const sess = req.session as any;

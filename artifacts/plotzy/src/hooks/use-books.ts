@@ -85,16 +85,34 @@ export function useTrashedBooks() {
 }
 
 export function useBook(id: number) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: [api.books.get.path, id],
     queryFn: async () => {
       if (!id) return null;
-      const url = buildUrl(api.books.get.path, { id });
+      // Forward localStorage guest IDs so the backend can perform a
+      // late-claim if the user signed in after creating the book as a
+      // guest and then navigated directly to /books/:id (bypassing the
+      // books-list endpoint that normally auto-claims). Without this
+      // the user would land on their own draft and see the read-only
+      // collaborator view because book.userId is still null.
+      const guestIds = getGuestBookIds();
+      const base = buildUrl(api.books.get.path, { id });
+      const url = guestIds.length > 0
+        ? `${base}?guestIds=${guestIds.join(",")}`
+        : base;
       const res = await fetch(url, { credentials: "include" });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error("Failed to fetch book");
       const data = await res.json();
-      return parseWithLogging(api.books.get.responses?.[200], data, "books.get");
+      const parsed = parseWithLogging(api.books.get.responses?.[200], data, "books.get");
+      // If a claim happened, the book list cache is now stale (the
+      // book transitioned from guest to owned). Invalidate so the
+      // home page reflects ownership immediately.
+      if (parsed && (parsed as any).userId && guestIds.includes(id)) {
+        queryClient.invalidateQueries({ queryKey: [api.books.list.path] });
+      }
+      return parsed;
     },
     enabled: !!id,
   });
