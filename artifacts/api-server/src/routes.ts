@@ -82,6 +82,29 @@ function isRTL(code: string): boolean {
   return ["ar", "he", "fa", "ur"].includes(code);
 }
 
+// Per-(IP, target) sliding-window cap for public comment endpoints. The
+// global writeLimiter (30/min/IP) is too loose to stop an attacker from
+// pasting hundreds of comments onto a single book in an hour. The bucket
+// key is supplied by the caller — `${ip}:${bookId}` for book comments,
+// `${ip}:${bookId}:${chapterId}` for inline. Process-local; a multi-pod
+// deployment will need a Redis-backed version eventually.
+const COMMENT_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const COMMENT_RATE_MAX = 10;
+const commentRateBuckets = new Map<string, number[]>();
+function allowCommentBurst(key: string): boolean {
+  const now = Date.now();
+  const recent = (commentRateBuckets.get(key) ?? []).filter(t => now - t < COMMENT_RATE_WINDOW_MS);
+  if (recent.length >= COMMENT_RATE_MAX) return false;
+  recent.push(now);
+  commentRateBuckets.set(key, recent);
+  if (commentRateBuckets.size > 10_000) {
+    for (const [k, v] of commentRateBuckets) {
+      if (v.every(t => now - t >= COMMENT_RATE_WINDOW_MS)) commentRateBuckets.delete(k);
+    }
+  }
+  return true;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -443,6 +466,13 @@ export async function registerRoutes(
   app.post("/api/public/books/:id/comments", requireEmailVerified, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
+      // Per-(IP, book) cap of 10 comments / hour. Without this, the
+      // global writeLimiter (30/min/IP) lets one user flood any single
+      // book with 600 comments per hour. Comments are public, so this
+      // is the spam surface most likely to be exploited.
+      if (!allowCommentBurst(`${req.ip}:${bookId}`)) {
+        return res.status(429).json({ message: "Too many comments on this book. Try again later." });
+      }
       const { content, authorName } = req.body;
       if (!content?.trim()) return res.status(400).json({ message: "Comment is required" });
       const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
@@ -508,6 +538,11 @@ export async function registerRoutes(
       const bookId = Number(req.params.bookId);
       const chapterId = Number(req.params.chapterId);
       if (!Number.isInteger(bookId) || !Number.isInteger(chapterId)) return res.status(400).json({ message: "Invalid ID" });
+      // Per-(IP, chapter) burst cap so an attacker can't flood a chapter
+      // with hundreds of inline comments to disrupt the reader UI.
+      if (!allowCommentBurst(`${req.ip}:${bookId}:${chapterId}`)) {
+        return res.status(429).json({ message: "Too many comments on this chapter. Try again later." });
+      }
 
       const { selectedText, startOffset, endOffset, content } = req.body;
       if (!selectedText || typeof selectedText !== "string" || !selectedText.trim())
