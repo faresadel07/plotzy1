@@ -1,4 +1,5 @@
-import { pgTable, text, serial, integer, timestamp, boolean, jsonb, numeric, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb, numeric, index, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -37,7 +38,18 @@ export const users = pgTable("users", {
   role: text("role").default("user").notNull(), // user | admin | moderator
   bannerUrl: text("banner_url"),
   emailVerified: boolean("email_verified").default(false),
-});
+}, (t) => [
+  // CHECK constraints lock these columns to the documented enum values.
+  // Application code already validates them, but a buggy migration or a
+  // direct DB write can otherwise persist invalid values that silently
+  // break tier checks downstream. Apply via `pnpm drizzle-kit push`.
+  check("users_role_check", sql`${t.role} IN ('user', 'admin', 'moderator')`),
+  check("users_subscription_tier_check", sql`${t.subscriptionTier} IN ('free', 'pro', 'premium')`),
+  check(
+    "users_subscription_status_check",
+    sql`${t.subscriptionStatus} IS NULL OR ${t.subscriptionStatus} IN ('free_trial', 'active', 'canceled', 'expired')`,
+  ),
+]);
 
 export const siteSettings = pgTable("site_settings", {
   key: text("key").primaryKey(),
@@ -319,6 +331,14 @@ export const bookRatings = pgTable("book_ratings", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_book_ratings_book_id").on(t.bookId),
+  // One rating per (book, user) — application code dedups but two
+  // concurrent requests from the same user could otherwise both
+  // succeed. NULL userId rows (anonymous public ratings) are not
+  // covered by the unique key, which matches Postgres NULL semantics
+  // and is the desired behaviour.
+  uniqueIndex("uq_book_ratings_book_user").on(t.bookId, t.userId),
+  // Bound the value to the documented 1-5 range at the DB level.
+  check("book_ratings_rating_range", sql`${t.rating} BETWEEN 1 AND 5`),
 ]);
 
 export const bookComments = pgTable("book_comments", {
