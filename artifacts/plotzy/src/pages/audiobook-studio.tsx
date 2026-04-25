@@ -24,6 +24,11 @@ interface VoiceOption {
   emoji: string;
 }
 
+// Voice catalogue. The 10 OpenAI personality slots stay verbatim — the
+// backend now maps them to Microsoft Edge neural voices, but to the
+// frontend they look identical so the UI labels keep their meaning.
+// Six Arabic neural voices appended below cover Saudi/Egyptian/Jordanian
+// dialects so books written in Arabic finally have native narrators.
 const VOICES: VoiceOption[] = [
   { id: "nova",    name: "Nova",    nameAr: "نوفا",    gender: "Female",  accent: "American",  accentAr: "أمريكي",  tone: "Warm & Upbeat",        toneAr: "دافئ ومشرق",      emoji: "🌟" },
   { id: "alloy",   name: "Alloy",   nameAr: "ألوي",   gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Versatile & Clear",    toneAr: "متعدد الاستخدام", emoji: "⚡" },
@@ -35,6 +40,13 @@ const VOICES: VoiceOption[] = [
   { id: "ash",     name: "Ash",     nameAr: "آش",     gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Warm & Engaging",      toneAr: "دافئ وجذاب",      emoji: "🌿" },
   { id: "ballad",  name: "Ballad",  nameAr: "بالاد",  gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Expressive",           toneAr: "معبر",             emoji: "🎵" },
   { id: "sage",    name: "Sage",    nameAr: "سيج",    gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Calm & Thoughtful",    toneAr: "هادئ ومتأمل",     emoji: "🌿" },
+  // Arabic neural voices
+  { id: "ar-zariyah", name: "Zariyah", nameAr: "زاريا", gender: "Female", accent: "Saudi",     accentAr: "سعودي",   tone: "Warm Standard Arabic", toneAr: "فصحى دافئة",      emoji: "🌙" },
+  { id: "ar-hamed",   name: "Hamed",   nameAr: "حامد",  gender: "Male",   accent: "Saudi",     accentAr: "سعودي",   tone: "Clear Standard Arabic",toneAr: "فصحى واضحة",      emoji: "🕋" },
+  { id: "ar-salma",   name: "Salma",   nameAr: "سلمى",  gender: "Female", accent: "Egyptian",  accentAr: "مصري",    tone: "Egyptian Warm",        toneAr: "مصري دافئ",       emoji: "🌅" },
+  { id: "ar-shakir",  name: "Shakir",  nameAr: "شاكر",  gender: "Male",   accent: "Egyptian",  accentAr: "مصري",    tone: "Egyptian Resonant",    toneAr: "مصري رنان",       emoji: "🐪" },
+  { id: "ar-sana",    name: "Sana",    nameAr: "سناء",  gender: "Female", accent: "Jordanian", accentAr: "أردني",    tone: "Levantine Female",     toneAr: "أردنية شامية",    emoji: "🌷" },
+  { id: "ar-taim",    name: "Taim",    nameAr: "تيم",   gender: "Male",   accent: "Jordanian", accentAr: "أردني",    tone: "Levantine Male",       toneAr: "أردني شامي",      emoji: "⛰️" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

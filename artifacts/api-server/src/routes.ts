@@ -2301,14 +2301,14 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     return buf;
   }
 
-  // Preview: synthesize first ~500 chars of a chapter
-  // SECURITY: audiobook preview both exposes chapter content (as TTS audio)
-  // and burns real money on every call. Gated on ownership + AI limits.
+  // Preview: synthesize first ~500 chars of a chapter via Edge TTS.
+  // SECURITY: ownership-gated; aiLimiter caps abuse-rate. Edge TTS is
+  // free so the cost concern is server CPU/socket time, not dollars.
   app.post("/api/books/:id/audiobook/preview", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.id);
-      const { chapterId, voice = "nova", speed = 1.0, model = "tts-1" } = req.body as {
-        chapterId: number; voice?: string; speed?: number; model?: string;
+      const { chapterId, voice = "nova", speed = 1.0 } = req.body as {
+        chapterId: number; voice?: string; speed?: number;
       };
 
       const book = await storage.getBook(bookId);
@@ -2322,32 +2322,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       // Limit preview to first 500 characters (~60-90 seconds of audio)
       const previewText = fullText.slice(0, 500) || `Preview of ${chapter.title || "Chapter"}`;
 
-      if (isMockOpenAI) {
-        const wav = makeMockWav();
-        return res.json({
-          audio: wav.toString("base64"),
-          mimeType: "audio/wav",
-          chapterId,
-          isMock: true,
-        });
-      }
+      const { synthesizeToMp3 } = await import("./lib/edge-tts");
+      const mp3 = await synthesizeToMp3({ text: previewText, voice, speed });
 
-      const validVoices = ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer"];
-      const safeVoice = validVoices.includes(voice) ? voice : "nova";
-      const safeSpeed = Math.max(0.25, Math.min(4.0, Number(speed) || 1.0));
-      const safeModel = model === "tts-1-hd" ? "tts-1-hd" : "tts-1";
-
-      const mp3Res = await openai.audio.speech.create({
-        model: safeModel,
-        voice: safeVoice as "alloy" | "ash" | "ballad" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
-        input: previewText,
-        speed: safeSpeed,
-        response_format: "mp3",
-      });
-
-      const arrayBuffer = await mp3Res.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      res.json({ audio: buffer.toString("base64"), mimeType: "audio/mpeg", chapterId });
+      res.json({ audio: mp3.toString("base64"), mimeType: "audio/mpeg", chapterId });
     } catch (err) {
       logger.error({ err }, "Audiobook preview error");
       res.status(500).json({ message: "Failed to generate audio preview" });
@@ -2362,8 +2340,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   app.post("/api/books/:id/audiobook/export", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(req.params.id);
-      const { voice = "nova", speed = 1.0, model = "tts-1", chapterIds } = req.body as {
-        voice?: string; speed?: number; model?: string; chapterIds?: number[];
+      const { voice = "nova", speed = 1.0, chapterIds } = req.body as {
+        voice?: string; speed?: number; chapterIds?: number[];
       };
 
       const book = await storage.getBook(bookId);
@@ -2378,51 +2356,16 @@ Write the query letter specifically tailored to this publisher, mentioning why t
         return res.status(400).json({ message: "No chapters to export" });
       }
 
-      if (isMockOpenAI) {
-        return res.status(402).json({
-          isMock: true,
-          message: "OpenAI API key required to generate real audio. Add OPENAI_API_KEY to enable audiobook export.",
-        });
-      }
-
-      const validVoices = ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer"];
-      const safeVoice = validVoices.includes(voice) ? voice : "nova";
-      const safeSpeed = Math.max(0.25, Math.min(4.0, Number(speed) || 1.0));
-      const safeModel = model === "tts-1-hd" ? "tts-1-hd" : "tts-1";
-
+      const { synthesizeToMp3, splitForTts } = await import("./lib/edge-tts");
       const audioChunks: Buffer[] = [];
 
       for (const chapter of chaptersToExport) {
         const text = extractChapterPlainText(chapter.content || "");
         if (!text) continue;
-
-        // OpenAI TTS has a 4096-char input limit per call; split into segments
-        const MAX_SEGMENT = 4000;
-        const segments: string[] = [];
-        let remaining = text;
-        while (remaining.length > 0) {
-          if (remaining.length <= MAX_SEGMENT) {
-            segments.push(remaining);
-            break;
-          }
-          // Find a sentence boundary near MAX_SEGMENT
-          let splitAt = remaining.lastIndexOf(". ", MAX_SEGMENT);
-          if (splitAt < MAX_SEGMENT / 2) splitAt = MAX_SEGMENT;
-          segments.push(remaining.slice(0, splitAt + 1).trim());
-          remaining = remaining.slice(splitAt + 1).trim();
-        }
-
-        for (const segment of segments) {
+        for (const segment of splitForTts(text)) {
           if (!segment) continue;
-          const segRes = await openai.audio.speech.create({
-            model: safeModel,
-            voice: safeVoice as "alloy" | "ash" | "ballad" | "coral" | "echo" | "fable" | "nova" | "onyx" | "sage" | "shimmer",
-            input: segment,
-            speed: safeSpeed,
-            response_format: "mp3",
-          });
-          const ab = await segRes.arrayBuffer();
-          audioChunks.push(Buffer.from(ab));
+          const buf = await synthesizeToMp3({ text: segment, voice, speed });
+          audioChunks.push(buf);
         }
       }
 
