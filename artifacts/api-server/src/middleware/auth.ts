@@ -1,8 +1,45 @@
 import type { Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { books, chapters, loreEntries, storyBeats, researchItems, arcRecipients, bookCollaborators } from "../../../../lib/db/src/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { isAdminUser } from "../lib/admin";
+
+// Parse the X-Guest-Books header sent by the frontend (main.tsx fetch
+// override). Comma-separated list of numeric book IDs the user holds in
+// localStorage from sessions where they wrote the draft as a guest.
+// Returns [] for missing / malformed headers.
+function readGuestBookHeader(req: Request): number[] {
+  const raw = req.headers["x-guest-books"];
+  if (!raw || typeof raw !== "string") return [];
+  return raw
+    .split(",")
+    .map(s => Number(s.trim()))
+    .filter(n => Number.isFinite(n) && n > 0);
+}
+
+// Late-claim: when a logged-in user fetches a book that's still
+// userId=null (created as a guest, never claimed), and the bookId is
+// vouched for by either the server-side session OR the X-Guest-Books
+// header, transfer ownership inline. Returns the claimed book row, or
+// null if no claim was possible.
+async function tryLateClaim(book: typeof books.$inferSelect, req: Request): Promise<typeof books.$inferSelect | null> {
+  if (book.userId !== null) return null;
+  if (!req.isAuthenticated() || !req.user) return null;
+  const userId = (req.user as any).id;
+
+  const sess = req.session as any;
+  const sessionGuestIds: number[] = sess?.guestBookIds || [];
+  const headerGuestIds = readGuestBookHeader(req);
+  const allowed = new Set([...sessionGuestIds, ...headerGuestIds]);
+  if (!allowed.has(book.id)) return null;
+
+  await db.update(books).set({ userId }).where(eq(books.id, book.id));
+  if (sessionGuestIds.includes(book.id)) {
+    sess.guestBookIds = sessionGuestIds.filter(id => id !== book.id);
+  }
+  const [claimed] = await db.select().from(books).where(eq(books.id, book.id));
+  return claimed ?? null;
+}
 
 // ---------------------------------------------------------------------------
 // 1) requireAuth — reject unauthenticated requests
@@ -72,8 +109,14 @@ export async function requireBookOwnerStrict(req: Request, res: Response, next: 
   if (!bookId || isNaN(bookId)) return res.status(400).json({ message: "Invalid book id" });
   if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Authentication required" });
   try {
-    const [book] = await db.select().from(books).where(eq(books.id, bookId));
+    let [book] = await db.select().from(books).where(eq(books.id, bookId));
     if (!book) return res.status(404).json({ message: "Book not found" });
+    // Late-claim if the user vouches for an unowned book via session
+    // or X-Guest-Books header. Mirrors GET /api/books/:id.
+    if (book.userId === null) {
+      const claimed = await tryLateClaim(book, req);
+      if (claimed) book = claimed;
+    }
     if (book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can do this" });
     req.ownerBook = book;
     return next();
@@ -93,12 +136,21 @@ export async function requireBookOwner(req: Request, res: Response, next: NextFu
   }
 
   try {
-    const [book] = await db.select().from(books).where(eq(books.id, bookId));
+    let [book] = await db.select().from(books).where(eq(books.id, bookId));
     if (!book) return res.status(404).json({ message: "Book not found" });
 
     // Authenticated user owns this book OR is a collaborator
     if (req.isAuthenticated() && req.user) {
       const userId = (req.user as any).id;
+      // Late-claim path. If the book is still ownerless and the user
+      // vouches for it via session or X-Guest-Books header, take it
+      // over before the owner check below. Without this, a draft
+      // started while signed-out blocks the user from their own
+      // audiobook export, AI tools, delete, etc.
+      if (book.userId === null) {
+        const claimed = await tryLateClaim(book, req);
+        if (claimed) book = claimed;
+      }
       if (book.userId === userId) {
         req.ownerBook = book;
         return next();

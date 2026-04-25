@@ -52,11 +52,40 @@ initSentry();
 // ── Global fetch override: always send credentials for /api calls ────────
 // This fixes 40+ fetch calls that forgot credentials: "include".
 // Without this, cookies won't be sent in production (cross-origin).
+//
+// Also tags every /api/* request with the user's localStorage guest-book
+// IDs via the X-Guest-Books header. The backend's requireBookOwner
+// middleware reads it to perform a "late claim" — if the user signed in
+// after starting a draft as a guest and visits the book directly, we
+// can prove ownership from the localStorage list even when the server
+// session.guestBookIds bucket has been cleared. Without this header
+// the audiobook preview / delete / publish routes return 401 and the
+// frontend shows a generic "Could not …" message that's hard to
+// diagnose.
 const originalFetch = window.fetch;
 window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
   if (url.startsWith("/api") || url.startsWith("/auth")) {
-    init = { ...init, credentials: init?.credentials || "include" };
+    let guestHeader = "";
+    try {
+      // Key matches LS_KEY in hooks/use-books.ts (underscores, not dashes).
+      const raw = localStorage.getItem("plotzy_guest_book_ids");
+      if (raw) {
+        const ids = JSON.parse(raw);
+        if (Array.isArray(ids) && ids.length > 0) {
+          guestHeader = ids.filter((n: any) => Number.isFinite(n) && n > 0).join(",");
+        }
+      }
+    } catch { /* localStorage absent / corrupted — header just stays empty */ }
+    const mergedHeaders = new Headers(init?.headers);
+    if (guestHeader && !mergedHeaders.has("X-Guest-Books")) {
+      mergedHeaders.set("X-Guest-Books", guestHeader);
+    }
+    init = {
+      ...init,
+      credentials: init?.credentials || "include",
+      headers: mergedHeaders,
+    };
   }
   return originalFetch.call(this, input, init);
 };
