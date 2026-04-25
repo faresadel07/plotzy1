@@ -488,6 +488,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
       given_name?: string;
       family_name?: string;
       email?: string;
+      email_verified?: boolean;
       picture?: string;
     };
 
@@ -495,21 +496,30 @@ router.get("/auth/linkedin/callback", async (req, res) => {
     if (!linkedinId) return res.redirect("/?auth=error");
 
     const email = profile.email || null;
+    const emailVerified = profile.email_verified === true;
     const displayName = profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || null;
     const avatarUrl = profile.picture || null;
 
     let user = await storage.getUserByLinkedinId(linkedinId);
     if (!user) {
-      if (email) {
+      // SECURITY: only link to an existing Plotzy account by email when
+      // LinkedIn explicitly says the address is verified. Otherwise an
+      // attacker could create a LinkedIn account with someone else's
+      // email (LinkedIn doesn't always require verification for sign-in
+      // and could change policy) and silently take over the existing
+      // Plotzy user. Mirrors the Google One Tap check.
+      if (email && emailVerified) {
         user = await storage.getUserByEmail(email);
         if (user) {
           user = await storage.updateUser(user.id, { linkedinId, avatarUrl: user.avatarUrl || avatarUrl });
         }
       }
       if (!user) {
-        // LinkedIn returns email_verified=true on its userinfo endpoint
-        // (verified before issuing the token) — addresses are confirmed.
-        user = await storage.createUser({ linkedinId, email, displayName, avatarUrl, emailVerified: true } as any);
+        // Brand-new account. Only mark verified if LinkedIn confirmed.
+        user = await storage.createUser({
+          linkedinId, email, displayName, avatarUrl,
+          emailVerified,
+        } as any);
       }
     }
 

@@ -107,16 +107,29 @@ export function setupPassport() {
             try {
               const appleId = idToken?.sub;
               const email = idToken?.email || null;
+              // Apple's id_token includes `email_verified` as either a
+              // boolean OR a stringified boolean depending on SDK version.
+              // Accept both forms; default to false for safety.
+              const emailVerified = idToken?.email_verified === true
+                || idToken?.email_verified === "true";
               if (!appleId) return done(new Error("No Apple ID in token"));
               let user = await storage.getUserByAppleId(appleId);
               if (!user) {
-                if (email) {
+                // SECURITY: only link by email when Apple explicitly says
+                // the address is verified. Apple's relay-email feature
+                // can issue tokens without `email_verified=true`, and a
+                // future API change could add unverified flows. Mirrors
+                // the Google One Tap parity.
+                if (email && emailVerified) {
                   user = await storage.getUserByEmail(email);
                   if (user) user = await storage.updateUser(user.id, { appleId });
                 }
-                // Apple's id_token is signed; the email field is verified
-                // by Apple at account-creation time on their end.
-                if (!user) user = await storage.createUser({ appleId, email, emailVerified: true } as any);
+                if (!user) {
+                  user = await storage.createUser({
+                    appleId, email,
+                    emailVerified,
+                  } as any);
+                }
               }
               done(null, user);
             } catch (err) {
