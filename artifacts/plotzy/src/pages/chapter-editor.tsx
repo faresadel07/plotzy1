@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react
 import { useRoute, Link, useLocation } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
-import { useChapters, useUpdateChapter, useDeleteChapter } from "@/hooks/use-chapters";
+import { useChapters, useUpdateChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
 import { AIAssistant } from "@/components/ai-assistant";
@@ -306,7 +306,6 @@ export default function ChapterEditor() {
   const { data: chapters, isLoading } = useChapters(bookId);
   const { data: book } = useBook(bookId);
   const updateChapter = useUpdateChapter();
-  const deleteChapter = useDeleteChapter();
   const updateBook = useUpdateBook();
   const { data: versions = [] } = useChapterVersions(chapterId || null);
   const saveVersion = useSaveVersion(chapterId || null);
@@ -1247,15 +1246,6 @@ export default function ChapterEditor() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  const handleDelete = async () => {
-    try {
-      await deleteChapter.mutateAsync({ id: chapterId, bookId });
-      toast({ title: ar ? "تم حذف الفصل" : "Chapter deleted" });
-      navigate(`/books/${bookId}`);
-    } catch {
-      toast({ title: ar ? "فشل الحذف" : "Failed to delete", variant: "destructive" });
-    }
-  };
 
   const handleSavePrefs = async (newPrefs: BookPreferences) => {
     const newFont = newPrefs.fontFamily;
@@ -1718,24 +1708,6 @@ export default function ChapterEditor() {
             <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setIsFocusMode(!isFocusMode)} title={ar ? "وضع التركيز" : "Focus Mode"}>
               {isFocusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </Button>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="rounded-2xl" dir={isRTL ? "rtl" : "ltr"}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl">{t("deleteChapter")}</AlertDialogTitle>
-                  <AlertDialogDescription>{t("deleteChapterConfirm")}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="rounded-lg">{t("cancel")}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg">{t("delete")}</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
 
             <div className="w-px h-5 bg-border/40 mx-1" />
 

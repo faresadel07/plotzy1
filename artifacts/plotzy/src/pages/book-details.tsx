@@ -6,7 +6,8 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-p
 import { Layout } from "@/components/layout";
 import { AuthModal } from "@/components/auth-modal";
 import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
-import { useChapters, useCreateChapter, useUpdateChapter, useReorderChapters } from "@/hooks/use-chapters";
+import { useChapters, useCreateChapter, useUpdateChapter, useReorderChapters, useDeleteChapter } from "@/hooks/use-chapters";
+import { ConfirmModal } from "@/components/confirm-modal";
 import { usePublishBook } from "@/hooks/use-public-library";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
@@ -136,8 +137,13 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const createChapter = useCreateChapter();
   const updateChapter = useUpdateChapter();
   const reorderChapters = useReorderChapters();
+  const deleteChapter = useDeleteChapter();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  // Chapter delete confirmation: { id, title } when modal is open, null
+  // otherwise. Stored as a single object so the title is captured at
+  // open time even if the chapter list re-orders before confirm.
+  const [confirmDeleteChapter, setConfirmDeleteChapter] = useState<{ id: number; title: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -844,6 +850,28 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                           <span>{lang === "ar" ? "كتابة" : "Write"}</span>
                                         </button>
                                       </Link>
+
+                                      {/* Delete chapter — was previously inside the chapter
+                                          editor's toolbar; lives here on the chapter row so
+                                          it sits next to Rename + Write. Icon-only, neutral
+                                          until hover where it goes red, opens a typed
+                                          confirm modal so a misclick can't drop a chapter. */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          setConfirmDeleteChapter({ id: chapter.id, title: chapter.title });
+                                        }}
+                                        aria-label={lang === "ar" ? "حذف الفصل" : "Delete chapter"}
+                                        title={lang === "ar" ? "حذف الفصل" : "Delete chapter"}
+                                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all"
+                                        style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#fca5a5'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.30)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
                                     </div>
                                   )}
                                 </div>
@@ -1191,6 +1219,37 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         </div>,
         document.body
       )}
+
+      {/* Chapter delete confirmation. Body's onConfirm hits the
+          mutation; the modal closes itself via its own onClose path
+          plus the optimistic close after onConfirm so a slow network
+          can't leave the modal stuck open. */}
+      <ConfirmModal
+        isOpen={confirmDeleteChapter !== null}
+        onClose={() => setConfirmDeleteChapter(null)}
+        onConfirm={async () => {
+          if (!confirmDeleteChapter) return;
+          const { id, title } = confirmDeleteChapter;
+          try {
+            await deleteChapter.mutateAsync({ id, bookId });
+            toast({ title: lang === "ar" ? `تم حذف "${title}"` : `Deleted "${title}"` });
+          } catch {
+            toast({ title: lang === "ar" ? "فشل الحذف" : "Failed to delete chapter", variant: "destructive" });
+          } finally {
+            setConfirmDeleteChapter(null);
+          }
+        }}
+        title={lang === "ar" ? "حذف الفصل؟" : "Delete chapter?"}
+        message={
+          confirmDeleteChapter
+            ? (lang === "ar"
+              ? `سيُحذف الفصل "${confirmDeleteChapter.title}" نهائياً. لا يمكن التراجع عن هذا الإجراء.`
+              : `"${confirmDeleteChapter.title}" will be permanently deleted. This cannot be undone.`)
+            : ""
+        }
+        confirmLabel={lang === "ar" ? "حذف" : "Delete"}
+        variant="danger"
+      />
     </Layout>
   );
 }
