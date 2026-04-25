@@ -134,6 +134,10 @@ export const chapters = pgTable("chapters", {
 }, (t) => [
   index("idx_chapters_book_id").on(t.bookId),
   index("idx_chapters_user_id").on(t.userId),
+  // Drag-reorder updates and chapter list views both sort by (bookId, order).
+  // The single bookId index already filters, but adding `order` gives the
+  // planner an index-only sort and avoids a sort step on long books.
+  index("idx_chapters_book_id_order").on(t.bookId, t.order),
 ]);
 
 export const chapterSnapshots = pgTable("chapter_snapshots", {
@@ -273,7 +277,17 @@ export const supportMessages = pgTable("support_messages", {
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
   read: boolean("read").default(false),
-});
+}, (t) => [
+  // Admin "open tickets" view filters by status; without an index this is a
+  // sequential scan once the table grows.
+  index("idx_support_messages_status").on(t.status),
+  index("idx_support_messages_user_id").on(t.userId),
+  index("idx_support_messages_created_at").on(t.createdAt),
+  // Lock the enum-style columns so a typo can't poison admin filters.
+  check("support_messages_category_chk", sql`${t.category} IN ('general','bug','billing','feature','other')`),
+  check("support_messages_priority_chk", sql`${t.priority} IN ('low','normal','high','urgent')`),
+  check("support_messages_status_chk", sql`${t.status} IN ('open','pending','closed','resolved')`),
+]);
 
 export type SupportMessage = typeof supportMessages.$inferSelect;
 export type InsertSupportMessage = typeof supportMessages.$inferInsert;
@@ -349,6 +363,9 @@ export const bookComments = pgTable("book_comments", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_book_comments_book_id").on(t.bookId),
+  // Moderation queries (admin "comments by user", per-user comment counts)
+  // would otherwise scan the whole table.
+  index("idx_book_comments_user_id").on(t.userId),
 ]);
 
 // ── Inline Reader Comments (text-anchored) ─────────────────────────────────
@@ -408,7 +425,12 @@ export const gutenbergBooks = pgTable("gutenberg_books", {
   content: text("content"),
   contentCachedAt: timestamp("content_cached_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  // The discover query filters out broken rows via `text_url IS NOT NULL`
+  // and the precache job scans `content IS NULL AND text_url IS NOT NULL`.
+  // A small index on text_url helps both without indexing the (huge) text.
+  index("idx_gutenberg_text_url").on(t.textUrl),
+]);
 
 export type GutenbergBook = typeof gutenbergBooks.$inferSelect;
 
@@ -468,6 +490,10 @@ export const notifications = pgTable("notifications", {
 }, (t) => [
   index("idx_notifications_user_id").on(t.userId),
   index("idx_notifications_created_at").on(t.createdAt),
+  // Unread-count queries hit (userId, read=false) on every page load. A
+  // composite index makes the count an index-only scan instead of a per-row
+  // visibility check.
+  index("idx_notifications_user_read").on(t.userId, t.read),
 ]);
 
 // ── Direct Messages ──────────────────────────────────────────────────────
@@ -483,6 +509,9 @@ export const directMessages = pgTable("direct_messages", {
   index("idx_direct_messages_sender_id").on(t.senderId),
   index("idx_direct_messages_receiver_id").on(t.receiverId),
   index("idx_direct_messages_created_at").on(t.createdAt),
+  // Same rationale as notifications above — DM unread badges live in the
+  // shell on every navigation.
+  index("idx_direct_messages_receiver_read").on(t.receiverId, t.read),
 ]);
 
 // ── Tutorials ────────────────────────────────────────────────────────────
@@ -512,6 +541,9 @@ export const dailyAiUsage = pgTable("daily_ai_usage", {
   callCount: integer("call_count").notNull().default(0),
 }, (t) => [
   uniqueIndex("uq_daily_ai_usage_user_date").on(t.userId, t.date),
+  // Admin analytics aggregates per day across all users — without this it
+  // ends up scanning the whole table to bucket by date.
+  index("idx_daily_ai_usage_date").on(t.date),
 ]);
 
 // ── Admin Analytics Tables ─────────────────────────────────────────────────
@@ -526,6 +558,9 @@ export const apiLogs = pgTable("api_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_api_logs_created_at").on(t.createdAt),
+  // "Slow requests for this user" / "all calls by user" admin queries
+  // would otherwise scan the entire table.
+  index("idx_api_logs_user_id").on(t.userId),
 ]);
 
 export const aiUsageLogs = pgTable("ai_usage_logs", {

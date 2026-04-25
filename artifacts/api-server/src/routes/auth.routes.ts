@@ -13,6 +13,7 @@ import crypto from "crypto";
 import { db } from "../db";
 import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
 import { eq, and, sql, gt, count } from "drizzle-orm";
+import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 
 // Lazily-initialised verifier for Google One Tap ID tokens. google-auth-library
 // fetches and caches Google's public JWKS internally, so a single client per
@@ -29,8 +30,19 @@ const MAX_FAILED_ATTEMPTS = 5;          // lock after 5 failures
 const LOCKOUT_WINDOW_MINUTES = 15;      // within a 15-minute window
 const LOCKOUT_DURATION_MINUTES = 15;    // lock for 15 minutes
 
+// Login attempts beyond ~24h serve no security purpose (the lockout window
+// is 15 minutes) and would otherwise grow the table unbounded under brute-
+// force traffic. Probabilistically purge old rows on insert so we don't need
+// a separate cron — 1% of writes do the cleanup, which is plenty given the
+// scan is bounded by a created_at index.
+const LOGIN_ATTEMPT_RETENTION_HOURS = 24;
 async function recordLoginAttempt(email: string, ip: string | undefined, success: boolean) {
   await db.insert(loginAttempts).values({ email: email.toLowerCase(), ip: ip || null, success });
+  if (Math.random() < 0.01) {
+    db.delete(loginAttempts)
+      .where(sql`created_at < NOW() - INTERVAL '${sql.raw(String(LOGIN_ATTEMPT_RETENTION_HOURS))} hours'`)
+      .catch(() => { /* opportunistic — silent on failure */ });
+  }
 }
 
 async function isAccountLocked(email: string, ip: string | undefined): Promise<{ locked: boolean; minutesLeft: number }> {
@@ -132,7 +144,7 @@ router.get("/api/auth/user", async (req, res) => {
 
 // ─── Email / Password Auth ─────────────────────────────────────────────────
 
-router.post("/api/auth/register", async (req, res) => {
+router.post("/api/auth/register", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { email, password, displayName } = z.object({
       email: z.string().email(),
@@ -186,7 +198,7 @@ router.post("/api/auth/register", async (req, res) => {
   }
 });
 
-router.post("/api/auth/login", async (req, res) => {
+router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { email, password } = z.object({
       email: z.string().email(),
@@ -223,6 +235,14 @@ router.post("/api/auth/login", async (req, res) => {
 
     // Capture guest book IDs before the session may change
     const guestIds: number[] = (req.session as any).guestBookIds || [];
+
+    // Session-fixation defence: regenerate the session id BEFORE associating
+    // the authenticated user. Without this, a session id planted by an
+    // attacker pre-login (e.g. via a CSRF / set-cookie injection vector)
+    // remains valid post-login and lets the attacker ride the new identity.
+    await new Promise<void>((resolve, reject) =>
+      req.session.regenerate((err) => (err ? reject(err) : resolve()))
+    );
 
     await new Promise<void>((resolve, reject) =>
       req.login(user, (err) => (err ? reject(err) : resolve()))
@@ -509,9 +529,14 @@ router.get("/auth/linkedin/callback", async (req, res) => {
       // and could change policy) and silently take over the existing
       // Plotzy user. Mirrors the Google One Tap check.
       if (email && emailVerified) {
-        user = await storage.getUserByEmail(email);
-        if (user) {
-          user = await storage.updateUser(user.id, { linkedinId, avatarUrl: user.avatarUrl || avatarUrl });
+        const existing = await storage.getUserByEmail(email);
+        // Hardening: also require the pre-existing local account to have
+        // emailVerified=true before linking. If the local account is
+        // unverified, it could be a placeholder created by an attacker
+        // squatting on the victim's address; linking would let them ride
+        // the LinkedIn login into the victim's identity.
+        if (existing && (existing as any).emailVerified) {
+          user = await storage.updateUser(existing.id, { linkedinId, avatarUrl: existing.avatarUrl || avatarUrl });
         }
       }
       if (!user) {
@@ -536,7 +561,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
 
 // ─── Verify Email ───────────────────────────────────────────────────────────
 
-router.post("/api/auth/verify-email", async (req, res) => {
+router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
     const [vt] = await db.select().from(emailVerificationTokens).where(and(eq(emailVerificationTokens.token, token), sql`expires_at > NOW()`));
@@ -552,7 +577,7 @@ router.post("/api/auth/verify-email", async (req, res) => {
 
 // ─── Forgot Password (send reset link) ──────────────────────────────────────
 
-router.post("/api/auth/forgot-password", async (req, res) => {
+router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
     const user = await storage.getUserByEmail(email);
@@ -598,7 +623,10 @@ router.post("/api/auth/forgot-password", async (req, res) => {
           </div>
         `,
       });
-      logger.info({ email }, "Password reset email sent");
+      // PII hygiene: log only the user id, never the raw email — these logs
+      // are shipped off-host (Sentry / hosting platform) and are visible to
+      // anyone with log-read access.
+      logger.info({ userId: user.id }, "Password reset email sent");
     } catch (emailErr) {
       logger.error({ err: emailErr }, "Failed to send reset email");
     }
@@ -613,7 +641,7 @@ router.post("/api/auth/forgot-password", async (req, res) => {
 
 // ─── Verify Reset Token (POST-based, no URL exposure) ──────────────────────
 
-router.post("/api/auth/verify-reset-token", async (req, res) => {
+router.post("/api/auth/verify-reset-token", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
     const [resetToken] = await db.select().from(passwordResetTokens)
@@ -627,7 +655,7 @@ router.post("/api/auth/verify-reset-token", async (req, res) => {
 
 // ─── Reset Password (with token) ────────────────────────────────────────────
 
-router.post("/api/auth/reset-password", async (req, res) => {
+router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { token, password } = z.object({
       token: z.string().min(1),

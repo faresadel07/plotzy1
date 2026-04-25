@@ -8,6 +8,7 @@ import { professionals, quoteRequests, researchItems as researchItemsTable, arcR
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { isAdminUser } from "../lib/admin";
+import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 import crypto from "crypto";
 
 const router = Router();
@@ -752,7 +753,9 @@ router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
 // ── Admin: CSV export — users ───────────────────────────────────────────────
 router.get("/api/admin/export/users.csv", requireAdmin, async (req, res) => {
   try {
-    const users = await storage.getAllUsers();
+    // CSV export opts into the higher (50 000) cap. For larger exports
+    // we'd need a streaming or paginated chunked-transfer implementation.
+    const users = await storage.getAllUsers({ limit: 50_000 });
     // Escape CSV values: prevent formula injection (=, +, -, @) and quote fields with commas/quotes
     const esc = (v: any) => {
       let s = String(v ?? "");
@@ -818,8 +821,10 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
   }
 });
 
-// Join book with invite code (any authenticated user)
-router.post("/api/books/join", async (req, res) => {
+// Join book with invite code (any authenticated user). Rate-limited to
+// stop invite-code brute force — codes are alphanumeric and short, so an
+// unlimited POST loop could feasibly enumerate them.
+router.post("/api/books/join", sensitiveAuthLimiter, async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const { code } = z.object({ code: z.string().min(1) }).parse(req.body);

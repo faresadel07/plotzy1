@@ -28,10 +28,13 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
     const [editForm, setEditForm] = useState({ name: "", content: "" });
     const queryClient = useQueryClient();
 
+    // Backend lore routes are nested under the book — see lib/shared/src/routes.ts.
+    // Three of these previously called the wrong path (`/api/lore`, `/api/lore/generate`)
+    // which 404'd silently and made Auto-Extract appear to do nothing.
     const { data: lore = [], isLoading } = useQuery<LoreEntry[]>({
-        queryKey: ["/api/lore", bookId],
+        queryKey: ["/api/books", bookId, "lore"],
         queryFn: async () => {
-            const res = await fetch(`/api/lore?bookId=${bookId}`);
+            const res = await fetch(`/api/books/${bookId}/lore`);
             if (!res.ok) throw new Error("Failed to fetch lore");
             return res.json();
         },
@@ -40,10 +43,10 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
     const saveMutation = useMutation({
         mutationFn: async (data: Partial<LoreEntry> & { isNew?: boolean }) => {
             if (data.isNew) {
-                const res = await fetch(`/api/lore`, {
+                const res = await fetch(`/api/books/${bookId}/lore`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ bookId, ...data }),
+                    body: JSON.stringify(data),
                 });
                 if (!res.ok) throw new Error("Failed to save");
                 return res.json();
@@ -58,7 +61,7 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/lore", bookId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/books", bookId, "lore"] });
             setEditingId(null);
             setIsAdding(false);
             setEditForm({ name: "", content: "" });
@@ -71,22 +74,22 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
             if (!res.ok) throw new Error("Failed to delete");
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/lore", bookId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/books", bookId, "lore"] });
         },
     });
 
     const generateLoreMutation = useMutation({
         mutationFn: async () => {
-            const res = await fetch(`/api/lore/generate`, {
+            const res = await fetch(`/api/books/${bookId}/lore/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bookId }),
+                body: JSON.stringify({}),
             });
             if (!res.ok) throw new Error("Failed to generate");
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/lore", bookId] });
+            queryClient.invalidateQueries({ queryKey: ["/api/books", bookId, "lore"] });
         },
     });
 

@@ -24,12 +24,13 @@ export function AudioRecorder({ onRecordingComplete, isProcessing }: AudioRecord
   }, []);
 
   const startRecording = async () => {
+    let stream: MediaStream | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: "audio/webm",
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -47,21 +48,27 @@ export function AudioRecorder({ onRecordingComplete, isProcessing }: AudioRecord
           const base64data = (reader.result as string).split(",")[1];
           onRecordingComplete(base64data);
         };
-        
+
         // Stop all tracks to release mic
-        stream.getTracks().forEach(track => track.stop());
+        stream!.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
-      
+
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
 
     } catch (err) {
       console.error("Error accessing microphone:", err);
+      // If MediaRecorder construction or start() threw AFTER getUserMedia
+      // resolved, the OS-level mic capture is still live — release it so
+      // the recording indicator drops. Same applies if setInterval threw.
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      mediaRecorderRef.current = null;
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = undefined; }
       alert("Could not access microphone. Please ensure permissions are granted.");
     }
   };

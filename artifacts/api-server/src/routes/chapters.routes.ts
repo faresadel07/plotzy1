@@ -12,6 +12,7 @@ import {
   isMockOpenAI,
   openai,
   AI_TEXT_MODEL,
+  AI_TRANSCRIBE_MODEL,
   requireOpenAI,
   isSubscriptionActive,
   countWords,
@@ -241,7 +242,7 @@ router.post(
       });
       const transcription = await openai.audio.transcriptions.create({
         file,
-        model: "gpt-4o-mini-transcribe",
+        model: AI_TRANSCRIBE_MODEL,
         language: langCode.length === 2 ? langCode : undefined,
       });
 
@@ -306,7 +307,7 @@ router.post(
       });
       const transcription = await openai.audio.transcriptions.create({
         file,
-        model: "gpt-4o-mini-transcribe",
+        model: AI_TRANSCRIBE_MODEL,
         language:
           language && language.length === 2 ? language : undefined,
       });

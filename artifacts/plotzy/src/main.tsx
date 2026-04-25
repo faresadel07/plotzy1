@@ -66,21 +66,28 @@ const originalFetch = window.fetch;
 window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
   if (url.startsWith("/api") || url.startsWith("/auth")) {
-    let guestHeader = "";
-    try {
-      // Key matches LS_KEY in hooks/use-books.ts (underscores, not dashes).
-      const raw = localStorage.getItem("plotzy_guest_book_ids");
-      if (raw) {
-        const ids = JSON.parse(raw);
-        if (Array.isArray(ids) && ids.length > 0) {
-          guestHeader = ids.filter((n: any) => Number.isFinite(n) && n > 0).join(",");
-        }
-      }
-    } catch { /* localStorage absent / corrupted — header just stays empty */ }
     const mergedHeaders = new Headers(init?.headers);
-    if (guestHeader && !mergedHeaders.has("X-Guest-Books")) {
-      mergedHeaders.set("X-Guest-Books", guestHeader);
+
+    // Only attach X-Guest-Books to /api/* requests. The header travels
+    // through the redirect chain on /auth/* OAuth handoffs and would have
+    // leaked the user's claim list to Google / LinkedIn / Apple servers.
+    if (url.startsWith("/api")) {
+      let guestHeader = "";
+      try {
+        // Key matches LS_KEY in hooks/use-books.ts (underscores, not dashes).
+        const raw = localStorage.getItem("plotzy_guest_book_ids");
+        if (raw) {
+          const ids = JSON.parse(raw);
+          if (Array.isArray(ids) && ids.length > 0) {
+            guestHeader = ids.filter((n: any) => Number.isFinite(n) && n > 0).join(",");
+          }
+        }
+      } catch { /* localStorage absent / corrupted — header just stays empty */ }
+      if (guestHeader && !mergedHeaders.has("X-Guest-Books")) {
+        mergedHeaders.set("X-Guest-Books", guestHeader);
+      }
     }
+
     init = {
       ...init,
       credentials: init?.credentials || "include",

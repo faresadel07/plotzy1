@@ -1,11 +1,26 @@
 import DOMPurify from "dompurify";
 
-// Hook: force rel="noopener noreferrer" on any link with target="_blank"
+// Allow only schemes that can appear in href / src without executing code.
+// `javascript:` and `vbscript:` URIs would be the obvious XSS vectors;
+// modern DOMPurify already strips them, but we belt-and-brace via an explicit
+// allowlist so a future config tweak can't accidentally re-open the door.
+const SAFE_URL_SCHEME = /^(?:https?:|mailto:|tel:|data:image\/(?:png|jpe?g|gif|webp|avif|svg\+xml);base64,|\/|#|\?)/i;
+
+// Hook: force rel="noopener noreferrer" on any link with target="_blank",
+// and drop unsafe URL schemes from <a href> and <img src>.
 // Runs once at module load (DOMPurify is a singleton).
 if (typeof window !== "undefined" && (DOMPurify as any).addHook) {
   (DOMPurify as any).addHook("afterSanitizeAttributes", function (node: Element) {
-    if (node.nodeName === "A" && node.getAttribute("target") === "_blank") {
-      node.setAttribute("rel", "noopener noreferrer");
+    if (node.nodeName === "A") {
+      const href = node.getAttribute("href");
+      if (href && !SAFE_URL_SCHEME.test(href.trim())) node.removeAttribute("href");
+      if (node.getAttribute("target") === "_blank") {
+        node.setAttribute("rel", "noopener noreferrer");
+      }
+    }
+    if (node.nodeName === "IMG") {
+      const src = node.getAttribute("src");
+      if (src && !SAFE_URL_SCHEME.test(src.trim())) node.removeAttribute("src");
     }
   });
 }

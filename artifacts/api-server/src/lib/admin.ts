@@ -14,7 +14,16 @@ export function isAdminUser(user: unknown): boolean {
   if (u.role === "admin") return true;
   if (process.env.NODE_ENV !== "production") {
     const adminEmail = process.env.ADMIN_EMAIL;
-    if (adminEmail && typeof u.email === "string" && u.email === adminEmail) return true;
+    // Case-insensitive compare — RFC 5321 says the local-part *can* be
+    // case-sensitive, but every mail provider in practice treats it as not.
+    // Without lowercasing, ADMIN_EMAIL=admin@x.com vs registered Admin@x.com
+    // silently fails to match (or, worse on prod misconfigs, lets an
+    // attacker register a case-variant address to bypass an admin check).
+    if (
+      adminEmail &&
+      typeof u.email === "string" &&
+      u.email.toLowerCase() === adminEmail.toLowerCase()
+    ) return true;
   }
   return false;
 }

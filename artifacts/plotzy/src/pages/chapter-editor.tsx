@@ -298,6 +298,18 @@ export default function ChapterEditor() {
   // Load editor fonts lazily (40+ fonts, only when editor opens)
   useEffect(() => { loadEditorFonts(); }, []);
 
+  // Mount sentinel + drag-tail cleanup. The auto-save pipeline kicks off
+  // background fetches and a "justSaved" timer that can otherwise fire
+  // against an unmounted component when the user navigates fast.
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (justSavedTimerRef.current) clearTimeout(justSavedTimerRef.current);
+      if (progressAbortRef.current) progressAbortRef.current.abort();
+    };
+  }, []);
+
   // Track last accessed for sorting on home page
   useEffect(() => { if (bookId) try { localStorage.setItem(`plotzy_book_accessed_${bookId}`, String(Date.now())); } catch {} }, [bookId]);
   const { resolvedTheme } = useTheme();
@@ -327,6 +339,12 @@ export default function ChapterEditor() {
   const [autoSaving, setAutoSaving] = useState(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveInFlightRef = useRef(false);
+  // Guards against post-unmount state updates from the auto-save pipeline.
+  // performSave kicks off a side-fetch to /progress and a "justSaved" toast
+  // timer; both can fire after the user has already navigated away.
+  const isMountedRef = useRef(true);
+  const justSavedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressAbortRef = useRef<AbortController | null>(null);
   // Offline-draft recovery state — set when a local IndexedDB copy
   // diverges from the server copy on mount, so we can offer the user
   // the option to restore unsaved work.
@@ -558,6 +576,11 @@ export default function ChapterEditor() {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  // Transcribed text held in a review modal so the user can fix mistakes
+  // before deciding whether to insert into the current page or just copy.
+  // Null when the modal is closed.
+  const [transcribedDraft, setTranscribedDraft] = useState<string | null>(null);
+  const [transcribedCopied, setTranscribedCopied] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
@@ -1122,17 +1145,28 @@ export default function ChapterEditor() {
         saveVersion.mutate({ content: currentContent, label });
       }
 
-      // Track progress if there's a net change in words
+      // Track progress if there's a net change in words. Abort any prior
+      // in-flight progress request so a fast Save → Save chain can't race,
+      // and abort on unmount to stop the post-fetch invalidate from firing
+      // against a torn-down query client subscription.
       if (wordsAdded !== 0) {
+        if (progressAbortRef.current) progressAbortRef.current.abort();
+        const ac = new AbortController();
+        progressAbortRef.current = ac;
         fetch(`/api/books/${bookId}/progress`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wordsAdded })
+          body: JSON.stringify({ wordsAdded }),
+          signal: ac.signal,
         }).then(() => {
+          if (!isMountedRef.current) return;
           queryClient.invalidateQueries({ queryKey: [`/api/books/${bookId}/progress`] });
-        }).catch(err => console.error("Failed to track progress:", err));
+        }).catch(err => {
+          if (err?.name !== "AbortError") console.error("Failed to track progress:", err);
+        });
       }
 
+      if (!isMountedRef.current) return;
       setIsDirty(false);
       // Server now has the canonical copy — drop the local draft so a
       // future mount doesn't falsely prompt for recovery.
@@ -1141,7 +1175,10 @@ export default function ChapterEditor() {
       }
       if (!options.silent) {
         setJustSaved(true);
-        setTimeout(() => setJustSaved(false), 2000);
+        if (justSavedTimerRef.current) clearTimeout(justSavedTimerRef.current);
+        justSavedTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) setJustSaved(false);
+        }, 2000);
         toast({ title: ar ? "تم الحفظ!" : "Saved successfully" });
       }
     } catch {
@@ -1316,24 +1353,14 @@ export default function ChapterEditor() {
           if (!res.ok) throw new Error("Transcription failed");
           const { text } = await res.json();
           if (text?.trim()) {
-            setPages(prev => {
-              const next = [...prev];
-              const idx = activePageIndex < next.length ? activePageIndex : next.length - 1;
-              const currentBlock = next[idx];
-
-              if (typeof currentBlock === 'string') {
-                next[idx] = currentBlock ? currentBlock + " " + text.trim() : text.trim();
-              } else if (typeof currentBlock === 'object' && currentBlock.type === 'text') {
-                next[idx] = { ...currentBlock, content: currentBlock.content ? currentBlock.content + " " + text.trim() : text.trim() };
-              } else {
-                // If active block is an image/drawing, insert dictation as a new string block after it
-                next.splice(idx + 1, 0, text.trim());
-                setActivePageIndex(idx + 1);
-              }
-              return next;
-            });
-            setIsDirty(true);
-            toast({ title: ar ? "تمت الإضافة إلى الصفحة" : "Added to your page" });
+            // Open the review modal instead of writing straight into the page.
+            // The user reviews/edits the transcription, then chooses whether
+            // to insert it at the active page or just copy it to the
+            // clipboard.
+            setTranscribedDraft(text.trim());
+            setTranscribedCopied(false);
+          } else {
+            toast({ title: ar ? "لم يتم التقاط أي كلام" : "No speech detected" });
           }
         } catch {
           toast({ title: ar ? "فشل التحويل" : "Transcription failed", variant: "destructive" });
@@ -1354,6 +1381,34 @@ export default function ChapterEditor() {
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
     if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  // Append the (possibly user-edited) transcription to the active page. Mirrors
+  // the original auto-insert behaviour, but only fires when the user confirms
+  // it from the review modal.
+  const insertTranscriptionAtActivePage = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setPages(prev => {
+      const next = [...prev];
+      const idx = activePageIndex < next.length ? activePageIndex : next.length - 1;
+      const currentBlock = next[idx];
+      if (typeof currentBlock === "string") {
+        next[idx] = currentBlock ? currentBlock + " " + trimmed : trimmed;
+      } else if (typeof currentBlock === "object" && currentBlock.type === "text") {
+        next[idx] = {
+          ...currentBlock,
+          content: currentBlock.content ? currentBlock.content + " " + trimmed : trimmed,
+        };
+      } else {
+        // Active block is an image / drawing — drop the dictation in a new
+        // text block right after it so we don't overwrite media content.
+        next.splice(idx + 1, 0, trimmed);
+        setActivePageIndex(idx + 1);
+      }
+      return next;
+    });
+    setIsDirty(true);
   };
 
   // ── Rich Media Handling ───────────────────────────────────────────────────
@@ -2851,6 +2906,96 @@ export default function ChapterEditor() {
           }}
         />
       </main>
+
+      {/* Voice dictation review modal — user reviews/edits the transcription
+          and chooses where it goes (insert into active page, copy to clipboard,
+          or cancel). Replaces the older "auto-insert" flow that surprised the
+          user when their cursor was on a different page. */}
+      {transcribedDraft !== null && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setTranscribedDraft(null)}
+          dir={isRTL ? "rtl" : "ltr"}
+        >
+          <div
+            className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[80vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Mic className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-base">
+                  {ar ? "مراجعة التسجيل الصوتي" : "Review your transcription"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setTranscribedDraft(null)}
+                className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground"
+                aria-label={ar ? "إغلاق" : "Close"}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 flex-1 overflow-auto">
+              <p className="text-xs text-muted-foreground mb-3">
+                {ar
+                  ? "صحّح أي كلمات لم تُلتقط بشكل صحيح، ثم اختر ماذا تريد أن تفعل بالنص."
+                  : "Fix any words that were misheard, then choose what to do with the text."}
+              </p>
+              <textarea
+                value={transcribedDraft}
+                onChange={e => { setTranscribedDraft(e.target.value); setTranscribedCopied(false); }}
+                autoFocus
+                rows={8}
+                className="w-full p-3 rounded-lg bg-muted/50 border border-border text-sm leading-relaxed font-serif resize-y outline-none focus:border-primary"
+                dir="auto"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-3 border-t border-border bg-muted/30">
+              <button
+                onClick={() => setTranscribedDraft(null)}
+                className="px-3 h-9 rounded-lg text-sm text-muted-foreground hover:bg-muted"
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(transcribedDraft);
+                    setTranscribedCopied(true);
+                    setTimeout(() => setTranscribedCopied(false), 1800);
+                  } catch {
+                    toast({ title: ar ? "تعذر النسخ" : "Could not copy", variant: "destructive" });
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 h-9 rounded-lg text-sm bg-muted hover:bg-muted/70 border border-border"
+              >
+                {transcribedCopied ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    {ar ? "تم النسخ" : "Copied"}
+                  </>
+                ) : (
+                  ar ? "نسخ" : "Copy"
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  insertTranscriptionAtActivePage(transcribedDraft);
+                  setTranscribedDraft(null);
+                  toast({ title: ar ? "تمت الإضافة إلى الصفحة" : "Added to your page" });
+                }}
+                disabled={!transcribedDraft.trim()}
+                className="flex items-center gap-1.5 px-3 h-9 rounded-lg text-sm bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {ar ? "إدراج في الصفحة" : "Insert in page"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete page confirm dialog */}
       <AlertDialog open={deletingPage !== null} onOpenChange={(open) => !open && setDeletingPage(null)}>

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useCallback, useMemo } from "react";
+import { createContext, useContext, ReactNode, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { clearGuestBookIds } from "@/hooks/use-books";
@@ -44,27 +44,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Single-flight guard: rapid double-clicks on "Sign out" used to fire two
+  // /api/auth/logout requests and two Google-One-Tap teardowns in parallel,
+  // which interleaved with React Query cache eviction in unpredictable ways.
+  // Holding the same Promise for the duration of the in-flight logout makes
+  // every concurrent caller observe one consistent teardown.
+  const logoutInFlightRef = useRef<Promise<void> | null>(null);
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    // Prevent Google One Tap from silently re-authenticating the user
-    // they just logged out from. The GSI script declares its global as
-    // `window.google` — the One Tap component already augments the
-    // global with a typed declaration (see GoogleOneTap.tsx), so we
-    // can use it without `as any`. A typed access also makes it
-    // visible if the GSI shape ever changes.
-    try {
-      window.google?.accounts?.id?.disableAutoSelect?.();
-    } catch {}
-    // SECURITY: purge any book IDs the previous session left behind so the
-    // next (unauthenticated) visitor cannot request them from the backend.
-    clearGuestBookIds();
-    // SECURITY: nuke every cached query, not just a hand-picked list. Any
-    // user-scoped query (/api/users/me/stats, /api/notifications, lore,
-    // chapter snapshots, marketplace usage, admin data, …) is off-limits to
-    // the next visitor on this browser — whitelisting caches is a
-    // guaranteed source of leaks whenever a new query is added.
-    queryClient.removeQueries();
-    queryClient.setQueryData(["/api/auth/user"], null);
+    if (logoutInFlightRef.current) return logoutInFlightRef.current;
+    logoutInFlightRef.current = (async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        // Prevent Google One Tap from silently re-authenticating the user
+        // they just logged out from.
+        try {
+          window.google?.accounts?.id?.disableAutoSelect?.();
+        } catch {}
+        // SECURITY: purge any book IDs the previous session left behind so the
+        // next (unauthenticated) visitor cannot request them from the backend.
+        clearGuestBookIds();
+        // SECURITY: nuke every cached query, not just a hand-picked list. Any
+        // user-scoped query (/api/users/me/stats, /api/notifications, lore,
+        // chapter snapshots, marketplace usage, admin data, …) is off-limits to
+        // the next visitor on this browser — whitelisting caches is a
+        // guaranteed source of leaks whenever a new query is added.
+        queryClient.removeQueries();
+        queryClient.setQueryData(["/api/auth/user"], null);
+      } finally {
+        logoutInFlightRef.current = null;
+      }
+    })();
+    return logoutInFlightRef.current;
   }, [queryClient]);
 
   // Memoise the context value so every consumer only re-renders when user /

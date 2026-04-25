@@ -58,21 +58,36 @@ export function setupPassport() {
             let user = await storage.getUserByGoogleId(profile.id);
             if (!user) {
               const email = profile.emails?.[0]?.value || null;
-              if (email) {
-                user = await storage.getUserByEmail(email);
-                if (user) {
-                  user = await storage.updateUser(user.id, { googleId: profile.id });
+              // Google's profile JSON exposes `email_verified` for verified
+              // Google addresses; passport-google-oauth20 surfaces it on
+              // profile._json. Default to false if absent.
+              const googleEmailVerified =
+                (profile as any)._json?.email_verified === true ||
+                (profile as any)._json?.email_verified === "true";
+
+              if (email && googleEmailVerified) {
+                const existing = await storage.getUserByEmail(email);
+                if (existing) {
+                  // SECURITY: only link Google to a pre-existing local account
+                  // when that account's email is already verified. Without
+                  // this, an attacker who pre-registered an unverified
+                  // password account with the victim's email would get the
+                  // legitimate Google sign-in linked into their account —
+                  // an account-takeover via login.
+                  if ((existing as any).emailVerified) {
+                    user = await storage.updateUser(existing.id, { googleId: profile.id });
+                  }
                 }
               }
               if (!user) {
                 user = await storage.createUser({
                   googleId: profile.id,
-                  email,
+                  email: googleEmailVerified ? email : null,
                   displayName: profile.displayName || null,
                   avatarUrl: profile.photos?.[0]?.value || null,
                   // Google verifies the email before letting it be used
                   // on a Google account; trust it as our verification.
-                  emailVerified: true,
+                  emailVerified: googleEmailVerified,
                 } as any);
               }
             }
@@ -121,8 +136,15 @@ export function setupPassport() {
                 // future API change could add unverified flows. Mirrors
                 // the Google One Tap parity.
                 if (email && emailVerified) {
-                  user = await storage.getUserByEmail(email);
-                  if (user) user = await storage.updateUser(user.id, { appleId });
+                  const existing = await storage.getUserByEmail(email);
+                  // Mirrors the Google/LinkedIn hardening: only link to a
+                  // pre-existing local account when *that* account already
+                  // verified the email. Otherwise the local row may be a
+                  // squatter and linking lets the squatter ride the Apple
+                  // sign-in into the victim's identity.
+                  if (existing && (existing as any).emailVerified) {
+                    user = await storage.updateUser(existing.id, { appleId });
+                  }
                 }
                 if (!user) {
                   user = await storage.createUser({

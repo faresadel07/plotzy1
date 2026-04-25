@@ -72,12 +72,29 @@ function Avatar({ url, name, size = 40 }: { url: string | null; name: string | n
 function BubbleContent({ content, isMine }: { content: string; isMine: boolean }) {
   const parsed = parseContent(content);
   if (parsed.type === "image" && parsed.data) {
+    // mime/name/data come from the message bubble's text payload, which a
+    // sender controls. Refuse anything that isn't a recognised image MIME so
+    // a hostile peer can't smuggle a script-bearing data URI into a popup.
+    const safeMime = /^image\/(png|jpe?g|gif|webp|avif|bmp|svg\+xml)$/i.test(parsed.mime || "")
+      ? parsed.mime!
+      : "image/png";
+    const dataUri = `data:${safeMime};base64,${parsed.data}`;
     return (
       <div>
-        <img src={`data:${parsed.mime};base64,${parsed.data}`} alt={parsed.name}
+        <img src={dataUri} alt={parsed.name}
           style={{ maxWidth: 260, maxHeight: 300, borderRadius: 8, display: "block", cursor: "pointer" }}
           onClick={() => {
-            const w = window.open(); if (w) { w.document.write(`<img src="data:${parsed.mime};base64,${parsed.data}" style="max-width:100%;max-height:100vh;margin:auto;display:block" />`); w.document.title = parsed.name || "Image"; }
+            // Build the popup with the DOM API instead of document.write —
+            // any string concat path is one regression away from XSS when
+            // mime/name come from a peer.
+            const w = window.open();
+            if (!w) return;
+            const img = w.document.createElement("img");
+            img.src = dataUri;
+            img.style.cssText = "max-width:100%;max-height:100vh;margin:auto;display:block";
+            w.document.body.style.cssText = "margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh";
+            w.document.body.appendChild(img);
+            w.document.title = parsed.name || "Image";
           }}
         />
         <div style={{ fontSize: 10.5, color: isMine ? "rgba(0,0,0,0.4)" : TD, marginTop: 4 }}>{parsed.name}</div>

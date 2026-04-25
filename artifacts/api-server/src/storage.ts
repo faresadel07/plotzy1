@@ -110,7 +110,7 @@ export interface IStorage {
   reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void>;
 
   // Admin
-  getAllUsers(): Promise<User[]>;
+  getAllUsers(opts?: { limit?: number; offset?: number }): Promise<User[]>;
   deleteUser(id: number): Promise<void>;
   suspendUser(id: number, suspended: boolean): Promise<User>;
   getSupportMessages(): Promise<SupportMessage[]>;
@@ -147,6 +147,7 @@ export interface IStorage {
   unlikeBook(userId: number, bookId: number): Promise<void>;
   isBookLiked(userId: number, bookId: number): Promise<boolean>;
   getBookLikesCount(bookId: number): Promise<number>;
+  getBookLikesCounts(bookIds: number[]): Promise<Map<number, number>>;
   getAuthorTotalLikes(userId: number): Promise<number>;
 }
 
@@ -518,10 +519,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async setFeaturedBook(bookId: number | null): Promise<void> {
-    await db.update(books).set({ featured: false } as any);
-    if (bookId !== null) {
-      await db.update(books).set({ featured: true } as any).where(eq(books.id, bookId));
-    }
+    // Run both updates in a transaction so a public reader never sees a
+    // window with zero featured books between "clear all" and "set one".
+    await db.transaction(async (tx) => {
+      await tx.update(books).set({ featured: false } as any);
+      if (bookId !== null) {
+        await tx.update(books).set({ featured: true } as any).where(eq(books.id, bookId));
+      }
+    });
   }
 
   // ─── Gamification ──────────────────────────────────────────────────────────
@@ -753,14 +758,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ── Admin ────────────────────────────────────────────────────────────────────
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.id));
+  // Always bounded: admin pages must not pull the entire users table into
+  // memory at once. Default cap (1000) is generous for browsing; the CSV
+  // export route opts into a higher cap explicitly.
+  async getAllUsers(opts: { limit?: number; offset?: number } = {}): Promise<User[]> {
+    const limit = Math.min(Math.max(1, opts.limit ?? 1000), 50_000);
+    const offset = Math.max(0, opts.offset ?? 0);
+    return await db.select().from(users).orderBy(desc(users.id)).limit(limit).offset(offset);
   }
 
+  // Run book-orphan + user-delete inside a single transaction so a crash
+  // between the two statements can't leave dangling references.
   async deleteUser(id: number): Promise<void> {
-    // Clean up books owned by this user
-    await db.update(books).set({ userId: null } as any).where(eq(books.userId, id));
-    await db.delete(users).where(eq(users.id, id));
+    await db.transaction(async (tx) => {
+      await tx.update(books).set({ userId: null } as any).where(eq(books.userId, id));
+      await tx.delete(users).where(eq(users.id, id));
+    });
   }
 
   async getSupportMessages(): Promise<SupportMessage[]> {
@@ -985,6 +998,22 @@ export class DatabaseStorage implements IStorage {
   async getBookLikesCount(bookId: number): Promise<number> {
     const [result] = await db.select({ count: count() }).from(bookLikes).where(eq(bookLikes.bookId, bookId));
     return Number(result?.count ?? 0);
+  }
+
+  // Batched variant — author profiles list every published book and used to
+  // call `getBookLikesCount` in a Promise.all loop (one round-trip per book).
+  // Replaces the N+1 with a single GROUP BY.
+  async getBookLikesCounts(bookIds: number[]): Promise<Map<number, number>> {
+    const out = new Map<number, number>();
+    if (bookIds.length === 0) return out;
+    const rows = await db
+      .select({ bookId: bookLikes.bookId, count: count() })
+      .from(bookLikes)
+      .where(inArray(bookLikes.bookId, bookIds))
+      .groupBy(bookLikes.bookId);
+    for (const r of rows) out.set(r.bookId, Number(r.count));
+    for (const id of bookIds) if (!out.has(id)) out.set(id, 0);
+    return out;
   }
 
   async getBookComments(bookId: number): Promise<any[]> {

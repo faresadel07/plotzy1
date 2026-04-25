@@ -1,15 +1,19 @@
 import rateLimit, { type Options, ipKeyGenerator } from "express-rate-limit";
 
 // ---------------------------------------------------------------------------
-// Key generator: use authenticated user id when available, otherwise IP.
-// This prevents a single logged-in user from burning through OpenAI credits
-// regardless of which IP they connect from.
+// Key generator: combine the authenticated user id (when present) with the
+// connecting IP. We used to switch from IP → user-id at login, which made
+// the limit appear *fresher* the moment an attacker authenticated — they
+// could exhaust the anonymous bucket, log in, and immediately get a fresh
+// allowance under the same minute. Combining both anchors keeps a single
+// continuous bucket per (caller, identity) tuple.
 // ---------------------------------------------------------------------------
 const keyGenerator: Options["keyGenerator"] = (req, res) => {
+  const ip = ipKeyGenerator(req, res);
   if ((req as any).isAuthenticated?.() && (req as any).user?.id) {
-    return `user:${(req as any).user.id}`;
+    return `user:${(req as any).user.id}|ip:${ip}`;
   }
-  return ipKeyGenerator(req, res);
+  return ip;
 };
 
 // ---------------------------------------------------------------------------
@@ -47,7 +51,24 @@ export const authLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  // Same shared keyGenerator — IP + authenticated user when present.
+  keyGenerator,
   message: { message: "Too many login attempts. Please try again later." },
+});
+
+// ---------------------------------------------------------------------------
+// Sensitive auth surface (registration, email verification, password reset).
+// These endpoints aren't called often by legitimate users but are heavily
+// abused for enumeration / brute-forcing tokens / account spam, so they get
+// a tighter window than authLimiter.
+// ---------------------------------------------------------------------------
+export const sensitiveAuthLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,   // 1-hour window
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator,
+  message: { message: "Too many requests. Please try again later." },
 });
 
 // ---------------------------------------------------------------------------

@@ -164,11 +164,10 @@ router.get("/api/authors/:userId/profile", async (req, res) => {
       storage.getAuthorTotalLikes(userId),
     ]);
 
-    // Get like count per book
-    const booksWithLikes = await Promise.all(publishedBooks.map(async (b) => ({
-      ...b,
-      likesCount: await storage.getBookLikesCount(b.id),
-    })));
+    // Like counts in one GROUP BY instead of one query per book — prolific
+    // authors used to fan out a query per published book.
+    const likeCounts = await storage.getBookLikesCounts(publishedBooks.map(b => b.id));
+    const booksWithLikes = publishedBooks.map(b => ({ ...b, likesCount: likeCounts.get(b.id) ?? 0 }));
 
     let isFollowing = false;
     if (req.isAuthenticated() && req.user) {

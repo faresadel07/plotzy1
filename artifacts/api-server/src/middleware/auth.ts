@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { books, chapters, loreEntries, storyBeats, researchItems, arcRecipients, bookCollaborators } from "../../../../lib/db/src/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { isAdminUser } from "../lib/admin";
 
 // Parse the X-Guest-Books header sent by the frontend (main.tsx fetch
@@ -22,6 +22,13 @@ function readGuestBookHeader(req: Request): number[] {
 // vouched for by either the server-side session OR the X-Guest-Books
 // header, transfer ownership inline. Returns the claimed book row, or
 // null if no claim was possible.
+//
+// SECURITY: the X-Guest-Books header is client-controlled, so we treat
+// the session-side list as authoritative and the header as an
+// "additional hint". The atomic UPDATE … WHERE userId IS NULL prevents
+// two concurrent late-claims (and any forged-header race) from both
+// succeeding — only the first request flips userId, the second sees the
+// row already owned and bails out.
 async function tryLateClaim(book: typeof books.$inferSelect, req: Request): Promise<typeof books.$inferSelect | null> {
   if (book.userId !== null) return null;
   if (!req.isAuthenticated() || !req.user) return null;
@@ -30,15 +37,26 @@ async function tryLateClaim(book: typeof books.$inferSelect, req: Request): Prom
   const sess = req.session as any;
   const sessionGuestIds: number[] = sess?.guestBookIds || [];
   const headerGuestIds = readGuestBookHeader(req);
-  const allowed = new Set([...sessionGuestIds, ...headerGuestIds]);
+  // Cap the header list so a hostile client can't push thousands of ids
+  // through the middleware on every request.
+  const cappedHeaderIds = headerGuestIds.slice(0, 50);
+  const allowed = new Set([...sessionGuestIds, ...cappedHeaderIds]);
   if (!allowed.has(book.id)) return null;
 
-  await db.update(books).set({ userId }).where(eq(books.id, book.id));
+  // Atomic claim — UPDATE will return zero rows if another request already
+  // assigned the owner, which is exactly the behaviour we want under a
+  // race. Reading back the row reflects whichever caller won the race.
+  await db.update(books)
+    .set({ userId })
+    .where(and(eq(books.id, book.id), sql`${books.userId} IS NULL`));
   if (sessionGuestIds.includes(book.id)) {
     sess.guestBookIds = sessionGuestIds.filter(id => id !== book.id);
   }
   const [claimed] = await db.select().from(books).where(eq(books.id, book.id));
-  return claimed ?? null;
+  // Safety: if some other caller won the race and now owns the book, we
+  // must NOT return it as if the current user owns it.
+  if (!claimed || claimed.userId !== userId) return null;
+  return claimed;
 }
 
 // ---------------------------------------------------------------------------

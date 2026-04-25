@@ -25,6 +25,12 @@ export const openai = new OpenAI({
 // a Groq-compatible base URL by default in dev.
 export const AI_TEXT_MODEL = process.env.AI_TEXT_MODEL || "llama-3.3-70b-versatile";
 
+// Speech-to-text model. Defaults to Groq's Whisper Large v3 Turbo (free, fast,
+// 90+ languages) since the same Groq-compatible base URL is used for the chat
+// model. Switch to "gpt-4o-mini-transcribe" by setting AI_TRANSCRIBE_MODEL if
+// you point AI_INTEGRATIONS_OPENAI_BASE_URL at api.openai.com.
+export const AI_TRANSCRIBE_MODEL = process.env.AI_TRANSCRIBE_MODEL || "whisper-large-v3-turbo";
+
 /**
  * Guard middleware for AI endpoints — returns 503 with clear message
  * when OpenAI key is missing, instead of crashing with an auth error.

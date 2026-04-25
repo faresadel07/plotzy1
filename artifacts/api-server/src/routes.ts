@@ -13,11 +13,11 @@ import multer from "multer";
 import mammoth from "mammoth";
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable, chapterSnapshots, bookCollaborators } from "../../../lib/db/src/schema";
 import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner, requireEmailVerified } from "./middleware/auth";
-import { aiLimiter, imageGenLimiter, tierAiLimiter } from "./middleware/rate-limit";
+import { aiLimiter, imageGenLimiter, tierAiLimiter, publicReadLimiter } from "./middleware/rate-limit";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
-import gutenbergRouter, { syncGutenbergCatalog } from "./routes/gutenberg.routes";
+import gutenbergRouter, { syncGutenbergCatalog, precacheTopBooks } from "./routes/gutenberg.routes";
 import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import { logger } from "./lib/logger";
@@ -60,6 +60,11 @@ const openai = new OpenAI({
 // Default chat/completion model — env-configurable so we can swap AI
 // providers (OpenAI, Groq, local LLM) without editing each call site.
 const AI_TEXT_MODEL = process.env.AI_TEXT_MODEL || "llama-3.3-70b-versatile";
+
+// Speech-to-text model. Defaults to Groq's Whisper Large v3 Turbo (free,
+// fast, 90+ languages). Override via AI_TRANSCRIBE_MODEL when pointing at
+// api.openai.com (where the equivalent is "gpt-4o-mini-transcribe").
+const AI_TRANSCRIBE_MODEL = process.env.AI_TRANSCRIBE_MODEL || "whisper-large-v3-turbo";
 
 // Language name lookup (code -> English name)
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -470,7 +475,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/public/books/:id/view", async (req, res) => {
+  app.post("/api/public/books/:id/view", publicReadLimiter, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
       await storage.incrementBookViewCount(bookId);
@@ -512,8 +517,16 @@ export async function registerRoutes(
       const { content, authorName } = req.body;
       if (!content?.trim()) return res.status(400).json({ message: "Comment is required" });
       const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
-      const name = authorName?.trim() || (req.user as any)?.displayName || "Anonymous";
-      const comment = await storage.addBookComment({ bookId, userId, authorName: name, content: content.trim() });
+      // Authenticated callers ALWAYS comment under their own displayName —
+      // accepting authorName from req.body would let a logged-in user
+      // impersonate another user's name. Only fall back to user-supplied
+      // text for genuinely anonymous (unauth) comments, and cap length so
+      // it can't be abused as a banner ad.
+      const safeContent = String(content).trim().slice(0, 4000);
+      const safeAuthor = userId
+        ? ((req.user as any)?.displayName || "Anonymous")
+        : (typeof authorName === "string" ? authorName.trim().slice(0, 80) : "") || "Anonymous";
+      const comment = await storage.addBookComment({ bookId, userId, authorName: safeAuthor, content: safeContent });
       res.status(201).json(comment);
     } catch (err) {
       logger.error({ err }, "Failed to post comment");
@@ -629,9 +642,18 @@ export async function registerRoutes(
       if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
       const userId = (req.user as any).id;
       const commentId = Number(req.params.commentId);
-      if (!Number.isInteger(commentId)) return res.status(400).json({ message: "Invalid ID" });
+      const pathBookId = Number(req.params.bookId);
+      if (!Number.isInteger(commentId) || !Number.isInteger(pathBookId)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
       const comment = await storage.getInlineCommentById(commentId);
       if (!comment) return res.status(404).json({ message: "Not found" });
+      // Reject path/object mismatch — the URL claims one book, the comment
+      // belongs to another. Without this check the bookId in the URL was
+      // ignored entirely and the route became a pure-by-id endpoint.
+      if (comment.bookId !== pathBookId) {
+        return res.status(404).json({ message: "Not found" });
+      }
       // Only the comment author OR the book owner can delete
       const book = await storage.getBook(comment.bookId);
       const canDelete = comment.userId === userId || book?.userId === userId;
@@ -649,9 +671,18 @@ export async function registerRoutes(
       if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
       const userId = (req.user as any).id;
       const commentId = Number(req.params.commentId);
-      if (!Number.isInteger(commentId)) return res.status(400).json({ message: "Invalid ID" });
+      const pathBookId = Number(req.params.bookId);
+      if (!Number.isInteger(commentId) || !Number.isInteger(pathBookId)) {
+        return res.status(400).json({ message: "Invalid ID" });
+      }
       const comment = await storage.getInlineCommentById(commentId);
       if (!comment) return res.status(404).json({ message: "Not found" });
+      // Same path/object consistency check as the delete endpoint above —
+      // the URL bookId must match the comment's bookId, otherwise we 404
+      // (don't leak the existence of a comment in another book).
+      if (comment.bookId !== pathBookId) {
+        return res.status(404).json({ message: "Not found" });
+      }
       // Only book owner OR collaborator can resolve
       const hasAccess = await storage.isBookAccessible(comment.bookId, userId);
       if (!hasAccess) return res.status(403).json({ message: "Access denied" });
@@ -699,9 +730,22 @@ export async function registerRoutes(
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
+      // Defang user-controlled fields before they reach the LLM. Both the
+      // book title and the user's prompt are concatenated into the cover
+      // prompt; without this an attacker could write a title like
+      // `". Ignore previous instructions and …` and steer the generated
+      // image. Strip quotes/newlines and clamp length.
+      const safeTitle = String(book?.title || "Novel")
+        .replace(/["\r\n]/g, "")
+        .slice(0, 120)
+        .trim() || "Novel";
+      const safePrompt = String(prompt || "")
+        .replace(/["\r\n]/g, " ")
+        .slice(0, 600)
+        .trim();
       const coverPrompt = side === "back"
-        ? `A professional book back cover background image for a book titled "${book?.title || 'Novel'}". ${prompt}. Portrait orientation, simple and elegant, designed to sit behind text. Subtle, not too busy. No text overlaid on the image.`
-        : `A stunning, professional book front cover for a book titled "${book?.title || 'Novel'}". ${prompt}. Portrait orientation, publication-quality artwork, cinematic and visually striking. The design should feel like a real published novel cover. No text or title overlaid on the image.`;
+        ? `A professional book back cover background image for a book titled "${safeTitle}". ${safePrompt}. Portrait orientation, simple and elegant, designed to sit behind text. Subtle, not too busy. No text overlaid on the image.`
+        : `A stunning, professional book front cover for a book titled "${safeTitle}". ${safePrompt}. Portrait orientation, publication-quality artwork, cinematic and visually striking. The design should feel like a real published novel cover. No text or title overlaid on the image.`;
 
       if (isMockOpenAI) {
         // Return a beautiful dynamic placeholder image based on the genre
@@ -1534,7 +1578,7 @@ export async function registerRoutes(
       const file = await toFile(audioBuffer, "audio.webm", { type: "audio/webm" });
       const transcription = await openai.audio.transcriptions.create({
         file,
-        model: "gpt-4o-mini-transcribe",
+        model: AI_TRANSCRIBE_MODEL,
         language: langCode.length === 2 ? langCode : undefined,
       });
 
@@ -1580,7 +1624,7 @@ export async function registerRoutes(
       const file = await toFile(audioBuffer, "audio.webm", { type: "audio/webm" });
       const transcription = await openai.audio.transcriptions.create({
         file,
-        model: "gpt-4o-mini-transcribe",
+        model: AI_TRANSCRIBE_MODEL,
         language: language && language.length === 2 ? language : undefined,
       });
 
@@ -2410,8 +2454,18 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // ── Social routes (extracted to ./routes/social.routes.ts) ─────────
   app.use(socialRouter);
 
-  // Trigger catalog sync in background on startup (non-blocking)
-  setImmediate(() => syncGutenbergCatalog().catch((err) => logger.error({ err }, "Gutenberg catalog sync failed")));
+  // Trigger catalog sync, then pre-cache the top classics so the discover
+  // page is reliable even when gutenberg.org is slow or unreachable. Both
+  // jobs are idempotent (skip when already done) and run in the background
+  // so they never block startup.
+  setImmediate(async () => {
+    try {
+      await syncGutenbergCatalog();
+      await precacheTopBooks();
+    } catch (err) {
+      logger.error({ err }, "Gutenberg startup jobs failed");
+    }
+  });
 
   return httpServer;
 }

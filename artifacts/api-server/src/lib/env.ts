@@ -78,6 +78,7 @@ const envSchema = z
     AI_INTEGRATIONS_OPENAI_API_KEY: z.string().optional(),
     AI_INTEGRATIONS_OPENAI_BASE_URL: z.string().url().optional(),
     AI_TEXT_MODEL: z.string().optional(),
+    AI_TRANSCRIBE_MODEL: z.string().optional(),
 
     // ── Payments ───────────────────────────────────────────────────────
     STRIPE_SECRET_KEY: z.string().optional(),

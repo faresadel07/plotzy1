@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { eq, and, asc, desc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, sql, isNotNull, isNull } from "drizzle-orm";
 import { gutenbergBooks } from "../../../../lib/db/src/schema";
 
 import { logger } from "../lib/logger";
@@ -14,8 +14,14 @@ const GUTENBERG_TEXT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const OPEN_LIBRARY = "https://openlibrary.org";
 /** Minimum rows to consider the catalog synced */
 const CATALOG_MIN_BOOKS = 1000;
+/** How many of the most-classic English books we keep permanently cached so
+ *  the discover page never goes empty even when gutenberg.org is unreachable. */
+const PRECACHE_TARGET = 200;
+/** Polite delay between gutenberg.org fetches during the precache job. */
+const PRECACHE_DELAY_MS = 2000;
 
 let catalogSyncRunning = false;
+let precacheRunning = false;
 
 /** Parse one CSV row, handling quoted fields correctly */
 function parseCSVRow(line: string): string[] {
@@ -153,6 +159,118 @@ function gutenbergTextUrls(id: number): string[] {
   ];
 }
 
+/** Strip Project Gutenberg's standard header/footer markers from a raw .txt
+ *  download so what we store is the actual book body. The markers are stable
+ *  across all Gutenberg releases since 2005. */
+function stripGutenbergMarkers(rawText: string): string {
+  const startMarker = /\*\*\* START OF (THE|THIS) PROJECT GUTENBERG/i;
+  const endMarker = /\*\*\* END OF (THE|THIS) PROJECT GUTENBERG/i;
+  let content = rawText;
+  const startMatch = rawText.search(startMarker);
+  if (startMatch !== -1) {
+    const afterStart = rawText.indexOf("\n", startMatch) + 1;
+    content = rawText.slice(afterStart);
+  }
+  const endMatch = content.search(endMarker);
+  if (endMatch !== -1) {
+    content = content.slice(0, endMatch).trim();
+  }
+  return content;
+}
+
+/** Try every known URL pattern Gutenberg uses for plain-text books and return
+ *  the first one that works, plus the cleaned content. Returns null when no
+ *  variant is reachable — caller treats that as "this book has no plain-text
+ *  version available". `preferredUrl` is tried first when supplied. */
+async function fetchAndCleanGutenbergText(
+  gutId: number,
+  preferredUrl?: string | null,
+): Promise<{ content: string; textUrl: string } | null> {
+  const candidates = gutenbergTextUrls(gutId);
+  if (preferredUrl && !candidates.includes(preferredUrl)) candidates.unshift(preferredUrl);
+  for (const url of candidates) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!r.ok) continue;
+      const rawText = await r.text();
+      return { content: stripGutenbergMarkers(rawText), textUrl: url };
+    } catch { /* try next candidate */ }
+  }
+  return null;
+}
+
+/** Pre-cache the full text of the top N most-classic English books so the
+ *  discover page is reliable even when gutenberg.org is slow or unreachable.
+ *
+ *  Selection strategy: English books that appear in at least one curated
+ *  bookshelf (a strong signal that Gutenberg's editors flagged them as
+ *  noteworthy), ordered by gutenbergId ASC because lower IDs are older
+ *  uploads which skew toward famous classics (Pride and Prejudice = 1342,
+ *  Frankenstein = 84, Alice in Wonderland = 11). Skips books we've already
+ *  cached or already marked broken (textUrl IS NULL).
+ *
+ *  Idempotent — re-runs are no-ops once the target is met. Polite to
+ *  gutenberg.org via a 2-second delay between fetches.
+ */
+export async function precacheTopBooks(target = PRECACHE_TARGET): Promise<void> {
+  if (precacheRunning) return;
+  precacheRunning = true;
+  try {
+    const [{ alreadyCached }] = await db
+      .select({ alreadyCached: sql<number>`count(*)::int` })
+      .from(gutenbergBooks)
+      .where(isNotNull(gutenbergBooks.content));
+    if ((alreadyCached ?? 0) >= target) {
+      logger.info({ alreadyCached }, "Gutenberg precache already at target — skipping");
+      return;
+    }
+    const remaining = target - (alreadyCached ?? 0);
+
+    const candidates = await db
+      .select({ gutenbergId: gutenbergBooks.gutenbergId, textUrl: gutenbergBooks.textUrl })
+      .from(gutenbergBooks)
+      .where(and(
+        isNull(gutenbergBooks.content),
+        isNotNull(gutenbergBooks.textUrl),
+        sql`${gutenbergBooks.languages}::text like ${`%"en"%`}`,
+        sql`jsonb_array_length(${gutenbergBooks.bookshelves}) > 0`,
+      ))
+      .orderBy(asc(gutenbergBooks.gutenbergId))
+      .limit(remaining);
+
+    logger.info({ count: candidates.length, remaining }, "Gutenberg precache starting");
+
+    let succeeded = 0;
+    let failed = 0;
+    for (const book of candidates) {
+      try {
+        const result = await fetchAndCleanGutenbergText(book.gutenbergId, book.textUrl);
+        if (result) {
+          await db.update(gutenbergBooks)
+            .set({ content: result.content, contentCachedAt: new Date(), textUrl: result.textUrl })
+            .where(eq(gutenbergBooks.gutenbergId, book.gutenbergId));
+          succeeded++;
+        } else {
+          // No plain-text version — mark broken so it disappears from discover.
+          await db.update(gutenbergBooks)
+            .set({ textUrl: null })
+            .where(eq(gutenbergBooks.gutenbergId, book.gutenbergId));
+          failed++;
+        }
+      } catch (err) {
+        logger.warn({ err, gutId: book.gutenbergId }, "Gutenberg precache fetch error");
+      }
+      await new Promise(r => setTimeout(r, PRECACHE_DELAY_MS));
+    }
+
+    logger.info({ succeeded, failed }, "Gutenberg precache complete");
+  } catch (err) {
+    logger.error({ err }, "Gutenberg precache failed");
+  } finally {
+    precacheRunning = false;
+  }
+}
+
 /** Upsert Open Library metadata into gutenbergBooks table */
 async function upsertOLMeta(olDoc: any, gutId: number) {
   const title = olDoc.title || "Unknown";
@@ -201,8 +319,11 @@ router.get("/api/gutenberg/books", async (req: any, res: any) => {
       return res.json({ count: 0, next: null, previous: null, results: [], syncing: true });
     }
 
-    // Build WHERE conditions from DB
-    const conditions: any[] = [];
+    // Build WHERE conditions from DB. Always exclude books we've previously
+    // confirmed broken — the content endpoint sets textUrl=NULL the first
+    // time it can't fetch a plain-text version, so this single filter keeps
+    // the discover grid free of dead tiles for the rest of time.
+    const conditions: any[] = [isNotNull(gutenbergBooks.textUrl)];
     if (search) {
       const q = `%${search.toLowerCase()}%`;
       conditions.push(sql`(lower(${gutenbergBooks.title}) like ${q} OR lower(${gutenbergBooks.authors}::text) like ${q})`);
@@ -319,49 +440,23 @@ router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
       }
     }
 
-    // Build candidate list: DB-cached URL first, then fallback patterns
-    const candidates = gutenbergTextUrls(gutId);
-    if (row?.textUrl && !candidates.includes(row.textUrl)) candidates.unshift(row.textUrl);
-
-    let textUrl: string | null = null;
-    let textResp: Response | null = null;
-
-    for (const url of candidates) {
-      try {
-        const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
-        if (r.ok) { textUrl = url; textResp = r; break; }
-      } catch { /* try next */ }
-    }
-
-    if (!textUrl || !textResp) {
-      // Mark this book as unavailable so the UI can hide it
-      if (row) await db.update(gutenbergBooks).set({ textUrl: null }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch((err) => logger.error({ err }, "Gutenberg DB update failed"));
+    const result = await fetchAndCleanGutenbergText(gutId, row?.textUrl);
+    if (!result) {
+      // No working URL — mark the row broken so the discover query hides it.
+      if (row) {
+        await db.update(gutenbergBooks)
+          .set({ textUrl: null })
+          .where(eq(gutenbergBooks.gutenbergId, gutId))
+          .catch((err) => logger.error({ err }, "Gutenberg DB update failed"));
+      }
       return res.status(404).json({ error: "No plain-text version available for this book" });
     }
 
-    // Save the working textUrl back to DB if it changed
-    if (row?.textUrl !== textUrl) {
-      await db.update(gutenbergBooks).set({ textUrl }).where(eq(gutenbergBooks.gutenbergId, gutId)).catch((err) => logger.error({ err }, "Gutenberg DB update failed"));
-    }
-
-    if (!textResp.ok) return res.status(502).json({ error: "Failed to fetch book text" });
-    const rawText = await textResp.text();
-
-    const startMarker = /\*\*\* START OF (THE|THIS) PROJECT GUTENBERG/i;
-    const endMarker = /\*\*\* END OF (THE|THIS) PROJECT GUTENBERG/i;
-    let content = rawText;
-    const startMatch = rawText.search(startMarker);
-    if (startMatch !== -1) {
-      const afterStart = rawText.indexOf("\n", startMatch) + 1;
-      content = rawText.slice(afterStart);
-    }
-    const endMatch = content.search(endMarker);
-    if (endMatch !== -1) {
-      content = content.slice(0, endMatch).trim();
-    }
-
+    const { content, textUrl } = result;
     if (row) {
-      await db.update(gutenbergBooks).set({ content, contentCachedAt: new Date() }).where(eq(gutenbergBooks.gutenbergId, gutId));
+      await db.update(gutenbergBooks)
+        .set({ content, contentCachedAt: new Date(), textUrl })
+        .where(eq(gutenbergBooks.gutenbergId, gutId));
     } else {
       await db.insert(gutenbergBooks).values({
         gutenbergId: gutId,
@@ -369,7 +464,10 @@ router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
         textUrl,
         content,
         contentCachedAt: new Date(),
-      }).onConflictDoUpdate({ target: gutenbergBooks.gutenbergId, set: { content, contentCachedAt: new Date() } });
+      }).onConflictDoUpdate({
+        target: gutenbergBooks.gutenbergId,
+        set: { content, contentCachedAt: new Date(), textUrl },
+      });
     }
 
     return res.json({ content, fromCache: false, cachedAt: new Date() });

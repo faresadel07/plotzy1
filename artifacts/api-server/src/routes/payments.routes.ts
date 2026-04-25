@@ -25,13 +25,31 @@ const BOOK_PRICE_CENTS = 499;
 
 router.post(api.payments.createIntent.path, paymentLimiter, async (req, res) => {
   try {
+    // Require an authenticated user and verify they own (or co-edit) the
+    // book. The previous version accepted any `bookId` from the request
+    // body — anyone could spin up payment intents against any book, which
+    // is both a fraud vector (associate someone else's purchase with the
+    // wrong book) and a Stripe-quota / log-noise problem.
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
     const { bookId } = api.payments.createIntent.input.parse(req.body);
+    const userId = (req.user as any).id;
+
+    const book = await storage.getBook(bookId);
+    if (!book) return res.status(404).json({ message: "Book not found" });
+    if (book.userId !== userId) {
+      return res.status(403).json({ message: "Only the book owner can purchase publishing for this book" });
+    }
 
     const stripe = await getUncachableStripeClient();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: BOOK_PRICE_CENTS,
       currency: "usd",
-      metadata: { bookId: String(bookId) },
+      // Pin both the book id AND the buyer's user id into the intent so the
+      // confirm/webhook handlers can refuse to credit the purchase to a
+      // different user later.
+      metadata: { bookId: String(bookId), userId: String(userId) },
       automatic_payment_methods: { enabled: true },
     });
 
@@ -194,6 +212,17 @@ router.post("/api/subscription/create-checkout", paymentLimiter, async (req, res
 
 router.get("/api/subscription/verify", async (req, res) => {
   try {
+    // SECURITY: previously this trusted `session.metadata.userId` and would
+    // happily flip subscriptionStatus=active on whichever user id the
+    // session metadata carried. A logged-in attacker who could observe (or
+    // guess) someone else's checkout session id could then activate that
+    // user's subscription, or — worse — pass their own session id with
+    // mutated metadata via a forged checkout. We now require the caller to
+    // be authenticated and only mutate the *current* user's row.
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    const callerId = (req.user as any).id;
     const { session_id } = z.object({ session_id: z.string() }).parse(req.query);
     const stripe = await getUncachableStripeClient();
     const session = await stripe.checkout.sessions.retrieve(session_id, {
@@ -201,24 +230,29 @@ router.get("/api/subscription/verify", async (req, res) => {
     });
 
     if (session.payment_status === "paid" || session.status === "complete") {
-      const userId = session.metadata?.userId ? Number(session.metadata.userId) : null;
+      const sessionUserId = session.metadata?.userId ? Number(session.metadata.userId) : null;
+      // The session must have been issued for this exact caller. If the
+      // metadata mismatches, the caller is trying to verify someone else's
+      // session — refuse without leaking which case it was.
+      if (sessionUserId !== callerId) {
+        return res.status(403).json({ success: false, message: "Session does not belong to caller" });
+      }
+
       const plan = (session.metadata?.plan as "monthly" | "yearly") || "monthly";
       const subscription = session.subscription as any;
       const customer = session.customer as any;
 
-      if (userId) {
-        const endDate = subscription?.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
-          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+      const endDate = subscription?.current_period_end
+        ? new Date(subscription.current_period_end * 1000)
+        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
-        await storage.updateUser(userId, {
-          subscriptionStatus: "active",
-          subscriptionPlan: plan,
-          subscriptionEndDate: endDate,
-          stripeCustomerId: customer?.id || session.customer as string || undefined,
-          stripeSubscriptionId: subscription?.id || undefined,
-        });
-      }
+      await storage.updateUser(callerId, {
+        subscriptionStatus: "active",
+        subscriptionPlan: plan,
+        subscriptionEndDate: endDate,
+        stripeCustomerId: customer?.id || (session.customer as string) || undefined,
+        stripeSubscriptionId: subscription?.id || undefined,
+      });
 
       return res.json({ success: true, plan });
     }

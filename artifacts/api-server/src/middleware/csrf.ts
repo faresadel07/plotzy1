@@ -43,7 +43,12 @@ function getAllowedOrigins(): string[] {
 function originMatches(origin: string, allowedOrigins: string[], req: Request): boolean {
   if (allowedOrigins.includes(origin)) return true;
   // Same-origin (proxying UI through the API): Origin matches the Host we
-  // were reached at.
+  // were reached at. We DELIBERATELY skip this same-origin fallback in
+  // production because the Host header can be controlled by an attacker
+  // through a misconfigured proxy / load balancer that forwards arbitrary
+  // Host values — pinning to the explicit ALLOWED_ORIGINS list there
+  // prevents that whole class of trust-the-host bypass.
+  if (process.env.NODE_ENV === "production") return false;
   const host = req.headers.host;
   if (!host) return false;
   const proto = req.protocol || "http";

@@ -17,6 +17,10 @@ function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps)
   const [isResizing, setIsResizing] = useState(false);
   const startRef = useRef<{ x: number; w: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Hold a reference to the active drag handlers so we can yank them off
+  // window if the node is unmounted mid-drag (TipTap re-renders can swap
+  // the NodeView without firing mouseup, leaving stale listeners forever).
+  const activeListenersRef = useRef<{ move: (e: MouseEvent) => void; up: () => void } | null>(null);
 
   const widthPct: number = node.attrs.widthPct ?? 100;
   const align: string = node.attrs.align ?? "center";
@@ -40,10 +44,29 @@ function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps)
       const pct = Math.round(Math.min(100, (newW / containerW) * 100));
       updateAttributes({ widthPct: pct });
     };
-    const onUp = () => { setIsResizing(false); startRef.current = null; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+    const onUp = () => {
+      setIsResizing(false);
+      startRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      activeListenersRef.current = null;
+    };
+    activeListenersRef.current = { move: onMove, up: onUp };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   }, [widthPct, updateAttributes]);
+
+  // Defensive unmount cleanup — if the resize was never released (component
+  // unmounted mid-drag, TipTap swapped the NodeView, etc.) we'd otherwise
+  // leak a pair of window listeners every time.
+  useEffect(() => () => {
+    const active = activeListenersRef.current;
+    if (active) {
+      window.removeEventListener("mousemove", active.move);
+      window.removeEventListener("mouseup", active.up);
+      activeListenersRef.current = null;
+    }
+  }, []);
 
   const AlignIcon = ({ a }: { a: string }) => (
     a === "left" ? <svg width="11" height="9" viewBox="0 0 11 9" fill="currentColor"><rect x="0" y="0" width="11" height="1.8" rx="0.9"/><rect x="0" y="3.6" width="7" height="1.8" rx="0.9"/><rect x="0" y="7.2" width="9" height="1.8" rx="0.9"/></svg>
@@ -457,7 +480,18 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
       FontFamily,
       FontSize,
       Highlight.configure({ multicolor: true }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "tiptap-link" } }),
+      Link.configure({
+        openOnClick: false,
+        // Force every editor-emitted link to open in a sandboxed tab — without
+        // this, `target="_blank"` paired with no `rel` exposes window.opener
+        // (tabnabbing). The sanitize.ts pipeline guards already-stored HTML;
+        // this guards the live editor output.
+        HTMLAttributes: {
+          class: "tiptap-link",
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+      }),
       ResizableImage,
     ],
     content: initialContent || "<p></p>",

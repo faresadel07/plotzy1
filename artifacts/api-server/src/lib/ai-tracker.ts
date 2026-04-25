@@ -12,6 +12,7 @@ import { aiUsageLogs } from "../../../../lib/db/src/schema";
 //   gpt-5.1:      input $5.00, output $15.00
 //   gpt-image-1:  ~$0.04 per image (flat)
 //   gpt-4o-mini-transcribe: ~$0.005 per minute
+//   whisper-large-v3-turbo: free on Groq's current tier
 // ---------------------------------------------------------------------------
 
 const COST_PER_1M_TOKENS: Record<string, { input: number; output: number }> = {
@@ -20,6 +21,8 @@ const COST_PER_1M_TOKENS: Record<string, { input: number; output: number }> = {
   "gpt-5.1":                 { input: 500, output: 1500 },
   "gpt-image-1":             { input: 0,   output: 0 },     // flat rate
   "gpt-4o-mini-transcribe":  { input: 0,   output: 0 },     // flat rate
+  "whisper-large-v3":        { input: 0,   output: 0 },     // flat rate
+  "whisper-large-v3-turbo":  { input: 0,   output: 0 },     // flat rate
 };
 
 function estimateCostCents(
@@ -29,8 +32,14 @@ function estimateCostCents(
 ): number {
   // Image generation is ~4 cents per call
   if (model === "gpt-image-1") return 4;
-  // Transcription is ~0.5 cents per call
-  if (model === "gpt-4o-mini-transcribe") return 1;
+  // Transcription is roughly flat per call. Whisper-on-Groq is free at the
+  // current tier, but we still log a 1-cent placeholder so the admin
+  // dashboard accounts for usage volume.
+  if (
+    model === "gpt-4o-mini-transcribe" ||
+    model === "whisper-large-v3" ||
+    model === "whisper-large-v3-turbo"
+  ) return 1;
 
   const rates = COST_PER_1M_TOKENS[model] || COST_PER_1M_TOKENS["gpt-4o"];
   const inputCost = (promptTokens / 1_000_000) * rates.input;
