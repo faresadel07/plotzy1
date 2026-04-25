@@ -272,17 +272,43 @@ export class DatabaseStorage implements IStorage {
   async reorderStoryBeats(updates: { id: number; columnId: string; order: number }[]): Promise<void> {
     if (updates.length === 0) return;
     const VALID_COLUMNS = ["act1", "act2", "act3"];
-    for (const u of updates) {
-      const safeCol = VALID_COLUMNS.includes(u.columnId) ? u.columnId : "act1";
-      await db.execute(sql`UPDATE story_beats SET "order" = ${Number(u.order)}, "column_id" = ${safeCol} WHERE id = ${Number(u.id)}`);
-    }
+    // Batched as a single UPDATE with CASE/WHEN per row instead of one
+    // round-trip per beat. Drag-and-drop reordering 30 beats was 30
+    // sequential statements (~600ms on Neon); this is one statement.
+    const ids = updates.map(u => Number(u.id)).filter(Number.isFinite);
+    if (ids.length === 0) return;
+    const orderCases = sql.join(
+      updates.map(u => sql`WHEN ${Number(u.id)} THEN ${Number(u.order)}`),
+      sql` `,
+    );
+    const colCases = sql.join(
+      updates.map(u => {
+        const safeCol = VALID_COLUMNS.includes(u.columnId) ? u.columnId : "act1";
+        return sql`WHEN ${Number(u.id)} THEN ${safeCol}`;
+      }),
+      sql` `,
+    );
+    await db.execute(sql`
+      UPDATE story_beats
+      SET "order" = CASE id ${orderCases} END,
+          "column_id" = CASE id ${colCases} END
+      WHERE id IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})
+    `);
   }
 
   async reorderChapters(updates: { id: number; order: number }[]): Promise<void> {
     if (updates.length === 0) return;
-    for (const u of updates) {
-      await db.execute(sql`UPDATE chapters SET "order" = ${Number(u.order)} WHERE id = ${Number(u.id)}`);
-    }
+    const ids = updates.map(u => Number(u.id)).filter(Number.isFinite);
+    if (ids.length === 0) return;
+    const orderCases = sql.join(
+      updates.map(u => sql`WHEN ${Number(u.id)} THEN ${Number(u.order)}`),
+      sql` `,
+    );
+    await db.execute(sql`
+      UPDATE chapters
+      SET "order" = CASE id ${orderCases} END
+      WHERE id IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})
+    `);
   }
 
   // ─── Chapters ──────────────────────────────────────────────────────────────
@@ -713,9 +739,17 @@ export class DatabaseStorage implements IStorage {
 
   async reorderSeriesBooks(updates: { bookId: number; seriesOrder: number }[]): Promise<void> {
     if (updates.length === 0) return;
-    for (const u of updates) {
-      await db.execute(sql`UPDATE books SET "series_order" = ${Number(u.seriesOrder)} WHERE id = ${Number(u.bookId)}`);
-    }
+    const ids = updates.map(u => Number(u.bookId)).filter(Number.isFinite);
+    if (ids.length === 0) return;
+    const orderCases = sql.join(
+      updates.map(u => sql`WHEN ${Number(u.bookId)} THEN ${Number(u.seriesOrder)}`),
+      sql` `,
+    );
+    await db.execute(sql`
+      UPDATE books
+      SET "series_order" = CASE id ${orderCases} END
+      WHERE id IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})
+    `);
   }
 
   // ── Admin ────────────────────────────────────────────────────────────────────
