@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "../../../lib/shared/src/routes";
@@ -1763,6 +1763,28 @@ Return a strict JSON object with these two arrays.`;
 
   const largeBodyParser = express.json({ limit: '5mb' });
 
+  // Load and format the book's lore as a system-prompt suffix — but ONLY
+  // if the caller actually owns the book. Without this guard, the AI
+  // routes below would happily pull any victim's worldbuilding into the
+  // model's context just because the bookId was supplied in the body.
+  // Returns "" for: missing bookId, unauthenticated caller, non-owner,
+  // missing book, or empty lore. Never throws — bad bookIds degrade
+  // gracefully to no-context AI responses.
+  async function loadLoreIfOwner(req: Request, bookId: number | undefined): Promise<string> {
+    if (!bookId) return "";
+    if (!req.isAuthenticated() || !req.user) return "";
+    try {
+      const book = await storage.getBook(bookId);
+      if (!book || book.userId !== (req.user as any).id) return "";
+      const lore = await storage.getLoreEntries(bookId);
+      if (lore.length === 0) return "";
+      const loreText = lore.map(l => `[${l.category.toUpperCase()}] ${l.name}: ${l.content}`).join("\n");
+      return "\n\nSTORY BIBLE / LORE CONTEXT (Strictly maintain factual consistency with these details):\n" + loreText;
+    } catch {
+      return "";
+    }
+  }
+
   app.post(api.ai.improve.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.improve.input.parse(req.body);
@@ -1770,14 +1792,7 @@ Return a strict JSON object with these two arrays.`;
       const langName = getLangName(langCode);
       const arabic = langCode === "ar";
 
-      let loreContext = "";
-      if (bookId) {
-        const loreEntries = await storage.getLoreEntries(bookId);
-        if (loreEntries.length > 0) {
-          const loreText = loreEntries.map(l => `[${l.category.toUpperCase()}] ${l.name}: ${l.content}`).join("\n");
-          loreContext = "\n\nSTORY BIBLE / LORE CONTEXT (Strictly maintain factual consistency with these details):\n" + loreText;
-        }
-      }
+      const loreContext = await loadLoreIfOwner(req, bookId);
 
       let systemPrompt = arabic
         ? "أنت محرر أدبي محترف. قم بتحسين النص التالي من حيث الوضوح والنحو والأسلوب والجودة الأدبية مع الحفاظ على المعنى الأصلي. أعد النص المحسّن فقط دون أي تعليق."
@@ -1807,14 +1822,7 @@ Return a strict JSON object with these two arrays.`;
       const langName = getLangName(langCode);
       const arabic = langCode === "ar";
 
-      let loreContext = "";
-      if (bookId) {
-        const loreEntries = await storage.getLoreEntries(bookId);
-        if (loreEntries.length > 0) {
-          const loreText = loreEntries.map(l => `[${l.category.toUpperCase()}] ${l.name}: ${l.content}`).join("\n");
-          loreContext = "\n\nSTORY BIBLE / LORE CONTEXT (Strictly refer to and respect these details when expanding the idea):\n" + loreText;
-        }
-      }
+      const loreContext = await loadLoreIfOwner(req, bookId);
 
       let systemPrompt = arabic
         ? "أنت روائي موهوب. خذ الفكرة أو المسودة التالية وقم بتوسيعها وتطويرها إلى نص أدبي كامل ومنسق. أضف وصفاً غنياً وحواراً ومشاعر وبناءً درامياً. اكتب بأسلوب أدبي راقٍ باللغة العربية الفصحى."
@@ -1844,14 +1852,7 @@ Return a strict JSON object with these two arrays.`;
       const langName = getLangName(langCode);
       const arabic = langCode === "ar";
 
-      let loreContext = "";
-      if (bookId) {
-        const loreEntries = await storage.getLoreEntries(bookId);
-        if (loreEntries.length > 0) {
-          const loreText = loreEntries.map(l => `[${l.category.toUpperCase()}] ${l.name}: ${l.content}`).join("\n");
-          loreContext = "\n\nSTORY BIBLE / LORE CONTEXT (These entities exist in the universe. Do not contradict them):\n" + loreText;
-        }
-      }
+      const loreContext = await loadLoreIfOwner(req, bookId);
 
       let systemPrompt = arabic
         ? "أنت روائي موهوب. استمر في كتابة النص التالي بنفس الأسلوب والنبرة. أضف ما لا يقل عن ثلاثة فقرات جديدة. أعد المتابعة فقط بدون النص الأصلي."
@@ -1927,14 +1928,7 @@ Rules:
       const { text, targetLanguage, bookId } = api.ai.translate.input.parse(req.body);
       const targetName = getLangName(targetLanguage);
 
-      let loreContext = "";
-      if (bookId) {
-        const loreEntries = await storage.getLoreEntries(bookId);
-        if (loreEntries.length > 0) {
-          const loreText = loreEntries.map(l => `[${l.category.toUpperCase()}] ${l.name}: ${l.content}`).join("\n");
-          loreContext = "\n\nSTORY BIBLE / LORE CONTEXT (Use these proper nouns across translations consistently):\n" + loreText;
-        }
-      }
+      const loreContext = await loadLoreIfOwner(req, bookId);
 
       let systemPrompt = `You are a professional literary translator. Translate the following text into fluent, natural ${targetName}, preserving the literary style, tone, and meaning. Return only the translation.`;
       systemPrompt += loreContext;
