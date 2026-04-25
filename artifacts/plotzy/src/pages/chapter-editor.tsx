@@ -902,10 +902,18 @@ export default function ChapterEditor() {
 
     if (sdtDebounceRef.current) clearTimeout(sdtDebounceRef.current);
 
-    sdtDebounceRef.current = setTimeout(async () => {
-      if (sdtAbortRef.current) sdtAbortRef.current.abort();
-      sdtAbortRef.current = new AbortController();
+    // Create the AbortController synchronously, BEFORE the timeout
+    // schedules. The previous code created it inside the setTimeout
+    // callback — if the component unmounted before the timer fired,
+    // there was nothing to abort, the fetch went out, and on response
+    // setSdtLoading/setSdtFindings ran on an unmounted component.
+    const ac = new AbortController();
+    if (sdtAbortRef.current) sdtAbortRef.current.abort();
+    sdtAbortRef.current = ac;
+    let cancelled = false;
 
+    sdtDebounceRef.current = setTimeout(async () => {
+      if (cancelled) return;
       setSdtLoading(true);
       try {
         const res = await fetch("/api/show-dont-tell", {
@@ -913,10 +921,11 @@ export default function ChapterEditor() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: currentText, language: lang }),
           credentials: "include",
-          signal: sdtAbortRef.current.signal,
+          signal: ac.signal,
         });
-        if (!res.ok) return;
+        if (!res.ok || cancelled) return;
         const data = await res.json();
+        if (cancelled) return;
         const findings: SDTFinding[] = data.findings || [];
         if (findings.length > 0) {
           setSdtFindings(findings);
@@ -926,12 +935,14 @@ export default function ChapterEditor() {
       } catch {
         // aborted or network error — ignore
       } finally {
-        setSdtLoading(false);
+        if (!cancelled) setSdtLoading(false);
       }
     }, 4000);
 
     return () => {
+      cancelled = true;
       if (sdtDebounceRef.current) clearTimeout(sdtDebounceRef.current);
+      ac.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages[activePageIndex], activePageIndex]);

@@ -18,17 +18,32 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
   const { toast } = useToast();
   const { refetch, user } = useAuth();
   const [, navigate] = useLocation();
+  // Single in-flight guard: PayPal renders two buttons (paypal + card)
+  // and the user can hammer either of them. Without this, double-clicks
+  // can land two capture-order requests for the same orderID and only
+  // the server's idempotency check protects us — feels uneasy. The flag
+  // covers the entire create→approve lifecycle so a click during
+  // approval is also dropped.
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const createOrder = async () => {
     if (!user) { navigate("/?auth=required"); throw new Error("Not authenticated"); }
-    const res = await fetch("/api/paypal/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error("Failed to create order");
-    return (await res.json()).orderId as string;
+    if (isProcessing) throw new Error("Payment already in progress");
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/paypal/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to create order");
+      return (await res.json()).orderId as string;
+    } catch (err) {
+      // Reset on createOrder failure so the user can retry.
+      setIsProcessing(false);
+      throw err;
+    }
   };
 
   const onApprove = async (data: { orderID: string }) => {
@@ -45,22 +60,27 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
       onSuccess?.();
     } catch {
       toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const onError = (err: any) => {
     console.error("PayPal error:", err);
     toast({ title: "Payment error", description: "Something went wrong. Please try again.", variant: "destructive" });
+    setIsProcessing(false);
   };
 
   const onCancel = () => {
     toast({ title: "Payment cancelled", description: "You can try again anytime.", variant: "destructive" });
+    setIsProcessing(false);
   };
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5" style={{ position: "relative" }}>
       <PayPalButtons
         fundingSource="paypal"
+        disabled={isProcessing}
         style={{ layout: "horizontal", color: "gold", height: 48, shape: "rect", label: "pay" }}
         createOrder={createOrder}
         onApprove={onApprove}
@@ -69,12 +89,28 @@ function PayPalButtonsInner({ plan, onSuccess }: PayPalCheckoutProps) {
       />
       <PayPalButtons
         fundingSource="card"
+        disabled={isProcessing}
         style={{ layout: "horizontal", height: 48, shape: "rect" }}
         createOrder={createOrder}
         onApprove={onApprove}
         onError={onError}
         onCancel={onCancel}
       />
+      {isProcessing && (
+        // Visible feedback that we're working — without this the UI
+        // looks frozen and the user reflexively clicks again.
+        <div
+          aria-live="polite"
+          style={{
+            position: "absolute", inset: 0, display: "flex",
+            alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.55)", borderRadius: 8,
+            pointerEvents: "none",
+          }}
+        >
+          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
     </div>
   );
 }

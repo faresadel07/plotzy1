@@ -46,10 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    // Prevent Google One Tap from silently re-authenticating the user they
-    // just logged out from.
+    // Prevent Google One Tap from silently re-authenticating the user
+    // they just logged out from. The GSI script declares its global as
+    // `window.google` — the One Tap component already augments the
+    // global with a typed declaration (see GoogleOneTap.tsx), so we
+    // can use it without `as any`. A typed access also makes it
+    // visible if the GSI shape ever changes.
     try {
-      (window as any).google?.accounts?.id?.disableAutoSelect?.();
+      window.google?.accounts?.id?.disableAutoSelect?.();
     } catch {}
     // SECURITY: purge any book IDs the previous session left behind so the
     // next (unauthenticated) visitor cannot request them from the backend.
