@@ -12,7 +12,7 @@ import os from "os";
 import multer from "multer";
 import mammoth from "mammoth";
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable, chapterSnapshots, bookCollaborators } from "../../../lib/db/src/schema";
-import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner } from "./middleware/auth";
+import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner, requireEmailVerified } from "./middleware/auth";
 import { aiLimiter, imageGenLimiter, tierAiLimiter } from "./middleware/rate-limit";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
@@ -293,7 +293,9 @@ export async function registerRoutes(
 
   // ─── Publish / Unpublish Book ───────────────────────────────────────────────
 
-  app.post("/api/books/:id/publish", async (req, res) => {
+  // Publishing exposes content to the public — gate behind verified
+  // email so throwaway accounts can't flood the library.
+  app.post("/api/books/:id/publish", requireEmailVerified, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
       const book = await storage.getBook(bookId);
@@ -438,7 +440,7 @@ export async function registerRoutes(
     } catch { res.json([]); }
   });
 
-  app.post("/api/public/books/:id/comments", async (req, res) => {
+  app.post("/api/public/books/:id/comments", requireEmailVerified, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
       const { content, authorName } = req.body;
@@ -501,7 +503,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/books/:bookId/chapters/:chapterId/inline-comments", async (req, res) => {
+  app.post("/api/books/:bookId/chapters/:chapterId/inline-comments", requireEmailVerified, async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
       const chapterId = Number(req.params.chapterId);
@@ -598,7 +600,7 @@ export async function registerRoutes(
     } catch { res.json({ avg: 0, count: 0 }); }
   });
 
-  app.post("/api/public/books/:id/rate", async (req, res) => {
+  app.post("/api/public/books/:id/rate", requireEmailVerified, async (req, res) => {
     try {
       if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Login to rate" });
       const bookId = Number(req.params.id);

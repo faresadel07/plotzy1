@@ -4,6 +4,7 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { logger } from "../lib/logger";
 import { sendNotificationEmail } from "../lib/email";
+import { requireEmailVerified } from "../middleware/auth";
 
 // Extract the bare handle from any common paste form — bare handle,
 // @-prefixed, or a full profile URL with or without protocol. Keeps
@@ -208,7 +209,7 @@ router.patch("/api/me/profile", async (req, res) => {
 });
 
 // POST /api/authors/:userId/follow
-router.post("/api/authors/:userId/follow", async (req, res) => {
+router.post("/api/authors/:userId/follow", requireEmailVerified, async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -251,7 +252,7 @@ router.delete("/api/authors/:userId/follow", async (req, res) => {
 // ── Book Likes ─────────────────────────────────────────────────────
 
 // POST /api/books/:bookId/like
-router.post("/api/books/:bookId/like", async (req, res) => {
+router.post("/api/books/:bookId/like", requireEmailVerified, async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const bookId = Number(req.params.bookId);
@@ -394,7 +395,7 @@ router.get("/api/messages/:userId", async (req, res) => {
 });
 
 // POST /api/messages/:userId
-router.post("/api/messages/:userId", async (req, res) => {
+router.post("/api/messages/:userId", requireEmailVerified, async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -437,7 +438,7 @@ router.post("/api/messages/:userId", async (req, res) => {
 });
 
 // POST /api/messages/:userId/attachment — send image/file as base64 message
-router.post("/api/messages/:userId/attachment", upload.single("file"), async (req, res) => {
+router.post("/api/messages/:userId/attachment", requireEmailVerified, upload.single("file"), async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const receiverId = Number(req.params.userId);

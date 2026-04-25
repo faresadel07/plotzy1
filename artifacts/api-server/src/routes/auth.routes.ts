@@ -358,7 +358,9 @@ router.post("/api/auth/google/one-tap", async (req, res) => {
       if (user) user = await storage.updateUser(user.id, { googleId });
     }
     if (!user) {
-      user = await storage.createUser({ googleId, email, displayName, avatarUrl });
+      // Google One Tap already required payload.email_verified === true
+      // above (see line ~344), so the address is verified by Google.
+      user = await storage.createUser({ googleId, email, displayName, avatarUrl, emailVerified: true } as any);
     }
 
     // Preserve any guest books started before login.
@@ -505,7 +507,9 @@ router.get("/auth/linkedin/callback", async (req, res) => {
         }
       }
       if (!user) {
-        user = await storage.createUser({ linkedinId, email, displayName, avatarUrl });
+        // LinkedIn returns email_verified=true on its userinfo endpoint
+        // (verified before issuing the token) — addresses are confirmed.
+        user = await storage.createUser({ linkedinId, email, displayName, avatarUrl, emailVerified: true } as any);
       }
     }
 

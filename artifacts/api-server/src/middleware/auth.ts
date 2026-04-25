@@ -28,6 +28,33 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 // ---------------------------------------------------------------------------
+// 2b) requireEmailVerified — block public-impact actions for unverified
+//     accounts. Without this, anyone with a throwaway email can register,
+//     skip the verification email, and start spamming comments / messages /
+//     follows / likes / publish actions. OAuth users (Google/Apple/LinkedIn)
+//     are auto-verified at signup since the provider already verified the
+//     address.
+//
+//     The error includes a `code: "EMAIL_NOT_VERIFIED"` so the frontend can
+//     show a "resend verification email" prompt instead of a generic 403.
+// ---------------------------------------------------------------------------
+export function requireEmailVerified(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  const u = req.user as any;
+  if (u.emailVerified) return next();
+  // Admins and OAuth-only users (no email column at all) are exempt — the
+  // former are operators we trust, the latter have no email to verify.
+  if (isAdminUser(req.user)) return next();
+  if (!u.email) return next();
+  return res.status(403).json({
+    message: "Please verify your email address to perform this action.",
+    code: "EMAIL_NOT_VERIFIED",
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 3) requireBookOwner — verifies the authenticated user owns the book
 // ---------------------------------------------------------------------------
 

@@ -70,7 +70,10 @@ export function setupPassport() {
                   email,
                   displayName: profile.displayName || null,
                   avatarUrl: profile.photos?.[0]?.value || null,
-                });
+                  // Google verifies the email before letting it be used
+                  // on a Google account; trust it as our verification.
+                  emailVerified: true,
+                } as any);
               }
             }
             done(null, user);
@@ -111,7 +114,9 @@ export function setupPassport() {
                   user = await storage.getUserByEmail(email);
                   if (user) user = await storage.updateUser(user.id, { appleId });
                 }
-                if (!user) user = await storage.createUser({ appleId, email });
+                // Apple's id_token is signed; the email field is verified
+                // by Apple at account-creation time on their end.
+                if (!user) user = await storage.createUser({ appleId, email, emailVerified: true } as any);
               }
               done(null, user);
             } catch (err) {
