@@ -3,6 +3,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
 import {
   BookOpen, Bell, Mail, PenTool, Send, Library, Plus, Users,
@@ -100,8 +101,29 @@ export default function DashboardDemo() {
     day: "numeric",
   });
 
-  const subStatus = user?.subscriptionPlan || user?.subscriptionStatus || "Free";
-  const subLabel = subStatus.charAt(0).toUpperCase() + subStatus.slice(1);
+  // Translate the subscription label rather than blindly capitalising
+  // the English-only enum value. The DB stores raw enum strings
+  // (free/pro/premium/free_trial/active/canceled/expired); render
+  // them through a per-locale map so Arabic users see Arabic words
+  // and unknown values fall back to a sensible capitalised default.
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const rawSub = user?.subscriptionPlan || user?.subscriptionStatus || "free";
+  const SUB_LABELS: Record<string, { en: string; ar: string }> = {
+    free:        { en: "Free",        ar: "مجاني" },
+    pro:         { en: "Pro",         ar: "احترافي" },
+    premium:     { en: "Premium",     ar: "بريميوم" },
+    free_trial:  { en: "Free Trial",  ar: "تجربة مجانية" },
+    active:      { en: "Active",      ar: "مفعّل" },
+    canceled:    { en: "Canceled",    ar: "ملغى" },
+    expired:     { en: "Expired",     ar: "منتهٍ" },
+    monthly:     { en: "Monthly",     ar: "شهري" },
+    yearly:      { en: "Yearly",      ar: "سنوي" },
+  };
+  const subEntry = SUB_LABELS[rawSub];
+  const subLabel = subEntry
+    ? (ar ? subEntry.ar : subEntry.en)
+    : rawSub.charAt(0).toUpperCase() + rawSub.slice(1);
 
   return (
     <Layout isLanding darkNav>

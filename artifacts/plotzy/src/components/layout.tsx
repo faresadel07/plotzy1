@@ -276,6 +276,14 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
     const params = new URLSearchParams(window.location.search);
     if (params.get("auth") === "success" && user && !user.displayName) {
       setShowDisplayName(true);
+      // Strip the auth=success param so a future user.displayName
+      // change (or a logout/login round trip on the same tab) doesn't
+      // re-fire the modal. Without this, the trigger would persist in
+      // the URL until the user navigates away, and any state change
+      // that re-runs this effect could re-open the prompt.
+      params.delete("auth");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? "?" + qs : ""));
     }
   }, [user]);
 

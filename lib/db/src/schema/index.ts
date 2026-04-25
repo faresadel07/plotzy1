@@ -609,6 +609,11 @@ export const loginAttempts = pgTable("login_attempts", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_login_attempts_email_created").on(t.email, t.createdAt),
+  // The lockout query (commit 50d9290) now filters by (email, ip,
+  // createdAt). Without this composite index the secondary IP filter
+  // was a sequential scan once the table grew past a few thousand
+  // rows — measurable login latency under brute-force load.
+  index("idx_login_attempts_email_ip_created").on(t.email, t.ip, t.createdAt),
 ]);
 
 // ── Admin Audit Logs ──────────────────────────────────────────────────────
