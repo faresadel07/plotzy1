@@ -453,7 +453,7 @@ export default function AuthorProfile() {
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
         await (navigator as any).share({
-          title: (profile?.displayName || "Plotzy author") + " · Plotzy",
+          title: (profile?.displayName || (ar ? "كاتب على Plotzy" : "Plotzy author")) + " · Plotzy",
           url,
         });
         return;

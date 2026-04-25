@@ -562,7 +562,11 @@ router.post("/api/auth/forgot-password", async (req, res) => {
 
     // Generate token
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // 30-minute window: short enough to limit risk if a reset email is
+    // sniffed mid-flight, long enough that real users opening their
+    // mailbox after a coffee break still make it. Industry norm is
+    // 15-30 min for password reset; we err on the user-friendly end.
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
     // Delete old tokens for this user
     await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, user.id));

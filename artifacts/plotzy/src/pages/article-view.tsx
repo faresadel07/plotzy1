@@ -94,7 +94,7 @@ export default function ArticleView() {
       {/* Featured Image */}
       {featuredImg && (
         <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 20px 0" }}>
-          <img src={featuredImg} alt="" className="article-featured-img" style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 400 }} />
+          <img src={featuredImg} alt={article?.title || "Featured image"} className="article-featured-img" style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 400 }} />
         </div>
       )}
 

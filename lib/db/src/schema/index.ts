@@ -157,6 +157,10 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_transactions_book_id").on(t.bookId),
+  // markTransactionSucceededIfPending (commit 54370d0) updates by
+  // stripe_payment_intent_id — needs a covering index or every payment
+  // confirm scans the whole table.
+  uniqueIndex("uq_transactions_stripe_payment_intent_id").on(t.stripePaymentIntentId),
 ]);
 
 export const loreEntries = pgTable("lore_entries", {
@@ -329,6 +333,9 @@ export const bookRatings = pgTable("book_ratings", {
   // covered by the unique key, which matches Postgres NULL semantics
   // and is the desired behaviour.
   uniqueIndex("uq_book_ratings_book_user").on(t.bookId, t.userId),
+  // Future author-stats queries that aggregate ratings per user will
+  // hit this column without a covering index otherwise.
+  index("idx_book_ratings_user_id").on(t.userId),
   // Bound the value to the documented 1-5 range at the DB level.
   check("book_ratings_rating_range", sql`${t.rating} BETWEEN 1 AND 5`),
 ]);
