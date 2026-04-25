@@ -614,11 +614,17 @@ export async function registerRoutes(
 
   // ─── Generate Book Front Cover (portrait) ──────────────────────────────────
 
-  app.post(api.books.generateCover.path, imageGenLimiter, tierAiLimiter, async (req, res) => {
+  // SECURITY: requireBookOwner first — without it, any authenticated
+  // user could overwrite ANY book's coverImage/backCoverImage by
+  // calling this endpoint with a victim's bookId. The handler calls
+  // storage.updateBook(bookId, { coverImage }) at the bottom, so
+  // ownership has to be enforced before AI cost is incurred.
+  app.post(api.books.generateCover.path, requireBookOwner, imageGenLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { prompt, side } = api.books.generateCover.input.parse(req.body);
       const bookId = Number(req.params.id);
       const book = await storage.getBook(bookId);
+      if (!book) return res.status(404).json({ message: "Book not found" });
 
       const coverPrompt = side === "back"
         ? `A professional book back cover background image for a book titled "${book?.title || 'Novel'}". ${prompt}. Portrait orientation, simple and elegant, designed to sit behind text. Subtle, not too busy. No text overlaid on the image.`
@@ -728,7 +734,7 @@ export async function registerRoutes(
 
   // ─── Generate Book Blurb (multi-language) ──────────────────────────────────
 
-  app.post(api.books.generateBlurb.path, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
+  app.post(api.books.generateBlurb.path, requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { language } = api.books.generateBlurb.input.parse(req.body);
       const bookId = Number(req.params.id);
