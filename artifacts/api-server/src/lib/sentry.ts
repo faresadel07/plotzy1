@@ -28,14 +28,24 @@ export function initSentry(): void {
   const SENSITIVE_KEY_RE = /(password|passwd|pwd|secret|token|authorization|api[_-]?key|cookie|session|email|stripe|paypal|webhook|signature|otp|code)/i;
   const REDACTED = "[REDACTED]" as any;
 
-  function redactObject(obj: unknown, depth = 0): void {
+  function redactObject(
+    obj: unknown,
+    depth = 0,
+    seen: WeakSet<object> = new WeakSet(),
+  ): void {
     if (!obj || typeof obj !== "object" || depth > 6) return;
+    // Cycle guard: a structure that references itself (or a cousin
+    // that references back) would otherwise be walked depth-times at
+    // every entry point. WeakSet keeps the bookkeeping cheap and
+    // doesn't leak references to the GC.
+    if (seen.has(obj as object)) return;
+    seen.add(obj as object);
     for (const key of Object.keys(obj as Record<string, unknown>)) {
       const rec = obj as Record<string, unknown>;
       if (SENSITIVE_KEY_RE.test(key)) {
         rec[key] = REDACTED;
       } else {
-        redactObject(rec[key], depth + 1);
+        redactObject(rec[key], depth + 1, seen);
       }
     }
   }

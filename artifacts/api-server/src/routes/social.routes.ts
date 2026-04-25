@@ -92,7 +92,7 @@ const profileUpdateSchema = z.object({
     .max(1_500_000)
     .refine(
       v => v.startsWith("data:image/") || (v.startsWith("http") && v.length < 2048),
-      "banner must be an image data URI (≤1MB) or a URL",
+      "banner must be an image data URI (≤1.5MB) or a URL",
     )
     .optional(),
 });
