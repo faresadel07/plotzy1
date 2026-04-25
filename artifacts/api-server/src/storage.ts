@@ -67,6 +67,7 @@ export interface IStorage {
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, updates: Partial<InsertTransaction>): Promise<Transaction>;
   getTransaction(stripePaymentIntentId: string): Promise<Transaction | undefined>;
+  markTransactionSucceededIfPending(stripePaymentIntentId: string): Promise<Transaction | null>;
 
   getUserById(id: number): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
@@ -344,6 +345,23 @@ export class DatabaseStorage implements IStorage {
   async getTransaction(stripePaymentIntentId: string): Promise<Transaction | undefined> {
     const [transaction] = await db.select().from(transactions).where(eq(transactions.stripePaymentIntentId, stripePaymentIntentId));
     return transaction;
+  }
+
+  // Atomic compare-and-swap: flip status from "pending" to "succeeded" in a
+  // single statement. Returns the row if WE made the transition (so the
+  // caller is responsible for follow-up writes), or `null` if some other
+  // request beat us to it (or the row doesn't exist). Closes the race
+  // where two concurrent /api/payments/confirm calls with the same
+  // paymentIntentId both see status="pending" and double-process.
+  async markTransactionSucceededIfPending(stripePaymentIntentId: string): Promise<Transaction | null> {
+    const [row] = await db.update(transactions)
+      .set({ status: "succeeded" })
+      .where(and(
+        eq(transactions.stripePaymentIntentId, stripePaymentIntentId),
+        eq(transactions.status, "pending"),
+      ))
+      .returning();
+    return row ?? null;
   }
 
   // ─── Users ─────────────────────────────────────────────────────────────────

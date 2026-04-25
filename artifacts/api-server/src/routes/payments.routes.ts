@@ -51,10 +51,15 @@ router.post(api.payments.createIntent.path, paymentLimiter, async (req, res) => 
   }
 });
 
-router.post(api.payments.confirm.path, async (req, res) => {
+router.post(api.payments.confirm.path, paymentLimiter, async (req, res) => {
   try {
-    const { bookId, paymentIntentId } = api.payments.confirm.input.parse(req.body);
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    const { paymentIntentId } = api.payments.confirm.input.parse(req.body);
 
+    // 1) Verify Stripe actually says this payment succeeded. Demo IDs
+    //    bypass for local testing only.
     if (!paymentIntentId.startsWith("demo_")) {
       try {
         const stripe = await getUncachableStripeClient();
@@ -68,17 +73,37 @@ router.post(api.payments.confirm.path, async (req, res) => {
       }
     }
 
-    // Idempotency: check if already processed
-    const existingTx = await storage.getTransaction(paymentIntentId);
-    if (existingTx && existingTx.status === "succeeded") {
+    // 2) Authorisation: the bookId we trust is the one the *transaction
+    //    record* was created with — NEVER the bookId in the request body
+    //    (an attacker could otherwise forge a paymentIntentId paired with
+    //    someone else's bookId and flip that book to isPaid). Cross-check
+    //    that the caller owns that book.
+    const tx = await storage.getTransaction(paymentIntentId);
+    if (!tx) {
+      return res.status(404).json({ message: "Unknown payment intent" });
+    }
+    if (tx.status === "succeeded") {
+      return res.json({ success: true, alreadyProcessed: true });
+    }
+    const book = await storage.getBook(tx.bookId);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+    if (book.userId !== req.user.id) {
+      return res.status(403).json({ message: "You do not own this book" });
+    }
+
+    // 3) Atomic state transition: only ONE concurrent request can flip
+    //    pending → succeeded. The losing requests get null and short-
+    //    circuit, eliminating the double-process race.
+    const claimed = await storage.markTransactionSucceededIfPending(paymentIntentId);
+    if (!claimed) {
+      // Another concurrent request beat us to it. Idempotent success.
       return res.json({ success: true, alreadyProcessed: true });
     }
 
-    await storage.updateBook(bookId, { isPaid: true });
-    const tx = existingTx;
-    if (tx) {
-      await storage.updateTransaction(tx.id, { status: "succeeded" });
-    }
+    // 4) Only the winner of the CAS marks the book paid.
+    await storage.updateBook(tx.bookId, { isPaid: true });
 
     res.json({ success: true });
   } catch (err) {
