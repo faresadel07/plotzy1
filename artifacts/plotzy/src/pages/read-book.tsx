@@ -364,10 +364,18 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
       });
     }
     measure();
+    // Capture the target node BEFORE handing it to ResizeObserver. If
+    // wrapperRef.current is reassigned mid-effect (fast navigation,
+    // chapter swap), the cleanup below would otherwise see a different
+    // ref and `target` could already be unmounted. Capturing keeps the
+    // observe/unobserve symmetric on whatever node we actually watched.
+    const target = wrapperRef.current?.parentElement ?? wrapperRef.current ?? null;
     const ro = new ResizeObserver(measure);
-    const target = wrapperRef.current?.parentElement ?? wrapperRef.current;
     if (target) ro.observe(target);
-    return () => ro.disconnect();
+    return () => {
+      if (target) ro.unobserve(target);
+      ro.disconnect();
+    };
   }, [chapters]);
 
   const translateX = containerW > 0 ? -(spreadIndex * containerW) : 0;

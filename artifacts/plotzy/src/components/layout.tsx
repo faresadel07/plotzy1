@@ -17,6 +17,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { DisplayNameModal } from "@/components/display-name-modal";
 import { LanguagePicker } from "@/components/language-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
 function getInitials(name?: string | null, email?: string | null): string {
   if (name) {
@@ -165,6 +166,7 @@ function FooterCol({ title, links }: { title: string; links: { label: string; hr
 export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, darkNav }: { children: React.ReactNode; isLanding?: boolean; isFullDark?: boolean; lightNav?: boolean; noScroll?: boolean; darkNav?: boolean }) {
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
+  const { toast } = useToast();
   const { user, isLoading, logout, refetch: refetchAuth } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showDisplayName, setShowDisplayName] = useState(false);
@@ -208,22 +210,42 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side validation BEFORE we spend CPU/RAM building a canvas
+    // and a base64 DataURL. The /api/auth/avatar endpoint Zod-rejects
+    // anything over ~250KB; without these guards a 50MB image would
+    // hang the canvas pipeline for seconds and the user would see a
+    // generic "Save failed" with no clue why. Limits chosen to be a
+    // little permissive — original is downscaled to 256px JPG so even
+    // a ~10MB photo will fit; rejecting beyond that is a sane cap.
+    const MAX_FILE_BYTES = 10 * 1024 * 1024;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Upload failed", description: "Please pick an image file.", variant: "destructive" });
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      toast({ title: "Upload failed", description: "Image is too large. Pick a file under 10 MB.", variant: "destructive" });
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+      return;
+    }
+
     setUploadingAvatar(true);
+    let url: string | null = null;
     try {
       const canvas = document.createElement("canvas");
       const img = new Image();
-      const url = URL.createObjectURL(file);
+      url = URL.createObjectURL(file);
       await new Promise<void>((res, rej) => {
         img.onload = () => res();
-        img.onerror = rej;
-        img.src = url;
+        img.onerror = () => rej(new Error("Could not decode image"));
+        img.src = url!;
       });
       const size = 256;
       const ratio = Math.min(size / img.width, size / img.height);
       canvas.width = Math.round(img.width * ratio);
       canvas.height = Math.round(img.height * ratio);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
       const res = await fetch("/api/auth/avatar", {
         method: "PATCH",
@@ -235,8 +257,16 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         refetchAuth();
       } else if (res.status === 401) {
         setAuthModalOpen(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: "Upload failed", description: data?.message || `Server returned ${res.status}`, variant: "destructive" });
       }
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.message || "Could not process image.", variant: "destructive" });
     } finally {
+      // Always revoke even on error — leaving the object URL alive is a
+      // memory leak per failed pick.
+      if (url) URL.revokeObjectURL(url);
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
