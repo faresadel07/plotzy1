@@ -211,7 +211,7 @@ export function RichWritingToolbar({
 
   const setSize = (size: number) => {
     const clamped = Math.max(8, Math.min(96, size));
-    (editor?.chain().focus() as any).setFontSize(clamped).run();
+    editor?.chain().focus().setFontSize(clamped).run();
   };
 
   const changeSize = (delta: number) => {
