@@ -807,7 +807,7 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
     const book = await storage.getBook(bookId);
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can invite collaborators" });
 
-    const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).parse(req.body);
+    const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).strict().parse(req.body);
     const code = generateInviteCode();
 
     // Delete any existing pending invite for this book by owner, then insert new one
@@ -827,7 +827,7 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
 router.post("/api/books/join", sensitiveAuthLimiter, async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
-    const { code } = z.object({ code: z.string().min(1) }).parse(req.body);
+    const { code } = z.object({ code: z.string().min(1) }).strict().parse(req.body);
     const userId = (req.user as any).id;
 
     // Find the invite
@@ -904,7 +904,7 @@ router.patch("/api/books/:bookId/collaborators/:collabId", requireBookOwner, asy
   try {
     const bookId = Number(req.params.bookId);
     const collabId = Number(req.params.collabId);
-    const { role } = z.object({ role: z.enum(["editor", "viewer"]) }).parse(req.body);
+    const { role } = z.object({ role: z.enum(["editor", "viewer"]) }).strict().parse(req.body);
     const book = await storage.getBook(bookId);
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the owner can change roles" });
 

@@ -162,7 +162,7 @@ router.get("/api/subscription/status", async (req, res) => {
 
 router.post("/api/subscription/create-checkout", paymentLimiter, async (req, res) => {
   try {
-    const { plan } = z.object({ plan: z.enum(["monthly", "yearly"]) }).parse(req.body);
+    const { plan } = z.object({ plan: z.enum(["monthly", "yearly"]) }).strict().parse(req.body);
     const stripe = await getUncachableStripeClient();
 
     const userId = req.isAuthenticated() && req.user ? req.user.id : null;
@@ -223,7 +223,7 @@ router.get("/api/subscription/verify", async (req, res) => {
       return res.status(401).json({ message: "Authentication required" });
     }
     const callerId = (req.user as any).id;
-    const { session_id } = z.object({ session_id: z.string() }).parse(req.query);
+    const { session_id } = z.object({ session_id: z.string() }).strict().parse(req.query);
     const stripe = await getUncachableStripeClient();
     const session = await stripe.checkout.sessions.retrieve(session_id, {
       expand: ["subscription", "customer"],
@@ -400,7 +400,7 @@ router.post("/api/paypal/create-order", paymentLimiter, async (req, res) => {
 // Capture the approved PayPal order and activate subscription
 router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-  const captureSchema = z.object({ orderId: z.string().min(1), plan: paypalPlanSchema });
+  const captureSchema = z.object({ orderId: z.string().min(1), plan: paypalPlanSchema }).strict();
   const parsed = captureSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
   const { orderId, plan } = parsed.data as { orderId: string; plan: PayPalPlan };

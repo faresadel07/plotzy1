@@ -294,7 +294,7 @@ export const api = {
     createIntent: {
       method: 'POST' as const,
       path: '/api/payments/create-intent' as const,
-      input: z.object({ bookId: z.number() }),
+      input: z.object({ bookId: z.number() }).strict(),
       responses: {
         200: z.object({ clientSecret: z.string(), paymentIntentId: z.string() }),
       }
@@ -302,7 +302,7 @@ export const api = {
     confirm: {
       method: 'POST' as const,
       path: '/api/payments/confirm' as const,
-      input: z.object({ bookId: z.number(), paymentIntentId: z.string() }),
+      input: z.object({ bookId: z.number(), paymentIntentId: z.string() }).strict(),
       responses: {
         200: z.object({ success: z.boolean() }),
       }

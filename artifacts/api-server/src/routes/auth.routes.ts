@@ -150,7 +150,7 @@ router.post("/api/auth/register", sensitiveAuthLimiter, async (req, res) => {
       email: z.string().email(),
       password: z.string().min(8, "Password must be at least 8 characters"),
       displayName: z.string().min(1).optional(),
-    }).parse(req.body);
+    }).strict().parse(req.body);
 
     const existing = await storage.getUserByEmail(email);
     if (existing) return res.status(409).json({ message: "An account with this email already exists." });
@@ -203,7 +203,7 @@ router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
     const { email, password } = z.object({
       email: z.string().email(),
       password: z.string().min(8, "Password must be at least 8 characters"),
-    }).parse(req.body);
+    }).strict().parse(req.body);
 
     // SECURITY: only read req.ip (resolved via app's `trust proxy` setting).
     // Reading X-Forwarded-For directly lets anyone spoof their IP and fill
@@ -294,7 +294,7 @@ router.patch("/api/auth/avatar", async (req, res) => {
         (v: string) => v.startsWith("data:image/") || (v.startsWith("http") && v.length < 2048),
         { message: "Must be a valid image (data URI max ~200KB, or a URL)" }
       ),
-    }).parse(req.body);
+    }).strict().parse(req.body);
     const updated = await storage.updateUser(req.user.id, { avatarUrl });
     const { passwordHash: _ph, ...safe } = updated as any;
     return res.json(safe);
@@ -308,7 +308,7 @@ router.patch("/api/auth/display-name", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    const { displayName } = z.object({ displayName: z.string().min(1).max(50) }).parse(req.body);
+    const { displayName } = z.object({ displayName: z.string().min(1).max(50) }).strict().parse(req.body);
     const updated = await storage.updateUser(req.user.id, { displayName });
     return res.json(updated);
   } catch (err) {
@@ -329,7 +329,7 @@ router.get("/api/auth/google/config", (_req, res) => {
 // public keys and the client ID we control, so a forged token cannot log in.
 router.post("/api/auth/google/one-tap", async (req, res) => {
   try {
-    const { credential } = z.object({ credential: z.string().min(10) }).parse(req.body);
+    const { credential } = z.object({ credential: z.string().min(10) }).strict().parse(req.body);
 
     const client = getGoogleOneTapClient();
     if (!client || !process.env.GOOGLE_CLIENT_ID) {
@@ -563,7 +563,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
 
 router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => {
   try {
-    const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
+    const { token } = z.object({ token: z.string().min(1) }).strict().parse(req.body);
     const [vt] = await db.select().from(emailVerificationTokens).where(and(eq(emailVerificationTokens.token, token), sql`expires_at > NOW()`));
     if (!vt) return res.status(400).json({ message: "Invalid or expired verification link" });
     await storage.updateUser(vt.userId, { emailVerified: true });
@@ -579,7 +579,7 @@ router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => 
 
 router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) => {
   try {
-    const { email } = z.object({ email: z.string().email() }).parse(req.body);
+    const { email } = z.object({ email: z.string().email() }).strict().parse(req.body);
     const user = await storage.getUserByEmail(email);
 
     // Always return success (don't reveal if email exists)
@@ -643,7 +643,7 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
 
 router.post("/api/auth/verify-reset-token", sensitiveAuthLimiter, async (req, res) => {
   try {
-    const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
+    const { token } = z.object({ token: z.string().min(1) }).strict().parse(req.body);
     const [resetToken] = await db.select().from(passwordResetTokens)
       .where(and(eq(passwordResetTokens.token, token), sql`used_at IS NULL AND expires_at > NOW()`));
     if (!resetToken) return res.status(400).json({ valid: false, message: "Invalid or expired reset link." });
@@ -660,7 +660,7 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
     const { token, password } = z.object({
       token: z.string().min(1),
       password: z.string().min(8),
-    }).parse(req.body);
+    }).strict().parse(req.body);
 
     // Atomic compare-and-swap: UPDATE...RETURNING succeeds for exactly one
     // caller — the first one to flip used_at from NULL. A second concurrent

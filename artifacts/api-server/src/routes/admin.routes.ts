@@ -178,7 +178,7 @@ router.post("/api/admin/flags", async (req, res) => {
     const { bookId, reason } = z.object({
       bookId: z.number(),
       reason: z.string().min(1),
-    }).parse(req.body);
+    }).strict().parse(req.body);
 
     const [flag] = await db.insert(contentFlags)
       .values({ bookId, reason })
@@ -218,7 +218,7 @@ router.patch("/api/admin/flags/:id", async (req, res) => {
     const { status, reviewNote } = z.object({
       status: z.enum(["approved", "rejected"]),
       reviewNote: z.string().optional(),
-    }).parse(req.body);
+    }).strict().parse(req.body);
 
     const adminId = (req.user as any).id;
 

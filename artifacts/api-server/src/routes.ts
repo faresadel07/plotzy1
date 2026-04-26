@@ -429,7 +429,7 @@ export async function registerRoutes(
   app.post("/api/admin/books/:id/feature", requireAdmin, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
-      const { feature } = z.object({ feature: z.boolean() }).parse(req.body);
+      const { feature } = z.object({ feature: z.boolean() }).strict().parse(req.body);
       await storage.setFeaturedBook(feature ? bookId : null);
       return res.json({ success: true });
     } catch (err) {
