@@ -70,6 +70,7 @@ export default function DashboardDemo() {
     queryFn: () => fetch("/api/notifications/unread-count", { credentials: "include" }).then(r => r.ok ? r.json() : { count: 0 }),
     enabled: !!user,
     refetchInterval: 30000,
+    staleTime: 30000,
   });
 
   // Fetch unread messages count
@@ -78,6 +79,7 @@ export default function DashboardDemo() {
     queryFn: () => fetch("/api/messages/unread-count", { credentials: "include" }).then(r => r.ok ? r.json() : { count: 0 }),
     enabled: !!user,
     refetchInterval: 30000,
+    staleTime: 30000,
   });
 
   const totalBooks = books?.length ?? 0;

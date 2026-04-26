@@ -256,6 +256,7 @@ export function useBookInlineComments(bookId: number) {
     },
     enabled: !!bookId,
     refetchInterval: 15000, // Poll every 15s for real-time-ish updates
+    staleTime: 15000,
   });
 }
 

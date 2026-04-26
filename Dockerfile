@@ -29,6 +29,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/lib/db/node_modules ./lib/db/node_modules
 COPY --from=deps /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
 COPY --from=build /app/artifacts/api-server/dist ./artifacts/api-server/dist
+COPY --from=build /app/artifacts/api-server/healthcheck.mjs ./artifacts/api-server/healthcheck.mjs
 COPY --from=build /app/artifacts/plotzy/dist ./artifacts/plotzy/dist
 COPY --from=build /app/lib ./lib
 COPY --from=build /app/package.json ./package.json
@@ -43,6 +44,6 @@ USER appuser
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD node -e "const h=require('http');h.get('http://localhost:8080/healthz',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
+  CMD node artifacts/api-server/healthcheck.mjs
 
 CMD ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]

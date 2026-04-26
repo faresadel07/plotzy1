@@ -53,11 +53,12 @@ export function initSentry(): void {
   Sentry.init({
     dsn: env.SENTRY_DSN,
     environment: env.SENTRY_ENVIRONMENT || env.NODE_ENV,
-    // In production default to 10% traces — full sampling is expensive
-    // at scale and the defaults should be safe to deploy.
-    tracesSampleRate:
-      env.SENTRY_TRACES_SAMPLE_RATE ??
-      (env.NODE_ENV === "production" ? 0.1 : 1.0),
+    // 10% traces in BOTH environments by default. Earlier this was 1.0 in
+    // dev which shipped every request to Sentry — noisy quota burn for
+    // very little signal during local development. Override via
+    // SENTRY_TRACES_SAMPLE_RATE if you want to crank it up for a specific
+    // debugging session.
+    tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1,
     includeLocalVariables: includeLocals,
     sendDefaultPii: false,
     beforeSend(event) {

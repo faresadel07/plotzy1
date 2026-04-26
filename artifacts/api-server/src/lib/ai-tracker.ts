@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { aiUsageLogs } from "../../../../lib/db/src/schema";
+import { logger } from "./logger";
 
 // ---------------------------------------------------------------------------
 // AI Usage Tracker
@@ -73,5 +74,5 @@ export function trackAIUsage(params: TrackAIParams): void {
       completionTokens,
       estimatedCostCents: cost,
     })
-    .catch((err) => { /* non-blocking */ if (process.env.NODE_ENV !== "production") console.warn("AI tracker insert failed:", err?.message); });
+    .catch((err) => { /* non-blocking */ if (process.env.NODE_ENV !== "production") logger.warn({ err }, "AI tracker insert failed"); });
 }
