@@ -58,6 +58,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
     queryFn: () => fetch("/api/notifications/unread-count", { credentials: "include" }).then(r => r.ok ? r.json() : { count: 0 }),
     enabled: !!user,
     refetchInterval: 30000,
+    staleTime: 30000,
   });
 
   // Unread message count
@@ -66,6 +67,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
     queryFn: () => fetch("/api/messages/unread-count", { credentials: "include" }).then(r => r.ok ? r.json() : { count: 0 }),
     enabled: !!user,
     refetchInterval: 30000,
+    staleTime: 30000,
   });
 
   // Notifications list (only when dropdown open)

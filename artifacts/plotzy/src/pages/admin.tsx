@@ -455,6 +455,7 @@ function ActivityTab() {
     queryKey: ["/api/admin/activity"],
     queryFn: () => fetch("/api/admin/activity", { credentials: "include" }).then(r => r.json()),
     refetchInterval: 60000,
+    staleTime: 60000,
   });
 
   if (isLoading) return <Spinner />;
@@ -1180,6 +1181,7 @@ function DevicesTab() {
     queryKey: ["/api/admin/analytics/devices"],
     queryFn: () => fetch("/api/admin/analytics/devices", { credentials: "include" }).then(r => r.json()),
     refetchInterval: 60_000, // live refresh every minute
+    staleTime: 60_000,
   });
 
   const { data: breakdown } = useQuery<any>({
@@ -1633,6 +1635,7 @@ function SystemHealthTab() {
     queryKey: ["/api/admin/analytics/system-health"],
     queryFn: () => fetch("/api/admin/analytics/system-health", { credentials: "include" }).then(r => r.json()),
     refetchInterval: 30000, // Auto-refresh every 30s
+    staleTime: 30000,
   });
 
   if (!data) return <Spinner />;

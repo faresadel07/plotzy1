@@ -151,13 +151,13 @@ export default function Messages() {
       // Map backend field names
       return rows.map((c: any) => ({ partnerId: c.partnerId, partnerDisplayName: c.partnerDisplayName, partnerAvatarUrl: c.partnerAvatarUrl, content: c.content, createdAt: c.createdAt, unreadCount: c.unreadCount }));
     },
-    enabled: !!user, refetchInterval: 15000,
+    enabled: !!user, refetchInterval: 15000, staleTime: 15000,
   });
 
   const { data: messages = [] } = useQuery<Message[]>({
     queryKey: ["/api/messages", selectedUserId],
     queryFn: () => fetch(`/api/messages/${selectedUserId}`, { credentials: "include" }).then(r => r.ok ? r.json() : []),
-    enabled: !!user && !!selectedUserId, refetchInterval: 5000,
+    enabled: !!user && !!selectedUserId, refetchInterval: 5000, staleTime: 5000,
   });
 
   const sendMut = useMutation({
