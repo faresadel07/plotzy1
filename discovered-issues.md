@@ -217,3 +217,37 @@ on prior audit reports.
 ---
 
 _Generated as part of Group B dependency cleanup (commit `ee09218`)._
+
+---
+
+## Architecture issue — duplicate route registration (HIGH severity)
+
+Both `artifacts/api-server/src/routes.ts` (legacy ~2400-line file) AND
+`artifacts/api-server/src/routes/*.ts` (new modular files) are mounted
+in `app.ts`. Express resolves whichever was registered first, and
+`routes.ts` registers its handlers BEFORE the modular routers
+(`app.use(authRouter)`, `app.use(booksRouter)`, etc., are called from
+inside `registerRoutes()` in `routes.ts` AFTER the inline
+`app.METHOD(...)` definitions).
+
+Result: many endpoints exist in BOTH places. The legacy handler wins
+for duplicates, while the modular handler is dead code.
+
+**Risk:**
+- Silent drift between two implementations of the same endpoint
+- Maintenance confusion (which handler is the "real" one?)
+- Future security fixes applied only to the modular version are
+  effectively no-ops
+- Group C `.strict()` work has to be done in both files, doubling the
+  edit count and creating new drift surface
+
+**Recommendation**: audit for duplicate routes, decide a single source
+of truth (likely the modular routers), and remove the legacy duplicates
+from `routes.ts`. Track as a separate refactoring task before
+production launch — recommend doing it BEFORE Group C2 / any further
+route-level work, since splitting one effort across two files is the
+exact pain that motivated the modularisation in the first place.
+
+---
+
+_Generated as part of Group C strict-schemas pre-work._
