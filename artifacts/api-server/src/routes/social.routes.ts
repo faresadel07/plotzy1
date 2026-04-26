@@ -69,13 +69,27 @@ const profileUpdateSchema = z.object({
     .transform(raw => {
       const s = raw.trim();
       if (!s) return s;
-      // Accept missing scheme — normalise so the stored value is always
-      // a safe http(s) URL. Matches what safeExternalUrl() does on the
-      // client so the round-trip is lossless.
+      // If the input has any scheme already, leave it intact so the URL
+      // parse below can judge it. Otherwise default to https:// so a user
+      // pasting "myblog.com" still works (matches client-side
+      // safeExternalUrl()).
       if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return s;
       return `https://${s}`;
     })
-    .refine(v => !v || /^https?:\/\//i.test(v), "website must be an http or https URL")
+    .refine(v => {
+      if (!v) return true;
+      try {
+        const u = new URL(v);
+        // SECURITY: parse the URL and inspect the *real* protocol — a
+        // string-prefix check ("startsWith('https://')") is bypassable
+        // in edge cases. Allowlist only http: and https:; everything
+        // else (javascript:, data:, vbscript:, file:, ftp:, …) is
+        // rejected here.
+        return u.protocol === "http:" || u.protocol === "https:";
+      } catch {
+        return false;
+      }
+    }, "website must be a valid http or https URL (no javascript:, data:, vbscript:, file:, etc.)")
     .optional(),
   twitterHandle: z.union([socialHandleSchema("twitter.com"), socialHandleSchema("x.com")]).optional(),
   instagramHandle: socialHandleSchema("instagram.com").optional(),

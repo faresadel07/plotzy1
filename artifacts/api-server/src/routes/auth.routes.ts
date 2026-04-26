@@ -132,9 +132,22 @@ router.get("/api/auth/user", async (req, res) => {
     if (req.isAuthenticated() && req.user) {
       const dbUser = await storage.getUserById(req.user.id);
       if (!dbUser) return res.status(401).json({ message: "Not authenticated" });
+      // SECURITY: never ship the raw OAuth subject IDs (googleId / appleId)
+      // to the browser. They are stable, externally-meaningful identifiers
+      // for the user at Google / Apple — useful to anyone running scripted
+      // attacks against those providers (or correlating across sites). The
+      // UI only needs to know "is a provider connected?" — boolean flags
+      // give it that without exposing the id.
       const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
       const isAdmin = isAdminUser(dbUser);
-      return res.json({ id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, isAdmin, suspended: !!suspended });
+      return res.json({
+        id, email, displayName, avatarUrl,
+        hasGoogle: !!googleId,
+        hasApple: !!appleId,
+        subscriptionStatus, subscriptionPlan, subscriptionEndDate,
+        isAdmin,
+        suspended: !!suspended,
+      });
     }
     return res.status(401).json({ message: "Not authenticated" });
   } catch (err) {
