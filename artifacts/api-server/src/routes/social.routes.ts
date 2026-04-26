@@ -174,9 +174,9 @@ router.get("/api/authors/:userId/profile", async (req, res) => {
       isFollowing = await storage.isFollowing(req.user.id, userId);
     }
 
-    res.json({ ...publicUser, books: booksWithLikes, followersCount, followingCount, totalLikes, isFollowing });
+    return res.json({ ...publicUser, books: booksWithLikes, followersCount, followingCount, totalLikes, isFollowing });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -193,12 +193,12 @@ router.patch("/api/me/profile", async (req, res) => {
     const updates = profileUpdateSchema.parse(req.body);
     const updated = await storage.updateUser(req.user.id, updates);
     const { passwordHash, ...safeUser } = updated;
-    res.json(safeUser);
+    return res.json(safeUser);
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ message: err.errors[0].message });
     }
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -221,9 +221,9 @@ router.post("/api/authors/:userId/follow", requireEmailVerified, async (req, res
       sendNotificationEmail(target.email, `${follower?.displayName || "Someone"} started following you`, `You have a new follower on Plotzy! Check out their profile.`).catch(() => {});
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -237,9 +237,9 @@ router.delete("/api/authors/:userId/follow", async (req, res) => {
     if (isNaN(targetId)) return res.status(400).json({ message: "Invalid user ID" });
 
     await storage.unfollowUser(req.user.id, targetId);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -253,9 +253,9 @@ router.post("/api/books/:bookId/like", requireEmailVerified, async (req, res) =>
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
     await storage.likeBook(req.user.id, bookId);
     const likesCount = await storage.getBookLikesCount(bookId);
-    res.json({ liked: true, likesCount });
+    return res.json({ liked: true, likesCount });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -267,9 +267,9 @@ router.delete("/api/books/:bookId/like", async (req, res) => {
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
     await storage.unlikeBook(req.user.id, bookId);
     const likesCount = await storage.getBookLikesCount(bookId);
-    res.json({ liked: false, likesCount });
+    return res.json({ liked: false, likesCount });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -283,9 +283,9 @@ router.get("/api/books/:bookId/like", async (req, res) => {
     if (req.isAuthenticated() && req.user) {
       liked = await storage.isBookLiked(req.user.id, bookId);
     }
-    res.json({ liked, likesCount });
+    return res.json({ liked, likesCount });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -296,9 +296,9 @@ router.get("/api/notifications", async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
     const notifs = await storage.getNotifications(req.user.id, 50);
-    res.json(notifs);
+    return res.json(notifs);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -309,9 +309,9 @@ router.get("/api/notifications/unread-count", async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
     const count = await storage.getUnreadNotificationCount(req.user.id);
-    res.json({ count });
+    return res.json({ count });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -325,9 +325,9 @@ router.patch("/api/notifications/:id/read", async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid notification ID" });
 
     await storage.markNotificationRead(id, req.user.id);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -338,9 +338,9 @@ router.post("/api/notifications/read-all", async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
     await storage.markAllNotificationsRead(req.user.id);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -351,9 +351,9 @@ router.get("/api/messages/unread-count", async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
     const count = await storage.getUnreadMessageCount(req.user.id);
-    res.json({ count });
+    return res.json({ count });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -364,9 +364,9 @@ router.get("/api/messages/conversations", async (req, res) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
     const conversations = await storage.getConversations(req.user.id);
-    res.json(conversations);
+    return res.json(conversations);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -382,9 +382,9 @@ router.get("/api/messages/:userId", async (req, res) => {
     const messages = await storage.getMessages(req.user.id, otherUserId, 100);
     // Mark messages from the other user as read
     await storage.markMessagesRead(req.user.id, otherUserId);
-    res.json(messages);
+    return res.json(messages);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -425,9 +425,9 @@ router.post("/api/messages/:userId", requireEmailVerified, async (req, res) => {
       sendNotificationEmail(receiver.email, `New message from ${senderName}`, `${senderName} sent you a message: "${content.trim().substring(0, 200)}"`).catch(() => {});
     }
 
-    res.json(message);
+    return res.json(message);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -462,10 +462,10 @@ router.post("/api/messages/:userId/attachment", requireEmailVerified, upload.sin
       actorId: req.user.id,
     });
 
-    res.json(message);
+    return res.json(message);
   } catch (err) {
     logger.error({ err }, "Attachment upload error");
-    res.status(500).json({ message: "Failed to send attachment" });
+    return res.status(500).json({ message: "Failed to send attachment" });
   }
 });
 

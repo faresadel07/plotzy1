@@ -81,13 +81,13 @@ router.get("/api/auth/providers", (_req, res) => {
   // OAuth was configured will see the "SOON" fallback forever even
   // after the admin enables it.
   res.setHeader("Cache-Control", "no-store");
-  res.json(getEnabledProviders());
+  return res.json(getEnabledProviders());
 });
 
 // ─── Gamification: Achievements & Stats ────────────────────────────────────
 
 router.get("/api/achievements", (_req, res) => {
-  res.json(ACHIEVEMENT_DEFINITIONS);
+  return res.json(ACHIEVEMENT_DEFINITIONS);
 });
 
 router.get("/api/users/me/stats", async (req, res) => {
@@ -100,7 +100,7 @@ router.get("/api/users/me/stats", async (req, res) => {
     const level = computeLevel(xp);
     const currentLevelXp = xpForCurrentLevel(level);
     const nextLevelXp = xpForNextLevel(level + 1);
-    res.json({
+    return res.json({
       ...stats,
       totalViewsReceived: totalViews,
       xp,
@@ -110,7 +110,7 @@ router.get("/api/users/me/stats", async (req, res) => {
       xpForNextLevel: nextLevelXp,
     });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -119,9 +119,9 @@ router.get("/api/users/me/achievements", async (req, res) => {
   const userId = (req.user as any).id;
   try {
     const achievements = await storage.getUserAchievements(userId);
-    res.json(achievements);
+    return res.json(achievements);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -138,7 +138,7 @@ router.get("/api/auth/user", async (req, res) => {
     }
     return res.status(401).json({ message: "Not authenticated" });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -266,7 +266,7 @@ router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
 router.post("/api/auth/logout", (req, res) => {
   req.logout((err) => {
     if (err) return res.status(500).json({ message: "Logout failed" });
-    req.session.destroy(() => {
+    return req.session.destroy(() => {
       // Explicitly invalidate the browser cookie too. req.session.destroy
       // only deletes the server-side row — without clearCookie, connect.sid
       // sticks around in the browser for the full maxAge (30 days) and is
@@ -279,7 +279,7 @@ router.post("/api/auth/logout", (req, res) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.COOKIE_SAME_SITE === "none" ? "none" : "lax",
       });
-      res.json({ success: true });
+      return res.json({ success: true });
     });
   });
 });
@@ -299,7 +299,7 @@ router.patch("/api/auth/avatar", async (req, res) => {
     const { passwordHash: _ph, ...safe } = updated as any;
     return res.json(safe);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -310,9 +310,9 @@ router.patch("/api/auth/display-name", async (req, res) => {
     }
     const { displayName } = z.object({ displayName: z.string().min(1).max(50) }).parse(req.body);
     const updated = await storage.updateUser(req.user.id, { displayName });
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -321,7 +321,7 @@ router.patch("/api/auth/display-name", async (req, res) => {
 // a VITE_ env var (the client ID is public information by design).
 router.get("/api/auth/google/config", (_req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID || null;
-  res.json({ clientId, enabled: !!clientId });
+  return res.json({ clientId, enabled: !!clientId });
 });
 
 // Verify a Google ID token produced by the One Tap flow and sign the user in.
@@ -380,7 +380,7 @@ router.post("/api/auth/google/one-tap", async (req, res) => {
     if (!user) {
       // Google One Tap already required payload.email_verified === true
       // above (see line ~344), so the address is verified by Google.
-      user = await storage.createUser({ googleId, email, displayName, avatarUrl, emailVerified: true } as any);
+      user = await storage.createUser({ googleId, email, displayName, avatarUrl, emailVerified: true });
     }
 
     // Preserve any guest books started before login.
@@ -544,7 +544,7 @@ router.get("/auth/linkedin/callback", async (req, res) => {
         user = await storage.createUser({
           linkedinId, email, displayName, avatarUrl,
           emailVerified,
-        } as any);
+        });
       }
     }
 
@@ -566,12 +566,12 @@ router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => 
     const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
     const [vt] = await db.select().from(emailVerificationTokens).where(and(eq(emailVerificationTokens.token, token), sql`expires_at > NOW()`));
     if (!vt) return res.status(400).json({ message: "Invalid or expired verification link" });
-    await storage.updateUser(vt.userId, { emailVerified: true } as any);
+    await storage.updateUser(vt.userId, { emailVerified: true });
     await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, vt.userId));
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Email verification error");
-    res.status(500).json({ message: "Verification failed" });
+    return res.status(500).json({ message: "Verification failed" });
   }
 });
 
@@ -631,11 +631,11 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
       logger.error({ err: emailErr }, "Failed to send reset email");
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid email" });
     logger.error({ err }, "Forgot password error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -682,13 +682,13 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await storage.updateUser(consumed.userId, { passwordHash } as any);
+    await storage.updateUser(consumed.userId, { passwordHash });
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Password must be at least 8 characters" });
     logger.error({ err }, "Reset password error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 

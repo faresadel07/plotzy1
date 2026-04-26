@@ -61,7 +61,7 @@ router.get("/api/admin/analytics/overview", async (_req, res) => {
     const [openTickets] = await db.select({ c: count() }).from(supportMessages)
       .where(eq(supportMessages.status, "open"));
 
-    res.json({
+    return res.json({
       totalUsers: totalUsers.c,
       newUsersToday: newUsersToday.c,
       newUsersWeek: newUsersWeek.c,
@@ -77,7 +77,7 @@ router.get("/api/admin/analytics/overview", async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Admin route error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -92,9 +92,9 @@ router.get("/api/admin/analytics/signups", async (req, res) => {
       GROUP BY DATE(created_at)
       ORDER BY day
     `);
-    res.json(rows.rows);
+    return res.json(rows.rows);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -109,9 +109,9 @@ router.get("/api/admin/analytics/writing-activity", async (req, res) => {
       GROUP BY DATE(created_at)
       ORDER BY day
     `);
-    res.json(rows.rows);
+    return res.json(rows.rows);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -155,7 +155,7 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
         AND subscription_end_date >= NOW() - INTERVAL '30 days'
     `);
 
-    res.json({
+    return res.json({
       tiers: tiers.rows,
       activeSubscribers: activeSubs.c,
       monthlySubs,
@@ -166,7 +166,7 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Admin route error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -183,10 +183,10 @@ router.post("/api/admin/flags", async (req, res) => {
     const [flag] = await db.insert(contentFlags)
       .values({ bookId, reason })
       .returning();
-    res.status(201).json(flag);
+    return res.status(201).json(flag);
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -205,9 +205,9 @@ router.get("/api/admin/flags", async (req, res) => {
       ORDER BY cf.created_at DESC
       LIMIT 100
     `);
-    res.json(rows.rows);
+    return res.json(rows.rows);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -234,10 +234,10 @@ router.patch("/api/admin/flags/:id", async (req, res) => {
         .where(eq(books.id, updated.bookId));
     }
 
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
     if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -255,9 +255,9 @@ router.get("/api/admin/analytics/leaderboard", async (_req, res) => {
       ORDER BY us.total_words_written DESC
       LIMIT 25
     `);
-    res.json(rows.rows);
+    return res.json(rows.rows);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -275,9 +275,9 @@ router.get("/api/admin/analytics/inactive-users", async (_req, res) => {
       ORDER BY us.last_writing_date ASC NULLS FIRST
       LIMIT 50
     `);
-    res.json(rows.rows);
+    return res.json(rows.rows);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -327,7 +327,7 @@ router.get("/api/admin/analytics/ai-usage", async (_req, res) => {
       ORDER BY cost_cents DESC
     `);
 
-    res.json({
+    return res.json({
       perUser: perUser.rows,
       totals: {
         calls: totals.calls,
@@ -341,7 +341,7 @@ router.get("/api/admin/analytics/ai-usage", async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Admin route error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -407,7 +407,7 @@ router.get("/api/admin/analytics/system-health", async (_req, res) => {
     const totalReqs = Number(errorRow?.total_count || 1);
     const errorCount = Number(errorRow?.error_count || 0);
 
-    res.json({
+    return res.json({
       latency: latency.rows?.[0] || {},
       errorRate: ((errorCount / totalReqs) * 100).toFixed(2),
       errorCount,
@@ -418,7 +418,7 @@ router.get("/api/admin/analytics/system-health", async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Admin route error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -453,7 +453,7 @@ router.get("/api/admin/analytics/devices", async (_req, res) => {
       db.select({ c: count() }).from(pageViews).where(humans),
     ]);
 
-    res.json({
+    return res.json({
       uniqueDevices: {
         day:   (uniq1.rows[0] as any)?.c ?? 0,
         week:  (uniq7.rows[0] as any)?.c ?? 0,
@@ -468,7 +468,7 @@ router.get("/api/admin/analytics/devices", async (_req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "devices analytics error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -509,7 +509,7 @@ router.get("/api/admin/analytics/devices/breakdown", async (req, res) => {
       `),
     ]);
 
-    res.json({
+    return res.json({
       days,
       deviceType: byType.rows,
       browser:    byBrowser.rows,
@@ -517,7 +517,7 @@ router.get("/api/admin/analytics/devices/breakdown", async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "devices breakdown error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -544,10 +544,10 @@ router.get("/api/admin/analytics/top-pages", async (req, res) => {
       LIMIT ${limit}
     `);
 
-    res.json({ days, rows: result.rows });
+    return res.json({ days, rows: result.rows });
   } catch (err) {
     logger.error({ err }, "top pages error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -571,10 +571,10 @@ router.get("/api/admin/analytics/daily-traffic", async (req, res) => {
       ORDER BY day ASC
     `);
 
-    res.json({ days, rows: result.rows });
+    return res.json({ days, rows: result.rows });
   } catch (err) {
     logger.error({ err }, "daily traffic error");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 

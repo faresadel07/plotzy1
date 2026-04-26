@@ -38,7 +38,7 @@ router.get("/api/series", async (req, res) => {
     const withBooks = await storage.getUserSeriesWithBooks(userId);
     return res.json(withBooks);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -52,7 +52,7 @@ router.post("/api/series", async (req, res) => {
     const series = await storage.createSeries({ userId, name: name.trim(), description: description?.trim() || null });
     return res.status(201).json({ ...series, books: [] });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -71,7 +71,7 @@ router.patch("/api/series/:id", async (req, res) => {
     const updated = await storage.updateSeries(seriesId, updates);
     return res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -104,7 +104,7 @@ router.post("/api/series/:id/publish", async (req, res) => {
   } catch (err: any) {
     if (err?.message === "NOT_FOUND") return res.status(404).json({ message: "Not found" });
     logger.error({ err }, "Failed to publish series");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -159,10 +159,10 @@ router.get("/api/public/series", async (_req, res) => {
       bookCount: (booksBySeries.get(s.id) || []).length,
     }));
 
-    res.json(result);
+    return res.json(result);
   } catch (err) {
     console.error("Failed to fetch public series:", err);
-    res.json([]);
+    return res.json([]);
   }
 });
 
@@ -187,7 +187,7 @@ router.get("/api/public/series/:id", async (req, res) => {
       ownerAvatarUrl: owner?.avatarUrl || null,
     });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -202,7 +202,7 @@ router.delete("/api/series/:id", async (req, res) => {
     await storage.deleteSeries(seriesId);
     return res.status(204).send();
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -223,7 +223,7 @@ router.post("/api/series/:id/books/:bookId", async (req, res) => {
     const updated = await storage.assignBookToSeries(bookId, seriesId, order);
     return res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -238,7 +238,7 @@ router.delete("/api/series/:id/books/:bookId", async (req, res) => {
     const updated = await storage.assignBookToSeries(bookId, null, 0);
     return res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -256,7 +256,7 @@ router.put("/api/series/:id/reorder", async (req, res) => {
     await storage.reorderSeriesBooks(updates);
     return res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -269,9 +269,9 @@ router.post("/api/support/messages", async (req, res) => {
       userId: req.isAuthenticated() && req.user ? req.user.id : null,
     });
     const msg = await storage.submitSupportMessage(data);
-    res.json(msg);
+    return res.json(msg);
   } catch (err) {
-    res.status(400).json({ message: "Invalid data" });
+    return res.status(400).json({ message: "Invalid data" });
   }
 });
 
@@ -287,9 +287,9 @@ router.get("/api/support/my-tickets", async (req, res) => {
     const tickets = await db.select().from(supportMessages)
       .where(eq(supportMessages.userId, req.user.id))
       .orderBy(desc(supportMessages.createdAt));
-    res.json(tickets);
+    return res.json(tickets);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -314,10 +314,10 @@ router.get("/api/support/tickets/:id/thread", async (req, res) => {
       .where(eq(supportReplies.ticketId, ticketId))
       .orderBy(asc(supportReplies.createdAt));
 
-    res.json({ ticket, replies });
+    return res.json({ ticket, replies });
   } catch (err) {
     logger.error({ err }, "Failed to fetch support thread");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -410,11 +410,11 @@ router.post("/api/admin/support/:id/reply", requireAdmin, async (req, res) => {
     })();
 
     await logAdminAction(adminUser.id, "support_reply", "support_ticket", ticketId, { length: body.length });
-    res.json({ success: true, reply: saved });
+    return res.json({ success: true, reply: saved });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: err.errors?.[0]?.message || "Invalid reply" });
     logger.error({ err }, "Support reply error");
-    res.status(500).json({ message: "Failed to send reply" });
+    return res.status(500).json({ message: "Failed to send reply" });
   }
 });
 
@@ -469,11 +469,11 @@ router.post("/api/support/tickets/:id/reply", async (req, res) => {
       logger.error({ err: nerr }, "Failed to notify admins of user support reply");
     }
 
-    res.json({ success: true, reply: saved });
+    return res.json({ success: true, reply: saved });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Reply cannot be empty" });
     logger.error({ err }, "User support reply error");
-    res.status(500).json({ message: "Failed to send reply" });
+    return res.status(500).json({ message: "Failed to send reply" });
   }
 });
 
@@ -486,9 +486,9 @@ function escapeHtml(s: string): string {
 router.get("/api/admin/stats", requireAdmin, async (req, res) => {
   try {
     const stats = await storage.getAdminStats();
-    res.json(stats);
+    return res.json(stats);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -508,9 +508,9 @@ router.get("/api/admin/users", requireAdmin, async (req, res) => {
       appleId: u.appleId ? "connected" : null,
       createdAt: (u as any).createdAt ?? null,
     }));
-    res.json(safe);
+    return res.json(safe);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -520,9 +520,9 @@ router.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await storage.deleteUser(id);
     await logAdminAction((req.user as any).id, "user_delete", "user", id);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -537,9 +537,9 @@ router.patch("/api/admin/users/:id/subscription", requireAdmin, async (req, res)
       subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : null,
     });
     await logAdminAction((req.user as any).id, "user_grant_subscription", "user", id, { subscriptionStatus, subscriptionPlan });
-    res.json({ success: true, user: updated });
+    return res.json({ success: true, user: updated });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -550,9 +550,9 @@ router.delete("/api/admin/books/:id", requireAdmin, async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await storage.deleteBook(id);
     await logAdminAction((req.user as any).id, "book_delete", "book", id);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -561,9 +561,9 @@ router.get("/api/banner", async (req, res) => {
   try {
     const message = await storage.getSetting("banner_message");
     const color = await storage.getSetting("banner_color");
-    res.json({ message, color });
+    return res.json({ message, color });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -577,9 +577,9 @@ router.get("/api/social-links", async (_req, res) => {
       const val = await storage.getSetting(key);
       if (val) links[key.replace("social_", "")] = val;
     }
-    res.json(links);
+    return res.json(links);
   } catch {
-    res.json({});
+    return res.json({});
   }
 });
 
@@ -592,9 +592,9 @@ router.post("/api/admin/social-links", requireAdmin, async (req, res) => {
     await storage.setSetting("social_twitter", twitter?.trim() || null);
     await storage.setSetting("social_tiktok", tiktok?.trim() || null);
     await logAdminAction((req.user as any).id, "social_links_update", "settings", null, { instagram, linkedin, youtube, twitter, tiktok });
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -606,9 +606,9 @@ router.post("/api/admin/banner", requireAdmin, async (req, res) => {
     await storage.setSetting("banner_message", message.trim());
     await storage.setSetting("banner_color", color || "default");
     await logAdminAction((req.user as any).id, "banner_update", "banner", null, { message: message.trim(), color });
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -616,9 +616,9 @@ router.delete("/api/admin/banner", requireAdmin, async (req, res) => {
   try {
     await storage.setSetting("banner_message", null);
     await storage.setSetting("banner_color", null);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -630,9 +630,9 @@ router.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
     const { suspended } = req.body;
     const user = await storage.suspendUser(id, !!suspended);
     await logAdminAction((req.user as any).id, suspended ? "user_suspend" : "user_unsuspend", "user", id);
-    res.json(user);
+    return res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -640,9 +640,9 @@ router.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
 router.get("/api/admin/activity", requireAdmin, async (req, res) => {
   try {
     const feed = await storage.getActivityFeed();
-    res.json(feed);
+    return res.json(feed);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -651,9 +651,9 @@ router.get("/api/admin/support/unread-count", requireAdmin, async (req, res) => 
   try {
     const messages = await storage.getSupportMessages();
     const count = messages.filter((m: any) => !m.read).length;
-    res.json({ count });
+    return res.json({ count });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -661,9 +661,9 @@ router.get("/api/admin/support/unread-count", requireAdmin, async (req, res) => 
 router.get("/api/admin/support", requireAdmin, async (req, res) => {
   try {
     const messages = await storage.getSupportMessages();
-    res.json(messages);
+    return res.json(messages);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -673,9 +673,9 @@ router.patch("/api/admin/support/:id", requireAdmin, async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     const { read, status } = req.body;
     const msg = await storage.updateSupportMessage(id, { read, status });
-    res.json(msg);
+    return res.json(msg);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -695,10 +695,10 @@ router.get("/api/admin/audit-logs", requireAdmin, async (req, res) => {
       createdAt: adminAuditLogs.createdAt,
     }).from(adminAuditLogs).orderBy(desc(adminAuditLogs.createdAt)).limit(limit).offset(offset);
     const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(adminAuditLogs);
-    res.json({ logs, total, page, limit, totalPages: Math.ceil(total / limit) });
+    return res.json({ logs, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     logger.error({ err }, "Failed to fetch audit logs");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -720,9 +720,9 @@ router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
       }
     }
     await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count, failed });
-    res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
+    return res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -744,9 +744,9 @@ router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
       }
     }
     await logAdminAction((req.user as any).id, "bulk_delete", "user", null, { userIds, count, failed });
-    res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
+    return res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -769,9 +769,9 @@ router.get("/api/admin/export/users.csv", requireAdmin, async (req, res) => {
     );
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", "attachment; filename=plotzy-users.csv");
-    res.send([header, ...rows].join("\n"));
+    return res.send([header, ...rows].join("\n"));
   } catch (err) {
-    res.status(500).json({ message: "Export failed" });
+    return res.status(500).json({ message: "Export failed" });
   }
 });
 
@@ -788,9 +788,9 @@ router.get("/api/admin/export/analytics.csv", requireAdmin, async (req, res) => 
     const rows = (signups.rows as any[]).map(r => `${r.date},${r.signups}`);
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename=plotzy-analytics-${days}d.csv`);
-    res.send([header, ...rows].join("\n"));
+    return res.send([header, ...rows].join("\n"));
   } catch (err) {
-    res.status(500).json({ message: "Export failed" });
+    return res.status(500).json({ message: "Export failed" });
   }
 });
 
@@ -814,10 +814,10 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
     await db.delete(bookCollaborators).where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, (req.user as any).id), sql`invite_code IS NOT NULL`));
     await db.insert(bookCollaborators).values({ bookId, userId: (req.user as any).id, role, inviteCode: code });
 
-    res.json({ code, role });
+    return res.json({ code, role });
   } catch (err) {
     logger.error({ err }, "Failed to create invite");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -848,11 +848,11 @@ router.post("/api/books/join", sensitiveAuthLimiter, async (req, res) => {
     // Delete the invite code (one-time use)
     await db.delete(bookCollaborators).where(eq(bookCollaborators.id, invite.id));
 
-    res.json({ success: true, bookId: invite.bookId, bookTitle: book.title, role: invite.role });
+    return res.json({ success: true, bookId: invite.bookId, bookTitle: book.title, role: invite.role });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Please enter a valid invite code" });
     logger.error({ err }, "Failed to join book");
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -878,9 +878,9 @@ router.get("/api/books/:bookId/collaborators", requireBookOwner, async (req, res
     const collabs = rows.filter(r => r.userId !== book?.userId);
     const pendingInvites = rows.filter(r => r.inviteCode && r.userId === book?.userId);
 
-    res.json({ collaborators: collabs, pendingInvites });
+    return res.json({ collaborators: collabs, pendingInvites });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -893,9 +893,9 @@ router.delete("/api/books/:bookId/collaborators/:collabId", requireBookOwner, as
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the owner can remove collaborators" });
 
     await db.delete(bookCollaborators).where(and(eq(bookCollaborators.id, collabId), eq(bookCollaborators.bookId, bookId)));
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -909,9 +909,9 @@ router.patch("/api/books/:bookId/collaborators/:collabId", requireBookOwner, asy
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the owner can change roles" });
 
     const [updated] = await db.update(bookCollaborators).set({ role }).where(and(eq(bookCollaborators.id, collabId), eq(bookCollaborators.bookId, bookId))).returning();
-    res.json(updated);
+    return res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -942,9 +942,9 @@ router.get("/api/marketplace/professionals", async (req, res) => {
     const filtered = genre && genre !== "all"
       ? rows.filter(p => Array.isArray(p.genres) && (p.genres as string[]).some(g => g.toLowerCase() === genre.toLowerCase()))
       : rows;
-    res.json(filtered);
+    return res.json(filtered);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch professionals" });
+    return res.status(500).json({ message: "Failed to fetch professionals" });
   }
 });
 
@@ -953,9 +953,9 @@ router.get("/api/marketplace/professionals/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const [pro] = await db.select().from(professionals).where(eq(professionals.id, id));
     if (!pro) return res.status(404).json({ message: "Not found" });
-    res.json(pro);
+    return res.json(pro);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch professional" });
+    return res.status(500).json({ message: "Failed to fetch professional" });
   }
 });
 
@@ -975,22 +975,22 @@ router.post("/api/marketplace/quote-requests", async (req, res) => {
   try {
     const data = quoteRequestSchema.parse(req.body);
     const [created] = await db.insert(quoteRequests).values({ professionalId: data.professionalId, authorName: data.authorName, authorEmail: data.authorEmail, bookTitle: data.bookTitle, wordCount: data.wordCount ?? null, genre: data.genre ?? null, description: data.description ?? null, deadline: data.deadline ?? null, service: data.service }).returning();
-    res.status(201).json(created);
+    return res.status(201).json(created);
   } catch (err) {
-    res.status(500).json({ message: "Failed to submit quote request" });
+    return res.status(500).json({ message: "Failed to submit quote request" });
   }
 });
 
 // ─── Research Items ────────────────────────────────────────────────────────
 
 router.get("/api/books/:bookId/research", requireBookOwner, async (req, res) => {
-  const bookId = parseInt(req.params.bookId);
+  const bookId = parseInt(String(req.params.bookId));
   if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
   try {
     const items = await db.select().from(researchItemsTable).where(eq(researchItemsTable.bookId, bookId));
-    res.json(items);
+    return res.json(items);
   } catch {
-    res.status(500).json({ message: "Failed to fetch research items" });
+    return res.status(500).json({ message: "Failed to fetch research items" });
   }
 });
 
@@ -1004,40 +1004,40 @@ const researchItemSchema = z.object({
 });
 
 router.post("/api/books/:bookId/research", requireBookOwner, async (req, res) => {
-  const bookId = parseInt(req.params.bookId);
+  const bookId = parseInt(String(req.params.bookId));
   if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
   const parsed = researchItemSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid input" });
   const { type, title, content, previewImageUrl, description, color } = parsed.data;
   try {
     const [item] = await db.insert(researchItemsTable).values({ bookId, type, title, content, previewImageUrl, description, color }).returning();
-    res.status(201).json(item);
+    return res.status(201).json(item);
   } catch {
-    res.status(500).json({ message: "Failed to create research item" });
+    return res.status(500).json({ message: "Failed to create research item" });
   }
 });
 
 router.put("/api/books/:bookId/research/:id", requireBookOwner, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
   const { type, title, content, previewImageUrl, description, color } = req.body;
   try {
     const [item] = await db.update(researchItemsTable).set({ type, title, content, previewImageUrl, description, color }).where(eq(researchItemsTable.id, id)).returning();
     if (!item) return res.status(404).json({ message: "Not found" });
-    res.json(item);
+    return res.json(item);
   } catch {
-    res.status(500).json({ message: "Failed to update research item" });
+    return res.status(500).json({ message: "Failed to update research item" });
   }
 });
 
 router.delete("/api/books/:bookId/research/:id", requireBookOwner, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(String(req.params.id));
   if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
   try {
     await db.delete(researchItemsTable).where(eq(researchItemsTable.id, id));
-    res.status(204).send();
+    return res.status(204).send();
   } catch {
-    res.status(500).json({ message: "Failed to delete research item" });
+    return res.status(500).json({ message: "Failed to delete research item" });
   }
 });
 
@@ -1049,9 +1049,9 @@ router.patch("/api/books/:bookId/isbn", requireBookOwner, async (req: any, res: 
   const { isbn } = req.body as { isbn?: string };
   try {
     const book = await storage.updateBook(bookId, { isbn: isbn ?? null } as any);
-    res.json(book);
+    return res.json(book);
   } catch {
-    res.status(500).json({ message: "Failed to update ISBN" });
+    return res.status(500).json({ message: "Failed to update ISBN" });
   }
 });
 
@@ -1074,7 +1074,7 @@ router.get("/api/isbn/validate/:isbn", (req, res) => {
     const valid = check === (isbn[9] === "X" ? 10 : parseInt(isbn[9]));
     return res.json({ valid, isbn, type: "ISBN-10" });
   }
-  res.json({ valid: false, isbn, type: "Unknown" });
+  return res.json({ valid: false, isbn, type: "Unknown" });
 });
 
 // Pure EAN-13 barcode SVG generator (no DOM dependency)
@@ -1110,7 +1110,7 @@ router.get("/api/isbn/barcode/:isbn", (req, res) => {
   if (!/^\d{13}$/.test(isbn)) return res.status(400).json({ message: "ISBN-13 required for barcode" });
   const svg = generateEAN13SVG(isbn);
   res.setHeader("Content-Type", "image/svg+xml");
-  res.send(svg);
+  return res.send(svg);
 });
 
 router.get("/api/isbn/barcode/:isbn/download", (req, res) => {
@@ -1119,7 +1119,7 @@ router.get("/api/isbn/barcode/:isbn/download", (req, res) => {
   const svg = generateEAN13SVG(isbn, { width: 3, barHeight: 120 });
   res.setHeader("Content-Type", "image/svg+xml");
   res.setHeader("Content-Disposition", `attachment; filename=isbn-barcode-${isbn}.svg`);
-  res.send(svg);
+  return res.send(svg);
 });
 
 // ─── ARC Recipients ────────────────────────────────────────────────────────
@@ -1129,9 +1129,9 @@ router.get("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: any
   if (isNaN(bookId)) return res.status(400).json({ message: "Invalid bookId" });
   try {
     const rows = await db.select().from(arcRecipientsTable).where(eq(arcRecipientsTable.bookId, bookId));
-    res.json(rows);
+    return res.json(rows);
   } catch {
-    res.status(500).json({ message: "Failed to fetch ARC recipients" });
+    return res.status(500).json({ message: "Failed to fetch ARC recipients" });
   }
 });
 
@@ -1142,9 +1142,9 @@ router.post("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: an
   if (!name || !email) return res.status(400).json({ message: "name and email required" });
   try {
     const [row] = await db.insert(arcRecipientsTable).values({ bookId, name, email, note: note ?? null, status: "sent" }).returning();
-    res.status(201).json(row);
+    return res.status(201).json(row);
   } catch {
-    res.status(500).json({ message: "Failed to add ARC recipient" });
+    return res.status(500).json({ message: "Failed to add ARC recipient" });
   }
 });
 
@@ -1157,9 +1157,9 @@ router.patch("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, re
   const { status } = parsed.data;
   try {
     const [row] = await db.update(arcRecipientsTable).set({ status }).where(eq(arcRecipientsTable.id, id)).returning();
-    res.json(row);
+    return res.json(row);
   } catch {
-    res.status(500).json({ message: "Failed to update ARC recipient" });
+    return res.status(500).json({ message: "Failed to update ARC recipient" });
   }
 });
 
@@ -1168,9 +1168,9 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
   if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
   try {
     await db.delete(arcRecipientsTable).where(eq(arcRecipientsTable.id, id));
-    res.status(204).send();
+    return res.status(204).send();
   } catch {
-    res.status(500).json({ message: "Failed to delete ARC recipient" });
+    return res.status(500).json({ message: "Failed to delete ARC recipient" });
   }
 });
 
@@ -1204,9 +1204,9 @@ router.get("/api/marketplace/usage", async (req, res) => {
     const tier = getUserTier(user as any);
     const limits = getTierLimits(tier);
     const usage = await checkMarketplaceLimit(req.user.id, tier);
-    res.json({ tier, ...usage, canUse: limits.canUseMarketplace });
+    return res.json({ tier, ...usage, canUse: limits.canUseMarketplace });
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -1215,9 +1215,9 @@ router.get("/api/marketplace/history", async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const history = await getMarketplaceHistory(req.user.id);
-    res.json(history);
+    return res.json(history);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -1236,16 +1236,16 @@ router.post("/api/marketplace/record", async (req, res) => {
 
     const { serviceId, bookId } = req.body;
     await recordMarketplaceUsage(req.user.id, serviceId, bookId);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
 // ── Tutorials ────────────────────────────────────────────────────────────
 
 import { tutorials } from "../../../../lib/db/src/schema";
-import { desc, asc } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 
 // GET /api/tutorials — public, list published tutorials
 router.get("/api/tutorials", async (req, res) => {
@@ -1253,9 +1253,9 @@ router.get("/api/tutorials", async (req, res) => {
     const all = await db.select().from(tutorials)
       .where(eq(tutorials.published, true))
       .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
-    res.json(all);
+    return res.json(all);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -1264,9 +1264,9 @@ router.get("/api/admin/tutorials", requireAdmin, async (req, res) => {
   try {
     const all = await db.select().from(tutorials)
       .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
-    res.json(all);
+    return res.json(all);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -1287,9 +1287,9 @@ router.post("/api/admin/tutorials", requireAdmin, async (req, res) => {
       sortOrder: sortOrder ?? 0,
       published: published !== false,
     }).returning();
-    res.status(201).json(tutorial);
+    return res.status(201).json(tutorial);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -1306,9 +1306,9 @@ router.patch("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
     updates.updatedAt = new Date();
     const [updated] = await db.update(tutorials).set(updates).where(eq(tutorials.id, id)).returning();
     if (!updated) return res.status(404).json({ message: "Tutorial not found" });
-    res.json(updated);
+    return res.json(updated);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -1318,9 +1318,9 @@ router.delete("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await db.delete(tutorials).where(eq(tutorials.id, id));
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 

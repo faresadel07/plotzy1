@@ -62,10 +62,10 @@ router.post(api.payments.createIntent.path, paymentLimiter, async (req, res) => 
       paymentMethod: "card",
     });
 
-    res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
+    return res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
   } catch (err) {
     logger.error({ err }, "Failed to create payment intent");
-    res.status(500).json({ message: "Failed to create payment intent" });
+    return res.status(500).json({ message: "Failed to create payment intent" });
   }
 });
 
@@ -123,10 +123,10 @@ router.post(api.payments.confirm.path, paymentLimiter, async (req, res) => {
     // 4) Only the winner of the CAS marks the book paid.
     await storage.updateBook(tx.bookId, { isPaid: true });
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Failed to confirm payment");
-    res.status(500).json({ message: "Failed to confirm payment" });
+    return res.status(500).json({ message: "Failed to confirm payment" });
   }
 });
 
@@ -203,10 +203,10 @@ router.post("/api/subscription/create-checkout", paymentLimiter, async (req, res
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
-    res.json({ url: session.url, sessionId: session.id });
+    return res.json({ url: session.url, sessionId: session.id });
   } catch (err: any) {
     logger.error({ err }, "Checkout error");
-    res.status(500).json({ message: err?.message || "Failed to create checkout session" });
+    return res.status(500).json({ message: err?.message || "Failed to create checkout session" });
   }
 });
 
@@ -257,9 +257,9 @@ router.get("/api/subscription/verify", async (req, res) => {
       return res.json({ success: true, plan });
     }
 
-    res.json({ success: false });
+    return res.json({ success: false });
   } catch (err: any) {
-    res.status(500).json({ message: err?.message || "Failed to verify subscription" });
+    return res.status(500).json({ message: err?.message || "Failed to verify subscription" });
   }
 });
 
@@ -280,18 +280,18 @@ router.post("/api/subscription/portal", async (req, res) => {
       customer: dbUser.stripeCustomerId,
       return_url: `${baseUrl}/`,
     });
-    res.json({ url: portalSession.url });
+    return res.json({ url: portalSession.url });
   } catch (err: any) {
-    res.status(500).json({ message: err?.message || "Failed to create portal session" });
+    return res.status(500).json({ message: err?.message || "Failed to create portal session" });
   }
 });
 
 router.get("/api/subscription/publishable-key", async (req, res) => {
   try {
     const key = await getStripePublishableKey();
-    res.json({ publishableKey: key });
+    return res.json({ publishableKey: key });
   } catch (err) {
-    res.json({ publishableKey: null });
+    return res.json({ publishableKey: null });
   }
 });
 

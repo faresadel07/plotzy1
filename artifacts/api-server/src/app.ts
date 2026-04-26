@@ -14,11 +14,11 @@ const origDelete = express.application.delete;
 function wrapArgs(args: any[]) {
   return args.map(a => typeof a === "function" && a.constructor.name === "AsyncFunction" ? asyncHandler(a) : a);
 }
-express.application.get = function (...args: any[]) { return origGet.apply(this, wrapArgs(args)); } as any;
-express.application.post = function (...args: any[]) { return origPost.apply(this, wrapArgs(args)); } as any;
-express.application.put = function (...args: any[]) { return origPut.apply(this, wrapArgs(args)); } as any;
-express.application.patch = function (...args: any[]) { return origPatch.apply(this, wrapArgs(args)); } as any;
-express.application.delete = function (...args: any[]) { return origDelete.apply(this, wrapArgs(args)); } as any;
+express.application.get = function (this: any, ...args: any[]) { return origGet.apply(this, wrapArgs(args)); } as any;
+express.application.post = function (this: any, ...args: any[]) { return origPost.apply(this, wrapArgs(args)); } as any;
+express.application.put = function (this: any, ...args: any[]) { return origPut.apply(this, wrapArgs(args)); } as any;
+express.application.patch = function (this: any, ...args: any[]) { return origPatch.apply(this, wrapArgs(args)); } as any;
+express.application.delete = function (this: any, ...args: any[]) { return origDelete.apply(this, wrapArgs(args)); } as any;
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import passport from "passport";
@@ -166,10 +166,10 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async
   try {
     const sig = Array.isArray(signature) ? signature[0] : signature;
     await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-    res.status(200).json({ received: true });
+    return res.status(200).json({ received: true });
   } catch (err: any) {
     log(`Webhook error: ${err.message}`, "stripe");
-    res.status(400).json({ error: "Webhook processing error" });
+    return res.status(400).json({ error: "Webhook processing error" });
   }
 });
 
@@ -234,7 +234,7 @@ app.use("/api", (req, res, next) => {
   if (req.method !== "GET" && req.method !== "HEAD" && req.method !== "OPTIONS") {
     return writeLimiter(req, res, next);
   }
-  next();
+  return next();
 });
 
 // API request logging for admin System Health dashboard
