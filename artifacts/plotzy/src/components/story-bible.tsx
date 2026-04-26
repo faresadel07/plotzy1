@@ -42,11 +42,21 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
 
     const saveMutation = useMutation({
         mutationFn: async (data: Partial<LoreEntry> & { isNew?: boolean }) => {
+            // Construct explicit body so the UI-only `isNew` discriminator
+            // and the redundant `id` (already in the PUT URL) don't leak
+            // onto the wire. Without this, the server-side Zod schemas
+            // for /api/books/:bookId/lore (POST) and /api/lore/:id (PUT)
+            // would 400 the moment they get .strict() applied.
+            const body = JSON.stringify({
+                name: data.name,
+                category: data.category,
+                content: data.content,
+            });
             if (data.isNew) {
                 const res = await fetch(`/api/books/${bookId}/lore`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data),
+                    body,
                 });
                 if (!res.ok) throw new Error("Failed to save");
                 return res.json();
@@ -54,7 +64,7 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
                 const res = await fetch(`/api/lore/${data.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data),
+                    body,
                 });
                 if (!res.ok) throw new Error("Failed to save");
                 return res.json();

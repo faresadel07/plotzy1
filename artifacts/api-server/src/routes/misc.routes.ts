@@ -331,7 +331,7 @@ router.post("/api/admin/support/:id/reply", requireAdmin, async (req, res) => {
     const ticketId = Number(req.params.id);
     if (!Number.isFinite(ticketId)) return res.status(400).json({ message: "Invalid ticket id" });
 
-    const { body } = z.object({ body: z.string().trim().min(1, "Reply cannot be empty").max(5000) }).parse(req.body);
+    const { body } = z.object({ body: z.string().trim().min(1, "Reply cannot be empty").max(5000) }).strict().parse(req.body);
 
     const { supportMessages, supportReplies, notifications } = await import("../../../../lib/db/src/schema");
     const { eq } = await import("drizzle-orm");
@@ -425,7 +425,7 @@ router.post("/api/support/tickets/:id/reply", async (req, res) => {
     const ticketId = Number(req.params.id);
     if (!Number.isFinite(ticketId)) return res.status(400).json({ message: "Invalid ticket id" });
 
-    const { body } = z.object({ body: z.string().trim().min(1).max(5000) }).parse(req.body);
+    const { body } = z.object({ body: z.string().trim().min(1).max(5000) }).strict().parse(req.body);
 
     const { supportMessages, supportReplies, notifications } = await import("../../../../lib/db/src/schema");
     const { eq } = await import("drizzle-orm");
@@ -807,7 +807,7 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
     const book = await storage.getBook(bookId);
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can invite collaborators" });
 
-    const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).parse(req.body);
+    const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).strict().parse(req.body);
     const code = generateInviteCode();
 
     // Delete any existing pending invite for this book by owner, then insert new one
@@ -827,7 +827,7 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
 router.post("/api/books/join", sensitiveAuthLimiter, async (req, res) => {
   try {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
-    const { code } = z.object({ code: z.string().min(1) }).parse(req.body);
+    const { code } = z.object({ code: z.string().min(1) }).strict().parse(req.body);
     const userId = (req.user as any).id;
 
     // Find the invite
@@ -904,7 +904,7 @@ router.patch("/api/books/:bookId/collaborators/:collabId", requireBookOwner, asy
   try {
     const bookId = Number(req.params.bookId);
     const collabId = Number(req.params.collabId);
-    const { role } = z.object({ role: z.enum(["editor", "viewer"]) }).parse(req.body);
+    const { role } = z.object({ role: z.enum(["editor", "viewer"]) }).strict().parse(req.body);
     const book = await storage.getBook(bookId);
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the owner can change roles" });
 
@@ -969,7 +969,7 @@ const quoteRequestSchema = z.object({
   description: z.string().max(5000).optional().nullable(),
   deadline: z.string().max(100).optional().nullable(),
   service: z.string().min(1).max(100),
-});
+}).strict();
 
 router.post("/api/marketplace/quote-requests", async (req, res) => {
   try {
@@ -1001,7 +1001,7 @@ const researchItemSchema = z.object({
   previewImageUrl: z.string().url().optional().nullable(),
   description: z.string().max(2000).optional().nullable(),
   color: z.string().max(50).default("default"),
-});
+}).strict();
 
 router.post("/api/books/:bookId/research", requireBookOwner, async (req, res) => {
   const bookId = parseInt(String(req.params.bookId));
@@ -1151,7 +1151,7 @@ router.post("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: an
 router.patch("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, res: any) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-  const statusSchema = z.object({ status: z.enum(["sent", "opened", "reviewed", "declined"]).default("sent") });
+  const statusSchema = z.object({ status: z.enum(["sent", "opened", "reviewed", "declined"]).default("sent") }).strict();
   const parsed = statusSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid status" });
   const { status } = parsed.data;

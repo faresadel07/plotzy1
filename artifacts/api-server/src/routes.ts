@@ -429,7 +429,7 @@ export async function registerRoutes(
   app.post("/api/admin/books/:id/feature", requireAdmin, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
-      const { feature } = z.object({ feature: z.boolean() }).parse(req.body);
+      const { feature } = z.object({ feature: z.boolean() }).strict().parse(req.body);
       await storage.setFeaturedBook(feature ? bookId : null);
       return res.json({ success: true });
     } catch (err) {
@@ -1443,7 +1443,7 @@ export async function registerRoutes(
       const { content, label } = z.object({
         content: z.string().min(1),
         label:   z.string().trim().min(1).max(80).optional(),
-      }).parse(req.body);
+      }).strict().parse(req.body);
 
       const { db: dbConn } = await import("./db");
       const { eq, desc } = await import("drizzle-orm");
@@ -1532,7 +1532,7 @@ export async function registerRoutes(
 
   app.patch('/api/books/:bookId/chapters/reorder', requireBookOwner, async (req, res) => {
     try {
-      const body = z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() })) }).parse(req.body);
+      const body = z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() }).strict()) }).strict().parse(req.body);
       await storage.reorderChapters(body.updates);
       return res.status(200).json({ ok: true });
     } catch (err) {
@@ -1555,7 +1555,7 @@ export async function registerRoutes(
   app.post('/api/books/:bookId/progress', async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
-      const { wordsAdded } = z.object({ wordsAdded: z.number() }).parse(req.body);
+      const { wordsAdded } = z.object({ wordsAdded: z.number() }).strict().parse(req.body);
       const record = await storage.updateDailyProgress(bookId, wordsAdded);
       return res.json(record);
     } catch (err) {
@@ -1618,7 +1618,7 @@ export async function registerRoutes(
       const { audio, language } = z.object({
         audio: z.string(),
         language: z.string().optional(),
-      }).parse(req.body);
+      }).strict().parse(req.body);
 
       const audioBuffer = Buffer.from(audio, "base64");
       const file = await toFile(audioBuffer, "audio.webm", { type: "audio/webm" });

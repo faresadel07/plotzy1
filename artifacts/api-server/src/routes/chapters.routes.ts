@@ -173,9 +173,10 @@ router.patch(
       const body = z
         .object({
           updates: z.array(
-            z.object({ id: z.number(), order: z.number() })
+            z.object({ id: z.number(), order: z.number() }).strict()
           ),
         })
+        .strict()
         .parse(req.body);
       await storage.reorderChapters(body.updates);
       return res.status(200).json({ ok: true });
@@ -206,6 +207,7 @@ router.post("/api/books/:bookId/progress", async (req, res) => {
     const bookId = Number(req.params.bookId);
     const { wordsAdded } = z
       .object({ wordsAdded: z.number() })
+      .strict()
       .parse(req.body);
     const record = await storage.updateDailyProgress(bookId, wordsAdded);
     return res.json(record);
@@ -299,6 +301,7 @@ router.post(
           audio: z.string(),
           language: z.string().optional(),
         })
+        .strict()
         .parse(req.body);
 
       const audioBuffer = Buffer.from(audio, "base64");
