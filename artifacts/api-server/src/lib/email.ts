@@ -13,10 +13,14 @@ async function getResend() {
 
 // Strip CR/LF (and other newline-class chars) from any string that ends up in
 // an email header — Subject, From, To. Without this an attacker who controls
-// a displayName or message snippet could inject `\r\nBcc: …` and fan-out
-// notifications to addresses they choose.
+// a displayName or message snippet could inject "\r\nBcc: ..." and fan-out
+// notifications to addresses they choose. The two unicode escapes catch
+// U+2028/U+2029 which JS treats as line terminators too.
 function sanitizeHeader(value: string): string {
-  return String(value).replace(/[\r\n  \0]/g, " ").trim().slice(0, 998);
+  return String(value)
+    .replace(/[\r\n\t]/g, " ")
+    .trim()
+    .slice(0, 998);
 }
 
 // Escape user-supplied text before interpolating into an HTML email body.
