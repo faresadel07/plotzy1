@@ -95,7 +95,7 @@ const profileUpdateSchema = z.object({
       "banner must be an image data URI (≤1.5MB) or a URL",
     )
     .optional(),
-});
+}).strict();
 
 const router = Router();
 
