@@ -13,5 +13,11 @@
   "devDependencies": {
     "typescript": "~5.9.2",
     "prettier": "^3.8.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "^8.5.10"
+    },
+    "//": "postcss override forces >=8.5.10 across the workspace because vite locks its bundled postcss at 8.5.9 (advisory GHSA-qx2v-qp2m-jg93 — XSS in stringify on </style>). REMOVE this override once vite ships postcss >=8.5.10 in its default tree (track on next vite minor)."
   }
 }

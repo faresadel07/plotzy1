@@ -179,3 +179,41 @@ Any package that's listed in a `references[]` anywhere MUST have
 ---
 
 _Generated as part of Group A typecheck cleanup (commit `fdc2308`)._
+
+---
+
+## Group B — dependency audit findings
+
+### Successfully patched (Group B / B1)
+
+- 12 vulnerabilities across 4 packages (dompurify, xmldom×2, postcss)
+- 75 % reduction in audit advisories (16 → 4)
+- postcss required pnpm override due to vite locking it at 8.5.9
+
+### Deferred — require major version bumps (B3)
+
+- **HIGH**: serialize-javascript 6 → 7 (RCE, build-time only via
+  vite-plugin-pwa > workbox-build)
+- **MODERATE**: uuid 10 → 14 (theoretical, unreachable in svix's code path)
+
+### NEW finding during audit — esbuild (deferred)
+
+- **MODERATE**: esbuild ≤0.24.2 (dev-server proxy bypass)
+- Path: `lib/db > drizzle-kit > @esbuild-kit/esm-loader >
+  @esbuild-kit/core-utils > esbuild@0.18.20`
+- **Production unaffected**: production esbuild is 0.25.12 / 0.27.3
+- **Blocker**: `@esbuild-kit/core-utils` is unmaintained, pinned to
+  esbuild 0.18.x. Forcing override may break `drizzle-kit push`.
+- **Recommendation**: monitor drizzle-kit for an upgrade that drops
+  `@esbuild-kit`, OR vendor a patched fork before production launch.
+
+### Process learning
+
+The audit advisory database publishes new CVEs continuously. An audit
+run is a SNAPSHOT, not a permanent state. Any production launch should
+include a fresh `pnpm audit` immediately before deployment, not rely
+on prior audit reports.
+
+---
+
+_Generated as part of Group B dependency cleanup (commit `ee09218`)._
