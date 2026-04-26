@@ -9,6 +9,10 @@
     "./publishers": "./src/publishers.ts",
     "./schema": "./src/schema-types.ts"
   },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc --build"
+  },
   "dependencies": {
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.7.1",
