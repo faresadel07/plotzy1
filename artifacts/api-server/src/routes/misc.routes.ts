@@ -161,7 +161,7 @@ router.get("/api/public/series", async (_req, res) => {
 
     return res.json(result);
   } catch (err) {
-    console.error("Failed to fetch public series:", err);
+    logger.error({ err }, "Failed to fetch public series");
     return res.json([]);
   }
 });
@@ -716,7 +716,7 @@ router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
         count++;
       } catch (e) {
         failed.push(Number(id));
-        console.error(`Failed to ${suspended ? "suspend" : "unsuspend"} user ${id}:`, e);
+        logger.error({ err: e, userId: id, suspended }, `Failed to ${suspended ? "suspend" : "unsuspend"} user`);
       }
     }
     await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count, failed });
@@ -740,7 +740,7 @@ router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
         count++;
       } catch (e) {
         failed.push(Number(id));
-        console.error(`Failed to delete user ${id}:`, e);
+        logger.error({ err: e, userId: id }, "Failed to delete user");
       }
     }
     await logAdminAction((req.user as any).id, "bulk_delete", "user", null, { userIds, count, failed });
