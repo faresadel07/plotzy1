@@ -676,13 +676,15 @@ export const insertDailyProgressSchema = createInsertSchema(dailyProgress).omit(
 export const insertStoryBeatSchema = createInsertSchema(storyBeats).omit({ id: true, createdAt: true });
 
 export type User = typeof users.$inferSelect;
-export type InsertUser = {
-  email?: string | null;
-  displayName?: string | null;
-  googleId?: string | null;
-  appleId?: string | null;
-  avatarUrl?: string | null;
-};
+// Schema-derived insert type. Drizzle's $inferInsert gives us every
+// nullable / defaulted column on `users` with the correct optionality;
+// dropping `id`/`createdAt` (Postgres generates them) leaves exactly the
+// fields a caller is allowed to set. Earlier this was hand-narrowed to
+// 5 fields and drifted out of sync as new columns (passwordHash,
+// linkedinId, emailVerified, …) were added — leading to `as any` casts
+// at the call sites that needed those fields. Source-of-truth fixes the
+// drift permanently.
+export type InsertUser = Omit<typeof users.$inferInsert, "id" | "createdAt">;
 
 export type Book = typeof books.$inferSelect;
 export type InsertBook = z.infer<typeof insertBookSchema>;

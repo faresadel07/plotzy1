@@ -8,6 +8,9 @@ out-tsc
 .expo
 .expo-shared
 
+# local scratch / one-off debug scripts that aren't part of the project
+artifacts/*/test-*.mjs
+
 # dependencies
 node_modules
 

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull } from "drizzle-orm";
+import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull, getTableColumns } from "drizzle-orm";
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
@@ -21,14 +21,9 @@ export type UserAchievement = typeof userAchievements.$inferSelect;
 
 export type PublishedBook = Book & { authorDisplayName: string | null; authorAvatarUrl: string | null };
 
-type UpdateUser = Partial<InsertUser> & {
-  displayName?: string | null;
-  subscriptionStatus?: string | null;
-  subscriptionPlan?: string | null;
-  subscriptionEndDate?: Date | null;
-  stripeCustomerId?: string | null;
-  stripeSubscriptionId?: string | null;
-};
+// Same source-of-truth pattern as InsertUser — every column the schema
+// allows to be inserted is also a valid update target, just optional.
+type UpdateUser = Partial<Omit<typeof users.$inferInsert, "id" | "createdAt">>;
 
 export interface IStorage {
   getBooks(): Promise<Book[]>;
@@ -459,7 +454,7 @@ export class DatabaseStorage implements IStorage {
   async getPublishedBooks(): Promise<PublishedBook[]> {
     const rows = await db
       .select({
-        ...books,
+        ...getTableColumns(books),
         authorDisplayName: users.displayName,
         authorAvatarUrl: users.avatarUrl,
       })
@@ -472,7 +467,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPublishedArticles(): Promise<PublishedBook[]> {
     const rows = await db
-      .select({ ...books, authorDisplayName: users.displayName, authorAvatarUrl: users.avatarUrl })
+      .select({ ...getTableColumns(books), authorDisplayName: users.displayName, authorAvatarUrl: users.avatarUrl })
       .from(books)
       .leftJoin(users, eq(books.userId, users.id))
       .where(and(eq(books.isPublished, true), eq(books.isDeleted, false), eq(books.contentType, "article")))
@@ -483,7 +478,7 @@ export class DatabaseStorage implements IStorage {
   async getPublishedBook(id: number): Promise<PublishedBook | undefined> {
     const [row] = await db
       .select({
-        ...books,
+        ...getTableColumns(books),
         authorDisplayName: users.displayName,
         authorAvatarUrl: users.avatarUrl,
       })
@@ -507,7 +502,7 @@ export class DatabaseStorage implements IStorage {
   async getFeaturedBook(): Promise<PublishedBook | undefined> {
     const [row] = await db
       .select({
-        ...books,
+        ...getTableColumns(books),
         authorDisplayName: users.displayName,
         authorAvatarUrl: users.avatarUrl,
       })

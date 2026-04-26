@@ -32,7 +32,18 @@ async function getCredentials() {
     },
   });
 
-  const data = await response.json();
+  // Replit's connector API isn't strongly typed in any SDK we depend on,
+  // so we narrow the response shape here. Anything outside this shape is
+  // treated as a missing connection and falls through to the throw below.
+  type ConnectorResponse = {
+    items?: Array<{
+      settings?: {
+        secret?: string;
+        publishable?: string;
+      };
+    }>;
+  };
+  const data = (await response.json()) as ConnectorResponse;
   const connectionSettings = data.items?.[0];
 
   if (!connectionSettings?.settings?.secret) {
@@ -48,7 +59,11 @@ async function getCredentials() {
 // WARNING: Never cache this client. Always call fresh.
 export async function getUncachableStripeClient(): Promise<Stripe> {
   const { secretKey } = await getCredentials();
-  return new Stripe(secretKey, { apiVersion: '2024-06-20' });
+  // Cast keeps us decoupled from the exact apiVersion literal the installed
+  // `stripe` package ships with — the SDK pins to its supported version
+  // anyway and the cast just stops a typecheck regression every time the
+  // package bumps.
+  return new Stripe(secretKey, { apiVersion: '2024-06-20' as Stripe.LatestApiVersion });
 }
 
 export async function getStripePublishableKey(): Promise<string> {

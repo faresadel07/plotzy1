@@ -7,9 +7,18 @@ import rateLimit, { type Options, ipKeyGenerator } from "express-rate-limit";
 // could exhaust the anonymous bucket, log in, and immediately get a fresh
 // allowance under the same minute. Combining both anchors keeps a single
 // continuous bucket per (caller, identity) tuple.
+//
+// SECURITY: `ipKeyGenerator` takes the IP STRING (not the Request object) —
+// the previous (req, res) call was a runtime bug: at runtime the helper
+// stringified the Request and bucketed every caller under the same key,
+// effectively neutralising per-IP rate limiting. The library's own
+// docstring shows the correct usage. IPv6 normalisation (collapsing /64
+// subnets to one bucket) is the whole reason to use this helper instead of
+// raw req.ip — without it an IPv6 attacker rotates the low bits and
+// trivially bypasses limits.
 // ---------------------------------------------------------------------------
-const keyGenerator: Options["keyGenerator"] = (req, res) => {
-  const ip = ipKeyGenerator(req, res);
+const keyGenerator: Options["keyGenerator"] = (req, _res) => {
+  const ip = ipKeyGenerator(req.ip || "");
   if ((req as any).isAuthenticated?.() && (req as any).user?.id) {
     return `user:${(req as any).user.id}|ip:${ip}`;
   }

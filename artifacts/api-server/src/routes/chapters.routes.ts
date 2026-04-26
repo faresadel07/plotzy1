@@ -27,9 +27,9 @@ const router = Router();
 router.get(api.chapters.list.path, async (req, res) => {
   try {
     const chapters = await storage.getChapters(Number(req.params.bookId));
-    res.json(chapters);
+    return res.json(chapters);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -78,11 +78,11 @@ router.post(api.chapters.create.path, requireBookOwner, async (req, res) => {
         /* non-blocking */
       }
     }
-    res.status(201).json(chapter);
+    return res.status(201).json(chapter);
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -140,11 +140,11 @@ router.put(api.chapters.update.path, requireChapterOwner, async (req, res) => {
         /* non-blocking */
       }
     }
-    res.json(chapter);
+    return res.json(chapter);
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -156,9 +156,9 @@ router.delete(
   async (req, res) => {
     try {
       await storage.deleteChapter(Number(req.params.id));
-      res.status(204).send();
+      return res.status(204).send();
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   }
 );
@@ -178,13 +178,13 @@ router.patch(
         })
         .parse(req.body);
       await storage.reorderChapters(body.updates);
-      res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true });
     } catch (err) {
       if (err instanceof z.ZodError)
         return res
           .status(400)
           .json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   }
 );
@@ -195,9 +195,9 @@ router.get("/api/books/:bookId/progress", async (req, res) => {
   try {
     const bookId = Number(req.params.bookId);
     const progress = await storage.getDailyProgress(bookId);
-    res.json(progress);
+    return res.json(progress);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -208,13 +208,13 @@ router.post("/api/books/:bookId/progress", async (req, res) => {
       .object({ wordsAdded: z.number() })
       .parse(req.body);
     const record = await storage.updateDailyProgress(bookId, wordsAdded);
-    res.json(record);
+    return res.json(record);
   } catch (err) {
     if (err instanceof z.ZodError)
       return res
         .status(400)
         .json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -277,10 +277,10 @@ router.post(
         title,
         content: chapterContent,
       });
-      res.json(chapter);
+      return res.json(chapter);
     } catch (err) {
       logger.error({ err }, "Chapters route error");
-      res.status(500).json({ message: "Failed to process voice" });
+      return res.status(500).json({ message: "Failed to process voice" });
     }
   }
 );
@@ -312,10 +312,10 @@ router.post(
           language && language.length === 2 ? language : undefined,
       });
 
-      res.json({ text: transcription.text });
+      return res.json({ text: transcription.text });
     } catch (err) {
       logger.error({ err }, "Chapters route error");
-      res.status(500).json({ message: "Transcription failed" });
+      return res.status(500).json({ message: "Transcription failed" });
     }
   }
 );

@@ -88,7 +88,7 @@ export function setupPassport() {
                   // Google verifies the email before letting it be used
                   // on a Google account; trust it as our verification.
                   emailVerified: googleEmailVerified,
-                } as any);
+                });
               }
             }
             done(null, user);
@@ -150,7 +150,7 @@ export function setupPassport() {
                   user = await storage.createUser({
                     appleId, email,
                     emailVerified,
-                  } as any);
+                  });
                 }
               }
               done(null, user);

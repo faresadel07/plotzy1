@@ -157,7 +157,7 @@ export async function registerRoutes(
 
   app.get(api.books.trashList.path, async (req, res) => {
     const books = await storage.getDeletedBooks();
-    res.json(books);
+    return res.json(books);
   });
 
   // IMPORTANT: /api/books/shared-with-me MUST be before /api/books/:id
@@ -177,10 +177,10 @@ export async function registerRoutes(
         .innerJoin(books, eq(bookCollaborators.bookId, books.id))
         .leftJoin(users, eq(books.userId, users.id))
         .where(eq(bookCollaborators.userId, userId));
-      res.json(rows);
+      return res.json(rows);
     } catch (err) {
       logger.error({ err }, "Failed to fetch shared books");
-      res.json([]);
+      return res.json([]);
     }
   });
 
@@ -215,10 +215,10 @@ export async function registerRoutes(
           role: r.collabRole, joinedAt: r.collabJoinedAt,
         });
       }
-      res.json(Array.from(grouped.values()));
+      return res.json(Array.from(grouped.values()));
     } catch (err) {
       logger.error({ err }, "Failed to fetch shared-by-me");
-      res.json([]);
+      return res.json([]);
     }
   });
 
@@ -310,10 +310,10 @@ export async function registerRoutes(
         if (!sess.guestBookIds) sess.guestBookIds = [];
         if (!sess.guestBookIds.includes(book.id)) sess.guestBookIds.push(book.id);
       }
-      res.status(201).json(book);
+      return res.status(201).json(book);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -321,37 +321,37 @@ export async function registerRoutes(
     try {
       const input = api.books.update.input.parse(req.body);
       const book = await storage.updateBook(Number(req.params.id), input);
-      res.json(book);
+      return res.json(book);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
   app.patch(api.books.trash.path, requireBookOwnerStrict, async (req, res) => {
     try {
       const book = await storage.updateBook(Number(req.params.id), { isDeleted: true } as any);
-      res.json(book);
+      return res.json(book);
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
   app.patch(api.books.restore.path, requireBookOwnerStrict, async (req, res) => {
     try {
       const book = await storage.updateBook(Number(req.params.id), { isDeleted: false } as any);
-      res.json(book);
+      return res.json(book);
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
   app.delete(api.books.delete.path, requireBookOwnerStrict, async (req, res) => {
     try {
       await storage.deleteBook(Number(req.params.id));
-      res.status(204).send();
+      return res.status(204).send();
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -410,7 +410,7 @@ export async function registerRoutes(
       if (err.message === "EMPTY_ARTICLE") {
         return res.status(400).json({ message: "Article has no content to publish" });
       }
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -420,9 +420,9 @@ export async function registerRoutes(
     try {
       const book = await storage.getFeaturedBook();
       if (!book) return res.status(404).json({ message: "No featured book" });
-      res.json(book);
+      return res.json(book);
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -431,9 +431,9 @@ export async function registerRoutes(
       const bookId = Number(req.params.id);
       const { feature } = z.object({ feature: z.boolean() }).parse(req.body);
       await storage.setFeaturedBook(feature ? bookId : null);
-      res.json({ success: true });
+      return res.json({ success: true });
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -441,16 +441,16 @@ export async function registerRoutes(
   app.get("/api/public/articles", async (_req, res) => {
     try {
       const articles = await storage.getPublishedArticles();
-      res.json(articles);
-    } catch { res.json([]); }
+      return res.json(articles);
+    } catch { return res.json([]); }
   });
 
   app.get("/api/public/books", async (_req, res) => {
     try {
       const publishedBooks = await storage.getPublishedBooks();
-      res.json(publishedBooks);
+      return res.json(publishedBooks);
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -458,9 +458,9 @@ export async function registerRoutes(
     try {
       const book = await storage.getPublishedBook(Number(req.params.id));
       if (!book || !book.isPublished) return res.status(404).json({ message: "Book not found" });
-      res.json(book);
+      return res.json(book);
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -469,9 +469,9 @@ export async function registerRoutes(
       const book = await storage.getPublishedBook(Number(req.params.id));
       if (!book || !book.isPublished) return res.status(404).json({ message: "Book not found" });
       const chapterList = await storage.getPublishedBookChapters(Number(req.params.id));
-      res.json(chapterList);
+      return res.json(chapterList);
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -488,9 +488,9 @@ export async function registerRoutes(
           await checkAndUnlockAchievements(book.userId, stats);
         }
       } catch { /* non-blocking */ }
-      res.json({ ok: true });
+      return res.json({ ok: true });
     } catch (err) {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -500,8 +500,8 @@ export async function registerRoutes(
     try {
       const bookId = Number(req.params.id);
       const comments = await storage.getBookComments(bookId);
-      res.json(comments);
-    } catch { res.json([]); }
+      return res.json(comments);
+    } catch { return res.json([]); }
   });
 
   app.post("/api/public/books/:id/comments", requireEmailVerified, async (req, res) => {
@@ -527,10 +527,10 @@ export async function registerRoutes(
         ? ((req.user as any)?.displayName || "Anonymous")
         : (typeof authorName === "string" ? authorName.trim().slice(0, 80) : "") || "Anonymous";
       const comment = await storage.addBookComment({ bookId, userId, authorName: safeAuthor, content: safeContent });
-      res.status(201).json(comment);
+      return res.status(201).json(comment);
     } catch (err) {
       logger.error({ err }, "Failed to post comment");
-      res.status(500).json({ message: "Failed to post comment" });
+      return res.status(500).json({ message: "Failed to post comment" });
     }
   });
 
@@ -561,10 +561,10 @@ export async function registerRoutes(
       const access = await checkBookAccess(bookId, req);
       if (!access.ok) return res.status(403).json({ message: "Access denied" });
       const comments = await storage.getInlineComments(chapterId);
-      res.json(comments);
+      return res.json(comments);
     } catch (err) {
       logger.error({ err }, "Failed to fetch inline comments");
-      res.json([]);
+      return res.json([]);
     }
   });
 
@@ -575,10 +575,10 @@ export async function registerRoutes(
       const access = await checkBookAccess(bookId, req);
       if (!access.ok) return res.status(403).json({ message: "Access denied" });
       const comments = await storage.getBookInlineComments(bookId);
-      res.json(comments);
+      return res.json(comments);
     } catch (err) {
       logger.error({ err }, "Failed to fetch inline comments");
-      res.json([]);
+      return res.json([]);
     }
   });
 
@@ -630,10 +630,10 @@ export async function registerRoutes(
         endOffset,
         content: content.trim().slice(0, 5000),
       });
-      res.status(201).json(comment);
+      return res.status(201).json(comment);
     } catch (err) {
       logger.error({ err }, "Failed to add inline comment");
-      res.status(500).json({ message: "Failed to add inline comment" });
+      return res.status(500).json({ message: "Failed to add inline comment" });
     }
   });
 
@@ -659,10 +659,10 @@ export async function registerRoutes(
       const canDelete = comment.userId === userId || book?.userId === userId;
       if (!canDelete) return res.status(403).json({ message: "Access denied" });
       await storage.deleteInlineComment(commentId);
-      res.json({ success: true });
+      return res.json({ success: true });
     } catch (err) {
       logger.error({ err }, "Failed to delete inline comment");
-      res.status(500).json({ message: "Failed to delete" });
+      return res.status(500).json({ message: "Failed to delete" });
     }
   });
 
@@ -687,10 +687,10 @@ export async function registerRoutes(
       const hasAccess = await storage.isBookAccessible(comment.bookId, userId);
       if (!hasAccess) return res.status(403).json({ message: "Access denied" });
       const updated = await storage.resolveInlineComment(commentId);
-      res.json(updated);
+      return res.json(updated);
     } catch (err) {
       logger.error({ err }, "Failed to resolve inline comment");
-      res.status(500).json({ message: "Failed to resolve" });
+      return res.status(500).json({ message: "Failed to resolve" });
     }
   });
 
@@ -698,8 +698,8 @@ export async function registerRoutes(
     try {
       const bookId = Number(req.params.id);
       const stats = await storage.getBookRatingStats(bookId);
-      res.json(stats);
-    } catch { res.json({ avg: 0, count: 0 }); }
+      return res.json(stats);
+    } catch { return res.json({ avg: 0, count: 0 }); }
   });
 
   app.post("/api/public/books/:id/rate", requireEmailVerified, async (req, res) => {
@@ -709,10 +709,10 @@ export async function registerRoutes(
       const { rating } = req.body;
       if (!rating || rating < 1 || rating > 5) return res.status(400).json({ message: "Rating must be 1-5" });
       await storage.rateBook(bookId, (req.user as any).id, rating);
-      res.json({ success: true });
+      return res.json({ success: true });
     } catch (err) {
       logger.error({ err }, "Failed to rate");
-      res.status(500).json({ message: "Failed to rate" });
+      return res.status(500).json({ message: "Failed to rate" });
     }
   });
 
@@ -771,10 +771,10 @@ export async function registerRoutes(
         await storage.updateBook(bookId, { coverImage: dataUri });
       }
 
-      res.json({ url: dataUri });
+      return res.json({ url: dataUri });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -842,10 +842,10 @@ export async function registerRoutes(
       });
 
       const report = response.choices[0]?.message?.content || "No analysis returned.";
-      res.json({ report });
+      return res.json({ report });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Analysis failed" });
+      return res.status(500).json({ message: "Analysis failed" });
     }
   });
 
@@ -893,10 +893,10 @@ export async function registerRoutes(
 
       const blurb = response.choices[0]?.message?.content || "";
       await storage.updateBook(bookId, { summary: blurb });
-      res.json({ blurb });
+      return res.json({ blurb });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to generate blurb" });
+      return res.status(500).json({ message: "Failed to generate blurb" });
     }
   });
 
@@ -1267,10 +1267,10 @@ export async function registerRoutes(
         return;
       }
 
-      res.status(400).json({ message: "Unsupported format" });
+      return res.status(400).json({ message: "Unsupported format" });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to generate download" });
+      return res.status(500).json({ message: "Failed to generate download" });
     }
   });
 
@@ -1279,10 +1279,10 @@ export async function registerRoutes(
   app.get(api.chapters.list.path, async (req, res) => {
     try {
       const chapters = await storage.getChapters(Number(req.params.bookId));
-      res.json(chapters);
+      return res.json(chapters);
     } catch (err) {
       logger.error({ err }, "Failed to fetch chapters");
-      res.status(500).json({ message: "Failed to fetch chapters" });
+      return res.status(500).json({ message: "Failed to fetch chapters" });
     }
   });
 
@@ -1327,10 +1327,10 @@ export async function registerRoutes(
           return res.status(201).json({ ...chapter, newAchievements: newAchievements.map(a => a.id) });
         } catch { /* non-blocking */ }
       }
-      res.status(201).json(chapter);
+      return res.status(201).json(chapter);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1400,16 +1400,16 @@ export async function registerRoutes(
           return res.json({ ...chapter, newAchievements: newAchievements.map(a => a.id) });
         } catch { /* non-blocking */ }
       }
-      res.json(chapter);
+      return res.json(chapter);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
   app.delete(api.chapters.delete.path, requireChapterOwner, async (req, res) => {
     await storage.deleteChapter(Number(req.params.id));
-    res.status(204).send();
+    return res.status(204).send();
   });
 
   // ─── Chapter Version History (snapshots) ──────────────────────────────────
@@ -1430,10 +1430,10 @@ export async function registerRoutes(
         .where(eq(chapterSnapshots.chapterId, chapterId))
         .orderBy(desc(chapterSnapshots.createdAt))
         .limit(50);
-      res.json(rows);
+      return res.json(rows);
     } catch (err) {
       logger.error({ err }, "Failed to list chapter snapshots");
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1468,11 +1468,11 @@ export async function registerRoutes(
         }
       }
 
-      res.status(201).json(snap);
+      return res.status(201).json(snap);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
       logger.error({ err }, "Failed to save chapter snapshot");
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1505,10 +1505,10 @@ export async function registerRoutes(
       }
 
       const updated = await storage.updateChapter(chapterId, { content: snap.content } as any);
-      res.json(updated);
+      return res.json(updated);
     } catch (err) {
       logger.error({ err }, "Failed to restore chapter snapshot");
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1523,10 +1523,10 @@ export async function registerRoutes(
       const result = await dbConn.delete(chapterSnapshots).where(
         and(eq(chapterSnapshots.id, snapId), eq(chapterSnapshots.chapterId, chapterId))
       );
-      res.status(204).send();
+      return res.status(204).send();
     } catch (err) {
       logger.error({ err }, "Failed to delete chapter snapshot");
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1534,10 +1534,10 @@ export async function registerRoutes(
     try {
       const body = z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() })) }).parse(req.body);
       await storage.reorderChapters(body.updates);
-      res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true });
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1546,9 +1546,9 @@ export async function registerRoutes(
     try {
       const bookId = Number(req.params.bookId);
       const progress = await storage.getDailyProgress(bookId);
-      res.json(progress);
+      return res.json(progress);
     } catch {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1557,10 +1557,10 @@ export async function registerRoutes(
       const bookId = Number(req.params.bookId);
       const { wordsAdded } = z.object({ wordsAdded: z.number() }).parse(req.body);
       const record = await storage.updateDailyProgress(bookId, wordsAdded);
-      res.json(record);
+      return res.json(record);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1604,10 +1604,10 @@ export async function registerRoutes(
       }
 
       const chapter = await storage.createChapter({ bookId, title, content: chapterContent });
-      res.json(chapter);
+      return res.json(chapter);
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to process voice" });
+      return res.status(500).json({ message: "Failed to process voice" });
     }
   });
 
@@ -1628,10 +1628,10 @@ export async function registerRoutes(
         language: language && language.length === 2 ? language : undefined,
       });
 
-      res.json({ text: transcription.text });
+      return res.json({ text: transcription.text });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Transcription failed" });
+      return res.status(500).json({ message: "Transcription failed" });
     }
   });
 
@@ -1670,7 +1670,7 @@ export async function registerRoutes(
       if (!allowed) return res.status(404).json({ message: "Book not found" });
 
       const entries = await storage.getLoreEntries(bookId);
-      res.json(entries);
+      return res.json(entries);
     } catch {
       return res.status(500).json({ message: "Internal error" });
     }
@@ -1680,10 +1680,10 @@ export async function registerRoutes(
     try {
       const input = api.lore.create.input.parse(req.body);
       const lore = await storage.createLoreEntry({ ...input, bookId: Number(req.params.bookId) });
-      res.status(201).json(lore);
+      return res.status(201).json(lore);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
@@ -1691,16 +1691,16 @@ export async function registerRoutes(
     try {
       const input = api.lore.update.input.parse(req.body);
       const lore = await storage.updateLoreEntry(Number(req.params.id), input);
-      res.json(lore);
+      return res.json(lore);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   });
 
   app.delete(api.lore.delete.path, requireChildOwner(loreEntriesTable), async (req, res) => {
     await storage.deleteLoreEntry(Number(req.params.id));
-    res.status(204).send();
+    return res.status(204).send();
   });
 
   app.post(api.lore.generate.path, aiLimiter, requireBookOwner, async (req, res) => {
@@ -1763,10 +1763,10 @@ export async function registerRoutes(
         count++;
       }
 
-      res.json({ success: true, generatedCount: count });
+      return res.json({ success: true, generatedCount: count });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to extract lore" });
+      return res.status(500).json({ message: "Failed to extract lore" });
     }
   });
 
@@ -1875,10 +1875,10 @@ Return a strict JSON object with these two arrays.`;
         }
       }
 
-      res.json({ success: true, message: "Parsed text and extracted lore/beats successfully." });
+      return res.json({ success: true, message: "Parsed text and extracted lore/beats successfully." });
     } catch (err) {
       logger.error({ err }, "Legacy import error");
-      res.status(500).json({ message: "Failed to process the legacy file. It might be corrupted or too large." });
+      return res.status(500).json({ message: "Failed to process the legacy file. It might be corrupted or too large." });
     }
   });
 
@@ -1931,10 +1931,10 @@ Return a strict JSON object with these two arrays.`;
         ]
       });
 
-      res.json({ improvedText: response.choices[0]?.message?.content || text });
+      return res.json({ improvedText: response.choices[0]?.message?.content || text });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to improve text" });
+      return res.status(500).json({ message: "Failed to improve text" });
     }
   });
 
@@ -1961,10 +1961,10 @@ Return a strict JSON object with these two arrays.`;
         ]
       });
 
-      res.json({ expandedText: response.choices[0]?.message?.content || idea });
+      return res.json({ expandedText: response.choices[0]?.message?.content || idea });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to expand idea" });
+      return res.status(500).json({ message: "Failed to expand idea" });
     }
   });
 
@@ -1991,10 +1991,10 @@ Return a strict JSON object with these two arrays.`;
         ]
       });
 
-      res.json({ continuedText: response.choices[0]?.message?.content || "" });
+      return res.json({ continuedText: response.choices[0]?.message?.content || "" });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to continue text" });
+      return res.status(500).json({ message: "Failed to continue text" });
     }
   });
 
@@ -2039,10 +2039,10 @@ Rules:
       const raw = response.choices[0]?.message?.content || '{"findings":[]}';
       let parsed: { findings: { original: string; suggestion: string; type: string }[] };
       try { parsed = JSON.parse(raw); } catch { parsed = { findings: [] }; }
-      res.json(parsed);
+      return res.json(parsed);
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ findings: [] });
+      return res.status(500).json({ findings: [] });
     }
   });
 
@@ -2064,10 +2064,10 @@ Rules:
         ]
       });
 
-      res.json({ translatedText: response.choices[0]?.message?.content || text });
+      return res.json({ translatedText: response.choices[0]?.message?.content || text });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to translate text" });
+      return res.status(500).json({ message: "Failed to translate text" });
     }
   });
 
@@ -2087,7 +2087,7 @@ Rules:
   // Plot Hole Detector
   app.post("/api/books/:bookId/ai/plot-holes", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.bookId);
+      const bookId = parseInt(String(req.params.bookId));
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
       const { manuscript } = await buildManuscript(bookId);
@@ -2108,17 +2108,17 @@ Return an empty array if no issues found. Focus on real narrative problems, not 
       });
 
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
-      res.json({ issues: data.issues ?? [] });
+      return res.json({ issues: data.issues ?? [] });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Analysis failed" });
+      return res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // Dialogue Coach
   app.post("/api/books/:bookId/ai/dialogue-coach", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.bookId);
+      const bookId = parseInt(String(req.params.bookId));
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
       const { manuscript } = await buildManuscript(bookId);
@@ -2139,17 +2139,17 @@ Provide 2-4 specific suggestions with real examples from the text.`,
       });
 
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
-      res.json({ score: data.score ?? 50, feedback: data.feedback ?? "", suggestions: data.suggestions ?? [] });
+      return res.json({ score: data.score ?? 50, feedback: data.feedback ?? "", suggestions: data.suggestions ?? [] });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Analysis failed" });
+      return res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // Pacing Analyzer
   app.post("/api/books/:bookId/ai/pacing", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.bookId);
+      const bookId = parseInt(String(req.params.bookId));
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
       const { manuscript, chapterTitles } = await buildManuscript(bookId);
@@ -2170,7 +2170,7 @@ Cover all chapters. Give 2-3 recommendations.`,
       });
 
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
-      res.json({
+      return res.json({
         overallPacing: data.overallPacing ?? "Medium",
         score: data.score ?? 50,
         summary: data.summary ?? "",
@@ -2179,14 +2179,14 @@ Cover all chapters. Give 2-3 recommendations.`,
       });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Analysis failed" });
+      return res.status(500).json({ message: "Analysis failed" });
     }
   });
 
   // Character Voice Consistency
   app.post("/api/books/:bookId/ai/voice-consistency", requireBookOwner, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.bookId);
+      const bookId = parseInt(String(req.params.bookId));
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
       const { manuscript } = await buildManuscript(bookId);
@@ -2207,10 +2207,10 @@ List 2-5 main characters. Issues array can be empty if consistent.`,
       });
 
       const data = JSON.parse(response.choices[0]?.message?.content || "{}");
-      res.json({ score: data.score ?? 50, characters: data.characters ?? [], recommendation: data.recommendation ?? "" });
+      return res.json({ score: data.score ?? 50, characters: data.characters ?? [], recommendation: data.recommendation ?? "" });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Analysis failed" });
+      return res.status(500).json({ message: "Analysis failed" });
     }
   });
 
@@ -2218,7 +2218,7 @@ List 2-5 main characters. Issues array can be empty if consistent.`,
 
   app.post("/api/books/:bookId/generate-proposal", requireBookOwner, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.bookId);
+      const bookId = parseInt(String(req.params.bookId));
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
@@ -2298,10 +2298,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
         ]
       });
 
-      res.json({ proposal: response.choices[0]?.message?.content || "" });
+      return res.json({ proposal: response.choices[0]?.message?.content || "" });
     } catch (err) {
       logger.error({ err }, "Route error");
-      res.status(500).json({ message: "Failed to generate proposal" });
+      return res.status(500).json({ message: "Failed to generate proposal" });
     }
   });
 
@@ -2350,7 +2350,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // free so the cost concern is server CPU/socket time, not dollars.
   app.post("/api/books/:id/audiobook/preview", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.id);
+      const bookId = parseInt(String(req.params.id));
       const { chapterId, voice = "nova", speed = 1.0 } = req.body as {
         chapterId: number; voice?: string; speed?: number;
       };
@@ -2369,10 +2369,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const { synthesizeToMp3 } = await import("./lib/edge-tts");
       const mp3 = await synthesizeToMp3({ text: previewText, voice, speed });
 
-      res.json({ audio: mp3.toString("base64"), mimeType: "audio/mpeg", chapterId });
+      return res.json({ audio: mp3.toString("base64"), mimeType: "audio/mpeg", chapterId });
     } catch (err) {
       logger.error({ err }, "Audiobook preview error");
-      res.status(500).json({ message: "Failed to generate audio preview" });
+      return res.status(500).json({ message: "Failed to generate audio preview" });
     }
   });
 
@@ -2383,7 +2383,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // can burn arbitrary dollars on a loop across every bookId.
   app.post("/api/books/:id/audiobook/export", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const bookId = parseInt(req.params.id);
+      const bookId = parseInt(String(req.params.id));
       const { voice = "nova", speed = 1.0, chapterIds } = req.body as {
         voice?: string; speed?: number; chapterIds?: number[];
       };
@@ -2418,10 +2418,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}_audiobook.mp3"`);
       res.setHeader("Content-Length", merged.length);
-      res.send(merged);
+      return res.send(merged);
     } catch (err) {
       logger.error({ err }, "Audiobook export error");
-      res.status(500).json({ message: "Failed to export audiobook" });
+      return res.status(500).json({ message: "Failed to export audiobook" });
     }
   });
 

@@ -70,7 +70,7 @@ router.get(api.books.list.path, async (req, res) => {
     // the IDs in the user's own session/localStorage.
     return res.json([]);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -79,9 +79,9 @@ router.get(api.books.list.path, async (req, res) => {
 router.get(api.books.trashList.path, async (req, res) => {
   try {
     const books = await storage.getDeletedBooks();
-    res.json(books);
+    return res.json(books);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -91,9 +91,9 @@ router.get(api.books.get.path, async (req, res) => {
   try {
     const book = await storage.getBook(Number(req.params.id));
     if (!book) return res.status(404).json({ message: "Book not found" });
-    res.json(book);
+    return res.json(book);
   } catch (err) {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -109,11 +109,11 @@ router.post(api.books.create.path, async (req, res) => {
       if (!sess.guestBookIds) sess.guestBookIds = [];
       if (!sess.guestBookIds.includes(book.id)) sess.guestBookIds.push(book.id);
     }
-    res.status(201).json(book);
+    return res.status(201).json(book);
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -123,11 +123,11 @@ router.put(api.books.update.path, requireBookOwner, async (req, res) => {
   try {
     const input = api.books.update.input.parse(req.body);
     const book = await storage.updateBook(Number(req.params.id), input);
-    res.json(book);
+    return res.json(book);
   } catch (err) {
     if (err instanceof z.ZodError)
       return res.status(400).json({ message: err.errors[0].message });
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -138,9 +138,9 @@ router.patch(api.books.trash.path, requireBookOwner, async (req, res) => {
     const book = await storage.updateBook(Number(req.params.id), {
       isDeleted: true,
     } as any);
-    res.json(book);
+    return res.json(book);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -149,9 +149,9 @@ router.patch(api.books.restore.path, requireBookOwner, async (req, res) => {
     const book = await storage.updateBook(Number(req.params.id), {
       isDeleted: false,
     } as any);
-    res.json(book);
+    return res.json(book);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -160,9 +160,9 @@ router.patch(api.books.restore.path, requireBookOwner, async (req, res) => {
 router.delete(api.books.delete.path, requireBookOwner, async (req, res) => {
   try {
     await storage.deleteBook(Number(req.params.id));
-    res.status(204).send();
+    return res.status(204).send();
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -228,7 +228,7 @@ router.post("/api/books/:id/publish", async (req, res) => {
     if (err.message === "EMPTY_ARTICLE") {
       return res.status(400).json({ message: "Article has no content to publish" });
     }
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -240,9 +240,9 @@ router.get("/api/public/books/featured", async (_req, res) => {
       storage.getFeaturedBook(),
     );
     if (!book) return res.status(404).json({ message: "No featured book" });
-    res.json(book);
+    return res.json(book);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -257,9 +257,9 @@ router.post(
         .parse(req.body);
       await storage.setFeaturedBook(feature ? bookId : null);
       await cache.invalidate("public:featured");
-      res.json({ success: true });
+      return res.json({ success: true });
     } catch {
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   }
 );
@@ -271,9 +271,9 @@ router.get("/api/public/books", async (_req, res) => {
       120, // 2-minute TTL — fresh enough for a library page
       () => storage.getPublishedBooks(),
     );
-    res.json(publishedBooks);
+    return res.json(publishedBooks);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -287,9 +287,9 @@ router.get("/api/public/books/:id", async (req, res) => {
     );
     if (!book || !book.isPublished)
       return res.status(404).json({ message: "Book not found" });
-    res.json(book);
+    return res.json(book);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -301,9 +301,9 @@ router.get("/api/public/books/:id/chapters", async (req, res) => {
     const chapterList = await storage.getPublishedBookChapters(
       Number(req.params.id)
     );
-    res.json(chapterList);
+    return res.json(chapterList);
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -321,9 +321,9 @@ router.post("/api/public/books/:id/view", async (req, res) => {
     } catch {
       /* non-blocking */
     }
-    res.json({ ok: true });
+    return res.json({ ok: true });
   } catch {
-    res.status(500).json({ message: "Internal error" });
+    return res.status(500).json({ message: "Internal error" });
   }
 });
 
@@ -374,10 +374,10 @@ router.post(
         await storage.updateBook(bookId, { coverImage: dataUri });
       }
 
-      res.json({ url: dataUri });
+      return res.json({ url: dataUri });
     } catch (err) {
       logger.error({ err }, "Books route error");
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   }
 );
@@ -433,10 +433,10 @@ router.post(
 
       const blurb = response.choices[0]?.message?.content || "";
       await storage.updateBook(bookId, { summary: blurb });
-      res.json({ blurb });
+      return res.json({ blurb });
     } catch (err) {
       logger.error({ err }, "Books route error");
-      res.status(500).json({ message: "Failed to generate blurb" });
+      return res.status(500).json({ message: "Failed to generate blurb" });
     }
   }
 );
@@ -826,10 +826,10 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
       return;
     }
 
-    res.status(400).json({ message: "Unsupported format" });
+    return res.status(400).json({ message: "Unsupported format" });
   } catch (err) {
     logger.error({ err }, "Books route error");
-    res.status(500).json({ message: "Failed to generate download" });
+    return res.status(500).json({ message: "Failed to generate download" });
   }
 });
 
@@ -951,13 +951,13 @@ Return a strict JSON object with these two arrays.`;
         }
       }
 
-      res.json({
+      return res.json({
         success: true,
         message: "Parsed text and extracted lore/beats successfully.",
       });
     } catch (err) {
       logger.error({ err }, "Legacy import error");
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Failed to process the legacy file. It might be corrupted or too large.",
       });
@@ -975,11 +975,11 @@ router.patch(
       const bookId = Number(req.params.bookId);
       const { isbn } = z.object({ isbn: z.string() }).parse(req.body);
       const book = await storage.updateBook(bookId, { isbn } as any);
-      res.json(book);
+      return res.json(book);
     } catch (err) {
       if (err instanceof z.ZodError)
         return res.status(400).json({ message: err.errors[0].message });
-      res.status(500).json({ message: "Internal error" });
+      return res.status(500).json({ message: "Internal error" });
     }
   }
 );
