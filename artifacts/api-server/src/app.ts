@@ -116,7 +116,15 @@ app.use(helmet({
 }));
 
 app.use((req, res, next) => {
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") ?? ["http://localhost:5173"];
+  // Trim + drop empty entries so a stray space in the env variable
+  // ("https://a.com, https://b.com") doesn't silently disable an origin —
+  // the comparison below is exact-string, so " https://b.com" wouldn't
+  // match the browser's "https://b.com" Origin header.
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ?.split(",")
+    .map(s => s.trim())
+    .filter(Boolean)
+    ?? ["http://localhost:5173"];
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);

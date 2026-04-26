@@ -8,8 +8,11 @@ interface AuthUser {
   email?: string | null;
   displayName?: string | null;
   avatarUrl?: string | null;
-  googleId?: string | null;
-  appleId?: string | null;
+  // Boolean flags only — the raw OAuth subject IDs are deliberately never
+  // shipped to the browser. The UI just needs to know "is the provider
+  // connected?" so it can render the right Connect/Disconnect button.
+  hasGoogle?: boolean;
+  hasApple?: boolean;
   subscriptionStatus?: string | null;
   subscriptionPlan?: string | null;
   subscriptionEndDate?: string | null;
