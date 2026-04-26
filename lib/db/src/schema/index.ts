@@ -291,7 +291,7 @@ export const supportMessages = pgTable("support_messages", {
 
 export type SupportMessage = typeof supportMessages.$inferSelect;
 export type InsertSupportMessage = typeof supportMessages.$inferInsert;
-export const insertSupportMessageSchema = createInsertSchema(supportMessages).omit({ id: true, createdAt: true, read: true, status: true });
+export const insertSupportMessageSchema = createInsertSchema(supportMessages).omit({ id: true, createdAt: true, read: true, status: true }).strict();
 
 export const supportReplies = pgTable("support_replies", {
   id: serial("id").primaryKey(),
@@ -667,13 +667,18 @@ export const adminAuditLogs = pgTable("admin_audit_logs", {
 
 export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
 
-export const insertBookSchema = createInsertSchema(books).omit({ id: true, createdAt: true });
-export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true });
-export const insertChapterSnapshotSchema = createInsertSchema(chapterSnapshots).omit({ id: true, createdAt: true });
-export const insertLoreEntrySchema = createInsertSchema(loreEntries).omit({ id: true, createdAt: true });
-export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true });
-export const insertDailyProgressSchema = createInsertSchema(dailyProgress).omit({ id: true, createdAt: true });
-export const insertStoryBeatSchema = createInsertSchema(storyBeats).omit({ id: true, createdAt: true });
+// `.strict()` forces these schemas (and their `.partial()` / `.omit()` derivatives
+// in lib/shared/src/routes.ts) to reject unknown fields rather than silently
+// strip them. Every endpoint that consumes one of these is a write path —
+// without strict mode, an authenticated caller can smuggle extras into req.body
+// that downstream code might pick up via `req.body.X`.
+export const insertBookSchema = createInsertSchema(books).omit({ id: true, createdAt: true }).strict();
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true }).strict();
+export const insertChapterSnapshotSchema = createInsertSchema(chapterSnapshots).omit({ id: true, createdAt: true }).strict();
+export const insertLoreEntrySchema = createInsertSchema(loreEntries).omit({ id: true, createdAt: true }).strict();
+export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true }).strict();
+export const insertDailyProgressSchema = createInsertSchema(dailyProgress).omit({ id: true, createdAt: true }).strict();
+export const insertStoryBeatSchema = createInsertSchema(storyBeats).omit({ id: true, createdAt: true }).strict();
 
 export type User = typeof users.$inferSelect;
 // Schema-derived insert type. Drizzle's $inferInsert gives us every

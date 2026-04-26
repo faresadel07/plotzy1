@@ -33,7 +33,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/books' as const,
-      input: insertBookSchema,
+      input: insertBookSchema.strict(),
       responses: {
         201: z.custom<typeof books.$inferSelect>(),
         400: errorSchemas.validation,
@@ -42,7 +42,7 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/books/:id' as const,
-      input: insertBookSchema.partial(),
+      input: insertBookSchema.partial().strict(),
       responses: {
         200: z.custom<typeof books.$inferSelect>(),
         404: errorSchemas.notFound,
@@ -75,7 +75,7 @@ export const api = {
     generateCover: {
       method: 'POST' as const,
       path: '/api/books/:id/cover' as const,
-      input: z.object({ prompt: z.string(), side: z.enum(['front', 'back']).default('front') }),
+      input: z.object({ prompt: z.string(), side: z.enum(['front', 'back']).default('front') }).strict(),
       responses: {
         200: z.object({ url: z.string() }),
         404: errorSchemas.notFound,
@@ -84,7 +84,7 @@ export const api = {
     generateBlurb: {
       method: 'POST' as const,
       path: '/api/books/:id/generate-blurb' as const,
-      input: z.object({ language: z.string().optional() }),
+      input: z.object({ language: z.string().optional() }).strict(),
       responses: {
         200: z.object({ blurb: z.string() }),
         404: errorSchemas.notFound,
@@ -100,7 +100,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/books/:bookId/chapters' as const,
-      input: insertChapterSchema.omit({ bookId: true }),
+      input: insertChapterSchema.omit({ bookId: true }).strict(),
       responses: {
         201: z.custom<typeof chapters.$inferSelect>(),
         400: errorSchemas.validation,
@@ -109,7 +109,7 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/chapters/:id' as const,
-      input: insertChapterSchema.partial(),
+      input: insertChapterSchema.partial().strict(),
       responses: {
         200: z.custom<typeof chapters.$inferSelect>(),
         404: errorSchemas.notFound,
@@ -126,7 +126,7 @@ export const api = {
     voice: {
       method: 'POST' as const,
       path: '/api/books/:bookId/chapters/voice' as const,
-      input: z.object({ audio: z.string() }),
+      input: z.object({ audio: z.string() }).strict(),
       responses: {
         200: z.custom<typeof chapters.$inferSelect>(),
       }
@@ -134,7 +134,7 @@ export const api = {
     reorder: {
       method: 'PATCH' as const,
       path: '/api/books/:bookId/chapters/reorder' as const,
-      input: z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() })) }),
+      input: z.object({ updates: z.array(z.object({ id: z.number(), order: z.number() }).strict()) }).strict(),
       responses: { 200: z.object({ success: z.boolean() }) },
     },
   },
@@ -147,7 +147,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/books/:bookId/lore' as const,
-      input: insertLoreEntrySchema.omit({ bookId: true }),
+      input: insertLoreEntrySchema.omit({ bookId: true }).strict(),
       responses: {
         201: z.custom<typeof loreEntries.$inferSelect>(),
         400: errorSchemas.validation,
@@ -156,7 +156,7 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/lore/:id' as const,
-      input: insertLoreEntrySchema.partial(),
+      input: insertLoreEntrySchema.partial().strict(),
       responses: {
         200: z.custom<typeof loreEntries.$inferSelect>(),
         404: errorSchemas.notFound,
@@ -173,7 +173,7 @@ export const api = {
     generate: {
       method: 'POST' as const,
       path: '/api/books/:bookId/lore/generate' as const,
-      input: z.object({ language: z.string().optional() }),
+      input: z.object({ language: z.string().optional() }).strict(),
       responses: {
         200: z.object({ success: z.boolean(), generatedCount: z.number() }),
         404: errorSchemas.notFound,
@@ -189,7 +189,7 @@ export const api = {
     update: {
       method: 'POST' as const,
       path: '/api/books/:bookId/progress' as const,
-      input: z.object({ wordsAdded: z.number() }),
+      input: z.object({ wordsAdded: z.number() }).strict(),
       responses: {
         200: z.custom<typeof dailyProgress.$inferSelect>(),
       }
@@ -204,7 +204,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/books/:bookId/story-beats' as const,
-      input: insertStoryBeatSchema.omit({ bookId: true }),
+      input: insertStoryBeatSchema.omit({ bookId: true }).strict(),
       responses: {
         201: z.custom<typeof storyBeats.$inferSelect>(),
         400: errorSchemas.validation,
@@ -213,7 +213,7 @@ export const api = {
     update: {
       method: 'PUT' as const,
       path: '/api/story-beats/:id' as const,
-      input: insertStoryBeatSchema.partial(),
+      input: insertStoryBeatSchema.partial().strict(),
       responses: {
         200: z.custom<typeof storyBeats.$inferSelect>(),
         404: errorSchemas.notFound,
@@ -235,8 +235,8 @@ export const api = {
           id: z.number(),
           columnId: z.string(),
           order: z.number()
-        }))
-      }),
+        }).strict())
+      }).strict(),
       responses: {
         200: z.object({ success: z.boolean() }),
       }
@@ -246,7 +246,7 @@ export const api = {
     improve: {
       method: 'POST' as const,
       path: '/api/improve-text' as const,
-      input: z.object({ text: z.string(), language: z.string().optional(), bookId: z.number().optional() }),
+      input: z.object({ text: z.string(), language: z.string().optional(), bookId: z.number().optional() }).strict(),
       responses: {
         200: z.object({ improvedText: z.string() }),
       }
@@ -254,7 +254,7 @@ export const api = {
     expand: {
       method: 'POST' as const,
       path: '/api/expand-idea' as const,
-      input: z.object({ idea: z.string(), language: z.string().optional(), bookId: z.number().optional() }),
+      input: z.object({ idea: z.string(), language: z.string().optional(), bookId: z.number().optional() }).strict(),
       responses: {
         200: z.object({ expandedText: z.string() }),
       }
@@ -262,7 +262,7 @@ export const api = {
     continueText: {
       method: 'POST' as const,
       path: '/api/continue-text' as const,
-      input: z.object({ text: z.string(), language: z.string().optional(), bookId: z.number().optional() }),
+      input: z.object({ text: z.string(), language: z.string().optional(), bookId: z.number().optional() }).strict(),
       responses: {
         200: z.object({ continuedText: z.string() }),
       }
@@ -270,7 +270,7 @@ export const api = {
     showDontTell: {
       method: 'POST' as const,
       path: '/api/show-dont-tell' as const,
-      input: z.object({ text: z.string(), language: z.string().optional() }),
+      input: z.object({ text: z.string(), language: z.string().optional() }).strict(),
       responses: {
         200: z.object({
           findings: z.array(z.object({
@@ -284,7 +284,7 @@ export const api = {
     translate: {
       method: 'POST' as const,
       path: '/api/translate-text' as const,
-      input: z.object({ text: z.string(), targetLanguage: z.string(), bookId: z.number().optional() }),
+      input: z.object({ text: z.string(), targetLanguage: z.string(), bookId: z.number().optional() }).strict(),
       responses: {
         200: z.object({ translatedText: z.string() }),
       }

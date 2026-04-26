@@ -254,6 +254,7 @@ router.post(
       const bookId = Number(req.params.id);
       const { feature } = z
         .object({ feature: z.boolean() })
+        .strict()
         .parse(req.body);
       await storage.setFeaturedBook(feature ? bookId : null);
       await cache.invalidate("public:featured");
@@ -973,7 +974,7 @@ router.patch(
   async (req: any, res: any) => {
     try {
       const bookId = Number(req.params.bookId);
-      const { isbn } = z.object({ isbn: z.string() }).parse(req.body);
+      const { isbn } = z.object({ isbn: z.string() }).strict().parse(req.body);
       const book = await storage.updateBook(bookId, { isbn } as any);
       return res.json(book);
     } catch (err) {
