@@ -251,3 +251,98 @@ exact pain that motivated the modularisation in the first place.
 ---
 
 _Generated as part of Group C strict-schemas pre-work._
+
+---
+
+# Group A2 — frontend types audit findings
+
+## Audit framing was misleading
+
+The audit reported 191 frontend typecheck errors. Investigation revealed:
+
+- ~140 cascade from a single root cause (missing `responses` schemas)
+- ~11 are real bugs (dead code + schema drift)
+- Remaining ~40 are local issues to triage after the cascade is fixed
+
+## Findings
+
+### HIGH — Dead code with broken endpoint references (FIXED in Pattern 0, commit `585d9d3`)
+
+`useImproveText` and `useExpandIdea` hooks in
+`artifacts/plotzy/src/hooks/use-ai.ts` called `api.ai.improve` and
+`api.ai.expand` — neither exist in the routes definition NOR exist as
+server endpoints. Calls would have crashed at runtime with
+`Cannot read properties of undefined (reading 'path')`. Both were
+exported but never imported anywhere in the codebase. Removed.
+
+### MEDIUM — Schema drift on DailyProgress (FIXED in Pattern 1, commit `5773f8d`)
+
+`artifacts/plotzy/src/shared/schema.ts` declared
+`DailyProgress.wordsWritten: number` while the DB column is
+`word_count` and runtime code (e.g. `analytics-dashboard.tsx`) accesses
+`.wordCount`. The TS type was silently wrong; runtime worked. Fixed.
+
+### HIGH (architectural debt) — Hand-maintained schema mirror
+
+`artifacts/plotzy/src/shared/schema.ts` duplicates types from
+`lib/db/src/schema/index.ts` instead of re-exporting them. The audit
+found drift in 6+ types beyond DailyProgress:
+
+- **User**: missing 8 fields including `subscriptionTier`, `role`,
+  `emailVerified`, `passwordHash`, `suspended`, `bannerUrl`,
+  `linkedinId`, `facebookId`. Note: `passwordHash` being absent is
+  CORRECT (frontend should never see it) — but it's right by
+  *accident*, not by design. The frontend works around the missing
+  fields by defining local types in `auth-context.tsx` and `admin.tsx`.
+- **Book**: missing `coverData` (jsonb) and `featured` (boolean).
+- **LoreEntry, Professional, QuoteRequest, StoryBeat, ResearchItem,
+  ArcRecipient**: drifted but unused as type imports anywhere in the
+  frontend (dead types in `schema.ts`). Some have severe drift —
+  `Professional` declares `email` and `specialty` while the DB has 14
+  different fields including `service` and no `email` column.
+
+**Recommendation**: replace this file with type re-exports from
+`@workspace/shared` (which can use drizzle's `$inferSelect`). Single
+source of truth, automatic sync. This would eliminate the entire class
+of drift bugs. Estimated effort: 1 dedicated session, since fixing the
+central User and Book types may surface 5-20 new TS errors in callers
+that currently work around the gaps with `as any` or local types.
+
+### HIGH (API design) — Routes lack response schemas (DEFERRED to Group A2.2)
+
+~140 of the 191 errors stem from `artifacts/plotzy/src/shared/routes.ts`
+not defining `responses` for endpoints. The hook code calls
+`parseWithLogging(api.X.Y.responses?.[200], data, "...")` — when
+`responses` is undefined, `parseWithLogging<T>` falls back to
+`data as T` with `T = unknown`. Every downstream property access on the
+result then fails typecheck (TS2339 `Property 'X' does not exist`,
+TS18046 `'X' is of type 'unknown'`, TS7006 implicit-any callbacks on
+the result, etc.).
+
+This is **API-contract design work**, not type cleanup. Each of the ~25
+affected endpoints needs a Zod schema describing the response shape,
+and each schema needs to match what the server actually returns
+(ideally enforced by importing the same schema from the route handler).
+
+**Estimated effort**: 1-2 dedicated sessions. Should be done before
+production launch — without it, the frontend has no runtime validation
+of API responses and TypeScript provides no help either.
+
+## Process learning
+
+Future audits should distinguish:
+
+- **"N independent type errors"** (mechanical fixes, work scales with N)
+- **"N cascading symptoms of K root causes"** (design work, work scales
+  with K, not N)
+
+Counting raw error messages overstates the work for cascade cases and
+understates the design judgment required. The "191 frontend typecheck
+errors" finding should have been written as "~3 root causes, with 191
+visible symptoms" — that framing would have led to the right scoping
+discussion at audit time rather than at execution time.
+
+---
+
+_Group A2 frontend types audit notes._
+
