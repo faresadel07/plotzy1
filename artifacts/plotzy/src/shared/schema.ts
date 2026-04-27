@@ -157,7 +157,7 @@ export type DailyProgress = {
   id: number;
   bookId: number;
   date: string;
-  wordsWritten: number;
+  wordCount: number;
   createdAt?: Date | null;
 };
 
