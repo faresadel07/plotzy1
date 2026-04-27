@@ -126,6 +126,9 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
       {/* Bell button */}
       <button
         onClick={() => setOpen(o => !o)}
+        aria-label={totalUnread > 0 ? `Notifications, ${totalUnread} unread` : "Notifications"}
+        aria-expanded={open}
+        aria-haspopup="menu"
         style={{
           position: "relative",
           display: "flex",

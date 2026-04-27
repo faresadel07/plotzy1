@@ -1695,13 +1695,14 @@ export default function ChapterEditor() {
                 onClick={stopRecording}
                 className="flex items-center gap-1 px-2 h-7 rounded-lg bg-red-500 text-white text-[10px] font-medium hover:bg-red-600 transition-colors animate-pulse"
                 title={ar ? "إيقاف التسجيل" : "Stop recording"}
+                aria-label={ar ? "إيقاف التسجيل" : "Stop recording"}
                 data-testid="button-stop-recording"
               >
                 <Square className="w-3 h-3 fill-current" />
                 <span className="font-mono">{formatTime(recordingTime)}</span>
               </button>
             ) : (
-              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors text-muted-foreground" onClick={startRecording} title={ar ? "تسجيل صوتي" : "Voice dictation"} data-testid="button-start-recording">
+              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors text-muted-foreground" onClick={startRecording} title={ar ? "تسجيل صوتي" : "Voice dictation"} aria-label={ar ? "تسجيل صوتي" : "Voice dictation"} data-testid="button-start-recording">
                 <Mic className="w-4 h-4" />
               </Button>
             )}

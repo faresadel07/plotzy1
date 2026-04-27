@@ -117,6 +117,8 @@ export function AudioRecorder({ onRecordingComplete, isProcessing }: AudioRecord
             isRecording ? "scale-110 hover:scale-105" : "hover:scale-105"
           }`}
           onClick={isRecording ? stopRecording : startRecording}
+          aria-label={isRecording ? "Stop recording" : "Start recording"}
+          aria-pressed={isRecording}
         >
           {isRecording ? (
             <Square className="w-8 h-8 fill-current" />
