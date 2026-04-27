@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { Mail, Lock, Eye, EyeOff, User, X, Loader2, AlertCircle, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
@@ -64,16 +64,21 @@ function FieldInput({
   rightSlot?: React.ReactNode;
 }) {
   const [focused, setFocused] = useState(false);
+  const inputId = useId();
+  const errorId = useId();
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <label style={labelStyle}>{label}</label>
+      <label htmlFor={inputId} style={labelStyle}>{label}</label>
       <div style={getWrapStyle(focused, !!error)}>
-        <Icon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
+        <Icon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.35)", flexShrink: 0 }} aria-hidden="true" />
         <input
+          id={inputId}
           type={type}
           placeholder={placeholder}
           value={value}
           autoComplete={autoComplete}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
           onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -82,8 +87,8 @@ function FieldInput({
         {rightSlot}
       </div>
       {error && (
-        <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
-          <AlertCircle style={{ width: 11, height: 11, color: "#e05555" }} />
+        <div id={errorId} style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
+          <AlertCircle style={{ width: 11, height: 11, color: "#e05555" }} aria-hidden="true" />
           <span style={{ fontFamily: SF, fontSize: 11, color: "#e05555" }}>{error}</span>
         </div>
       )}
@@ -238,6 +243,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             </div>
             <button
               onClick={onClose}
+              aria-label={ar ? "إغلاق" : "Close sign in"}
               style={{
                 width: 28, height: 28, borderRadius: 7,
                 border: "1px solid rgba(255,255,255,0.09)",
@@ -312,6 +318,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               autoComplete={tab === "signin" ? "current-password" : "new-password"}
               rightSlot={
                 <button type="button" onClick={() => setShowPw(v => !v)}
+                  aria-label={showPw ? (ar ? "إخفاء كلمة المرور" : "Hide password") : (ar ? "إظهار كلمة المرور" : "Show password")}
+                  aria-pressed={showPw}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0, flexShrink: 0 }}>
                   {showPw ? <EyeOff style={{ width: 15, height: 15 }} /> : <Eye style={{ width: 15, height: 15 }} />}
                 </button>
@@ -429,7 +437,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>
                     {ar ? "أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور" : "Enter your email and we'll send you a link to reset your password"}
                   </p>
-                  <input value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder={ar ? "البريد الإلكتروني" : "Email address"} type="email"
+                  <label htmlFor="forgot-email" className="sr-only">{ar ? "البريد الإلكتروني" : "Email address"}</label>
+                  <input id="forgot-email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder={ar ? "البريد الإلكتروني" : "Email address"} type="email" autoComplete="email"
+                    aria-label={ar ? "البريد الإلكتروني" : "Email address"}
                     style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontFamily: SF, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
                   <button disabled={forgotLoading || !forgotEmail.includes("@")}
                     onClick={async () => {

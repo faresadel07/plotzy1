@@ -345,21 +345,38 @@ function UsersTab() {
 
       <div style={{ overflowX: "auto" }}>
         <table style={S.table}>
+          <caption className="sr-only">User management</caption>
           <thead>
             <tr>
-              <th style={{ ...S.th, width: 36 }}><input type="checkbox" checked={selected.size === paged.length && paged.length > 0} onChange={toggleAll} style={{ accentColor: "#fff" }} /></th>
-              <th style={S.th}>User</th>
-              <th style={S.th}>Email</th>
-              <th style={S.th}>Status</th>
-              <th style={S.th}>Subscription</th>
-              <th style={S.th}>Joined</th>
-              <th style={S.th}>Actions</th>
+              <th scope="col" style={{ ...S.th, width: 36 }}>
+                <input
+                  type="checkbox"
+                  checked={selected.size === paged.length && paged.length > 0}
+                  onChange={toggleAll}
+                  aria-label="Select all users on this page"
+                  style={{ accentColor: "#fff" }}
+                />
+              </th>
+              <th scope="col" style={S.th}>User</th>
+              <th scope="col" style={S.th}>Email</th>
+              <th scope="col" style={S.th}>Status</th>
+              <th scope="col" style={S.th}>Subscription</th>
+              <th scope="col" style={S.th}>Joined</th>
+              <th scope="col" style={S.th}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {paged.map(u => (
               <tr key={u.id} style={{ opacity: u.suspended ? 0.55 : 1 }}>
-                <td style={{ ...S.td, width: 36 }}><input type="checkbox" checked={selected.has(u.id)} onChange={() => toggleSelect(u.id)} style={{ accentColor: "#fff" }} /></td>
+                <td style={{ ...S.td, width: 36 }}>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(u.id)}
+                    onChange={() => toggleSelect(u.id)}
+                    aria-label={`Select user ${u.displayName || u.email || u.id}`}
+                    style={{ accentColor: "#fff" }}
+                  />
+                </td>
                 <td style={S.td}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {u.avatarUrl
