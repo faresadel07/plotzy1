@@ -83,6 +83,39 @@ export const ChapterSchema = z.object({
 
 export type Chapter = z.infer<typeof ChapterSchema>;
 
+// ─── Conditional Chapter shape (with optional newAchievements) ────────
+//
+// Used by chapters.create and chapters.update — the server returns the
+// base Chapter, plus a `newAchievements: string[]` field if the call
+// triggered any gamification unlocks for an authenticated user. The
+// frontend hooks ignore the field today (they invalidate the cache via
+// queryClient instead), but the shape is real and worth typing.
+
+export const ChapterWithAchievementsSchema = ChapterSchema.extend({
+  newAchievements: z.array(z.string()).optional(),
+});
+
+// ─── AI / generate response shapes ────────────────────────────────────
+//
+// Tiny one-key responses returned directly by the server handlers
+// (not derived from DB columns — no drift guards needed).
+
+export const GenerateCoverResponseSchema = z.object({
+  url: z.string(),
+});
+
+export const GenerateBlurbResponseSchema = z.object({
+  blurb: z.string(),
+});
+
+export const ContinueTextResponseSchema = z.object({
+  continuedText: z.string(),
+});
+
+export const TranslateTextResponseSchema = z.object({
+  translatedText: z.string(),
+});
+
 // ─── Drift guards ─────────────────────────────────────────────────────
 //
 // Compile-time type checks. If the DB schema ever gains a non-optional
