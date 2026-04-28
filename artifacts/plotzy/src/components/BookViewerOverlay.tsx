@@ -58,8 +58,7 @@ export function BookViewerOverlay({ isOpen, onClose, bookData }: BookViewerOverl
                                     rotation={[0.13, 0.1, 0]}
                                     polar={[-0.4, 0.2]}
                                     azimuth={[-1, 0.75]}
-                                    config={{ mass: 2, tension: 400 }}
-                                    snap={{ mass: 4, tension: 400 }}
+                                    snap={true}
                                 >
                                     <Book3D
                                         color={bookData.color}

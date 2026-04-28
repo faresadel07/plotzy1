@@ -30,7 +30,6 @@ import type { BookPages } from "@/shared/schema";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
-import type { Book } from "@/shared/schema";
 
 const RTL_LANGS = ["ar", "he", "fa", "ur"];
 
@@ -54,8 +53,11 @@ function countChapterWords(content: string): number {
   return text ? text.split(/\s+/).filter(Boolean).length : 0;
 }
 
-// Book cover component — realistic book look, fully contained
-function BookCoverWrap({ book }: { book: Book }) {
+// Book cover component — realistic book look, fully contained.
+// Prop typed structurally (only the fields used) to decouple from the
+// drifted @/shared/schema Book type vs. the wire-accurate api-schemas
+// Book — caller can pass either.
+function BookCoverWrap({ book }: { book: { title: string; coverImage?: string | null; spineColor?: string | null; authorName?: string | null } }) {
   const spineColor = book.spineColor || "#7c3aed";
 
   return (

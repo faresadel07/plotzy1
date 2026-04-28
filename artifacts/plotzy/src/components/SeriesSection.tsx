@@ -19,7 +19,7 @@ import {
   usePublishSeries,
   type BookSeriesWithBooks,
 } from "@/hooks/use-series";
-import type { Book } from "@/hooks/use-books";
+import type { Book } from "@/shared/api-schemas";
 
 type Props = { books: Book[] | undefined };
 
