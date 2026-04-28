@@ -752,10 +752,17 @@ export const PREMIUM_MAX_IMAGES_PER_DAY = 25;
 export const PREMIUM_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 10;
 
 // ── Pricing (cents) ──
-export const PRO_MONTHLY_CENTS = 999;           // $9.99/month
-export const PRO_YEARLY_CENTS = 7999;            // $79.99/year ($6.67/mo - save 33%)
-export const PREMIUM_MONTHLY_CENTS = 1999;       // $19.99/month
-export const PREMIUM_YEARLY_CENTS = 15999;       // $159.99/year ($13.33/mo - save 33%)
+//
+// Source of truth for subscription pricing. The pricing page UI
+// (artifacts/plotzy/src/pages/pricing.tsx) advertises these exact
+// numbers — keep them in sync. Monthly prices are positioned as
+// promo prices ($8.99 / $16.99) shown alongside a higher
+// strikethrough "original price" purely as marketing visual; the
+// strikethrough numbers don't exist in the backend.
+export const PRO_MONTHLY_CENTS = 899;            // $8.99/month  (advertised promo price)
+export const PRO_YEARLY_CENTS = 7999;            // $79.99/year
+export const PREMIUM_MONTHLY_CENTS = 1699;       // $16.99/month (advertised promo price)
+export const PREMIUM_YEARLY_CENTS = 15999;       // $159.99/year
 
 // Legacy constants (kept for backward compatibility)
 export const FREE_TRIAL_MAX_CHAPTERS = FREE_MAX_CHAPTERS_PER_BOOK;

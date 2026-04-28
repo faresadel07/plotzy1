@@ -346,3 +346,355 @@ discussion at audit time rather than at execution time.
 
 _Group A2 frontend types audit notes._
 
+---
+
+# Payment System Hardening — flagged during Issue #1 fix
+
+## LOW — `ORDER_ALREADY_CAPTURED` retry path doesn't re-verify amount
+
+**Location**: `artifacts/api-server/src/routes/payments.routes.ts`,
+PayPal capture-order handler, around line 442 (the
+`if (errText.includes("ORDER_ALREADY_CAPTURED") ...)` branch).
+
+**Behavior**: When PayPal returns `ORDER_ALREADY_CAPTURED`, the server
+returns `alreadyProcessed: true` without verifying that the original
+capture's amount matched the currently-requested plan. The handler
+re-uses the `plan` parameter from the *current* request body without
+checking what the *original* capture was for.
+
+**Current safety**: SAFE in normal flows because:
+
+1. Subscription tier was activated by the original capture (which now
+   passes amount verification thanks to the Issue #1 fix).
+2. Re-capture attempts don't re-activate or upgrade the user — the
+   `alreadyProcessed: true` early return short-circuits before any
+   `storage.updateUser` call.
+3. The `plan` parameter on retry is effectively ignored — the user's
+   subscriptionPlan field was set at the original capture and isn't
+   overwritten on retry.
+
+**Future concern**: If the activation logic ever changes to allow
+modifications via subsequent capture-order calls (e.g. "upgrade an
+existing plan" via the same handler), this becomes a vulnerability.
+A user could pay $9.99 for `pro_monthly`, then call capture-order
+again with `plan: "premium_yearly"` after the order already captured,
+and the retry path would respond with success while the real charge
+was for the cheaper plan.
+
+**Recommended (future)**: Either:
+
+- Reject the second call entirely if the body's plan doesn't match
+  the original transaction's plan (requires the transaction record
+  Issue #3 will introduce); or
+- Strip the `plan` param from the `alreadyProcessed` return path and
+  read it from the original transaction record so the retry can
+  never affect the user's tier.
+
+**Severity**: Low (current). Watch closely if behavior changes.
+
+_Discovered 2026-04-28 during the Payment Security Hardening — Issue
+#1 (Amount Verification) implementation._
+
+---
+
+## MEDIUM — Silent column drop on PayPal subscription activation
+
+**Location**: `artifacts/api-server/src/routes/payments.routes.ts`
+around line 441 (the successful-capture path of
+`/api/paypal/capture-order`).
+
+**Behavior**: After a successful PayPal capture and amount
+verification, the handler calls:
+
+```ts
+storage.updateUser(userId, {
+  subscriptionStatus: "active",
+  subscriptionTier: tier,
+  subscriptionPlan: plan,
+  subscriptionEndDate: endDate,
+  paymentMethod: "paypal",
+} as any);
+```
+
+The `paymentMethod` field is included in the payload, BUT the
+`payment_method` column does NOT exist in the `users` table schema.
+The `as any` cast disables TypeScript's type checking, so the
+compiler can't catch the mismatch. At runtime, Drizzle (or the
+storage layer wrapping it) silently drops the unknown field — the
+update for the other 4 fields succeeds, but `paymentMethod` is
+never persisted.
+
+**How discovered**: During Test 2 verification of the
+amount-verification fix (group `fix/payment-amount-verification`).
+The forensic DB query attempted to `SELECT payment_method` and
+got `column "payment_method" does not exist`, while the production
+code attempts to write to it on every successful PayPal capture.
+
+**Current safety**: SAFE-ish. The other 4 fields update correctly,
+so the subscription DOES activate. But:
+
+1. We have NO record of which payment provider activated each
+   subscription (lost analytics + lost ability to route
+   cancellation/portal flows correctly per provider).
+2. If we ever ADD a `payment_method` column to the schema, the
+   writes would suddenly start landing — which could be a desired
+   feature, but the activation could leak this field via
+   copy-paste between Stripe/PayPal handlers in unexpected ways.
+3. This is the observable consequence of Issue #6 from the
+   original audit ("remove `as any` from `storage.updateUser`") —
+   the cast hides this exact class of bug.
+
+**Recommended fix** (in a future dedicated group, NOT here):
+
+- Decide product intent: do we WANT to track `payment_method`
+  per user? Probably yes (for cancellation routing, analytics,
+  customer support).
+- If yes: add `payment_method` column to users schema, write a
+  migration, remove the `as any`, fix the type, deploy.
+- If no: remove the `paymentMethod: "paypal"` line from the
+  `updateUser` payload (and from the parallel Stripe handler if
+  it has the same pattern).
+- Either way: removing the `as any` is what would have caught
+  this at compile time. That's the meta-fix that prevents future
+  versions of this bug.
+
+**Severity**: Medium. No security or financial impact. Loss of
+operational data (per-user payment provider) and risk of similar
+silent drops elsewhere via the same `as any` antipattern.
+
+**Related**:
+
+- Original audit Issue #6 (remove `as any` from `updateUser`) is
+  the underlying cause.
+- A parallel check on the Stripe activation path (around line
+  ~70 in `payments.routes.ts` based on earlier context) would
+  confirm whether this affects Stripe-side activations too.
+  Worth a 5-min audit when Issue #6 is addressed.
+
+_Discovered 2026-04-28 during Test 2 verification of the
+amount-verification fix (group fix/payment-amount-verification)._
+
+---
+
+## LOW — Hardcoded "Plotzy Pro" toast on all subscription activations
+
+**Location**: `artifacts/plotzy/src/components/paypal-button.tsx`
+around line 58 (the `onApprove` success path of the PayPal button).
+
+**Behavior**: After a successful PayPal capture for ANY plan
+(pro_monthly, pro_yearly, premium_monthly, premium_yearly, plus
+the 3 legacy plan IDs), the success toast displays:
+
+```ts
+toast({
+  title: "🎉 Welcome to Plotzy Pro!",
+  description: "Your subscription is now active."
+});
+```
+
+The `plan` prop is in scope (it's used in the request body on the
+preceding line) but is not used to differentiate the message. As
+a result:
+
+- A user activating `premium_yearly` sees "Welcome to Plotzy Pro"
+  even though they're now on Premium.
+- A user activating `pro_monthly` sees the same message — which
+  happens to be correct.
+- The DB and the gated features both reflect the correct tier
+  immediately after activation, so users WILL notice they actually
+  got Premium when they use Premium-only features. The toast just
+  lies for a moment.
+
+**How discovered**: During Test 1.4 verification of the
+amount-verification fix (group `fix/payment-amount-verification`),
+the user reported the toast saying "Plotzy Pro" after upgrading
+to `premium_yearly`. Backend verification confirmed the DB
+activated `premium_yearly` correctly — the toast was the only
+wrong thing.
+
+**Current safety**: SAFE. No security or financial impact. The
+correct tier is activated; the toast is just a static string
+that doesn't reflect the actual tier. Mildly confusing UX but
+reversible in seconds (the user reloads and sees the Premium
+tier active).
+
+**Recommended fix** (in a future frontend polish group):
+
+```ts
+const tierLabel = plan?.startsWith("premium") ? "Premium" : "Pro";
+toast({
+  title: `🎉 Welcome to Plotzy ${tierLabel}!`,
+  description: "Your subscription is now active."
+});
+```
+
+Or, more robustly, derive the label from the API response or a
+mapping that tracks the canonical plan-to-tier relationship
+(consistent with the `planToTier()` mapping on the backend). A
+shared frontend constant or hook would be cleanest if the same
+label is needed elsewhere.
+
+If we eventually internationalize the app, this toast string
+should also be wrapped in a translation function — flag for that
+future work, too.
+
+**Severity**: LOW. Cosmetic / UX. No data integrity issue.
+
+_Discovered 2026-04-28 during Test 1.4 verification of
+amount-verification fix (group fix/payment-amount-verification)._
+
+---
+
+# UI/Backend Price Mismatch — flagged future-cleanup items
+
+## LOW — Duplicate/dead subscription constants in 3 locations
+
+**Locations**:
+- `lib/db/src/schema/index.ts:755-758` (canonical, source of truth):
+  PRO_MONTHLY_CENTS=899, PRO_YEARLY_CENTS=7999,
+  PREMIUM_MONTHLY_CENTS=1699, PREMIUM_YEARLY_CENTS=15999.
+- `lib/shared/src/schema-types.ts:304-305` (orphan duplicate):
+  SUBSCRIPTION_MONTHLY_CENTS=800, SUBSCRIPTION_YEARLY_CENTS=7800.
+- `artifacts/plotzy/src/shared/schema.ts:240-242` (frontend mirror,
+  orphan duplicate):
+  SUBSCRIPTION_MONTHLY_CENTS=1300, SUBSCRIPTION_YEARLY_MONTHLY_CENTS=1000,
+  SUBSCRIPTION_YEARLY_ANNUAL_CENTS=9999.
+
+**Behavior**: The two duplicate locations are not imported anywhere —
+verified via `grep -rn "import.*SUBSCRIPTION_"`. They are dead code.
+The canonical constants are imported only by
+`artifacts/api-server/src/routes/payments.routes.ts` for both PayPal
+amounts and Stripe checkout `unit_amount`.
+
+**Current safety**: SAFE. Dead constants don't affect runtime, but
+they're a nasty tripwire for future developers. Anyone reading the
+frontend mirror will see "$13/month" and could reasonably assume the
+backend agrees. The values aren't even close to the canonical numbers
+(800, 1300, 7800, 1000, 9999 vs the real 899, 1699, 7999, 15999).
+
+**Future concern**: A developer could:
+
+1. Cargo-cult the wrong number into a new feature (analytics, email
+   templates, marketing pages).
+2. Update the dead duplicate by mistake while leaving the canonical
+   stale.
+3. Re-introduce a real import of the dead constants and silently
+   double-charge or undercharge users.
+
+**Recommended**: Either delete the dead constants outright, or convert
+them to re-exports of the canonical schema constants
+(`export { PRO_MONTHLY_CENTS as SUBSCRIPTION_MONTHLY_CENTS } from
+"@workspace/db/schema"`) so the truth flows from one place.
+
+**Severity**: Low (currently dead). Watch closely if frontend code
+ever starts importing pricing constants — at that point the drift
+becomes real.
+
+_Discovered 2026-04-28 during the UI/Backend Price Mismatch
+investigation (group fix/price-constants-mismatch)._
+
+---
+
+## MEDIUM — Stripe checkout endpoint doesn't support Premium tier
+
+**Location**: `artifacts/api-server/src/routes/payments.routes.ts`,
+`/api/subscription/create-checkout` handler (around line 163).
+
+**Behavior**: The Stripe `create-checkout` accepts only
+`plan: "monthly" | "yearly"` (the legacy plan IDs that map to Pro
+tier). Lines 174-176 hardcode the price selection between two cases:
+
+```ts
+const priceData = plan === "monthly"
+  ? { unit_amount: SUBSCRIPTION_MONTHLY_CENTS, recurring: { interval: "month" } }
+  : { unit_amount: SUBSCRIPTION_YEARLY_ANNUAL_CENTS, recurring: { interval: "year" } };
+```
+
+There is no branch for `premium_monthly` or `premium_yearly`. The
+PayPal flow (capture-order) supports all four canonical tiers, but
+Stripe customers can only subscribe to Pro.
+
+**Current safety**: SAFE in the sense that Stripe customers don't get
+upgraded to Premium without paying — the request is simply rejected
+by the Zod enum that limits `plan` to `monthly | yearly`.
+
+**Impact**:
+
+- Feature gap: users who prefer Stripe (card-on-file, Apple/Google
+  Pay) can't subscribe to Premium at all.
+- Inconsistent product surface: pricing.tsx advertises Premium, the
+  PayPal button can charge for it, but Stripe checkout silently 400s.
+- Lost revenue: a meaningful share of buyers may abandon when they
+  realise Premium isn't available via their preferred payment method.
+
+**Recommended**: Extend the Zod enum to accept all four tier IDs, and
+add `premium_monthly` / `premium_yearly` cases to the price selection.
+Mirror PayPal's `paypalPlanAmount` mapping. Pair the change with the
+Stripe-amount-verification work below (they touch the same handler
+family).
+
+**Severity**: Medium (feature gap, not a security issue).
+
+_Discovered 2026-04-28 during the UI/Backend Price Mismatch
+investigation (group fix/price-constants-mismatch)._
+
+---
+
+## MEDIUM — Stripe webhook handler doesn't verify amount/plan match
+
+**Location**: `artifacts/api-server/src/webhook-handlers.ts` and
+`artifacts/api-server/src/app.ts:171` (the `/api/stripe/webhook`
+mount).
+
+**Behavior**: The Stripe webhook receives signed events from Stripe
+(signature verification IS performed correctly via
+`stripe.webhooks.constructEvent`). But once the event is verified as
+"from Stripe", the handler trusts the event's metadata to determine
+which subscription tier to activate, without independently
+cross-checking that the Stripe Price object's amount matches the
+plan that's being activated.
+
+This is the Stripe equivalent of the PayPal Issue #1 vulnerability
+(amount tampering). With PayPal we hardened it on
+fix/payment-amount-verification by comparing the captured amount to
+`paypalPlanAmount(plan)`. The Stripe path needs the same treatment.
+
+**Current safety**: PARTIALLY SAFE. The Stripe signature check
+prevents an attacker from forging an arbitrary event payload (they
+can't sign one). However:
+
+- If `metadata.plan` on the Checkout Session is set client-side via
+  the `create-checkout` request body, an attacker who controls that
+  body can pin a higher `metadata.plan` than the price they're
+  actually paying for. The webhook would then activate the higher
+  tier based on the metadata, not the verified Price.
+- We need to confirm whether the create-checkout handler hardcodes
+  metadata.plan server-side (safe) or echoes it from the request
+  (vulnerable).
+
+**Risk class**: Same as PayPal pre-fix — bait-and-switch tier upgrade
+for the price of a lower tier.
+
+**Recommended**: In a separate dedicated group, audit:
+
+1. How `metadata.plan` reaches the Stripe webhook (server-side only,
+   or client-controlled?).
+2. Add an amount verification step that compares
+   `event.data.object.amount_total` (or equivalent) against
+   `paypalPlanAmount(plan)`-equivalent for Stripe.
+3. Reject activation + Sentry alert + structured log if mismatch
+   (mirror the PayPal fix verbatim).
+
+**Severity**: Medium-High (needs the create-checkout audit to
+determine exact severity).
+
+**Next action**: Before estimating effort, grep create-checkout
+handler for how `metadata.plan` is set. If server-side from the
+Zod-validated `plan` enum (likely safe). If echoed from raw
+request body (vulnerable). The result determines whether this
+becomes a P1 fix or P3 hardening.
+
+_Discovered 2026-04-28 during the UI/Backend Price Mismatch
+investigation (group fix/price-constants-mismatch)._
+
+
