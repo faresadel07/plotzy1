@@ -49,7 +49,7 @@ const FontSize = Extension.create({
   },
   addCommands() {
     return {
-      setFontSize: (size: number) => ({ chain }: any) =>
+      setFontSizePx: (size: number) => ({ chain }: any) =>
         chain().setMark("textStyle", { fontSize: size }).run(),
     } as any;
   },
@@ -895,7 +895,7 @@ export default function ArticleEditor() {
     if (!editor) return;
     setStyleOpen(false);
     if      (v === "p")          editor.chain().focus().setParagraph().run();
-    else if (v === "title")      { editor.chain().focus().setParagraph().run(); editor.chain().focus().setFontSize(28).run(); editor.chain().focus().toggleBold().run(); }
+    else if (v === "title")      { editor.chain().focus().setParagraph().run(); editor.chain().focus().setFontSizePx(28).run(); editor.chain().focus().toggleBold().run(); }
     else if (v === "h1")         editor.chain().focus().toggleHeading({level:1}).run();
     else if (v === "h2")         editor.chain().focus().toggleHeading({level:2}).run();
     else if (v === "h3")         editor.chain().focus().toggleHeading({level:3}).run();
@@ -915,7 +915,7 @@ export default function ArticleEditor() {
       : FONT_SIZES[Math.max(0, Math.min(FONT_SIZES.length-1, idx+delta))];
     setFontSize(next);
     setFontSizeInput(String(next));
-    editor?.chain().focus().setFontSize(next).run();
+    editor?.chain().focus().setFontSizePx(next).run();
   };
 
   const applyLink = () => {
@@ -1193,7 +1193,7 @@ export default function ArticleEditor() {
                 const n = parseInt(fontSizeInput,10);
                 if (!isNaN(n) && n>=8 && n<=96) {
                   setFontSize(n);
-                  editor?.chain().focus().setFontSize(n).run();
+                  editor?.chain().focus().setFontSizePx(n).run();
                 } else setFontSizeInput(String(fontSize));
               }}
               onKeyDown={e => { if(e.key==="Enter")(e.target as HTMLInputElement).blur(); }}
