@@ -583,7 +583,7 @@ export default function ChapterEditor() {
   const [transcribedCopied, setTranscribedCopied] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restoredPositionRef = useRef(false);
 
   /* ── Print View derived state (must be before useEffects that reference maxSpread) ── */

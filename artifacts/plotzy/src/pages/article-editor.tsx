@@ -445,7 +445,7 @@ export default function ArticleEditor() {
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef   = useRef<Blob[]>([]);
-  const recTimerRef      = useRef<ReturnType<typeof setInterval>>();
+  const recTimerRef      = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── toolbar dropdowns ── */
   const [styleOpen, setStyleOpen] = useState(false);
