@@ -16,7 +16,7 @@ export function DevicesShowcase({ onCtaClick }: DevicesShowcaseProps) {
   return (
     <section
       aria-labelledby="devices-showcase-heading"
-      className="bg-gradient-to-b from-white to-[#fafafa] border-b border-[#f0f0f0] px-6 py-24 sm:py-32"
+      className="bg-gradient-to-b from-white to-[#fafafa] border-b border-[#f0f0f0] px-6 pt-12 sm:pt-16 pb-12 sm:pb-16"
     >
       <div className="max-w-6xl mx-auto text-center">
         {/* Eyebrow */}
@@ -37,7 +37,7 @@ export function DevicesShowcase({ onCtaClick }: DevicesShowcaseProps) {
         {/* Sub-heading */}
         <p className="text-base sm:text-lg text-[#555] leading-relaxed max-w-2xl mx-auto mb-14 sm:mb-16">
           Whether you're at your desk or on your iPad in a coffee shop, Plotzy
-          follows you — with cloud sync, real-time saving, and a writing
+          follows you. With cloud sync, real-time saving, and a writing
           experience tailored to each device.
         </p>
 
