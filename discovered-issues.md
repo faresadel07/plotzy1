@@ -346,3 +346,53 @@ discussion at audit time rather than at execution time.
 
 _Group A2 frontend types audit notes._
 
+---
+
+# Payment System Hardening — flagged during Issue #1 fix
+
+## LOW — `ORDER_ALREADY_CAPTURED` retry path doesn't re-verify amount
+
+**Location**: `artifacts/api-server/src/routes/payments.routes.ts`,
+PayPal capture-order handler, around line 442 (the
+`if (errText.includes("ORDER_ALREADY_CAPTURED") ...)` branch).
+
+**Behavior**: When PayPal returns `ORDER_ALREADY_CAPTURED`, the server
+returns `alreadyProcessed: true` without verifying that the original
+capture's amount matched the currently-requested plan. The handler
+re-uses the `plan` parameter from the *current* request body without
+checking what the *original* capture was for.
+
+**Current safety**: SAFE in normal flows because:
+
+1. Subscription tier was activated by the original capture (which now
+   passes amount verification thanks to the Issue #1 fix).
+2. Re-capture attempts don't re-activate or upgrade the user — the
+   `alreadyProcessed: true` early return short-circuits before any
+   `storage.updateUser` call.
+3. The `plan` parameter on retry is effectively ignored — the user's
+   subscriptionPlan field was set at the original capture and isn't
+   overwritten on retry.
+
+**Future concern**: If the activation logic ever changes to allow
+modifications via subsequent capture-order calls (e.g. "upgrade an
+existing plan" via the same handler), this becomes a vulnerability.
+A user could pay $9.99 for `pro_monthly`, then call capture-order
+again with `plan: "premium_yearly"` after the order already captured,
+and the retry path would respond with success while the real charge
+was for the cheaper plan.
+
+**Recommended (future)**: Either:
+
+- Reject the second call entirely if the body's plan doesn't match
+  the original transaction's plan (requires the transaction record
+  Issue #3 will introduce); or
+- Strip the `plan` param from the `alreadyProcessed` return path and
+  read it from the original transaction record so the retry can
+  never affect the user's tier.
+
+**Severity**: Low (current). Watch closely if behavior changes.
+
+_Discovered 2026-04-28 during the Payment Security Hardening — Issue
+#1 (Amount Verification) implementation._
+
+

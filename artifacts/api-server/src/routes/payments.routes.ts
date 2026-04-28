@@ -6,6 +6,7 @@ import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CEN
 import { api } from "../../../../lib/shared/src/routes";
 import { isSubscriptionActive } from "./helpers";
 import { logger } from "../lib/logger";
+import { Sentry } from "../lib/sentry";
 import rateLimit from "express-rate-limit";
 
 const router = Router();
@@ -397,6 +398,28 @@ router.post("/api/paypal/create-order", paymentLimiter, async (req, res) => {
   }
 });
 
+// PayPal capture response shape — documented at
+// https://developer.paypal.com/docs/api/orders/v2/#orders_capture
+// Nested fields are marked optional defensively so a malformed or
+// partial response surfaces as a verification failure (rejected) rather
+// than crashing the handler.
+interface PayPalCaptureResponse {
+  id: string;
+  status: string;                            // order-level status
+  purchase_units?: Array<{
+    payments?: {
+      captures?: Array<{
+        id: string;
+        status: string;                      // capture-level status
+        amount: {
+          currency_code: string;
+          value: string;                     // string e.g. "9.99" — exact decimal
+        };
+      }>;
+    };
+  }>;
+}
+
 // Capture the approved PayPal order and activate subscription
 router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
@@ -404,6 +427,9 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   const parsed = captureSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
   const { orderId, plan } = parsed.data as { orderId: string; plan: PayPalPlan };
+  // Hoisted so the security-verification log path below can include the
+  // userId in its forensic record.
+  const userId = (req.user as any).id;
   try {
     const token = await getPayPalToken();
     const captureRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
@@ -419,12 +445,72 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
       logger.error({ err: errText }, "PayPal capture error");
       return res.status(502).json({ message: "Failed to capture PayPal order" });
     }
-    const capture = await captureRes.json() as { status: string };
+    const capture = await captureRes.json() as PayPalCaptureResponse;
     if (capture.status !== "COMPLETED") {
       return res.status(400).json({ message: "Payment not completed" });
     }
+
+    // ─── SECURITY: verify the captured amount matches the requested plan ───
+    //
+    // The client tells us which `plan` they're paying for, but PayPal tells
+    // us the actual amount and currency that were charged. If the two don't
+    // match, the client is attempting to upgrade themselves to a higher
+    // tier at a lower price (e.g. create a "pro_monthly" $9.99 order, then
+    // call capture-order with plan: "premium_yearly" $159.99). Refuse
+    // activation, alert via Sentry, and don't create any subscription
+    // record.
+    //
+    // String comparison only — PayPal returns the amount as a fixed-decimal
+    // string ("9.99"), and `paypalPlanAmount` produces the same shape via
+    // `(cents/100).toFixed(2)`. Float comparison is avoided to sidestep
+    // precision issues entirely.
+    const captureDetail = capture.purchase_units?.[0]?.payments?.captures?.[0];
+    const expectedAmount = paypalPlanAmount(plan);
+    const expectedCurrency = "USD";
+    const receivedAmount = captureDetail?.amount?.value;
+    const receivedCurrency = captureDetail?.amount?.currency_code;
+    const captureLevelStatus = captureDetail?.status;
+    const captureId = captureDetail?.id;
+
+    const mismatch =
+      !captureDetail ||
+      captureLevelStatus !== "COMPLETED" ||
+      receivedAmount !== expectedAmount ||
+      receivedCurrency !== expectedCurrency;
+
+    if (mismatch) {
+      const forensic = {
+        event: "paypal_capture_verification_failed",
+        userId,
+        plan,
+        paypalOrderId: orderId,
+        captureId,
+        expectedAmount,
+        receivedAmount,
+        expectedCurrency,
+        receivedCurrency,
+        captureLevelStatus,
+        topLevelStatus: capture.status,
+      };
+      logger.warn(forensic, "PayPal capture failed amount/currency verification");
+      Sentry.captureMessage(
+        "PayPal capture amount/currency mismatch — possible tampering attempt",
+        {
+          level: "warning",
+          tags: {
+            payment_provider: "paypal",
+            event_type: "capture_amount_mismatch",
+          },
+          extra: forensic,
+        },
+      );
+      // Generic message — never reveal which field mismatched, so an
+      // attacker iterating the API can't narrow in on the gap.
+      return res.status(400).json({ message: "Payment validation failed" });
+    }
+    // ─── End security check ───────────────────────────────────────────────
+
     // Activate subscription in DB — yearly plans give 1 year, monthly gives 1 month
-    const userId = (req.user as any).id;
     const endDate = new Date();
     const isYearly = plan === "yearly_annual" || plan === "pro_yearly" || plan === "premium_yearly";
     if (isYearly) {
