@@ -476,6 +476,75 @@ amount-verification fix (group fix/payment-amount-verification)._
 
 ---
 
+## LOW — Hardcoded "Plotzy Pro" toast on all subscription activations
+
+**Location**: `artifacts/plotzy/src/components/paypal-button.tsx`
+around line 58 (the `onApprove` success path of the PayPal button).
+
+**Behavior**: After a successful PayPal capture for ANY plan
+(pro_monthly, pro_yearly, premium_monthly, premium_yearly, plus
+the 3 legacy plan IDs), the success toast displays:
+
+```ts
+toast({
+  title: "🎉 Welcome to Plotzy Pro!",
+  description: "Your subscription is now active."
+});
+```
+
+The `plan` prop is in scope (it's used in the request body on the
+preceding line) but is not used to differentiate the message. As
+a result:
+
+- A user activating `premium_yearly` sees "Welcome to Plotzy Pro"
+  even though they're now on Premium.
+- A user activating `pro_monthly` sees the same message — which
+  happens to be correct.
+- The DB and the gated features both reflect the correct tier
+  immediately after activation, so users WILL notice they actually
+  got Premium when they use Premium-only features. The toast just
+  lies for a moment.
+
+**How discovered**: During Test 1.4 verification of the
+amount-verification fix (group `fix/payment-amount-verification`),
+the user reported the toast saying "Plotzy Pro" after upgrading
+to `premium_yearly`. Backend verification confirmed the DB
+activated `premium_yearly` correctly — the toast was the only
+wrong thing.
+
+**Current safety**: SAFE. No security or financial impact. The
+correct tier is activated; the toast is just a static string
+that doesn't reflect the actual tier. Mildly confusing UX but
+reversible in seconds (the user reloads and sees the Premium
+tier active).
+
+**Recommended fix** (in a future frontend polish group):
+
+```ts
+const tierLabel = plan?.startsWith("premium") ? "Premium" : "Pro";
+toast({
+  title: `🎉 Welcome to Plotzy ${tierLabel}!`,
+  description: "Your subscription is now active."
+});
+```
+
+Or, more robustly, derive the label from the API response or a
+mapping that tracks the canonical plan-to-tier relationship
+(consistent with the `planToTier()` mapping on the backend). A
+shared frontend constant or hook would be cleanest if the same
+label is needed elsewhere.
+
+If we eventually internationalize the app, this toast string
+should also be wrapped in a translation function — flag for that
+future work, too.
+
+**Severity**: LOW. Cosmetic / UX. No data integrity issue.
+
+_Discovered 2026-04-28 during Test 1.4 verification of
+amount-verification fix (group fix/payment-amount-verification)._
+
+---
+
 # UI/Backend Price Mismatch — flagged future-cleanup items
 
 ## LOW — Duplicate/dead subscription constants in 3 locations
