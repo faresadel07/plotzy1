@@ -1,5 +1,5 @@
 import * as React from "react"
-import { motion, HTMLMotionProps } from "framer-motion"
+import { motion, HTMLMotionProps, type Variants } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 interface DockProps {
@@ -13,7 +13,7 @@ interface DockIconItemProps extends Omit<HTMLMotionProps<"div">, "children"> {
   className?: string
 }
 
-const floatingAnimation = {
+const floatingAnimation: Variants = {
   initial: { y: 0 },
   animate: {
     y: [-2, 2, -2],
