@@ -1,11 +1,30 @@
 // Type-safe API route definitions for the Plotzy client
+import { z } from "zod";
+import { BookSchema, ChapterSchema } from "./api-schemas";
+
 export const api = {
   books: {
-    list: { method: 'GET' as const, path: '/api/books' as const },
-    get: { method: 'GET' as const, path: '/api/books/:id' as const },
+    list: {
+      method: 'GET' as const,
+      path: '/api/books' as const,
+      responses: { 200: z.array(BookSchema) },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/books/:id' as const,
+      responses: { 200: BookSchema },
+    },
     trashList: { method: 'GET' as const, path: '/api/books-trash' as const },
-    create: { method: 'POST' as const, path: '/api/books' as const },
-    update: { method: 'PUT' as const, path: '/api/books/:id' as const },
+    create: {
+      method: 'POST' as const,
+      path: '/api/books' as const,
+      responses: { 201: BookSchema },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/books/:id' as const,
+      responses: { 200: BookSchema },
+    },
     trash: { method: 'PATCH' as const, path: '/api/books/:id/trash' as const },
     restore: { method: 'PATCH' as const, path: '/api/books/:id/restore' as const },
     delete: { method: 'DELETE' as const, path: '/api/books/:id' as const },
@@ -17,7 +36,11 @@ export const api = {
     duplicate: { method: 'POST' as const, path: '/api/books/:id/duplicate' as const },
   },
   chapters: {
-    list: { method: 'GET' as const, path: '/api/books/:bookId/chapters' as const },
+    list: {
+      method: 'GET' as const,
+      path: '/api/books/:bookId/chapters' as const,
+      responses: { 200: z.array(ChapterSchema) },
+    },
     create: { method: 'POST' as const, path: '/api/books/:bookId/chapters' as const },
     update: { method: 'PUT' as const, path: '/api/chapters/:id' as const },
     delete: { method: 'DELETE' as const, path: '/api/chapters/:id' as const },
