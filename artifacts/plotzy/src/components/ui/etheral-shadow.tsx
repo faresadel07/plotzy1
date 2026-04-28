@@ -75,6 +75,7 @@ export function EtherealShadow({
         if (hueRotateAnimation.current) hueRotateAnimation.current.stop();
       };
     }
+    return undefined; // ref not yet attached or animation disabled: nothing to clean up
   }, [animationEnabled, animationDuration, hueRotateMotionValue]);
 
   return (
