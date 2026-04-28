@@ -18,7 +18,7 @@ interface BookCustomizerProps {
 }
 
 // ── Defaults (used by the "Reset" button) ──────────────────────────────────
-const DEFAULTS: BookPreferences = {
+const DEFAULTS = {
   fontFamily: "eb-garamond",
   fontSize: "text-lg",
   lineHeight: "normal",
@@ -26,7 +26,7 @@ const DEFAULTS: BookPreferences = {
   bgColor: "#ffffff",
   textColor: "#111111",
   pageStyle: "blank",
-};
+} satisfies BookPreferences;
 
 // ── Font Definitions ─────────────────────────────────────────────────────────
 

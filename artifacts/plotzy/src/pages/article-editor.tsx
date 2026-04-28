@@ -1111,7 +1111,7 @@ export default function ArticleEditor() {
           {/* Share button — only when the article is actually published */}
           {(article as any)?.isPublished && (
             <ArticleShareButton
-              articleId={id}
+              articleId={String(id)}
               article={article}
               canvasWidth={containerW}
               open={showShareMenu}
