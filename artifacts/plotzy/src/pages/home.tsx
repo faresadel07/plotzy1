@@ -430,7 +430,7 @@ export default function Home() {
   };
 
   const handleSelectorCreateBook = async (data: { title: string; summary: string; authorName: string; language: string; genre?: string }) => {
-    const newBook = await createBook.mutateAsync({ ...data, contentType: "book" } as any);
+    const newBook = await createBook.mutateAsync({ ...data, contentType: "book" });
     setIsOpen(false);
     setLocation(`/books/${newBook.id}`);
   };
@@ -442,7 +442,7 @@ export default function Home() {
       language: data.language,
       contentType: "article",
       articleCategory: data.category,
-    } as any);
+    });
     setIsOpen(false);
     setLocation(`/articles/${newArticle.id}`);
   };
@@ -828,7 +828,7 @@ export default function Home() {
                   const aTime = getLastAccessed(a.id);
                   const bTime = getLastAccessed(b.id);
                   if (aTime !== bTime) return bTime - aTime;
-                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                  return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
                 }).filter(b => !bookSearch.trim() || b.title.toLowerCase().includes(bookSearch.toLowerCase())).map((book, bookIndex) => {
                       const langInfo = getBookLangInfo(book.language || "en");
                       const coverPalette = COVER_PALETTES[book.id % COVER_PALETTES.length];

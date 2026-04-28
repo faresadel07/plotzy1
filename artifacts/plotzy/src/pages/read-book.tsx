@@ -976,7 +976,9 @@ export default function ReadBook() {
               // single-page, so totalPagesInChapter is 1 and pageIdx is 0.
               const ch = isChapter ? unit.chapter : null;
               const html = isChapter ? parseContentAsHtml(ch!.content) : "";
-              const plainText = isChapter ? parseContent(ch!.content) : (unit.kind !== "chapter" ? unit.content : "");
+              // Outer ternary already handles isChapter; in the false branch unit.kind is
+              // narrowed to one of the matter kinds, so unit.content is always defined.
+              const plainText = isChapter ? parseContent(ch!.content) : unit.content;
               const isRTL = isArabicText(plainText);
               const titleIsNumber = isChapter && ch!.title && /^\d+$/.test(ch!.title.trim());
               const chapterLabel = isChapter

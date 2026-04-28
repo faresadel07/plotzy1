@@ -1,11 +1,27 @@
 'use client';
-import React, { useMemo, type JSX } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
+// Narrowed from React.ElementType. The full polymorphism produced
+// motion(unknown)-typed components which TypeScript couldn't reconcile
+// with our spread JSX call. The 7 tags below cover every existing
+// caller and any text-shimmer headline use case we've actually needed.
+type TextShimmerTag = "p" | "h1" | "h2" | "h3" | "h4" | "span" | "div";
+
+const MOTION_TAGS = {
+  p: motion.p,
+  h1: motion.h1,
+  h2: motion.h2,
+  h3: motion.h3,
+  h4: motion.h4,
+  span: motion.span,
+  div: motion.div,
+} as const;
+
 interface TextShimmerProps extends React.HTMLAttributes<HTMLElement> {
   children: string;
-  as?: React.ElementType;
+  as?: TextShimmerTag;
   className?: string;
   duration?: number;
   spread?: number;
@@ -20,7 +36,14 @@ export function TextShimmer({
   style,
   ...rest
 }: TextShimmerProps) {
-  const MotionComponent = motion(Component as keyof JSX.IntrinsicElements);
+  // motion.X variants are structurally compatible for our prop set;
+  // TS can't narrow the union from MOTION_TAGS[Component] automatically.
+  // The cast to typeof motion.div picks one concrete shape so the JSX
+  // call site below has a defined target. The spread of `rest` (typed
+  // as React.HTMLAttributes<HTMLElement>) is also cast — motion's
+  // wrapped event-handler types differ from React's HTMLAttributes
+  // even though they're structurally compatible at runtime.
+  const MotionComponent = MOTION_TAGS[Component] as typeof motion.div;
 
   const dynamicSpread = useMemo(() => {
     return children.length * spread;
@@ -49,7 +72,7 @@ export function TextShimmer({
           ...style,
         } as React.CSSProperties
       }
-      {...rest}
+      {...(rest as React.ComponentProps<typeof motion.div>)}
     >
       {children}
     </MotionComponent>

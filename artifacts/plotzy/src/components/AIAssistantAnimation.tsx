@@ -63,6 +63,7 @@ export function AIAssistantAnimation() {
       timerRef.current = setTimeout(() => { setUserText(""); setAiText(""); setPhase("user-typing"); }, 700);
       return clear;
     }
+    return undefined; // "idle" phase: no timers scheduled, no cleanup needed
   }, [phase]);
 
   const showUser     = phase !== "idle";

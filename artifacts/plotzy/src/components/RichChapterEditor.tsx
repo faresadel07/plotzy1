@@ -255,9 +255,9 @@ const FontSize = Extension.create({
   },
   addCommands() {
     return {
-      setFontSize: (size: number) => ({ chain }: { chain: any }) =>
+      setFontSizePx: (size: number) => ({ chain }: { chain: any }) =>
         chain().setMark("textStyle", { fontSize: size }).run(),
-      unsetFontSize: () => ({ chain }: { chain: any }) =>
+      unsetFontSizePx: () => ({ chain }: { chain: any }) =>
         chain().setMark("textStyle", { fontSize: null }).run(),
     } as any;
   },
@@ -592,7 +592,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         // Suppress overflow check right after a programmatic content change
         suppressOverflowRef.current = true;
         lastSyncedRef.current = initialContent;
-        editor.commands.setContent(initialContent, false);
+        editor.commands.setContent(initialContent, { emitUpdate: false });
         // Re-enable after the next frame
         requestAnimationFrame(() => { suppressOverflowRef.current = false; });
       } else {

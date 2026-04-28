@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ export function OnboardingWizard({
         }
     };
 
-    const stepVariants = {
+    const stepVariants: Variants = {
         hidden: { opacity: 0, x: isRTL ? -20 : 20, scale: 0.95 },
         visible: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
         exit: { opacity: 0, x: isRTL ? 20 : -20, scale: 0.95, transition: { duration: 0.2 } }

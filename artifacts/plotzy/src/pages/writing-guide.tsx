@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   BookOpen, Layers, Map, AlignLeft, Lightbulb,
   Heart, Zap, Drama, Search, Wand2, Ghost, Clock,
@@ -13,7 +13,7 @@ import {
   Circle, Triangle, Square, Hexagon,
 } from "lucide-react";
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: (i = 0) => ({
     opacity: 1, y: 0,

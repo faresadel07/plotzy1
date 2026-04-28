@@ -213,7 +213,7 @@ export default function CoverDesigner() {
       defaultAppliedRef.current = `${book.id}:saved`;
       setElements(saved.elements);
       setHistory([saved.elements]);
-      if (saved.settings) setCoverSettings({ spineSync: true, ...saved.settings });
+      if (saved.settings) setCoverSettings({ ...saved.settings, spineSync: saved.settings.spineSync ?? true });
       if (saved.spineWidth) setSpineWidth(saved.spineWidth);
       return;
     }

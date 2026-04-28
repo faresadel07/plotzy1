@@ -54,7 +54,7 @@ function FieldInput({
   label, icon: Icon, type = "text", placeholder, value, onChange, error, autoComplete, rightSlot,
 }: {
   label: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   type?: string;
   placeholder: string;
   value: string;

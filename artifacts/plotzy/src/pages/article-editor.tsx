@@ -49,7 +49,7 @@ const FontSize = Extension.create({
   },
   addCommands() {
     return {
-      setFontSize: (size: number) => ({ chain }: any) =>
+      setFontSizePx: (size: number) => ({ chain }: any) =>
         chain().setMark("textStyle", { fontSize: size }).run(),
     } as any;
   },
@@ -178,7 +178,7 @@ function Sep() {
 }
 
 /* ── Dropdown positioning hook ──────────────────────────────────────── */
-function useDropPos(isOpen: boolean, btnRef: React.RefObject<HTMLButtonElement>) {
+function useDropPos(isOpen: boolean, btnRef: React.RefObject<HTMLButtonElement | null>) {
   const [pos, setPos] = useState<{top:number; left:number} | null>(null);
   useEffect(() => {
     if (isOpen && btnRef.current) {
@@ -445,7 +445,7 @@ export default function ArticleEditor() {
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef   = useRef<Blob[]>([]);
-  const recTimerRef      = useRef<ReturnType<typeof setInterval>>();
+  const recTimerRef      = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── toolbar dropdowns ── */
   const [styleOpen, setStyleOpen] = useState(false);
@@ -590,7 +590,7 @@ export default function ArticleEditor() {
     const html = isHtml ? rawContent
       : rawContent ? `<p>${rawContent.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
       : "<p></p>";
-    editor.commands.setContent(html, false);
+    editor.commands.setContent(html, { emitUpdate: false });
     setContent(html);
   }, [article, editor]);
 
@@ -895,7 +895,7 @@ export default function ArticleEditor() {
     if (!editor) return;
     setStyleOpen(false);
     if      (v === "p")          editor.chain().focus().setParagraph().run();
-    else if (v === "title")      { editor.chain().focus().setParagraph().run(); editor.chain().focus().setFontSize(28).run(); editor.chain().focus().toggleBold().run(); }
+    else if (v === "title")      { editor.chain().focus().setParagraph().run(); editor.chain().focus().setFontSizePx(28).run(); editor.chain().focus().toggleBold().run(); }
     else if (v === "h1")         editor.chain().focus().toggleHeading({level:1}).run();
     else if (v === "h2")         editor.chain().focus().toggleHeading({level:2}).run();
     else if (v === "h3")         editor.chain().focus().toggleHeading({level:3}).run();
@@ -915,7 +915,7 @@ export default function ArticleEditor() {
       : FONT_SIZES[Math.max(0, Math.min(FONT_SIZES.length-1, idx+delta))];
     setFontSize(next);
     setFontSizeInput(String(next));
-    editor?.chain().focus().setFontSize(next).run();
+    editor?.chain().focus().setFontSizePx(next).run();
   };
 
   const applyLink = () => {
@@ -1111,7 +1111,7 @@ export default function ArticleEditor() {
           {/* Share button — only when the article is actually published */}
           {(article as any)?.isPublished && (
             <ArticleShareButton
-              articleId={id}
+              articleId={String(id)}
               article={article}
               canvasWidth={containerW}
               open={showShareMenu}
@@ -1132,12 +1132,12 @@ export default function ArticleEditor() {
         <div
           style={{
             position:"fixed",top:92,left:0,right:0,zIndex:49, /* 44px Layout nav + 48px top bar */
-            scrollbarWidth:"none" as any,
+            scrollbarWidth:"none",
             background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
             padding:"0 14px",height:44,
             display:"flex",alignItems:"center",justifyContent:"center",gap:2,
-            overflowX:"auto",scrollbarWidth:"none",
+            overflowX:"auto",
           }}
           onMouseDown={e => e.preventDefault()}
         >
@@ -1193,7 +1193,7 @@ export default function ArticleEditor() {
                 const n = parseInt(fontSizeInput,10);
                 if (!isNaN(n) && n>=8 && n<=96) {
                   setFontSize(n);
-                  editor?.chain().focus().setFontSize(n).run();
+                  editor?.chain().focus().setFontSizePx(n).run();
                 } else setFontSizeInput(String(fontSize));
               }}
               onKeyDown={e => { if(e.key==="Enter")(e.target as HTMLInputElement).blur(); }}

@@ -12,7 +12,7 @@ export function AudioRecorder({ onRecordingComplete, isProcessing }: AudioRecord
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
@@ -68,7 +68,7 @@ export function AudioRecorder({ onRecordingComplete, isProcessing }: AudioRecord
       // the recording indicator drops. Same applies if setInterval threw.
       if (stream) stream.getTracks().forEach(t => t.stop());
       mediaRecorderRef.current = null;
-      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = undefined; }
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       alert("Could not access microphone. Please ensure permissions are granted.");
     }
   };

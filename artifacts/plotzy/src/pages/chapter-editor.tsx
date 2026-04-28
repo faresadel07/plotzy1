@@ -532,10 +532,12 @@ export default function ChapterEditor() {
     });
   };
 
-  // Kept for plain <textarea> editors (comments / titles). The main rich
-  // editor (TipTap / contenteditable) is handled by the global effect below,
-  // which reacts to every caret move regardless of editor implementation.
-  const scrollToCursorCenter = (el: HTMLTextAreaElement) => {
+  // Kept for plain <input> / <textarea> editors (comments / titles). The
+  // main rich editor (TipTap / contenteditable) is handled by the global
+  // effect below, which reacts to every caret move regardless of editor
+  // implementation. Both element types share the selectionStart / value /
+  // getBoundingClientRect API the function uses.
+  const scrollToCursorCenter = (el: HTMLInputElement | HTMLTextAreaElement) => {
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 28;
     const selStart = el.selectionStart ?? 0;
     const textBefore = el.value.substring(0, selStart);
@@ -583,7 +585,7 @@ export default function ChapterEditor() {
   const [transcribedCopied, setTranscribedCopied] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restoredPositionRef = useRef(false);
 
   /* ── Print View derived state (must be before useEffects that reference maxSpread) ── */
@@ -2037,7 +2039,7 @@ export default function ChapterEditor() {
             onKeyDown={(e) => {
               if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter" || e.key === " ") {
                 playTypewriterSound(isFocusMode);
-                if (isTypewriterMode) scrollToCursorCenter(e.currentTarget as HTMLTextAreaElement);
+                if (isTypewriterMode) scrollToCursorCenter(e.currentTarget);
               }
             }}
           />
@@ -2462,7 +2464,7 @@ export default function ChapterEditor() {
                               setSdtPageIdx(-1);
                             }
                             playTypewriterSound(isFocusMode);
-                            if (isTypewriterMode) scrollToCursorCenter(e.currentTarget as HTMLTextAreaElement);
+                            if (isTypewriterMode) scrollToCursorCenter(e.currentTarget);
                           }
                         }}
                       />
