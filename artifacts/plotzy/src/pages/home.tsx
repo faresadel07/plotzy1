@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { BOOK_LANGUAGES } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { LandingCanvas } from "@/components/landing/LandingCanvas";
+import { DevicesShowcase } from "@/components/landing/DevicesShowcase";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { BookCoverShader } from "@/components/ui/book-cover-shader";
@@ -1264,6 +1265,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ===== DEVICES SHOWCASE ===== */}
+        <DevicesShowcase onCtaClick={openCreateBook} />
 
         {/* ===== CARD STACK FEATURES ===== */}
         <div id="platform-features" style={{ background: "#080808", padding: "80px 0 100px" }}>
