@@ -1132,12 +1132,12 @@ export default function ArticleEditor() {
         <div
           style={{
             position:"fixed",top:92,left:0,right:0,zIndex:49, /* 44px Layout nav + 48px top bar */
-            scrollbarWidth:"none" as any,
+            scrollbarWidth:"none",
             background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
             padding:"0 14px",height:44,
             display:"flex",alignItems:"center",justifyContent:"center",gap:2,
-            overflowX:"auto",scrollbarWidth:"none",
+            overflowX:"auto",
           }}
           onMouseDown={e => e.preventDefault()}
         >

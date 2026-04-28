@@ -315,7 +315,7 @@ export default function Messages() {
                             maxWidth: "80%", padding: "10px 14px", borderRadius: 16, wordBreak: "break-word",
                             borderBottomRightRadius: isMine ? 4 : 16, borderBottomLeftRadius: isMine ? 16 : 4,
                             background: isMine ? SENT_BG : RECV_BG, color: isMine ? SENT_TEXT : RECV_TEXT,
-                            fontSize: 14, lineHeight: 1.55, fontFamily: SF, wordBreak: "break-word",
+                            fontSize: 14, lineHeight: 1.55, fontFamily: SF,
                           }}>
                             <BubbleContent content={msg.content} isMine={isMine} />
                             <div style={{ display: "flex", alignItems: "center", justifyContent: isMine ? "flex-end" : "flex-start", gap: 4, marginTop: 4 }}>
