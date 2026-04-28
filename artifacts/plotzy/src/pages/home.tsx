@@ -430,7 +430,7 @@ export default function Home() {
   };
 
   const handleSelectorCreateBook = async (data: { title: string; summary: string; authorName: string; language: string; genre?: string }) => {
-    const newBook = await createBook.mutateAsync({ ...data, contentType: "book" } as any);
+    const newBook = await createBook.mutateAsync({ ...data, contentType: "book" });
     setIsOpen(false);
     setLocation(`/books/${newBook.id}`);
   };
@@ -442,7 +442,7 @@ export default function Home() {
       language: data.language,
       contentType: "article",
       articleCategory: data.category,
-    } as any);
+    });
     setIsOpen(false);
     setLocation(`/articles/${newArticle.id}`);
   };

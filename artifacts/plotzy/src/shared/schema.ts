@@ -105,7 +105,16 @@ export type Book = {
   seriesOrder?: number | null;
 };
 
-export type InsertBook = Omit<Book, 'id' | 'createdAt'>;
+// `isDeleted`, `isPublished`, `viewCount` are NOT NULL columns with
+// server-side DB defaults (false, false, 0). The client doesn't need
+// to provide them; the API fills them in. Marked optional only on the
+// Insert type — the SELECT-side `Book` type still has them required
+// because they're always populated when reading back.
+export type InsertBook = Omit<Book, 'id' | 'createdAt' | 'isDeleted' | 'isPublished' | 'viewCount'> & {
+  isDeleted?: boolean;
+  isPublished?: boolean;
+  viewCount?: number;
+};
 
 export type Chapter = {
   id: number;
@@ -118,7 +127,12 @@ export type Chapter = {
   createdAt?: Date | null;
 };
 
-export type InsertChapter = Omit<Chapter, 'id' | 'createdAt'>;
+// `order`, `status` are NOT NULL columns with server-side DB defaults
+// (0, "draft"). Same rationale as InsertBook above — client may omit.
+export type InsertChapter = Omit<Chapter, 'id' | 'createdAt' | 'order' | 'status'> & {
+  order?: number;
+  status?: string;
+};
 
 export type ChapterSnapshot = {
   id: number;
