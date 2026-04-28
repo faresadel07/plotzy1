@@ -1,6 +1,14 @@
 // Type-safe API route definitions for the Plotzy client
 import { z } from "zod";
-import { BookSchema, ChapterSchema } from "./api-schemas";
+import {
+  BookSchema,
+  ChapterSchema,
+  ChapterWithAchievementsSchema,
+  GenerateCoverResponseSchema,
+  GenerateBlurbResponseSchema,
+  ContinueTextResponseSchema,
+  TranslateTextResponseSchema,
+} from "./api-schemas";
 
 export const api = {
   books: {
@@ -14,7 +22,11 @@ export const api = {
       path: '/api/books/:id' as const,
       responses: { 200: BookSchema },
     },
-    trashList: { method: 'GET' as const, path: '/api/books-trash' as const },
+    trashList: {
+      method: 'GET' as const,
+      path: '/api/books-trash' as const,
+      responses: { 200: z.array(BookSchema) },
+    },
     create: {
       method: 'POST' as const,
       path: '/api/books' as const,
@@ -25,11 +37,27 @@ export const api = {
       path: '/api/books/:id' as const,
       responses: { 200: BookSchema },
     },
-    trash: { method: 'PATCH' as const, path: '/api/books/:id/trash' as const },
-    restore: { method: 'PATCH' as const, path: '/api/books/:id/restore' as const },
+    trash: {
+      method: 'PATCH' as const,
+      path: '/api/books/:id/trash' as const,
+      responses: { 200: BookSchema },
+    },
+    restore: {
+      method: 'PATCH' as const,
+      path: '/api/books/:id/restore' as const,
+      responses: { 200: BookSchema },
+    },
     delete: { method: 'DELETE' as const, path: '/api/books/:id' as const },
-    generateCover: { method: 'POST' as const, path: '/api/books/:id/cover' as const },
-    generateBlurb: { method: 'POST' as const, path: '/api/books/:id/generate-blurb' as const },
+    generateCover: {
+      method: 'POST' as const,
+      path: '/api/books/:id/cover' as const,
+      responses: { 200: GenerateCoverResponseSchema },
+    },
+    generateBlurb: {
+      method: 'POST' as const,
+      path: '/api/books/:id/generate-blurb' as const,
+      responses: { 200: GenerateBlurbResponseSchema },
+    },
     togglePublish: { method: 'PATCH' as const, path: '/api/books/:id/publish' as const },
     shareToken: { method: 'GET' as const, path: '/api/books/:shareToken/share' as const },
     rateLimit: { method: 'GET' as const, path: '/api/books/:bookId/rate-limit' as const },
@@ -41,10 +69,22 @@ export const api = {
       path: '/api/books/:bookId/chapters' as const,
       responses: { 200: z.array(ChapterSchema) },
     },
-    create: { method: 'POST' as const, path: '/api/books/:bookId/chapters' as const },
-    update: { method: 'PUT' as const, path: '/api/chapters/:id' as const },
+    create: {
+      method: 'POST' as const,
+      path: '/api/books/:bookId/chapters' as const,
+      responses: { 201: ChapterWithAchievementsSchema },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/chapters/:id' as const,
+      responses: { 200: ChapterWithAchievementsSchema },
+    },
     delete: { method: 'DELETE' as const, path: '/api/chapters/:id' as const },
-    voice: { method: 'POST' as const, path: '/api/books/:bookId/chapters/voice' as const },
+    voice: {
+      method: 'POST' as const,
+      path: '/api/books/:bookId/chapters/voice' as const,
+      responses: { 200: ChapterSchema },
+    },
     reorder: { method: 'PATCH' as const, path: '/api/books/:bookId/chapters/reorder' as const },
   },
   lore: {
@@ -69,8 +109,16 @@ export const api = {
     plotHoles: { method: 'POST' as const, path: '/api/books/:bookId/ai/plot-holes' as const },
     dialogueCoach: { method: 'POST' as const, path: '/api/books/:bookId/ai/dialogue-coach' as const },
     pacingAnalysis: { method: 'POST' as const, path: '/api/books/:bookId/ai/pacing-analysis' as const },
-    continueText: { method: 'POST' as const, path: '/api/continue-text' as const },
-    translate: { method: 'POST' as const, path: '/api/translate-text' as const },
+    continueText: {
+      method: 'POST' as const,
+      path: '/api/continue-text' as const,
+      responses: { 200: ContinueTextResponseSchema },
+    },
+    translate: {
+      method: 'POST' as const,
+      path: '/api/translate-text' as const,
+      responses: { 200: TranslateTextResponseSchema },
+    },
   },
   payments: {
     createIntent: { method: 'POST' as const, path: '/api/payments/create-intent' as const },
