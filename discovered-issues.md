@@ -397,6 +397,85 @@ _Discovered 2026-04-28 during the Payment Security Hardening — Issue
 
 ---
 
+## MEDIUM — Silent column drop on PayPal subscription activation
+
+**Location**: `artifacts/api-server/src/routes/payments.routes.ts`
+around line 441 (the successful-capture path of
+`/api/paypal/capture-order`).
+
+**Behavior**: After a successful PayPal capture and amount
+verification, the handler calls:
+
+```ts
+storage.updateUser(userId, {
+  subscriptionStatus: "active",
+  subscriptionTier: tier,
+  subscriptionPlan: plan,
+  subscriptionEndDate: endDate,
+  paymentMethod: "paypal",
+} as any);
+```
+
+The `paymentMethod` field is included in the payload, BUT the
+`payment_method` column does NOT exist in the `users` table schema.
+The `as any` cast disables TypeScript's type checking, so the
+compiler can't catch the mismatch. At runtime, Drizzle (or the
+storage layer wrapping it) silently drops the unknown field — the
+update for the other 4 fields succeeds, but `paymentMethod` is
+never persisted.
+
+**How discovered**: During Test 2 verification of the
+amount-verification fix (group `fix/payment-amount-verification`).
+The forensic DB query attempted to `SELECT payment_method` and
+got `column "payment_method" does not exist`, while the production
+code attempts to write to it on every successful PayPal capture.
+
+**Current safety**: SAFE-ish. The other 4 fields update correctly,
+so the subscription DOES activate. But:
+
+1. We have NO record of which payment provider activated each
+   subscription (lost analytics + lost ability to route
+   cancellation/portal flows correctly per provider).
+2. If we ever ADD a `payment_method` column to the schema, the
+   writes would suddenly start landing — which could be a desired
+   feature, but the activation could leak this field via
+   copy-paste between Stripe/PayPal handlers in unexpected ways.
+3. This is the observable consequence of Issue #6 from the
+   original audit ("remove `as any` from `storage.updateUser`") —
+   the cast hides this exact class of bug.
+
+**Recommended fix** (in a future dedicated group, NOT here):
+
+- Decide product intent: do we WANT to track `payment_method`
+  per user? Probably yes (for cancellation routing, analytics,
+  customer support).
+- If yes: add `payment_method` column to users schema, write a
+  migration, remove the `as any`, fix the type, deploy.
+- If no: remove the `paymentMethod: "paypal"` line from the
+  `updateUser` payload (and from the parallel Stripe handler if
+  it has the same pattern).
+- Either way: removing the `as any` is what would have caught
+  this at compile time. That's the meta-fix that prevents future
+  versions of this bug.
+
+**Severity**: Medium. No security or financial impact. Loss of
+operational data (per-user payment provider) and risk of similar
+silent drops elsewhere via the same `as any` antipattern.
+
+**Related**:
+
+- Original audit Issue #6 (remove `as any` from `updateUser`) is
+  the underlying cause.
+- A parallel check on the Stripe activation path (around line
+  ~70 in `payments.routes.ts` based on earlier context) would
+  confirm whether this affects Stripe-side activations too.
+  Worth a 5-min audit when Issue #6 is addressed.
+
+_Discovered 2026-04-28 during Test 2 verification of the
+amount-verification fix (group fix/payment-amount-verification)._
+
+---
+
 # UI/Backend Price Mismatch — flagged future-cleanup items
 
 ## LOW — Duplicate/dead subscription constants in 3 locations
