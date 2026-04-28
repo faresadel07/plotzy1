@@ -349,14 +349,14 @@ function paypalPlanAmount(plan: PayPalPlan): string {
 
 function paypalPlanDescription(plan: PayPalPlan): string {
   switch (plan) {
-    case "pro_monthly":      return "Plotzy Pro — Monthly ($9.99/mo)";
+    case "pro_monthly":      return "Plotzy Pro — Monthly ($8.99/mo)";
     case "pro_yearly":       return "Plotzy Pro — Annual ($79.99/yr)";
-    case "premium_monthly":  return "Plotzy Premium — Monthly ($19.99/mo)";
+    case "premium_monthly":  return "Plotzy Premium — Monthly ($16.99/mo)";
     case "premium_yearly":   return "Plotzy Premium — Annual ($159.99/yr)";
-    case "monthly":          return "Plotzy Pro — Monthly ($9.99/mo)";
-    case "yearly_monthly":   return "Plotzy Pro — Monthly ($9.99/mo)";
+    case "monthly":          return "Plotzy Pro — Monthly ($8.99/mo)";
+    case "yearly_monthly":   return "Plotzy Pro — Monthly ($8.99/mo)";
     case "yearly_annual":    return "Plotzy Pro — Annual ($79.99/yr)";
-    default:                 return "Plotzy Pro — Monthly ($9.99/mo)";
+    default:                 return "Plotzy Pro — Monthly ($8.99/mo)";
   }
 }
 

@@ -395,4 +395,158 @@ was for the cheaper plan.
 _Discovered 2026-04-28 during the Payment Security Hardening — Issue
 #1 (Amount Verification) implementation._
 
+---
+
+# UI/Backend Price Mismatch — flagged future-cleanup items
+
+## LOW — Duplicate/dead subscription constants in 3 locations
+
+**Locations**:
+- `lib/db/src/schema/index.ts:755-758` (canonical, source of truth):
+  PRO_MONTHLY_CENTS=899, PRO_YEARLY_CENTS=7999,
+  PREMIUM_MONTHLY_CENTS=1699, PREMIUM_YEARLY_CENTS=15999.
+- `lib/shared/src/schema-types.ts:304-305` (orphan duplicate):
+  SUBSCRIPTION_MONTHLY_CENTS=800, SUBSCRIPTION_YEARLY_CENTS=7800.
+- `artifacts/plotzy/src/shared/schema.ts:240-242` (frontend mirror,
+  orphan duplicate):
+  SUBSCRIPTION_MONTHLY_CENTS=1300, SUBSCRIPTION_YEARLY_MONTHLY_CENTS=1000,
+  SUBSCRIPTION_YEARLY_ANNUAL_CENTS=9999.
+
+**Behavior**: The two duplicate locations are not imported anywhere —
+verified via `grep -rn "import.*SUBSCRIPTION_"`. They are dead code.
+The canonical constants are imported only by
+`artifacts/api-server/src/routes/payments.routes.ts` for both PayPal
+amounts and Stripe checkout `unit_amount`.
+
+**Current safety**: SAFE. Dead constants don't affect runtime, but
+they're a nasty tripwire for future developers. Anyone reading the
+frontend mirror will see "$13/month" and could reasonably assume the
+backend agrees. The values aren't even close to the canonical numbers
+(800, 1300, 7800, 1000, 9999 vs the real 899, 1699, 7999, 15999).
+
+**Future concern**: A developer could:
+
+1. Cargo-cult the wrong number into a new feature (analytics, email
+   templates, marketing pages).
+2. Update the dead duplicate by mistake while leaving the canonical
+   stale.
+3. Re-introduce a real import of the dead constants and silently
+   double-charge or undercharge users.
+
+**Recommended**: Either delete the dead constants outright, or convert
+them to re-exports of the canonical schema constants
+(`export { PRO_MONTHLY_CENTS as SUBSCRIPTION_MONTHLY_CENTS } from
+"@workspace/db/schema"`) so the truth flows from one place.
+
+**Severity**: Low (currently dead). Watch closely if frontend code
+ever starts importing pricing constants — at that point the drift
+becomes real.
+
+_Discovered 2026-04-28 during the UI/Backend Price Mismatch
+investigation (group fix/price-constants-mismatch)._
+
+---
+
+## MEDIUM — Stripe checkout endpoint doesn't support Premium tier
+
+**Location**: `artifacts/api-server/src/routes/payments.routes.ts`,
+`/api/subscription/create-checkout` handler (around line 163).
+
+**Behavior**: The Stripe `create-checkout` accepts only
+`plan: "monthly" | "yearly"` (the legacy plan IDs that map to Pro
+tier). Lines 174-176 hardcode the price selection between two cases:
+
+```ts
+const priceData = plan === "monthly"
+  ? { unit_amount: SUBSCRIPTION_MONTHLY_CENTS, recurring: { interval: "month" } }
+  : { unit_amount: SUBSCRIPTION_YEARLY_ANNUAL_CENTS, recurring: { interval: "year" } };
+```
+
+There is no branch for `premium_monthly` or `premium_yearly`. The
+PayPal flow (capture-order) supports all four canonical tiers, but
+Stripe customers can only subscribe to Pro.
+
+**Current safety**: SAFE in the sense that Stripe customers don't get
+upgraded to Premium without paying — the request is simply rejected
+by the Zod enum that limits `plan` to `monthly | yearly`.
+
+**Impact**:
+
+- Feature gap: users who prefer Stripe (card-on-file, Apple/Google
+  Pay) can't subscribe to Premium at all.
+- Inconsistent product surface: pricing.tsx advertises Premium, the
+  PayPal button can charge for it, but Stripe checkout silently 400s.
+- Lost revenue: a meaningful share of buyers may abandon when they
+  realise Premium isn't available via their preferred payment method.
+
+**Recommended**: Extend the Zod enum to accept all four tier IDs, and
+add `premium_monthly` / `premium_yearly` cases to the price selection.
+Mirror PayPal's `paypalPlanAmount` mapping. Pair the change with the
+Stripe-amount-verification work below (they touch the same handler
+family).
+
+**Severity**: Medium (feature gap, not a security issue).
+
+_Discovered 2026-04-28 during the UI/Backend Price Mismatch
+investigation (group fix/price-constants-mismatch)._
+
+---
+
+## MEDIUM — Stripe webhook handler doesn't verify amount/plan match
+
+**Location**: `artifacts/api-server/src/webhook-handlers.ts` and
+`artifacts/api-server/src/app.ts:171` (the `/api/stripe/webhook`
+mount).
+
+**Behavior**: The Stripe webhook receives signed events from Stripe
+(signature verification IS performed correctly via
+`stripe.webhooks.constructEvent`). But once the event is verified as
+"from Stripe", the handler trusts the event's metadata to determine
+which subscription tier to activate, without independently
+cross-checking that the Stripe Price object's amount matches the
+plan that's being activated.
+
+This is the Stripe equivalent of the PayPal Issue #1 vulnerability
+(amount tampering). With PayPal we hardened it on
+fix/payment-amount-verification by comparing the captured amount to
+`paypalPlanAmount(plan)`. The Stripe path needs the same treatment.
+
+**Current safety**: PARTIALLY SAFE. The Stripe signature check
+prevents an attacker from forging an arbitrary event payload (they
+can't sign one). However:
+
+- If `metadata.plan` on the Checkout Session is set client-side via
+  the `create-checkout` request body, an attacker who controls that
+  body can pin a higher `metadata.plan` than the price they're
+  actually paying for. The webhook would then activate the higher
+  tier based on the metadata, not the verified Price.
+- We need to confirm whether the create-checkout handler hardcodes
+  metadata.plan server-side (safe) or echoes it from the request
+  (vulnerable).
+
+**Risk class**: Same as PayPal pre-fix — bait-and-switch tier upgrade
+for the price of a lower tier.
+
+**Recommended**: In a separate dedicated group, audit:
+
+1. How `metadata.plan` reaches the Stripe webhook (server-side only,
+   or client-controlled?).
+2. Add an amount verification step that compares
+   `event.data.object.amount_total` (or equivalent) against
+   `paypalPlanAmount(plan)`-equivalent for Stripe.
+3. Reject activation + Sentry alert + structured log if mismatch
+   (mirror the PayPal fix verbatim).
+
+**Severity**: Medium-High (needs the create-checkout audit to
+determine exact severity).
+
+**Next action**: Before estimating effort, grep create-checkout
+handler for how `metadata.plan` is set. If server-side from the
+Zod-validated `plan` enum (likely safe). If echoed from raw
+request body (vulnerable). The result determines whether this
+becomes a P1 fix or P3 hardening.
+
+_Discovered 2026-04-28 during the UI/Backend Price Mismatch
+investigation (group fix/price-constants-mismatch)._
+
 
