@@ -981,12 +981,11 @@ export default function ChapterEditor() {
     });
   }, [pages, effectivePrefs.fontSize, effectivePrefs.lineHeight, effectivePrefs.letterSpacing, dynDimsForHook.contentHeight]);
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
-  if (!chapter) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
-  }
+  // Early returns moved past every hook below — see the matching block
+  // before the main JSX return (~line 1572). Returning here used to
+  // change the hook count between the loading and loaded renders, which
+  // violates the Rules of Hooks and crashed the component for any user
+  // who hit a slow load (e.g. collaborators on someone else's book).
 
   const handlePageChange = (index: number, value: string) => {
     const measureEl = measureRef.current;
@@ -1568,6 +1567,19 @@ export default function ChapterEditor() {
       />
     );
   };
+
+  // ── Loading / not-found gates ───────────────────────────────────────────
+  // Placed AFTER every hook above so the hook count is the same on the
+  // loading and loaded renders. Earlier this lived around line 985 and
+  // crashed React's hook-order check for any caller whose chapters fetch
+  // took more than one render to settle (e.g. collaborators on someone
+  // else's book, where the API does extra authorization work).
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+  if (!chapter) {
+    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
+  }
 
   return (
     <div
