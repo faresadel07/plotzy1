@@ -592,7 +592,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         // Suppress overflow check right after a programmatic content change
         suppressOverflowRef.current = true;
         lastSyncedRef.current = initialContent;
-        editor.commands.setContent(initialContent, false);
+        editor.commands.setContent(initialContent, { emitUpdate: false });
         // Re-enable after the next frame
         requestAnimationFrame(() => { suppressOverflowRef.current = false; });
       } else {

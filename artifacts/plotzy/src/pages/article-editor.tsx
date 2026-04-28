@@ -590,7 +590,7 @@ export default function ArticleEditor() {
     const html = isHtml ? rawContent
       : rawContent ? `<p>${rawContent.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
       : "<p></p>";
-    editor.commands.setContent(html, false);
+    editor.commands.setContent(html, { emitUpdate: false });
     setContent(html);
   }, [article, editor]);
 
