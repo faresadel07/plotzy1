@@ -178,7 +178,7 @@ function Sep() {
 }
 
 /* ── Dropdown positioning hook ──────────────────────────────────────── */
-function useDropPos(isOpen: boolean, btnRef: React.RefObject<HTMLButtonElement>) {
+function useDropPos(isOpen: boolean, btnRef: React.RefObject<HTMLButtonElement | null>) {
   const [pos, setPos] = useState<{top:number; left:number} | null>(null);
   useEffect(() => {
     if (isOpen && btnRef.current) {
