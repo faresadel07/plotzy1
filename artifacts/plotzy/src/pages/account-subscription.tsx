@@ -77,6 +77,15 @@ export default function AccountSubscription() {
   const oldestPaymentAt = payments.at(-1)?.createdAt ?? null;
   const latestPaymentMethod = payments[0]?.paymentMethod ?? null;
 
+  // Sandbox flag drives the "TEST MODE" badge in the page header. The
+  // /api/paypal/config endpoint is the same one /checkout uses, so the
+  // shared queryKey makes React Query dedupe the fetch across both pages
+  // when the user navigates between them.
+  const { data: paypalConfig } = useQuery<{ sandbox?: boolean }>({
+    queryKey: ["/api/paypal/config"],
+  });
+  const isSandbox = !!paypalConfig?.sandbox;
+
   const planId = user?.subscriptionPlan ?? null;
   const plan = getPlanDetails(planId);
   const status = user?.subscriptionStatus ?? "free_trial";
@@ -98,7 +107,10 @@ export default function AccountSubscription() {
             Back to home
           </button>
 
-          <h1 className="text-3xl font-bold leading-tight mb-2">My Subscription</h1>
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
+            <h1 className="text-3xl font-bold leading-tight">My Subscription</h1>
+            {isSandbox && <TestModeBadge />}
+          </div>
           <p className="text-sm mb-8" style={{ color: TS }}>
             Manage your plan and view your payment history.
           </p>
@@ -608,6 +620,22 @@ function Spinner() {
         borderTopColor: "rgba(255,255,255,0.5)",
       }}
     />
+  );
+}
+
+function TestModeBadge() {
+  return (
+    <span
+      className="text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded-full inline-flex items-center"
+      style={{
+        background: "rgba(245,158,11,0.15)",
+        color: WARNING,
+        border: "1px solid rgba(245,158,11,0.35)",
+      }}
+      title="PayPal Sandbox — no real charges"
+    >
+      Test mode
+    </span>
   );
 }
 

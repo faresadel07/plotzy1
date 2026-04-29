@@ -328,11 +328,15 @@ async function getPayPalToken(): Promise<string> {
   return data.access_token;
 }
 
-// Return PayPal client ID to the frontend (public)
+// Return PayPal client ID + sandbox flag to the frontend (public).
+// `sandbox` lets pages render a "TEST MODE" badge in dev/staging when
+// PAYPAL_SANDBOX=true. In production with the env unset, sandbox is
+// false and no badge appears — production-safe by default.
 router.get("/api/paypal/config", (_req, res) => {
   const clientId = process.env.PAYPAL_CLIENT_ID;
-  if (!clientId) return res.status(503).json({ enabled: false });
-  return res.json({ enabled: true, clientId });
+  const sandbox = process.env.PAYPAL_SANDBOX === "true";
+  if (!clientId) return res.status(503).json({ enabled: false, sandbox });
+  return res.json({ enabled: true, clientId, sandbox });
 });
 
 import {
