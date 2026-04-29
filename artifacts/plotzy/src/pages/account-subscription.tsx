@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import {
+  AlertCircle,
   ArrowRight,
   Check,
   CheckCircle2,
   ChevronLeft,
-  ChevronRight,
   Pause,
   X,
 } from "lucide-react";
@@ -39,50 +40,6 @@ type PaymentRow = {
   createdAt: string;
 };
 
-// MOCK DATA for Step 4 visual layout. Replaced in Step 5 with the real
-// /api/user/payment-history fetch via React Query.
-const MOCK_PAYMENTS: PaymentRow[] = [
-  {
-    id: 3,
-    paypalOrderId: "MOCK_ORDER_3",
-    paypalCaptureId: "MOCK_CAPTURE_3",
-    amountCents: 1699,
-    currency: "USD",
-    plan: "premium_monthly",
-    tier: "premium",
-    cycle: "monthly",
-    paymentMethod: "paypal_card",
-    status: "completed",
-    createdAt: "2026-05-02T10:14:22.000Z",
-  },
-  {
-    id: 2,
-    paypalOrderId: "MOCK_ORDER_2",
-    paypalCaptureId: "MOCK_CAPTURE_2",
-    amountCents: 899,
-    currency: "USD",
-    plan: "pro_monthly",
-    tier: "pro",
-    cycle: "monthly",
-    paymentMethod: "paypal_account",
-    status: "completed",
-    createdAt: "2026-04-02T09:01:11.000Z",
-  },
-  {
-    id: 1,
-    paypalOrderId: "MOCK_ORDER_1",
-    paypalCaptureId: "MOCK_CAPTURE_1",
-    amountCents: 899,
-    currency: "USD",
-    plan: "pro_monthly",
-    tier: "pro",
-    cycle: "monthly",
-    paymentMethod: "paypal_card",
-    status: "completed",
-    createdAt: "2026-03-02T08:34:51.000Z",
-  },
-];
-
 export default function AccountSubscription() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -90,6 +47,26 @@ export default function AccountSubscription() {
   useEffect(() => {
     document.title = "My Subscription · Plotzy";
   }, []);
+
+  // Real payment history. The default queryFn (configured in
+  // lib/queryClient.ts) does GET on `queryKey.join("/")` with
+  // credentials: "include" and throws on non-2xx, so a plain useQuery
+  // call is enough — no custom fetcher needed.
+  const {
+    data,
+    isLoading: isHistoryLoading,
+    isError: isHistoryError,
+  } = useQuery<{ payments: PaymentRow[] }>({
+    queryKey: ["/api/user/payment-history"],
+  });
+
+  const payments = data?.payments ?? [];
+  // Backend returns rows sorted by createdAt DESC, so [0] is most recent
+  // and [.length - 1] is oldest. Both fields below are derived on
+  // the client to avoid widening users.subscription_started_at — first
+  // ever payment IS the subscription start date.
+  const oldestPaymentAt = payments.at(-1)?.createdAt ?? null;
+  const latestPaymentMethod = payments[0]?.paymentMethod ?? null;
 
   const planId = user?.subscriptionPlan ?? null;
   const plan = getPlanDetails(planId);
@@ -124,14 +101,18 @@ export default function AccountSubscription() {
               plan={plan!}
               status={status}
               endDate={user?.subscriptionEndDate ?? null}
-              firstPaymentAt={MOCK_PAYMENTS[MOCK_PAYMENTS.length - 1]?.createdAt ?? null}
-              paymentMethod={MOCK_PAYMENTS[0]?.paymentMethod ?? null}
+              firstPaymentAt={oldestPaymentAt}
+              paymentMethod={latestPaymentMethod}
             />
           )}
 
           {!isFree && plan && <FeaturesCard plan={plan} />}
 
-          <PaymentHistorySection rows={MOCK_PAYMENTS} />
+          <PaymentHistorySection
+            rows={payments}
+            isLoading={isHistoryLoading}
+            isError={isHistoryError}
+          />
         </div>
       </div>
     </Layout>
@@ -248,14 +229,42 @@ function FeaturesCard({ plan }: { plan: PlanDetails }) {
   );
 }
 
-function PaymentHistorySection({ rows }: { rows: PaymentRow[] }) {
+function PaymentHistorySection({
+  rows,
+  isLoading,
+  isError,
+}: {
+  rows: PaymentRow[];
+  isLoading: boolean;
+  isError: boolean;
+}) {
   return (
     <section className="mb-8">
       <h3 className="text-lg font-semibold mb-1">Payment history</h3>
       <p className="text-xs mb-4" style={{ color: TD }}>
         Payment records started in May 2026. Older transactions aren't shown.
       </p>
-      {rows.length === 0 ? (
+      {isLoading ? (
+        <div
+          className="rounded-2xl p-8 flex items-center justify-center gap-3 text-sm"
+          style={{ background: C2, border: `1px solid ${B}`, color: TS }}
+        >
+          <Spinner />
+          Loading payment history…
+        </div>
+      ) : isError ? (
+        <div
+          className="rounded-2xl p-5 flex items-start gap-3 text-sm"
+          style={{
+            background: "rgba(239,68,68,0.10)",
+            border: "1px solid rgba(239,68,68,0.35)",
+            color: "rgba(255,255,255,0.92)",
+          }}
+        >
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#EF4444" }} />
+          <span>Couldn't load payment history. Please refresh the page.</span>
+        </div>
+      ) : rows.length === 0 ? (
         <div
           className="rounded-2xl p-8 text-center text-sm"
           style={{ background: C2, border: `1px solid ${B}`, color: TS }}
@@ -413,6 +422,20 @@ function humanizePaymentMethod(method: string | null): string {
     default:
       return "—";
   }
+}
+
+function Spinner() {
+  return (
+    <div
+      className="rounded-full animate-spin"
+      style={{
+        width: 18,
+        height: 18,
+        border: "2px solid rgba(255,255,255,0.1)",
+        borderTopColor: "rgba(255,255,255,0.5)",
+      }}
+    />
+  );
 }
 
 function formatDate(iso: string): string {
