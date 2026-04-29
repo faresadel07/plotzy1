@@ -698,3 +698,47 @@ _Discovered 2026-04-28 during the UI/Backend Price Mismatch
 investigation (group fix/price-constants-mismatch)._
 
 
+# Card Button Verification — flagged during Phase 1 verification
+
+## LOW — Card flow shows stuck-loading state briefly after success
+
+**Location**: `artifacts/plotzy/src/components/paypal-button.tsx`
+(`onApprove` function, around lines 49-66).
+
+**Behavior**: After a successful card payment via the gray "Debit
+or Credit Card" button, the PayPal popup closes and the success
+toast fires correctly, but the buttons themselves remain in their
+loading-spinner state for 1-2 seconds before the page navigates
+away or the spinner clears. The user sees what looks like "still
+processing" even though the backend has fully activated the
+subscription.
+
+**How discovered**: During Test C1.1 verification of the card
+payment flow (group `verify/card-button-flow`). DB confirmed
+subscription was active immediately; only the visual state
+lagged.
+
+**Cause** (most likely):
+- `refetch()` is fire-and-forget (not awaited) — auth context
+  refresh races `onSuccess?.()` / `navigate("/")`.
+- Plus possible PayPal SDK internal state retention after popup
+  close in `react-paypal-js` v9.
+- The `finally` block does call `setIsProcessing(false)`, but
+  timing vs. SDK-internal repaint can leave a brief gap.
+
+**Current safety**: SAFE. Cosmetic only. DB and entitlements are
+correct as soon as the backend confirms the capture. Users who
+refresh see the right state immediately.
+
+**Recommended fix** (future frontend polish group):
+1. `await refetch()` before `navigate("/")` or `onSuccess?.()`.
+2. Move `setIsProcessing(false)` BEFORE the success toast/
+   navigation so visuals clear first.
+3. Consider an explicit "redirecting…" overlay during the brief
+   gap.
+
+**Severity**: LOW. UX/cosmetic only.
+
+_Discovered 2026-04-29 during Test C1.1 of card flow verification
+(group `verify/card-button-flow`)._
+
