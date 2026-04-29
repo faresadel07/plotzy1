@@ -4,7 +4,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
-import { PayPalCheckout, PayPalPlan } from "@/components/paypal-button";
+import type { PayPalPlan } from "@/lib/checkout-plans";
 import NumberFlow from "@number-flow/react";
 
 /* ── Design tokens ── */
@@ -343,30 +343,28 @@ export default function Pricing() {
                   <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{proLabel}</p>
 
                   <div style={{ marginTop: 4 }}>
-                    {user ? (
-                      <PayPalCheckout plan={proPlan} onSuccess={() => navigate("/")} />
-                    ) : (
-                      <button
-                        onClick={() => navigate("/?auth=required")}
-                        style={{
-                          width: "100%",
-                          padding: "12px 0",
-                          borderRadius: 12,
-                          fontSize: 14,
-                          fontWeight: 600,
-                          fontFamily: SF,
-                          background: "#efefef",
-                          color: "#111",
-                          border: "none",
-                          cursor: "pointer",
-                          transition: "opacity 0.2s",
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.opacity = "0.9")}
-                        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                      >
-                        Get started
-                      </button>
-                    )}
+                    <button
+                      onClick={() =>
+                        navigate(user ? `/checkout?plan=${proPlan}` : "/?auth=required")
+                      }
+                      style={{
+                        width: "100%",
+                        padding: "12px 0",
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        fontFamily: SF,
+                        background: "#efefef",
+                        color: "#111",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "opacity 0.2s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.9")}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                    >
+                      Get started
+                    </button>
                   </div>
                 </div>
 
@@ -439,30 +437,28 @@ export default function Pricing() {
                 <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{premiumLabel}</p>
 
                 <div style={{ marginTop: 4 }}>
-                  {user ? (
-                    <PayPalCheckout plan={premiumPlan} onSuccess={() => navigate("/")} />
-                  ) : (
-                    <button
-                      onClick={() => navigate("/?auth=required")}
-                      style={{
-                        width: "100%",
-                        padding: "12px 0",
-                        borderRadius: 12,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        fontFamily: SF,
-                        background: "rgba(255,255,255,0.08)",
-                        border: `1px solid rgba(255,255,255,0.12)`,
-                        color: T,
-                        cursor: "pointer",
-                        transition: "background 0.2s",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                    >
-                      Get started
-                    </button>
-                  )}
+                  <button
+                    onClick={() =>
+                      navigate(user ? `/checkout?plan=${premiumPlan}` : "/?auth=required")
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "12px 0",
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      fontFamily: SF,
+                      background: "rgba(255,255,255,0.08)",
+                      border: `1px solid rgba(255,255,255,0.12)`,
+                      color: T,
+                      cursor: "pointer",
+                      transition: "background 0.2s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+                  >
+                    Get started
+                  </button>
                 </div>
               </div>
 
