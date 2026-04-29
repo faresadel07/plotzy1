@@ -162,7 +162,9 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
         throw new Error("Not authenticated");
       }
       if (res.status === 429) {
-        setError("Too many attempts. Please wait a minute and try again.");
+        setError(
+          "You've made several payment attempts in a short time. Please wait a few minutes before trying again.",
+        );
         setIsProcessing(false);
         throw new Error("Rate limited");
       }
@@ -183,9 +185,16 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
         body: JSON.stringify({ orderId: data.orderID, plan: plan.id }),
         credentials: "include",
       });
+      if (res.status === 429) {
+        setError(
+          "You've made several payment attempts in a short time. Please wait a few minutes before trying again.",
+        );
+        setIsProcessing(false);
+        return;
+      }
       if (!res.ok) {
         setError(
-          "Payment couldn't be processed. Please try again or use a different payment method."
+          "Payment couldn't be processed. Please try again or use a different payment method.",
         );
         setIsProcessing(false);
         return;
@@ -197,8 +206,14 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
       setStatus("success");
     } catch (err) {
       console.error("Capture failed:", err);
+      // fetch() throws TypeError specifically for network failures
+      // (offline, DNS, blocked by an extension, CORS, …). Anything else
+      // is more likely an internal logic error and gets the generic copy.
+      const isNetworkError = err instanceof TypeError;
       setError(
-        "Payment couldn't be processed. Please try again or use a different payment method."
+        isNetworkError
+          ? "Could not reach our payment servers. Please check your internet connection and try again."
+          : "Payment couldn't be processed. Please try again or use a different payment method.",
       );
       setIsProcessing(false);
     }
@@ -227,7 +242,7 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
         </span>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-10 md:gap-16">
+      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-8 md:gap-16">
         <OrderSummaryPanel plan={plan} paid={status === "success"} />
         {status === "success" ? (
           <SuccessPanel plan={plan} />
@@ -257,7 +272,7 @@ function OrderSummaryPanel({
 }) {
   return (
     <section
-      className="rounded-2xl p-7 md:p-8"
+      className="rounded-2xl p-5 md:p-8"
       style={{ background: C2, border: `1px solid ${B}` }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -276,13 +291,13 @@ function OrderSummaryPanel({
           </span>
         )}
       </div>
-      <h2 className="text-3xl font-bold leading-tight">{plan.displayName}</h2>
+      <h2 className="text-2xl md:text-3xl font-bold leading-tight">{plan.displayName}</h2>
       <p style={{ color: TS }} className="text-sm mt-1">
         {plan.cycleLabel}
       </p>
 
-      <div className="mt-6 flex items-baseline gap-2">
-        <span className="text-5xl font-bold leading-none">
+      <div className="mt-6 flex items-baseline gap-2 flex-wrap">
+        <span className="text-4xl md:text-5xl font-bold leading-none">
           ${plan.priceUsd.toFixed(2)}
         </span>
         <span style={{ color: TS }} className="text-sm">
@@ -356,12 +371,19 @@ function PaymentFormPanel({
   onCancel: () => void;
 }) {
   const [method, setMethod] = useState<PaymentMethod>("card");
-  const [saveInfo, setSaveInfo] = useState(false);
 
   return (
     <section className="space-y-6">
       {error && <ErrorBanner message={error} />}
 
+      <div
+        className="space-y-6"
+        style={{
+          opacity: isProcessing ? 0.4 : 1,
+          pointerEvents: isProcessing ? "none" : "auto",
+          transition: "opacity 0.2s",
+        }}
+      >
       <div>
         <SectionLabel>Contact information</SectionLabel>
         <Field label="Email">
@@ -437,15 +459,6 @@ function PaymentFormPanel({
                 <p className="mt-2 text-xs" style={{ color: TD }}>
                   You'll enter your card details securely in a PayPal popup.
                 </p>
-                {isProcessing && (
-                  <div
-                    className="mt-3 flex items-center gap-2 text-xs"
-                    style={{ color: TS }}
-                  >
-                    <Spinner small />
-                    Processing payment…
-                  </div>
-                )}
               </div>
             )}
           </MethodOption>
@@ -474,28 +487,11 @@ function PaymentFormPanel({
                   onError={onError}
                   onCancel={onCancel}
                 />
-                {isProcessing && (
-                  <div className="mt-3 flex items-center gap-2 text-xs" style={{ color: TS }}>
-                    <Spinner small />
-                    Processing payment…
-                  </div>
-                )}
               </div>
             )}
           </MethodOption>
         </div>
       </div>
-
-      <label className="flex items-start gap-3 cursor-pointer text-sm" style={{ color: TS }}>
-        <input
-          type="checkbox"
-          checked={saveInfo}
-          onChange={(e) => setSaveInfo(e.target.checked)}
-          className="mt-0.5 w-4 h-4 rounded cursor-pointer"
-          style={{ accentColor: T }}
-        />
-        <span>Save my information for faster checkout next time</span>
-      </label>
 
       <p style={{ color: TD }} className="text-xs leading-relaxed">
         By continuing, you agree to our{" "}
@@ -508,7 +504,24 @@ function PaymentFormPanel({
         </a>
         .
       </p>
+      </div>
 
+      {isProcessing && (
+        <div
+          aria-live="polite"
+          className="flex flex-col items-center gap-3 py-2"
+        >
+          <Spinner large />
+          <div className="text-center">
+            <p className="text-sm font-semibold" style={{ color: T }}>
+              Processing payment…
+            </p>
+            <p className="text-xs mt-1" style={{ color: TS }}>
+              Please don't close this window.
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -518,7 +531,7 @@ function SuccessPanel({ plan }: { plan: PlanDetails }) {
   const nextCharge = computeNextCharge(plan.cycle);
   return (
     <section
-      className="rounded-2xl p-7 md:p-10 text-center"
+      className="rounded-2xl p-5 md:p-10 text-center"
       style={{ background: C2, border: `1px solid ${B}` }}
     >
       <div
@@ -538,13 +551,13 @@ function SuccessPanel({ plan }: { plan: PlanDetails }) {
         className="mt-6 rounded-xl p-4 text-left text-sm space-y-2"
         style={{ background: C3, border: `1px solid ${B}` }}
       >
-        <div className="flex items-center justify-between">
-          <span style={{ color: TS }}>Plan</span>
-          <span>{plan.displayName} ({plan.cycle})</span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span style={{ color: TS }} className="flex-shrink-0">Plan</span>
+          <span className="text-right">{plan.displayName} ({plan.cycle})</span>
         </div>
-        <div className="flex items-center justify-between">
-          <span style={{ color: TS }}>Next charge</span>
-          <span>{nextCharge} · ${plan.priceUsd.toFixed(2)}</span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span style={{ color: TS }} className="flex-shrink-0">Next charge</span>
+          <span className="text-right">{nextCharge} · ${plan.priceUsd.toFixed(2)}</span>
         </div>
       </div>
 
@@ -695,7 +708,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{ background: BG, color: T, fontFamily: SF }}
-      className="min-h-screen px-6 py-12"
+      className="min-h-screen px-4 md:px-6 py-8 md:py-12"
     >
       <div className="max-w-6xl mx-auto">{children}</div>
     </div>
@@ -710,16 +723,16 @@ function CenterBlock({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Spinner({ small = false }: { small?: boolean }) {
-  const size = small ? 14 : 24;
+function Spinner({ small = false, large = false }: { small?: boolean; large?: boolean }) {
+  const size = small ? 14 : large ? 32 : 24;
   return (
     <div
       className="rounded-full animate-spin"
       style={{
         width: size,
         height: size,
-        border: `2px solid rgba(255,255,255,0.1)`,
-        borderTopColor: "rgba(255,255,255,0.5)",
+        border: `${large ? 3 : 2}px solid rgba(255,255,255,0.1)`,
+        borderTopColor: "rgba(255,255,255,0.6)",
       }}
     />
   );
