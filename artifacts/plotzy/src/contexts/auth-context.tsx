@@ -14,6 +14,7 @@ interface AuthUser {
   hasGoogle?: boolean;
   hasApple?: boolean;
   subscriptionStatus?: string | null;
+  subscriptionTier?: string | null;
   subscriptionPlan?: string | null;
   subscriptionEndDate?: string | null;
   isAdmin?: boolean;
