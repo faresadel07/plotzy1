@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { eq, desc } from "drizzle-orm";
 import { storage } from "../storage";
 import { db } from "../db";
 import { getUncachableStripeClient, getStripePublishableKey } from "../stripe-client";
@@ -613,6 +614,31 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   } catch (err) {
     logger.error({ err }, "PayPal capture error");
     return res.status(500).json({ message: "PayPal capture error" });
+  }
+});
+
+// Read-only history of subscription captures for the authenticated user.
+// Powers the /account/subscription page. Limit 50 — subscriptions are
+// infrequent so this comfortably covers multi-year history while bounding
+// the response size for any single request.
+router.get("/api/user/payment-history", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const userId = (req.user as any).id;
+
+  try {
+    const rows = await db
+      .select()
+      .from(subscriptionPayments)
+      .where(eq(subscriptionPayments.userId, userId))
+      .orderBy(desc(subscriptionPayments.createdAt))
+      .limit(50);
+
+    return res.json({ payments: rows });
+  } catch (err) {
+    logger.error({ err, userId }, "Failed to fetch payment history");
+    return res.status(500).json({ message: "Failed to fetch payment history" });
   }
 });
 
