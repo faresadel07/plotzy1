@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Check,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   CreditCard,
 } from "lucide-react";
@@ -233,6 +234,19 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
 
   return (
     <Frame>
+      {status !== "success" && (
+        <button
+          type="button"
+          onClick={() => navigate("/pricing")}
+          className="mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
+          style={{ color: TS }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = T)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to plans
+        </button>
+      )}
       <header className="mb-10 flex items-center gap-2">
         <span style={{ color: T }} className="text-base font-bold tracking-wide">
           Plotzy

@@ -1,4 +1,15 @@
-import type { PayPalPlan } from "@/components/paypal-button";
+// Source of truth for the set of plan IDs recognized by the PayPal layer.
+// Mirror of paypalPlanSchema in artifacts/api-server/src/routes/payments.routes.ts.
+// Legacy "monthly" / "yearly_monthly" / "yearly_annual" remain accepted by
+// the backend for older subscriptions but new flows use pro_*/premium_*.
+export type PayPalPlan =
+  | "monthly"
+  | "yearly_monthly"
+  | "yearly_annual"
+  | "pro_monthly"
+  | "pro_yearly"
+  | "premium_monthly"
+  | "premium_yearly";
 
 export type PlanTier = "pro" | "premium";
 export type BillingCycle = "monthly" | "yearly";
