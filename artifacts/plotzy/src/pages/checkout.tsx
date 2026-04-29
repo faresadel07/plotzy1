@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   ChevronRight,
   CreditCard,
-  Lock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
@@ -132,6 +131,17 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
   const [status, setStatus] = useState<CheckoutStatus>("form");
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Mount-time reset. Every fresh /checkout visit must start from a clean
+  // form state — without this, Vite HMR + React Fast Refresh can preserve
+  // stale state (isProcessing=true, status="success", or a leftover error
+  // banner) across file edits during development. In production this is a
+  // no-op since the initial useState values already match.
+  useEffect(() => {
+    setIsProcessing(false);
+    setError(null);
+    setStatus("form");
+  }, []);
 
   const createOrder = async () => {
     setError(null);
@@ -379,7 +389,65 @@ function PaymentFormPanel({
             icon={<CreditCard className="w-4 h-4" style={{ color: T }} />}
             title="Card"
           >
-            {method === "card" && <CardFieldsPlaceholder />}
+            {method === "card" && (
+              <div className="pt-3">
+                {/*
+                  PayPal renders the card button inside a same-origin iframe
+                  (a PCI-compliance requirement) and exposes only a fixed
+                  set of `style` props (color, shape, height, layout, label).
+                  Cross-frame proxy-clicks are blocked by the browser, so we
+                  cannot replace the button with our own. The "Powered by
+                  PayPal" tagline below is a hard SDK requirement that is
+                  not removable via configuration. We render the SDK button
+                  inside our own framed container so it reads as an embedded
+                  payment widget rather than a stray element.
+                */}
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.18em] mb-2"
+                  style={{ color: TD }}
+                >
+                  Payment by card
+                </p>
+                <div
+                  style={{
+                    background: "linear-gradient(180deg, #1a1a1a 0%, #161616 100%)",
+                    border: `1px solid ${B}`,
+                    borderRadius: 16,
+                    padding: 24,
+                    boxShadow:
+                      "inset 0 0 0 1px rgba(255,255,255,0.04), 0 1px 0 0 rgba(255,255,255,0.02)",
+                  }}
+                >
+                  <PayPalButtons
+                    fundingSource="card"
+                    disabled={isProcessing}
+                    style={{
+                      layout: "vertical",
+                      shape: "rect",
+                      color: "black",
+                      label: "pay",
+                      height: 48,
+                    }}
+                    createOrder={createOrder}
+                    onApprove={onApprove}
+                    onError={onError}
+                    onCancel={onCancel}
+                  />
+                </div>
+                <p className="mt-2 text-xs" style={{ color: TD }}>
+                  You'll enter your card details securely in a PayPal popup.
+                </p>
+                {isProcessing && (
+                  <div
+                    className="mt-3 flex items-center gap-2 text-xs"
+                    style={{ color: TS }}
+                  >
+                    <Spinner small />
+                    Processing payment…
+                  </div>
+                )}
+              </div>
+            )}
           </MethodOption>
 
           <MethodOption
@@ -441,21 +509,6 @@ function PaymentFormPanel({
         .
       </p>
 
-      {method === "card" && (
-        <button
-          type="button"
-          disabled
-          className="w-full rounded-xl flex items-center justify-center gap-2 py-4 text-base font-semibold"
-          style={{
-            background: "rgba(255,255,255,0.10)",
-            color: TS,
-            cursor: "not-allowed",
-          }}
-        >
-          <Lock className="w-4 h-4" />
-          Pay ${plan.priceUsd.toFixed(2)}
-        </button>
-      )}
     </section>
   );
 }
@@ -578,73 +631,6 @@ function MethodOption({
           {children}
         </div>
       )}
-    </div>
-  );
-}
-
-function CardFieldsPlaceholder() {
-  return (
-    <div className="pt-3 space-y-3">
-      <Field label="Card number">
-        <input
-          type="text"
-          placeholder="1234 1234 1234 1234"
-          disabled
-          className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none cursor-not-allowed"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${B}`,
-            color: T,
-          }}
-        />
-      </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Expires">
-          <input
-            type="text"
-            placeholder="MM / YY"
-            disabled
-            className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none cursor-not-allowed"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: `1px solid ${B}`,
-              color: T,
-            }}
-          />
-        </Field>
-        <Field label="CVC">
-          <input
-            type="text"
-            placeholder="123"
-            disabled
-            className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none cursor-not-allowed"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: `1px solid ${B}`,
-              color: T,
-            }}
-          />
-        </Field>
-      </div>
-      <Field label="Cardholder name">
-        <input
-          type="text"
-          placeholder="Full name on card"
-          disabled
-          className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none cursor-not-allowed"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${B}`,
-            color: T,
-          }}
-        />
-      </Field>
-      <p
-        className="text-xs leading-relaxed pt-1"
-        style={{ color: TD }}
-      >
-        Card payments will be available soon. Use PayPal below for now.
-      </p>
     </div>
   );
 }
