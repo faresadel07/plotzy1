@@ -138,13 +138,13 @@ router.get("/api/auth/user", async (req, res) => {
       // attacks against those providers (or correlating across sites). The
       // UI only needs to know "is a provider connected?" — boolean flags
       // give it that without exposing the id.
-      const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
+      const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
       const isAdmin = isAdminUser(dbUser);
       return res.json({
         id, email, displayName, avatarUrl,
         hasGoogle: !!googleId,
         hasApple: !!appleId,
-        subscriptionStatus, subscriptionPlan, subscriptionEndDate,
+        subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate,
         isAdmin,
         suspended: !!suspended,
       });

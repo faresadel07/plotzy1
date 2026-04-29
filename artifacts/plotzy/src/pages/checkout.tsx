@@ -71,6 +71,7 @@ function InvalidPlan() {
 
 function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
   const [clientId, setClientId] = useState<string | null>(null);
+  const [sandbox, setSandbox] = useState(false);
   const [sdkUnavailable, setSdkUnavailable] = useState(false);
 
   useEffect(() => {
@@ -79,7 +80,8 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
         if (!r.ok) throw new Error("Config unavailable");
         return r.json();
       })
-      .then((d: { enabled: boolean; clientId?: string }) => {
+      .then((d: { enabled: boolean; clientId?: string; sandbox?: boolean }) => {
+        setSandbox(!!d.sandbox);
         if (d.enabled && d.clientId) setClientId(d.clientId);
         else setSdkUnavailable(true);
       })
@@ -121,12 +123,12 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
         components: "buttons,card-fields,applepay",
       }}
     >
-      <CheckoutLayout plan={plan} />
+      <CheckoutLayout plan={plan} sandbox={sandbox} />
     </PayPalScriptProvider>
   );
 }
 
-function CheckoutLayout({ plan }: { plan: PlanDetails }) {
+function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean }) {
   const { user, refetch } = useAuth();
   const [, navigate] = useLocation();
   const [status, setStatus] = useState<CheckoutStatus>("form");
@@ -256,13 +258,14 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
           Back to plans
         </button>
       )}
-      <header className="mb-10 flex items-center gap-2">
+      <header className="mb-10 flex items-center gap-2 flex-wrap">
         <span style={{ color: T }} className="text-base font-bold tracking-wide">
           Plotzy
         </span>
         <span style={{ color: TD }} className="text-sm">
           · Checkout
         </span>
+        {sandbox && <TestModeBadge />}
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-8 md:gap-16">
@@ -755,6 +758,22 @@ function CenterBlock({ children }: { children: React.ReactNode }) {
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 text-center">
       {children}
     </div>
+  );
+}
+
+function TestModeBadge() {
+  return (
+    <span
+      className="text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded-full inline-flex items-center"
+      style={{
+        background: "rgba(245,158,11,0.15)",
+        color: "#F59E0B",
+        border: "1px solid rgba(245,158,11,0.35)",
+      }}
+      title="PayPal Sandbox — no real charges"
+    >
+      Test mode
+    </span>
   );
 }
 

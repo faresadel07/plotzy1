@@ -453,7 +453,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate(`/authors/${user.id}`)} className="gap-2 cursor-pointer">
                     <User className="w-4 h-4" />
-                    My Profile
+                    {t("myProfile")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/account/subscription")} className="gap-2 cursor-pointer">
                     <CreditCard className="w-4 h-4" />
