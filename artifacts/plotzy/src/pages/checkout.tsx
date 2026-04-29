@@ -178,12 +178,21 @@ function CheckoutLayout({ plan }: { plan: PlanDetails }) {
     }
   };
 
-  const onApprove = async (data: { orderID: string }) => {
+  // `source` tells the backend which SDK button fired this callback.
+  // PayPal's capture response can't reliably distinguish a Standard
+  // card payment from a PayPal-account payment (both surface as
+  // payment_source.paypal when the merchant doesn't have ACDC enabled),
+  // so we let the frontend — which definitively knows which funding
+  // source button was clicked — tell the backend.
+  const onApprove = async (
+    data: { orderID: string },
+    source: "paypal" | "card",
+  ) => {
     try {
       const res = await fetch("/api/paypal/capture-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: data.orderID, plan: plan.id }),
+        body: JSON.stringify({ orderId: data.orderID, plan: plan.id, paymentSource: source }),
         credentials: "include",
       });
       if (res.status === 429) {
@@ -380,25 +389,34 @@ function PaymentFormPanel({
   error: string | null;
   isProcessing: boolean;
   createOrder: () => Promise<string>;
-  onApprove: (data: { orderID: string }) => Promise<void>;
+  onApprove: (data: { orderID: string }, source: "paypal" | "card") => Promise<void>;
   onError: (err: unknown) => void;
   onCancel: () => void;
 }) {
   const [method, setMethod] = useState<PaymentMethod>("card");
 
+  // The previous single dimming wrapper around the whole form
+  // (opacity 0.4 + pointerEvents:none) blocked the PayPal SDK card popup.
+  // PayPal renders the popup as a child of the SDK button container — both
+  // the parent's opacity and its pointer-events propagate down to the
+  // popup's iframe content, so the popup appeared faded AND non-clickable
+  // during processing. Fix: dim only the non-SDK parts (contact info,
+  // payment-method label, legal microtype) and leave the radio panels
+  // (which contain the SDK buttons + their popups) at full opacity and
+  // fully clickable. Method radios are guarded against switching mid-flight
+  // via the !isProcessing check on onSelect; SDK buttons themselves are
+  // already disabled via their own `disabled={isProcessing}` prop.
+  const dimStyle: React.CSSProperties = {
+    opacity: isProcessing ? 0.4 : 1,
+    pointerEvents: isProcessing ? "none" : "auto",
+    transition: "opacity 0.2s",
+  };
+
   return (
     <section className="space-y-6">
       {error && <ErrorBanner message={error} />}
 
-      <div
-        className="space-y-6"
-        style={{
-          opacity: isProcessing ? 0.4 : 1,
-          pointerEvents: isProcessing ? "none" : "auto",
-          transition: "opacity 0.2s",
-        }}
-      >
-      <div>
+      <div style={dimStyle}>
         <SectionLabel>Contact information</SectionLabel>
         <Field label="Email">
           <input
@@ -416,12 +434,14 @@ function PaymentFormPanel({
       </div>
 
       <div>
-        <SectionLabel>Payment method</SectionLabel>
+        <div style={dimStyle}>
+          <SectionLabel>Payment method</SectionLabel>
+        </div>
         <div className="space-y-3">
           <MethodOption
             id="card"
             selected={method === "card"}
-            onSelect={() => setMethod("card")}
+            onSelect={() => { if (!isProcessing) setMethod("card"); }}
             icon={<CreditCard className="w-4 h-4" style={{ color: T }} />}
             title="Card"
           >
@@ -465,7 +485,7 @@ function PaymentFormPanel({
                       height: 48,
                     }}
                     createOrder={createOrder}
-                    onApprove={onApprove}
+                    onApprove={(data) => onApprove(data, "card")}
                     onError={onError}
                     onCancel={onCancel}
                   />
@@ -480,7 +500,7 @@ function PaymentFormPanel({
           <MethodOption
             id="paypal"
             selected={method === "paypal"}
-            onSelect={() => setMethod("paypal")}
+            onSelect={() => { if (!isProcessing) setMethod("paypal"); }}
             icon={<PayPalGlyph />}
             title="PayPal"
           >
@@ -497,7 +517,7 @@ function PaymentFormPanel({
                     height: 48,
                   }}
                   createOrder={createOrder}
-                  onApprove={onApprove}
+                  onApprove={(data) => onApprove(data, "paypal")}
                   onError={onError}
                   onCancel={onCancel}
                 />
@@ -507,17 +527,18 @@ function PaymentFormPanel({
         </div>
       </div>
 
-      <p style={{ color: TD }} className="text-xs leading-relaxed">
-        By continuing, you agree to our{" "}
-        <a href="/terms" style={{ color: TS }} className="underline underline-offset-2">
-          Terms
-        </a>{" "}
-        and{" "}
-        <a href="/privacy" style={{ color: TS }} className="underline underline-offset-2">
-          Privacy Policy
-        </a>
-        .
-      </p>
+      <div style={dimStyle}>
+        <p style={{ color: TD }} className="text-xs leading-relaxed">
+          By continuing, you agree to our{" "}
+          <a href="/terms" style={{ color: TS }} className="underline underline-offset-2">
+            Terms
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" style={{ color: TS }} className="underline underline-offset-2">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </div>
 
       {isProcessing && (
