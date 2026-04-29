@@ -167,6 +167,36 @@ export const transactions = pgTable("transactions", {
   uniqueIndex("uq_transactions_stripe_payment_intent_id").on(t.stripePaymentIntentId),
 ]);
 
+// Subscription payments — one row per successful PayPal capture-order.
+// Drives the /account/subscription payment history view and any future
+// admin / refund / dispute tooling. Distinct from `transactions` above,
+// which is strictly tied to one-time book unlocks (NOT NULL bookId,
+// stripe_payment_intent_id) — that schema cannot host subscription data.
+export const subscriptionPayments = pgTable("subscription_payments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  paypalOrderId: text("paypal_order_id").notNull(),
+  paypalCaptureId: text("paypal_capture_id").notNull(),
+  // Stored in cents to mirror PRO_MONTHLY_CENTS / PREMIUM_YEARLY_CENTS
+  // and avoid float precision concerns when summing or filtering.
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  plan: text("plan").notNull(),                  // pro_monthly | pro_yearly | premium_monthly | premium_yearly | (legacy)
+  tier: text("tier").notNull(),                  // pro | premium
+  cycle: text("cycle").notNull(),                // monthly | yearly
+  paymentMethod: text("payment_method").notNull(), // paypal_account | paypal_card
+  status: text("status").notNull().default("completed"), // completed | refunded | disputed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  // Per-user history lookup — the GET /api/user/payment-history endpoint
+  // filters by userId and orders by createdAt, so this index covers the hot path.
+  index("idx_subpayments_user_id").on(t.userId),
+  // Idempotency key. The capture-order handler may legitimately receive
+  // a retry for a known orderId (e.g. via the alreadyProcessed branch).
+  // ON CONFLICT DO NOTHING against this index prevents duplicate rows.
+  uniqueIndex("uq_subpayments_paypal_order_id").on(t.paypalOrderId),
+]);
+
 export const loreEntries = pgTable("lore_entries", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
@@ -699,6 +729,8 @@ export type LoreEntry = typeof loreEntries.$inferSelect;
 export type InsertLoreEntry = z.infer<typeof insertLoreEntrySchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type SubscriptionPayment = typeof subscriptionPayments.$inferSelect;
+export type InsertSubscriptionPayment = typeof subscriptionPayments.$inferInsert;
 export type DailyProgress = typeof dailyProgress.$inferSelect;
 export type InsertDailyProgress = z.infer<typeof insertDailyProgressSchema>;
 export type StoryBeat = typeof storyBeats.$inferSelect;
