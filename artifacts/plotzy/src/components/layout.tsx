@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings2, Menu, X } from "lucide-react";
+import { BookOpen, CreditCard, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings2, Menu, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -454,6 +454,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   <DropdownMenuItem onClick={() => navigate(`/authors/${user.id}`)} className="gap-2 cursor-pointer">
                     <User className="w-4 h-4" />
                     My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/account/subscription")} className="gap-2 cursor-pointer">
+                    <CreditCard className="w-4 h-4" />
+                    {t("mySubscription")}
                   </DropdownMenuItem>
                   {user.isAdmin && (
                     <>
