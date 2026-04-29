@@ -743,3 +743,58 @@ _Discovered 2026-04-29 during Test C1.1 of card flow verification
 (group `verify/card-button-flow`)._
 
 
+# Quick Wins Batch 1 — flagged during Step 4 testing
+
+## LOW — Resend `onboarding@resend.dev` testing domain blocks all
+## sends to recipients other than the account owner
+
+**Location**: `artifacts/api-server/src/lib/email.ts:43`, also
+`artifacts/api-server/src/routes/auth.routes.ts:199` and `:625`,
+`artifacts/api-server/src/routes/misc.routes.ts:383`. All four
+hardcode `from: "Plotzy <onboarding@resend.dev>"`.
+
+**Behavior**: Resend's shared `onboarding@resend.dev` testing
+domain has a documented restriction — it can only send to the
+email address registered with the Resend account. Sends to any
+other recipient are silently rejected (or returned with a 422
+`validation_error` visible only in the Resend dashboard). The app
+sees no error: `sendEmail()` swallows the failure in its internal
+try/catch, the user-facing flow returns 200, but the email never
+arrives.
+
+**How discovered**: Step 4 of `feat/quick-wins-batch-1` (cancel
+subscription confirmation email). The cancel flow worked end-to-end
+on id=2 (`faresadeldq@gmail.com`) with the UI flipping correctly
+and the DB updating, but the email never landed in the inbox.
+After investigation: id=2 is not the Resend-registered account;
+id=1 (`faresadelqd@gmail.com`) is. Re-tested on id=1 and the email
+arrived as expected.
+
+**Current safety**: SAFE for development — the Resend account
+owner can test all email flows on their own account. No production
+impact yet because Plotzy isn't launched.
+
+**Recommended fix BEFORE production launch**:
+1. Verify a custom domain in Resend (typically
+   `noreply@plotzy.com` or `mail.plotzy.com`). Resend's docs:
+   https://resend.com/docs/dashboard/domains/introduction
+2. Update the four `from:` strings — or better, replace them with
+   a single env-driven constant `process.env.EMAIL_FROM`
+   (default: `"Plotzy <onboarding@resend.dev>"` for dev, override
+   to `"Plotzy <noreply@plotzy.com>"` in production).
+3. Optional cleanup at the same time: refactor the 3 ad-hoc
+   `Resend` instantiations in `auth.routes.ts` (×2) and
+   `misc.routes.ts` to use the centralized `sendEmail()` helper
+   from `lib/email.ts`. Reduces duplication and gives a single
+   point to swap the `from` address.
+
+**Severity**: LOW for dev, **HIGH for production launch**. Without
+this fix, no real users will ever receive: verification emails,
+password reset emails, notification emails, payment receipts, or
+cancel confirmations. The whole email pipeline silently fails for
+everyone except the Resend-account owner.
+
+_Discovered 2026-04-30 during Step 4 testing of
+`feat/quick-wins-batch-1` (cancel subscription confirmation email)._
+
+

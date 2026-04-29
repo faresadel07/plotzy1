@@ -14,6 +14,7 @@ import {
 } from "../../../../lib/db/src/schema";
 import { api } from "../../../../lib/shared/src/routes";
 import { isSubscriptionActive } from "./helpers";
+import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 import { Sentry } from "../lib/sentry";
 import rateLimit from "express-rate-limit";
@@ -377,6 +378,13 @@ function planToTier(plan: PayPalPlan): "pro" | "premium" {
   return plan.startsWith("premium") ? "premium" : "pro";
 }
 
+// User-facing plan name for emails / receipts. Mirrors the displayName
+// field of PLAN_DETAILS in artifacts/plotzy/src/lib/checkout-plans.ts —
+// kept tiny and inline rather than reaching across the workspace boundary.
+function planToDisplayName(plan: PayPalPlan): string {
+  return plan.startsWith("premium") ? "Plotzy Premium" : "Plotzy Pro";
+}
+
 // Create a PayPal order for a subscription plan
 const paypalPlanSchema = z.enum(["pro_monthly", "pro_yearly", "premium_monthly", "premium_yearly", "monthly", "yearly_monthly", "yearly_annual"]);
 
@@ -684,6 +692,39 @@ router.post("/api/user/cancel-subscription", async (req, res) => {
       },
       "Subscription canceled by user",
     );
+
+    // Fire-and-forget cancellation confirmation email. Never block the
+    // cancel response on email — sendEmail() already wraps in try/catch
+    // internally (warns + skips if RESEND_API_KEY missing, logs failures
+    // without throwing). The .catch(() => {}) is belt-and-suspenders so
+    // even an unexpected throw can't surface here.
+    if (user.email) {
+      const planName = planToDisplayName(user.subscriptionPlan as PayPalPlan);
+      const accessUntil = user.subscriptionEndDate
+        ? new Date(user.subscriptionEndDate).toLocaleDateString("en-US", {
+            year: "numeric", month: "long", day: "numeric",
+          })
+        : "the end of your billing period";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      const html = `
+        <div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:40px 20px;">
+          <h2 style="color:#111;margin-bottom:8px;">Subscription canceled</h2>
+          <p style="color:#555;line-height:1.6;">
+            We've canceled your <strong>${planName}</strong> subscription.
+            You'll continue to have access until <strong>${accessUntil}</strong>,
+            after which your account will return to the Free plan.
+          </p>
+          <p style="color:#555;line-height:1.6;">
+            Your books are always yours — none of your content is deleted.
+            If you change your mind, you can resubscribe anytime.
+          </p>
+          <a href="${frontendUrl}/account/subscription" style="display:inline-block;margin:24px 0;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:14px;">View subscription</a>
+          <hr style="border:none;border-top:1px solid #eee;margin:32px 0;" />
+          <p style="color:#bbb;font-size:11px;">Plotzy — The modern platform for writers</p>
+        </div>
+      `;
+      sendEmail(user.email, "Your Plotzy subscription has been canceled", html).catch(() => {});
+    }
 
     return res.json({
       success: true,
