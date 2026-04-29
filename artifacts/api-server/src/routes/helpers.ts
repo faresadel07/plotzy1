@@ -48,16 +48,26 @@ export function requireOpenAI(req: any, res: any, next: any) {
 // Subscription helpers
 // ---------------------------------------------------------------------------
 export function isSubscriptionActive(user: Express.User): boolean {
-  if (user.subscriptionStatus === "active") {
-    if (
-      user.subscriptionEndDate &&
-      new Date(user.subscriptionEndDate) < new Date()
-    ) {
-      return false;
-    }
-    return true;
+  // Both "active" and "canceled" grant entitlement while subscription_end_date
+  // is still in the future. "canceled" semantically means "paid for current
+  // period, not renewing" — same access until the period ends, then it
+  // naturally lapses via the endDate check below. Without this, calling
+  // POST /api/user/cancel-subscription would immediately revoke tier in
+  // getUserTier() and here, contradicting the "you keep access until X"
+  // user-facing promise.
+  if (
+    user.subscriptionStatus !== "active" &&
+    user.subscriptionStatus !== "canceled"
+  ) {
+    return false;
   }
-  return false;
+  if (
+    user.subscriptionEndDate &&
+    new Date(user.subscriptionEndDate) < new Date()
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function countWords(content: string): number {

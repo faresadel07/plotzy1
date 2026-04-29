@@ -1,18 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   ArrowRight,
   Check,
   CheckCircle2,
   ChevronLeft,
+  Loader2,
   Pause,
   X,
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Theme tokens — mirror /checkout for visual consistency.
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
@@ -132,10 +141,48 @@ function CurrentSubscriptionCard({
   firstPaymentAt: string | null;
   paymentMethod: string | null;
 }) {
+  const { refetch } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/user/cancel-subscription", {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = (await res.json()) as { message?: string; success?: boolean };
+      if (!res.ok || !body.success) {
+        throw new Error(body.message ?? "Cancel failed");
+      }
+      return body;
+    },
+    onSuccess: async () => {
+      await refetch();
+      setIsModalOpen(false);
+      setCancelError(null);
+    },
+    onError: (err: Error) => {
+      setCancelError(err.message);
+    },
+  });
+
+  const handleConfirmCancel = () => {
+    setCancelError(null);
+    cancelMutation.mutate();
+  };
+
+  const handleCloseModal = () => {
+    if (cancelMutation.isPending) return;
+    setIsModalOpen(false);
+    setCancelError(null);
+  };
+
   const statusDisplay = getStatusDisplay(status, endDate);
   const nextRenewal = endDate ? formatDate(endDate) : "—";
   const subscribedSince = firstPaymentAt ? formatDate(firstPaymentAt) : "—";
   const methodLabel = humanizePaymentMethod(paymentMethod);
+  const canCancel = status === "active";
 
   return (
     <section
@@ -167,7 +214,133 @@ function CurrentSubscriptionCard({
         <DetailRow label="Payment method" value={methodLabel} />
         <DetailRow label="Plan ID" value={plan.id} mono />
       </dl>
+
+      {canCancel && (
+        <div
+          className="mt-6 pt-5 flex justify-end"
+          style={{ borderTop: `1px solid ${B}` }}
+        >
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="text-xs font-medium transition-colors"
+            style={{ color: TS }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
+          >
+            Cancel subscription
+          </button>
+        </div>
+      )}
+
+      <CancelDialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal();
+        }}
+        plan={plan}
+        endDate={endDate}
+        isPending={cancelMutation.isPending}
+        error={cancelError}
+        onConfirm={handleConfirmCancel}
+      />
     </section>
+  );
+}
+
+function CancelDialog({
+  open,
+  onOpenChange,
+  plan,
+  endDate,
+  isPending,
+  error,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  plan: PlanDetails;
+  endDate: string | null;
+  isPending: boolean;
+  error: string | null;
+  onConfirm: () => void;
+}) {
+  const accessUntil = endDate ? formatDate(endDate) : "the end of your billing period";
+  // Show first 4 features as a tangible preview of what they'll lose.
+  const featuresLost = plan.features.slice(0, 4);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cancel your {plan.displayName} subscription?</DialogTitle>
+          <DialogDescription>
+            You'll continue to have access until <span className="font-semibold text-foreground">{accessUntil}</span>.
+            After that date, your account will return to the Free plan.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 text-sm">
+          <p className="text-muted-foreground">
+            Your books are always yours — you won't lose any content. But after
+            your access ends, you'll no longer have:
+          </p>
+          <ul className="space-y-1.5">
+            {featuresLost.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-muted-foreground">
+                <span className="text-muted-foreground/60 mt-0.5">•</span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground/80 pt-2">
+            No charge today. We won't charge you again unless you choose to
+            resubscribe later.
+          </p>
+        </div>
+
+        {error && (
+          <div
+            role="alert"
+            className="rounded-lg px-3 py-2 flex items-start gap-2 text-xs"
+            style={{
+              background: "rgba(239,68,68,0.10)",
+              border: "1px solid rgba(239,68,68,0.35)",
+              color: "rgba(255,255,255,0.92)",
+            }}
+          >
+            <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: "#EF4444" }} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: T, color: "#000" }}
+          >
+            Keep my subscription
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isPending}
+            className="px-4 py-2.5 rounded-lg text-sm font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              background: "transparent",
+              color: "#EF4444",
+              border: "1px solid rgba(239,68,68,0.4)",
+            }}
+          >
+            {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isPending ? "Canceling…" : "Cancel anyway"}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -93,9 +93,23 @@ export function getTierLimits(tier: Tier): TierLimits {
   return LIMITS[tier] || LIMITS.free;
 }
 
-export function getUserTier(user: { subscriptionTier?: string; subscriptionStatus?: string | null }): Tier {
-  // If subscription is not active, treat as free regardless of stored tier
-  if (user.subscriptionStatus !== "active") return "free";
+export function getUserTier(user: {
+  subscriptionTier?: string;
+  subscriptionStatus?: string | null;
+  subscriptionEndDate?: Date | string | null;
+}): Tier {
+  // Mirror isSubscriptionActive in helpers.ts: both "active" and "canceled"
+  // entitle the user to their tier while subscription_end_date is in the
+  // future. After the date passes, fall back to free regardless of stored
+  // tier. This is what makes POST /api/user/cancel-subscription preserve
+  // access until end-of-period instead of revoking it immediately.
+  const statusGrants =
+    user.subscriptionStatus === "active" || user.subscriptionStatus === "canceled";
+  if (!statusGrants) return "free";
+  if (user.subscriptionEndDate) {
+    const end = new Date(user.subscriptionEndDate);
+    if (!isNaN(end.getTime()) && end < new Date()) return "free";
+  }
   const tier = (user.subscriptionTier || "free") as Tier;
   return LIMITS[tier] ? tier : "free";
 }
