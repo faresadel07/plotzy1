@@ -1,8 +1,17 @@
 import { Router } from "express";
 import { z } from "zod";
+import { eq, desc } from "drizzle-orm";
 import { storage } from "../storage";
+import { db } from "../db";
 import { getUncachableStripeClient, getStripePublishableKey } from "../stripe-client";
-import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, SUBSCRIPTION_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_MONTHLY_CENTS, SUBSCRIPTION_YEARLY_ANNUAL_CENTS } from "../../../../lib/db/src/schema";
+import {
+  FREE_TRIAL_MAX_CHAPTERS,
+  FREE_TRIAL_MAX_WORDS,
+  SUBSCRIPTION_MONTHLY_CENTS,
+  SUBSCRIPTION_YEARLY_MONTHLY_CENTS,
+  SUBSCRIPTION_YEARLY_ANNUAL_CENTS,
+  subscriptionPayments,
+} from "../../../../lib/db/src/schema";
 import { api } from "../../../../lib/shared/src/routes";
 import { isSubscriptionActive } from "./helpers";
 import { logger } from "../lib/logger";
@@ -423,10 +432,26 @@ interface PayPalCaptureResponse {
 // Capture the approved PayPal order and activate subscription
 router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
-  const captureSchema = z.object({ orderId: z.string().min(1), plan: paypalPlanSchema }).strict();
+  // `paymentSource` reflects which SDK button funded the capture (`paypal`
+  // for the yellow PayPal-account button, `card` for the popup-card button).
+  // Optional + defaults to "paypal" so older clients still work, but the
+  // checkout.tsx flow always sends an explicit value. Used purely for the
+  // payment_method audit label — does NOT affect security verification,
+  // which is funding-source agnostic and runs on the capture response.
+  const captureSchema = z
+    .object({
+      orderId: z.string().min(1),
+      plan: paypalPlanSchema,
+      paymentSource: z.enum(["paypal", "card"]).optional().default("paypal"),
+    })
+    .strict();
   const parsed = captureSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
-  const { orderId, plan } = parsed.data as { orderId: string; plan: PayPalPlan };
+  const { orderId, plan, paymentSource } = parsed.data as {
+    orderId: string;
+    plan: PayPalPlan;
+    paymentSource: "paypal" | "card";
+  };
   // Hoisted so the security-verification log path below can include the
   // userId in its forensic record.
   const userId = (req.user as any).id;
@@ -542,10 +567,78 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
       subscriptionEndDate: endDate,
       paymentMethod: "paypal",
     } as any);
+
+    // Audit row in subscription_payments. Wrapped in try/catch so a
+    // history-write failure NEVER blocks activation — the user already
+    // has their subscription; a missed audit row is recoverable later
+    // (and any failure here is logged for triage).
+    try {
+      // The frontend's SDK button binding is the source of truth for funding
+      // method. PayPal's capture response can't reliably distinguish a
+      // Standard popup-card payment from a PayPal-account payment when the
+      // merchant doesn't have ACDC enabled — both surface as
+      // payment_source.paypal. Trust the client-supplied paymentSource for
+      // the audit label; security verification doesn't depend on it.
+      const paymentMethod = paymentSource === "card" ? "paypal_card" : "paypal_account";
+      const amountCents = Math.round(
+        parseFloat(captureDetail.amount.value) * 100,
+      );
+      const cycle = isYearly ? "yearly" : "monthly";
+
+      await db
+        .insert(subscriptionPayments)
+        .values({
+          userId,
+          paypalOrderId: orderId,
+          paypalCaptureId: captureDetail.id,
+          amountCents,
+          currency: captureDetail.amount.currency_code,
+          plan,
+          tier,
+          cycle,
+          paymentMethod,
+          status: "completed",
+        })
+        // Idempotent on uq_subpayments_paypal_order_id — a retry that
+        // somehow re-enters this branch with the same orderId becomes
+        // a no-op rather than a duplicate audit row.
+        .onConflictDoNothing();
+    } catch (err) {
+      logger.error(
+        { err, userId, orderId, captureId: captureDetail.id },
+        "Failed to record subscription_payment row",
+      );
+    }
+
     return res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "PayPal capture error");
     return res.status(500).json({ message: "PayPal capture error" });
+  }
+});
+
+// Read-only history of subscription captures for the authenticated user.
+// Powers the /account/subscription page. Limit 50 — subscriptions are
+// infrequent so this comfortably covers multi-year history while bounding
+// the response size for any single request.
+router.get("/api/user/payment-history", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const userId = (req.user as any).id;
+
+  try {
+    const rows = await db
+      .select()
+      .from(subscriptionPayments)
+      .where(eq(subscriptionPayments.userId, userId))
+      .orderBy(desc(subscriptionPayments.createdAt))
+      .limit(50);
+
+    return res.json({ payments: rows });
+  } catch (err) {
+    logger.error({ err, userId }, "Failed to fetch payment history");
+    return res.status(500).json({ message: "Failed to fetch payment history" });
   }
 });
 
