@@ -742,3 +742,59 @@ refresh see the right state immediately.
 _Discovered 2026-04-29 during Test C1.1 of card flow verification
 (group `verify/card-button-flow`)._
 
+
+# Cancel Subscription — flagged during Step 1 testing
+
+## LOW — `/api/auth/user` response omits `subscriptionTier`
+
+**Location**: `artifacts/api-server/src/routes/auth.routes.ts`, the
+`GET /api/auth/user` handler around lines 130-156.
+
+**Behavior**: the response shape destructures `subscriptionStatus`,
+`subscriptionPlan`, `subscriptionEndDate` from the DB user but
+**omits `subscriptionTier`**. Frontend consumers that read
+`useAuth().user.subscriptionTier` get `undefined`, even though the
+DB column has a real value.
+
+```ts
+// auth.routes.ts:141 — current
+const { id, email, displayName, avatarUrl, googleId, appleId,
+        subscriptionStatus, subscriptionPlan, subscriptionEndDate,
+        suspended } = dbUser;
+//      ^^^^^^^^^^^^^^^^^^ subscriptionTier missing here
+return res.json({
+  id, email, displayName, avatarUrl,
+  hasGoogle: !!googleId, hasApple: !!appleId,
+  subscriptionStatus, subscriptionPlan, subscriptionEndDate,
+  isAdmin, suspended: !!suspended,
+});
+```
+
+**How discovered**: Step 1 of `feat/cancel-subscription`. After
+posting to the new cancel endpoint, the test verification expected
+`useAuth().user.subscriptionTier === "premium"` (still entitled
+during the canceled-but-within-period window). The frontend got
+`tier: undefined`, suggesting at first glance that the entitlement
+fix had failed. The DB column was correctly `"premium"` and the
+authoritative server-side check `/api/subscription/status` (which
+calls `getUserTier()`) correctly returned `tier: "premium",
+isActive: true` — the gap was purely the auth-route serializer.
+
+**Current safety**: SAFE. All places that need the tier currently
+either (a) call `/api/subscription/status` for the server-computed
+value, or (b) derive tier client-side from `subscriptionPlan` via
+`getPlanDetails()` in `lib/checkout-plans.ts`. No production code
+relies on `useAuth().user.subscriptionTier` being populated.
+
+**Recommended fix**: add `subscriptionTier` to both the
+destructuring and the response object in `auth.routes.ts:141-150`.
+One-line change. Removes a confusing pitfall for future code that
+reads from `useAuth()` without realizing tier needs derivation.
+
+**Severity**: LOW. Surface-area pitfall, not a functional bug.
+
+_Discovered 2026-04-29 during Step 1 testing of `feat/cancel-subscription`
+(verifying that canceling preserves Premium entitlement until
+end-of-period)._
+
+

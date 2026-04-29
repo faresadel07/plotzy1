@@ -642,4 +642,53 @@ router.get("/api/user/payment-history", async (req, res) => {
   }
 });
 
+// Cancel the authenticated user's subscription. Only updates DB state —
+// no PayPal API call (we use one-time captures, not PayPal subscriptions,
+// so there's nothing to cancel on PayPal's side). The user keeps tier
+// access until subscription_end_date passes, enforced by the updated
+// isSubscriptionActive (helpers.ts) and getUserTier (tier-limits.ts)
+// helpers which now recognize "canceled" status as still-entitled while
+// endDate is in the future.
+router.post("/api/user/cancel-subscription", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const userId = (req.user as any).id;
+
+  try {
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.subscriptionStatus !== "active") {
+      return res.status(400).json({
+        message:
+          user.subscriptionStatus === "canceled"
+            ? "Subscription is already canceled."
+            : "No active subscription to cancel.",
+      });
+    }
+
+    await storage.updateUser(userId, { subscriptionStatus: "canceled" } as any);
+
+    logger.info(
+      {
+        userId,
+        plan: user.subscriptionPlan,
+        accessUntil: user.subscriptionEndDate,
+      },
+      "Subscription canceled by user",
+    );
+
+    return res.json({
+      success: true,
+      accessUntil: user.subscriptionEndDate,
+    });
+  } catch (err) {
+    logger.error({ err, userId }, "Failed to cancel subscription");
+    return res.status(500).json({ message: "Failed to cancel subscription" });
+  }
+});
+
 export default router;
