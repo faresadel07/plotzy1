@@ -438,8 +438,24 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
     });
     if (!captureRes.ok) {
       const errText = await captureRes.text();
-      // Handle already-captured orders gracefully
-      if (errText.includes("ORDER_ALREADY_CAPTURED") || errText.includes("UNPROCESSABLE_ENTITY")) {
+      // Only short-circuit for the specific "this order has been captured by
+      // an earlier request" idempotency case. PayPal's UNPROCESSABLE_ENTITY
+      // bucket also covers INSTRUMENT_DECLINED, PAYER_CANNOT_PAY,
+      // ORDER_NOT_APPROVED, COMPLIANCE_VIOLATION, etc. — those are real
+      // failures that must surface as errors to the client, not be silently
+      // turned into "success: true". Parse the JSON and match strictly on
+      // details[].issue === "ORDER_ALREADY_CAPTURED".
+      let isAlreadyCaptured = false;
+      try {
+        const errBody = JSON.parse(errText) as {
+          details?: Array<{ issue?: string }>;
+        };
+        isAlreadyCaptured =
+          errBody.details?.some((d) => d.issue === "ORDER_ALREADY_CAPTURED") ?? false;
+      } catch {
+        // Body wasn't JSON — treat as a generic error, not idempotency.
+      }
+      if (isAlreadyCaptured) {
         return res.json({ success: true, alreadyProcessed: true });
       }
       logger.error({ err: errText }, "PayPal capture error");
