@@ -3,6 +3,7 @@ import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull, getTableColum
 import {
   books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
+  subscriptionPayments,
   follows, notifications, directMessages, bookLikes, bookComments, bookRatings, inlineComments,
   type Book, type InsertBook, type InlineComment, type InsertInlineComment,
   type Chapter, type InsertChapter,
@@ -806,15 +807,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActivityFeed(): Promise<Array<{ type: string; title: string; subtitle: string; time: string }>> {
-    const [recentUsers, recentBooks, recentSupport] = await Promise.all([
+    const [recentUsers, recentBooks, recentSupport, recentPayments] = await Promise.all([
       db.select().from(users).orderBy(desc(users.createdAt)).limit(15),
       db.select().from(books).where(and(eq(books.isPublished, true), eq(books.isDeleted, false))).orderBy(desc(books.createdAt)).limit(15),
       db.select().from(supportMessages).orderBy(desc(supportMessages.createdAt)).limit(15),
+      // LEFT JOIN so a deleted-user row still surfaces with email=null,
+      // matching the recentPayments query in /api/admin/analytics/revenue.
+      db.select({
+        amountCents: subscriptionPayments.amountCents,
+        plan: subscriptionPayments.plan,
+        createdAt: subscriptionPayments.createdAt,
+        userEmail: users.email,
+        userDisplayName: users.displayName,
+      })
+        .from(subscriptionPayments)
+        .leftJoin(users, eq(users.id, subscriptionPayments.userId))
+        .where(eq(subscriptionPayments.status, "completed"))
+        .orderBy(desc(subscriptionPayments.createdAt))
+        .limit(15),
     ]);
+    const formatPlan = (p: string) =>
+      p.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     const events: Array<{ type: string; title: string; subtitle: string; time: string; ts: Date }> = [
       ...recentUsers.map(u => ({ type: "user", title: `New user registered`, subtitle: u.displayName || u.email || "Unknown", time: "", ts: u.createdAt ?? new Date(0) })),
       ...recentBooks.map(b => ({ type: "book", title: `Book published`, subtitle: b.title, time: "", ts: b.createdAt ?? new Date(0) })),
       ...recentSupport.map(m => ({ type: "support", title: `Support ticket: ${m.subject}`, subtitle: m.name || m.email, time: "", ts: m.createdAt ?? new Date(0) })),
+      ...recentPayments.map(p => ({
+        type: "payment",
+        title: `Payment received`,
+        subtitle: `$${(p.amountCents / 100).toFixed(2)} ${formatPlan(p.plan)} — ${p.userDisplayName || p.userEmail || "deleted user"}`,
+        time: "",
+        ts: p.createdAt ?? new Date(0),
+      })),
     ];
     events.sort((a, b) => b.ts.getTime() - a.ts.getTime());
     return events.slice(0, 30).map(e => ({ ...e, time: e.ts.toISOString() }));
