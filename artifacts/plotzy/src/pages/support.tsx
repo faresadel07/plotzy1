@@ -1,103 +1,29 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ChevronDown, Search, Send, CheckCircle2, Clock, Zap,
-  BookOpen, CreditCard, Shield, Cpu, Settings, Users,
-  HelpCircle, MessageSquare, FileText,
-  Globe, Lock, ChevronRight, Circle,
+  ChevronDown, Send, CheckCircle2, Clock,
+  MessageSquare, FileText, Sparkles,
+  Lock, Circle, ArrowRight,
 } from "lucide-react";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-/* ─── FAQ Data ─── */
-const FAQ_CATEGORIES = [
-  {
-    id: "getting-started",
-    label: "Getting Started",
-    icon: BookOpen,
-    questions: [
-      { q: "How do I create my first book on Plotzy?", a: "Click the '+' button on your Library page and choose whether you want to write a Book or an Article. Give it a title, pick a genre, and your writing workspace opens immediately. Your work is saved automatically every few seconds: you never have to worry about losing progress." },
-      { q: "Is Plotzy free to use?", a: "Yes: Plotzy's core writing tools are completely free with no time limit. You can create books, chapters, and articles, use the in-app reader, and access the Public Domain Library at no cost. Our Pro plan unlocks advanced AI features, the 3D Cover Designer, priority support, and more." },
-      { q: "Do I need to create an account to start writing?", a: "You can browse the platform without an account, but to save your writing, access all features, and sync across devices you'll need a free Plotzy account. Sign-up takes under 30 seconds: just an email and password." },
-      { q: "Can I import an existing manuscript from Word or Google Docs?", a: "Yes. Inside any book's settings you'll find an Import option that accepts .docx and .txt files. The system automatically splits your document into chapters based on your headings. We're actively building PDF import as well." },
-      { q: "How do I organize my chapters?", a: "Your Chapter Manager uses a Scrivener-style drag-and-drop board. You can reorder chapters by dragging, set a status (Draft / Revised / Final) for each, add private author notes, and see a live word count per chapter." },
-    ],
-  },
-  {
-    id: "writing-ai",
-    label: "AI Writing Assistant",
-    icon: Cpu,
-    questions: [
-      { q: "What can the AI Writing Assistant do?", a: "The AI is embedded directly in your chapter editor and can: detect plot holes and logical inconsistencies, coach your dialogue for natural flow, analyze your pacing and suggest improvements, check character voice consistency across chapters, generate scene outlines, and suggest next-paragraph continuations: all without leaving your editor." },
-      { q: "How many AI requests do I get per month?", a: "Free accounts receive 20 AI requests per month. Pro subscribers get 500 monthly requests, and annual Pro subscribers get unlimited AI usage. Requests reset on the 1st of each month." },
-      { q: "Does the AI have access to my full book, or just the current chapter?", a: "For context-aware features like character consistency and plot hole detection, the AI reads your full book outline and chapter summaries (not raw text) to give smarter, more accurate feedback. For inline suggestions, it reads the current chapter only." },
-      { q: "Can the AI write content for me?", a: "The AI can suggest continuations and generate scene starters, but it's designed as a co-pilot, not a ghost-writer. It's tuned to amplify your voice rather than replace it. All suggestions are marked clearly and require your approval before they're added to your manuscript." },
-      { q: "Is my writing data used to train AI models?", a: "Never. Your manuscripts are processed in real-time for the feature you're using and are never stored by our AI provider or used for model training. We have a strict zero-retention agreement in place." },
-    ],
-  },
-  {
-    id: "cover-publishing",
-    label: "Cover & Publishing",
-    icon: FileText,
-    questions: [
-      { q: "How does the 3D Cover Designer work?", a: "The Cover Designer is a browser-based studio where you can upload a background image or choose a gradient, add titles and author name with live typography controls, edit the spine text, and preview your cover as a fully rotatable 3D book. You can export your cover as a high-resolution PNG ready for print or digital distribution." },
-      { q: "Can I generate a book cover using AI?", a: "Yes: there's an 'AI Generate' button in the Cover Designer. You describe the mood, genre, and key elements of your cover and Plotzy produces a unique cover image. Pro users get 10 AI cover generations per month." },
-      { q: "How do I publish my book to the Plotzy Marketplace?", a: "Open your book, go to the Publish tab, fill in your book description, set a price (or mark it Free), upload your cover, add genre tags, and click Publish. Your book goes live in the Marketplace immediately after a quick automated content check." },
-      { q: "What percentage of sales do I keep?", a: "Authors keep 85% of every sale. Plotzy retains a 15% platform fee which covers payment processing, hosting, and ongoing platform development. There are no listing fees or upfront costs." },
-      { q: "Can I set my book as 'Free' in the Marketplace?", a: "Absolutely. Setting a price of $0 lists your book as free for all readers. Many authors use this to build their audience before releasing paid sequels." },
-    ],
-  },
-  {
-    id: "billing",
-    label: "Billing & Subscription",
-    icon: CreditCard,
-    questions: [
-      { q: "What does Plotzy Pro include?", a: "Pro includes: 500 monthly AI requests (unlimited on annual plan), AI cover generation (10/month), priority 2-hour support response, advanced export formats (EPUB, MOBI, PDF), writing streak analytics, early access to new features, and a Pro badge on your author profile." },
-      { q: "Can I cancel my Pro subscription at any time?", a: "Yes: cancel from Account Settings > Subscription with one click. You keep Pro access until the end of your current billing period. We don't charge cancellation fees and there's no lock-in." },
-      { q: "Do you offer refunds?", a: "We offer a full refund within 7 days of any purchase if you're not satisfied. For annual subscriptions, we'll prorate the unused months if you cancel after the 7-day window. Contact support with your order details and we'll process it within 24 hours." },
-      { q: "Is my payment information secure?", a: "All payments are processed by Stripe: we never store your card number on our servers. Stripe is PCI-DSS Level 1 certified, the highest level of payment security available." },
-      { q: "Do you offer student or non-profit discounts?", a: "Yes: we offer 50% off for verified students and 30% off for registered non-profit organizations. Email us from your institutional address with a brief description and we'll set up your discounted account within 24 hours." },
-    ],
-  },
-  {
-    id: "account",
-    label: "Account & Privacy",
-    icon: Shield,
-    questions: [
-      { q: "How is my writing data stored and protected?", a: "All your data is stored in encrypted PostgreSQL databases hosted on infrastructure with SOC 2 Type II certification. Data is backed up every 6 hours with 30-day retention. All data in transit uses TLS 1.3." },
-      { q: "Can I export all my data and writing?", a: "Yes: go to Account Settings > Data & Privacy > Export My Data. You'll receive a downloadable archive (ZIP) containing all your books in EPUB and plain text format, your profile data, and a full activity log. Export is processed within minutes." },
-      { q: "How do I delete my account?", a: "Account Settings > Danger Zone > Delete Account. This permanently removes all your writing, profile data, and purchase history from our systems. Published marketplace books will be delisted. This action cannot be undone: we recommend exporting your data first." },
-      { q: "Can I change my email address or username?", a: "Yes: Account Settings > Profile. Email changes require verification from both the old and new address. Display name changes take effect immediately and can be changed once every 30 days." },
-      { q: "Who can see my books and writing?", a: "Your books are private by default: only you can see them. Books you publish to the Marketplace become publicly visible. You can toggle any book's visibility at any time from its settings." },
-    ],
-  },
-  {
-    id: "technical",
-    label: "Technical Issues",
-    icon: Settings,
-    questions: [
-      { q: "Which browsers does Plotzy support?", a: "Plotzy works best on Chrome 90+, Safari 15+, Firefox 88+, and Edge 90+. The 3D Cover Designer requires WebGL support (enabled by default in all modern browsers). Internet Explorer is not supported." },
-      { q: "Does Plotzy work offline?", a: "The editor has a local draft buffer: if you lose internet while writing, your changes are saved locally and synced when your connection returns. Full offline mode (browsing your library without internet) is on our roadmap for Q3 2025." },
-      { q: "My chapter isn't saving. What should I do?", a: "First check your internet connection. The editor shows a green 'Saved' indicator when synced and an orange 'Saving…' when a sync is in progress. If you see a red 'Save failed' indicator, try refreshing the page: unsaved content will be recovered from the local buffer. If the problem persists, contact support with your book and chapter ID." },
-      { q: "The page is loading slowly or freezing. What can I do?", a: "Try: (1) Hard refresh (Ctrl+Shift+R / Cmd+Shift+R), (2) Clearing your browser cache, (3) Disabling browser extensions one by one, (4) Switching to a different browser. If your book has 50+ chapters, the chapter list may render slowly: we're actively optimizing this." },
-      { q: "How do I report a bug?", a: "Use the contact form on this page and select 'Bug Report' as the category. Please include: what you were trying to do, what happened instead, your browser and OS, and if possible a screenshot. We triage bug reports within 4 hours." },
-    ],
-  },
-  {
-    id: "community",
-    label: "Community & Marketplace",
-    icon: Users,
-    questions: [
-      { q: "What is the Plotzy Community?", a: "The Community page is a social reading and discovery space where authors share their work, readers leave reviews, and writing groups connect. You can follow authors, add books to your reading list, and see what people in your network are writing." },
-      { q: "How do reader reviews and ratings work?", a: "Readers who have purchased or downloaded a book can leave a 1–5 star rating and a written review. Authors can respond to reviews publicly. Reviews are moderated for spam and hate speech within 24 hours of submission." },
-      { q: "Can I request a feature or suggest improvements?", a: "Yes: we have a public feature request board linked from the Community page where you can submit, vote on, and comment on feature ideas. Our product team reviews the top-voted requests every two weeks." },
-    ],
-  },
-];
-
+/* ─── FAQ source-of-truth note ─────────────────────────────────
+ * The 26 question/answer pairs that previously lived here contained
+ * nine provably-false claims (Stripe as processor, 85/15 marketplace
+ * split, 7-day refund guarantee, self-service Delete Account UI,
+ * student/non-profit discount programs, SOC 2 backup intervals, and
+ * others). They were removed in feat/faq-page.
+ *
+ * The single source of truth for FAQ content is now
+ * src/data/faq-data.ts, rendered at /faq. The Support page keeps
+ * its contact form, ticket history, and system status and points
+ * product-question traffic to the FAQ via the banner below.
+ * ─── */
 const SYSTEM_COMPONENTS = [
   { name: "Writing Editor",        status: "operational" },
   { name: "AI Assistant",          status: "operational" },
@@ -126,41 +52,9 @@ const CONTACT_PRIORITIES = [
 
 /* ─── Sub-components ─── */
 
-function FAQItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div
-      style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}
-      onClick={() => setOpen(o => !o)}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", gap: 16 }}>
-        <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.88)", lineHeight: 1.5, flex: 1 }}>{q}</span>
-        <ChevronDown
-          size={15}
-          style={{
-            color: "rgba(255,255,255,0.3)",
-            flexShrink: 0,
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s ease",
-          }}
-        />
-      </div>
-      {open && (
-        <div style={{
-          fontFamily: SF, fontSize: 13.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.8,
-          paddingBottom: 16, paddingRight: 28,
-        }}>
-          {a}
-        </div>
-      )}
-    </div>
-  );
-}
+type Tab = "contact" | "tickets";
 
-type Tab = "faq" | "contact" | "tickets";
-
-const TABS: { id: Tab; label: string; icon: typeof HelpCircle }[] = [
-  { id: "faq", label: "FAQ", icon: HelpCircle },
+const TABS: { id: Tab; label: string; icon: typeof MessageSquare }[] = [
   { id: "contact", label: "Contact", icon: MessageSquare },
   { id: "tickets", label: "My Tickets", icon: FileText },
 ];
@@ -387,9 +281,7 @@ export default function SupportPage() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [activeTab, setActiveTab] = useState<Tab>("faq");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("getting-started");
+  const [activeTab, setActiveTab] = useState<Tab>("contact");
   const [submitted, setSubmitted] = useState(false);
 
   const [form, setForm] = useState({
@@ -411,36 +303,6 @@ export default function SupportPage() {
       }));
     }
   }, [user]);
-
-  const filteredCategories = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q && !activeCategory) return FAQ_CATEGORIES;
-    return FAQ_CATEGORIES
-      .filter(cat => !activeCategory || cat.id === activeCategory)
-      .map(cat => ({
-        ...cat,
-        questions: q
-          ? cat.questions.filter(faq => faq.q.toLowerCase().includes(q) || faq.a.toLowerCase().includes(q))
-          : cat.questions,
-      }))
-      .filter(cat => cat.questions.length > 0);
-  }, [searchQuery, activeCategory]);
-
-  // When searching, show across all categories
-  const searchResults = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return null;
-    return FAQ_CATEGORIES
-      .map(cat => ({
-        ...cat,
-        questions: cat.questions.filter(faq => faq.q.toLowerCase().includes(q) || faq.a.toLowerCase().includes(q)),
-      }))
-      .filter(cat => cat.questions.length > 0);
-  }, [searchQuery]);
-
-  const totalResults = searchResults
-    ? searchResults.reduce((acc, c) => acc + c.questions.length, 0)
-    : 0;
 
   const submitMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -533,44 +395,50 @@ export default function SupportPage() {
         </h1>
         <p style={{
           fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.35)",
-          margin: "0 auto 28px", maxWidth: 420, lineHeight: 1.6,
+          margin: "0 auto 28px", maxWidth: 460, lineHeight: 1.6,
         }}>
-          Search our knowledge base, browse by topic, or reach out directly.
+          Get in touch with our team or check the status of an existing ticket.
         </p>
+      </div>
 
-        {/* Search bar */}
-        <div style={{ maxWidth: 480, margin: "0 auto", position: "relative" }}>
-          <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.25)", pointerEvents: "none" }} />
-          <input
-            type="text"
-            placeholder="Search questions..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+      {/* ── See-FAQ banner — visible on every tab so product
+          questions get directed to the FAQ source of truth before
+          the user composes a ticket. ── */}
+      <div style={{ background: "#000", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{
+          maxWidth: 900, margin: "0 auto", padding: "16px 24px",
+          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+            background: "rgba(124,106,247,0.10)",
+            border: "1px solid rgba(124,106,247,0.18)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Sparkles size={16} style={{ color: "#a99ef7" }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontFamily: SF, fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.9)", marginBottom: 2 }}>
+              Looking for answers?
+            </div>
+            <div style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+              Browse our FAQ for instant answers about plans, AI features, and account questions.
+            </div>
+          </div>
+          <Link
+            href="/faq"
             style={{
-              width: "100%", fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.88)",
-              background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10,
-              padding: "12px 16px 12px 40px", outline: "none", boxSizing: "border-box",
-              transition: "border-color 0.15s",
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontFamily: SF, fontSize: 13, fontWeight: 600,
+              padding: "8px 14px", borderRadius: 8,
+              background: "#fff", color: "#000",
+              textDecoration: "none", whiteSpace: "nowrap",
             }}
-            onFocus={e => { e.target.style.borderColor = "rgba(255,255,255,0.2)"; }}
-            onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.07)"; }}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery("")} style={{
-              position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-              background: "none", border: "none", cursor: "pointer",
-              color: "rgba(255,255,255,0.3)", padding: 4, fontSize: 16, lineHeight: 1,
-            }}>
-              x
-            </button>
-          )}
+          >
+            Browse FAQ
+            <ArrowRight size={13} />
+          </Link>
         </div>
-
-        {searchQuery && (
-          <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>
-            {totalResults === 0 ? "No results found. Try different keywords or contact us." : `${totalResults} result${totalResults !== 1 ? "s" : ""} found`}
-          </p>
-        )}
       </div>
 
       {/* ── Tab Navigation ── */}
@@ -588,7 +456,7 @@ export default function SupportPage() {
               <button
                 key={tab.id}
                 className="tab-btn"
-                onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
+                onClick={() => setActiveTab(tab.id)}
                 style={{
                   fontFamily: SF, fontSize: 13, fontWeight: 500,
                   color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)",
@@ -609,98 +477,6 @@ export default function SupportPage() {
 
       {/* ── Content ── */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px clamp(14px, 4vw, 24px) 48px" }}>
-
-        {/* ========== FAQ TAB ========== */}
-        {activeTab === "faq" && (
-          <div style={{ display: "flex", gap: 32, animation: "fadeIn 0.2s ease" }}>
-            {/* Left sidebar: category pills */}
-            {!searchQuery && (
-              <div style={{
-                width: 200, flexShrink: 0,
-                display: "flex", flexDirection: "column", gap: 2,
-                position: "sticky", top: 80, alignSelf: "flex-start",
-              }}>
-                {FAQ_CATEGORIES.map(cat => {
-                  const active = activeCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      className="cat-pill"
-                      onClick={() => setActiveCategory(cat.id)}
-                      style={{
-                        fontFamily: SF, fontSize: 13, fontWeight: active ? 600 : 400,
-                        color: active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.4)",
-                        background: active ? "rgba(255,255,255,0.08)" : "transparent",
-                        borderRadius: 8, padding: "9px 14px",
-                        textAlign: "left",
-                        display: "flex", alignItems: "center", gap: 10,
-                      }}
-                    >
-                      <cat.icon size={14} style={{ opacity: active ? 0.9 : 0.4, flexShrink: 0 }} />
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Right side: questions */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {searchQuery && searchResults ? (
-                // Search mode: show results across all categories
-                searchResults.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "48px 0" }}>
-                    <HelpCircle size={32} style={{ color: "rgba(255,255,255,0.12)", marginBottom: 12 }} />
-                    <p style={{ fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>
-                      No results for "{searchQuery}"
-                    </p>
-                    <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
-                      Try different keywords or use the Contact tab.
-                    </p>
-                  </div>
-                ) : (
-                  searchResults.map(cat => (
-                    <div key={cat.id} style={{ marginBottom: 24 }}>
-                      <div style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        marginBottom: 8, padding: "0 0 8px",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      }}>
-                        <cat.icon size={13} color="rgba(255,255,255,0.35)" />
-                        <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
-                          {cat.label}
-                        </span>
-                      </div>
-                      {cat.questions.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}
-                    </div>
-                  ))
-                )
-              ) : (
-                // Category mode
-                filteredCategories.map(cat => (
-                  <div key={cat.id}>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      marginBottom: 4,
-                    }}>
-                      <span style={{
-                        fontFamily: SF, fontSize: 11, fontWeight: 600,
-                        color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                      }}>
-                        {cat.label}
-                      </span>
-                      <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.18)" }}>
-                        {cat.questions.length} questions
-                      </span>
-                    </div>
-                    {cat.questions.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
         {/* ========== CONTACT TAB ========== */}
         {activeTab === "contact" && (

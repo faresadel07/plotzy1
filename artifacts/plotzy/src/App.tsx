@@ -47,6 +47,7 @@ const ArticleView = lazy(() => import("@/pages/article-view"));
 const SeriesView = lazy(() => import("@/pages/series-view"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const AccountSubscription = lazy(() => import("@/pages/account-subscription"));
+const FaqPage = lazy(() => import("@/pages/faq"));
 
 function EmailVerifyHandler() {
   const { toast } = useToast();
@@ -224,6 +225,7 @@ function Router() {
         <Route path="/tutorial" component={TutorialPage} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/terms" component={TermsOfService} />
+        <Route path="/faq" component={FaqPage} />
         <Route path="/marketplace" component={Marketplace} />
 
         {/* ── Auth-required routes ── */}
