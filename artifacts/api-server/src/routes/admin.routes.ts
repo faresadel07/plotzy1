@@ -170,6 +170,39 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
   }
 });
 
+// Monthly revenue from actual completed payments (subscription_payments table),
+// not the estimated MRR computed from current users.subscription_status above.
+// Powers the bar chart on the Revenue tab. Capped at 36 months to bound the
+// payload — anyone needing more would be doing a CSV export instead.
+router.get("/api/admin/analytics/revenue/monthly", async (req, res) => {
+  try {
+    const months = Math.min(36, Math.max(1, Number(req.query.months) || 12));
+    const result = await db.execute(sql`
+      SELECT
+        to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+        SUM(amount_cents)::bigint AS revenue_cents,
+        COUNT(*)::int AS payment_count,
+        COUNT(DISTINCT user_id)::int AS unique_payers
+      FROM subscription_payments
+      WHERE status = 'completed'
+        AND created_at >= NOW() - make_interval(months => ${months})
+      GROUP BY date_trunc('month', created_at)
+      ORDER BY date_trunc('month', created_at) DESC
+    `);
+    return res.json({
+      months: result.rows.map((r: any) => ({
+        month: r.month,
+        revenueCents: Number(r.revenue_cents || 0),
+        paymentCount: Number(r.payment_count || 0),
+        uniquePayers: Number(r.unique_payers || 0),
+      })),
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch monthly revenue");
+    return res.status(500).json({ message: "Failed to fetch monthly revenue" });
+  }
+});
+
 // ─── 3. CONTENT MODERATION ──────────────────────────────────────────────────
 
 // Flag a book
