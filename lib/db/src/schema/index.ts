@@ -30,6 +30,12 @@ export const users = pgTable("users", {
   role: text("role").default("user").notNull(), // user | admin | moderator
   bannerUrl: text("banner_url"),
   emailVerified: boolean("email_verified").default(false),
+  // Idempotency marker for the welcome email — set on first send, then
+  // checked on every subsequent verification/signup callback to prevent
+  // duplicates if a user re-clicks their verification link or links a
+  // second OAuth provider after their initial signup. NULL for all
+  // pre-existing users so they don't get a retroactive welcome.
+  welcomeEmailSentAt: timestamp("welcome_email_sent_at"),
 }, (t) => [
   // CHECK constraints lock these columns to the documented enum values.
   // Application code already validates them, but a buggy migration or a

@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { storage } from "./storage";
 import { logger } from "./lib/logger";
+import { sendWelcomeEmailIfFirstTime } from "./lib/email";
 
 declare global {
   namespace Express {
@@ -91,6 +92,10 @@ export function setupPassport() {
                 });
               }
             }
+            // Fire-and-forget welcome email. Idempotent — re-logins of
+            // an existing user early-return because welcomeEmailSentAt
+            // is already set.
+            sendWelcomeEmailIfFirstTime(user.id).catch(() => {});
             done(null, user);
           } catch (err) {
             done(err as Error);
@@ -153,6 +158,9 @@ export function setupPassport() {
                   });
                 }
               }
+              // Fire-and-forget welcome email. Idempotent — re-logins of
+              // an existing user early-return.
+              sendWelcomeEmailIfFirstTime(user.id).catch(() => {});
               done(null, user);
             } catch (err) {
               done(err as Error);

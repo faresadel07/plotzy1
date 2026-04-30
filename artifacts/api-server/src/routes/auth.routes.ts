@@ -8,7 +8,7 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
-import { sendEmail } from "../lib/email";
+import { sendEmail, sendWelcomeEmailIfFirstTime } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import crypto from "crypto";
 import { db } from "../db";
@@ -404,6 +404,11 @@ router.post("/api/auth/google/one-tap", async (req, res) => {
       (req.session as any).guestBookIds = [];
     }
 
+    // Fire-and-forget welcome email. Idempotent — only sends if this is
+    // a brand-new user. Returning users (re-link, re-login) early-return
+    // because welcomeEmailSentAt is already set.
+    sendWelcomeEmailIfFirstTime(user.id).catch(() => {});
+
     const { id, email: e, displayName: d, avatarUrl: a, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
     return res.json({ id, email: e, displayName: d, avatarUrl: a, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
   } catch (err: any) {
@@ -563,6 +568,11 @@ router.get("/auth/linkedin/callback", async (req, res) => {
       req.login(user!, err => (err ? reject(err) : resolve()));
     });
 
+    // Fire-and-forget welcome email. Idempotent — link-existing-account
+    // path early-returns since the existing user already has welcomeEmailSentAt
+    // set; only brand-new LinkedIn signups will actually send.
+    sendWelcomeEmailIfFirstTime(user!.id).catch(() => {});
+
     res.redirect("/?auth=success");
   } catch (err) {
     logger.error({ err }, "LinkedIn callback error");
@@ -579,6 +589,10 @@ router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => 
     if (!vt) return res.status(400).json({ message: "Invalid or expired verification link" });
     await storage.updateUser(vt.userId, { emailVerified: true });
     await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, vt.userId));
+    // Fire-and-forget welcome email. Helper is idempotent — re-clicks of the
+    // verification link won't produce duplicate emails because welcomeEmailSentAt
+    // gets set on first send. Doesn't block the verification response.
+    sendWelcomeEmailIfFirstTime(vt.userId).catch(() => {});
     return res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "Email verification error");
