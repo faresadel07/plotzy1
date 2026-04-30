@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { sendEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 import crypto from "crypto";
@@ -374,40 +375,36 @@ router.post("/api/admin/support/:id/reply", requireAdmin, async (req, res) => {
     }
 
     // 4. Email the user. Fire-and-forget — the reply is already saved.
-    (async () => {
-      try {
-        if (!process.env.RESEND_API_KEY) return;
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        await resend.emails.send({
-          from: "Plotzy Support <onboarding@resend.dev>",
-          to: ticket.email,
-          replyTo: process.env.ADMIN_EMAIL || "onboarding@resend.dev",
-          subject: `Re: ${ticket.subject}`,
-          html: `
-            <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#111;">
-              <div style="border-bottom:1px solid #eee;padding-bottom:16px;margin-bottom:24px;">
-                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#888;">Plotzy Support</p>
-                <h2 style="margin:8px 0 0;font-size:18px;font-weight:700;color:#111;">Reply to your ticket</h2>
-              </div>
-              <p style="margin:0 0 6px;font-size:12px;color:#888;">Hi ${ticket.name || "there"},</p>
-              <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#444;">
-                We replied to your support ticket about <strong>"${ticket.subject}"</strong>:
-              </p>
-              <div style="background:#f7f7f7;border-left:3px solid #111;padding:16px 18px;border-radius:6px;margin-bottom:20px;">
-                <p style="margin:0;font-size:14px;line-height:1.7;color:#222;white-space:pre-wrap;">${escapeHtml(body)}</p>
-              </div>
-              <p style="margin:0 0 18px;font-size:13px;line-height:1.65;color:#555;">
-                You can continue the conversation by opening your ticket in Plotzy — just reply directly from the Support page.
-              </p>
-              <p style="margin:24px 0 0;font-size:12px;color:#999;">— ${escapeHtml(adminName)}, Plotzy team</p>
-            </div>
-          `,
-        });
-      } catch (emailErr) {
-        logger.error({ err: emailErr }, "Failed to send support reply email");
-      }
-    })();
+    // sendEmail() handles missing RESEND_API_KEY gracefully (warns + skips)
+    // and wraps the send in its own try/catch — the outer .catch here is
+    // belt-and-suspenders against any unexpected throw from the helper.
+    sendEmail(
+      ticket.email,
+      `Re: ${ticket.subject}`,
+      `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#111;">
+          <div style="border-bottom:1px solid #eee;padding-bottom:16px;margin-bottom:24px;">
+            <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#888;">Plotzy Support</p>
+            <h2 style="margin:8px 0 0;font-size:18px;font-weight:700;color:#111;">Reply to your ticket</h2>
+          </div>
+          <p style="margin:0 0 6px;font-size:12px;color:#888;">Hi ${ticket.name || "there"},</p>
+          <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#444;">
+            We replied to your support ticket about <strong>"${ticket.subject}"</strong>:
+          </p>
+          <div style="background:#f7f7f7;border-left:3px solid #111;padding:16px 18px;border-radius:6px;margin-bottom:20px;">
+            <p style="margin:0;font-size:14px;line-height:1.7;color:#222;white-space:pre-wrap;">${escapeHtml(body)}</p>
+          </div>
+          <p style="margin:0 0 18px;font-size:13px;line-height:1.65;color:#555;">
+            You can continue the conversation by opening your ticket in Plotzy — just reply directly from the Support page.
+          </p>
+          <p style="margin:24px 0 0;font-size:12px;color:#999;">— ${escapeHtml(adminName)}, Plotzy team</p>
+        </div>
+      `,
+      {
+        from: "Plotzy Support <onboarding@resend.dev>",
+        replyTo: process.env.ADMIN_EMAIL || "onboarding@resend.dev",
+      },
+    ).catch(() => {});
 
     await logAdminAction(adminUser.id, "support_reply", "support_ticket", ticketId, { length: body.length });
     return res.json({ success: true, reply: saved });

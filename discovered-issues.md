@@ -778,15 +778,12 @@ impact yet because Plotzy isn't launched.
 1. Verify a custom domain in Resend (typically
    `noreply@plotzy.com` or `mail.plotzy.com`). Resend's docs:
    https://resend.com/docs/dashboard/domains/introduction
-2. Update the four `from:` strings — or better, replace them with
-   a single env-driven constant `process.env.EMAIL_FROM`
-   (default: `"Plotzy <onboarding@resend.dev>"` for dev, override
-   to `"Plotzy <noreply@plotzy.com>"` in production).
-3. Optional cleanup at the same time: refactor the 3 ad-hoc
-   `Resend` instantiations in `auth.routes.ts` (×2) and
-   `misc.routes.ts` to use the centralized `sendEmail()` helper
-   from `lib/email.ts`. Reduces duplication and gives a single
-   point to swap the `from` address.
+2. Update the `DEFAULT_FROM` constant in `lib/email.ts` (or read
+   from `process.env.EMAIL_FROM`) and the support-email `from`
+   override in `misc.routes.ts`. After feat/quick-wins-batch-2
+   Step 1, all email sends route through the centralized
+   `sendEmail()` helper, so this is a 1–2 line change rather than
+   touching multiple call sites.
 
 **Severity**: LOW for dev, **HIGH for production launch**. Without
 this fix, no real users will ever receive: verification emails,

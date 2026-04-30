@@ -8,6 +8,7 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
+import { sendEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import crypto from "crypto";
 import { db } from "../db";
@@ -193,14 +194,11 @@ router.post("/api/auth/register", sensitiveAuthLimiter, async (req, res) => {
       const verifyToken = crypto.randomBytes(32).toString("hex");
       await db.insert(emailVerificationTokens).values({ userId: user.id, token: verifyToken, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) });
       const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? `https://${process.env.APP_DOMAIN || "localhost"}` : "http://localhost:5173");
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: "Plotzy <onboarding@resend.dev>",
-        to: email,
-        subject: "Verify your Plotzy account",
-        html: `<div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:40px 20px;"><h2 style="color:#111;">Welcome to Plotzy!</h2><p style="color:#555;line-height:1.6;">Please verify your email to get full access:</p><a href="${frontendUrl}/?verify=${verifyToken}" style="display:inline-block;margin:24px 0;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;">Verify Email</a><p style="color:#999;font-size:13px;">This link expires in 24 hours.</p></div>`,
-      });
+      await sendEmail(
+        email,
+        "Verify your Plotzy account",
+        `<div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:40px 20px;"><h2 style="color:#111;">Welcome to Plotzy!</h2><p style="color:#555;line-height:1.6;">Please verify your email to get full access:</p><a href="${frontendUrl}/?verify=${verifyToken}" style="display:inline-block;margin:24px 0;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;">Verify Email</a><p style="color:#999;font-size:13px;">This link expires in 24 hours.</p></div>`,
+      );
     } catch (emailErr) { logger.error({ err: emailErr }, "Failed to send verification email"); }
 
     const { id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
@@ -619,13 +617,10 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
     const resetLink = `${frontendUrl}/reset-password/${token}`;
 
     try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: "Plotzy <onboarding@resend.dev>",
-        to: email,
-        subject: "Reset your Plotzy password",
-        html: `
+      await sendEmail(
+        email,
+        "Reset your Plotzy password",
+        `
           <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
             <h2 style="color: #111; margin-bottom: 16px;">Reset your password</h2>
             <p style="color: #555; line-height: 1.6;">You requested a password reset for your Plotzy account. Click the button below to set a new password:</p>
@@ -635,7 +630,7 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
             <p style="color: #bbb; font-size: 11px;">Plotzy — The modern platform for writers</p>
           </div>
         `,
-      });
+      );
       // PII hygiene: log only the user id, never the raw email — these logs
       // are shipped off-host (Sentry / hosting platform) and are visible to
       // anyone with log-read access.

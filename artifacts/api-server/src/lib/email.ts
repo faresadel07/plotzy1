@@ -33,18 +33,36 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-export async function sendEmail(to: string, subject: string, html: string) {
+// Default From address. When the production custom domain is verified
+// in Resend (per discovered-issues.md HIGH entry), swap this constant
+// (or read from process.env.EMAIL_FROM) and every caller benefits.
+const DEFAULT_FROM = "Plotzy <onboarding@resend.dev>";
+
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  opts?: { from?: string; replyTo?: string },
+) {
   try {
     const resend = await getResend();
     if (!resend) { logger.warn("RESEND_API_KEY not set — skipping email"); return; }
     const safeSubject = sanitizeHeader(subject);
     const safeTo = sanitizeHeader(to);
-    await resend.emails.send({
-      from: "Plotzy <onboarding@resend.dev>",
+    // Build payload incrementally so optional headers (from, replyTo) are
+    // only attached when present. Resend's SDK accepts/strips undefined
+    // fields either way, but keeping the payload minimal makes the call
+    // sites and the email-debug logs easier to read.
+    const payload: Record<string, unknown> = {
+      from: opts?.from ? sanitizeHeader(opts.from) : DEFAULT_FROM,
       to: safeTo,
       subject: safeSubject,
       html,
-    });
+    };
+    if (opts?.replyTo) {
+      payload.replyTo = sanitizeHeader(opts.replyTo);
+    }
+    await resend.emails.send(payload as any);
     logger.info({ to: safeTo, subject: safeSubject }, "Email sent");
   } catch (err) {
     logger.error({ err, to, subject }, "Email send failed");
