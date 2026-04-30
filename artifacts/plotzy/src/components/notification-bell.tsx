@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Bell, Heart, UserPlus, MessageSquare, BookOpen, Star, Check, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#0e0e12";
@@ -51,6 +52,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   // Unread notification count
   const { data: notifCount } = useQuery<{ count: number }>({
@@ -87,13 +89,23 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
     },
   });
 
-  // Mark all as read
+  // Mark all as read. The backend route is /read-all (matches the
+  // singular /:id/read sibling); the previous /mark-all-read URL did
+  // not exist and the POST 404'd silently because the mutation had
+  // no onError. Now the URL is correct AND a failure toast surfaces
+  // so the next regression of this kind is visible within seconds.
   const markAllMut = useMutation({
     mutationFn: () =>
-      fetch("/api/notifications/mark-all-read", { method: "POST", credentials: "include" }).then(r => { if (!r.ok) throw new Error(); }),
+      fetch("/api/notifications/read-all", { method: "POST", credentials: "include" }).then(r => { if (!r.ok) throw new Error("Mark-all-read failed"); }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/notifications"] });
       qc.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't mark notifications as read",
+        variant: "destructive",
+      });
     },
   });
 
