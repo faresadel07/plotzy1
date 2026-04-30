@@ -464,8 +464,8 @@ function UsersTab() {
 
 // ─── Activity Tab ─────────────────────────────────────────────────────────────
 
-const EVENT_ICONS: Record<string, string> = { user: "👤", book: "📖", support: "🎫" };
-const EVENT_COLORS: Record<string, string> = { user: "#818cf8", book: "#34d399", support: "#fb923c" };
+const EVENT_ICONS: Record<string, string> = { user: "👤", book: "📖", support: "🎫", payment: "💳" };
+const EVENT_COLORS: Record<string, string> = { user: "#818cf8", book: "#34d399", support: "#fb923c", payment: "#10b981" };
 
 function ActivityTab() {
   const { data: events = [], isLoading } = useQuery<ActivityEvent[]>({
@@ -1371,10 +1371,75 @@ function HorizontalBars({ rows, accent }: { rows: Array<{ label: string; count: 
 
 // ─── 2. REVENUE TAB ───────────────────────────────────────────────────────────
 
+// Format plan codes from subscription_payments ("premium_yearly") into a
+// human-readable string ("Premium Yearly"). Mirrors the formatter on the
+// backend in storage.getActivityFeed for consistency.
+function formatPlanDisplay(plan: string): string {
+  return plan.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Render an arrow + colored % for a delta. null means we don't have the
+// data to compute a comparison (typically: prior month had zero revenue).
+function DeltaBadge({ pct }: { pct: number | null }) {
+  if (pct === null || !isFinite(pct)) {
+    return <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 600, fontSize: 12 }}>—</span>;
+  }
+  const positive = pct >= 0;
+  return (
+    <span style={{ color: positive ? "#10b981" : "#f87171", fontWeight: 600, fontSize: 12 }}>
+      {positive ? "▲" : "▼"} {Math.abs(pct).toFixed(1)}%
+    </span>
+  );
+}
+
+interface RecentPayment {
+  id: number;
+  userId: number;
+  userEmail: string | null;
+  userDisplayName: string | null;
+  amountCents: number;
+  currency: string;
+  plan: string;
+  tier: string;
+  cycle: string;
+  paymentMethod: string;
+  status: string;
+  createdAt: string;
+}
+
+interface RevenueData {
+  tiers: Array<{ tier: string; plan: string; count: number | string }>;
+  activeSubscribers: number;
+  monthlySubs: number;
+  yearlySubs: number;
+  mrrCents: number;
+  mrrDollars: string;
+  churnedLast30Days: number;
+  // From subscription_payments
+  mrrCurrentMonthCents: number;
+  mrrPriorMonthCents: number;
+  mrrDeltaPct: number | null;
+  conversionRateAllTimePct: number | null;
+  conversionRateLast30dPct: number | null;
+  churnRateLast30dPct: number | null;
+  paidUsersAllTime: number;
+  verifiedSignupsAllTime: number;
+  paidUsersLast30d: number;
+  verifiedSignupsLast30d: number;
+  recentPayments: RecentPayment[];
+}
+
 function RevenueTab() {
-  const { data } = useQuery<any>({
+  const { data } = useQuery<RevenueData>({
     queryKey: ["/api/admin/analytics/revenue"],
     queryFn: () => fetch("/api/admin/analytics/revenue", { credentials: "include" }).then(r => r.json()),
+  });
+
+  // Monthly revenue from subscription_payments table — separate endpoint so
+  // it can be re-fetched / windowed independently of the headline cards.
+  const { data: monthly } = useQuery<{ months: Array<{ month: string; revenueCents: number; paymentCount: number; uniquePayers: number }> }>({
+    queryKey: ["/api/admin/analytics/revenue/monthly"],
+    queryFn: () => fetch("/api/admin/analytics/revenue/monthly?months=12", { credentials: "include" }).then(r => r.json()),
   });
 
   if (!data) return <Spinner />;
@@ -1385,14 +1450,49 @@ function RevenueTab() {
     color: COLORS[i % COLORS.length],
   }));
 
+  // Backend returns DESC (newest first); reverse for a chart that reads
+  // chronologically left-to-right. Map cents → dollars for the y-axis.
+  const chartData = (monthly?.months || []).slice().reverse().map((m) => ({
+    month: m.month,
+    revenue: m.revenueCents / 100,
+    paymentCount: m.paymentCount,
+  }));
+
+  const fmtPct = (p: number | null) => (p === null || !isFinite(p) ? "—" : `${p.toFixed(1)}%`);
+
   return (
     <div>
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        <MiniStat label="MRR" value={`$${data.mrrDollars}`} sub="Monthly Recurring Revenue" />
+      {/* Headline cards — pre-existing estimated MRR snapshot */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+        <MiniStat label="MRR (estimated)" value={`$${data.mrrDollars}`} sub="From active subs" />
         <MiniStat label="Active Subscribers" value={data.activeSubscribers} />
         <MiniStat label="Monthly Plans" value={data.monthlySubs} sub="@ $13/mo" />
         <MiniStat label="Yearly Plans" value={data.yearlySubs} sub="@ $99.99/yr" />
         <MiniStat label="Churned (30d)" value={data.churnedLast30Days} sub="Cancelled recently" />
+      </div>
+
+      {/* Real cash + funnel cards — sourced from subscription_payments */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <div style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 10, padding: "16px 20px", flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Revenue This Month</div>
+          <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px", display: "flex", alignItems: "baseline", gap: 8 }}>
+            ${(data.mrrCurrentMonthCents / 100).toFixed(2)}
+            <DeltaBadge pct={data.mrrDeltaPct} />
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
+            vs ${(data.mrrPriorMonthCents / 100).toFixed(2)} prior month
+          </div>
+        </div>
+        <MiniStat
+          label="Conversion Rate"
+          value={fmtPct(data.conversionRateAllTimePct)}
+          sub={`${data.paidUsersAllTime} paid / ${data.verifiedSignupsAllTime} verified — 30d: ${fmtPct(data.conversionRateLast30dPct)}`}
+        />
+        <MiniStat
+          label="Churn Rate (30d)"
+          value={fmtPct(data.churnRateLast30dPct)}
+          sub={`${data.churnedLast30Days} churned of ${data.activeSubscribers + data.churnedLast30Days} active+churned`}
+        />
       </div>
 
       <ChartCard title="Subscription Tier Breakdown">
@@ -1415,6 +1515,70 @@ function RevenueTab() {
             ))}
           </div>
         </div>
+      </ChartCard>
+
+      <ChartCard title="Monthly Revenue (Last 12 Months)">
+        {chartData.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+            No completed payments yet — chart will populate once real revenue lands.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+              <Tooltip
+                contentStyle={chartTooltipStyle}
+                formatter={(value: any, name: string) => name === "revenue" ? [`$${Number(value).toFixed(2)}`, "Revenue"] : [value, name]}
+              />
+              <Bar dataKey="revenue" fill="#10b981" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </ChartCard>
+
+      <ChartCard title="Recent Payments">
+        {data.recentPayments.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+            No completed payments yet.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Date</th>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>User</th>
+                  <th style={{ textAlign: "right", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Amount</th>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Plan</th>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Method</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recentPayments.map((p) => (
+                  <tr key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                      {new Date(p.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.85)", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {p.userDisplayName || p.userEmail || <span style={{ color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>deleted user</span>}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "right", color: "#10b981", fontWeight: 600, whiteSpace: "nowrap" }}>
+                      ${(p.amountCents / 100).toFixed(2)}
+                    </td>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                      {formatPlanDisplay(p.plan)}
+                    </td>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.5)", fontSize: 12, whiteSpace: "nowrap" }}>
+                      {p.paymentMethod === "paypal_card" ? "Card" : p.paymentMethod === "paypal_account" ? "PayPal" : p.paymentMethod}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </ChartCard>
     </div>
   );
