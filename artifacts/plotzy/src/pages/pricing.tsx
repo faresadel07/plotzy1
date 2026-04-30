@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown } from "lucide-react";
-import { useLocation } from "wouter";
+import { Check, ChevronDown, ArrowRight } from "lucide-react";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
 import { getPlanDetails, type PayPalPlan } from "@/lib/checkout-plans";
+import { getPricingFaq } from "@/data/faq-data";
 import NumberFlow from "@number-flow/react";
 
 /* ── Design tokens ── */
@@ -66,12 +67,12 @@ const FEATURES_PREMIUM = [
 ];
 
 /* ── FAQ ── */
-const FAQ = [
-  ["Can I cancel anytime?", "Yes. Cancel from your account settings at any time. You keep full access until the end of your current billing period. No cancellation fees."],
-  ["What payment methods do you accept?", "We accept credit cards, debit cards, Apple Pay, and PayPal. All payments are processed securely through PayPal's payment infrastructure."],
-  ["What happens to my work if I cancel?", "Your books are always yours. After cancellation you move back to the Free plan, but your content is never deleted. You can export everything at any time."],
-  ["What are Marketplace analyses?", "The AI Marketplace lets you run professional editorial analyses on your manuscripts. Pro users get 3 analyses per month, Premium users get 9. Each analysis provides a detailed score card and report."],
-];
+// Local FAQ array removed — the pricing page now reads the
+// "Pricing & Subscriptions" category from the single FAQ source of
+// truth at src/data/faq-data.ts. See getPricingFaq() in the imports.
+// The previous in-file copies were drifting (Apple Pay was listed
+// as supported, Free-tier export was claimed, Pro Marketplace
+// analyses were attributed when only Premium has them).
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -632,9 +633,9 @@ export default function Pricing() {
                     marginTop: 16,
                   }}
                 >
-                  {FAQ.map(([q, a]) => (
+                  {(getPricingFaq()?.items ?? []).map((item) => (
                     <div
-                      key={q}
+                      key={item.id}
                       style={{
                         borderRadius: 14,
                         padding: "18px 20px",
@@ -642,10 +643,29 @@ export default function Pricing() {
                         border: `1px solid ${B}`,
                       }}
                     >
-                      <p style={{ fontWeight: 600, color: T, marginBottom: 8, fontSize: 13.5 }}>{q}</p>
-                      <p style={{ color: TS, fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>{a}</p>
+                      <p style={{ fontWeight: 600, color: T, marginBottom: 8, fontSize: 13.5 }}>{item.question}</p>
+                      <p style={{ color: TS, fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>{item.answer}</p>
                     </div>
                   ))}
+                </div>
+
+                <div style={{ textAlign: "center", marginTop: 18 }}>
+                  <Link
+                    href="/faq"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 12,
+                      color: TS,
+                      textDecoration: "none",
+                      fontFamily: SF,
+                      fontWeight: 500,
+                    }}
+                  >
+                    See all FAQ
+                    <ArrowRight style={{ width: 12, height: 12 }} />
+                  </Link>
                 </div>
               </motion.div>
             )}

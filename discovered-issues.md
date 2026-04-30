@@ -831,4 +831,90 @@ missing nav-badge count for admins.
 _Discovered 2026-04-30 during Step 3 testing of
 `feat/admin-dashboard` (activity feed payments extension)._
 
+## LOW — No self-service account deletion endpoint exists
+
+**Location**: `artifacts/api-server/src/routes/auth.routes.ts` —
+no DELETE handler for the authenticated user's own account.
+The only deletion path is `DELETE /api/admin/users/:id` at
+`misc.routes.ts:514`, gated by `requireAdmin` and intended for
+moderation, not self-service.
+
+**Behavior**: A regular signed-in user has no way to delete
+their own Plotzy account from the UI. To delete, they must email
+`faresadel@gmail.com` and request manual removal. The /faq page
+documents this honestly.
+
+**Why LOW**: deletion is still possible via support contact; the
+gap is convenience and ergonomics, not a privacy or compliance
+blocker. GDPR/CCPA compliance still operative because the
+manual path exists and we honor requests.
+
+**Suggested implementation when this is addressed**:
+1. New endpoint `POST /api/auth/delete-account` (or DELETE).
+   Auth-required. Confirm with current password (or fresh OAuth
+   re-auth) so a hijacked session cannot trigger deletion.
+2. Reuse `storage.deleteUser` which already orphans published
+   books (sets `userId: null` on books to preserve community
+   engagement) and cascades drafts. This behavior matches what
+   the FAQ promises so no schema changes needed.
+3. Client-side: a danger-zone section in
+   `pages/account-subscription.tsx` (or a new `/account` page)
+   with a typed-confirmation modal ("type DELETE to confirm").
+4. Email confirmation post-deletion through the existing
+   `sendEmail` helper so the user gets a record.
+
+**Out-of-scope rationale**: was out of scope for `feat/faq-page`
+which only documents existing behavior. The FAQ answer was
+written truthfully (`Self-service account deletion is on our
+roadmap.`).
+
+_Discovered 2026-04-30 during Phase A audit of `feat/faq-page`
+when verifying the founder-stated claim "users can permanently
+delete their account" against the codebase._
+
+## INFO — Pre-existing FAQ block on Support page contained 9 false claims (now removed)
+
+**Location**: `artifacts/plotzy/src/pages/support.tsx` lines
+16–99 (pre-merge). Removed in `feat/faq-page` and replaced with a
+small banner pointing users to the new `/faq` page.
+
+**The false claims that shipped to users**:
+
+1. "Free accounts receive 20 AI requests per month" — schema is
+   10 per **day**, not 20 per month.
+2. "Pro: 500 monthly AI requests (unlimited on annual plan)" —
+   schema is 100 per day; yearly is not unlimited.
+3. "Pro users get 10 AI cover generations per month" — schema
+   is 10 per **day**.
+4. "Authors keep 85% of every sale. Plotzy retains a 15%
+   platform fee" — there is no marketplace book-sales feature.
+5. "We offer a full refund within 7 days of any purchase" —
+   no refund-initiation code exists; policy is case-by-case.
+6. "All payments are processed by Stripe" — Plotzy uses
+   PayPal, not Stripe.
+7. "SOC 2 Type II certification. Backed up every 6 hours with
+   30-day retention" — Neon's posture; the specific intervals
+   were unverifiable / fabricated.
+8. "Account Settings > Data & Privacy > Export My Data" —
+   no such endpoint or UI exists.
+9. "Account Settings > Danger Zone > Delete Account.
+   Permanently removes all your writing" — no self-service
+   deletion UI, and the deletion that does exist orphans books
+   rather than deleting them.
+
+Plus 4 unverifiable claims (50%/30% student/non-profit
+discounts, 24-hour content-moderation SLA, "feature request
+board", "triage bug reports within 4 hours") and 2 hard-coded
+past-date promises ("offline mode Q3 2025", which never shipped).
+
+**Why this is INFO not a future task**: the false content was
+deleted, replaced by the new `/faq` page rendering from the
+single source of truth `src/data/faq-data.ts`. There is no
+remaining work item from this discovery. Logging it here so a
+future maintainer who finds the diff understands the scope of
+the cleanup and the quality bar that motivated it.
+
+_Discovered 2026-04-30 during Step 1.5 of `feat/faq-page` when
+auditing existing FAQ surfaces before publishing the new one._
+
 
