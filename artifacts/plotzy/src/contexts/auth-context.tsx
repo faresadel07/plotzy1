@@ -67,13 +67,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // SECURITY: purge any book IDs the previous session left behind so the
         // next (unauthenticated) visitor cannot request them from the backend.
         clearGuestBookIds();
-        // SECURITY: nuke every cached query, not just a hand-picked list. Any
-        // user-scoped query (/api/users/me/stats, /api/notifications, lore,
-        // chapter snapshots, marketplace usage, admin data, …) is off-limits to
-        // the next visitor on this browser — whitelisting caches is a
-        // guaranteed source of leaks whenever a new query is added.
-        queryClient.removeQueries();
+        // ORDERING MATTERS. Update the auth observer FIRST while it is still
+        // attached to its query, so AuthProvider re-renders with `user = null`
+        // synchronously and every consumer (navbar, dropdown, …) flips to the
+        // signed-out UI immediately, no F5 required. THEN scope the nuke to
+        // every OTHER cached query — the predicate excludes the auth key so
+        // the observer notification we just fired is not undone by the
+        // removal that follows.
+        //
+        // The previous order (`removeQueries()` then `setQueryData`) detached
+        // the observer for one tick, which silently dropped the update and
+        // left the navbar showing the old user state until the next manual
+        // refresh.
+        //
+        // SECURITY intent preserved: every user-scoped query
+        // (/api/users/me/stats, /api/notifications, lore, chapter snapshots,
+        // marketplace usage, admin data, …) is still off-limits to the next
+        // visitor on this browser. Whitelisting caches is a guaranteed source
+        // of leaks whenever a new query is added; the predicate keeps the
+        // sweep nuclear except for the single auth row we just set to null.
         queryClient.setQueryData(["/api/auth/user"], null);
+        queryClient.removeQueries({
+          predicate: (q) => q.queryKey[0] !== "/api/auth/user",
+        });
       } finally {
         logoutInFlightRef.current = null;
       }
