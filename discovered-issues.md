@@ -794,4 +794,41 @@ everyone except the Resend-account owner.
 _Discovered 2026-04-30 during Step 4 testing of
 `feat/quick-wins-batch-1` (cancel subscription confirmation email)._
 
+## LOW — `GET /api/admin/support/unread-count` returns 500
+
+**Location**: `artifacts/api-server/src/routes/misc.routes.ts:647-655`.
+
+**Behavior**: The endpoint calls `storage.getSupportMessages()`,
+expects an array, and filters with `messages.filter((m: any) => !m.read).length`.
+In the running dev environment (logged in as id=1 admin) it returns
+500 — the body says `{"message":"Internal error"}` and the error
+gets swallowed by the bare `catch (err)` with no logging.
+
+**How discovered**: Network tab spotted during Step 3 verification
+of `feat/admin-dashboard` (extending the activity feed). Unrelated
+to today's work — this endpoint hasn't been touched in this group.
+
+**Current impact**: The admin nav badge for unread support tickets
+silently fails to populate. The Support tab itself
+(`/api/admin/support`) still works because it calls the same storage
+method but presumably doesn't trip whatever the underlying error is —
+worth confirming during the actual investigation.
+
+**Suggested investigation**:
+1. Add a `logger.error({ err }, "...")` inside the `catch` so the
+   underlying exception surfaces in the logs (right now it's blind).
+2. Run the endpoint in isolation and inspect the thrown error —
+   most likely candidates: a Drizzle schema/column drift, a `null`
+   on `m.read`, or `getSupportMessages()` returning a non-array
+   shape under some condition.
+3. Once the root cause is known, either fix in place (LOW-effort)
+   or convert to a `count(*)` SQL query directly so a single
+   malformed row can't blow up the whole admin nav.
+
+**Severity**: LOW. No data loss, no user-facing impact, only a
+missing nav-badge count for admins.
+
+_Discovered 2026-04-30 during Step 3 testing of
+`feat/admin-dashboard` (activity feed payments extension)._
+
 
