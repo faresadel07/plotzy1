@@ -195,6 +195,12 @@ function CurrentSubscriptionCard({
   const subscribedSince = firstPaymentAt ? formatDate(firstPaymentAt) : "—";
   const methodLabel = humanizePaymentMethod(paymentMethod);
   const canCancel = status === "active";
+  // Resubscribe affordance for users who canceled but still have access.
+  // Routes to /pricing (not /checkout directly) so they can also consider
+  // switching plans during reactivation rather than being locked into
+  // the same plan they had before.
+  const canResubscribe = status === "canceled";
+  const [, navigate] = useLocation();
 
   return (
     <section
@@ -227,21 +233,35 @@ function CurrentSubscriptionCard({
         <DetailRow label="Plan ID" value={plan.id} mono />
       </dl>
 
-      {canCancel && (
+      {(canCancel || canResubscribe) && (
         <div
           className="mt-6 pt-5 flex justify-end"
           style={{ borderTop: `1px solid ${B}` }}
         >
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="text-xs font-medium transition-colors"
-            style={{ color: TS }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
-          >
-            Cancel subscription
-          </button>
+          {canCancel ? (
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="text-xs font-medium transition-colors"
+              style={{ color: TS }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
+            >
+              Cancel subscription
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate("/pricing")}
+              className="text-xs font-medium transition-colors inline-flex items-center gap-1"
+              style={{ color: TS }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = SUCCESS)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
+              title="Pick a plan to continue your subscription"
+            >
+              Resubscribe →
+            </button>
+          )}
         </div>
       )}
 
