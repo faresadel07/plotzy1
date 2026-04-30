@@ -4,7 +4,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
-import type { PayPalPlan } from "@/lib/checkout-plans";
+import { getPlanDetails, type PayPalPlan } from "@/lib/checkout-plans";
 import NumberFlow from "@number-flow/react";
 
 /* ── Design tokens ── */
@@ -75,6 +75,154 @@ const FAQ = [
 
 type BillingCycle = "monthly" | "yearly";
 
+// ── Tier-aware plan-card button state ──────────────────────────────────────
+// Drives the per-card CTA on the Pro and Premium cards based on the user's
+// current subscription. The frontend determines what to show; the backend's
+// capture-order success path handles whatever plan the user ultimately picks
+// (overwrite semantics — see the cycle-restart disclosure below).
+type ButtonKind = "get_started" | "current" | "switch" | "upgrade" | "reactivate";
+type ButtonState = {
+  kind: ButtonKind;
+  label: string;
+  href: string | null; // null → disabled (current plan)
+  showCycleDisclosure: boolean;
+};
+
+function getCardButtonState(
+  user: { subscriptionPlan?: string | null; subscriptionStatus?: string | null } | null,
+  cardPlan: PayPalPlan,
+): ButtonState {
+  // Logged out → existing behavior (auth gate).
+  if (!user) {
+    return { kind: "get_started", label: "Get started", href: "/?auth=required", showCycleDisclosure: false };
+  }
+
+  const userPlan = user.subscriptionPlan;
+  const userStatus = user.subscriptionStatus;
+  const isEntitled = userStatus === "active" || userStatus === "canceled";
+
+  // Free / no plan / expired → existing behavior.
+  if (!userPlan || !isEntitled) {
+    return { kind: "get_started", label: "Get started", href: `/checkout?plan=${cardPlan}`, showCycleDisclosure: false };
+  }
+
+  // This is the user's current plan — either current (active) or reactivate (canceled).
+  if (userPlan === cardPlan) {
+    if (userStatus === "canceled") {
+      return { kind: "reactivate", label: "Reactivate →", href: `/checkout?plan=${cardPlan}`, showCycleDisclosure: false };
+    }
+    return { kind: "current", label: "Current plan", href: null, showCycleDisclosure: false };
+  }
+
+  // Different plan — Upgrade if going up in tier rank, otherwise Switch.
+  const userPlanDetails = getPlanDetails(userPlan);
+  const cardPlanDetails = getPlanDetails(cardPlan);
+  if (userPlanDetails && cardPlanDetails) {
+    const userRank = userPlanDetails.tier === "premium" ? 2 : 1;
+    const cardRank = cardPlanDetails.tier === "premium" ? 2 : 1;
+    if (cardRank > userRank) {
+      return { kind: "upgrade", label: "Upgrade →", href: `/checkout?plan=${cardPlan}`, showCycleDisclosure: true };
+    }
+  }
+  return { kind: "switch", label: "Switch →", href: `/checkout?plan=${cardPlan}`, showCycleDisclosure: true };
+}
+
+function PlanButton({
+  state,
+  tier,
+  navigate,
+}: {
+  state: ButtonState;
+  tier: "pro" | "premium";
+  navigate: (path: string) => void;
+}) {
+  const { kind, label, href, showCycleDisclosure } = state;
+
+  const baseStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 0",
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 600,
+    fontFamily: SF,
+    transition: "opacity 0.2s, background 0.2s",
+  };
+
+  let style: React.CSSProperties;
+  let onEnter: ((e: React.MouseEvent<HTMLButtonElement>) => void) | undefined;
+  let onLeave: ((e: React.MouseEvent<HTMLButtonElement>) => void) | undefined;
+
+  if (kind === "current") {
+    // Disabled, dimmed — read-only confirmation that this is the user's plan.
+    style = {
+      ...baseStyle,
+      background: "rgba(255,255,255,0.04)",
+      color: TS,
+      border: `1px solid ${B}`,
+      cursor: "default",
+    };
+  } else if (kind === "reactivate") {
+    // Subtle amber tint matches the canceled-status pill on /account/subscription.
+    style = {
+      ...baseStyle,
+      background: "rgba(245,158,11,0.12)",
+      color: "#F59E0B",
+      border: "1px solid rgba(245,158,11,0.3)",
+      cursor: "pointer",
+    };
+    onEnter = (e) => (e.currentTarget.style.opacity = "0.85");
+    onLeave = (e) => (e.currentTarget.style.opacity = "1");
+  } else if (tier === "pro") {
+    // Original Pro card styling — light primary button on the dark card.
+    style = {
+      ...baseStyle,
+      background: "#efefef",
+      color: "#111",
+      border: "none",
+      cursor: "pointer",
+    };
+    onEnter = (e) => (e.currentTarget.style.opacity = "0.9");
+    onLeave = (e) => (e.currentTarget.style.opacity = "1");
+  } else {
+    // Original Premium card styling — subtle dark-on-darker.
+    style = {
+      ...baseStyle,
+      background: "rgba(255,255,255,0.08)",
+      border: "1px solid rgba(255,255,255,0.12)",
+      color: T,
+      cursor: "pointer",
+    };
+    onEnter = (e) => (e.currentTarget.style.background = "rgba(255,255,255,0.14)");
+    onLeave = (e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)");
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => { if (href) navigate(href); }}
+        disabled={kind === "current"}
+        style={style}
+        onMouseEnter={onEnter}
+        onMouseLeave={onLeave}
+      >
+        {label}
+      </button>
+      {showCycleDisclosure && (
+        <p style={{
+          fontSize: 11,
+          color: TD,
+          marginTop: 8,
+          textAlign: "center",
+          lineHeight: 1.4,
+        }}>
+          Switching restarts the billing period.
+        </p>
+      )}
+    </>
+  );
+}
+
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [showFaq, setShowFaq] = useState(false);
@@ -94,6 +242,13 @@ export default function Pricing() {
   const premiumPriceSuffix = isYearly ? "/yr" : "/mo";
   const premiumLabel = isYearly ? "Billed $159.99 per year" : "Billed $16.99 every month";
   const premiumPlan: PayPalPlan = isYearly ? "premium_yearly" : "premium_monthly";
+
+  // Tier-aware CTAs: depend on the currently-selected billing cycle so the
+  // Pro Monthly card shows "Current plan" only when the user is on Pro
+  // Monthly (not Pro Yearly). Switching cycle within the same tier is a
+  // "Switch →" (with cycle-restart disclosure), not "Current plan".
+  const proButton = getCardButtonState(user ?? null, proPlan);
+  const premiumButton = getCardButtonState(user ?? null, premiumPlan);
 
   /* ── Shared styles ── */
   const cardBase: React.CSSProperties = {
@@ -343,28 +498,7 @@ export default function Pricing() {
                   <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{proLabel}</p>
 
                   <div style={{ marginTop: 4 }}>
-                    <button
-                      onClick={() =>
-                        navigate(user ? `/checkout?plan=${proPlan}` : "/?auth=required")
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "12px 0",
-                        borderRadius: 12,
-                        fontSize: 14,
-                        fontWeight: 600,
-                        fontFamily: SF,
-                        background: "#efefef",
-                        color: "#111",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "opacity 0.2s",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = "0.9")}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                    >
-                      Get started
-                    </button>
+                    <PlanButton state={proButton} tier="pro" navigate={navigate} />
                   </div>
                 </div>
 
@@ -437,28 +571,7 @@ export default function Pricing() {
                 <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{premiumLabel}</p>
 
                 <div style={{ marginTop: 4 }}>
-                  <button
-                    onClick={() =>
-                      navigate(user ? `/checkout?plan=${premiumPlan}` : "/?auth=required")
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "12px 0",
-                      borderRadius: 12,
-                      fontSize: 14,
-                      fontWeight: 600,
-                      fontFamily: SF,
-                      background: "rgba(255,255,255,0.08)",
-                      border: `1px solid rgba(255,255,255,0.12)`,
-                      color: T,
-                      cursor: "pointer",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                  >
-                    Get started
-                  </button>
+                  <PlanButton state={premiumButton} tier="premium" navigate={navigate} />
                 </div>
               </div>
 
