@@ -154,6 +154,81 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
         AND subscription_end_date IS NOT NULL
         AND subscription_end_date >= NOW() - INTERVAL '30 days'
     `);
+    const churnedLast30Days = Number(churnResult.rows?.[0]?.c || 0);
+
+    // MRR delta from real payments — current calendar month vs prior calendar
+    // month, summed from subscription_payments. Distinct from the estimated
+    // mrrCents above (which is a static snapshot of current active subs);
+    // this measures real cash collected month-over-month.
+    const mrrDeltaResult = await db.execute(sql`
+      SELECT
+        COALESCE(SUM(amount_cents) FILTER (WHERE created_at >= date_trunc('month', NOW())), 0)::bigint AS current_month,
+        COALESCE(SUM(amount_cents) FILTER (
+          WHERE created_at >= date_trunc('month', NOW() - INTERVAL '1 month')
+            AND created_at <  date_trunc('month', NOW())
+        ), 0)::bigint AS prior_month
+      FROM subscription_payments
+      WHERE status = 'completed'
+        AND created_at >= date_trunc('month', NOW() - INTERVAL '1 month')
+    `);
+    const mrrCurrentMonthCents = Number((mrrDeltaResult.rows?.[0] as any)?.current_month || 0);
+    const mrrPriorMonthCents = Number((mrrDeltaResult.rows?.[0] as any)?.prior_month || 0);
+    // Null when prior month is zero — % delta is undefined, not Infinity.
+    // Frontend renders this as "—" in that case.
+    const mrrDeltaPct = mrrPriorMonthCents > 0
+      ? ((mrrCurrentMonthCents - mrrPriorMonthCents) / mrrPriorMonthCents) * 100
+      : null;
+
+    // Conversion rate. Denominator is email-verified signups (Q2: unverified
+    // accounts are noise — half-finished signups, abandoned password resets).
+    // Numerator is users with at least one completed payment.
+    const conversionResult = await db.execute(sql`
+      SELECT
+        (SELECT COUNT(DISTINCT user_id)::int FROM subscription_payments WHERE status = 'completed') AS paid_all,
+        (SELECT COUNT(*)::int FROM users WHERE email_verified = true) AS verified_all,
+        (SELECT COUNT(DISTINCT u.id)::int
+           FROM users u
+           INNER JOIN subscription_payments sp ON sp.user_id = u.id
+           WHERE u.email_verified = true
+             AND u.created_at >= NOW() - INTERVAL '30 days'
+             AND sp.status = 'completed') AS paid_30d,
+        (SELECT COUNT(*)::int FROM users
+           WHERE email_verified = true
+             AND created_at >= NOW() - INTERVAL '30 days') AS verified_30d
+    `);
+    const convRow = conversionResult.rows?.[0] as any;
+    const paidAll = Number(convRow?.paid_all || 0);
+    const verifiedAll = Number(convRow?.verified_all || 0);
+    const paid30d = Number(convRow?.paid_30d || 0);
+    const verified30d = Number(convRow?.verified_30d || 0);
+    const conversionRateAllTimePct = verifiedAll > 0 ? (paidAll / verifiedAll) * 100 : null;
+    const conversionRateLast30dPct = verified30d > 0 ? (paid30d / verified30d) * 100 : null;
+
+    // Churn rate. We don't have a per-user "canceled at" timestamp — the only
+    // signals are subscription_status and subscription_end_date — so the
+    // denominator is approximated as (current active + churned in window),
+    // which equals "active at the start of the 30-day window" when no one
+    // both joined and churned within the same window. Reasonable for a v1
+    // and matches the formula the user signed off in Phase A.
+    const churnDenominator = activeSubs.c + churnedLast30Days;
+    const churnRateLast30dPct = churnDenominator > 0
+      ? (churnedLast30Days / churnDenominator) * 100
+      : null;
+
+    // Last 10 completed payments — feeds a "Recent Payments" mini-table on
+    // the Revenue tab. LEFT JOIN so rows for deleted users still surface
+    // with email=null instead of disappearing silently.
+    const recentPaymentsResult = await db.execute(sql`
+      SELECT
+        sp.id, sp.user_id, sp.amount_cents, sp.currency,
+        sp.plan, sp.tier, sp.cycle, sp.payment_method, sp.status, sp.created_at,
+        u.email, u.display_name
+      FROM subscription_payments sp
+      LEFT JOIN users u ON u.id = sp.user_id
+      WHERE sp.status = 'completed'
+      ORDER BY sp.created_at DESC
+      LIMIT 10
+    `);
 
     return res.json({
       tiers: tiers.rows,
@@ -162,7 +237,32 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
       yearlySubs,
       mrrCents,
       mrrDollars: (mrrCents / 100).toFixed(2),
-      churnedLast30Days: Number(churnResult.rows?.[0]?.c || 0),
+      churnedLast30Days,
+      // ── New analytics from subscription_payments ──
+      mrrCurrentMonthCents,
+      mrrPriorMonthCents,
+      mrrDeltaPct,
+      conversionRateAllTimePct,
+      conversionRateLast30dPct,
+      churnRateLast30dPct,
+      paidUsersAllTime: paidAll,
+      verifiedSignupsAllTime: verifiedAll,
+      paidUsersLast30d: paid30d,
+      verifiedSignupsLast30d: verified30d,
+      recentPayments: recentPaymentsResult.rows.map((r: any) => ({
+        id: r.id,
+        userId: r.user_id,
+        userEmail: r.email,
+        userDisplayName: r.display_name,
+        amountCents: Number(r.amount_cents),
+        currency: r.currency,
+        plan: r.plan,
+        tier: r.tier,
+        cycle: r.cycle,
+        paymentMethod: r.payment_method,
+        status: r.status,
+        createdAt: r.created_at,
+      })),
     });
   } catch (err) {
     logger.error({ err }, "Admin route error");
