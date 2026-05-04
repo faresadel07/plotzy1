@@ -1,6 +1,8 @@
 import { useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildFaqPageSchema } from "@/lib/seo-schema";
 import {
   Accordion,
   AccordionContent,
@@ -61,6 +63,7 @@ export default function FaqPage() {
         title="Frequently Asked Questions"
         description="Answers about getting started, pricing, AI features, publishing, and account on Plotzy."
       />
+      <JsonLd data={buildFaqPageSchema(allCategories)} />
       <div style={{ background: BG, color: T, fontFamily: SF, minHeight: "100vh" }}>
         {/* ── Hero ── */}
         <section style={{ borderBottom: `1px solid ${B}` }}>
@@ -218,6 +221,7 @@ function CategorySection({ category }: { category: FaqCategory }) {
               {item.question}
             </AccordionTrigger>
             <AccordionContent
+              forceMount
               className="px-5"
               style={{ color: TS, fontSize: 14, lineHeight: 1.65, paddingBottom: 18 }}
             >

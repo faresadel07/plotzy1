@@ -1443,6 +1443,52 @@ _Logged 2026-05-04 during Stage 4 of feat/seo-meta-and-jsonld._
 
 ---
 
+## LOW — FAQ accordion close animation is instant (forceMount trade-off)
+
+**Files**: [components/ui/accordion.tsx](artifacts/plotzy/src/components/ui/accordion.tsx),
+[pages/faq.tsx](artifacts/plotzy/src/pages/faq.tsx)
+
+Stage 7 of `feat/seo-meta-and-jsonld` added an opt-in `forceMount`
+prop to the shared `AccordionContent` and turned it on for every
+item on `/faq`. This was required for the FAQPage JSON-LD to match
+Google's "structured data must reflect visible content" rule —
+without `forceMount`, Radix's `Presence` component unmounts closed
+answer content from the DOM, and the schema would then reference text
+that crawlers can't see.
+
+**Side effect**: with `forceMount` on, Radix sets the `hidden` HTML
+attribute on closed-state content. Browsers default `[hidden]` to
+`display: none`, which suppresses the existing close-direction
+animation (`data-[state=closed]:animate-accordion-up`). The result:
+
+- **Open animation** — still smooth (state change `closed → open`
+  removes `hidden` before the down animation runs)
+- **Close animation** — instant collapse (the `hidden` attribute lands
+  before the up animation can play)
+
+Closing is the less-noticeable direction in practice and the
+trade-off was deliberately accepted to ship the JSON-LD compliance
+fix in a single commit. Other accordions in the app are unaffected
+because `forceMount` defaults off.
+
+**If user feedback indicates the instant close is jarring**, fork
+the FAQ accordion to use a different hide mechanism that keeps both
+animations smooth AND keeps content in the DOM. Two viable patterns:
+
+1. Replace Radix's `[hidden]` with CSS `visibility: hidden;
+   height: 0; overflow: hidden` controlled by `data-state`. Allows
+   the close animation to play because the content is rendered, just
+   collapsed.
+2. Use a plain CSS-only details/summary element (no Radix). Native
+   browser semantics, but loses Radix's keyboard-navigation and
+   typed API.
+
+Estimated effort if triggered: ~30 min for option 1.
+
+_Logged 2026-05-04 during Stage 7 of feat/seo-meta-and-jsonld._
+
+---
+
 ## LOW — Migrate sitemap.xml to a dynamic endpoint when content scales
 
 **File**: [artifacts/plotzy/public/sitemap.xml](artifacts/plotzy/public/sitemap.xml)

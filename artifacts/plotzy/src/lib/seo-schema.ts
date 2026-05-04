@@ -307,3 +307,57 @@ export function buildPersonSchema(profile: PersonSchemaInput): Record<string, un
 
   return schema;
 }
+
+export interface FaqItemInput {
+  question: string;
+  answer: string;
+}
+
+export interface FaqCategoryInput {
+  items: FaqItemInput[];
+}
+
+/**
+ * FAQPage JSON-LD for /faq.
+ *
+ * Flattens the page's category-grouped Q&A into the single
+ * `mainEntity` array that schema.org defines — Google's FAQPage rich
+ * result doesn't model categories, so the visual grouping on the page
+ * is a presentation detail not reflected in the schema.
+ *
+ * Each entry is a `Question` whose `acceptedAnswer.text` is the answer
+ * verbatim. Plotzy's FAQ answers are plain prose (verified — no
+ * markdown), so JSON.stringify in <JsonLd> escapes them safely. If a
+ * future answer ever introduces HTML, schema.org permits it inside
+ * `Answer.text` as long as the page also renders the same HTML.
+ *
+ * No length cap is applied: the longest answer at the time of writing
+ * is 556 chars, well under Google's 5000-char recommendation. Add a
+ * cap if that ever changes.
+ *
+ * Visibility requirement: every Question/Answer in this schema MUST
+ * be present in the rendered HTML (Google's policy on structured data
+ * matching visible content). The FAQ page achieves this via the
+ * `forceMount` prop on each AccordionContent, which keeps the closed-
+ * state answer in the DOM with the `hidden` HTML attribute.
+ */
+export function buildFaqPageSchema(
+  categories: FaqCategoryInput[],
+): Record<string, unknown> {
+  const mainEntity = categories
+    .flatMap((cat) => cat.items)
+    .map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    }));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity,
+  };
+}
