@@ -2,6 +2,8 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation, useRoute } from "wouter";
 import { HelmetProvider } from "react-helmet-async";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildOrganizationSchema, buildWebSiteSchema } from "@/lib/seo-schema";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -106,6 +108,23 @@ function ScrollToTop() {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location]);
   return null;
+}
+
+/**
+ * Site-wide JSON-LD that ships on every page. Organization is always
+ * present so search engines can resolve "Plotzy" as a publisher when
+ * referenced from per-page Book / Article / Person schemas. WebSite is
+ * landing-only — search engines treat it as the site root descriptor
+ * and only need it once.
+ */
+function GlobalSchemas() {
+  const [pathname] = useLocation();
+  return (
+    <>
+      <JsonLd data={buildOrganizationSchema()} />
+      {pathname === "/" && <JsonLd data={buildWebSiteSchema()} />}
+    </>
+  );
 }
 
 function OAuthCallbackHandler() {
@@ -266,6 +285,7 @@ function App() {
             <LanguageProvider>
               <AuthProvider>
                 <TooltipProvider>
+                  <GlobalSchemas />
                   <ScrollToTop />
                   <OAuthCallbackHandler />
                   <EmailVerifyHandler />

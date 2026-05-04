@@ -1407,6 +1407,42 @@ _Logged 2026-05-04 during Stage 3 of feat/seo-meta-and-jsonld._
 
 ---
 
+## LOW — Organization JSON-LD has no contactPoint / sameAs / foundingDate
+
+**File**: [artifacts/plotzy/src/lib/seo-schema.ts](artifacts/plotzy/src/lib/seo-schema.ts)
+
+Stage 4 of `feat/seo-meta-and-jsonld` ships a minimal `Organization`
+schema with name, url, logo, and description only. Three optional
+schema.org fields are intentionally omitted at launch:
+
+- **`contactPoint.email`** — would expose `faresadel@gmail.com` (or
+  whatever `SUPPORT_EMAIL` resolves to) to spam scrapers that crawl
+  JSON-LD blobs. Google rarely surfaces `contactPoint` in rich results,
+  so the SEO benefit is negligible against the spam-bot risk.
+- **`sameAs`** — list of official social-profile URLs. Plotzy doesn't
+  yet have a managed social presence to point at, and pointing at a
+  non-existent or inactive account makes the schema look stale.
+- **`foundingDate`** — pre-launch; no canonical "founding" date to
+  publish. Adding one later when the launch date is fixed.
+
+**When to add each**:
+
+1. `contactPoint` → after a dedicated support inbox (e.g. `support@plotzy.com`)
+   exists. The spam exposure on a personal address isn't worth the
+   marginal SEO value.
+2. `sameAs` → after Plotzy has at least one active, branded social
+   profile (Twitter, Instagram, LinkedIn) — list every active one as
+   absolute URLs.
+3. `foundingDate` → on the day of public launch, ISO 8601 format
+   (e.g. `"2026-06-01"`).
+
+All three are one-line additions to `buildOrganizationSchema()` when
+ready.
+
+_Logged 2026-05-04 during Stage 4 of feat/seo-meta-and-jsonld._
+
+---
+
 ## LOW — Migrate sitemap.xml to a dynamic endpoint when content scales
 
 **File**: [artifacts/plotzy/public/sitemap.xml](artifacts/plotzy/public/sitemap.xml)
