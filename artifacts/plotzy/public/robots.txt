@@ -1,7 +1,16 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /messages
 Disallow: /api/
+Disallow: /auth/
+Disallow: /dashboard
+Disallow: /trash
+Disallow: /messages
+Disallow: /support
+Disallow: /checkout
+Disallow: /account/
+Disallow: /reset-password/
+Disallow: /articles/
+Disallow: /books/
 
 Sitemap: https://plotzy.com/sitemap.xml
