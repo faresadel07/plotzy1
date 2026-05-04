@@ -1489,6 +1489,38 @@ _Logged 2026-05-04 during Stage 7 of feat/seo-meta-and-jsonld._
 
 ---
 
+## LOW — Restore email contact in FAQ once a dedicated inbox is provisioned
+
+**File**: [artifacts/plotzy/src/data/faq-data.ts](artifacts/plotzy/src/data/faq-data.ts)
+
+The "How do I contact support?" answer was rewritten to drop the
+literal `faresadel@gmail.com` from the FAQ body — that text now ships
+inside the FAQPage JSON-LD on `/faq` and structured data is widely
+indexed and scraped. The contact form on the Support page is the
+documented path for now.
+
+**Restore the email mention when** a brand-aligned support inbox
+(e.g., `support@plotzy.<tld>`) exists. At that point:
+
+1. Update the `contact-support` answer in `faq-data.ts` to re-include
+   the inbox.
+2. Sweep the rest of `faq-data.ts` for the four remaining mentions
+   of `faresadel@gmail.com` (refunds, discounts, account deletion,
+   change-email, browser-issues — five answers). Replace them all
+   with the new inbox in one pass.
+3. Consider also updating the Organization JSON-LD `contactPoint`
+   per the earlier deferred entry.
+
+The four remaining personal-email mentions in other FAQ answers
+were intentionally left in this batch because (a) they're inside
+longer-form answers that don't ship as cleanly via JSON-LD as
+`contact-support`'s short tail entry, and (b) consolidating them is
+a copy decision best made together with the new inbox rollout.
+
+_Logged 2026-05-04 during Stage 7 follow-up of feat/seo-meta-and-jsonld._
+
+---
+
 ## LOW — Migrate sitemap.xml to a dynamic endpoint when content scales
 
 **File**: [artifacts/plotzy/public/sitemap.xml](artifacts/plotzy/public/sitemap.xml)
