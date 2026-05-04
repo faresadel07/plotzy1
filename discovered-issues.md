@@ -992,4 +992,31 @@ other DB work is in flight.
 
 _Logged 2026-05-04 during Stage 8 of `feat/remove-stripe`._
 
+## LOW — Same bare-catch-500 pattern on GET /api/admin/support
+
+**Location**: `artifacts/api-server/src/routes/misc.routes.ts:658-665`.
+
+The full-list support-tickets endpoint mirrors the bare-catch
+pattern that we fixed for `/api/admin/support/unread-count` in
+Item 3 of feat/cleanup-batch-1. Same defensive treatment should
+apply: structured `logger.error({ err }, ...)` inside the catch
+(currently `err` is captured and silently dropped) plus a graceful
+fallback rather than 500ing the admin Support tab on a transient
+failure.
+
+**Why LOW**: the admin Support tab is internal-only and a 500
+here doesn't affect end-users. The next request retries; the
+failure window is bounded.
+
+**Suggested fix when prioritised**:
+```ts
+catch (err) {
+  logger.error({ err }, "Failed to fetch admin support messages");
+  return res.json([]);  // or 503, depending on how the UI should react
+}
+```
+
+_Logged 2026-05-04 during Item 3 of feat/cleanup-batch-1
+after deciding to keep this batch's scope narrow._
+
 

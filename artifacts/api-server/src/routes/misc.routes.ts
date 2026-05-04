@@ -646,11 +646,13 @@ router.get("/api/admin/activity", requireAdmin, async (req, res) => {
 // ── Admin: unread support count (used for nav badge) ──────────────────────
 router.get("/api/admin/support/unread-count", requireAdmin, async (req, res) => {
   try {
-    const messages = await storage.getSupportMessages();
-    const count = messages.filter((m: any) => !m.read).length;
+    const count = await storage.getUnreadSupportCount();
     return res.json({ count });
   } catch (err) {
-    return res.status(500).json({ message: "Internal error" });
+    logger.error({ err }, "Failed to compute admin support unread count");
+    // Nav badge degrades to 0 rather than 500ing on the admin dropdown.
+    // The next request retries; a real outage will surface in logs above.
+    return res.json({ count: 0 });
   }
 });
 

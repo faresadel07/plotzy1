@@ -105,6 +105,7 @@ export interface IStorage {
   getSupportMessages(): Promise<SupportMessage[]>;
   submitSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
   updateSupportMessage(id: number, updates: { read?: boolean; status?: string }): Promise<SupportMessage>;
+  getUnreadSupportCount(): Promise<number>;
   getAdminStats(): Promise<{ totalUsers: number; totalBooks: number; publishedBooks: number; totalChapters: number; openSupportTickets: number }>;
   getActivityFeed(): Promise<Array<{ type: string; title: string; subtitle: string; time: string }>>;
   getSetting(key: string): Promise<string | null>;
@@ -739,6 +740,17 @@ export class DatabaseStorage implements IStorage {
   async updateSupportMessage(id: number, updates: { read?: boolean; status?: string }): Promise<SupportMessage> {
     const [msg] = await db.update(supportMessages).set(updates).where(eq(supportMessages.id, id)).returning();
     return msg;
+  }
+
+  // SQL-side count of unread tickets. The schema column allows NULL so we
+  // treat null and false as "unread" to match the prior JS filter
+  // (m => !m.read) — a row created before the column existed or seeded
+  // without a default would otherwise be miscounted as read.
+  async getUnreadSupportCount(): Promise<number> {
+    const [row] = await db.select({ count: count() })
+      .from(supportMessages)
+      .where(or(isNull(supportMessages.read), eq(supportMessages.read, false)));
+    return row?.count ?? 0;
   }
 
   async getAdminStats(): Promise<{ totalUsers: number; totalBooks: number; publishedBooks: number; totalChapters: number; openSupportTickets: number }> {
