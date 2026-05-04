@@ -1186,4 +1186,65 @@ languages ≈ 325 entries. Defer until i18n batch is prioritized.
 _Logged 2026-05-04 during Item 7 of feat/cleanup-batch-1 after
 deciding to ship verifiable aria-labels first._
 
+## LOW — Div-onClick conversions deferred from Item 9 (cleanup-batch-1)
+
+Two clusters of div-as-button patterns were SKIPPED in Item 9
+because converting them carries CSS or HTML5 risk that exceeds
+the cleanup batch's scope:
+
+### 1. LibraryBookshelf decorative spines (20 divs)
+
+`components/LibraryBookshelf.tsx:25-50` has 20 visual book-spine
+divs with heavy custom CSS classes (`.book.white.has-simple-text`,
+`.book.maroon.decor-heavy`, `.book.book-pages`, etc.) that paint
+the on-homepage shelf decoration. Each div has an onClick that
+shows a preview overlay.
+
+Converting to `<button>` requires CSS overrides on every `.book`
+selector to neutralise default button styles (background, border,
+font, color, padding). The companion stylesheet would need
+`appearance: none; background: transparent; border: 0; padding: 0;
+color: inherit; font: inherit;` reset rules per selector.
+
+Better as a focused LibraryBookshelf a11y + CSS pass than a
+mid-batch conversion.
+
+### 2. cover-designer.tsx:840 layer row (1 div)
+
+The cover-designer layer row is a div with an onClick (selects the
+layer) but contains 4 nested `<button>` children (visibility, lock,
+move-up, move-down) that were given aria-labels in Item 7. HTML5
+forbids interactive elements nested inside `<button>`, so the row
+cannot be converted to a `<button>` while keeping the children as
+buttons.
+
+Proper fix is one of:
+- `role="button"` + `tabIndex={0}` + keyboard handler on the outer
+  div (preserves the children unchanged)
+- Refactor so the row's click target and the action buttons are
+  siblings rather than parent/children
+
+Both restructures are larger than Item 9's scope. Defer to a
+focused cover-designer a11y pass.
+
+### 3. Modal/dropdown backdrops (8 divs) — INTENTIONAL, no change planned
+
+The following `<div>` elements have `onClick` but should NOT be
+converted to buttons because they are full-screen close-on-outside
+overlays. Converting them would create giant invisible tab-stops
+that screen readers announce as buttons, which is worse UX than
+the current state. Keyboard users close these via the Escape key
+or the explicit close button inside the modal:
+
+- `gutenberg-reader.tsx:882, 992, 1026` (page panel / TOC / settings)
+- `research-board.tsx:72`, `book-customizer.tsx:298`,
+  `ai-assistant.tsx:169`, `BookViewerOverlay.tsx:34`,
+  `author-profile.tsx:811`
+
+These are listed for completeness so a future contributor reading
+this entry doesn't try to "fix" them.
+
+_Logged 2026-05-04 during Item 9 of feat/cleanup-batch-1 after
+choosing conservative scope to avoid CSS regressions._
+
 

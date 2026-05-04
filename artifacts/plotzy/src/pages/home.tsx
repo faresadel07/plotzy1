@@ -998,7 +998,7 @@ export default function Home() {
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
               {sharedBooks.map(sb => (
-                <div key={sb.id} onClick={async () => {
+                <button key={sb.id} type="button" onClick={async () => {
                   // Go directly to first chapter (writing page)
                   try {
                     const res = await fetch(`/api/books/${sb.id}/chapters`, { credentials: "include" });
@@ -1011,7 +1011,7 @@ export default function Home() {
                     }
                   } catch { setLocation(`/books/${sb.id}`); }
                 }}
-                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02]"
+                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] text-left bg-transparent border-0 w-full"
                   style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.1)" }}>
                   {/* Mini cover */}
                   <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(96,165,250,0.08)" }}>
@@ -1030,7 +1030,7 @@ export default function Home() {
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: sb.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: sb.role === "editor" ? "#4ade80" : "#60a5fa" }}>
                     {sb.role === "editor" ? "EDITOR" : "VIEWER"}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -1050,8 +1050,8 @@ export default function Home() {
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
               {sharedByMe.map(book => (
-                <div key={book.id} onClick={() => setLocation(`/books/${book.id}`)}
-                  className="p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+                <button key={book.id} type="button" onClick={() => setLocation(`/books/${book.id}`)}
+                  className="p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] text-left bg-transparent border-0 w-full"
                   style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.1)" }}>
                   {/* Book header */}
                   <div className="flex items-center gap-3 mb-3">
@@ -1091,7 +1091,7 @@ export default function Home() {
                       <span className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.3)" }}>+ {book.collaborators.length - 3} more</span>
                     )}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </section>

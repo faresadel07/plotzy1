@@ -109,7 +109,7 @@ function BubbleContent({ content, isMine }: { content: string; isMine: boolean }
       a.click();
     };
     return (
-      <div onClick={downloadFile} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "4px 0" }}>
+      <button type="button" onClick={downloadFile} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "4px 0", background: "none", border: "none", textAlign: "left", width: "100%", color: "inherit", font: "inherit" }}>
         <div style={{ width: 40, height: 40, borderRadius: 8, background: isMine ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <FileText style={{ width: 20, height: 20, color: isMine ? "rgba(0,0,0,0.5)" : TS }} />
         </div>
@@ -118,7 +118,7 @@ function BubbleContent({ content, isMine }: { content: string; isMine: boolean }
           <div style={{ fontSize: 10.5, color: isMine ? "rgba(0,0,0,0.35)" : TD, marginTop: 1 }}>Tap to download</div>
         </div>
         <Download style={{ width: 16, height: 16, color: isMine ? "rgba(0,0,0,0.3)" : TD, flexShrink: 0 }} />
-      </div>
+      </button>
     );
   }
   return <div style={{ whiteSpace: "pre-wrap" }}>{parsed.text}</div>;
