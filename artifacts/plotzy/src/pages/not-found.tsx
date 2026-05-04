@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { BookOpen } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 
@@ -10,6 +11,7 @@ export default function NotFound() {
       flexDirection: "column", alignItems: "center", justifyContent: "center",
       fontFamily: SF, color: "#fff", padding: 24, textAlign: "center",
     }}>
+      <SEO title="Page Not Found" noindex />
       <div style={{
         width: 64, height: 64, borderRadius: 16, marginBottom: 24,
         background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",

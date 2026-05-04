@@ -4,6 +4,7 @@ import { Check, ChevronDown, ArrowRight } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { getPlanDetails, type PayPalPlan } from "@/lib/checkout-plans";
 import { getPricingFaq } from "@/data/faq-data";
 import NumberFlow from "@number-flow/react";
@@ -288,6 +289,10 @@ export default function Pricing() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO
+        title="Pricing"
+        description="Free, Pro, and Premium plans for writers — write, design covers, publish, and produce audiobooks with AI assistance."
+      />
       <div style={{ backgroundColor: BG, minHeight: "100vh", color: T, fontFamily: SF }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 20px 48px" }}>
 

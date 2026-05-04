@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import {
   Accordion,
   AccordionContent,
@@ -56,6 +57,10 @@ export default function FaqPage() {
 
   return (
     <Layout darkNav>
+      <SEO
+        title="Frequently Asked Questions"
+        description="Answers about getting started, pricing, AI features, publishing, and account on Plotzy."
+      />
       <div style={{ background: BG, color: T, fontFamily: SF, minHeight: "100vh" }}>
         {/* ── Hero ── */}
         <section style={{ borderBottom: `1px solid ${B}` }}>

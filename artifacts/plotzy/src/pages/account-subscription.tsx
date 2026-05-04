@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
 import {
@@ -53,10 +54,6 @@ export default function AccountSubscription() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
-  useEffect(() => {
-    document.title = "My Subscription · Plotzy";
-  }, []);
-
   // Real payment history. The default queryFn (configured in
   // lib/queryClient.ts) does GET on `queryKey.join("/")` with
   // credentials: "include" and throws on non-2xx, so a plain useQuery
@@ -93,6 +90,7 @@ export default function AccountSubscription() {
 
   return (
     <Layout darkNav>
+      <SEO title="My Subscription" noindex />
       <div style={{ background: BG, minHeight: "100vh", color: T, fontFamily: SF }}>
         <div className="max-w-4xl mx-auto px-6 py-12">
           <button

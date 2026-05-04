@@ -8,6 +8,7 @@ import {
   type InlineComment,
 } from "@/hooks/use-public-library";
 import { InlineCommentsLayer } from "@/components/InlineCommentsLayer";
+import { SEO } from "@/components/SEO";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
@@ -700,6 +701,7 @@ export default function ReadBook() {
   if (!book) {
     return (
       <div style={{ minHeight: "100vh", background: "#181614", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <SEO title="Book not found" noindex />
         <BookOpen style={{ width: 48, height: 48, opacity: 0.4 }} />
         <p style={{ fontSize: 20, fontWeight: 600, fontFamily: "Georgia, serif" }}>Book not found</p>
         <Link href="/library">
@@ -713,6 +715,11 @@ export default function ReadBook() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#181614" }}>
+      <SEO
+        title={book.title}
+        description={book.summary || `${book.title} by ${book.authorName || "an anonymous author"} — read free on Plotzy.`}
+        ogType="book"
+      />
 
       {/* ── Top bar ── */}
       <header style={{

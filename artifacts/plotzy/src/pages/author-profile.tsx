@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import {
   BookOpen, Users, UserPlus, UserCheck, Globe, Twitter, Instagram,
   Edit3, Check, X, Calendar, ArrowLeft, MessageCircle, Heart, Eye,
@@ -515,16 +516,6 @@ export default function AuthorProfile() {
 
   const totalLikes = profile?.totalLikes ?? 0;
 
-  // Keep the browser tab + any meta-reading integrations in sync with the
-  // profile currently being viewed. Restores the app default on unmount.
-  useEffect(() => {
-    const name = profile?.displayName?.trim();
-    if (name) document.title = `${name} · Plotzy`;
-    return () => {
-      document.title = "Plotzy — Write Your Story";
-    };
-  }, [profile?.displayName]);
-
   // Memoise the avatar gradient so it doesn't recompute every render.
   const avatarBg = useMemo(
     () => avatarGradient(profile?.displayName || String(userId)),
@@ -540,6 +531,7 @@ export default function AuthorProfile() {
 
   if (!profile || (profile as any).message) return (
     <Layout isLanding darkNav>
+      <SEO title={ar ? "الكاتب غير موجود" : "Author not found"} noindex />
       <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
         <p style={{ fontFamily: SF, color: TS, fontSize: 16 }}>{ar ? "الكاتب غير موجود" : "Author not found"}</p>
         <button onClick={() => navigate("/")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 20px", borderRadius: 10, background: C3, border: `1px solid ${B}`, fontFamily: SF, fontSize: 13, color: TS, cursor: "pointer" }}>
@@ -551,6 +543,11 @@ export default function AuthorProfile() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO
+        title={profile.displayName || "Author"}
+        description={profile.bio || `${profile.displayName || "An author"} on Plotzy — read their books and follow.`}
+        ogType="profile"
+      />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 
         {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} ar={ar} />}

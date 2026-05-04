@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import {
   BookOpen, Pen, Palette, Megaphone, MessageSquare,
   Zap, Clock, FileText, Search, X,
@@ -1344,6 +1345,10 @@ export default function Marketplace() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO
+        title="Marketplace"
+        description="Connect with editors, cover designers, and audiobook narrators for your book."
+      />
     <div style={{ minHeight: "100vh", background: BG, color: "#f0f0f0", fontFamily: SF }}>
 
       {/* Top ambient glow */}

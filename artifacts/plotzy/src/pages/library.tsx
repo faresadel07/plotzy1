@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { usePublishedBooks, useBookRatingStats, useFeaturedBook, useSetFeaturedBook, useAdminDeleteBook } from "@/hooks/use-public-library";
 import type { PublishedBook } from "@/hooks/use-public-library";
 import { useAuth } from "@/contexts/auth-context";
@@ -379,6 +380,10 @@ export default function Library() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO
+        title="Community Library"
+        description="Browse books published by writers on Plotzy. Read free, rate, and follow your favorite authors."
+      />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
 

@@ -4,6 +4,7 @@ import { useBook } from "@/hooks/use-books";
 import { useChapters } from "@/hooks/use-chapters";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
+import { SEO } from "@/components/SEO";
 import {
   ArrowLeft, Play, Pause, Download, Loader2, Mic2, Music2,
   Volume2, VolumeX, CheckCircle2, Circle, ChevronDown, ChevronUp,
@@ -536,6 +537,7 @@ export default function AudiobookStudio() {
 
   return (
     <>
+      <SEO title="Audiobook Studio" noindex />
       {/* ── Global animations ── */}
       <style>{`
         @keyframes waveBar {

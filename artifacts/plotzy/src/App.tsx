@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation, useRoute } from "wouter";
 import { HelmetProvider } from "react-helmet-async";
+import { SEO } from "@/components/SEO";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -148,6 +149,7 @@ function ResetPasswordPage() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 24 }}>
+      <SEO title="Reset Password" noindex />
       <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 400 }}>
         {tokenValid === null ? (
           <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Verifying link...</div>

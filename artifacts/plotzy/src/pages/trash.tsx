@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTrashedBooks, useRestoreBook, useDeleteBook } from "@/hooks/use-books";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { BookOpen, RefreshCcw, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -28,6 +29,7 @@ export default function Trash() {
 
   return (
     <>
+      <SEO title="Trash" noindex />
       <ConfirmModal
         isOpen={confirmDelete !== null}
         onClose={() => setConfirmDelete(null)}

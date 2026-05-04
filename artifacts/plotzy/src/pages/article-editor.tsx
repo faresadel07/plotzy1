@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useRoute, Link } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
@@ -1009,6 +1010,7 @@ export default function ArticleEditor() {
   /* ═══════════════════════ EDITOR ═══════════════════════ */
   return (
     <Layout isLanding darkNav>
+      <SEO title="Article Editor" noindex />
       <div style={{background:BG,minHeight:"100vh",fontFamily:SF}}>
 
         {/* ── TOP BAR — fixed below Layout navbar (44px), always visible ── */}

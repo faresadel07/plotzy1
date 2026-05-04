@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ArrowLeft, Calendar, Clock, Eye, Heart, BookOpen, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SEO } from "@/components/SEO";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 
@@ -66,6 +67,7 @@ export default function ArticleView() {
   if (!article || !article.isPublished) {
     return (
       <div style={{ minHeight: "100vh", background: "#080808", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: SF }}>
+        <SEO title="Article not found" noindex />
         <BookOpen style={{ width: 48, height: 48, opacity: 0.3 }} />
         <p style={{ fontSize: 18, fontWeight: 600 }}>Article not found</p>
         <Link href="/blog"><button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>Back to Blog</button></Link>
@@ -73,8 +75,19 @@ export default function ArticleView() {
     );
   }
 
+  const articleExcerpt = (() => {
+    const raw = article.articleContent || article.summary || "";
+    const text = stripHtml(raw).slice(0, 160).trim();
+    return text || `An article by ${article.authorName || article.authorDisplayName || "a Plotzy author"}.`;
+  })();
+
   return (
     <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF }}>
+      <SEO
+        title={article.title}
+        description={articleExcerpt}
+        ogType="article"
+      />
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
       {/* Nav */}

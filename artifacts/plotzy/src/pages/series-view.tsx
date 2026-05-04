@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, Calendar, Copy, Check, User, Layers } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const ACC = "#7c6af7";
@@ -70,6 +71,7 @@ export default function SeriesView() {
   if (!series) {
     return (
       <div style={{ minHeight: "100vh", background: "#080808", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: SF }}>
+        <SEO title="Series not found" noindex />
         <Layers style={{ width: 48, height: 48, opacity: 0.3 }} />
         <p style={{ fontSize: 18, fontWeight: 600 }}>Series not found</p>
         <Link href="/library">
@@ -83,6 +85,10 @@ export default function SeriesView() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF, color: "#fff" }}>
+      <SEO
+        title={series.name}
+        description={series.description || `${series.name} — a book series on Plotzy.`}
+      />
 
       {/* Header */}
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px", height: 48, display: "flex", alignItems: "center", gap: 12 }}>
