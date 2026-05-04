@@ -62,8 +62,6 @@ export type User = {
   subscriptionStatus?: string | null;
   subscriptionPlan?: string | null;
   subscriptionEndDate?: Date | null;
-  stripeCustomerId?: string | null;
-  stripeSubscriptionId?: string | null;
 };
 
 export type InsertUser = {
@@ -153,19 +151,6 @@ export type LoreEntry = {
 };
 
 export type InsertLoreEntry = Omit<LoreEntry, 'id' | 'createdAt'>;
-
-export type Transaction = {
-  id: number;
-  bookId: number;
-  amount: string;
-  currency: string;
-  status: string;
-  stripePaymentIntentId?: string | null;
-  paymentMethod?: string | null;
-  createdAt?: Date | null;
-};
-
-export type InsertTransaction = Omit<Transaction, 'id' | 'createdAt'>;
 
 export type DailyProgress = {
   id: number;

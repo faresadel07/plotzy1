@@ -120,10 +120,6 @@ export const api = {
       responses: { 200: TranslateTextResponseSchema },
     },
   },
-  payments: {
-    createIntent: { method: 'POST' as const, path: '/api/payments/create-intent' as const },
-    confirm: { method: 'POST' as const, path: '/api/payments/confirm' as const },
-  }
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
