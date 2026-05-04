@@ -88,6 +88,7 @@ export default function SeriesView() {
       <SEO
         title={series.name}
         description={series.description || `${series.name} — a book series on Plotzy.`}
+        ogImage={series.coverImage || series.books?.[0]?.coverImage || undefined}
       />
 
       {/* Header */}

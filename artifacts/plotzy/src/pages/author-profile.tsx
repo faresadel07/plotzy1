@@ -547,6 +547,7 @@ export default function AuthorProfile() {
         title={profile.displayName || "Author"}
         description={profile.bio || `${profile.displayName || "An author"} on Plotzy — read their books and follow.`}
         ogType="profile"
+        ogImage={profile.avatarUrl || undefined}
       />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 

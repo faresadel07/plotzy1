@@ -1354,6 +1354,59 @@ _Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
 
 ---
 
+## LOW — OG image aspect ratio mismatch on book / author / article shares
+
+**Files**: [pages/read-book.tsx](artifacts/plotzy/src/pages/read-book.tsx),
+[pages/author-profile.tsx](artifacts/plotzy/src/pages/author-profile.tsx),
+[pages/article-view.tsx](artifacts/plotzy/src/pages/article-view.tsx),
+[pages/series-view.tsx](artifacts/plotzy/src/pages/series-view.tsx),
+[pages/gutenberg-reader.tsx](artifacts/plotzy/src/pages/gutenberg-reader.tsx)
+
+Stage 3 of `feat/seo-meta-and-jsonld` wires the user-supplied content
+image into `og:image` / `twitter:image`:
+
+- `/read/:id` → `book.coverImage` (book cover, typically 2:3 portrait)
+- `/authors/:userId` → `profile.avatarUrl` (avatar, typically 1:1 square)
+- `/blog/:id` → `article.featuredImage` (variable)
+- `/series/:id` → `series.coverImage || books[0].coverImage` (2:3 portrait)
+- `/discover/:id` → `meta.coverUrl` (Project Gutenberg, variable)
+
+**The Open Graph standard expects 1.91:1 (1200×630)** for "summary
+large image" cards. Twitter, Facebook, LinkedIn, Slack, Discord, and
+iMessage all crop or letterbox anything that doesn't match. Book
+covers in 2:3 portrait will appear letterboxed in horizontal cards;
+square avatars get center-cropped. The shared preview is always
+*something* — never broken — but it's not the polished, branded
+landscape preview competitors ship.
+
+**Why this is a low priority for now**: in the SPA-only architecture
+(Path A from the earlier discovered-issues entry), social previews
+already fall back to the root `/opengraph.jpg` for non-JS crawlers
+regardless of what `<SEO ogImage>` is set to. The per-page ogImage
+only takes effect for JS-executing crawlers (Googlebot — which doesn't
+render social cards anyway). So the aspect-ratio mismatch only shows
+up if the SPA architecture is later upgraded to Path B (build-time
+prerender) or Path C (server-side OG injection). At that point this
+becomes worth fixing.
+
+**Future enhancement when the time comes**:
+
+1. Build a dynamic OG image generator using `@vercel/og` (or
+   `satori` directly) — composites the cover/avatar onto a 1200×630
+   branded canvas with title and author overlay text.
+2. Serve via a small `GET /api/og/book/:id`, `/api/og/author/:id`,
+   etc. endpoint with a long-lived cache header.
+3. Update `<SEO>` callers to point at the generated URL instead of
+   the raw upload.
+
+Estimated effort when triggered: ~1 day including a font license
+review and a generated-image cache strategy. Defer until Plotzy has
+measurable social-share traffic on book or author pages.
+
+_Logged 2026-05-04 during Stage 3 of feat/seo-meta-and-jsonld._
+
+---
+
 ## LOW — Migrate sitemap.xml to a dynamic endpoint when content scales
 
 **File**: [artifacts/plotzy/public/sitemap.xml](artifacts/plotzy/public/sitemap.xml)

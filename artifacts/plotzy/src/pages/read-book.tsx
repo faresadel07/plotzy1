@@ -719,6 +719,7 @@ export default function ReadBook() {
         title={book.title}
         description={book.summary || `${book.title} by ${book.authorName || "an anonymous author"} — read free on Plotzy.`}
         ogType="book"
+        ogImage={book.coverImage || undefined}
       />
 
       {/* ── Top bar ── */}

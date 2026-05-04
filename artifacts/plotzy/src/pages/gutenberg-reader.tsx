@@ -537,6 +537,7 @@ export default function GutenbergReader() {
           title={meta.title}
           description={`Read ${meta.title} by ${gutenbergAuthorName} — free, public domain, on Plotzy.`}
           ogType="book"
+          ogImage={meta.coverUrl || undefined}
         />
       )}
       {/* ══ TOP BAR ══════════════════════════════════════════════════════════ */}

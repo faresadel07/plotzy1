@@ -97,6 +97,29 @@ function buildCanonical(pathname: string): string {
   return `${SITE_URL}${stripped}`;
 }
 
+/**
+ * Resolve an OG image to an absolute URL.
+ *
+ * Social-preview crawlers (Twitter, Facebook, LinkedIn, Slack) require
+ * absolute URLs for og:image / twitter:image — relative paths render as
+ * a broken preview on most platforms. This helper handles three input
+ * shapes:
+ *   - already absolute (http:// or https://) → use as-is
+ *   - protocol-relative (//cdn.example.com/x.jpg) → prepend "https:"
+ *   - site-root path (/uploads/abc.jpg) → prepend SITE_URL
+ *
+ * Anything that doesn't start with one of those (defensive) falls back
+ * to the default OG image so the preview is always something rather
+ * than a malformed URL the crawler will reject silently.
+ */
+function absolutizeImage(value: string | undefined): string {
+  if (!value) return `${SITE_URL}${DEFAULT_OG_IMAGE}`;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("//")) return `https:${value}`;
+  if (value.startsWith("/")) return `${SITE_URL}${value}`;
+  return `${SITE_URL}${DEFAULT_OG_IMAGE}`;
+}
+
 export function SEO({
   title,
   titleOverride,
@@ -117,7 +140,7 @@ export function SEO({
   const finalDescription = description ?? DEFAULT_DESCRIPTION;
   const finalCanonical = canonical ?? buildCanonical(pathname);
   const finalOgUrl = ogUrl ?? finalCanonical;
-  const finalOgImage = ogImage ?? DEFAULT_OG_IMAGE;
+  const finalOgImage = absolutizeImage(ogImage);
 
   return (
     <Helmet>

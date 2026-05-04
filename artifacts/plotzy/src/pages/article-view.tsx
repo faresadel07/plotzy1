@@ -87,6 +87,7 @@ export default function ArticleView() {
         title={article.title}
         description={articleExcerpt}
         ogType="article"
+        ogImage={article.featuredImage || undefined}
       />
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
