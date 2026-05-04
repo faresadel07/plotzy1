@@ -1555,4 +1555,213 @@ Estimated effort when triggered: ~1 hour.
 
 _Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
 
+---
+
+## Pricing Path A follow-ups (deferred from feat/pricing-honesty-rewrite)
+
+This batch (commits 9f6f9d7, 61b1dd5, 23f2bf5, ab3ca93) re-based the
+`/pricing` copy on the actual server-side gates in
+`artifacts/api-server/src/lib/tier-limits.ts`. Many TierLimits flags
+(`canExportPdf`, `canUseAudiobook`, `maxBooks`, etc.) are well-defined
+but never read by any route handler — Free users currently access
+all those features. The pricing copy now reflects this reality (Path B).
+
+Path A is the engineering work that re-introduces real gates so Pro
+and Premium re-acquire structural value beyond AI quotas. Each item
+below has the audit's effort estimate, the file:line that needs
+touching, and severity reflecting revenue impact + customer trust risk.
+
+Reference: `pricing-truthfulness-audit.md`, `pricing-rewrite-plan.md`.
+
+### HIGH — infrastructure investments
+
+#### Item 11. Feature-flag system for "Early access" tier benefit
+
+**Severity**: HIGH
+**Effort**: ~16h
+**Why HIGH**: requires building a new system (DB table, gating
+middleware, admin UI for flag management), not just wiring up an
+existing constant. Blocks the "Early access to new features" claim
+that was removed from /pricing.
+
+**Work**: introduce a `feature_flags` table (`flag_name`, `enabled_tiers`),
+a small `requireFeatureFlag('foo')` middleware, and a frontend
+`useFeatureFlag` hook. When ready, claim can return to /pricing.
+
+#### Item 12. Support priority queue for "Priority support" tier benefit
+
+**Severity**: HIGH
+**Effort**: ~16h
+**Why HIGH**: also requires net-new infrastructure. The `supportMessages`
+table exists but has no priority/tier column, no admin triage UI, no
+SLA timer.
+
+**Work**: add `priority` column to `supportMessages` derived from
+the submitter's tier at create time; build admin triage UI that sorts
+by priority + age; document an SLA target (only after the queue
+mechanics exist). Then re-add "Priority support" claim with a real
+metric.
+
+### MEDIUM — wire existing tier-limits.ts flags into route handlers
+
+These are 1–3 hour additions per gate. The flag/constant exists in
+`tier-limits.ts` already; the route handler just needs to read it.
+
+#### Item 1. Wire `canExportPdf` on PDF download endpoint
+
+**Severity**: MEDIUM
+**Effort**: 1h
+**File**: search `artifacts/api-server/src` for the PDF-export route.
+
+**Work**: at top of handler, look up `getUserTier(user)` →
+`getTierLimits(tier).canExportPdf`. Return 403 with code
+`PDF_EXPORT_TIER_LOCKED` if false.
+
+#### Item 2. Wire `canExportEpub` on EPUB download endpoint
+
+**Severity**: MEDIUM
+**Effort**: 1h
+**File**: same as Item 1 (often the same endpoint with `format=epub`).
+
+**Work**: parallel to Item 1 with `canExportEpub`.
+
+#### Item 3. Wire `canUseAudiobook` on audiobook preview/export endpoints
+
+**Severity**: MEDIUM
+**Effort**: 1h
+**File**: `artifacts/api-server/src/routes.ts` audiobook handlers
+(synthesizeToMp3 callers around lines 2369/2403).
+
+**Work**: gate on `getTierLimits(tier).canUseAudiobook`.
+
+#### Item 4. Wire `maxAudiobookExportsPerMonth` for monthly export quotas
+
+**Severity**: MEDIUM
+**Effort**: 2h
+**File**: same as Item 3 + new `audiobook_exports` counter table.
+
+**Work**: add `audiobook_exports` table with `(user_id, created_at)`,
+add `checkAudiobookLimit(userId, tier)` mirror of
+`checkMarketplaceLimit`, gate before the synth call. Once shipped,
+restore "X audiobook exports/month" claims to /pricing per tier.
+
+#### Item 5. Per-tier book count enforcement
+
+**Severity**: MEDIUM
+**Effort**: 1h
+**File**: `artifacts/api-server/src/routes/books.routes.ts` POST handler.
+
+**Work**: read `getTierLimits(tier).maxBooks`; reject when count ≥
+limit. Today no tier has a book count cap so all three tiers behave
+identically here. Once shipped, "No book limits" on Pro can become a
+relative uplift over a Free/Starter cap.
+
+#### Item 6. Per-book chapter count enforcement (currently checks total)
+
+**Severity**: MEDIUM
+**Effort**: 1h
+**File**: `artifacts/api-server/src/routes/chapters.routes.ts:48`.
+
+**Work**: today the check uses `getUserChapterCount(userId)` (TOTAL
+across all books) and only fires for non-active subscriptions. Extend
+to use `getTierLimits(tier).maxChaptersPerBook` per-book and apply on
+all tiers (so Pro's "no chapter limits" eventually means "limit is
+high but real").
+
+#### Item 7. Aggregate word count enforcement
+
+**Severity**: MEDIUM
+**Effort**: 3h
+**File**: `chapters.routes.ts:101` (currently per-chapter check) +
+new aggregator.
+
+**Work**: add `getUserWordCount(userId)` that sums across all chapters,
+gate against `getTierLimits(tier).maxWords` on chapter PUT. Higher
+effort because the aggregator query needs an index for performance
+on writers with many chapters.
+
+#### Item 9. Wire `canUseAdvancedAI` on 4 analysis endpoints
+
+**Severity**: MEDIUM
+**Effort**: 1h
+**File**: the 4 analysis endpoints in `routes.ts` (plot holes, pacing,
+dialogue, voice consistency).
+
+**Work**: gate each on `getTierLimits(tier).canUseAdvancedAI`. Once
+done, the AI analysis tools line moves back to Pro feature list.
+
+### LOW — small wiring fixes + cleanup
+
+#### Item 8. `maxPublishedBooks` enforcement on Pro
+
+**Severity**: LOW
+**Effort**: 30m
+**File**: publish/unpublish endpoint.
+
+**Work**: today only Free has a published-book cap. Wire Pro to
+`PRO_MAX_PUBLISHED_BOOKS` so a future "20 published books on Pro,
+unlimited on Premium" claim is real.
+
+#### Item 10. Spine AI cover generation
+
+**Severity**: LOW
+**Effort**: ~4h
+**File**: cover-generator route + frontend
+(`pages/cover-designer.tsx`) + `lib/shared/src/routes.ts:78`
+(`z.enum(['front', 'back'])`).
+
+**Work**: extend the cover-generation prompt + Zod enum to accept
+`'spine'`; add a spine canvas to the cover designer UI. Once done,
+`(front and back)` on /pricing can become `(front, back, and spine)`
+and the spine claim is real.
+
+#### Item 14. Delete `/api/marketplace/record` deprecated stub
+
+**Severity**: LOW
+**Source**: introduced in B1 of this batch (commit 9f6f9d7).
+**File**: `artifacts/api-server/src/routes/misc.routes.ts:1247`.
+**Calendar trigger**: 2026-05-19 (≈2 weeks after deploy of 9f6f9d7).
+
+**Work**: by then no browser tab from the pre-fix deployment will
+still be alive. Delete the stub route entirely + the comment block.
+The frontend already stopped calling it in 9f6f9d7.
+
+#### Item 15. Move mid-file import in `misc.routes.ts` to file top
+
+**Severity**: LOW
+**File**: `artifacts/api-server/src/routes/misc.routes.ts:1211`.
+
+**Work**: the
+`import { getUserTier, getTierLimits, checkMarketplaceLimit, getMarketplaceHistory }`
+statement sits at line 1211, in the middle of the file rather than
+at the top with the other imports. Pre-existing pattern (not
+introduced by this batch — predates it). Quick cleanup when touching
+this file next: hoist to the top alongside the other `import` lines.
+
+#### Item 16. "✦ Most Popular" badge on Pro tier — verify before claim becomes data-supported
+
+**Severity**: LOW
+**File**: `artifacts/plotzy/src/pages/pricing.tsx:472-478`.
+
+**Observation**: the badge text "✦ Most Popular" was retained
+through the pricing rewrite, but Plotzy is pre-launch with no
+subscription distribution data. The claim is the same category as
+the items the audit removed — unverifiable marketing copy. Two
+honest paths:
+
+- (a) Remove the badge until launch metrics exist, then re-add when
+  there is a defensible "X% of subscribers" backing it.
+- (b) Reframe as "Recommended" or "Best balance of features and
+  price" — softer, not tied to a popularity claim that can't be
+  verified.
+
+Neither is a launch blocker. Logging here so it gets revisited the
+first time someone touches the pricing card styling.
+
+_Item 13 (downgrade word-cap UX mismatch) was originally drafted for
+this list but was promoted to in-batch implementation — see B5b
+commit and chapters.routes.ts PUT handler's "downgrade grace" branch._
+
+_Logged 2026-05-05 during B5 of feat/pricing-honesty-rewrite._
+
 
