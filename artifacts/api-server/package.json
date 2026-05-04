@@ -44,8 +44,6 @@
     "pino": "^9",
     "pino-http": "^10",
     "resend": "^6.10.0",
-    "stripe": "^20.4.1",
-    "stripe-replit-sync": "^1.0.0",
     "ua-parser-js": "^2.0.9",
     "ws": "^8.18.0",
     "zod": "catalog:"
