@@ -9,6 +9,8 @@ import {
 } from "@/hooks/use-public-library";
 import { InlineCommentsLayer } from "@/components/InlineCommentsLayer";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBookSchema } from "@/lib/seo-schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
@@ -721,6 +723,7 @@ export default function ReadBook() {
         ogType="book"
         ogImage={book.coverImage || undefined}
       />
+      <JsonLd data={buildBookSchema(book, ratingStats)} />
 
       {/* ── Top bar ── */}
       <header style={{

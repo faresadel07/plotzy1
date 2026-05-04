@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "wouter";
+import { absolutizeImage, SITE_URL } from "@/lib/seo-schema";
 
 /**
  * Per-page SEO component. Sets <title>, <meta description>, robots,
@@ -31,8 +32,6 @@ import { useLocation } from "wouter";
 
 const SITE_BRAND = "Plotzy";
 const SITE_BRAND_FULL = "Plotzy — Write Your Story";
-const SITE_URL = "https://plotzy.com";
-const DEFAULT_OG_IMAGE = "/opengraph.jpg";
 const DEFAULT_DESCRIPTION =
   "Plotzy is a professional book writing platform with AI-assisted tools, audiobook studio, cover designer, and a community library.";
 
@@ -95,29 +94,6 @@ function buildCanonical(pathname: string): string {
     ? cleanPath.slice(0, -1)
     : cleanPath;
   return `${SITE_URL}${stripped}`;
-}
-
-/**
- * Resolve an OG image to an absolute URL.
- *
- * Social-preview crawlers (Twitter, Facebook, LinkedIn, Slack) require
- * absolute URLs for og:image / twitter:image — relative paths render as
- * a broken preview on most platforms. This helper handles three input
- * shapes:
- *   - already absolute (http:// or https://) → use as-is
- *   - protocol-relative (//cdn.example.com/x.jpg) → prepend "https:"
- *   - site-root path (/uploads/abc.jpg) → prepend SITE_URL
- *
- * Anything that doesn't start with one of those (defensive) falls back
- * to the default OG image so the preview is always something rather
- * than a malformed URL the crawler will reject silently.
- */
-function absolutizeImage(value: string | undefined): string {
-  if (!value) return `${SITE_URL}${DEFAULT_OG_IMAGE}`;
-  if (/^https?:\/\//i.test(value)) return value;
-  if (value.startsWith("//")) return `https:${value}`;
-  if (value.startsWith("/")) return `${SITE_URL}${value}`;
-  return `${SITE_URL}${DEFAULT_OG_IMAGE}`;
 }
 
 export function SEO({
