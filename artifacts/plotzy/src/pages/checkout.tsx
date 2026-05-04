@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
+import { Sentry } from "@/lib/sentry";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#000";
@@ -217,7 +218,9 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
       setIsProcessing(false);
       setStatus("success");
     } catch (err) {
-      console.error("Capture failed:", err);
+      Sentry.captureException(err, {
+        tags: { area: "checkout", source: "paypal_capture" },
+      });
       // fetch() throws TypeError specifically for network failures
       // (offline, DNS, blocked by an extension, CORS, …). Anything else
       // is more likely an internal logic error and gets the generic copy.
@@ -232,7 +235,9 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
   };
 
   const onError = (err: unknown) => {
-    console.error("PayPal SDK error:", err);
+    Sentry.captureException(err, {
+      tags: { area: "checkout", source: "paypal_sdk" },
+    });
     setError(
       "Payment couldn't be processed. Please try again or use a different payment method."
     );

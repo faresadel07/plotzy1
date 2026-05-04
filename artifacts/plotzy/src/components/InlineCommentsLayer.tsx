@@ -336,7 +336,6 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
       setLiveRects([]);
       setNewComment("");
     } catch (err: any) {
-      console.error("Inline comment submit error:", err);
       toast({ title: err?.message || "Failed to save — is the server running?", variant: "destructive" });
     } finally {
       setSubmitting(false);
@@ -417,7 +416,7 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
                     <MessageSquarePlus style={{ width: 14, height: 14, color: "rgba(250,204,21,0.8)" }} />
                     <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Add Comment</span>
                   </div>
-                  <button onClick={() => { setSelectionInfo(null); setLiveRects([]); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
+                  <button onClick={() => { setSelectionInfo(null); setLiveRects([]); }} aria-label="Cancel" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
                     <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>
@@ -453,7 +452,7 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {activeComment.comment.authorAvatarUrl ? (
-                      <img src={activeComment.comment.authorAvatarUrl} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
+                      <img src={activeComment.comment.authorAvatarUrl} alt={activeComment.comment.authorName || ""} style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
                     ) : (
                       <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(250,204,21,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "rgba(250,204,21,0.8)" }}>
                         {activeComment.comment.authorName[0]?.toUpperCase()}
@@ -466,7 +465,7 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => setActiveComment(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
+                  <button onClick={() => setActiveComment(null)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
                     <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>

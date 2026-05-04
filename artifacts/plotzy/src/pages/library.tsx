@@ -159,11 +159,13 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
             <div style={{ position: "absolute", bottom: 8, right: 8, display: "flex", gap: 4, zIndex: 10 }}>
               <button
                 onClick={e => { e.preventDefault(); e.stopPropagation(); setFeatured({ bookId: book.id, feature: !isFeatured }, { onSuccess: () => toast({ title: isFeatured ? "Unfeatured" : "Featured!" }) }); }}
+                aria-label={isFeatured ? "Unfeature this book" : "Feature this book"}
                 style={{ width: 26, height: 26, borderRadius: 6, background: isFeatured ? "#fbbf24" : "rgba(0,0,0,0.7)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: isFeatured ? "#000" : "#fff" }}
               ><Trophy style={{ width: 12, height: 12 }} /></button>
               {!confirmDelete ? (
                 <button
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDelete(true); }}
+                  aria-label="Delete book"
                   style={{ width: 26, height: 26, borderRadius: 6, background: "rgba(0,0,0,0.7)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}
                 ><Trash2 style={{ width: 12, height: 12 }} /></button>
               ) : (
@@ -202,7 +204,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
                 onMouseLeave={e => { (e.currentTarget.querySelector("span") as any).style.color = TS; }}
               >
                 {book.authorAvatarUrl ? (
-                  <img src={book.authorAvatarUrl} alt="" style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
+                  <img src={book.authorAvatarUrl} alt={authorName} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
                 ) : (
                   <User style={{ width: 12, height: 12, color: TD }} />
                 )}
@@ -438,7 +440,7 @@ export default function Library() {
                             border: "1px solid rgba(255,255,255,0.06)",
                           }}>
                             {b.coverImage ? (
-                              <img src={b.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              <img src={b.coverImage} alt={b.title || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
                               <BookOpen style={{ width: 16, height: 16, color: "#a78bfa", opacity: 0.5, margin: "auto", display: "block", marginTop: 22 }} />
                             )}

@@ -296,6 +296,17 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
     <div dir={isRTL ? "rtl" : "ltr"} className={`${noScroll ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}
       style={darkNav ? { background: "#080808" } : undefined}>
 
+      {/* Skip-to-content link — first focusable element so keyboard
+          users can bypass the navbar. Visually offscreen by default,
+          slides into view on focus. `start-2` is a Tailwind logical
+          property so RTL layouts mirror correctly. */}
+      <a
+        href="#main-content"
+        className="absolute start-2 top-2 z-[200] -translate-y-[200%] focus:translate-y-0 transition-transform bg-white text-black px-4 py-2 rounded-md shadow-lg outline outline-2 outline-blue-600 outline-offset-2 text-sm font-medium"
+      >
+        {t("skipToContent")}
+      </a>
+
       {/* ── Top navbar ── */}
       <header style={{
         position: "fixed",
@@ -608,18 +619,23 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             <span style={{ flex: 1, textAlign: "center" }}>📢 {banner.message}</span>
             <button
               onClick={() => setBannerDismissed(true)}
+              aria-label="Dismiss"
               style={{ background: "none", border: "none", cursor: "pointer", color: fg, opacity: 0.6, fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0 }}
             >×</button>
           </div>
         );
       })()}
 
-      <main className={
-        noScroll ? "flex-1 overflow-hidden pt-[44px]" :
-        isLanding ? "flex-1 w-full pt-11" :
-        isFullDark ? "flex-1 w-full pt-[60px]" :
-        "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-10"
-      }>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        style={{ scrollMarginTop: "80px" }}
+        className={
+          noScroll ? "flex-1 overflow-hidden pt-[44px]" :
+          isLanding ? "flex-1 w-full pt-11" :
+          isFullDark ? "flex-1 w-full pt-[60px]" :
+          "flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-[72px] pb-10"
+        }>
         {children}
       </main>
 

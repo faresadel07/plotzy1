@@ -117,7 +117,7 @@ export default function ArticleView() {
           {/* Author */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {article.authorAvatarUrl ? (
-              <img src={article.authorAvatarUrl} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+              <img src={article.authorAvatarUrl} alt={authorName} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
             ) : (
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(124,106,247,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <User size={14} style={{ color: "#7c6af7" }} />

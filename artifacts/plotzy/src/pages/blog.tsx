@@ -127,7 +127,7 @@ export default function Blog() {
                     {/* Image */}
                     {img ? (
                       <div style={{ height: 160, overflow: "hidden" }}>
-                        <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={img} alt={a.title || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </div>
                     ) : (
                       <div style={{ height: 100, background: "linear-gradient(135deg, rgba(124,106,247,0.08), rgba(124,106,247,0.02))", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -158,7 +158,7 @@ export default function Blog() {
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           {a.authorAvatarUrl ? (
-                            <img src={a.authorAvatarUrl} alt="" style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
+                            <img src={a.authorAvatarUrl} alt={authorName} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
                           ) : (
                             <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(124,106,247,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                               <User size={10} style={{ color: ACC }} />

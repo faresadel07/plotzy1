@@ -992,4 +992,259 @@ other DB work is in flight.
 
 _Logged 2026-05-04 during Stage 8 of `feat/remove-stripe`._
 
+## LOW — Same bare-catch-500 pattern on GET /api/admin/support
+
+**Location**: `artifacts/api-server/src/routes/misc.routes.ts:658-665`.
+
+The full-list support-tickets endpoint mirrors the bare-catch
+pattern that we fixed for `/api/admin/support/unread-count` in
+Item 3 of feat/cleanup-batch-1. Same defensive treatment should
+apply: structured `logger.error({ err }, ...)` inside the catch
+(currently `err` is captured and silently dropped) plus a graceful
+fallback rather than 500ing the admin Support tab on a transient
+failure.
+
+**Why LOW**: the admin Support tab is internal-only and a 500
+here doesn't affect end-users. The next request retries; the
+failure window is bounded.
+
+**Suggested fix when prioritised**:
+```ts
+catch (err) {
+  logger.error({ err }, "Failed to fetch admin support messages");
+  return res.json([]);  // or 503, depending on how the UI should react
+}
+```
+
+_Logged 2026-05-04 during Item 3 of feat/cleanup-batch-1
+after deciding to keep this batch's scope narrow._
+
+## MEDIUM — Missing logged-in change-password endpoint
+
+**Location**: `artifacts/api-server/src/routes/auth.routes.ts` —
+no `POST /api/auth/change-password` (or similar) handler exists.
+
+**Behavior**: A logged-in user has no in-app way to change their
+password without going through the forgot-password reset-token
+flow. They have to log out, click "Forgot password," wait for the
+email, follow the link, and set the new password. This is the
+recovery flow, not the routine-rotation flow.
+
+**Why this matters now**: Item 5 of feat/cleanup-batch-1 wired
+the new password-changed notification email into the
+`/api/auth/reset-password` handler — the only path that exists.
+The user prompt asked us to "verify BOTH paths" assuming a
+logged-in change endpoint existed. It does not. The single path
+is now covered; the second path remains missing.
+
+**Cross-reference**: This is the same gap previously logged in
+`pre-launch-audit.md` as M-11 ("No password-change endpoint for
+logged-in users"). Re-flagging here so it doesn't drift, and so
+the next batch that adds this endpoint knows to also call the
+same `sendEmail` helper to fire the password-changed
+notification (the email body and contact-email env-var pattern
+are already in place at `auth.routes.ts:705-738`).
+
+**Suggested implementation when prioritised**:
+```ts
+// POST /api/auth/change-password — auth-required
+// Body: { currentPassword: string, newPassword: string }
+// Validate currentPassword via bcrypt.compare against the stored hash
+// Reject if invalid (avoids hijacked-session password takeover)
+// bcrypt.hash newPassword, storage.updateUser({ passwordHash })
+// Fire the same password-changed email block already in
+// /api/auth/reset-password — extract to a helper or duplicate
+```
+
+**Why MEDIUM rather than HIGH**: a recovery path exists. Users
+who want to change their password can do so via forgot-password
+even if they remember the old one. The gap is convenience, not
+capability.
+
+_Logged 2026-05-04 during Item 5 of feat/cleanup-batch-1 when
+auditing both password-change paths._
+
+## LOW — Suspension email has no admin-supplied "reason" field
+
+**Location**: `artifacts/api-server/src/routes/misc.routes.ts:623`
+(single-suspend) and `:705` (bulk-suspend); the email helper at
+`artifacts/api-server/src/lib/email.ts:163` (`sendSuspensionEmail`).
+
+**Behavior today**: When an admin suspends a user via either
+endpoint, the user receives a generic email saying "Your account
+has been suspended... contact us if you believe this is a
+mistake." The email body says nothing about WHY the suspension
+happened. The user has to email support to find out, then wait
+for a manual reply.
+
+**Why this matters**: a user who was suspended for a clear cause
+(e.g., posted abusive content, ToS violation, payment fraud)
+should ideally see that reason in the email itself — both for
+their own clarity and to reduce support back-and-forth. Without
+it, every suspension generates an appeal email even when the
+admin's reason was unambiguous.
+
+**Why LOW**: the platform is pre-launch; suspension volume is
+zero today. The current generic email is honest about the
+situation; users can appeal via the SUPPORT_EMAIL contact and
+get a reason that way. The gap is convenience and admin-time
+efficiency, not user-rights compliance.
+
+**Suggested implementation when prioritised**:
+
+1. Backend — extend the request body shape:
+```ts
+const { suspended, reason } = z.object({
+  suspended: z.boolean(),
+  reason: z.string().max(500).optional(),
+}).strict().parse(req.body);
+```
+
+2. Backend — pass reason to the helper:
+```ts
+sendSuspensionEmail(before.email, reason).catch(...)
+```
+
+3. Helper — interpolate with `escapeHtml()`:
+```ts
+export async function sendSuspensionEmail(toEmail: string, reason?: string) {
+  const reasonHtml = reason
+    ? `<p style="..."><strong>Reason:</strong> ${escapeHtml(reason)}</p>`
+    : "";
+  // ...
+}
+```
+
+The `escapeHtml()` step is critical — without it, an admin could
+craft an HTML-injection payload as the reason and weaponise the
+suspension email pipeline. The helper file already has
+`escapeHtml()` available; the inline comment in
+`sendSuspensionEmail` flags this for the implementer.
+
+4. Persistence — add a `reason` column to `admin_audit_logs.details`
+JSON or a new `suspension_reason` column on the user row. Keeping
+it on the audit log is cleaner since it's a per-action attribute,
+not a per-user-state attribute.
+
+5. Admin UI — add a textarea to the suspend modal in
+`artifacts/plotzy/src/pages/admin.tsx` (single-suspend mutation
+at line 245-251 and the bulk modal). Pass the reason through.
+
+**Why deferred from Item 6 of feat/cleanup-batch-1**: Adding a
+reason field requires API change + admin UI textarea + audit log
+persistence. Defer until admin moderation gets dedicated product
+attention.
+
+_Logged 2026-05-04 during Item 6 of feat/cleanup-batch-1 after
+deciding to ship the email pipeline first and the reason field
+as a separate UX polish._
+
+## LOW — Aria-label coverage gaps deferred from Item 7 (cleanup-batch-1)
+
+Three areas were scoped out of the Item 7 sweep because verifying
+each properly would expand the batch's footprint significantly:
+
+### 1. `pages/audiobook-studio.tsx` — ~6 icon-only buttons need verification
+
+The MiniPlayer toggle (line 271), export button context (line 779),
+per-chapter expand chevrons (line 913), and a few others have
+icon children that may or may not be paired with visible text in
+the surrounding row layout. Verified: line 847 (chapter selection
+CheckCircle/Circle toggle) and line 913 (expand ChevronUp/Down)
+ARE icon-only and need aria-label. Better as a focused
+audiobook-studio a11y pass than a guess-based addition mixed in
+with the other Item 7 work.
+
+### 2. Form `aria-describedby`
+
+Auth modal password input passes `error={fieldErrors.password}`
+into a shared `FieldInput` component. Adding `aria-describedby`
+properly requires modifying FieldInput's id-generation and the
+error-slot binding, which propagates to every field across the
+app. Better as a single focused FieldInput refactor than a one-off
+aria-describedby on the password input.
+
+### 3. Read-book left/right page-tap regions are `<div onClick>` not buttons
+
+Lines 477 and 502 of `pages/read-book.tsx` are `<div>` elements
+with `onClick` and `title=` for previous/next page navigation.
+They have title attributes for sighted-keyboard tooltip behavior
+but cannot be focused with Tab and don't announce as buttons to
+screen readers. Adding aria-label to a non-button div helps
+little. Proper fix is conversion to `<button>` in Item 9 of this
+batch (div-buttons → buttons), at which point aria-label can be
+added as part of the conversion.
+
+### 4. Full i18n translation of all aria-labels
+
+The 34 labels added in Item 7 are English-only (with 9 reusing
+the existing `ar ? "..." : "..."` ternary pattern in
+chapter-editor for free Arabic coverage). Translating to all 14
+UI languages would add roughly 25 new strings × 13 non-English
+languages ≈ 325 entries. Defer until i18n batch is prioritized.
+
+_Logged 2026-05-04 during Item 7 of feat/cleanup-batch-1 after
+deciding to ship verifiable aria-labels first._
+
+## LOW — Div-onClick conversions deferred from Item 9 (cleanup-batch-1)
+
+Two clusters of div-as-button patterns were SKIPPED in Item 9
+because converting them carries CSS or HTML5 risk that exceeds
+the cleanup batch's scope:
+
+### 1. LibraryBookshelf decorative spines (20 divs)
+
+`components/LibraryBookshelf.tsx:25-50` has 20 visual book-spine
+divs with heavy custom CSS classes (`.book.white.has-simple-text`,
+`.book.maroon.decor-heavy`, `.book.book-pages`, etc.) that paint
+the on-homepage shelf decoration. Each div has an onClick that
+shows a preview overlay.
+
+Converting to `<button>` requires CSS overrides on every `.book`
+selector to neutralise default button styles (background, border,
+font, color, padding). The companion stylesheet would need
+`appearance: none; background: transparent; border: 0; padding: 0;
+color: inherit; font: inherit;` reset rules per selector.
+
+Better as a focused LibraryBookshelf a11y + CSS pass than a
+mid-batch conversion.
+
+### 2. cover-designer.tsx:840 layer row (1 div)
+
+The cover-designer layer row is a div with an onClick (selects the
+layer) but contains 4 nested `<button>` children (visibility, lock,
+move-up, move-down) that were given aria-labels in Item 7. HTML5
+forbids interactive elements nested inside `<button>`, so the row
+cannot be converted to a `<button>` while keeping the children as
+buttons.
+
+Proper fix is one of:
+- `role="button"` + `tabIndex={0}` + keyboard handler on the outer
+  div (preserves the children unchanged)
+- Refactor so the row's click target and the action buttons are
+  siblings rather than parent/children
+
+Both restructures are larger than Item 9's scope. Defer to a
+focused cover-designer a11y pass.
+
+### 3. Modal/dropdown backdrops (8 divs) — INTENTIONAL, no change planned
+
+The following `<div>` elements have `onClick` but should NOT be
+converted to buttons because they are full-screen close-on-outside
+overlays. Converting them would create giant invisible tab-stops
+that screen readers announce as buttons, which is worse UX than
+the current state. Keyboard users close these via the Escape key
+or the explicit close button inside the modal:
+
+- `gutenberg-reader.tsx:882, 992, 1026` (page panel / TOC / settings)
+- `research-board.tsx:72`, `book-customizer.tsx:298`,
+  `ai-assistant.tsx:169`, `BookViewerOverlay.tsx:34`,
+  `author-profile.tsx:811`
+
+These are listed for completeness so a future contributor reading
+this entry doesn't try to "fix" them.
+
+_Logged 2026-05-04 during Item 9 of feat/cleanup-batch-1 after
+choosing conservative scope to avoid CSS regressions._
+
 

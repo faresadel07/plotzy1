@@ -310,7 +310,7 @@ export default function PublishBook() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end", flexShrink: 0 }}>
                   <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12 }}>
                     {book.coverImage ? (
-                      <img src={book.coverImage} alt="" style={{ width: 36, height: 50, objectFit: "cover", borderRadius: 6 }} />
+                      <img src={book.coverImage} alt={book.title || ""} style={{ width: 36, height: 50, objectFit: "cover", borderRadius: 6 }} />
                     ) : (
                       <div style={{ width: 36, height: 50, borderRadius: 6, background: ACCENT, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <BookOpen size={14} color={MUTED} />

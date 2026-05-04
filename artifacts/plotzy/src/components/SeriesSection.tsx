@@ -342,10 +342,10 @@ function SeriesCard({
               </div>
             </div>
           ) : series.description ? (
-            <div onClick={() => setEditingDesc(true)} className="group/desc cursor-pointer p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all">
+            <button type="button" onClick={() => setEditingDesc(true)} className="group/desc cursor-pointer p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all w-full text-left">
               <p className="text-sm text-white/60 leading-relaxed">{series.description}</p>
               <span className="text-[10px] text-white/25 mt-1 block opacity-0 group-hover/desc:opacity-100 transition-opacity">Click to edit</span>
-            </div>
+            </button>
           ) : (
             <button onClick={() => setEditingDesc(true)} className="w-full text-left text-xs text-white/30 hover:text-white/60 transition-colors border border-dashed border-white/10 hover:border-white/20 rounded-lg px-3 py-2">
               + Add description

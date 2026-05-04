@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, Sparkles, Feather, Loader2, Wand2, Rocket, ArrowRight, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
+import { Sentry } from "@/lib/sentry";
 
 const GENRES = [
     { id: "fantasy", label: "Fantasy", icon: "✨" },
@@ -67,7 +68,9 @@ export function OnboardingWizard({
             await onCreateBook({ title, summary: smartSummary, authorName, genre, protagonist });
             onClose();
         } catch (err) {
-            console.error("Failed to create book:", err);
+            Sentry.captureException(err, {
+                tags: { area: "onboarding", source: "book_create" },
+            });
         } finally {
             setIsSubmitting(false);
         }

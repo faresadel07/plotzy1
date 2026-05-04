@@ -74,6 +74,7 @@ export const SUPPORTED_UI_LANGS: readonly Language[] = UI_LANGUAGES.map((l) => l
 export const translations: Record<Language, Record<string, string>> = {
   en: {
     appName: "Plotzy",
+    skipToContent: "Skip to main content",
     tagline: "Write your story. Share your world.",
     myLibrary: "My Library",
     mySubscription: "My Subscription",
@@ -177,6 +178,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   ar: {
     appName: "بلوتزي",
+    skipToContent: "تخطي إلى المحتوى الرئيسي",
     tagline: "اكتب قصتك. شارك عالمك.",
     myLibrary: "مكتبتي",
     mySubscription: "اشتراكي",
@@ -280,6 +282,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   fr: {
     appName: "Plotzy",
+    skipToContent: "Aller au contenu principal",
     tagline: "Écrivez votre histoire. Partagez votre monde.",
     myLibrary: "Ma bibliothèque",
     mySubscription: "Mon abonnement",
@@ -383,6 +386,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   es: {
     appName: "Plotzy",
+    skipToContent: "Saltar al contenido principal",
     tagline: "Escribe tu historia. Comparte tu mundo.",
     myLibrary: "Mi biblioteca",
     mySubscription: "Mi suscripción",
@@ -486,6 +490,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   de: {
     appName: "Plotzy",
+    skipToContent: "Zum Hauptinhalt springen",
     tagline: "Schreib deine Geschichte. Teile deine Welt.",
     myLibrary: "Meine Bibliothek",
     mySubscription: "Mein Abonnement",
@@ -589,6 +594,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   pt: {
     appName: "Plotzy",
+    skipToContent: "Ir para o conteúdo principal",
     tagline: "Escreva sua história. Compartilhe seu mundo.",
     myLibrary: "Minha biblioteca",
     mySubscription: "Minha assinatura",
@@ -692,6 +698,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   ru: {
     appName: "Plotzy",
+    skipToContent: "Перейти к основному содержанию",
     tagline: "Пишите свою историю. Делитесь своим миром.",
     myLibrary: "Моя библиотека",
     mySubscription: "Моя подписка",
@@ -795,6 +802,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   zh: {
     appName: "Plotzy",
+    skipToContent: "跳到主要内容",
     tagline: "写下你的故事，分享你的世界。",
     myLibrary: "我的书库",
     mySubscription: "我的订阅",
@@ -898,6 +906,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   ja: {
     appName: "Plotzy",
+    skipToContent: "メインコンテンツへスキップ",
     tagline: "あなたの物語を書こう。あなたの世界を共有しよう。",
     myLibrary: "マイライブラリ",
     mySubscription: "マイサブスクリプション",
@@ -1001,6 +1010,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   ko: {
     appName: "Plotzy",
+    skipToContent: "본문 바로가기",
     tagline: "당신의 이야기를 쓰세요. 당신의 세계를 나누세요.",
     myLibrary: "내 서재",
     mySubscription: "내 구독",
@@ -1104,6 +1114,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   hi: {
     appName: "Plotzy",
+    skipToContent: "मुख्य सामग्री पर जाएं",
     tagline: "अपनी कहानी लिखें। अपनी दुनिया साझा करें।",
     myLibrary: "मेरी लाइब्रेरी",
     mySubscription: "मेरी सदस्यता",
@@ -1207,6 +1218,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   tr: {
     appName: "Plotzy",
+    skipToContent: "Ana içeriğe geç",
     tagline: "Hikayeni yaz. Dünyanı paylaş.",
     myLibrary: "Kütüphanem",
     mySubscription: "Aboneliğim",
@@ -1310,6 +1322,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   he: {
     appName: "Plotzy",
+    skipToContent: "דלג לתוכן הראשי",
     tagline: "כתוב את הסיפור שלך. שתף את העולם שלך.",
     myLibrary: "הספרייה שלי",
     mySubscription: "המנוי שלי",
@@ -1413,6 +1426,7 @@ export const translations: Record<Language, Record<string, string>> = {
   },
   fa: {
     appName: "Plotzy",
+    skipToContent: "پرش به محتوای اصلی",
     tagline: "داستان خود را بنویسید. دنیای خود را به اشتراک بگذارید.",
     myLibrary: "کتابخانه من",
     mySubscription: "اشتراک من",

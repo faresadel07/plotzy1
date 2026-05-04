@@ -233,7 +233,7 @@ function EditProfileModal({
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <div style={{ position: "relative", width: 72, height: 72, borderRadius: "50%", background: C3, border: `2px solid ${B}`, overflow: "hidden", flexShrink: 0 }}>
                   {profile.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={profile.avatarUrl} alt={profile.displayName || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: SF, fontSize: 24, fontWeight: 700, color: TS }}>
                       {(profile.displayName || "?")[0].toUpperCase()}
