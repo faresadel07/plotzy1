@@ -986,6 +986,9 @@ export default function Home() {
 
 
 
+        {/* ===== SHARED SECTIONS WRAPPER (dark bg matches Your Projects above) ===== */}
+        <div className="bg-[#050505]">
+
         {/* ===== SHARED WITH ME ===== */}
         {user && sharedBooks.length > 0 && (
           <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
@@ -1098,6 +1101,9 @@ export default function Home() {
             </div>
           </section>
         )}
+
+        </div>
+        {/* ===== END SHARED SECTIONS WRAPPER ===== */}
 
         {/* ===== BOOK SERIES ===== */}
         {user && !isLoading && (
