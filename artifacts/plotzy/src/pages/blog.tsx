@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Calendar, Clock, Eye, ArrowLeft, Search, User } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const ACC = "#7c6af7";
@@ -51,6 +54,11 @@ export default function Blog() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF }}>
+      <SEO
+        title="Articles"
+        description="Long-form articles from Plotzy authors — writing craft, publishing, and industry voices."
+      />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Articles", path: "/blog" }])} />
 
       {/* Header */}
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "48px 20px 40px", textAlign: "center" }}>

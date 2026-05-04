@@ -3,6 +3,7 @@ import { useRoute, Link } from "wouter";
 import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useToast } from "@/hooks/use-toast";
+import { SEO } from "@/components/SEO";
 import {
   ArrowLeft, Type, ImageIcon, Square, Layers, Palette,
   Download, Save, Plus, Trash2, ChevronUp, ChevronDown,
@@ -1201,6 +1202,7 @@ export default function CoverDesigner() {
   /* ─── Render ─── */
   return (
     <>
+    <SEO title="Cover Designer" noindex />
     {/* Mobile warning — cover designer needs desktop */}
     <div className="md:hidden flex flex-col items-center justify-center h-screen p-8 text-center bg-[#111] text-white" style={{ fontFamily: "Inter, sans-serif" }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>🖥️</div>

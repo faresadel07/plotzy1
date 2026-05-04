@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import {
   BookOpen, Bell, Mail, PenTool, Send, Library, Plus, Users,
   FileText, Loader2, Clock,
@@ -129,6 +130,7 @@ export default function DashboardDemo() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO title="Dashboard" noindex />
       <div style={{
         minHeight: "100vh",
         background: BG,

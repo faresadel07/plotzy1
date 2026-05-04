@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown, Send, CheckCircle2, Clock,
@@ -348,6 +349,7 @@ export default function SupportPage() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO title="Support" noindex />
       <div style={{ background: "#000", minHeight: "100vh" }}>
       <style>{`
         @keyframes fadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }

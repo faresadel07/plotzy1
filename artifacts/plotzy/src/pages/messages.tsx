@@ -3,6 +3,7 @@ import { useRoute, useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { Send, MessageCircle, ArrowLeft, Check, CheckCheck, Image as ImageIcon, Paperclip, Search, FileText, Download, X } from "lucide-react";
 
 /* ── Responsive ───────────────────────────────────────────── */
@@ -219,6 +220,7 @@ export default function Messages() {
 
   return (
     <Layout isFullDark darkNav noScroll>
+      <SEO title="Messages" noindex />
       <div style={{ display: "flex", height: "calc(100vh - 44px)", fontFamily: SF, background: BG }}>
 
         {/* ═══ SIDEBAR ═══════════════════════════════════ */}

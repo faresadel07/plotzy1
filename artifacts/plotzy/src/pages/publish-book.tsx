@@ -4,6 +4,7 @@ import { useRoute, Link } from "wouter";
 import { useBook } from "@/hooks/use-books";
 import { useChapters } from "@/hooks/use-chapters";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 import { PUBLISHERS, REGIONS, ALL_GENRES, type Publisher } from "@/shared/publishers";
@@ -281,6 +282,7 @@ export default function PublishBook() {
 
   return (
     <Layout isFullDark>
+      <SEO title="Find Publishers" noindex />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF, color: TEXT }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 14px 48px" }} dir={isRTL ? "rtl" : "ltr"}>
 

@@ -1,5 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation, useRoute } from "wouter";
+import { HelmetProvider } from "react-helmet-async";
+import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildOrganizationSchema, buildWebSiteSchema } from "@/lib/seo-schema";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -106,6 +110,23 @@ function ScrollToTop() {
   return null;
 }
 
+/**
+ * Site-wide JSON-LD that ships on every page. Organization is always
+ * present so search engines can resolve "Plotzy" as a publisher when
+ * referenced from per-page Book / Article / Person schemas. WebSite is
+ * landing-only — search engines treat it as the site root descriptor
+ * and only need it once.
+ */
+function GlobalSchemas() {
+  const [pathname] = useLocation();
+  return (
+    <>
+      <JsonLd data={buildOrganizationSchema()} />
+      {pathname === "/" && <JsonLd data={buildWebSiteSchema()} />}
+    </>
+  );
+}
+
 function OAuthCallbackHandler() {
   const { toast } = useToast();
   useEffect(() => {
@@ -147,6 +168,7 @@ function ResetPasswordPage() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0a", padding: 24 }}>
+      <SEO title="Reset Password" noindex />
       <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 400 }}>
         {tokenValid === null ? (
           <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Verifying link...</div>
@@ -257,24 +279,27 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" attribute="class">
-          <LanguageProvider>
-            <AuthProvider>
-              <TooltipProvider>
-                <ScrollToTop />
-                <OAuthCallbackHandler />
-                <EmailVerifyHandler />
-                <GoogleOneTap />
-                <Router />
-                <QuickDropNotepad />
-                <Toaster />
-                <MobileBlocker />
-              </TooltipProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="dark" attribute="class">
+            <LanguageProvider>
+              <AuthProvider>
+                <TooltipProvider>
+                  <GlobalSchemas />
+                  <ScrollToTop />
+                  <OAuthCallbackHandler />
+                  <EmailVerifyHandler />
+                  <GoogleOneTap />
+                  <Router />
+                  <QuickDropNotepad />
+                  <Toaster />
+                  <MobileBlocker />
+                </TooltipProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }

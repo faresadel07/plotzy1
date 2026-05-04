@@ -356,7 +356,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "contact-support",
         question: "How do I contact support?",
         answer:
-          "Email us at faresadel@gmail.com or use the contact form on the Support page. We aim to respond within a business day for general questions and within a few hours for urgent issues affecting paying users. Premium subscribers receive priority support response.",
+          "Use the contact form on the Support page. We aim to respond as quickly as we can — Premium subscribers receive priority response.",
       },
     ],
   },

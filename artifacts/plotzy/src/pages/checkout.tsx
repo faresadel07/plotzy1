@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
 import { Sentry } from "@/lib/sentry";
+import { SEO } from "@/components/SEO";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#000";
@@ -35,12 +36,6 @@ export default function Checkout() {
   const planParam = params.get("plan");
   const plan = getPlanDetails(planParam);
 
-  useEffect(() => {
-    document.title = plan
-      ? `Checkout · ${plan.displayName} · Plotzy`
-      : "Checkout · Plotzy";
-  }, [plan]);
-
   if (!plan) return <InvalidPlan />;
   return <CheckoutWithSdk plan={plan} />;
 }
@@ -52,6 +47,7 @@ function InvalidPlan() {
       style={{ background: BG, color: T, fontFamily: SF }}
       className="min-h-screen flex items-center justify-center p-6"
     >
+      <SEO title="Invalid plan" noindex />
       <div className="max-w-sm w-full text-center space-y-5">
         <h1 className="text-2xl font-bold">Invalid plan</h1>
         <p style={{ color: TS }} className="text-sm">
@@ -124,6 +120,7 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
         components: "buttons,card-fields,applepay",
       }}
     >
+      <SEO title={`Checkout · ${plan.displayName}`} noindex />
       <CheckoutLayout plan={plan} sandbox={sandbox} />
     </PayPalScriptProvider>
   );

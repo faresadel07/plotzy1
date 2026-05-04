@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { useLanguage } from "@/contexts/language-context";
 import {
   Search, BookOpen, Loader2, ChevronLeft, ChevronRight, X,
@@ -290,6 +293,11 @@ export default function DiscoverPage() {
 
   return (
     <Layout darkNav isLanding>
+      <SEO
+        title="Discover Public-Domain Books"
+        description="Search and read 60,000+ public-domain books from Project Gutenberg, with Plotzy's reading experience."
+      />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Discover", path: "/discover" }])} />
       <div className="min-h-screen" style={{ background: "#080808" }}>
 
         {/* ══ HERO ══════════════════════════════════════════════════════════ */}

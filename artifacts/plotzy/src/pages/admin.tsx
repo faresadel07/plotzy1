@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { Users, BookOpen, Globe, FileText, Ticket, Settings, ArrowLeft } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -2431,6 +2432,7 @@ export default function AdminPage() {
 
   return (
     <div style={S.page}>
+      <SEO title="Admin" noindex />
       <div style={S.header}>
         <div style={S.title}>
           <Settings className="w-5 h-5" style={{ color: "rgba(255,255,255,0.5)" }} />

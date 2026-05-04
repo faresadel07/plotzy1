@@ -4,6 +4,7 @@ import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { AuthModal } from "@/components/auth-modal";
 import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
 import { useChapters, useCreateChapter, useUpdateChapter, useReorderChapters, useDeleteChapter } from "@/hooks/use-chapters";
@@ -362,6 +363,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
   return (
     <Layout isFullDark noScroll>
+      <SEO title={book?.title || "Book"} noindex />
       {/* Hidden file input for cover upload */}
       <input
         ref={fileInputRef}

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { AuthModal } from "@/components/auth-modal";
 import { FeatureVideo } from "@/components/FeatureVideo";
 import { WritingAnimation } from "@/components/WritingAnimation";
@@ -516,6 +517,7 @@ export default function Home() {
 
   return (
     <>
+      <SEO titleOverride="Plotzy — Write Your Story" />
       {/* ── Scroll Progress Bar ── */}
       <motion.div
         style={{

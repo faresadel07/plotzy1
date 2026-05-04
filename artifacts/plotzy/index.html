@@ -6,6 +6,13 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Plotzy is a professional book writing platform with AI-assisted tools, audiobook studio, cover designer, and a community library." />
 
+    <!-- Static canonical fallback for non-JS crawlers (Twitter, FB,
+         LinkedIn, Slack). JS-capable crawlers (Googlebot, Bingbot)
+         see the per-page canonical emitted by react-helmet-async via
+         the <SEO> component. The proper non-JS fix is build-time
+         prerender (Path B in discovered-issues.md). -->
+    <link rel="canonical" href="https://plotzy.com" />
+
     <!-- Open Graph / Social Sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Plotzy — Write Your Story" />

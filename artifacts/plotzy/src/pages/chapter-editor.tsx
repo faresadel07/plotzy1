@@ -4,6 +4,7 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useChapters, useUpdateChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
+import { SEO } from "@/components/SEO";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
 import { AIAssistant } from "@/components/ai-assistant";
 import { BookCustomizer } from "@/components/book-customizer";
@@ -1586,6 +1587,7 @@ export default function ChapterEditor() {
       className="flex flex-col h-screen overflow-hidden transition-all duration-700"
       style={{ backgroundColor: "#000" }}
     >
+      <SEO title={chapter.title || "Chapter Editor"} noindex />
       {/* ── Draft-recovery banner — shown only when a local IndexedDB
           copy diverges from the server copy on mount (e.g. the user
           lost network mid-save or closed the tab before save). ── */}

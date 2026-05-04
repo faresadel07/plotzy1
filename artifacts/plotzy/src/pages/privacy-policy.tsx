@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, ChevronRight } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
 
 const SECTIONS = [
@@ -42,6 +45,11 @@ export default function PrivacyPolicy() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", color: "var(--foreground)" }}>
+      <SEO
+        title="Privacy Policy"
+        description="How Plotzy handles your data and your privacy choices."
+      />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Privacy Policy", path: "/privacy" }])} />
       {/* Minimal header */}
       <header style={{ borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 50, backdropFilter: "blur(12px)" }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 clamp(14px, 4vw, 24px)", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>

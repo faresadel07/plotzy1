@@ -1247,4 +1247,312 @@ this entry doesn't try to "fix" them.
 _Logged 2026-05-04 during Item 9 of feat/cleanup-batch-1 after
 choosing conservative scope to avoid CSS regressions._
 
+---
+
+## MEDIUM — SPA fallback returns HTTP 200 for unknown paths
+
+**File**: `artifacts/api-server/src/static.ts:16`
+
+The static-serving middleware sends `index.html` for every path that
+doesn't match a real file:
+
+```ts
+app.use("/{*path}", (_req, res) => {
+  res.sendFile(path.resolve(distPath, "index.html"));
+});
+```
+
+This is the standard SPA pattern, but it has an SEO consequence:
+crawlers receive `200 OK` for genuinely missing content. The frontend
+React `<NotFound>` component renders a 404 message, but the HTTP
+status is wrong. Search engines that cache by status code may index
+the 404 body as legitimate content, and link-checkers can't
+distinguish dead URLs from live ones.
+
+**Fixing this requires server-side route knowledge.** Options:
+
+1. **Allowlist of valid SPA routes** — middleware checks `req.path`
+   against a route table copied from `App.tsx`; 404 if not in table.
+   Brittle (must keep the list in sync with App.tsx).
+2. **Probe the data layer** — for paths like `/read/:id`, hit the DB
+   to verify the resource exists; 404 if not. Adds a DB roundtrip per
+   crawler hit and only catches dynamic-resource 404s.
+3. **Generate a 404.html during build** and `res.status(404).sendFile`
+   on unknown paths. Loses client-side navigation benefit (full page
+   reload to show the 404). Cleanest for SEO.
+
+**Recommendation**: defer to a focused 404-handling batch. This is
+out of scope for `feat/seo-meta-and-jsonld` because none of the
+options is a one-line change and option 1's brittleness needs its
+own design decision.
+
+_Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — SEO: SPA limits social-preview crawlers to root OG tags
+
+**Context**: Plotzy is a pure client-rendered SPA (no SSR). The static
+[index.html](artifacts/plotzy/index.html) is served verbatim for every
+route by [static.ts:16](artifacts/api-server/src/static.ts#L16).
+After hydration, `react-helmet-async` updates the head with per-page
+tags — but only crawlers that execute JavaScript see the updated
+values.
+
+**Who this affects**:
+- ✓ Googlebot, Bingbot, DuckDuckBot — they execute JS, see per-page
+  meta + JSON-LD correctly. Search ranking is unaffected.
+- ✗ Twitter/X card-bot, Facebook/Instagram crawler, LinkedIn preview,
+  Slack/Discord/iMessage unfurlers — they fetch raw HTML only. Every
+  shared URL renders the root `og:image` ("/opengraph.jpg") and root
+  title regardless of the actual page.
+
+For Plotzy's pre-launch state with no measurable social traffic, this
+is acceptable. For the medium term it costs:
+
+- Sharing `/read/:id` (a published book) on Twitter/Facebook shows
+  the generic site preview, not the book cover.
+- Sharing `/authors/:userId` shows the site preview, not the author
+  avatar.
+- Article shares from `/blog/:id` lose the per-post hero image.
+
+**Two future paths** (recommended in priority order):
+
+### Path B — Build-time prerender for static public pages
+
+Use `vite-react-ssg`, `vite-plugin-prerender-spa`, or a similar Vite
+plugin to render the following routes to real HTML files at build:
+
+- `/`, `/pricing`, `/faq`, `/privacy`, `/terms`, `/tutorial`,
+  `/writing-guide`, `/marketplace`
+
+Each gets its own static `index.html` with the correct title, meta,
+and OG tags baked in. Fixes social previews for those eight pages.
+Estimated effort: 3–4 hours including build-pipeline verification.
+Dynamic routes still need Path C.
+
+### Path C — Server-side dynamic OG injection for dynamic pages
+
+Add an Express middleware that intercepts these dynamic routes:
+
+- `/read/:id` (book cover OG)
+- `/authors/:userId` (author avatar OG)
+- `/blog/:id` (article hero OG)
+- `/series/:id` (series first-book cover OG)
+
+For each, fetch the relevant row, replace placeholder tokens in
+index.html (e.g., `<!-- @@OG_TITLE@@ -->`), and send the rewritten
+HTML. Fixes social previews everywhere. Estimated effort: 6–8 hours
+including a small in-memory cache (5-minute TTL) so a viral share
+doesn't hammer the DB.
+
+**Recommendation**: revisit Path B after launch when there's evidence
+of social-share traffic warranting the work. Path C only if a major
+social channel becomes a primary acquisition surface.
+
+_Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — OG image aspect ratio mismatch on book / author / article shares
+
+**Files**: [pages/read-book.tsx](artifacts/plotzy/src/pages/read-book.tsx),
+[pages/author-profile.tsx](artifacts/plotzy/src/pages/author-profile.tsx),
+[pages/article-view.tsx](artifacts/plotzy/src/pages/article-view.tsx),
+[pages/series-view.tsx](artifacts/plotzy/src/pages/series-view.tsx),
+[pages/gutenberg-reader.tsx](artifacts/plotzy/src/pages/gutenberg-reader.tsx)
+
+Stage 3 of `feat/seo-meta-and-jsonld` wires the user-supplied content
+image into `og:image` / `twitter:image`:
+
+- `/read/:id` → `book.coverImage` (book cover, typically 2:3 portrait)
+- `/authors/:userId` → `profile.avatarUrl` (avatar, typically 1:1 square)
+- `/blog/:id` → `article.featuredImage` (variable)
+- `/series/:id` → `series.coverImage || books[0].coverImage` (2:3 portrait)
+- `/discover/:id` → `meta.coverUrl` (Project Gutenberg, variable)
+
+**The Open Graph standard expects 1.91:1 (1200×630)** for "summary
+large image" cards. Twitter, Facebook, LinkedIn, Slack, Discord, and
+iMessage all crop or letterbox anything that doesn't match. Book
+covers in 2:3 portrait will appear letterboxed in horizontal cards;
+square avatars get center-cropped. The shared preview is always
+*something* — never broken — but it's not the polished, branded
+landscape preview competitors ship.
+
+**Why this is a low priority for now**: in the SPA-only architecture
+(Path A from the earlier discovered-issues entry), social previews
+already fall back to the root `/opengraph.jpg` for non-JS crawlers
+regardless of what `<SEO ogImage>` is set to. The per-page ogImage
+only takes effect for JS-executing crawlers (Googlebot — which doesn't
+render social cards anyway). So the aspect-ratio mismatch only shows
+up if the SPA architecture is later upgraded to Path B (build-time
+prerender) or Path C (server-side OG injection). At that point this
+becomes worth fixing.
+
+**Future enhancement when the time comes**:
+
+1. Build a dynamic OG image generator using `@vercel/og` (or
+   `satori` directly) — composites the cover/avatar onto a 1200×630
+   branded canvas with title and author overlay text.
+2. Serve via a small `GET /api/og/book/:id`, `/api/og/author/:id`,
+   etc. endpoint with a long-lived cache header.
+3. Update `<SEO>` callers to point at the generated URL instead of
+   the raw upload.
+
+Estimated effort when triggered: ~1 day including a font license
+review and a generated-image cache strategy. Defer until Plotzy has
+measurable social-share traffic on book or author pages.
+
+_Logged 2026-05-04 during Stage 3 of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — Organization JSON-LD has no contactPoint / sameAs / foundingDate
+
+**File**: [artifacts/plotzy/src/lib/seo-schema.ts](artifacts/plotzy/src/lib/seo-schema.ts)
+
+Stage 4 of `feat/seo-meta-and-jsonld` ships a minimal `Organization`
+schema with name, url, logo, and description only. Three optional
+schema.org fields are intentionally omitted at launch:
+
+- **`contactPoint.email`** — would expose `faresadel@gmail.com` (or
+  whatever `SUPPORT_EMAIL` resolves to) to spam scrapers that crawl
+  JSON-LD blobs. Google rarely surfaces `contactPoint` in rich results,
+  so the SEO benefit is negligible against the spam-bot risk.
+- **`sameAs`** — list of official social-profile URLs. Plotzy doesn't
+  yet have a managed social presence to point at, and pointing at a
+  non-existent or inactive account makes the schema look stale.
+- **`foundingDate`** — pre-launch; no canonical "founding" date to
+  publish. Adding one later when the launch date is fixed.
+
+**When to add each**:
+
+1. `contactPoint` → after a dedicated support inbox (e.g. `support@plotzy.com`)
+   exists. The spam exposure on a personal address isn't worth the
+   marginal SEO value.
+2. `sameAs` → after Plotzy has at least one active, branded social
+   profile (Twitter, Instagram, LinkedIn) — list every active one as
+   absolute URLs.
+3. `foundingDate` → on the day of public launch, ISO 8601 format
+   (e.g. `"2026-06-01"`).
+
+All three are one-line additions to `buildOrganizationSchema()` when
+ready.
+
+_Logged 2026-05-04 during Stage 4 of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — FAQ accordion close animation is instant (forceMount trade-off)
+
+**Files**: [components/ui/accordion.tsx](artifacts/plotzy/src/components/ui/accordion.tsx),
+[pages/faq.tsx](artifacts/plotzy/src/pages/faq.tsx)
+
+Stage 7 of `feat/seo-meta-and-jsonld` added an opt-in `forceMount`
+prop to the shared `AccordionContent` and turned it on for every
+item on `/faq`. This was required for the FAQPage JSON-LD to match
+Google's "structured data must reflect visible content" rule —
+without `forceMount`, Radix's `Presence` component unmounts closed
+answer content from the DOM, and the schema would then reference text
+that crawlers can't see.
+
+**Side effect**: with `forceMount` on, Radix sets the `hidden` HTML
+attribute on closed-state content. Browsers default `[hidden]` to
+`display: none`, which suppresses the existing close-direction
+animation (`data-[state=closed]:animate-accordion-up`). The result:
+
+- **Open animation** — still smooth (state change `closed → open`
+  removes `hidden` before the down animation runs)
+- **Close animation** — instant collapse (the `hidden` attribute lands
+  before the up animation can play)
+
+Closing is the less-noticeable direction in practice and the
+trade-off was deliberately accepted to ship the JSON-LD compliance
+fix in a single commit. Other accordions in the app are unaffected
+because `forceMount` defaults off.
+
+**If user feedback indicates the instant close is jarring**, fork
+the FAQ accordion to use a different hide mechanism that keeps both
+animations smooth AND keeps content in the DOM. Two viable patterns:
+
+1. Replace Radix's `[hidden]` with CSS `visibility: hidden;
+   height: 0; overflow: hidden` controlled by `data-state`. Allows
+   the close animation to play because the content is rendered, just
+   collapsed.
+2. Use a plain CSS-only details/summary element (no Radix). Native
+   browser semantics, but loses Radix's keyboard-navigation and
+   typed API.
+
+Estimated effort if triggered: ~30 min for option 1.
+
+_Logged 2026-05-04 during Stage 7 of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — Restore email contact in FAQ once a dedicated inbox is provisioned
+
+**File**: [artifacts/plotzy/src/data/faq-data.ts](artifacts/plotzy/src/data/faq-data.ts)
+
+The "How do I contact support?" answer was rewritten to drop the
+literal `faresadel@gmail.com` from the FAQ body — that text now ships
+inside the FAQPage JSON-LD on `/faq` and structured data is widely
+indexed and scraped. The contact form on the Support page is the
+documented path for now.
+
+**Restore the email mention when** a brand-aligned support inbox
+(e.g., `support@plotzy.<tld>`) exists. At that point:
+
+1. Update the `contact-support` answer in `faq-data.ts` to re-include
+   the inbox.
+2. Sweep the rest of `faq-data.ts` for the four remaining mentions
+   of `faresadel@gmail.com` (refunds, discounts, account deletion,
+   change-email, browser-issues — five answers). Replace them all
+   with the new inbox in one pass.
+3. Consider also updating the Organization JSON-LD `contactPoint`
+   per the earlier deferred entry.
+
+The four remaining personal-email mentions in other FAQ answers
+were intentionally left in this batch because (a) they're inside
+longer-form answers that don't ship as cleanly via JSON-LD as
+`contact-support`'s short tail entry, and (b) consolidating them is
+a copy decision best made together with the new inbox rollout.
+
+_Logged 2026-05-04 during Stage 7 follow-up of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — Migrate sitemap.xml to a dynamic endpoint when content scales
+
+**File**: [artifacts/plotzy/public/sitemap.xml](artifacts/plotzy/public/sitemap.xml)
+
+The sitemap is currently a static XML file maintained by hand.
+Stage 10 of `feat/seo-meta-and-jsonld` adds `/faq` and `/blog` to it
+but leaves the static-file approach in place. This is fine for v1
+because Plotzy has fewer than ~100 published books at launch and
+content updates are rare.
+
+The static approach **will not scale**. Once any of the following is
+true, migrate to a dynamic `GET /sitemap.xml` Express endpoint that
+reads from the DB:
+
+- Published books exceed ~500 (search engines may stop crawling a
+  large stale sitemap)
+- Weekly blog posts or new author profiles become routine
+- Sitemap submission to Google Search Console / Bing Webmaster Tools
+  shows stale indexing
+
+**Implementation when needed**:
+
+1. New route in api-server: `GET /sitemap.xml` that queries
+   `pageViews` skip rules + selects `id, publishedAt` from
+   `books WHERE isPublished = true`, plus distinct authors with
+   any published book.
+2. Render `<urlset>` to plain XML; set
+   `Content-Type: application/xml`.
+3. Cache the result for ~1 hour with `Cache-Control: public, max-age=3600`.
+
+Estimated effort when triggered: ~1 hour.
+
+_Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
+
 

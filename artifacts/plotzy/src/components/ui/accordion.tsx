@@ -38,13 +38,27 @@ const AccordionTrigger = React.forwardRef<
 ))
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
+/**
+ * `forceMount` keeps the closed-state content in the DOM (Radix
+ * applies the `hidden` HTML attribute instead of unmounting). Default
+ * behavior is unchanged: closed content unmounts. Opt in only when the
+ * answer text needs to be crawler-visible (e.g. FAQPage JSON-LD on
+ * /faq) — otherwise leave it off so closed accordions don't ship
+ * unnecessary DOM nodes.
+ *
+ * Trade-off: with `forceMount`, the close-direction animation
+ * (`data-[state=closed]:animate-accordion-up`) is suppressed by the
+ * `hidden` attribute's default `display: none`. Open animations still
+ * play. Documented in discovered-issues.md.
+ */
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, forceMount, ...props }, ref) => (
   <AccordionPrimitive.Content
     ref={ref}
     className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+    forceMount={forceMount}
     {...props}
   >
     <div className={cn("pb-4 pt-0", className)}>{children}</div>

@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Play, X } from "lucide-react";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
@@ -360,6 +363,11 @@ export default function TutorialPage() {
 
   return (
     <Layout isLanding darkNav>
+      <SEO
+        title="Tutorial"
+        description="Learn Plotzy step by step — chapter editor, lore entries, AI assistant, and audiobook studio."
+      />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Tutorial", path: "/tutorial" }])} />
       <div style={{ fontFamily: SF, background: BG, minHeight: "100vh" }}>
 
         {/* ─── Hero ─── */}
