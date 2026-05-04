@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { sendEmail } from "../lib/email";
+import { sendEmail, sendSuspensionEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 import crypto from "crypto";
@@ -625,8 +625,20 @@ router.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     const { suspended } = req.body;
+    // Read BEFORE the update so we can detect the false→true transition.
+    // Suppresses repeat emails on double-clicks and on unsuspend→suspend
+    // cycles where the email was already sent on the prior suspension.
+    const before = await storage.getUserById(id);
     const user = await storage.suspendUser(id, !!suspended);
     await logAdminAction((req.user as any).id, suspended ? "user_suspend" : "user_unsuspend", "user", id);
+    // Notify the suspended user — only on the false→true transition,
+    // only if they have an email on file. Fire-and-forget so a transient
+    // email failure cannot roll back the suspension itself.
+    if (suspended && !before?.suspended && before?.email) {
+      sendSuspensionEmail(before.email).catch((err) =>
+        logger.error({ err, userId: id }, "Failed to send suspension email"),
+      );
+    }
     return res.json(user);
   } catch (err) {
     return res.status(500).json({ message: "Internal error" });
@@ -711,8 +723,19 @@ router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
     const failed: number[] = [];
     for (const id of userIds) {
       try {
+        // Same per-user pattern as the single-suspend endpoint: read
+        // before, suspend, then notify on the false→true transition.
+        // Loop is sequential because each suspend is its own transaction;
+        // emails are fire-and-forget so a slow Resend call doesn't block
+        // the loop and stretch admin response time past the 30s mark.
+        const before = await storage.getUserById(Number(id));
         await storage.suspendUser(Number(id), !!suspended);
         count++;
+        if (suspended && !before?.suspended && before?.email) {
+          sendSuspensionEmail(before.email).catch((err) =>
+            logger.error({ err, userId: id }, "Failed to send bulk suspension email"),
+          );
+        }
       } catch (e) {
         failed.push(Number(id));
         logger.error({ err: e, userId: id, suspended }, `Failed to ${suspended ? "suspend" : "unsuspend"} user`);

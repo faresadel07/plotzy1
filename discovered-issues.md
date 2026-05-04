@@ -1064,4 +1064,79 @@ capability.
 _Logged 2026-05-04 during Item 5 of feat/cleanup-batch-1 when
 auditing both password-change paths._
 
+## LOW — Suspension email has no admin-supplied "reason" field
+
+**Location**: `artifacts/api-server/src/routes/misc.routes.ts:623`
+(single-suspend) and `:705` (bulk-suspend); the email helper at
+`artifacts/api-server/src/lib/email.ts:163` (`sendSuspensionEmail`).
+
+**Behavior today**: When an admin suspends a user via either
+endpoint, the user receives a generic email saying "Your account
+has been suspended... contact us if you believe this is a
+mistake." The email body says nothing about WHY the suspension
+happened. The user has to email support to find out, then wait
+for a manual reply.
+
+**Why this matters**: a user who was suspended for a clear cause
+(e.g., posted abusive content, ToS violation, payment fraud)
+should ideally see that reason in the email itself — both for
+their own clarity and to reduce support back-and-forth. Without
+it, every suspension generates an appeal email even when the
+admin's reason was unambiguous.
+
+**Why LOW**: the platform is pre-launch; suspension volume is
+zero today. The current generic email is honest about the
+situation; users can appeal via the SUPPORT_EMAIL contact and
+get a reason that way. The gap is convenience and admin-time
+efficiency, not user-rights compliance.
+
+**Suggested implementation when prioritised**:
+
+1. Backend — extend the request body shape:
+```ts
+const { suspended, reason } = z.object({
+  suspended: z.boolean(),
+  reason: z.string().max(500).optional(),
+}).strict().parse(req.body);
+```
+
+2. Backend — pass reason to the helper:
+```ts
+sendSuspensionEmail(before.email, reason).catch(...)
+```
+
+3. Helper — interpolate with `escapeHtml()`:
+```ts
+export async function sendSuspensionEmail(toEmail: string, reason?: string) {
+  const reasonHtml = reason
+    ? `<p style="..."><strong>Reason:</strong> ${escapeHtml(reason)}</p>`
+    : "";
+  // ...
+}
+```
+
+The `escapeHtml()` step is critical — without it, an admin could
+craft an HTML-injection payload as the reason and weaponise the
+suspension email pipeline. The helper file already has
+`escapeHtml()` available; the inline comment in
+`sendSuspensionEmail` flags this for the implementer.
+
+4. Persistence — add a `reason` column to `admin_audit_logs.details`
+JSON or a new `suspension_reason` column on the user row. Keeping
+it on the audit log is cleaner since it's a per-action attribute,
+not a per-user-state attribute.
+
+5. Admin UI — add a textarea to the suspend modal in
+`artifacts/plotzy/src/pages/admin.tsx` (single-suspend mutation
+at line 245-251 and the bulk modal). Pass the reason through.
+
+**Why deferred from Item 6 of feat/cleanup-batch-1**: Adding a
+reason field requires API change + admin UI textarea + audit log
+persistence. Defer until admin moderation gets dedicated product
+attention.
+
+_Logged 2026-05-04 during Item 6 of feat/cleanup-batch-1 after
+deciding to ship the email pipeline first and the reason field
+as a separate UX polish._
+
 

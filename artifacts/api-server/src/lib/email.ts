@@ -157,3 +157,36 @@ export async function sendNotificationEmail(to: string, title: string, body: str
   `;
   await sendEmail(to, title, html);
 }
+
+/**
+ * Notify a user that their account has been suspended by an admin.
+ * Called from the single-user and bulk suspension endpoints; both fire
+ * this fire-and-forget after the suspend transitions false → true so a
+ * transient email failure cannot roll back the actual suspension.
+ *
+ * NO USER-SUPPLIED CONTENT IS INTERPOLATED INTO THE TEMPLATE TODAY.
+ * If a `reason` field is added in the future (see discovered-issues.md
+ * follow-up), it MUST flow through escapeHtml() before being dropped
+ * into the body — otherwise an admin who can suspend users could craft
+ * an HTML-injection payload as the "reason" and weaponise the email
+ * pipeline against the suspended user.
+ */
+export async function sendSuspensionEmail(toEmail: string): Promise<void> {
+  // Configurable so prod can point appeal traffic at a real support@
+  // address when one exists. Dev/staging falls back to the founder's
+  // personal email until then. Single env var change, no redeploy.
+  const supportEmail = process.env.SUPPORT_EMAIL || "faresadel@gmail.com";
+  const subject = "Your Plotzy account has been suspended";
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Your account has been suspended</h2>
+      <p style="color: #555; line-height: 1.6;">Your Plotzy account has been suspended. You will not be able to sign in or use the platform while the suspension is in effect.</p>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;">If you believe this was a mistake, or if you'd like to appeal, please contact us:</p>
+      <a href="mailto:${supportEmail}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">${supportEmail}</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">We review appeals as quickly as we can.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy — The modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toEmail, subject, html);
+}
