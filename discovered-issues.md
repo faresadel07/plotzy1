@@ -1247,4 +1247,145 @@ this entry doesn't try to "fix" them.
 _Logged 2026-05-04 during Item 9 of feat/cleanup-batch-1 after
 choosing conservative scope to avoid CSS regressions._
 
+---
+
+## MEDIUM — SPA fallback returns HTTP 200 for unknown paths
+
+**File**: `artifacts/api-server/src/static.ts:16`
+
+The static-serving middleware sends `index.html` for every path that
+doesn't match a real file:
+
+```ts
+app.use("/{*path}", (_req, res) => {
+  res.sendFile(path.resolve(distPath, "index.html"));
+});
+```
+
+This is the standard SPA pattern, but it has an SEO consequence:
+crawlers receive `200 OK` for genuinely missing content. The frontend
+React `<NotFound>` component renders a 404 message, but the HTTP
+status is wrong. Search engines that cache by status code may index
+the 404 body as legitimate content, and link-checkers can't
+distinguish dead URLs from live ones.
+
+**Fixing this requires server-side route knowledge.** Options:
+
+1. **Allowlist of valid SPA routes** — middleware checks `req.path`
+   against a route table copied from `App.tsx`; 404 if not in table.
+   Brittle (must keep the list in sync with App.tsx).
+2. **Probe the data layer** — for paths like `/read/:id`, hit the DB
+   to verify the resource exists; 404 if not. Adds a DB roundtrip per
+   crawler hit and only catches dynamic-resource 404s.
+3. **Generate a 404.html during build** and `res.status(404).sendFile`
+   on unknown paths. Loses client-side navigation benefit (full page
+   reload to show the 404). Cleanest for SEO.
+
+**Recommendation**: defer to a focused 404-handling batch. This is
+out of scope for `feat/seo-meta-and-jsonld` because none of the
+options is a one-line change and option 1's brittleness needs its
+own design decision.
+
+_Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — SEO: SPA limits social-preview crawlers to root OG tags
+
+**Context**: Plotzy is a pure client-rendered SPA (no SSR). The static
+[index.html](artifacts/plotzy/index.html) is served verbatim for every
+route by [static.ts:16](artifacts/api-server/src/static.ts#L16).
+After hydration, `react-helmet-async` updates the head with per-page
+tags — but only crawlers that execute JavaScript see the updated
+values.
+
+**Who this affects**:
+- ✓ Googlebot, Bingbot, DuckDuckBot — they execute JS, see per-page
+  meta + JSON-LD correctly. Search ranking is unaffected.
+- ✗ Twitter/X card-bot, Facebook/Instagram crawler, LinkedIn preview,
+  Slack/Discord/iMessage unfurlers — they fetch raw HTML only. Every
+  shared URL renders the root `og:image` ("/opengraph.jpg") and root
+  title regardless of the actual page.
+
+For Plotzy's pre-launch state with no measurable social traffic, this
+is acceptable. For the medium term it costs:
+
+- Sharing `/read/:id` (a published book) on Twitter/Facebook shows
+  the generic site preview, not the book cover.
+- Sharing `/authors/:userId` shows the site preview, not the author
+  avatar.
+- Article shares from `/blog/:id` lose the per-post hero image.
+
+**Two future paths** (recommended in priority order):
+
+### Path B — Build-time prerender for static public pages
+
+Use `vite-react-ssg`, `vite-plugin-prerender-spa`, or a similar Vite
+plugin to render the following routes to real HTML files at build:
+
+- `/`, `/pricing`, `/faq`, `/privacy`, `/terms`, `/tutorial`,
+  `/writing-guide`, `/marketplace`
+
+Each gets its own static `index.html` with the correct title, meta,
+and OG tags baked in. Fixes social previews for those eight pages.
+Estimated effort: 3–4 hours including build-pipeline verification.
+Dynamic routes still need Path C.
+
+### Path C — Server-side dynamic OG injection for dynamic pages
+
+Add an Express middleware that intercepts these dynamic routes:
+
+- `/read/:id` (book cover OG)
+- `/authors/:userId` (author avatar OG)
+- `/blog/:id` (article hero OG)
+- `/series/:id` (series first-book cover OG)
+
+For each, fetch the relevant row, replace placeholder tokens in
+index.html (e.g., `<!-- @@OG_TITLE@@ -->`), and send the rewritten
+HTML. Fixes social previews everywhere. Estimated effort: 6–8 hours
+including a small in-memory cache (5-minute TTL) so a viral share
+doesn't hammer the DB.
+
+**Recommendation**: revisit Path B after launch when there's evidence
+of social-share traffic warranting the work. Path C only if a major
+social channel becomes a primary acquisition surface.
+
+_Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
+
+---
+
+## LOW — Migrate sitemap.xml to a dynamic endpoint when content scales
+
+**File**: [artifacts/plotzy/public/sitemap.xml](artifacts/plotzy/public/sitemap.xml)
+
+The sitemap is currently a static XML file maintained by hand.
+Stage 10 of `feat/seo-meta-and-jsonld` adds `/faq` and `/blog` to it
+but leaves the static-file approach in place. This is fine for v1
+because Plotzy has fewer than ~100 published books at launch and
+content updates are rare.
+
+The static approach **will not scale**. Once any of the following is
+true, migrate to a dynamic `GET /sitemap.xml` Express endpoint that
+reads from the DB:
+
+- Published books exceed ~500 (search engines may stop crawling a
+  large stale sitemap)
+- Weekly blog posts or new author profiles become routine
+- Sitemap submission to Google Search Console / Bing Webmaster Tools
+  shows stale indexing
+
+**Implementation when needed**:
+
+1. New route in api-server: `GET /sitemap.xml` that queries
+   `pageViews` skip rules + selects `id, publishedAt` from
+   `books WHERE isPublished = true`, plus distinct authors with
+   any published book.
+2. Render `<urlset>` to plain XML; set
+   `Content-Type: application/xml`.
+3. Cache the result for ~1 hour with `Cache-Control: public, max-age=3600`.
+
+Estimated effort when triggered: ~1 hour.
+
+_Logged 2026-05-04 during Phase A audit of feat/seo-meta-and-jsonld._
+
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation, useRoute } from "wouter";
+import { HelmetProvider } from "react-helmet-async";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -257,24 +258,26 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" attribute="class">
-          <LanguageProvider>
-            <AuthProvider>
-              <TooltipProvider>
-                <ScrollToTop />
-                <OAuthCallbackHandler />
-                <EmailVerifyHandler />
-                <GoogleOneTap />
-                <Router />
-                <QuickDropNotepad />
-                <Toaster />
-                <MobileBlocker />
-              </TooltipProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="dark" attribute="class">
+            <LanguageProvider>
+              <AuthProvider>
+                <TooltipProvider>
+                  <ScrollToTop />
+                  <OAuthCallbackHandler />
+                  <EmailVerifyHandler />
+                  <GoogleOneTap />
+                  <Router />
+                  <QuickDropNotepad />
+                  <Toaster />
+                  <MobileBlocker />
+                </TooltipProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }
