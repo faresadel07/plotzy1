@@ -14,6 +14,8 @@ import mammoth from "mammoth";
 import { FREE_TRIAL_MAX_CHAPTERS, FREE_TRIAL_MAX_WORDS, loreEntries as loreEntriesTable, storyBeats as storyBeatsTable, chapterSnapshots, bookCollaborators } from "../../../lib/db/src/schema";
 import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterOwner, requireChildOwner, requireEmailVerified } from "./middleware/auth";
 import { aiLimiter, imageGenLimiter, tierAiLimiter, publicReadLimiter } from "./middleware/rate-limit";
+import { getUserTier, checkMarketplaceLimit, recordMarketplaceUsage } from "./lib/tier-limits";
+import { isAdminUser } from "./lib/admin";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
@@ -782,9 +784,28 @@ export async function registerRoutes(
 
   app.post("/api/marketplace/analyze", requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
-      const { serviceId, text } = req.body as { serviceId: string; text: string };
+      const { serviceId, text, bookId } = req.body as { serviceId: string; text: string; bookId?: number };
       if (!text || text.trim().length < 30) {
         return res.status(400).json({ message: "Text is too short for analysis" });
+      }
+
+      // Marketplace monthly limit gate. Runs INSIDE the handler (after
+      // tierAiLimiter has authenticated the request) so the gate happens
+      // before the LLM bill, closing the bypass where a curl-savvy free
+      // user previously hit /analyze directly and never called /record.
+      // tierAiLimiter already guarantees req.user is set; we still
+      // re-fetch to get the current subscription state.
+      const dbUser = await storage.getUserById(req.user!.id);
+      if (!dbUser) return res.status(401).json({ message: "User not found" });
+      if (!isAdminUser(dbUser)) {
+        const tier = getUserTier(dbUser as any);
+        const { allowed } = await checkMarketplaceLimit(req.user!.id, tier);
+        if (!allowed) {
+          return res.status(429).json({
+            message: "Monthly marketplace limit reached. Upgrade your plan for more analyses.",
+            code: "MARKETPLACE_LIMIT",
+          });
+        }
       }
 
       const truncated = text.slice(0, 50000);
@@ -827,9 +848,22 @@ export async function registerRoutes(
 
       const prompt = prompts[serviceId] || prompts["dev-editor"];
 
+      // Record marketplace usage inline on success — counter is what the
+      // monthly limit reads. If the insert fails we log but still return
+      // the report (analysis already cost money; refusing the user the
+      // result they paid for would be worse than a small under-count).
+      const finishAnalysis = async (report: string) => {
+        try {
+          await recordMarketplaceUsage(req.user!.id, serviceId, bookId);
+        } catch (recordErr) {
+          logger.warn({ err: recordErr, userId: req.user!.id, serviceId }, "Failed to record marketplace usage");
+        }
+        return res.json({ report });
+      };
+
       if (isMockOpenAI) {
         const demoReport = `# Demo Report — ${serviceId.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}\n\n> **Note:** This is a demo result. Connect a real OpenAI API key for full analysis.\n\n## Overview\n\nYour manuscript has been reviewed. Here are the key findings from the initial scan.\n\n## Strengths\n\n- Strong narrative voice throughout the text\n- Compelling opening that draws readers in\n- Well-paced middle section\n\n## Areas for Improvement\n\n- Consider deepening character motivations in chapter 2\n- A few pacing issues in the third act\n- Some dialogue could be more natural\n\n## Recommendations\n\n1. Revisit the opening chapter hook\n2. Strengthen secondary character arcs\n3. Tighten dialogue in action sequences\n\n## Conclusion\n\nOverall, this is a promising manuscript with clear commercial potential.`;
-        return res.json({ report: demoReport });
+        return finishAnalysis(demoReport);
       }
 
       const response = await openai.chat.completions.create({
@@ -842,7 +876,7 @@ export async function registerRoutes(
       });
 
       const report = response.choices[0]?.message?.content || "No analysis returned.";
-      return res.json({ report });
+      return finishAnalysis(report);
     } catch (err) {
       logger.error({ err }, "Route error");
       return res.status(500).json({ message: "Analysis failed" });
