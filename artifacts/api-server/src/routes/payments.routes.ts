@@ -3,16 +3,11 @@ import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { storage } from "../storage";
 import { db } from "../db";
-import { getUncachableStripeClient, getStripePublishableKey } from "../stripe-client";
 import {
   FREE_TRIAL_MAX_CHAPTERS,
   FREE_TRIAL_MAX_WORDS,
-  SUBSCRIPTION_MONTHLY_CENTS,
-  SUBSCRIPTION_YEARLY_MONTHLY_CENTS,
-  SUBSCRIPTION_YEARLY_ANNUAL_CENTS,
   subscriptionPayments,
 } from "../../../../lib/db/src/schema";
-import { api } from "../../../../lib/shared/src/routes";
 import { isSubscriptionActive } from "./helpers";
 import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
@@ -30,118 +25,11 @@ const paymentLimiter = rateLimit({
   message: { message: "Too many payment attempts. Please try again later." },
 });
 
-const BOOK_PRICE_CENTS = 499;
-
-// ─── Payments (Stripe one-time) ─────────────────────────────────────────────
-
-router.post(api.payments.createIntent.path, paymentLimiter, async (req, res) => {
-  try {
-    // Require an authenticated user and verify they own (or co-edit) the
-    // book. The previous version accepted any `bookId` from the request
-    // body — anyone could spin up payment intents against any book, which
-    // is both a fraud vector (associate someone else's purchase with the
-    // wrong book) and a Stripe-quota / log-noise problem.
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    const { bookId } = api.payments.createIntent.input.parse(req.body);
-    const userId = (req.user as any).id;
-
-    const book = await storage.getBook(bookId);
-    if (!book) return res.status(404).json({ message: "Book not found" });
-    if (book.userId !== userId) {
-      return res.status(403).json({ message: "Only the book owner can purchase publishing for this book" });
-    }
-
-    const stripe = await getUncachableStripeClient();
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: BOOK_PRICE_CENTS,
-      currency: "usd",
-      // Pin both the book id AND the buyer's user id into the intent so the
-      // confirm/webhook handlers can refuse to credit the purchase to a
-      // different user later.
-      metadata: { bookId: String(bookId), userId: String(userId) },
-      automatic_payment_methods: { enabled: true },
-    });
-
-    await storage.createTransaction({
-      bookId,
-      amount: "4.99",
-      currency: "usd",
-      status: "pending",
-      stripePaymentIntentId: paymentIntent.id,
-      paymentMethod: "card",
-    });
-
-    return res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
-  } catch (err) {
-    logger.error({ err }, "Failed to create payment intent");
-    return res.status(500).json({ message: "Failed to create payment intent" });
-  }
-});
-
-router.post(api.payments.confirm.path, paymentLimiter, async (req, res) => {
-  try {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    const { paymentIntentId } = api.payments.confirm.input.parse(req.body);
-
-    // 1) Verify Stripe actually says this payment succeeded. Demo IDs
-    //    bypass for local testing only.
-    if (!paymentIntentId.startsWith("demo_")) {
-      try {
-        const stripe = await getUncachableStripeClient();
-        const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-        if (intent.status !== "succeeded") {
-          return res.status(400).json({ message: "Payment not confirmed by Stripe" });
-        }
-      } catch (stripeErr) {
-        logger.error({ err: stripeErr }, "Stripe verify error");
-        return res.status(400).json({ message: "Payment verification failed" });
-      }
-    }
-
-    // 2) Authorisation: the bookId we trust is the one the *transaction
-    //    record* was created with — NEVER the bookId in the request body
-    //    (an attacker could otherwise forge a paymentIntentId paired with
-    //    someone else's bookId and flip that book to isPaid). Cross-check
-    //    that the caller owns that book.
-    const tx = await storage.getTransaction(paymentIntentId);
-    if (!tx) {
-      return res.status(404).json({ message: "Unknown payment intent" });
-    }
-    if (tx.status === "succeeded") {
-      return res.json({ success: true, alreadyProcessed: true });
-    }
-    const book = await storage.getBook(tx.bookId);
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-    if (book.userId !== req.user.id) {
-      return res.status(403).json({ message: "You do not own this book" });
-    }
-
-    // 3) Atomic state transition: only ONE concurrent request can flip
-    //    pending → succeeded. The losing requests get null and short-
-    //    circuit, eliminating the double-process race.
-    const claimed = await storage.markTransactionSucceededIfPending(paymentIntentId);
-    if (!claimed) {
-      // Another concurrent request beat us to it. Idempotent success.
-      return res.json({ success: true, alreadyProcessed: true });
-    }
-
-    // 4) Only the winner of the CAS marks the book paid.
-    await storage.updateBook(tx.bookId, { isPaid: true });
-
-    return res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Failed to confirm payment");
-    return res.status(500).json({ message: "Failed to confirm payment" });
-  }
-});
-
-// ─── Subscription (Stripe) ──────────────────────────────────────────────────
+// ─── Subscription Status (processor-agnostic) ──────────────────────────────
+// Reads from users.subscription_* fields populated by the PayPal capture
+// flow. No live caller in the frontend today (the legacy useSubscription
+// hook that consumed this is unimported), but kept because subscription-
+// success.tsx still invalidates this query key after redirect verification.
 
 router.get("/api/subscription/status", async (req, res) => {
   if (!req.isAuthenticated() || !req.user) {
@@ -169,141 +57,6 @@ router.get("/api/subscription/status", async (req, res) => {
     aiLimitToday: limits.maxAiCallsPerDay,
     isActive: isSubscriptionActive(user as any),
   });
-});
-
-router.post("/api/subscription/create-checkout", paymentLimiter, async (req, res) => {
-  try {
-    const { plan } = z.object({ plan: z.enum(["monthly", "yearly"]) }).strict().parse(req.body);
-    const stripe = await getUncachableStripeClient();
-
-    const userId = req.isAuthenticated() && req.user ? req.user.id : null;
-    const dbUser = userId ? await storage.getUserById(userId) : null;
-
-    const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-    const baseUrl = domain ? `https://${domain}` : `http://localhost:5000`;
-
-    const priceData = plan === "monthly"
-      ? { unit_amount: SUBSCRIPTION_MONTHLY_CENTS, recurring: { interval: "month" as const } }
-      : { unit_amount: SUBSCRIPTION_YEARLY_ANNUAL_CENTS, recurring: { interval: "year" as const } };
-
-    const sessionParams: any = {
-      payment_method_types: ["card"],
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: plan === "monthly" ? "Plotzy Monthly Plan" : "Plotzy Yearly Plan",
-            description: plan === "monthly"
-              ? "Full access to all Plotzy features — unlimited books, chapters, and AI assistance."
-              : "Full access to all Plotzy features at the best value — save 19% vs monthly.",
-          },
-          ...priceData,
-        },
-        quantity: 1,
-      }],
-      mode: "subscription",
-      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/pricing`,
-      metadata: { plan, userId: userId ? String(userId) : "" },
-    };
-
-    if (dbUser?.stripeCustomerId) {
-      sessionParams.customer = dbUser.stripeCustomerId;
-    } else if (dbUser?.email) {
-      sessionParams.customer_email = dbUser.email;
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    return res.json({ url: session.url, sessionId: session.id });
-  } catch (err: any) {
-    logger.error({ err }, "Checkout error");
-    return res.status(500).json({ message: err?.message || "Failed to create checkout session" });
-  }
-});
-
-router.get("/api/subscription/verify", async (req, res) => {
-  try {
-    // SECURITY: previously this trusted `session.metadata.userId` and would
-    // happily flip subscriptionStatus=active on whichever user id the
-    // session metadata carried. A logged-in attacker who could observe (or
-    // guess) someone else's checkout session id could then activate that
-    // user's subscription, or — worse — pass their own session id with
-    // mutated metadata via a forged checkout. We now require the caller to
-    // be authenticated and only mutate the *current* user's row.
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    const callerId = (req.user as any).id;
-    const { session_id } = z.object({ session_id: z.string() }).strict().parse(req.query);
-    const stripe = await getUncachableStripeClient();
-    const session = await stripe.checkout.sessions.retrieve(session_id, {
-      expand: ["subscription", "customer"],
-    });
-
-    if (session.payment_status === "paid" || session.status === "complete") {
-      const sessionUserId = session.metadata?.userId ? Number(session.metadata.userId) : null;
-      // The session must have been issued for this exact caller. If the
-      // metadata mismatches, the caller is trying to verify someone else's
-      // session — refuse without leaking which case it was.
-      if (sessionUserId !== callerId) {
-        return res.status(403).json({ success: false, message: "Session does not belong to caller" });
-      }
-
-      const plan = (session.metadata?.plan as "monthly" | "yearly") || "monthly";
-      const subscription = session.subscription as any;
-      const customer = session.customer as any;
-
-      const endDate = subscription?.current_period_end
-        ? new Date(subscription.current_period_end * 1000)
-        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-
-      await storage.updateUser(callerId, {
-        subscriptionStatus: "active",
-        subscriptionPlan: plan,
-        subscriptionEndDate: endDate,
-        stripeCustomerId: customer?.id || (session.customer as string) || undefined,
-        stripeSubscriptionId: subscription?.id || undefined,
-      });
-
-      return res.json({ success: true, plan });
-    }
-
-    return res.json({ success: false });
-  } catch (err: any) {
-    return res.status(500).json({ message: err?.message || "Failed to verify subscription" });
-  }
-});
-
-router.post("/api/subscription/portal", async (req, res) => {
-  try {
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    const dbUser = await storage.getUserById(req.user.id);
-    if (!dbUser?.stripeCustomerId) {
-      return res.status(400).json({ message: "No billing account found" });
-    }
-    const stripe = await getUncachableStripeClient();
-    const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-    const baseUrl = domain ? `https://${domain}` : `http://localhost:5000`;
-
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: dbUser.stripeCustomerId,
-      return_url: `${baseUrl}/`,
-    });
-    return res.json({ url: portalSession.url });
-  } catch (err: any) {
-    return res.status(500).json({ message: err?.message || "Failed to create portal session" });
-  }
-});
-
-router.get("/api/subscription/publishable-key", async (req, res) => {
-  try {
-    const key = await getStripePublishableKey();
-    return res.json({ publishableKey: key });
-  } catch (err) {
-    return res.json({ publishableKey: null });
-  }
 });
 
 // ─── PayPal ─────────────────────────────────────────────────────────────────

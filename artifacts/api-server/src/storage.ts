@@ -1,13 +1,12 @@
 import { db } from "./db";
 import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull, getTableColumns } from "drizzle-orm";
 import {
-  books, chapters, transactions, users, loreEntries, dailyProgress, storyBeats,
+  books, chapters, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
   subscriptionPayments,
   follows, notifications, directMessages, bookLikes, bookComments, bookRatings, inlineComments,
   type Book, type InsertBook, type InlineComment, type InsertInlineComment,
   type Chapter, type InsertChapter,
-  type Transaction, type InsertTransaction,
   type User, type InsertUser,
   type LoreEntry, type InsertLoreEntry,
   type DailyProgress, type InsertDailyProgress,
@@ -60,17 +59,11 @@ export interface IStorage {
   reorderStoryBeats(updates: { id: number; columnId: string; order: number }[]): Promise<void>;
   reorderChapters(updates: { id: number; order: number }[]): Promise<void>;
 
-  createTransaction(tx: InsertTransaction): Promise<Transaction>;
-  updateTransaction(id: number, updates: Partial<InsertTransaction>): Promise<Transaction>;
-  getTransaction(stripePaymentIntentId: string): Promise<Transaction | undefined>;
-  markTransactionSucceededIfPending(stripePaymentIntentId: string): Promise<Transaction | null>;
-
   getUserById(id: number): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   getUserByAppleId(appleId: string): Promise<User | undefined>;
   getUserByLinkedinId(linkedinId: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByStripeCustomerId(customerId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: UpdateUser): Promise<User>;
 
@@ -354,39 +347,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(loreEntries).where(eq(loreEntries.id, id));
   }
 
-  // ─── Transactions ──────────────────────────────────────────────────────────
-  async createTransaction(tx: InsertTransaction): Promise<Transaction> {
-    const [transaction] = await db.insert(transactions).values(tx).returning();
-    return transaction;
-  }
-
-  async updateTransaction(id: number, updates: Partial<InsertTransaction>): Promise<Transaction> {
-    const [transaction] = await db.update(transactions).set(updates).where(eq(transactions.id, id)).returning();
-    return transaction;
-  }
-
-  async getTransaction(stripePaymentIntentId: string): Promise<Transaction | undefined> {
-    const [transaction] = await db.select().from(transactions).where(eq(transactions.stripePaymentIntentId, stripePaymentIntentId));
-    return transaction;
-  }
-
-  // Atomic compare-and-swap: flip status from "pending" to "succeeded" in a
-  // single statement. Returns the row if WE made the transition (so the
-  // caller is responsible for follow-up writes), or `null` if some other
-  // request beat us to it (or the row doesn't exist). Closes the race
-  // where two concurrent /api/payments/confirm calls with the same
-  // paymentIntentId both see status="pending" and double-process.
-  async markTransactionSucceededIfPending(stripePaymentIntentId: string): Promise<Transaction | null> {
-    const [row] = await db.update(transactions)
-      .set({ status: "succeeded" })
-      .where(and(
-        eq(transactions.stripePaymentIntentId, stripePaymentIntentId),
-        eq(transactions.status, "pending"),
-      ))
-      .returning();
-    return row ?? null;
-  }
-
   // ─── Users ─────────────────────────────────────────────────────────────────
   async getUserById(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -410,11 +370,6 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-
-  async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId));
     return user;
   }
 

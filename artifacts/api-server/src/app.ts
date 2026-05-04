@@ -25,7 +25,6 @@ import passport from "passport";
 import helmet from "helmet";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
-import { WebhookHandlers } from "./webhook-handlers";
 import { setupPassport } from "./auth";
 import { logger } from "./lib/logger";
 import { generalLimiter, authLimiter, publicReadLimiter, writeLimiter } from "./middleware/rate-limit";
@@ -43,31 +42,6 @@ declare module "http" {
 
 export function log(message: string, source = "express") {
   logger.info({ source }, message);
-}
-
-async function initStripe() {
-  try {
-    const { runMigrations } = await import("stripe-replit-sync");
-    const { getStripeSync } = await import("./stripe-client");
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) throw new Error("DATABASE_URL required");
-    log("Initializing Stripe schema...", "stripe");
-    await runMigrations({ databaseUrl });
-    log("Stripe schema ready", "stripe");
-    const stripeSync = await getStripeSync();
-    const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-    if (domain) {
-      const webhookUrl = `https://${domain}/api/stripe/webhook`;
-      await stripeSync.findOrCreateManagedWebhook(webhookUrl);
-      log(`Webhook configured: ${webhookUrl}`, "stripe");
-    }
-    stripeSync
-      .syncBackfill()
-      .then(() => log("Stripe data synced", "stripe"))
-      .catch((err: Error) => log(`Stripe sync error: ${err.message}`, "stripe"));
-  } catch (err: any) {
-    log(`Stripe init skipped: ${err.message}`, "stripe");
-  }
 }
 
 const app = express();
@@ -168,19 +142,6 @@ app.get("/healthz", async (_req, res) => {
   }
 });
 
-app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-  const signature = req.headers["stripe-signature"];
-  if (!signature) return res.status(400).json({ error: "Missing stripe-signature" });
-  try {
-    const sig = Array.isArray(signature) ? signature[0] : signature;
-    await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-    return res.status(200).json({ received: true });
-  } catch (err: any) {
-    log(`Webhook error: ${err.message}`, "stripe");
-    return res.status(400).json({ error: "Webhook processing error" });
-  }
-});
-
 // Default JSON body limit. Tightened from 10mb → 2mb so generic
 // endpoints (login, comment, follow, profile, etc.) can't be used to
 // pump tens of megabytes through the parser. Routes that legitimately
@@ -223,9 +184,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // SECURITY: Origin/Referer-based CSRF check for state-changing requests.
-// Runs AFTER session setup (so rejections don't touch the session store)
-// and AFTER the Stripe webhook route above (which is declared before this
-// and is therefore matched before this middleware runs).
+// Runs AFTER session setup so rejections don't touch the session store.
 app.use(csrfOriginCheck);
 
 // Rate limiting — applied after auth so user id is available as key.
@@ -289,11 +248,6 @@ process.on("uncaughtException", (err) => {
 });
 
 export async function setupApp() {
-  if (process.env.REPL_ID) {
-    initStripe();
-  } else {
-    log("Stripe init skipped (not on Replit)", "stripe");
-  }
   await registerRoutes(httpServer, app);
 }
 

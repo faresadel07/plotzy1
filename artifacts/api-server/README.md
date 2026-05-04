@@ -46,8 +46,6 @@ Google / Apple / LinkedIn OAuth pairs, `SENTRY_DSN`,
 - `GET /healthz` — DB-aware readiness (200 healthy, 503 degraded)
 - `GET|POST|PUT|PATCH|DELETE /api/...` — main API surface (see
   `lib/shared/src/routes.ts` for the typed contracts)
-- `POST /api/stripe/webhook` — Stripe events (CSRF-exempt; verified
-  server-side by Stripe's signature)
 - `/auth/google` `/auth/apple` `/auth/linkedin` — OAuth bounce paths
 
 ## Architecture notes

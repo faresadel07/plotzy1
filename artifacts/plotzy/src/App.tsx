@@ -29,7 +29,6 @@ const ArticleEditor = lazy(() => import("@/pages/article-editor"));
 const Trash = lazy(() => import("@/pages/trash"));
 const WritingGuide = lazy(() => import("@/pages/writing-guide"));
 const Pricing = lazy(() => import("@/pages/pricing"));
-const SubscriptionSuccess = lazy(() => import("@/pages/subscription-success"));
 const Marketplace = lazy(() => import("@/pages/marketplace"));
 const Library = lazy(() => import("@/pages/library"));
 const ReadBook = lazy(() => import("@/pages/read-book"));
@@ -237,7 +236,6 @@ function Router() {
         <Route path="/books/:id/cover-designer" component={ProtectedRoute(CoverDesigner)} />
         <Route path="/books/:id/find-publishers" component={ProtectedRoute(PublishBook)} />
         <Route path="/books/:id/audiobook" component={ProtectedRoute(AudiobookStudio)} />
-        <Route path="/subscription/success" component={ProtectedRoute(SubscriptionSuccess)} />
         <Route path="/checkout" component={ProtectedRoute(Checkout)} />
         <Route path="/account/subscription" component={ProtectedRoute(AccountSubscription)} />
         <Route path="/support" component={ProtectedRoute(SupportPage)} />
