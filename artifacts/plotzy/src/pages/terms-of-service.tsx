@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
 const SECTIONS = [
   { id: "acceptance",       label: "Acceptance of Terms" },
@@ -52,6 +54,7 @@ export default function TermsOfService() {
         title="Terms of Service"
         description="The agreement between you and Plotzy: account use, content rights, payments, and legal."
       />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Terms of Service", path: "/terms" }])} />
       {/* Minimal header */}
       <header style={{ borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--background)", zIndex: 50, backdropFilter: "blur(12px)" }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 clamp(14px, 4vw, 24px)", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>

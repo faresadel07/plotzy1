@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
-import { buildPersonSchema } from "@/lib/seo-schema";
+import { buildPersonSchema, buildBreadcrumbSchema } from "@/lib/seo-schema";
 import {
   BookOpen, Users, UserPlus, UserCheck, Globe, Twitter, Instagram,
   Edit3, Check, X, Calendar, ArrowLeft, MessageCircle, Heart, Eye,
@@ -552,6 +552,9 @@ export default function AuthorProfile() {
         ogImage={profile.avatarUrl || undefined}
       />
       <JsonLd data={buildPersonSchema(profile)} />
+      <JsonLd data={buildBreadcrumbSchema([
+        { name: profile.displayName || "Author", path: `/authors/${profile.id}` },
+      ])} />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
 
         {editOpen && isOwnProfile && <EditProfileModal profile={profile} onClose={() => setEditOpen(false)} userId={userId} ar={ar} />}

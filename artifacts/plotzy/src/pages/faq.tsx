@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
-import { buildFaqPageSchema } from "@/lib/seo-schema";
+import { buildFaqPageSchema, buildBreadcrumbSchema } from "@/lib/seo-schema";
 import {
   Accordion,
   AccordionContent,
@@ -64,6 +64,7 @@ export default function FaqPage() {
         description="Answers about getting started, pricing, AI features, publishing, and account on Plotzy."
       />
       <JsonLd data={buildFaqPageSchema(allCategories)} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "FAQ", path: "/faq" }])} />
       <div style={{ background: BG, color: T, fontFamily: SF, minHeight: "100vh" }}>
         {/* ── Hero ── */}
         <section style={{ borderBottom: `1px solid ${B}` }}>

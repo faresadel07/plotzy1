@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   BookOpen, Layers, Map, AlignLeft, Lightbulb,
@@ -492,6 +494,7 @@ export default function WritingGuide() {
         title="Writing Guide"
         description="Practical writing guidance — story structure, character work, world-building, and revision tactics."
       />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Writing Guide", path: "/writing-guide" }])} />
       {/* ── Progress Bar ── */}
       <div style={{
         position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: 3,

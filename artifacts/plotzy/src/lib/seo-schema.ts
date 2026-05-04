@@ -361,3 +361,52 @@ export function buildFaqPageSchema(
     mainEntity,
   };
 }
+
+export interface BreadcrumbItem {
+  /** Visible label rendered by Google's breadcrumb chip. */
+  name: string;
+  /** Site-root-relative path, e.g. "/pricing" or `/read/${id}`. The
+   *  builder prepends SITE_URL so call sites don't repeat the host. */
+  path: string;
+}
+
+/**
+ * BreadcrumbList JSON-LD for nested public routes.
+ *
+ * The home item (`Plotzy` → `https://plotzy.com`) is prepended
+ * automatically — Google's BreadcrumbList rich result requires
+ * position 1 to be the site root, so building it in keeps every call
+ * site honest and avoids forgetting it.
+ *
+ * Pass the trailing portion of the breadcrumb only:
+ *   buildBreadcrumbSchema([{ name: "Pricing", path: "/pricing" }])
+ *     → Plotzy › Pricing  (2 items)
+ *
+ *   buildBreadcrumbSchema([
+ *     { name: "Community Library", path: "/library" },
+ *     { name: book.title, path: `/read/${book.id}` },
+ *   ])
+ *     → Plotzy › Community Library › <book title>  (3 items)
+ *
+ * Call sites should guard on data availability for dynamic pages —
+ * rendering `Plotzy › Library › undefined` while the book query is
+ * loading is worse than no breadcrumb at all.
+ */
+export function buildBreadcrumbSchema(
+  items: BreadcrumbItem[],
+): Record<string, unknown> {
+  const allItems: BreadcrumbItem[] = [
+    { name: SITE_NAME, path: "" },
+    ...items,
+  ];
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: allItems.map((item, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: item.name,
+      item: `${SITE_URL}${item.path}`,
+    })),
+  };
+}

@@ -7,6 +7,8 @@ import {
   AlignJustify, Copy, Search, LayoutGrid, Bookmark, Type,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const LS_POS = (id: number) => `plotzy_rpos_${id}`;
@@ -533,12 +535,18 @@ export default function GutenbergReader() {
       }}
     >
       {meta && (
-        <SEO
-          title={meta.title}
-          description={`Read ${meta.title} by ${gutenbergAuthorName} — free, public domain, on Plotzy.`}
-          ogType="book"
-          ogImage={meta.coverUrl || undefined}
-        />
+        <>
+          <SEO
+            title={meta.title}
+            description={`Read ${meta.title} by ${gutenbergAuthorName} — free, public domain, on Plotzy.`}
+            ogType="book"
+            ogImage={meta.coverUrl || undefined}
+          />
+          <JsonLd data={buildBreadcrumbSchema([
+            { name: "Discover", path: "/discover" },
+            { name: meta.title, path: `/discover/${meta.id}` },
+          ])} />
+        </>
       )}
       {/* ══ TOP BAR ══════════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between px-4 py-2.5 shrink-0 z-40 select-none"

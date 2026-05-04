@@ -3,6 +3,8 @@ import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, Calendar, Copy, Check, User, Layers } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const ACC = "#7c6af7";
@@ -90,6 +92,10 @@ export default function SeriesView() {
         description={series.description || `${series.name} — a book series on Plotzy.`}
         ogImage={series.coverImage || series.books?.[0]?.coverImage || undefined}
       />
+      <JsonLd data={buildBreadcrumbSchema([
+        { name: "Community Library", path: "/library" },
+        { name: series.name, path: `/series/${series.id}` },
+      ])} />
 
       {/* Header */}
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px", height: 48, display: "flex", alignItems: "center", gap: 12 }}>

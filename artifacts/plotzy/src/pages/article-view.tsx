@@ -5,6 +5,8 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { ArrowLeft, Calendar, Clock, Eye, Heart, BookOpen, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 
@@ -89,6 +91,10 @@ export default function ArticleView() {
         ogType="article"
         ogImage={article.featuredImage || undefined}
       />
+      <JsonLd data={buildBreadcrumbSchema([
+        { name: "Articles", path: "/blog" },
+        { name: article.title, path: `/blog/${article.id}` },
+      ])} />
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
       {/* Nav */}

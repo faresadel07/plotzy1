@@ -10,7 +10,7 @@ import {
 import { InlineCommentsLayer } from "@/components/InlineCommentsLayer";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
-import { buildBookSchema } from "@/lib/seo-schema";
+import { buildBookSchema, buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
@@ -724,6 +724,10 @@ export default function ReadBook() {
         ogImage={book.coverImage || undefined}
       />
       <JsonLd data={buildBookSchema(book, ratingStats)} />
+      <JsonLd data={buildBreadcrumbSchema([
+        { name: "Community Library", path: "/library" },
+        { name: book.title, path: `/read/${book.id}` },
+      ])} />
 
       {/* ── Top bar ── */}
       <header style={{
