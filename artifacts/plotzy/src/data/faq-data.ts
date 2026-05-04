@@ -61,7 +61,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "what-can-i-do-for-free",
         question: "What can I do on the Free plan?",
         answer:
-          "The Free plan lets you create up to 2 books with up to 3 chapters each, write up to 5,000 total words across your account, use the AI assistant 10 times per day, generate up to 2 AI cover images per day, and publish 1 book to the Community Library. Audiobook export is not included in the Free plan, but the browser preview using your device's built-in voices is available.",
+          "The Free plan limits are: 3 chapters total across all your books, 5,000 words per chapter, 10 AI assists per day, 2 AI cover images per day, and 1 published book in the Community Library. Beyond those limits, Free includes the full feature set — the writing editor, audiobook studio with 10 AI voices, PDF and EPUB export, AI analysis tools, the cover designer, voice dictation, the Story Bible and Research board, book collaboration, and version history.",
       },
       {
         id: "create-first-book",
@@ -104,7 +104,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "how-many-books",
         question: "How many books can I create?",
         answer:
-          "The Free plan allows up to 2 books. Pro raises that to 50 books. Premium effectively removes the limit at 9,999 books. Within each book, Free is capped at 3 chapters, Pro at 100, and Premium at 9,999.",
+          "The Free plan caps your total chapter count at 3 across all your books — Free users can create as many book entries as they want, but the chapters across all of them must total 3 or fewer. Pro and Premium plans don't enforce a chapter or book count today.",
       },
       {
         id: "writing-languages",
@@ -116,7 +116,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "export-book",
         question: "How do I export my finished book?",
         answer:
-          "From the book's settings on Pro and Premium plans, you can download your manuscript as a PDF or EPUB. Free-plan users can copy text out of the editor manually but do not have direct PDF or EPUB export.",
+          "From the book's settings, you can download your manuscript as a PDF or EPUB. This export is available across all plans — Free, Pro, and Premium.",
       },
     ],
   },
@@ -172,7 +172,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "pro-vs-premium",
         question: "What's the difference between Pro and Premium?",
         answer:
-          "Pro raises the Free limits significantly: 50 books, 100 chapters per book, 500,000 total words, 100 AI assists per day, 10 AI cover images per day, 20 published books, and 3 audiobook exports per month. Premium effectively removes structural caps with 9,999-book and 9,999-chapter ceilings, 200 AI assists per day, 25 cover images per day, and 10 audiobook exports per month. Premium also includes 9 AI Marketplace analyses per month and faster support response.",
+          "Pro ($8.99/month) raises Free's daily AI assists from 10 to 100 and unlocks 3 AI Marketplace analyses per month. Premium ($16.99/month) raises the daily AI assists to 200 and unlocks 9 AI Marketplace analyses per month. Beyond AI quotas, all three plans currently share the same feature set; Pro and Premium remove the Free plan's chapter and per-chapter word caps.",
       },
       {
         id: "upgrade-downgrade",
@@ -190,7 +190,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "what-happens-if-i-cancel",
         question: "What happens if I cancel my subscription?",
         answer:
-          "Your books remain in your account; nothing is deleted. After the current period ends, your account returns to the Free plan limits, which means some features will be reduced (for example, AI assists drop to 10 per day, audiobook export becomes browser-preview only). Your existing books stay in your library and remain readable. If you resubscribe later, all paid features return immediately.",
+          "Your books remain in your account; nothing is deleted. After the current period ends, your account returns to the Free plan limits — your daily AI assist budget drops back to 10 per day, and creating new chapters or words above the Free caps is blocked. Existing content stays in your library and remains readable. If you resubscribe later, the higher AI assist quota returns immediately.",
       },
       {
         id: "auto-renewal",
@@ -251,7 +251,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "what-is-marketplace",
         question: "What is the Marketplace?",
         answer:
-          "The Marketplace today is a menu of AI-powered services applied to your manuscript: developmental editing, copy editing, beta-reader feedback, cover generation, and blurb writing. You commission a service against a specific book and receive structured feedback. The Premium plan includes 9 Marketplace analyses per month; Pro and Free can use them within their tier's limits.",
+          "The Marketplace today is a menu of AI-powered services applied to your manuscript: developmental editing, copy editing, beta-reader feedback, cover generation, and blurb writing. You commission a service against a specific book and receive structured feedback. The Pro plan includes 3 Marketplace analyses per month; Premium includes 9 per month; the Free plan does not include Marketplace access.",
       },
       {
         id: "sell-my-books",
@@ -282,7 +282,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "audiobook-exports",
         question: "How many audiobooks can I export per month?",
         answer:
-          "Free plans cannot export audiobooks; the browser preview using your device's built-in speech synthesis is available instead. Pro plans get 3 audiobook exports per month. Premium plans get 10 per month. Counts reset at the start of each calendar month.",
+          "Audiobook export is currently available across all plans — Free, Pro, and Premium. Each export consumes from your daily AI assist budget, so larger books (or many exports) draw faster on the Free plan's 10 assists/day than on Pro's 100/day or Premium's 200/day.",
       },
       {
         id: "audiobook-languages",
@@ -356,7 +356,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "contact-support",
         question: "How do I contact support?",
         answer:
-          "Use the contact form on the Support page. We aim to respond as quickly as we can — Premium subscribers receive priority response.",
+          "Use the contact form on the Support page. We aim to respond as quickly as we can.",
       },
     ],
   },
