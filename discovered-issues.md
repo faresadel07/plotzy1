@@ -1764,4 +1764,122 @@ commit and chapters.routes.ts PUT handler's "downgrade grace" branch._
 
 _Logged 2026-05-05 during B5 of feat/pricing-honesty-rewrite._
 
+---
+
+## Writing Course follow-ups (deferred from feat/course-batch-1-schema)
+
+This batch added the 8-table schema for the free Writing Course. The
+items below are deliberate scope cuts logged so they don't get lost.
+
+### LOW — Migrate from drizzle-kit push to versioned migrations once schema stabilizes post-launch
+
+**File**: [lib/db/](lib/db/), [lib/db/drizzle.config.ts](lib/db/drizzle.config.ts)
+
+The project uses `drizzle-kit push` to apply schema changes (no
+`migrations/` directory, no versioned `.sql` files on disk, no
+`down()` definitions). For the GDPR Stage 1 work and now this
+course batch, we hand-write a `*-migration.sql` artifact for review
+in the absence of generated migrations.
+
+This is fine while the schema is changing rapidly pre-launch — push
+is faster and the artifact gives us human-readable review. After
+launch, when schema changes become rare and require careful rollouts,
+migrate to `drizzle-kit generate` + `migrate` so we get:
+
+- Version-controlled migration history on disk
+- Reversible migrations (`down()` blocks)
+- CI-checkable schema state ("is master's schema applied to staging?")
+
+**Estimated effort when triggered**: ~2 hours
+- Generate baseline migration from current production schema
+- Add `out: "./migrations"` to `drizzle.config.ts`
+- Update `lib/db/package.json` scripts: replace `push` with
+  `generate` + `migrate`, document the new flow in the README
+- Run `drizzle-kit generate` once to establish the baseline file
+
+Don't migrate during active feature development — pre-launch volatility
+makes the extra ceremony costly.
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Course quiz pool-based randomization (defer until cheating signals appear)
+
+**File**: [lib/db/src/schema/index.ts](lib/db/src/schema/index.ts)
+(`courseQuizzes` and `courseQuizQuestions`)
+
+Module quizzes are 5 fixed questions; the final exam is 40 fixed
+questions. A user retaking a quiz sees the same questions in the
+same order. This is fine for a free trust-based course but may
+encourage memorization-as-strategy (especially the final exam).
+
+**When to trigger**: post-launch, if we see signals like:
+- Final-exam pass rates >> retention on the actual lesson material
+- Users reporting they "Googled the answers"
+- Repeat takers achieving 100% on attempt 2 after failing attempt 1
+
+**Schema change when triggered**:
+- Add `pool_size INTEGER` nullable column to `course_quizzes`
+- When `pool_size > question_count`, server picks `question_count`
+  random questions per attempt
+- Author 60 final-exam questions instead of 40 (and pull 40); 10
+  per module quiz (and pull 5)
+
+**Estimated effort**: ~3h schema + UI + selection logic, plus the
+content authoring (additional 50 questions across the course).
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Course restart functionality (defer until user requests indicate need)
+
+**File**: [lib/db/src/schema/index.ts](lib/db/src/schema/index.ts)
+(`courseProgress`, `courseQuizAttempts`)
+
+v1 ships without a "restart course" button. Users who want to
+re-engage can re-watch lessons (the UI shows them as completed but
+remains accessible) and retake quizzes (multiple attempts already
+supported).
+
+**When to trigger**: a user explicitly asks to "reset their progress
+to 0%" — e.g., a writer who wants to retake the course a year
+later for a refresher and prefers the visual clean slate.
+
+**Implementation when needed**:
+- New endpoint `POST /api/course/restart` that hard-deletes the
+  user's `course_progress` and `course_quiz_attempts` rows
+- **Never** delete `course_certificates` — once earned, retained
+- Frontend confirmation modal ("This will reset your progress
+  display. Lessons remain accessible. You'll keep your certificate.")
+
+**Estimated effort**: ~30 min.
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Batch 1.3 (frontend): final-project submission needs CTA for users without an existing book
+
+**File**: future course frontend (Batch 1.3)
+**Schema reference**: [lib/db/src/schema/index.ts](lib/db/src/schema/index.ts) `courseFinalProjects.bookId notNull`
+
+The final-project submission requires `bookId notNull` — a user who
+reaches Module 6 without having created a book in their Plotzy
+library cannot submit a final project. The schema deliberately
+enforces this.
+
+**Required UX in Batch 1.3**:
+- Submission form detects "user has 0 books" state
+- Shows a CTA: "Create your first book to submit it as your final
+  project" with a button that opens the existing book-creation flow
+- After book creation, returns to the submission form pre-selected
+  on the new book
+
+Alternative (simpler): on submission attempt, auto-create a
+placeholder book named "<DisplayName>'s Course Project" and let the
+user populate chapters later. More frictionless but produces an
+empty book in their library.
+
+**Estimated effort**: ~1h either way. Logging now so Batch 1.3 doesn't
+discover this mid-implementation.
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+
 

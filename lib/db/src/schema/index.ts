@@ -703,6 +703,214 @@ export const adminAuditLogs = pgTable("admin_audit_logs", {
 
 export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
 
+// ── Writing Course: Modules ──────────────────────────────────────────────
+//
+// Plotzy's free Writing Course ("How to Write Your First Book"): 6
+// modules, 27 lessons, 6 module quizzes + 1 final exam, 1 final project,
+// 1 certificate. Free for all subscription tiers — no tier gates on
+// the course route handlers (Batch 1.2).
+//
+// Schema lives in this file (alongside the rest of the product schema)
+// rather than a separate file because Drizzle's `pnpm push` workflow
+// reads a single schema entrypoint. Migrations are applied via push,
+// not versioned files (see discovered-issues.md item: "Migrate to
+// versioned migrations once schema stabilizes").
+
+export const courseModules = pgTable("course_modules", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  order: integer("order").notNull(),
+  estimatedMinutes: integer("estimated_minutes").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("idx_course_modules_order_unique").on(t.order),
+  check("course_modules_order_range", sql`${t.order} BETWEEN 1 AND 6`),
+]);
+
+export type CourseModule = typeof courseModules.$inferSelect;
+export type InsertCourseModule = typeof courseModules.$inferInsert;
+
+// ── Writing Course: Lessons ──────────────────────────────────────────────
+// Markdown body stored in `content` (text). 27 rows total, distributed
+// across 6 modules. Slug is unique within a module so the URL pattern
+// /course/<module-slug>/<lesson-slug> resolves uniquely.
+export const courseLessons = pgTable("course_lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").notNull().references(() => courseModules.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull(),
+  title: text("title").notNull(),
+  orderInModule: integer("order_in_module").notNull(),
+  estimatedMinutes: integer("estimated_minutes").notNull(),
+  content: text("content").notNull(),
+  heroImageUrl: text("hero_image_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("idx_course_lessons_module_slug").on(t.moduleId, t.slug),
+  uniqueIndex("idx_course_lessons_module_order").on(t.moduleId, t.orderInModule),
+  index("idx_course_lessons_module").on(t.moduleId),
+]);
+
+export type CourseLesson = typeof courseLessons.$inferSelect;
+export type InsertCourseLesson = typeof courseLessons.$inferInsert;
+
+// ── Writing Course: Quizzes ──────────────────────────────────────────────
+// 6 module quizzes (one per module, type='module', moduleId set,
+// passingPercentage=70, no time limit) + 1 final exam (type='final',
+// moduleId NULL, passingPercentage=75, timeLimitMinutes=60).
+//
+// The check constraint enforces type/moduleId consistency: a 'module'
+// quiz MUST have a moduleId; the 'final' exam MUST NOT. Without this
+// the data model would silently allow nonsensical rows like a 'final'
+// with a moduleId or a 'module' without one.
+export const courseQuizzes = pgTable("course_quizzes", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").references(() => courseModules.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'module' | 'final'
+  questionCount: integer("question_count").notNull(),
+  passingPercentage: integer("passing_percentage").notNull(),
+  timeLimitMinutes: integer("time_limit_minutes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  check("course_quizzes_type_check", sql`${t.type} IN ('module', 'final')`),
+  check(
+    "course_quizzes_module_consistency",
+    sql`(${t.type} = 'module' AND ${t.moduleId} IS NOT NULL) OR (${t.type} = 'final' AND ${t.moduleId} IS NULL)`,
+  ),
+  check("course_quizzes_passing_range", sql`${t.passingPercentage} BETWEEN 0 AND 100`),
+  // One quiz per module. The final exam (moduleId NULL) is not subject
+  // to this constraint — a partial unique index ignores NULL rows.
+  uniqueIndex("idx_course_quizzes_module_unique").on(t.moduleId).where(sql`${t.moduleId} IS NOT NULL`),
+]);
+
+export type CourseQuiz = typeof courseQuizzes.$inferSelect;
+export type InsertCourseQuiz = typeof courseQuizzes.$inferInsert;
+
+// ── Writing Course: Quiz Questions ───────────────────────────────────────
+// MCQ with exactly 4 options (a/b/c/d). The check constraint guards
+// `correct_option` against typos so a runtime grader can trust it.
+export const courseQuizQuestions = pgTable("course_quiz_questions", {
+  id: serial("id").primaryKey(),
+  quizId: integer("quiz_id").notNull().references(() => courseQuizzes.id, { onDelete: "cascade" }),
+  questionText: text("question_text").notNull(),
+  optionA: text("option_a").notNull(),
+  optionB: text("option_b").notNull(),
+  optionC: text("option_c").notNull(),
+  optionD: text("option_d").notNull(),
+  correctOption: text("correct_option").notNull(),
+  explanation: text("explanation"),
+  order: integer("order").notNull(),
+}, (t) => [
+  index("idx_course_quiz_questions_quiz").on(t.quizId),
+  uniqueIndex("idx_course_quiz_questions_quiz_order").on(t.quizId, t.order),
+  check("course_quiz_questions_correct_option_check", sql`${t.correctOption} IN ('a', 'b', 'c', 'd')`),
+]);
+
+export type CourseQuizQuestion = typeof courseQuizQuestions.$inferSelect;
+export type InsertCourseQuizQuestion = typeof courseQuizQuestions.$inferInsert;
+
+// ── Writing Course: Progress ─────────────────────────────────────────────
+// Per-user lesson completion. The unique on (userId, lessonId) means a
+// lesson is "completed" once — a re-engagement updates the row instead
+// of inserting.
+//
+// Cascade rules:
+//   - userId CASCADE: account deletion removes their course progress
+//     (GDPR right-to-erasure).
+//   - lessonId RESTRICT: we want it to be HARD to accidentally delete
+//     a lesson that any student has progress on. A real lesson removal
+//     is a manual operation that should first reset the affected
+//     progress rows (or migrate them to a successor lesson).
+export const courseProgress = pgTable("course_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lessonId: integer("lesson_id").notNull().references(() => courseLessons.id, { onDelete: "restrict" }),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  timeSpentSeconds: integer("time_spent_seconds").default(0).notNull(),
+}, (t) => [
+  uniqueIndex("idx_course_progress_user_lesson").on(t.userId, t.lessonId),
+  index("idx_course_progress_user").on(t.userId),
+]);
+
+export type CourseProgress = typeof courseProgress.$inferSelect;
+export type InsertCourseProgress = typeof courseProgress.$inferInsert;
+
+// ── Writing Course: Quiz Attempts ────────────────────────────────────────
+// Multiple attempts per (user, quiz) allowed. The "best attempt" is the
+// one with max(scorePercentage). answersJson stores `{ "<questionId>":
+// "a" | "b" | "c" | "d" }` for the post-attempt review screen.
+export const courseQuizAttempts = pgTable("course_quiz_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  quizId: integer("quiz_id").notNull().references(() => courseQuizzes.id, { onDelete: "cascade" }),
+  scorePercentage: integer("score_percentage").notNull(),
+  correctCount: integer("correct_count").notNull(),
+  totalCount: integer("total_count").notNull(),
+  passed: boolean("passed").notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  answersJson: jsonb("answers_json").notNull(),
+}, (t) => [
+  index("idx_course_quiz_attempts_user").on(t.userId),
+  index("idx_course_quiz_attempts_quiz").on(t.quizId),
+  index("idx_course_quiz_attempts_user_quiz").on(t.userId, t.quizId),
+  check("course_quiz_attempts_score_range", sql`${t.scorePercentage} BETWEEN 0 AND 100`),
+]);
+
+export type CourseQuizAttempt = typeof courseQuizAttempts.$inferSelect;
+export type InsertCourseQuizAttempt = typeof courseQuizAttempts.$inferInsert;
+
+// ── Writing Course: Certificates ─────────────────────────────────────────
+// Issued exactly once per user when the API-layer validation
+// (Batch 1.2) confirms all 27 lessons are completed, all 6 module
+// quizzes passed (>= 70%), the final exam passed (>= 75%), and the
+// final project submitted. The column-level UNIQUE on userId is the
+// schema's hard guarantee that we never double-issue.
+//
+// `certificateUuid` is a public-facing slug for /certificates/<uuid>.
+// `pdfUrl` is populated lazily on first download.
+export const courseCertificates = pgTable("course_certificates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  certificateUuid: text("certificate_uuid").notNull().unique(),
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  finalExamScore: integer("final_exam_score").notNull(),
+  modulesCompletedAt: jsonb("modules_completed_at").notNull(),
+  pdfUrl: text("pdf_url"),
+}, (t) => [
+  index("idx_course_certificates_uuid").on(t.certificateUuid),
+]);
+
+export type CourseCertificate = typeof courseCertificates.$inferSelect;
+export type InsertCourseCertificate = typeof courseCertificates.$inferInsert;
+
+// ── Writing Course: Final Projects ───────────────────────────────────────
+// One submission per user, referencing an existing book + 3 chapters
+// from the user's main library. ai_feedback_json holds the structured
+// output of the existing AI analysis tools (plot holes, pacing,
+// dialogue, voice consistency) run against the submission.
+//
+// chapter_ids is jsonb (no FK enforcement on array elements). The
+// submission API is responsible for verifying the IDs exist and belong
+// to the same book (same constraint pattern as books.tags).
+export const courseFinalProjects = pgTable("course_final_projects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  chapterIds: jsonb("chapter_ids").notNull(),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  approvedAt: timestamp("approved_at"),
+  aiFeedbackJson: jsonb("ai_feedback_json"),
+}, (t) => [
+  index("idx_course_final_projects_book").on(t.bookId),
+]);
+
+export type CourseFinalProject = typeof courseFinalProjects.$inferSelect;
+export type InsertCourseFinalProject = typeof courseFinalProjects.$inferInsert;
+
 // `.strict()` forces these schemas (and their `.partial()` / `.omit()` derivatives
 // in lib/shared/src/routes.ts) to reject unknown fields rather than silently
 // strip them. Every endpoint that consumes one of these is a write path —
