@@ -917,4 +917,79 @@ the cleanup and the quality bar that motivated it.
 _Discovered 2026-04-30 during Step 1.5 of `feat/faq-page` when
 auditing existing FAQ surfaces before publishing the new one._
 
+## DEFERRED — Stage 6 of feat/remove-stripe (DB migration) and downstream legal/FAQ updates
+
+**Context**: `feat/remove-stripe` removed Stripe across 8 planned
+stages. Stages 1-5 (backend routes, webhook, storage layer,
+stripe-client + npm uninstall, frontend dead code) and Stages
+7-8 (.env, docs) all shipped. Stage 6 (DB migration) was
+explicitly deferred per founder's request to handle separate
+database issues first.
+
+### 1. Stage 6 — drop the `transactions` table and Stripe columns on `users`
+
+The `transactions` table and three Stripe columns survive in the
+schema as of merge. Pre-flight verified all three columns are
+empty (0 rows total). The transactions table is also empty
+(0 rows). The schema comment at
+`lib/db/src/schema/index.ts:178-180` already documents that
+`transactions` is "strictly tied to one-time book unlocks" — the
+deleted Stripe path.
+
+Migration to run when ready:
+```sql
+BEGIN;
+ALTER TABLE users DROP COLUMN stripe_customer_id;
+ALTER TABLE users DROP COLUMN stripe_subscription_id;
+DROP TABLE transactions;
+COMMIT;
+```
+
+Schema files to prune after the SQL succeeds:
+- `lib/db/src/schema/index.ts` — remove `stripeCustomerId` +
+  `stripeSubscriptionId` columns from `users` table; remove the
+  entire `transactions` pgTable definition; remove the
+  corresponding `Transaction` / `InsertTransaction` type exports.
+- `lib/shared/src/schema-types.ts` — same changes, mirror copy.
+
+### 2. Privacy Policy + Terms of Service Stripe references
+
+Three places in `pages/privacy-policy.tsx` (lines 150, 176, 222
+at the time of audit) and one place in `pages/terms-of-service.tsx`
+(line 228) name "Stripe and PayPal" or "Stripe / PayPal" as
+payment processors. The pre-launch audit's C-1 finding originally
+flagged these as false claims; the stripe-investigation.md report
+inverted that finding when it discovered Stripe was live in code.
+Now that `feat/remove-stripe` has actually removed Stripe, the
+legal docs should be updated to remove Stripe and mention PayPal
+alone. Approximately 5 minutes of edits.
+
+### 3. FAQ alignment (no action needed)
+
+The /faq currently states "Plotzy uses PayPal as its payment
+processor" at `artifacts/plotzy/src/data/faq-data.ts:181-187`
+and 223. With Stripe genuinely removed now, this answer is
+accurate. No change needed.
+
+### 4. Stage 6 readiness checklist
+
+Before running the migration:
+- Confirm production DB matches dev DB (pre-flight ran on
+  dev — re-run the SELECT counts against prod connection string
+  before any DROP)
+- Take a Neon DB branch snapshot or backup
+- Run inside a transaction (BEGIN ... COMMIT) so a partial
+  failure doesn't leave the schema half-mutated
+- After SQL: prune the two schema files above, run typecheck +
+  build, commit, merge
+
+**Why DEFERRED rather than CRITICAL**: the surviving columns and
+empty transactions table are inert — no code reads or writes
+them after Stages 1-5. The launch is not blocked by leaving
+them in place. They are simply schema noise that should be
+cleaned up when Faris is ready to coordinate with whatever
+other DB work is in flight.
+
+_Logged 2026-05-04 during Stage 8 of `feat/remove-stripe`._
+
 

@@ -36,9 +36,10 @@ boot the backend:
 
 Optional but used heavily: `OPENAI_API_KEY` (or Groq via
 `AI_INTEGRATIONS_OPENAI_BASE_URL`), `RESEND_API_KEY` (transactional
-email), Stripe / PayPal, Sentry, Google / Apple / LinkedIn OAuth pairs.
-Boot-time validation (`lib/env.ts`) prints a precise list of which vars
-are missing or wrongly shaped.
+email), `PAYPAL_CLIENT_ID` + `PAYPAL_SECRET` (subscriptions), Sentry,
+Google / Apple / LinkedIn OAuth pairs. Boot-time validation
+(`lib/env.ts`) prints a precise list of which vars are missing or
+wrongly shaped.
 
 ## Workspace commands
 

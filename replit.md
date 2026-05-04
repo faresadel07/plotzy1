@@ -16,7 +16,7 @@ Full-stack book writing and publishing platform. pnpm monorepo with React+Vite f
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **Auth**: Passport.js (Google OAuth + email/password)
-- **Payments**: Stripe (subscriptions)
+- **Payments**: PayPal (subscriptions)
 - **AI**: OpenAI API (writing assistance + TTS for audiobook export)
 - **File uploads**: multer
 - **WebSockets**: ws
@@ -33,7 +33,6 @@ workspace/
 │   │       ├── routes.ts       # All API routes (~1700 lines)
 │   │       ├── storage.ts      # DB access layer
 │   │       ├── auth.ts         # Passport strategies
-│   │       ├── stripe-client.ts
 │   │       ├── achievements-engine.ts
 │   │       └── db.ts           # Drizzle client (imports from ../../../lib/db)
 │   └── plotzy/             # React + Vite frontend
@@ -81,7 +80,7 @@ Express 5 API server with all Plotzy routes.
 
 - Entry: `src/index.ts` — reads `PORT` (8080), starts server
 - App setup: `src/app.ts` — CORS, sessions, Passport, routes
-- All routes: `src/routes.ts` (books, chapters, lore, story beats, auth, AI, Stripe, admin, etc.)
+- All routes: `src/routes.ts` (books, chapters, lore, story beats, auth, AI, payments, admin, etc.)
 - Storage: `src/storage.ts` — database access abstraction
 - Dev: `pnpm --filter @workspace/api-server run dev` (tsx watch)
 
@@ -167,6 +166,5 @@ Routes: `/discover` (grid browser) → `/discover/:id` (immersive reader)
 - `DATABASE_URL` — PostgreSQL connection string (auto-provided by Replit)
 - `SESSION_SECRET` — Express session secret
 - `OPENAI_API_KEY` — For AI writing assistance
-- `STRIPE_SECRET_KEY` — For subscriptions
-- `STRIPE_PUBLISHABLE_KEY` — For frontend Stripe.js
+- `PAYPAL_CLIENT_ID` / `PAYPAL_SECRET` — For subscriptions
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — For Google OAuth
