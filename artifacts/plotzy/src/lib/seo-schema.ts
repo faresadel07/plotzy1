@@ -190,3 +190,120 @@ export function buildBookSchema(
 
   return schema;
 }
+
+/**
+ * Normalise a social handle stored on the user record.
+ *
+ * Strips an optional leading `@` and trims whitespace. Case is preserved
+ * because some platforms render handles case-sensitively (vanity URLs)
+ * and lowercasing every entry would change the visible identity.
+ *
+ * Returns `null` for empty / whitespace-only / null inputs so the caller
+ * can decide whether to drop the field entirely.
+ */
+function normalizeHandle(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim().replace(/^@+/, "").trim();
+  return trimmed || null;
+}
+
+/**
+ * Strict scheme check for a website URL destined for JSON-LD `sameAs`.
+ *
+ * Unlike the UI-side `safeExternalUrl` helper (which auto-prepends
+ * https:// for friendly display), the JSON-LD schema must not silently
+ * "fix" a bare-domain input — schema validators reject it, and a
+ * misspelled bare domain like "plotzy.con" would otherwise be turned
+ * into a live URL pointing at someone else's site.
+ *
+ * Drops with a DEV-only console.debug breadcrumb so a user reporting
+ * "my website doesn't show in search results" has a trace to follow.
+ */
+function validateWebsiteUrlForSameAs(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^https?:\/\//i.test(trimmed)) {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        "[seo] Dropping website from Person sameAs: missing http(s) scheme",
+        { raw },
+      );
+    }
+    return null;
+  }
+  // Defensive parse — even with a scheme, malformed values (spaces,
+  // control chars) shouldn't reach the schema.
+  try {
+    const u = new URL(trimmed);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+const PERSON_BIO_CAP = 500;
+
+export interface PersonSchemaInput {
+  id: number;
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  website: string | null;
+  twitterHandle: string | null;
+  instagramHandle: string | null;
+}
+
+/**
+ * Person JSON-LD for an author profile at /authors/:userId.
+ *
+ * Schema fields:
+ *   name, url — always present (`name` falls back to "Author" when the
+ *               user hasn't set a displayName)
+ *   image — included only when avatarUrl is truthy. Gradient-initial
+ *           avatars are page-rendered, not real images, so we omit
+ *           `image` rather than referencing a URL that doesn't exist.
+ *   description — bio capped at 500 chars via the same truncateAtWord
+ *                 helper used for Book.description.
+ *   sameAs — array of absolute URLs. Built from twitterHandle,
+ *            instagramHandle, and website (validated). Omitted when
+ *            empty so validators don't see `"sameAs": []`.
+ *
+ * No further social fields are emitted because the user record doesn't
+ * store them: TikTok, LinkedIn user URL, YouTube, Facebook page,
+ * Mastodon, Threads, Bluesky, and a separate blog URL are all out of
+ * scope. (`linkedinId` and `facebookId` exist but are OAuth provider
+ * IDs, not user-managed URLs — the API strips them.)
+ */
+export function buildPersonSchema(profile: PersonSchemaInput): Record<string, unknown> {
+  const schema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: profile.displayName?.trim() || "Author",
+    url: `${SITE_URL}/authors/${profile.id}`,
+  };
+
+  if (profile.avatarUrl) {
+    schema.image = absolutizeImage(profile.avatarUrl);
+  }
+
+  if (profile.bio && profile.bio.trim()) {
+    schema.description = truncateAtWord(profile.bio, PERSON_BIO_CAP);
+  }
+
+  const sameAs: string[] = [];
+  const tw = normalizeHandle(profile.twitterHandle);
+  if (tw) sameAs.push(`https://twitter.com/${tw}`);
+  const ig = normalizeHandle(profile.instagramHandle);
+  if (ig) sameAs.push(`https://instagram.com/${ig}`);
+  const website = validateWebsiteUrlForSameAs(profile.website);
+  if (website) sameAs.push(website);
+
+  if (sameAs.length > 0) {
+    schema.sameAs = sameAs;
+  }
+
+  return schema;
+}
