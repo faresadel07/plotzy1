@@ -860,6 +860,7 @@ export default function ReadBook() {
                   <span style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>({inlineComments.length})</span>
                 </div>
                 <button onClick={() => setShowCommentsSidebar(false)}
+                  aria-label="Close comments"
                   style={{ background: "none", border: "none", color: "#555", cursor: "pointer", padding: 4 }}>
                   <X style={{ width: 16, height: 16 }} />
                 </button>
@@ -928,6 +929,7 @@ export default function ReadBook() {
                             <div style={{ display: "flex", gap: 4 }}>
                               <button onClick={() => resolveInlineComment.mutate({ bookId, commentId: c.id })}
                                 title="Resolve"
+                                aria-label="Resolve comment"
                                 style={{ background: "none", border: "none", color: "rgba(34,197,94,0.5)", cursor: "pointer", padding: 3, borderRadius: 4 }}
                                 onMouseEnter={e => (e.currentTarget.style.color = "#22c55e")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(34,197,94,0.5)")}
@@ -936,6 +938,7 @@ export default function ReadBook() {
                               </button>
                               <button onClick={() => deleteInlineComment.mutate({ bookId, commentId: c.id })}
                                 title="Delete"
+                                aria-label="Delete comment"
                                 style={{ background: "none", border: "none", color: "rgba(239,68,68,0.4)", cursor: "pointer", padding: 3, borderRadius: 4 }}
                                 onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(239,68,68,0.4)")}

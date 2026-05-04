@@ -827,7 +827,7 @@ export default function CoverDesigner() {
           <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mt-3">Colors</p>
           <div className="flex flex-wrap gap-2">
             {SHAPE_COLORS.map((c) => (
-              <button key={c} style={{ background: c }} className="w-7 h-7 rounded-lg border border-white/10 hover:scale-110 transition-transform" onClick={() => { if (selected?.type === "shape") commitUpdate(selected.id, { fill: c }); }} />
+              <button key={c} style={{ background: c }} className="w-7 h-7 rounded-lg border border-white/10 hover:scale-110 transition-transform" onClick={() => { if (selected?.type === "shape") commitUpdate(selected.id, { fill: c }); }} aria-label={`Set shape color to ${c}`} />
             ))}
           </div>
         </div>
@@ -841,15 +841,15 @@ export default function CoverDesigner() {
               <span className="text-xs text-white/30 w-5 flex-shrink-0">{el.type === "text" ? "T" : el.type === "image" ? "I" : "S"}</span>
               <span className="text-xs text-white/70 flex-1 truncate">{el.type === "text" ? (el.content?.slice(0, 20) || "Text") : el.type === "image" ? "Image" : el.shapeType || "Shape"}</span>
               <span className="text-xs text-white/30 flex-shrink-0">{el.face[0].toUpperCase()}</span>
-              <button onClick={(e) => { e.stopPropagation(); updateElement(el.id, { visible: !el.visible }); }} className="flex-shrink-0 opacity-60 hover:opacity-100">
+              <button onClick={(e) => { e.stopPropagation(); updateElement(el.id, { visible: !el.visible }); }} aria-label={el.visible ? "Hide layer" : "Show layer"} className="flex-shrink-0 opacity-60 hover:opacity-100">
                 {el.visible ? <Eye className="w-3.5 h-3.5 text-white/60" /> : <EyeOff className="w-3.5 h-3.5 text-white/30" />}
               </button>
-              <button onClick={(e) => { e.stopPropagation(); updateElement(el.id, { locked: !el.locked }); }} className="flex-shrink-0 opacity-60 hover:opacity-100">
+              <button onClick={(e) => { e.stopPropagation(); updateElement(el.id, { locked: !el.locked }); }} aria-label={el.locked ? "Unlock layer" : "Lock layer"} className="flex-shrink-0 opacity-60 hover:opacity-100">
                 {el.locked ? <Lock className="w-3.5 h-3.5 text-amber-400/70" /> : <Unlock className="w-3.5 h-3.5 text-white/30" />}
               </button>
               <div className="flex flex-col gap-0.5">
-                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "up"); }}><ChevronUp className="w-3 h-3 text-white/40 hover:text-white" /></button>
-                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "down"); }}><ChevronDown className="w-3 h-3 text-white/40 hover:text-white" /></button>
+                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "up"); }} aria-label="Move layer up"><ChevronUp className="w-3 h-3 text-white/40 hover:text-white" /></button>
+                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "down"); }} aria-label="Move layer down"><ChevronDown className="w-3 h-3 text-white/40 hover:text-white" /></button>
               </div>
             </div>
           ))}
@@ -1049,7 +1049,8 @@ export default function CoverDesigner() {
                 onClick={() => {
                   if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
                   setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: c } }));
-                }} />
+                }}
+                aria-label={`Set background color to ${c}`} />
             ))}
           </div>
         </div>
@@ -1063,8 +1064,8 @@ export default function CoverDesigner() {
         <div className="flex items-center justify-between">
           <span className="text-xs bg-blue-600/30 text-blue-300 px-2 py-1 rounded-lg font-semibold capitalize">{selected.type}</span>
           <div className="flex gap-1">
-            <button onClick={duplicateSelected} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"><Copy className="w-3.5 h-3.5" /></button>
-            <button onClick={deleteSelected} className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/50 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+            <button onClick={duplicateSelected} aria-label="Duplicate element" className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"><Copy className="w-3.5 h-3.5" /></button>
+            <button onClick={deleteSelected} aria-label="Delete element" className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/50 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
           </div>
         </div>
 
@@ -1109,10 +1110,10 @@ export default function CoverDesigner() {
             <div>
               <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Style</p>
               <div className="flex gap-1.5">
-                <button onClick={() => commitUpdate(selected.id, { fontWeight: selected.fontWeight === "bold" ? "normal" : "bold" })} className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontWeight === "bold" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}><Bold className="w-3.5 h-3.5" /></button>
-                <button onClick={() => commitUpdate(selected.id, { fontStyle: selected.fontStyle === "italic" ? "normal" : "italic" })} className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontStyle === "italic" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}><Italic className="w-3.5 h-3.5" /></button>
+                <button onClick={() => commitUpdate(selected.id, { fontWeight: selected.fontWeight === "bold" ? "normal" : "bold" })} aria-label="Bold" className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontWeight === "bold" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}><Bold className="w-3.5 h-3.5" /></button>
+                <button onClick={() => commitUpdate(selected.id, { fontStyle: selected.fontStyle === "italic" ? "normal" : "italic" })} aria-label="Italic" className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontStyle === "italic" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}><Italic className="w-3.5 h-3.5" /></button>
                 {(["left","center","right"] as Align[]).map((a) => (
-                  <button key={a} onClick={() => commitUpdate(selected.id, { textAlign: a })} className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${selected.textAlign === a ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
+                  <button key={a} onClick={() => commitUpdate(selected.id, { textAlign: a })} aria-label={`Align ${a}`} className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${selected.textAlign === a ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
                     {a === "left" ? <AlignLeft className="w-3.5 h-3.5" /> : a === "center" ? <AlignCenter className="w-3.5 h-3.5" /> : <AlignRight className="w-3.5 h-3.5" />}
                   </button>
                 ))}
@@ -1126,7 +1127,7 @@ export default function CoverDesigner() {
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {["#ffffff","#000000","#f1f5f9","#94a3b8","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"].map((c) => (
-                  <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform" onClick={() => commitUpdate(selected.id, { color: c })} />
+                  <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform" onClick={() => commitUpdate(selected.id, { color: c })} aria-label={`Set text color to ${c}`} />
                 ))}
               </div>
             </div>
@@ -1238,14 +1239,14 @@ export default function CoverDesigner() {
         <div className="h-4 w-px bg-white/10" />
 
         {/* Undo/Redo */}
-        <button onClick={undo} disabled={historyIdx <= 0} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors" title="Undo"><RotateCcw className="w-4 h-4" /></button>
-        <button onClick={redo} disabled={historyIdx >= history.length - 1} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors rotate-180" title="Redo"><RotateCcw className="w-4 h-4" /></button>
+        <button onClick={undo} disabled={historyIdx <= 0} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors" title="Undo" aria-label="Undo"><RotateCcw className="w-4 h-4" /></button>
+        <button onClick={redo} disabled={historyIdx >= history.length - 1} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors rotate-180" title="Redo" aria-label="Redo"><RotateCcw className="w-4 h-4" /></button>
 
         {/* Zoom */}
         <div className="flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1">
-          <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))} className="text-white/40 hover:text-white text-sm w-4 text-center">−</button>
+          <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))} aria-label="Zoom out" className="text-white/40 hover:text-white text-sm w-4 text-center">−</button>
           <span className="text-xs text-white/60 w-10 text-center">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))} className="text-white/40 hover:text-white text-sm w-4 text-center">+</button>
+          <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))} aria-label="Zoom in" className="text-white/40 hover:text-white text-sm w-4 text-center">+</button>
         </div>
 
         <div className="h-4 w-px bg-white/10" />

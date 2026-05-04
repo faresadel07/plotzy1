@@ -619,6 +619,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             <span style={{ flex: 1, textAlign: "center" }}>📢 {banner.message}</span>
             <button
               onClick={() => setBannerDismissed(true)}
+              aria-label="Dismiss"
               style={{ background: "none", border: "none", cursor: "pointer", color: fg, opacity: 0.6, fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0 }}
             >×</button>
           </div>

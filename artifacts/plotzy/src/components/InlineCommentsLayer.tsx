@@ -416,7 +416,7 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
                     <MessageSquarePlus style={{ width: 14, height: 14, color: "rgba(250,204,21,0.8)" }} />
                     <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Add Comment</span>
                   </div>
-                  <button onClick={() => { setSelectionInfo(null); setLiveRects([]); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
+                  <button onClick={() => { setSelectionInfo(null); setLiveRects([]); }} aria-label="Cancel" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
                     <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>
@@ -465,7 +465,7 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => setActiveComment(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
+                  <button onClick={() => setActiveComment(null)} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.3)" }}>
                     <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>

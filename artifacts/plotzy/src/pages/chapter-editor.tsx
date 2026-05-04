@@ -1721,21 +1721,21 @@ export default function ChapterEditor() {
               </Button>
             )}
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"} aria-label={ar ? "استعراض الصفحات" : "Page Navigator"}>
               <LayoutGrid className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowStoryBible(true)} title={ar ? "الكتاب المقدس للقصة" : "Story Bible"}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowStoryBible(true)} title={ar ? "الكتاب المقدس للقصة" : "Story Bible"} aria-label={ar ? "الكتاب المقدس للقصة" : "Story Bible"}>
               <BookOpen className="w-4 h-4" />
             </Button>
 
             <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex" onClick={() => fileInputRef.current?.click()} title={ar ? "إدراج صورة" : "Insert Image"}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex" onClick={() => fileInputRef.current?.click()} title={ar ? "إدراج صورة" : "Insert Image"} aria-label={ar ? "إدراج صورة" : "Insert Image"}>
               <ImageIcon className="w-4 h-4" />
             </Button>
 
 
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowCustomizer(true)} title={t("settings")}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowCustomizer(true)} title={t("settings")} aria-label={t("settings")}>
               <Palette className="w-4 h-4" />
             </Button>
 
@@ -1746,6 +1746,7 @@ export default function ChapterEditor() {
                 className={`w-8 h-8 rounded-lg transition-colors ${showPageStylePicker || (prefs.pageStyle && prefs.pageStyle !== "blank") ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
                 onClick={() => setShowPageStylePicker(v => !v)}
                 title="Page Style"
+                aria-label="Page Style"
               >
                 <Layers className="w-4 h-4" />
               </Button>
@@ -1763,25 +1764,25 @@ export default function ChapterEditor() {
 
             <AmbientSoundscape />
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"} aria-label={ar ? "عرض مرجعي" : "Reference Mode"}>
               <PanelRight className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isPrintView ? "text-foreground bg-foreground/10" : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"}`} onClick={() => { setIsPrintView(v => !v); setCurrentSpread(0); }} title={ar ? "معاينة الطباعة" : "Print View"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isPrintView ? "text-foreground bg-foreground/10" : "text-muted-foreground hover:bg-foreground/10 hover:text-foreground"}`} onClick={() => { setIsPrintView(v => !v); setCurrentSpread(0); }} title={ar ? "معاينة الطباعة" : "Print View"} aria-label={ar ? "معاينة الطباعة" : "Print View"}>
               <Printer className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isTypewriterMode ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`} onClick={toggleTypewriterMode} title={ar ? "تمركز المؤشر — النص يتحرك، المؤشر يبقى في منتصف الشاشة" : "Center Typing — keep the cursor in the middle of the screen as you type"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isTypewriterMode ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`} onClick={toggleTypewriterMode} title={ar ? "تمركز المؤشر — النص يتحرك، المؤشر يبقى في منتصف الشاشة" : "Center Typing — keep the cursor in the middle of the screen as you type"} aria-label={ar ? "تمركز المؤشر" : "Center Typing"}>
               <AlignCenter className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setIsFocusMode(!isFocusMode)} title={ar ? "وضع التركيز" : "Focus Mode"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setIsFocusMode(!isFocusMode)} title={ar ? "وضع التركيز" : "Focus Mode"} aria-label={ar ? "وضع التركيز" : "Focus Mode"}>
               {isFocusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </Button>
 
             <div className="w-px h-5 bg-border/40 mx-1" />
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors relative ${showVersionHistory ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`} onClick={() => setShowVersionHistory(v => !v)} title={ar ? "سجل الإصدارات" : "Version History"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors relative ${showVersionHistory ? "text-foreground bg-white/10" : "text-muted-foreground hover:bg-white/10 hover:text-foreground"}`} onClick={() => setShowVersionHistory(v => !v)} title={ar ? "سجل الإصدارات" : "Version History"} aria-label={ar ? "سجل الإصدارات" : "Version History"}>
               <History className="w-4 h-4" />
               {versions.length > 0 && <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white" />}
             </Button>

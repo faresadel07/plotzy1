@@ -1139,4 +1139,51 @@ _Logged 2026-05-04 during Item 6 of feat/cleanup-batch-1 after
 deciding to ship the email pipeline first and the reason field
 as a separate UX polish._
 
+## LOW — Aria-label coverage gaps deferred from Item 7 (cleanup-batch-1)
+
+Three areas were scoped out of the Item 7 sweep because verifying
+each properly would expand the batch's footprint significantly:
+
+### 1. `pages/audiobook-studio.tsx` — ~6 icon-only buttons need verification
+
+The MiniPlayer toggle (line 271), export button context (line 779),
+per-chapter expand chevrons (line 913), and a few others have
+icon children that may or may not be paired with visible text in
+the surrounding row layout. Verified: line 847 (chapter selection
+CheckCircle/Circle toggle) and line 913 (expand ChevronUp/Down)
+ARE icon-only and need aria-label. Better as a focused
+audiobook-studio a11y pass than a guess-based addition mixed in
+with the other Item 7 work.
+
+### 2. Form `aria-describedby`
+
+Auth modal password input passes `error={fieldErrors.password}`
+into a shared `FieldInput` component. Adding `aria-describedby`
+properly requires modifying FieldInput's id-generation and the
+error-slot binding, which propagates to every field across the
+app. Better as a single focused FieldInput refactor than a one-off
+aria-describedby on the password input.
+
+### 3. Read-book left/right page-tap regions are `<div onClick>` not buttons
+
+Lines 477 and 502 of `pages/read-book.tsx` are `<div>` elements
+with `onClick` and `title=` for previous/next page navigation.
+They have title attributes for sighted-keyboard tooltip behavior
+but cannot be focused with Tab and don't announce as buttons to
+screen readers. Adding aria-label to a non-button div helps
+little. Proper fix is conversion to `<button>` in Item 9 of this
+batch (div-buttons → buttons), at which point aria-label can be
+added as part of the conversion.
+
+### 4. Full i18n translation of all aria-labels
+
+The 34 labels added in Item 7 are English-only (with 9 reusing
+the existing `ar ? "..." : "..."` ternary pattern in
+chapter-editor for free Arabic coverage). Translating to all 14
+UI languages would add roughly 25 new strings × 13 non-English
+languages ≈ 325 entries. Defer until i18n batch is prioritized.
+
+_Logged 2026-05-04 during Item 7 of feat/cleanup-batch-1 after
+deciding to ship verifiable aria-labels first._
+
 
