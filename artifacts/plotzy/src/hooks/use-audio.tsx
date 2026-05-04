@@ -55,8 +55,7 @@ export function useAudio() {
       handleRef.current = builder(ctx, master);
       setCurrentTrack(id);
       setIsPlaying(true);
-    } catch (err) {
-      console.warn("Ambient preset failed:", id, err);
+    } catch {
       handleRef.current = null;
       setIsPlaying(false);
       setCurrentTrack(null);

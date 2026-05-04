@@ -336,7 +336,6 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
       setLiveRects([]);
       setNewComment("");
     } catch (err: any) {
-      console.error("Inline comment submit error:", err);
       toast({ title: err?.message || "Failed to save — is the server running?", variant: "destructive" });
     } finally {
       setSubmitting(false);
