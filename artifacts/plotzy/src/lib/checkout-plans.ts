@@ -28,22 +28,28 @@ export interface PlanDetails {
   accentColor: string;
 }
 
+// IMPORTANT: PRO_FEATURES and PREMIUM_FEATURES MUST stay in sync
+// with FEATURES_PRO and FEATURES_PREMIUM in pages/pricing.tsx.
+// If you add or remove a feature here, update pricing.tsx as well.
+// Related: data/faq-data.ts may also reference these features.
+//
+// The pricing page uses richer items (FeatureItem objects with captions
+// for the AI-quota disclaimer); the checkout summary intentionally keeps
+// just the main lines as plain strings — users at checkout have already
+// seen the full pricing page.
 const PRO_FEATURES = [
-  "50 books, 100 chapters per book",
-  "500,000 words total",
-  "100 AI assists per day",
-  "PDF & EPUB professional export",
-  "Audiobook studio with 10 AI voices",
-  "Priority support",
+  "100 AI requests per day",
+  "3 AI Marketplace analyses per month",
+  "No chapter limits",
+  "No word limits",
+  "No publishing limits on Community Library",
 ];
 
 const PREMIUM_FEATURES = [
-  "Unlimited books, chapters & words",
-  "200 AI assists per day",
-  "10 audiobook exports per month",
+  "200 AI requests per day",
   "9 AI Marketplace analyses per month",
-  "Priority support (< 2 hour response)",
-  "Early access to new features",
+  "No book, chapter, or word limits",
+  "No limits on Community Library publishing",
 ];
 
 const PRO_ACCENT = "#3B82F6";

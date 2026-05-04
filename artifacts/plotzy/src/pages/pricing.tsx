@@ -71,9 +71,9 @@ const AI_DAILY_CAPTION = "Shared across all AI features (writing, audiobook, cov
 const FEATURES_PRO: FeatureItem[] = [
   { text: "100 AI requests per day", caption: AI_DAILY_CAPTION },
   "3 AI Marketplace analyses per month",
-  "Unlimited chapters",
-  "Unlimited words per chapter",
-  "Unlimited published books in Community Library",
+  "No chapter limits",
+  "No word limits",
+  "No publishing limits on Community Library",
 ];
 
 const FEATURES_PREMIUM: FeatureItem[] = [
