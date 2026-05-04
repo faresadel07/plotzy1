@@ -891,7 +891,7 @@ export default function ReadBook() {
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               {c.authorAvatarUrl ? (
-                                <img src={c.authorAvatarUrl} alt="" style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
+                                <img src={c.authorAvatarUrl} alt={c.authorName || ""} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
                               ) : (
                                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(250,204,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#facc15" }}>
                                   {c.authorName[0]?.toUpperCase()}

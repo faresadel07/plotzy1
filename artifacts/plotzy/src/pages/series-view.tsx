@@ -119,7 +119,7 @@ export default function SeriesView() {
           {series.ownerName && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {series.ownerAvatarUrl ? (
-                <img src={series.ownerAvatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
+                <img src={series.ownerAvatarUrl} alt={series.ownerName || ""} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
               ) : (
                 <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(124,106,247,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <User size={12} style={{ color: ACC }} />
@@ -168,7 +168,7 @@ export default function SeriesView() {
                   {/* Cover */}
                   <div style={{ position: "relative", aspectRatio: "2/3", overflow: "hidden", background: book.spineColor || "rgba(124,106,247,0.08)" }}>
                     {book.coverImage ? (
-                      <img src={book.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <img src={book.coverImage} alt={book.title || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
                       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <BookOpen style={{ width: 32, height: 32, color: "rgba(255,255,255,0.15)" }} />

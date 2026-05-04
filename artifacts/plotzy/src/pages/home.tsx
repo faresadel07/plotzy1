@@ -1016,7 +1016,7 @@ export default function Home() {
                   {/* Mini cover */}
                   <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(96,165,250,0.08)" }}>
                     {sb.coverImage ? (
-                      <img src={sb.coverImage} alt="" className="w-full h-full object-cover rounded-lg" />
+                      <img src={sb.coverImage} alt={sb.title || ""} className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       <BookOpen className="w-4 h-4" style={{ color: "rgba(96,165,250,0.5)" }} />
                     )}
@@ -1057,7 +1057,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ background: "rgba(167,139,250,0.08)" }}>
                       {book.coverImage ? (
-                        <img src={book.coverImage} alt="" className="w-full h-full object-cover" />
+                        <img src={book.coverImage} alt={book.title || ""} className="w-full h-full object-cover" />
                       ) : (
                         <BookOpen className="w-4 h-4" style={{ color: "rgba(167,139,250,0.5)" }} />
                       )}
@@ -1075,7 +1075,7 @@ export default function Home() {
                     {book.collaborators.slice(0, 3).map((c) => (
                       <div key={c.userId} className="flex items-center gap-2 px-2 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
                         {c.avatarUrl ? (
-                          <img src={c.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                          <img src={c.avatarUrl} alt={c.name || ""} className="w-5 h-5 rounded-full object-cover" />
                         ) : (
                           <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
                             {(c.name || "?")[0]?.toUpperCase()}

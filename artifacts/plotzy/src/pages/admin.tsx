@@ -380,7 +380,7 @@ function UsersTab() {
                 <td style={S.td}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {u.avatarUrl
-                      ? <img src={u.avatarUrl} loading="lazy" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />
+                      ? <img src={u.avatarUrl} alt={u.displayName || u.email || ""} loading="lazy" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }} />
                       : <div style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>{(u.displayName || u.email || "?")[0].toUpperCase()}</div>
                     }
                     <span style={{ fontWeight: 500 }}>{u.displayName || "—"}</span>
@@ -1711,7 +1711,7 @@ function EngagementTab() {
                 <td style={S.td}>{i + 1}</td>
                 <td style={S.td}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {u.avatar_url && <img src={u.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: "50%" }} />}
+                    {u.avatar_url && <img src={u.avatar_url} alt={u.display_name || u.email || ""} style={{ width: 24, height: 24, borderRadius: "50%" }} />}
                     <span>{u.display_name || u.email || "—"}</span>
                   </div>
                 </td>

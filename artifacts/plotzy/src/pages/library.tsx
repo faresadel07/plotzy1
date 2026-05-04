@@ -204,7 +204,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
                 onMouseLeave={e => { (e.currentTarget.querySelector("span") as any).style.color = TS; }}
               >
                 {book.authorAvatarUrl ? (
-                  <img src={book.authorAvatarUrl} alt="" style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
+                  <img src={book.authorAvatarUrl} alt={authorName} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
                 ) : (
                   <User style={{ width: 12, height: 12, color: TD }} />
                 )}
@@ -440,7 +440,7 @@ export default function Library() {
                             border: "1px solid rgba(255,255,255,0.06)",
                           }}>
                             {b.coverImage ? (
-                              <img src={b.coverImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              <img src={b.coverImage} alt={b.title || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
                               <BookOpen style={{ width: 16, height: 16, color: "#a78bfa", opacity: 0.5, margin: "auto", display: "block", marginTop: 22 }} />
                             )}
