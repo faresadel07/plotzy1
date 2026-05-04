@@ -1208,7 +1208,7 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
 
 // ── Marketplace Usage ────────────────────────────────────────────────────
 
-import { getUserTier, getTierLimits, checkMarketplaceLimit, recordMarketplaceUsage, getMarketplaceHistory } from "../lib/tier-limits";
+import { getUserTier, getTierLimits, checkMarketplaceLimit, getMarketplaceHistory } from "../lib/tier-limits";
 
 // GET /api/marketplace/usage — current user's marketplace usage + limits.
 // Admins bypass all tier enforcement so they can test the marketplace
@@ -1243,25 +1243,21 @@ router.get("/api/marketplace/history", async (req, res) => {
   }
 });
 
-// POST /api/marketplace/record — record a marketplace usage (called after analysis completes)
+// POST /api/marketplace/record — DEPRECATED (no-op stub).
+//
+// The monthly limit gate and the usage record now both live inside
+// /api/marketplace/analyze (see routes.ts). This stub stays so that
+// any browser tab still running the previous frontend bundle (which
+// fired POST /record after every successful /analyze) gets a 200 and
+// doesn't throw — without double-incrementing the marketplace counter
+// (which was the original revenue-leak fix). New frontend code does
+// not call this endpoint.
+//
+// Safe to remove once enough time has passed that no client still
+// references it.
 router.post("/api/marketplace/record", async (req, res) => {
-  try {
-    if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
-    const user = await storage.getUserById(req.user.id);
-    if (!user) return res.status(401).json({ message: "User not found" });
-
-    if (!isAdminUser(user)) {
-      const tier = getUserTier(user as any);
-      const { allowed } = await checkMarketplaceLimit(req.user.id, tier);
-      if (!allowed) return res.status(429).json({ message: "Monthly marketplace limit reached. Upgrade your plan for more analyses.", code: "MARKETPLACE_LIMIT" });
-    }
-
-    const { serviceId, bookId } = req.body;
-    await recordMarketplaceUsage(req.user.id, serviceId, bookId);
-    return res.json({ success: true });
-  } catch {
-    return res.status(500).json({ message: "Internal error" });
-  }
+  if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
+  return res.json({ success: true, deprecated: true });
 });
 
 // ── Tutorials ────────────────────────────────────────────────────────────

@@ -21,52 +21,66 @@ const T = "#fff";
 const TS = "rgba(255,255,255,0.55)";
 const TD = "rgba(255,255,255,0.25)";
 
-/* ── Feature lists ── */
-const FEATURES_FREE = [
-  "2 books, 3 chapters per book",
-  "5,000 words total",
-  "10 AI assists per day (improve, expand, continue)",
-  "AI book cover generator",
-  "1 published book in Community Library",
+/* ── Feature lists ──
+ *
+ * Each feature row is either a plain string OR a `{ text, caption }`
+ * object. The caption renders as small dim text below the main line —
+ * used today only for the AI-requests rows on Pro/Premium to disclose
+ * that the daily counter is shared across all AI features (writing,
+ * audiobook, cover, etc.) rather than implying it's only for the
+ * editor's improve/expand/continue actions.
+ *
+ * Lists are kept honest against the actual server-side gates:
+ *   - Free's "Free tier limits" subsection mirrors the constants
+ *     enforced in `chapters.routes.ts` and `tier-limits.ts`.
+ *   - Pro/Premium "Unlimited"/"No limits" lines reflect the current
+ *     enforcement reality (no Pro/Premium cap exists yet); future
+ *     Path A work re-introduces caps and would require updating these.
+ *   - Removed claims (priority support, early access, audiobook
+ *     export quotas, AI cover spine) had no infrastructure backing
+ *     and are tracked as Path A follow-ups in discovered-issues.md.
+ */
+type FeatureItem = string | { text: string; caption: string };
+
+const FEATURES_FREE: FeatureItem[] = [
+  "AI book cover generator (front and back)",
   "Basic cover designer",
-  "Community library access with likes & comments",
+  "Community library: like, comment, follow, message",
   "Author profile page",
-  "Follow authors & direct messaging",
   "Notifications center",
   "Ambient writing sounds",
-  "45+ languages & RTL support",
-  "No PDF/EPUB export",
-  "No Audiobook studio",
-  "No AI Marketplace access",
-];
-
-const FEATURES_PRO = [
-  "50 books, 100 chapters per book",
-  "500,000 words",
-  "100 AI assists per day (improve, expand, continue, translate)",
-  "3 audiobook exports per month",
-  "20 published books in Community Library",
-  "PDF & EPUB professional export",
+  "Voice dictation & transcription",
+  "PDF & EPUB export",
   "Audiobook studio with 10 AI voices",
-  "AI cover generator (front, back & spine)",
   "AI analysis tools (plot holes, pacing, dialogue, voice)",
-  "3 AI Marketplace analyses per month",
-  "Version history & auto-snapshots",
   "Story Bible & Research board",
   "Book collaboration (invite co-writers)",
-  "Writing streaks, calendar & analytics",
-  "Voice dictation & transcription",
+  "Auto-snapshots & version history",
+  "45+ book languages · 14 UI languages",
 ];
 
-const FEATURES_PREMIUM = [
-  "Everything in Pro, plus:",
-  "Unlimited books, chapters & words",
-  "200 AI assists per day",
-  "10 audiobook exports per month",
-  "Unlimited publishing to Community Library",
+const FREE_LIMITS = [
+  "3 chapters total (across all books)",
+  "5,000 words per chapter",
+  "10 AI assists per day",
+  "1 published book in Community Library",
+];
+
+const AI_DAILY_CAPTION = "Shared across all AI features (writing, audiobook, cover, etc.)";
+
+const FEATURES_PRO: FeatureItem[] = [
+  { text: "100 AI requests per day", caption: AI_DAILY_CAPTION },
+  "3 AI Marketplace analyses per month",
+  "No chapter limits",
+  "No word limits",
+  "No publishing limits on Community Library",
+];
+
+const FEATURES_PREMIUM: FeatureItem[] = [
+  { text: "200 AI requests per day", caption: AI_DAILY_CAPTION },
   "9 AI Marketplace analyses per month",
-  "Priority support (< 2 hour response)",
-  "Early access to new features",
+  "No book, chapter, or word limits",
+  "No limits on Community Library publishing",
 ];
 
 /* ── FAQ ── */
@@ -282,10 +296,26 @@ export default function Pricing() {
     </div>
   );
 
-  const featureRow = (text: string, highlight: boolean) => (
+  const featureRow = (item: FeatureItem, highlight: boolean) => {
+    const text = typeof item === "string" ? item : item.text;
+    const caption = typeof item === "string" ? undefined : item.caption;
+    return (
+      <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <div style={{ marginTop: 1 }}>{checkIcon(highlight)}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+          <span style={{ fontSize: 13, color: highlight ? "rgba(255,255,255,0.85)" : TS, lineHeight: 1.4 }}>{text}</span>
+          {caption && (
+            <span style={{ fontSize: 11, color: TD, lineHeight: 1.4 }}>{caption}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const limitRow = (text: string) => (
     <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      {checkIcon(highlight)}
-      <span style={{ fontSize: 13, color: highlight ? "rgba(255,255,255,0.85)" : TS }}>{text}</span>
+      <span style={{ width: 4, height: 4, borderRadius: "50%", background: TD, flexShrink: 0 }} aria-hidden />
+      <span style={{ fontSize: 12, color: TD, lineHeight: 1.5 }}>{text}</span>
     </div>
   );
 
@@ -425,6 +455,14 @@ export default function Pricing() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {FEATURES_FREE.map(f => featureRow(f, false))}
                 </div>
+
+                {/* ── Free tier limits (constraints, dim styling) ── */}
+                <p style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 22, marginBottom: 10 }}>
+                  Free tier limits
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {FREE_LIMITS.map(limitRow)}
+                </div>
               </div>
             </motion.div>
 
@@ -459,7 +497,7 @@ export default function Pricing() {
                 />
 
                 <div style={{ padding: "24px 24px 20px", position: "relative" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                     <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#60a5fa", textTransform: "uppercase" }}>
                       Pro
                     </p>
@@ -477,6 +515,7 @@ export default function Pricing() {
                       ✦ Most Popular
                     </span>
                   </div>
+                  <p style={{ fontSize: 13, color: TS, marginBottom: 14 }}>For serious writers</p>
 
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                     {proOriginalPrice && (
@@ -547,9 +586,10 @@ export default function Pricing() {
               />
 
               <div style={{ padding: "24px 24px 20px", position: "relative" }}>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#c084fc", textTransform: "uppercase", marginBottom: 14 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#c084fc", textTransform: "uppercase", marginBottom: 6 }}>
                   Premium
                 </p>
+                <p style={{ fontSize: 13, color: TS, marginBottom: 14 }}>For full-time writers and authors</p>
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                   {premiumOriginalPrice && (
@@ -587,8 +627,8 @@ export default function Pricing() {
               <div style={{ height: 1, background: B }} />
 
               <div style={{ padding: "20px 24px 24px", position: "relative" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-                  Includes
+                <p style={{ fontSize: 11, fontWeight: 600, color: TS, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
+                  Everything in Pro, plus
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {FEATURES_PREMIUM.map(f => featureRow(f, true))}

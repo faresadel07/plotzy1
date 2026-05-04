@@ -38,6 +38,7 @@ export interface IStorage {
   updateBook(id: number, updates: Partial<InsertBook>): Promise<Book>;
   deleteBook(id: number): Promise<void>;
 
+  getChapter(id: number): Promise<Chapter | undefined>;
   getChapters(bookId: number): Promise<Chapter[]>;
   createChapter(chapter: InsertChapter): Promise<Chapter>;
   updateChapter(id: number, updates: Partial<InsertChapter>): Promise<Chapter>;
@@ -303,6 +304,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ─── Chapters ──────────────────────────────────────────────────────────────
+  async getChapter(id: number): Promise<Chapter | undefined> {
+    const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+    return chapter;
+  }
+
   async getChapters(bookId: number): Promise<Chapter[]> {
     return await db.select().from(chapters).where(eq(chapters.bookId, bookId));
   }

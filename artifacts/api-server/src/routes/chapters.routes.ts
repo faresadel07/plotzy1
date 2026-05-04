@@ -93,18 +93,39 @@ router.put(api.chapters.update.path, requireChapterOwner, async (req, res) => {
     const input = api.chapters.update.input.parse(req.body);
     const userId = req.isAuthenticated() && req.user ? req.user.id : null;
 
-    // Enforce free trial word count limit
+    // Enforce free trial word count limit, with downgrade grace.
+    //
+    // The Free per-chapter cap (FREE_TRIAL_MAX_WORDS) is meant to gate
+    // NEW writing, not to brick chapters that were already over the cap
+    // when the user was on Pro. Without grace, a user who writes a
+    // 12,000-word chapter on Pro and then downgrades cannot save any
+    // edit — every autosave returns 403. That contradicts the FAQ
+    // ("Existing content stays in your library and remains readable")
+    // and feels punitive to former paying customers.
+    //
+    // Grace rule: if the user is on Free AND the chapter ALREADY
+    // exceeds the cap, allow updates whose new word count does NOT
+    // increase. The user can trim, polish, or hold flat — but not grow
+    // a chapter further past the cap. Fresh chapters and ordinary
+    // growth above the cap are still rejected as before.
     if (userId && input.content) {
       const dbUser = await storage.getUserById(userId);
       if (dbUser && !isSubscriptionActive(dbUser as any)) {
         const wordCount = countWords(input.content);
         if (wordCount > FREE_TRIAL_MAX_WORDS) {
-          return res.status(403).json({
-            message: "Free trial word limit reached",
-            code: "WORD_LIMIT",
-            wordCount,
-            limit: FREE_TRIAL_MAX_WORDS,
-          });
+          const existing = await storage.getChapter(Number(req.params.id));
+          const existingWordCount = existing?.content ? countWords(existing.content) : 0;
+          const alreadyOverCap = existingWordCount > FREE_TRIAL_MAX_WORDS;
+          const grew = wordCount > existingWordCount;
+          if (!alreadyOverCap || grew) {
+            return res.status(403).json({
+              message: "Free trial word limit reached",
+              code: "WORD_LIMIT",
+              wordCount,
+              limit: FREE_TRIAL_MAX_WORDS,
+            });
+          }
+          // else: edit-doesn't-grow on an already-oversize chapter — allow.
         }
       }
     }

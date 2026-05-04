@@ -466,11 +466,20 @@ function LaunchModal({
         return;
       }
 
+      // /analyze now gates by the marketplace monthly limit AND records
+      // the usage on success in a single round-trip (was previously
+      // split across /analyze + /record, which a curl-savvy free user
+      // could bypass by skipping the second call). bookId is included
+      // here so the server can attribute the usage row to the right book.
       const res = await fetch(`${BASE}/api/marketplace/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ serviceId: service.id, text: manuscriptText }),
+        body: JSON.stringify({
+          serviceId: service.id,
+          text: manuscriptText,
+          bookId: selectedBookId,
+        }),
       });
 
       if (!res.ok) {
@@ -484,21 +493,6 @@ function LaunchModal({
       const { scores, cleanReport } = parseScores(report);
       setReportScores(scores);
       setReportText(scores ? cleanReport : report);
-
-      // Record usage
-      try {
-        await fetch(`${BASE}/api/marketplace/record`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            serviceId: service.id,
-            bookId: selectedBookId,
-          }),
-        });
-      } catch {
-        // non-critical
-      }
 
       onAnalysisComplete();
       setStep("done");
