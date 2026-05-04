@@ -706,6 +706,44 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
     const passwordHash = await bcrypt.hash(password, 12);
     await storage.updateUser(consumed.userId, { passwordHash });
 
+    // Notify the user that their password was just changed. If the change
+    // wasn't theirs (account takeover via compromised email), they need to
+    // act fast — the email gives them the support contact and a re-reset
+    // link. Wrapped in try/catch so a transient email failure doesn't
+    // block the password update itself, which already succeeded.
+    try {
+      const user = await storage.getUserById(consumed.userId);
+      if (user?.email) {
+        const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
+          ? `https://${process.env.APP_DOMAIN || "localhost"}`
+          : "http://localhost:5173");
+        // Configurable so prod can use a proper support@plotzy domain
+        // address when it exists; dev/staging falls back to the founder's
+        // personal email until then. Single env var change, no redeploy.
+        const supportEmail = process.env.SUPPORT_EMAIL || "faresadel@gmail.com";
+        await sendEmail(
+          user.email,
+          "Your Plotzy password was changed",
+          `
+            <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+              <h2 style="color: #111; margin-bottom: 16px;">Your password was changed</h2>
+              <p style="color: #555; line-height: 1.6;">Your Plotzy account password was just changed successfully. If this was you, no action is needed.</p>
+              <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>If you didn't do this</strong>, your account may be compromised. Reset your password again immediately and contact us:</p>
+              <a href="${frontendUrl}/forgot-password" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Reset password again</a>
+              <p style="color: #555; font-size: 13px; margin-top: 12px;">Or email <a href="mailto:${supportEmail}" style="color: #111;">${supportEmail}</a> for urgent help.</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+              <p style="color: #bbb; font-size: 11px;">Plotzy — The modern platform for writers</p>
+            </div>
+          `,
+        );
+        logger.info({ userId: user.id }, "Password-changed notification sent");
+      }
+    } catch (emailErr) {
+      // Log but don't fail the password reset — the password is already
+      // updated; the user can still log in. The email is a courtesy.
+      logger.error({ err: emailErr }, "Failed to send password-changed notification");
+    }
+
     return res.json({ success: true });
   } catch (err: any) {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Password must be at least 8 characters" });

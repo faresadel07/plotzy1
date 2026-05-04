@@ -1019,4 +1019,49 @@ catch (err) {
 _Logged 2026-05-04 during Item 3 of feat/cleanup-batch-1
 after deciding to keep this batch's scope narrow._
 
+## MEDIUM — Missing logged-in change-password endpoint
+
+**Location**: `artifacts/api-server/src/routes/auth.routes.ts` —
+no `POST /api/auth/change-password` (or similar) handler exists.
+
+**Behavior**: A logged-in user has no in-app way to change their
+password without going through the forgot-password reset-token
+flow. They have to log out, click "Forgot password," wait for the
+email, follow the link, and set the new password. This is the
+recovery flow, not the routine-rotation flow.
+
+**Why this matters now**: Item 5 of feat/cleanup-batch-1 wired
+the new password-changed notification email into the
+`/api/auth/reset-password` handler — the only path that exists.
+The user prompt asked us to "verify BOTH paths" assuming a
+logged-in change endpoint existed. It does not. The single path
+is now covered; the second path remains missing.
+
+**Cross-reference**: This is the same gap previously logged in
+`pre-launch-audit.md` as M-11 ("No password-change endpoint for
+logged-in users"). Re-flagging here so it doesn't drift, and so
+the next batch that adds this endpoint knows to also call the
+same `sendEmail` helper to fire the password-changed
+notification (the email body and contact-email env-var pattern
+are already in place at `auth.routes.ts:705-738`).
+
+**Suggested implementation when prioritised**:
+```ts
+// POST /api/auth/change-password — auth-required
+// Body: { currentPassword: string, newPassword: string }
+// Validate currentPassword via bcrypt.compare against the stored hash
+// Reject if invalid (avoids hijacked-session password takeover)
+// bcrypt.hash newPassword, storage.updateUser({ passwordHash })
+// Fire the same password-changed email block already in
+// /api/auth/reset-password — extract to a helper or duplicate
+```
+
+**Why MEDIUM rather than HIGH**: a recovery path exists. Users
+who want to change their password can do so via forgot-password
+even if they remember the old one. The gap is convenience, not
+capability.
+
+_Logged 2026-05-04 during Item 5 of feat/cleanup-batch-1 when
+auditing both password-change paths._
+
 
