@@ -681,6 +681,61 @@ const QUIZ_BANKS: QuizBank[] = [
       },
     ],
   },
+  {
+    moduleSlug: "publishing",
+    questions: [
+      {
+        questionText: "A writer has just finished a literary debut novel. They have no series in mind for the next decade; they want feedback from professional editors; they are willing to wait two to three years for shelf presence. Per Lesson 1, which path most likely fits?",
+        optionA: "Self-publishing — the speed is essential.",
+        optionB: "Traditional publishing — the manuscript benefits from the editorial infrastructure, and the slow timeline doesn't conflict with the writer's situation.",
+        optionC: "The hybrid path — release the same book through both channels simultaneously.",
+        optionD: "Don't publish at all; the literary market is too crowded.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads the situation — the writer doesn't need speed. (c) is not a real option (the same book can't be released through both at once). (d) is defeatist and irrelevant. (b) matches L1's diagnostic: the literary debut is exactly the kind of book that benefits from traditional infrastructure (credibility, awards eligibility, editorial work), and the writer's willingness to wait removes the path's main cost.",
+      },
+      {
+        questionText: "A self-published thriller has a beautiful, atmospheric, hand-painted cover featuring a stormy moor. Sales are weak. Per Lesson 2, what is most likely happening, and what's the first move?",
+        optionA: "The book needs more advertising.",
+        optionB: "The cover is signalling the wrong genre — atmospheric moors signal literary or gothic fiction, not thriller; a reader scanning thriller bestsellers won't recognise the book as their genre and won't stop on it. The first move is a new cover that uses thriller conventions.",
+        optionC: "The cover is too professional — readers want amateur charm.",
+        optionD: "Self-published thrillers don't sell; the writer should switch genres.",
+        correctOption: "b",
+        explanation:
+          "(a) treats the symptom without the diagnosis. (c) is the opposite of L2's claim. (d) overcorrects. (b) is L2's specific point: cover signals genre in 1.5 seconds. A beautiful cover that signals the wrong genre is a sales-loss the writer cannot fix with marketing budget — it has to be fixed at the cover.",
+      },
+      {
+        questionText: "A writer has 30,000 followers on a social platform but no email newsletter. Their first book launches next month. Per Lesson 3, what's the realistic audience for the launch?",
+        optionA: "About 30,000 — that's the follower count.",
+        optionB: "Almost zero — followers are not an audience the writer can reach reliably; the launch is happening to strangers, and the cure for next time is to start a newsletter today and move whatever fraction of those followers convert.",
+        optionC: "About 3,000 — roughly 10% of followers will see the post.",
+        optionD: "The audience size is irrelevant; the book sells itself.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads followers as readers. (c) is generous given current algorithmic reach for organic posts. (d) is wishful. (b) is L3's specific diagnosis: the difference between rented attention (followers) and owned audience (newsletter list) is exactly the difference between a launch that has momentum and one that doesn't. The cure is structural — start the list now — and the writer should accept that this launch will under-perform what a list-based launch would do.",
+      },
+      {
+        questionText: "A first-time author plans these launch tactics: (1) cold social media posts, (2) paid ads with no retargeting infrastructure, (3) a blog tour across small writing blogs, (4) asking ten beta readers for honest reviews. Per Lesson 4, which is the only honest tactic in the list?",
+        optionA: "Cold social media posts — they reach the most people.",
+        optionB: "Paid ads — they're scalable.",
+        optionC: "Blog tours — they build relationships with reviewers.",
+        optionD: "Asking beta readers for honest reviews — direct, transparent, targets readers who have already engaged with the work.",
+        correctOption: "d",
+        explanation:
+          "(a), (b), and (c) are L4's three tactics that don't work for first-time authors — each treats strangers as the launch audience. (d) is one of L4's three honest tactics: a small number of thoughtful reviews from readers who already engaged with the work changes discoverability in a way that cold tactics cannot. The contrast is between strangers (don't convert) and engaged readers (do).",
+      },
+      {
+        questionText: "A writer's first book launched eight weeks ago. Sales have slowed dramatically. They check sales daily, refresh reviews hourly, and have written nothing of book 2 in the last month. Per Lesson 5, what is happening, and what's the diagnostic move?",
+        optionA: "The book is failing; the writer should pull it from sale.",
+        optionB: "The post-launch slump is normal and predictable; the writer is in the slump and has not started book 2, so the daily-checking has become the symptom — the cure is the same daily-wordcount habit from M5 (now applied to book 2), because most writers who don't finish book 2 stopped at exactly this stage.",
+        optionC: "The writer should hire a marketing consultant.",
+        optionD: "The writer should rewrite book 1 and re-launch.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads normal pattern as failure. (c) treats the symptom (slow sales) without addressing the cause (no book 2 in progress). (d) is wasted effort on a published book. (b) is L5's specific diagnosis: the post-launch slump is predictable; the danger is that the slump plus not-starting-book-2 becomes the moment a career ends. The cure is the next-book remedy from M5 L5, applied here as a survival mechanism for the launch slump.",
+      },
+    ],
+  },
 ];
 
 async function seedQuizQuestions(slugToId: Map<string, number>) {
