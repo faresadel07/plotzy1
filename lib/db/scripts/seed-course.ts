@@ -571,6 +571,61 @@ const QUIZ_BANKS: QuizBank[] = [
       },
     ],
   },
+  {
+    moduleSlug: "world",
+    questions: [
+      {
+        questionText: "A draft has a chapter where the protagonist's three-month grief is rendered scene by scene across forty pages. The pacing is slow; readers are losing patience. Per Lesson 1, what is the most likely diagnosis?",
+        optionA: "The grief isn't intense enough; the writer should add more emotional language.",
+        optionB: "The chapter is over-showing — three months of fictional time is a candidate for telling; the chapter could be a single paragraph that summarises the grief, with one or two key shown moments embedded in the summary.",
+        optionC: "The chapter needs more dialogue.",
+        optionD: "The chapter should be cut entirely; grief has no place in fiction.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads the symptom. (c) is a workaround that doesn't address the cause. (d) overcorrects. (b) is L1's diagnosis: the writer is showing something that should be told — three months of similar emotional content is precisely what telling exists for. The cure is summary plus one or two key shown moments, not more showing.",
+      },
+      {
+        questionText: "A scene has been written with rich visual detail across two pages. Beta readers say the scene \"feels flat\" but can't say why. According to Lesson 2, what is most likely missing?",
+        optionA: "The scene needs more dialogue.",
+        optionB: "The scene engages only one sense — usually vision — and the reader experiences it as flat because real attention is multi-sensory; adding even one phrase from another sense (a smell, a sound) usually doubles the scene's grip without adding noticeable length.",
+        optionC: "The scene is too long and should be cut.",
+        optionD: "The scene needs more characters.",
+        correctOption: "b",
+        explanation:
+          "(a), (c), and (d) all guess at structural fixes. (b) is L2's specific diagnosis: the visual default is the most common reason a scene \"feels flat.\" A single phrase from a second sense — the faint smell of cigarette smoke that shouldn't have been there — usually fixes the flatness without lengthening the scene meaningfully.",
+      },
+      {
+        questionText: "A novel's setting is described lavishly throughout — five sentences per room, weather noted at the start of every chapter. Per Lesson 3, what is most likely happening?",
+        optionA: "The setting is doing character work; the elevation is appropriate.",
+        optionB: "The world has become too detailed for the story to breathe inside it; the reader is reading a setting catalogue rather than a novel, and the cure is to identify which specific details are load-bearing and cut the rest.",
+        optionC: "The setting needs even more detail to fully come alive.",
+        optionD: "The novel needs a more interesting protagonist.",
+        correctOption: "b",
+        explanation:
+          "(a) is the writer's hope; (c) makes the failure worse; (d) misdirects. (b) is L3's diagnosis: setting elevation works through a few perfect details, not through pervasive lavishness. When every room gets five sentences, the real load-bearing rooms lose their weight — there's no contrast to mark them as special.",
+      },
+      {
+        questionText: "A writer's chapter opens with: \"The fog was thick, the city alive and watching, the streets a being unto themselves.\" Per Lesson 3's discussion of pretentiousness, what's the diagnostic move?",
+        optionA: "Make the prose more poetic — the writer is on the right track.",
+        optionB: "Replace the abstract claims with a single concrete detail that shows the same thing — for instance, On the third day in the city, he noticed that the bus drivers all knew each other's first names, and none of them used his.",
+        optionC: "Cut the opening entirely; openings should be action-only.",
+        optionD: "Add more setting description to support the abstract claims.",
+        correctOption: "b",
+        explanation:
+          "(a) doubles the failure. (c) overcorrects. (d) makes the failure worse. (b) is L3's specific cure: the failure mode of \"setting as character\" is the abstract claim; the fix is a concrete detail that does the same work without telling the reader what to feel.",
+      },
+      {
+        questionText: "A first draft is 130,000 words. Beta readers say the prose is \"good but slow.\" The writer is unwilling to cut scenes. Per Module 4, what is the most efficient first cut?",
+        optionA: "Cut every scene by twenty percent uniformly.",
+        optionB: "Apply the load-bearing-detail test to all description: keep what tells the reader about the character, sets up later moments, or carries atmosphere; cut everything else, including descriptions the writer is fond of.",
+        optionC: "Cut every chapter's first paragraph.",
+        optionD: "Cut all dialogue tags.",
+        correctOption: "b",
+        explanation:
+          "(a) is unspecific and damages good scenes. (c) is a stylistic gimmick. (d) is irrelevant. (b) is L4's prescription, which the module has been building toward: the cure for \"good but slow\" first drafts is almost always to cut description that doesn't do work. The cuts feel like losses; they are concentrations. A 130,000-word draft that has had this pass usually loses 15,000-25,000 words and gains pace at every scale.",
+      },
+    ],
+  },
 ];
 
 async function seedQuizQuestions(slugToId: Map<string, number>) {
