@@ -1,10 +1,13 @@
 import { db } from "./db";
 import { eq, or, count, desc, asc, sql, sum, and, inArray, isNull, getTableColumns } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import {
   books, chapters, users, loreEntries, dailyProgress, storyBeats,
   userStats, userAchievements, bookSeries, supportMessages, siteSettings,
   subscriptionPayments,
   follows, notifications, directMessages, bookLikes, bookComments, bookRatings, inlineComments,
+  courseModules, courseLessons, courseQuizzes, courseQuizQuestions,
+  courseProgress, courseQuizAttempts, courseCertificates, courseFinalProjects,
   type Book, type InsertBook, type InlineComment, type InsertInlineComment,
   type Chapter, type InsertChapter,
   type User, type InsertUser,
@@ -14,7 +17,29 @@ import {
   type BookSeries, type InsertBookSeries,
   type SupportMessage, type InsertSupportMessage,
   type Follow, type Notification, type DirectMessage,
+  type CourseModule, type CourseLesson, type CourseQuiz, type CourseQuizQuestion,
+  type CourseProgress, type CourseQuizAttempt, type InsertCourseQuizAttempt,
+  type CourseFinalProject, type CourseCertificate,
 } from "../../../lib/db/src/schema";
+
+/**
+ * Aggregate result of {@link IStorage.getCertificateEligibility}. Exposed
+ * so the routes layer can build the 409 NOT_ELIGIBLE response off the
+ * same shape the storage layer already constructs.
+ */
+export interface CertificateEligibility {
+  eligible: boolean;
+  missing: {
+    lessonsCompleted: number;
+    totalLessons: number;
+    moduleQuizzesPassed: number;
+    totalModuleQuizzes: number;
+    finalExamPassed: boolean;
+    finalProjectSubmitted: boolean;
+  };
+  finalExamScore: number | null;
+  modulesCompletedAt: Record<string, string>;
+}
 
 export type UserStats = typeof userStats.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
@@ -140,6 +165,36 @@ export interface IStorage {
   getBookLikesCount(bookId: number): Promise<number>;
   getBookLikesCounts(bookIds: number[]): Promise<Map<number, number>>;
   getAuthorTotalLikes(userId: number): Promise<number>;
+
+  // Course: catalog (read-only)
+  getCourseModules(): Promise<CourseModule[]>;
+  getCourseModuleBySlug(slug: string): Promise<CourseModule | undefined>;
+  getCourseLessons(moduleId: number): Promise<CourseLesson[]>;
+  getCourseLessonBySlug(slug: string): Promise<CourseLesson | undefined>;
+  getAllCourseLessons(): Promise<CourseLesson[]>;
+  getCourseQuiz(quizId: number): Promise<CourseQuiz | undefined>;
+  getCourseQuizQuestions(quizId: number): Promise<CourseQuizQuestion[]>;
+  getModuleQuiz(moduleId: number): Promise<CourseQuiz | undefined>;
+  getFinalQuiz(): Promise<CourseQuiz | undefined>;
+
+  // Course: per-user progress
+  getCourseProgressForUser(userId: number): Promise<CourseProgress[]>;
+  markLessonComplete(userId: number, lessonId: number, timeSpentSeconds: number): Promise<CourseProgress>;
+
+  // Course: quiz attempts (storage persists; route grades and computes score)
+  recordQuizAttempt(insert: InsertCourseQuizAttempt): Promise<CourseQuizAttempt>;
+  getQuizAttempts(userId: number, quizId: number): Promise<CourseQuizAttempt[]>;
+
+  // Course: final project
+  getFinalProjectForUser(userId: number): Promise<CourseFinalProject | undefined>;
+  upsertFinalProject(userId: number, bookId: number, chapterIds: number[]): Promise<CourseFinalProject>;
+  saveFinalProjectFeedback(userId: number, feedback: object): Promise<void>;
+
+  // Course: certificate (PDF generation deferred to Batch 3 — pdf_url stays NULL on issue)
+  getCertificateEligibility(userId: number): Promise<CertificateEligibility>;
+  issueCertificate(userId: number, finalExamScore: number, modulesCompletedAt: Record<string, string>): Promise<CourseCertificate>;
+  getCertificateForUser(userId: number): Promise<CourseCertificate | undefined>;
+  getCertificateByUuid(uuid: string): Promise<CourseCertificate | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1078,6 +1133,263 @@ export class DatabaseStorage implements IStorage {
 
   async resolveInlineComment(id: number): Promise<InlineComment> {
     const [c] = await db.update(inlineComments).set({ resolved: true }).where(eq(inlineComments.id, id)).returning();
+    return c;
+  }
+
+  // ── Course: Catalog ────────────────────────────────────────────────────
+  async getCourseModules(): Promise<CourseModule[]> {
+    return await db.select().from(courseModules).orderBy(asc(courseModules.order));
+  }
+
+  async getCourseModuleBySlug(slug: string): Promise<CourseModule | undefined> {
+    const [m] = await db.select().from(courseModules).where(eq(courseModules.slug, slug));
+    return m;
+  }
+
+  async getCourseLessons(moduleId: number): Promise<CourseLesson[]> {
+    return await db.select().from(courseLessons)
+      .where(eq(courseLessons.moduleId, moduleId))
+      .orderBy(asc(courseLessons.orderInModule));
+  }
+
+  async getCourseLessonBySlug(slug: string): Promise<CourseLesson | undefined> {
+    // The DB-level UNIQUE on course_lessons is (module_id, slug), NOT slug
+    // alone. The seed script keeps slugs globally namespaced (e.g.
+    // "foundation-what-is-story") so this lookup is unambiguous in
+    // practice — but defensively throw if a future seed mistake or
+    // multi-course expansion introduces collisions, instead of silently
+    // returning the wrong lesson.
+    const rows = await db.select().from(courseLessons).where(eq(courseLessons.slug, slug));
+    if (rows.length === 0) return undefined;
+    if (rows.length > 1) {
+      throw new Error(
+        `getCourseLessonBySlug: slug "${slug}" matched ${rows.length} lessons. ` +
+        `Schema UNIQUE is (module_id, slug); the catalog must keep slugs globally unique. ` +
+        `Fix the seed.`,
+      );
+    }
+    return rows[0];
+  }
+
+  async getAllCourseLessons(): Promise<CourseLesson[]> {
+    return await db.select().from(courseLessons)
+      .orderBy(asc(courseLessons.moduleId), asc(courseLessons.orderInModule));
+  }
+
+  async getCourseQuiz(quizId: number): Promise<CourseQuiz | undefined> {
+    const [q] = await db.select().from(courseQuizzes).where(eq(courseQuizzes.id, quizId));
+    return q;
+  }
+
+  async getCourseQuizQuestions(quizId: number): Promise<CourseQuizQuestion[]> {
+    // Returns full rows including correct_option + explanation. Routes
+    // strip those fields on the public read endpoint and only expose
+    // them in the post-submit review response.
+    return await db.select().from(courseQuizQuestions)
+      .where(eq(courseQuizQuestions.quizId, quizId))
+      .orderBy(asc(courseQuizQuestions.order));
+  }
+
+  async getModuleQuiz(moduleId: number): Promise<CourseQuiz | undefined> {
+    const [q] = await db.select().from(courseQuizzes)
+      .where(and(eq(courseQuizzes.moduleId, moduleId), eq(courseQuizzes.type, "module")));
+    return q;
+  }
+
+  async getFinalQuiz(): Promise<CourseQuiz | undefined> {
+    const [q] = await db.select().from(courseQuizzes).where(eq(courseQuizzes.type, "final"));
+    return q;
+  }
+
+  // ── Course: Per-user Progress ──────────────────────────────────────────
+  async getCourseProgressForUser(userId: number): Promise<CourseProgress[]> {
+    return await db.select().from(courseProgress).where(eq(courseProgress.userId, userId));
+  }
+
+  async markLessonComplete(userId: number, lessonId: number, timeSpentSeconds: number): Promise<CourseProgress> {
+    // UPSERT semantics: re-clicking a completed lesson updates time-spent
+    // but preserves the original `completed_at`. Set only timeSpentSeconds
+    // in the UPDATE clause; completedAt and id stay as the original row.
+    const [row] = await db.insert(courseProgress)
+      .values({ userId, lessonId, timeSpentSeconds })
+      .onConflictDoUpdate({
+        target: [courseProgress.userId, courseProgress.lessonId],
+        set: { timeSpentSeconds },
+      })
+      .returning();
+    return row;
+  }
+
+  // ── Course: Quiz Attempts ──────────────────────────────────────────────
+  async recordQuizAttempt(insert: InsertCourseQuizAttempt): Promise<CourseQuizAttempt> {
+    const [row] = await db.insert(courseQuizAttempts).values(insert).returning();
+    return row;
+  }
+
+  async getQuizAttempts(userId: number, quizId: number): Promise<CourseQuizAttempt[]> {
+    return await db.select().from(courseQuizAttempts)
+      .where(and(
+        eq(courseQuizAttempts.userId, userId),
+        eq(courseQuizAttempts.quizId, quizId),
+      ))
+      .orderBy(desc(courseQuizAttempts.startedAt));
+  }
+
+  // ── Course: Final Project ──────────────────────────────────────────────
+  async getFinalProjectForUser(userId: number): Promise<CourseFinalProject | undefined> {
+    const [p] = await db.select().from(courseFinalProjects).where(eq(courseFinalProjects.userId, userId));
+    return p;
+  }
+
+  async upsertFinalProject(userId: number, bookId: number, chapterIds: number[]): Promise<CourseFinalProject> {
+    // Resubmission semantics (D4): wipe the prior aiFeedbackJson because
+    // it was generated against the previous chapters and is now stale.
+    // Atomic via ON CONFLICT — no DELETE-then-INSERT race window.
+    const [row] = await db.insert(courseFinalProjects)
+      .values({ userId, bookId, chapterIds })
+      .onConflictDoUpdate({
+        target: courseFinalProjects.userId,
+        set: {
+          bookId,
+          chapterIds,
+          submittedAt: new Date(),
+          approvedAt: null,
+          aiFeedbackJson: null,
+        },
+      })
+      .returning();
+    return row;
+  }
+
+  async saveFinalProjectFeedback(userId: number, feedback: object): Promise<void> {
+    await db.update(courseFinalProjects)
+      .set({ aiFeedbackJson: feedback })
+      .where(eq(courseFinalProjects.userId, userId));
+  }
+
+  // ── Course: Certificate ────────────────────────────────────────────────
+  async getCertificateEligibility(userId: number): Promise<CertificateEligibility> {
+    // 5 queries, no N+1: pull the data and aggregate in JS. Thresholds
+    // (passing %) are NOT hard-coded — the `passed` boolean was already
+    // evaluated against each quiz's `passingPercentage` when the attempt
+    // was recorded, so this method only counts passing rows.
+    const [allLessons, userProgress, allQuizzes, passingAttempts, project] = await Promise.all([
+      db.select({ id: courseLessons.id, moduleId: courseLessons.moduleId }).from(courseLessons),
+      db.select({ lessonId: courseProgress.lessonId, completedAt: courseProgress.completedAt })
+        .from(courseProgress).where(eq(courseProgress.userId, userId)),
+      db.select({ id: courseQuizzes.id, moduleId: courseQuizzes.moduleId, type: courseQuizzes.type })
+        .from(courseQuizzes),
+      db.select({ quizId: courseQuizAttempts.quizId, scorePercentage: courseQuizAttempts.scorePercentage })
+        .from(courseQuizAttempts)
+        .where(and(eq(courseQuizAttempts.userId, userId), eq(courseQuizAttempts.passed, true))),
+      db.select({ id: courseFinalProjects.id }).from(courseFinalProjects)
+        .where(eq(courseFinalProjects.userId, userId))
+        .then((rows) => rows[0]),
+    ]);
+
+    const totalLessons = allLessons.length;
+    const lessonsCompleted = userProgress.length;
+
+    const moduleQuizzes = allQuizzes.filter((q) => q.type === "module");
+    const finalQuiz = allQuizzes.find((q) => q.type === "final");
+
+    const totalModuleQuizzes = moduleQuizzes.length;
+    const passedQuizIds = new Set(passingAttempts.map((a) => a.quizId));
+    const moduleQuizzesPassed = moduleQuizzes.filter((q) => passedQuizIds.has(q.id)).length;
+
+    let finalExamPassed = false;
+    let finalExamScore: number | null = null;
+    if (finalQuiz) {
+      const finalAttempts = passingAttempts.filter((a) => a.quizId === finalQuiz.id);
+      if (finalAttempts.length > 0) {
+        finalExamPassed = true;
+        finalExamScore = Math.max(...finalAttempts.map((a) => a.scorePercentage));
+      }
+    }
+
+    const finalProjectSubmitted = !!project;
+
+    // modulesCompletedAt: per module where ALL its lessons have been
+    // completed, the timestamp of the last completion. Used by
+    // certificate issuance to record the user's per-module pacing.
+    const lessonsByModule = new Map<number, number[]>();
+    for (const l of allLessons) {
+      if (!lessonsByModule.has(l.moduleId)) lessonsByModule.set(l.moduleId, []);
+      lessonsByModule.get(l.moduleId)!.push(l.id);
+    }
+    const completedTimes = new Map<number, Date>();
+    for (const r of userProgress) completedTimes.set(r.lessonId, r.completedAt);
+
+    const modulesCompletedAt: Record<string, string> = {};
+    for (const [moduleId, lessonIds] of lessonsByModule) {
+      if (lessonIds.length === 0) continue;
+      if (lessonIds.every((id) => completedTimes.has(id))) {
+        const latest = lessonIds.reduce<Date>((max, id) => {
+          const t = completedTimes.get(id)!;
+          return t > max ? t : max;
+        }, new Date(0));
+        modulesCompletedAt[String(moduleId)] = latest.toISOString();
+      }
+    }
+
+    const eligible =
+      lessonsCompleted === totalLessons &&
+      moduleQuizzesPassed === totalModuleQuizzes &&
+      finalExamPassed &&
+      finalProjectSubmitted;
+
+    return {
+      eligible,
+      missing: {
+        lessonsCompleted, totalLessons,
+        moduleQuizzesPassed, totalModuleQuizzes,
+        finalExamPassed, finalProjectSubmitted,
+      },
+      finalExamScore,
+      modulesCompletedAt,
+    };
+  }
+
+  async issueCertificate(
+    userId: number,
+    finalExamScore: number,
+    modulesCompletedAt: Record<string, string>,
+  ): Promise<CourseCertificate> {
+    // Idempotent: schema has UNIQUE(user_id). Three steps:
+    //   1. Try INSERT; ON CONFLICT DO NOTHING.
+    //   2. If RETURNING came back with a row, we created it.
+    //   3. If empty, the certificate already exists — re-fetch.
+    // pdfUrl is intentionally NOT set (Batch 3 lazy-generates on first download).
+    const [created] = await db.insert(courseCertificates)
+      .values({
+        userId,
+        certificateUuid: randomUUID(),
+        finalExamScore,
+        modulesCompletedAt,
+      })
+      .onConflictDoNothing({ target: courseCertificates.userId })
+      .returning();
+    if (created) return created;
+
+    const [existing] = await db.select().from(courseCertificates)
+      .where(eq(courseCertificates.userId, userId));
+    if (!existing) {
+      throw new Error(
+        `issueCertificate: race — INSERT returned no row and SELECT found none for user ${userId}`,
+      );
+    }
+    return existing;
+  }
+
+  async getCertificateForUser(userId: number): Promise<CourseCertificate | undefined> {
+    const [c] = await db.select().from(courseCertificates)
+      .where(eq(courseCertificates.userId, userId));
+    return c;
+  }
+
+  async getCertificateByUuid(uuid: string): Promise<CourseCertificate | undefined> {
+    const [c] = await db.select().from(courseCertificates)
+      .where(eq(courseCertificates.certificateUuid, uuid));
     return c;
   }
 }

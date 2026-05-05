@@ -8,6 +8,7 @@ import authRouter from "./auth.routes";
 import paymentsRouter from "./payments.routes";
 import gutenbergRouter from "./gutenberg.routes";
 import miscRouter from "./misc.routes";
+import courseRouter from "./course.routes";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(authRouter);
 router.use(paymentsRouter);
 router.use(gutenbergRouter);
 router.use(miscRouter);
+router.use(courseRouter);
 
 export default router;

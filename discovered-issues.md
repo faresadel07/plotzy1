@@ -1764,4 +1764,197 @@ commit and chapters.routes.ts PUT handler's "downgrade grace" branch._
 
 _Logged 2026-05-05 during B5 of feat/pricing-honesty-rewrite._
 
+---
+
+## Writing Course follow-ups (deferred from feat/course-batch-1-schema)
+
+This batch added the 8-table schema for the free Writing Course. The
+items below are deliberate scope cuts logged so they don't get lost.
+
+### LOW — Migrate from drizzle-kit push to versioned migrations once schema stabilizes post-launch
+
+**File**: [lib/db/](lib/db/), [lib/db/drizzle.config.ts](lib/db/drizzle.config.ts)
+
+The project uses `drizzle-kit push` to apply schema changes (no
+`migrations/` directory, no versioned `.sql` files on disk, no
+`down()` definitions). For the GDPR Stage 1 work and now this
+course batch, we hand-write a `*-migration.sql` artifact for review
+in the absence of generated migrations.
+
+This is fine while the schema is changing rapidly pre-launch — push
+is faster and the artifact gives us human-readable review. After
+launch, when schema changes become rare and require careful rollouts,
+migrate to `drizzle-kit generate` + `migrate` so we get:
+
+- Version-controlled migration history on disk
+- Reversible migrations (`down()` blocks)
+- CI-checkable schema state ("is master's schema applied to staging?")
+
+**Estimated effort when triggered**: ~2 hours
+- Generate baseline migration from current production schema
+- Add `out: "./migrations"` to `drizzle.config.ts`
+- Update `lib/db/package.json` scripts: replace `push` with
+  `generate` + `migrate`, document the new flow in the README
+- Run `drizzle-kit generate` once to establish the baseline file
+
+Don't migrate during active feature development — pre-launch volatility
+makes the extra ceremony costly.
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Course quiz pool-based randomization (defer until cheating signals appear)
+
+**File**: [lib/db/src/schema/index.ts](lib/db/src/schema/index.ts)
+(`courseQuizzes` and `courseQuizQuestions`)
+
+Module quizzes are 5 fixed questions; the final exam is 40 fixed
+questions. A user retaking a quiz sees the same questions in the
+same order. This is fine for a free trust-based course but may
+encourage memorization-as-strategy (especially the final exam).
+
+**When to trigger**: post-launch, if we see signals like:
+- Final-exam pass rates >> retention on the actual lesson material
+- Users reporting they "Googled the answers"
+- Repeat takers achieving 100% on attempt 2 after failing attempt 1
+
+**Schema change when triggered**:
+- Add `pool_size INTEGER` nullable column to `course_quizzes`
+- When `pool_size > question_count`, server picks `question_count`
+  random questions per attempt
+- Author 60 final-exam questions instead of 40 (and pull 40); 10
+  per module quiz (and pull 5)
+
+**Estimated effort**: ~3h schema + UI + selection logic, plus the
+content authoring (additional 50 questions across the course).
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Course restart functionality (defer until user requests indicate need)
+
+**File**: [lib/db/src/schema/index.ts](lib/db/src/schema/index.ts)
+(`courseProgress`, `courseQuizAttempts`)
+
+v1 ships without a "restart course" button. Users who want to
+re-engage can re-watch lessons (the UI shows them as completed but
+remains accessible) and retake quizzes (multiple attempts already
+supported).
+
+**When to trigger**: a user explicitly asks to "reset their progress
+to 0%" — e.g., a writer who wants to retake the course a year
+later for a refresher and prefers the visual clean slate.
+
+**Implementation when needed**:
+- New endpoint `POST /api/course/restart` that hard-deletes the
+  user's `course_progress` and `course_quiz_attempts` rows
+- **Never** delete `course_certificates` — once earned, retained
+- Frontend confirmation modal ("This will reset your progress
+  display. Lessons remain accessible. You'll keep your certificate.")
+
+**Estimated effort**: ~30 min.
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Batch 1.3 (frontend): final-project submission needs CTA for users without an existing book
+
+**File**: future course frontend (Batch 1.3)
+**Schema reference**: [lib/db/src/schema/index.ts](lib/db/src/schema/index.ts) `courseFinalProjects.bookId notNull`
+
+The final-project submission requires `bookId notNull` — a user who
+reaches Module 6 without having created a book in their Plotzy
+library cannot submit a final project. The schema deliberately
+enforces this.
+
+**Required UX in Batch 1.3**:
+- Submission form detects "user has 0 books" state
+- Shows a CTA: "Create your first book to submit it as your final
+  project" with a button that opens the existing book-creation flow
+- After book creation, returns to the submission form pre-selected
+  on the new book
+
+Alternative (simpler): on submission attempt, auto-create a
+placeholder book named "<DisplayName>'s Course Project" and let the
+user populate chapters later. More frictionless but produces an
+empty book in their library.
+
+**Estimated effort**: ~1h either way. Logging now so Batch 1.3 doesn't
+discover this mid-implementation.
+
+_Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
+
+### LOW — Duplicate `openai` client instances at routes.ts:57 and helpers.ts:14
+
+**File**: `artifacts/api-server/src/routes.ts:57` and `artifacts/api-server/src/routes/helpers.ts:14`.
+
+**Observation**: two `new OpenAI({...})` instances exist with byte-for-byte identical config (same env vars, same SDK options). Pre-existing duplication; not introduced by this batch. The new `lib/ai-analysis.ts` (Commit 1 of feat/course-batch-1-2-api) imports the canonical instance from `routes/helpers.ts`, so going forward the canonical path is the helpers one.
+
+**Work**: delete the routes.ts:57 instance + the local `AI_TEXT_MODEL` constant. Update the remaining `routes.ts` AI handlers (the ones not yet refactored to use shared helpers) to import from `routes/helpers.ts`.
+
+**Risk**: low — both instances are configured identically, so the swap is a no-op behaviorally. Catch is making sure no AI handler is depending on a route-local override.
+
+**Estimated effort**: ~30 min including grep audit + smoke test of every AI route.
+
+_Logged 2026-05-05 during Commit 1 review of feat/course-batch-1-2-api._
+
+### MEDIUM — `tierAiLimiter` should accept an optional `cost` parameter
+
+**File**: `artifacts/api-server/src/middleware/rate-limit.ts:92`.
+
+**Observation**: the existing `tierAiLimiter` middleware charges exactly 1 daily-AI hit per request. For endpoints that consume multiple LLM calls in a single request (today: only `/api/course/final-project/feedback`, which runs 4 analyses), this forces a choice between (a) duplicating cost-aware logic inline, or (b) under-charging the user's budget. Approach (a) was taken in Commit 3 of feat/course-batch-1-2-api.
+
+**Work**: refactor `tierAiLimiter` from an Express middleware function into a factory: `tierAiLimiter({ cost?: number = 1 })`. The factory closes over `cost`, runs `checkAiLimit` with `(used + cost) <= limit` as the gate, and calls `incrementAiUsage` `cost` times on success. Update all 14 existing callsites to use the factory form (most pass nothing, getting the default `cost: 1`); update `/final-project/feedback` to use `cost: 4` and remove the inline cost-aware block.
+
+**Risk**: medium — touches a shared middleware that gates 14+ AI endpoints. Each callsite needs regression smoke-testing. The inline path in `course.routes.ts` becomes deletable, simplifying the orchestration handler.
+
+**Estimated effort**: ~2h. Affects 14 existing endpoints; requires regression testing of each AI feature.
+
+_Logged 2026-05-05 during DP2 of feat/course-batch-1-2-api._
+
+### LOW — Bulk `getAllUserQuizAttempts` if dashboard latency emerges
+
+**File**: `artifacts/api-server/src/storage.ts` + `artifacts/api-server/src/routes/course.routes.ts` (`GET /api/course/progress`).
+
+**Observation**: the course dashboard rollup currently calls `storage.getQuizAttempts(userId, quizId)` once per quiz via `Promise.all` — typically 7 parallel queries (6 module quizzes + 1 final). For v1 with ~7 quizzes this is fine, but if the course expands or many users hit the dashboard simultaneously, query volume grows linearly with quiz count.
+
+**Work**: add `getAllUserQuizAttempts(userId): Promise<CourseQuizAttempt[]>` to `IStorage` that pulls every attempt across every quiz in one query. Update the dashboard handler to use it and group in JS by `quizId`.
+
+**Trigger**: profile shows DB time on `/api/course/progress` becomes load-bearing OR course expands beyond ~10 quizzes.
+
+**Estimated effort**: ~30 min.
+
+_Logged 2026-05-05 during DP3 of feat/course-batch-1-2-api._
+
+### MEDIUM — Certificate PDF lazy-generation on first download
+
+**File**: future `artifacts/api-server/src/routes/course.routes.ts` (new endpoint) + likely a new `lib/pdf-generator.ts` helper.
+
+**Observation**: the cert schema has a nullable `pdf_url` column and the public verification page works as a web view. PDF generation was deferred from Batch 1.2 (D3) to keep that batch focused on the API surface. Without a PDF, users can share the verification URL but can't download a printable cert.
+
+**Work**: add `GET /api/certificates/:uuid/pdf` (path already in Phase A spec). On first hit: generate the PDF (pdfkit or render-then-print HTML), upload to whatever blob storage the app uses for book exports, then `setCertificatePdfUrl(uuid, url)` and serve. Subsequent hits redirect to the persisted URL. Also add the missing `setCertificatePdfUrl(uuid, pdfUrl)` storage method (intentionally deferred from Commit 2 of feat/course-batch-1-2-api).
+
+**Decisions needed before starting**:
+- pdfkit (programmatic, more control) vs HTML-to-PDF (easier templating, requires Chromium)?
+- Where to store: same blob path as book exports? Or a dedicated certificates/ prefix?
+- Cert template/layout — needs design input (logo, layout, fonts).
+
+**Estimated effort**: ~1 day including template design.
+
+_Logged 2026-05-05 during D3 deferral of feat/course-batch-1-2-api._
+
+### LOW — `routes/index.ts` is currently unused
+
+**File**: `artifacts/api-server/src/routes/index.ts`.
+
+**Observation**: the file aggregates every router (`booksRouter`, `coursesRouter`, etc.) but `grep` for any importer returns no matches — the active wire-up is in `routes.ts`'s `registerRoutes` function. We've kept it in sync with each new router (including `courseRouter` in Commit 4 of feat/course-batch-1-2-api) to avoid setting a trap for any future developer who resurrects it.
+
+**Work**: pick one of:
+- (a) Delete `routes/index.ts` entirely. Saves cognitive load; if a future contributor wants to consolidate wire-up they can build it fresh.
+- (b) Migrate `routes.ts`'s `registerRoutes` to call `app.use(routes/index.default)` and pull EVERY route registration from there. Significant refactor but reduces routes.ts from a 2400-line god-file.
+
+**Trigger**: post-Batch-1.3 cleanup pass, or when routes.ts becomes painful to navigate.
+
+**Estimated effort**: (a) 5 min. (b) ~3h with regression risk.
+
+_Logged 2026-05-05 during Commit 4 review of feat/course-batch-1-2-api._
+
+
 
