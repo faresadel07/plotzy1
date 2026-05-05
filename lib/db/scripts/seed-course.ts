@@ -74,7 +74,7 @@ const MODULES: ModuleSeed[] = [
     lessons: [
       { slug: "architecture-three-acts",          title: "The 3-Act Structure" },
       { slug: "architecture-heros-journey",       title: "The Hero's Journey simplified" },
-      { slug: "architecture-save-the-cat",        title: "Save the Cat beat sheet" },
+      { slug: "architecture-beat-sheets",         title: "Beat Sheets and Granular Structure" },
       { slug: "architecture-choosing-structure",  title: "Choosing your structure" },
     ],
   },
@@ -261,6 +261,53 @@ async function seedQuizzes(slugToId: Map<string, number>) {
   console.log(`  quizzes: ${created} inserted, ${skipped} already present`);
 }
 
+// ── Slug migrations ───────────────────────────────────────────────────
+//
+// Lesson rows in production may carry slugs from earlier batches that
+// have since been renamed in the catalog. This pass walks a list of
+// (oldSlug → newSlug) pairs and updates any matching rows, optionally
+// retitling. Idempotent: rows already at the new slug are a no-op.
+//
+// Rationale for the table-driven approach: each rename is a one-line
+// catalog edit + one entry here. Future batches that need to rename
+// a lesson add a row to LESSON_RENAMES, run `pnpm seed:course`, and
+// drop the entry once all production environments have applied it.
+const LESSON_RENAMES: { from: string; to: string; newTitle?: string }[] = [
+  // Batch 2.2: brand-name removal — "Save the Cat" is a 2005 Snyder
+  // trademark; the lesson teaches the concept of beat sheets generically.
+  {
+    from: "architecture-save-the-cat",
+    to: "architecture-beat-sheets",
+    newTitle: "Beat Sheets and Granular Structure",
+  },
+];
+
+async function applyLessonRenames() {
+  let renamed = 0;
+  let alreadyApplied = 0;
+  for (const r of LESSON_RENAMES) {
+    const [old] = await db
+      .select({ id: courseLessons.id })
+      .from(courseLessons)
+      .where(eq(courseLessons.slug, r.from));
+    if (!old) {
+      alreadyApplied++;
+      continue;
+    }
+    await db
+      .update(courseLessons)
+      .set({
+        slug: r.to,
+        ...(r.newTitle ? { title: r.newTitle } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(courseLessons.id, old.id));
+    renamed++;
+    console.log(`  rename "${r.from}" → "${r.to}"`);
+  }
+  console.log(`  renames: ${renamed} applied, ${alreadyApplied} already at target`);
+}
+
 // ── Lesson content updates ────────────────────────────────────────────
 //
 // Lessons start their life with placeholder content (above) on a fresh
@@ -414,6 +461,61 @@ const QUIZ_BANKS: QuizBank[] = [
       },
     ],
   },
+  {
+    moduleSlug: "architecture",
+    questions: [
+      {
+        questionText: "Which of the following is closest to why the 3-act structure recurs across cultures?",
+        optionA: "It was invented by Aristotle and adopted globally over 2,000 years.",
+        optionB: "It is enforced by modern publishers who reject manuscripts that don't follow it.",
+        optionC: "It is the minimum complete unit produced when a want/obstacle/change pattern is stretched across enough pages to fill a book.",
+        optionD: "It is the easiest structure to teach in writing classes, so students keep encountering it.",
+        correctOption: "c",
+        explanation:
+          "Aristotle observed the shape and Freytag drew it, but the pattern predates them and appears in cultures that never read either. (b) and (d) are downstream effects, not causes. The shape recurs because the human brain recognises it as a complete unit of meaning — anything shorter is truncated, anything longer drifts.",
+      },
+      {
+        questionText: "A writer's draft has a clear inciting incident, rising complications, a strong climax, and a resolution. Beta readers say the middle \"sags.\" Per Lesson 1, what is the most likely missing element?",
+        optionA: "The book is too long.",
+        optionB: "The midpoint reversal is missing or weak — there's nothing in the middle of the middle that re-frames the obstacle.",
+        optionC: "The protagonist is not likeable enough.",
+        optionD: "The setting needs more sensory detail.",
+        correctOption: "b",
+        explanation:
+          "\"Saggy middle\" is almost always a midpoint problem. Without a reversal, Act 2's complications stack linearly and the reader's pulse never rises. (a), (c), and (d) are common diagnostic distractors that don't address the structural cause.",
+      },
+      {
+        questionText: "A novel about an orphan who leaves home, faces a series of trials, defeats a wrong, and returns to find that home no longer fits — but the protagonist on the last page is barely different from the one on the first. Which structure is the writer mostly using, and what's failing?",
+        optionA: "The hero's journey, and the change beat is the missing one — the protagonist completed the external journey without internal transformation.",
+        optionB: "A beat sheet, and the likability beat is missing.",
+        optionC: "The 3-act structure, and the inciting incident is missing.",
+        optionD: "None — the book doesn't follow any structure.",
+        correctOption: "a",
+        explanation:
+          "The shape (Call → Tests → Ordeal → Return) is the hero's journey. What that pattern promises is transformation. If the protagonist hasn't changed, the pattern's payoff has been broken even though the pattern's beats are present. (b), (c), and (d) describe different problems.",
+      },
+      {
+        questionText: "A writer planning a quiet literary novel about an aging professor remembering his marriage chooses to apply a 15-beat commercial beat sheet to plot it. Three months in, the draft feels mechanical. What does Lesson 4 say is most likely happening?",
+        optionA: "The writer needs more beats — 15 isn't enough for a novel.",
+        optionB: "Beat sheets only work for screenwriting; the writer should use the hero's journey instead.",
+        optionC: "The story's engine is interiority and prose, not pacing — and the beat sheet is forcing inserted joints the story doesn't have to give.",
+        optionD: "The writer is not skilled enough at beat-sheet writing yet.",
+        correctOption: "c",
+        explanation:
+          "(a), (b), and (d) all suggest a different technique will fix it. Lesson 4's point is that some stories don't want any granular structural map; their engine is interiority. Forcing a beat sheet onto a prose-engine novel produces exactly the \"mechanical\" feeling the writer is reporting. The fix is to step away from the tool, not to apply it harder.",
+      },
+      {
+        questionText: "A premise: a young woman, raised in isolation, discovers her mother's letters and decides whether to leave home and find the family she was hidden from. Which structure is most likely the right starting lens, and why?",
+        optionA: "Beat sheets — the premise is about a clear external event (the discovery of letters), and beat sheets handle external events well.",
+        optionB: "The hero's journey — the engine is transformation (a young woman becoming someone capable of leaving), and the Call/Refusal/Tests/Return pattern matches the implied arc.",
+        optionC: "None — the premise is too literary for any structural lens.",
+        optionD: "The 3-act structure — the premise has an inciting incident and a clear lock-in, which is enough.",
+        correctOption: "b",
+        explanation:
+          "The premise has a clear protagonist with a transformation arc (isolation → agency). The hero's journey will tell the writer why each beat matters in a way the 3-act lens can't, because the deepest question the story is asking is \"who does she have to become to leave?\" — that's a transformation question. (a) misreads the engine; the external events serve the change, not the other way around. (c) overstates the literariness of a story with a strong external decision. (d) is true but less informative — most stories have 3-act underneath, but the hero's journey is the lens that explains this premise's specific gravity.",
+      },
+    ],
+  },
 ];
 
 async function seedQuizQuestions(slugToId: Map<string, number>) {
@@ -468,8 +570,15 @@ async function seedQuizQuestions(slugToId: Map<string, number>) {
 
 // ── Main ───────────────────────────────────────────────────────────────
 async function main() {
-  console.log("Seeding writing course (modules → lessons → quizzes → content → questions)...");
+  console.log("Seeding writing course (modules → renames → lessons → quizzes → content → questions)...");
   const slugToId = await seedModules();
+  // Renames must run BEFORE seedLessons. Otherwise seedLessons sees a
+  // catalog slug it doesn't recognise in the DB (because the DB still
+  // has the old slug) and tries to INSERT a new row at the same
+  // (moduleId, orderInModule) position — which the unique index on
+  // course_lessons blocks. Renaming first turns the existing row into
+  // the new slug, then seedLessons skips it as already-present.
+  await applyLessonRenames();
   await seedLessons(slugToId);
   await seedQuizzes(slugToId);
   await updateLessonContentFromFiles();

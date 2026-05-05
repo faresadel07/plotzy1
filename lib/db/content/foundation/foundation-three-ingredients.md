@@ -97,7 +97,7 @@ You finish Module 1 with:
 - A working **premise** of your own — the one you wrote in Lesson 3.
 - A way to **test** that premise against the three things every story needs.
 
-[Module 2](/learn/module/architecture) builds the architecture that holds these three ingredients across hundreds of pages. Plot frameworks. The shape of a three-act structure. The hero's journey, simplified. Save the Cat as a checking tool, not a religion.
+[Module 2](/learn/module/architecture) builds the architecture that holds these three ingredients across hundreds of pages. Plot frameworks. The shape of a three-act structure. The hero's journey, simplified. Beat sheets as a checking tool, not a religion.
 
 But the ingredients are in your hands now. Take them seriously and the architecture will have something to support.
 

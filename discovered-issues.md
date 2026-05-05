@@ -1990,5 +1990,17 @@ _Logged 2026-05-05 during Clarification B of Commit 1 review._
 
 _Logged 2026-05-05 during Commit 7 of feat/course-batch-1-3-frontend._
 
+### LOW — Legacy "Save the Cat" reference in writing-guide.tsx
+
+**File**: `artifacts/plotzy/src/pages/writing-guide.tsx:142`.
+
+**Observation**: the legacy writing-guide page (predates the writing course) names "Save the Cat! Beat Sheet" in a list of plotting frameworks. Module 2 (Batch 2.2) introduced a brand-name rule for *course content* — the lesson on beat sheets teaches the concept generically rather than under that specific 2005 trademark. The writing-guide reference predates that rule and is not infringement-tier (brief educational mention), but is inconsistent with the course voice rules that now apply to similar territory.
+
+**Resolution**: during a future content polish pass on `writing-guide.tsx`, reword the entry to a generic phrasing (e.g. "Beat sheet plotting" or "Granular beat plotting"). Not urgent — the page is read by a different audience than the course pages, and the brand-name rule was scoped to course content for a reason.
+
+**Estimated effort**: ~5 min (single line edit) when the writing-guide page is next opened for revisions.
+
+_Logged 2026-05-05 during Phase A of feat/course-batch-2-2-module-architecture._
+
 
 
