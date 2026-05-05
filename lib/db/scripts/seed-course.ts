@@ -626,6 +626,61 @@ const QUIZ_BANKS: QuizBank[] = [
       },
     ],
   },
+  {
+    moduleSlug: "writing-process",
+    questions: [
+      {
+        questionText: "A writer sits at the same blank chapter for three days. Each session, they produce nothing. Per Lesson 1, what is most likely happening, and what's the diagnostic move?",
+        optionA: "The writer is blocked; they should take a long break.",
+        optionB: "The writer is probably not blocked in the fear/perfectionism sense — three days of producing nothing on the same scene usually means the scene doesn't have a clear function yet, and the cure is to leave the page and ask of the scene: what does the protagonist want here, what's in the way, what changes by the end?",
+        optionC: "The writer should write through it with longer sessions.",
+        optionD: "The writer should give up the project.",
+        correctOption: "b",
+        explanation:
+          "(a) and (d) overcorrect. (c) treats the symptom without the diagnosis. (b) is L1's specific diagnosis: the four causes are fear, perfectionism, unclear premise, and no plan. Same scene, three days almost always means the fourth — no plan. The cure is at outline level, not at typing level.",
+      },
+      {
+        questionText: "A writer's first draft has been going well for six weeks, then stalls. They notice they've started re-reading yesterday's pages before adding new ones, fixing sentences as they go. Per Lesson 2, what is most likely happening?",
+        optionA: "The draft is failing; they should start over.",
+        optionB: "Editor-mode has begun running during writer-mode, slowing the writing past the rate at which the book gets finished — the cure is to stop re-reading yesterday's pages and to forbid in-draft editing until the first draft is complete.",
+        optionC: "The writer needs more inspiration.",
+        optionD: "The writer should outline more thoroughly.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads the symptom. (c) is vague. (d) is unrelated to the specific failure mode. (b) is L2's specific diagnosis: editing as you go is the most common reason a sustained first draft stalls. The cure is the separation of writer-mode and editor-mode — editor-mode comes back at revision.",
+      },
+      {
+        questionText: "A writer has finished a first draft and spends three months polishing the prose chapter by chapter. At the end of three months, they realise chapters 4-6 don't belong in the book and need to be cut. According to Lesson 3, what is the lesson?",
+        optionA: "Always start with a more detailed outline.",
+        optionB: "Revision should never include cuts at the structural level.",
+        optionC: "Pass 1 (structural) must come before Pass 3 (line-level); polishing prose in chapters that will be cut is wasted work, which is exactly the failure mode L3 prescribes the three-pass order to prevent.",
+        optionD: "The writer should hire an editor sooner.",
+        correctOption: "c",
+        explanation:
+          "(a) is irrelevant to the revision question. (b) is the opposite of the truth. (d) is a workaround. (c) is L3's specific lesson: the three passes are structural → scene → line, in that order. Polish before structure means the writer polishes scenes that won't survive the structural pass. Three months of wasted work is the canonical example.",
+      },
+      {
+        questionText: "A writer's checklist has thirty items, including \"use vivid verbs,\" \"be original,\" and \"make the reader feel something.\" Per Lesson 4, what is wrong with this checklist?",
+        optionA: "Thirty items is too few; checklists should have at least fifty items.",
+        optionB: "The items are not actionable — they describe outcomes (vivid, original, feel something) rather than specific things the writer can check on the page; an actionable checklist asks yes/no questions tied to specific craft moves, with a one-sentence why per item.",
+        optionC: "The items are too specific; checklists should be general guidance only.",
+        optionD: "Checklists are unnecessary; trust your instincts.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads the failure mode. (c) is the opposite of the lesson. (d) abandons the lesson entirely. (b) is L4's specific point: a checklist with vague outcome-items can't be applied. \"Use vivid verbs\" doesn't tell you what to look for; \"Are dialogue tags mostly 'said'?\" does — and the why (the eye doesn't trip on said) lets the writer adapt the rule.",
+      },
+      {
+        questionText: "A writer is on revision pass nine. They moved a comma in chapter five last Tuesday; this Tuesday they moved it back. Three beta readers have read the latest draft and none of them have structural notes. Per Lesson 5, what is most likely true, and what's the move?",
+        optionA: "The book isn't ready; the writer should keep revising until they don't move the comma back and forth.",
+        optionB: "The book is past the point of useful revision — the comma being moved back and forth is one of the three signs of done, the absence of structural beta-reader notes is another, and the cure for over-revising one book is to start the next.",
+        optionC: "The book needs more beta readers.",
+        optionD: "The book needs a developmental edit.",
+        correctOption: "b",
+        explanation:
+          "(a) inverts the diagnostic. (c) treats noise as the cure to clarity. (d) is a workaround that doesn't address the question of when to stop. (b) is L5's specific diagnosis: moving commas back and forth and no structural notes from readers are two of the three signs of done. The remedy is the next-book remedy. The current book is shippable.",
+      },
+    ],
+  },
 ];
 
 async function seedQuizQuestions(slugToId: Map<string, number>) {
