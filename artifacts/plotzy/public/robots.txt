@@ -14,5 +14,6 @@ Disallow: /articles/
 Disallow: /books/
 Disallow: /learn/quiz/
 Disallow: /learn/final-project
+Disallow: /learn/visuals-preview
 
 Sitemap: https://plotzy.com/sitemap.xml

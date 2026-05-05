@@ -2002,5 +2002,16 @@ _Logged 2026-05-05 during Commit 7 of feat/course-batch-1-3-frontend._
 
 _Logged 2026-05-05 during Phase A of feat/course-batch-2-2-module-architecture._
 
+### LOW — `/learn/visuals-preview` is a foundation for a future public design-system docs page
+
+**File**: `artifacts/plotzy/src/pages/learn-visuals-preview.tsx`.
+
+**Observation**: Batch 2.7 B1 added a permanent internal style-guide page that renders all six course visual primitives (Hero, InlineImage, Diagram, AnimatedDiagram, QuoteCard, InteractiveExample) with sample content. It's hardened against accidental indexing (`SEO noindex`, `robots.txt` Disallow, amber "Internal preview" banner) and is currently a developer/contributor reference. If Plotzy ever wants public design-system documentation (Storybook-equivalent on the marketing surface), this page is already 80% of that work — it just needs prop tables, copy buttons, and routing under a public path.
+
+**Resolution**: when (and if) a public design-system docs effort is greenlit, fork `learn-visuals-preview.tsx` to a new `design-system/` route, generate prop tables from the component TS interfaces (e.g. via `react-docgen-typescript`), and lift the noindex/banner. Estimated effort: ~1 day for a minimum-viable public page; longer if every primitive in the app (not just course visuals) is brought in.
+
+**Estimated effort**: ~1 day for a course-visuals-only public docs page; multi-day for a full app design-system surface.
+
+_Logged 2026-05-05 during B1 of feat/course-batch-2-7-visual-enhancements._
 
 
