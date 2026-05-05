@@ -1956,5 +1956,39 @@ _Logged 2026-05-05 during D3 deferral of feat/course-batch-1-2-api._
 
 _Logged 2026-05-05 during Commit 4 review of feat/course-batch-1-2-api._
 
+### MEDIUM — Mobile blocker affects course + certificate share URLs
+
+**File**: `artifacts/plotzy/src/components/MobileBlocker.tsx` and its mount in `artifacts/plotzy/src/App.tsx:296`.
+
+**Observation**: per DP1/A3 of feat/course-batch-1-3-frontend, the existing site-wide MobileBlocker (blocks viewports `< 700px`) was kept in place — no per-route bypass. This means when a user shares a `/certificates/:uuid` URL on LinkedIn/Twitter (mobile-heavy audience), recipients on phones see the "open on iPad or laptop" message instead of the verified certificate. Same impact on `/learn/lesson/<slug>` shares for SEO link clicks from mobile.
+
+**Resolution path**: lift MobileBlocker site-wide in the dedicated Mobile Strategy batch (Option A "full mobile" per Faris's pre-batch directive). Course components were written mobile-first using Tailwind's `sm:` breakpoints + logical properties (`me-*` / `text-start`) so they should render correctly when the blocker is removed; full pass-by-pass mobile QA still needed across the rest of the app first.
+
+**Risk while pending**: temporary friction for shared course URLs from mobile. Mitigation considered but rejected: per-route bypass would create inconsistent mobile UX (course works, rest doesn't) — worse than uniformly deferred mobile.
+
+_Logged 2026-05-05 during DP1/A3 of feat/course-batch-1-3-frontend._
+
+### LOW — Markdown component has no syntax highlighter
+
+**File**: `artifacts/plotzy/src/components/course/Markdown.tsx`.
+
+**Observation**: the component emits `class="language-{lang}"` on `<code>` inside `<pre>` blocks but no syntax highlighter (Prism, Shiki, etc.) is wired. Course content for v1 — Modules 1-6 cover storytelling theory, not technical material — does not require highlighted code samples, so this is acceptable through pre-launch.
+
+**Resolution**: install Shiki (or Prism) and call it from a `useEffect` in `Markdown.tsx` if Batch 2 lesson authoring discovers a need (e.g., a writing exercise involving code-formatted snippets). ~1h with theme integration.
+
+_Logged 2026-05-05 during Clarification B of Commit 1 review._
+
+### LOW — Course chrome translations are English-only outside of `navCourse`
+
+**File**: `artifacts/plotzy/src/lib/i18n.ts`.
+
+**Observation**: feat/course-batch-1-3-frontend added ~75 English course-chrome i18n keys (`courseLanding*`, `courseQuiz*`, `courseFeedback*`, `courseCert*`, `courseElig*`, etc.). Only `navCourse` has translations for all 14 languages; every other key falls back to English via the `getT` resolver. For non-English UI users this means the course pages mix their native language (existing app chrome) with English (course chrome).
+
+**Resolution**: a pure-translation pass that adds 13 × ~75 = ~975 entries. Trivial mechanically (a translator pass), but easy to defer because the fallback works. Recommend grouping with the per-language polish that the user has previously deferred ("translation polish batch").
+
+**Estimated effort**: ~3-4h with a competent translator pass; longer if every translation is hand-reviewed.
+
+_Logged 2026-05-05 during Commit 7 of feat/course-batch-1-3-frontend._
+
 
 

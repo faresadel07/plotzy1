@@ -51,6 +51,12 @@ const SeriesView = lazy(() => import("@/pages/series-view"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const AccountSubscription = lazy(() => import("@/pages/account-subscription"));
 const FaqPage = lazy(() => import("@/pages/faq"));
+const LearnPage = lazy(() => import("@/pages/learn"));
+const LearnModulePage = lazy(() => import("@/pages/learn-module"));
+const LearnLessonPage = lazy(() => import("@/pages/learn-lesson"));
+const LearnQuizPage = lazy(() => import("@/pages/learn-quiz"));
+const LearnFinalProjectPage = lazy(() => import("@/pages/learn-final-project"));
+const CertificateVerifyPage = lazy(() => import("@/pages/certificate-verify"));
 
 function EmailVerifyHandler() {
   const { toast } = useToast();
@@ -248,6 +254,10 @@ function Router() {
         <Route path="/terms" component={TermsOfService} />
         <Route path="/faq" component={FaqPage} />
         <Route path="/marketplace" component={Marketplace} />
+        <Route path="/learn" component={LearnPage} />
+        <Route path="/learn/module/:slug" component={LearnModulePage} />
+        <Route path="/learn/lesson/:slug" component={LearnLessonPage} />
+        <Route path="/certificates/:uuid" component={CertificateVerifyPage} />
 
         {/* ── Auth-required routes ── */}
         <Route path="/dashboard" component={ProtectedRoute(DashboardDemo)} />
@@ -261,6 +271,8 @@ function Router() {
         <Route path="/checkout" component={ProtectedRoute(Checkout)} />
         <Route path="/account/subscription" component={ProtectedRoute(AccountSubscription)} />
         <Route path="/support" component={ProtectedRoute(SupportPage)} />
+        <Route path="/learn/quiz/:id" component={ProtectedRoute(LearnQuizPage)} />
+        <Route path="/learn/final-project" component={ProtectedRoute(LearnFinalProjectPage)} />
 
         {/* ── Messages ── */}
         <Route path="/messages/:userId" component={ProtectedRoute(Messages)} />

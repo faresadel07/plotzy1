@@ -410,3 +410,102 @@ export function buildBreadcrumbSchema(
     })),
   };
 }
+
+// ── Course schemas (Batch 1.3) ────────────────────────────────────────────
+// Three builders for the writing course:
+//   1. Course           — for /learn (the course landing page)
+//   2. LearningResource — for /learn/lesson/:slug (each lesson)
+//   3. EducationalOccupationalCredential — for /certificates/:uuid
+//
+// schema.org's `CredentialDocument` is deprecated; the Educational
+// variant is the right type for course-completion certificates per
+// schema.org's pending docs.
+
+const COURSE_LANDING_PATH = "/learn";
+
+export function buildCourseSchema(): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: "How to Write Your First Book",
+    description:
+      "A free 6-module writing course covering story foundations, structure, characters, world-building, the writing process, and getting published. 27 lessons, quizzes, a final project, and a verified certificate of completion.",
+    url: `${SITE_URL}${COURSE_LANDING_PATH}`,
+    educationalLevel: "Beginner",
+    inLanguage: "en",
+    provider: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+    },
+  };
+}
+
+export interface LearningResourceInput {
+  lessonSlug: string;
+  lessonTitle: string;
+  moduleTitle: string;
+  description?: string | null;
+}
+
+export function buildLearningResourceSchema(
+  lesson: LearningResourceInput,
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    name: lesson.lessonTitle,
+    description: lesson.description || undefined,
+    learningResourceType: "Lecture",
+    educationalLevel: "Beginner",
+    inLanguage: "en",
+    url: `${SITE_URL}/learn/lesson/${lesson.lessonSlug}`,
+    isPartOf: {
+      "@type": "Course",
+      name: lesson.moduleTitle,
+      url: `${SITE_URL}${COURSE_LANDING_PATH}`,
+    },
+    provider: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  };
+}
+
+export interface CredentialInput {
+  uuid: string;
+  holderName: string;
+  issuedAt: string;
+}
+
+export function buildEducationalCredentialSchema(
+  cert: CredentialInput,
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "EducationalOccupationalCredential",
+    name: "Certificate of Completion — How to Write Your First Book",
+    url: `${SITE_URL}/certificates/${cert.uuid}`,
+    credentialCategory: "Certificate",
+    dateCreated: cert.issuedAt,
+    recognizedBy: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    educationalLevel: "Beginner",
+    about: {
+      "@type": "Course",
+      name: "How to Write Your First Book",
+      url: `${SITE_URL}${COURSE_LANDING_PATH}`,
+    },
+  };
+}

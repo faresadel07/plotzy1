@@ -11,4 +11,44 @@
   <url><loc>https://plotzy.com/blog</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://plotzy.com/privacy</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://plotzy.com/terms</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
+
+  <!-- Writing course (Batch 1.3) -->
+  <url><loc>https://plotzy.com/learn</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+
+  <!-- 6 modules -->
+  <url><loc>https://plotzy.com/learn/module/foundation</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/module/architecture</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/module/characters</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/module/world</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/module/writing-process</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/module/publishing</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+
+  <!-- 27 lessons -->
+  <url><loc>https://plotzy.com/learn/lesson/foundation-what-is-story</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/foundation-why-people-read</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/foundation-finding-idea</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/foundation-three-ingredients</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/architecture-three-acts</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/architecture-heros-journey</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/architecture-save-the-cat</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/architecture-choosing-structure</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/characters-protagonist-wound</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/characters-backstory</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/characters-antagonist</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/characters-supporting-cast</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/characters-dialogue</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/world-show-dont-tell</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/world-sensory-writing</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/world-setting-as-character</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/world-description-pace</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/process-blank-page</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/process-first-draft</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/process-revision-passes</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/process-self-editing</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/process-when-to-stop</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/publishing-self-vs-traditional</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/publishing-cover-blurb</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/publishing-audience</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/publishing-marketing</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://plotzy.com/learn/lesson/publishing-after-launch</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
 </urlset>
