@@ -18,13 +18,20 @@
  *   cd lib/db && pnpm seed:course
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { db, pool } from "../src/index";
 import {
   courseModules,
   courseLessons,
   courseQuizzes,
+  courseQuizQuestions,
 } from "../src/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+
+// __dirname equivalent under "type": "module" / ESM.
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── Module catalog (final slugs/titles/subtitles per spec) ──────────────
 interface LessonSeed {
@@ -254,13 +261,220 @@ async function seedQuizzes(slugToId: Map<string, number>) {
   console.log(`  quizzes: ${created} inserted, ${skipped} already present`);
 }
 
+// ── Lesson content updates ────────────────────────────────────────────
+//
+// Lessons start their life with placeholder content (above) on a fresh
+// DB. As real lesson content lands per module (Batch 2.x), we drop
+// markdown files at:
+//   lib/db/content/<module-slug>/<lesson-slug>.md
+//
+// This pass walks every lesson slug in the catalog. If a content file
+// exists for that slug, the script UPSERTs the row's content and
+// updatedAt to match. Idempotent — re-running is a no-op when the
+// file content matches what's already in the DB.
+//
+// Lessons whose content file does NOT exist are left untouched. The
+// placeholder remains visible to the frontend. That's intentional:
+// it makes it obvious which lessons still need content.
+const CONTENT_ROOT = resolve(__dirname, "../content");
+
+interface LessonContentFile {
+  moduleSlug: string;
+  lessonSlug: string;
+  path: string;
+}
+
+function findLessonContentFile(
+  moduleSlug: string,
+  lessonSlug: string,
+): LessonContentFile | null {
+  const path = resolve(CONTENT_ROOT, moduleSlug, `${lessonSlug}.md`);
+  if (!existsSync(path)) return null;
+  return { moduleSlug, lessonSlug, path };
+}
+
+async function updateLessonContentFromFiles() {
+  let updated = 0;
+  let unchanged = 0;
+  let missing = 0;
+  for (const m of MODULES) {
+    for (const l of m.lessons) {
+      const file = findLessonContentFile(m.slug, l.slug);
+      if (!file) {
+        missing++;
+        continue;
+      }
+      const fresh = readFileSync(file.path, "utf-8");
+
+      const [row] = await db
+        .select({ id: courseLessons.id, content: courseLessons.content })
+        .from(courseLessons)
+        .where(eq(courseLessons.slug, l.slug));
+      if (!row) {
+        // Lesson doesn't exist yet — seedLessons should have inserted
+        // it, but guard against running this pass before that one.
+        console.log(`  content "${l.slug}" — lesson row missing; run seedLessons first`);
+        continue;
+      }
+      if (row.content === fresh) {
+        unchanged++;
+        continue;
+      }
+      await db
+        .update(courseLessons)
+        .set({ content: fresh, updatedAt: new Date() })
+        .where(eq(courseLessons.id, row.id));
+      updated++;
+      console.log(`  content "${l.slug}" — updated (${fresh.length} chars)`);
+    }
+  }
+  console.log(
+    `  content: ${updated} updated, ${unchanged} unchanged, ${missing} still placeholder`,
+  );
+}
+
+// ── Quiz questions ────────────────────────────────────────────────────
+//
+// Per-module question banks. Adds entries here as each module's content
+// lands. Idempotent: if any question already exists for the target
+// quiz, the entire bank is skipped (we don't reconcile field-by-field
+// to avoid surprising in-place edits to live attempts' question text).
+//
+// To rewrite a question after launch: delete the row manually and
+// re-run, or hand-write a one-off migration. The seed is for first
+// load and additive bank growth, not for editorial revisions.
+interface QuizQuestionSeed {
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: "a" | "b" | "c" | "d";
+  explanation: string;
+}
+
+interface QuizBank {
+  moduleSlug: string; // resolves to that module's quiz row
+  questions: QuizQuestionSeed[];
+}
+
+const QUIZ_BANKS: QuizBank[] = [
+  {
+    moduleSlug: "foundation",
+    questions: [
+      {
+        questionText: "Which of the following best matches the definition of \"story\" given in Lesson 1?",
+        optionA: "A sequence of events presented in chronological order.",
+        optionB: "A patterned sequence in which someone wants something, hits an obstacle, and is changed by what happens.",
+        optionC: "A description of a memorable moment from a person's life.",
+        optionD: "A made-up version of real events designed to entertain.",
+        correctOption: "b",
+        explanation:
+          "A story isn't defined by being chronological (a) or memorable (c) or fictional (d). It's defined by the pattern of want, obstacle, and change. Without the pattern, what you have is a sequence, an anecdote, or a vignette — not a story.",
+      },
+      {
+        questionText: "Lesson 2 argued that fiction does something arguments and non-fiction can't. Which best captures that thing?",
+        optionA: "Fiction is more entertaining than non-fiction.",
+        optionB: "Fiction is easier to remember than non-fiction.",
+        optionC: "Fiction lets a reader practise being someone else by simulating their choices and emotions.",
+        optionD: "Fiction reaches a wider audience because it doesn't require expertise.",
+        correctOption: "c",
+        explanation:
+          "(a), (b), and (d) may be incidentally true, but the unique thing fiction does is provide rehearsal in another life — running the character's choices and feelings on the reader's own simulator. An argument can describe another life from the outside; fiction puts the reader inside it.",
+      },
+      {
+        questionText: "A student tells you their idea is \"a man builds a robot.\" What's the most useful next move?",
+        optionA: "Tell them the idea is too unoriginal to use.",
+        optionB: "Tell them to expand it into a premise that adds character, situation, and tension.",
+        optionC: "Tell them to find a less common idea.",
+        optionD: "Tell them robots are overdone.",
+        correctOption: "b",
+        explanation:
+          "Originality lives in execution, not in the idea (Lesson 3). The fix isn't a different idea — it's translating this idea into a premise that has someone with a felt want and a specific obstacle. \"A man builds a robot\" is a kernel; you can't write from a kernel, only from a premise.",
+      },
+      {
+        questionText: "Which of these premises contains all three ingredients every story needs (a character to care about, a conflict, a change)?",
+        optionA: "A widow inherits her husband's beehives.",
+        optionB: "A widow inherits her husband's beehives, learns he kept them as a refuge from a marriage he was secretly leaving, and decides whether to forgive a dead man.",
+        optionC: "A widow has hives in her backyard and writes about them in her journal.",
+        optionD: "A widow remembers when her husband first showed her the hives.",
+        correctOption: "b",
+        explanation:
+          "(a) is an idea, not yet a premise — no obstacle, no change. (c) is closer to a vignette. (d) is a memory. Only (b) has a character with a felt want (forgiveness or refusal), a specific obstacle (the discovery), and an implied change (whichever decision she lands on).",
+      },
+      {
+        questionText: "A novel ends with the protagonist solving the murder but being exactly the same person they were on page one. According to Lesson 4, what is most likely missing?",
+        optionA: "The character isn't likeable enough.",
+        optionB: "The conflict wasn't dramatic enough.",
+        optionC: "The change ingredient is absent — the situation changed but the character didn't.",
+        optionD: "The plot was too short.",
+        correctOption: "c",
+        explanation:
+          "(a) is irrelevant — characters don't need to be likeable to be cared-about (Macbeth, Ahab). (b) and (d) describe symptoms, not the underlying issue. The missing ingredient is change: the reader's payoff is supposed to be the difference between who-they-were and who-they-become. A solved mystery without a transformed solver is plot without story.",
+      },
+    ],
+  },
+];
+
+async function seedQuizQuestions(slugToId: Map<string, number>) {
+  let inserted = 0;
+  let skippedBanks = 0;
+  for (const bank of QUIZ_BANKS) {
+    const moduleId = slugToId.get(bank.moduleSlug);
+    if (!moduleId) {
+      throw new Error(`QUIZ_BANKS: module "${bank.moduleSlug}" not in catalog`);
+    }
+    const [quiz] = await db
+      .select({ id: courseQuizzes.id })
+      .from(courseQuizzes)
+      .where(
+        and(eq(courseQuizzes.moduleId, moduleId), eq(courseQuizzes.type, "module")),
+      );
+    if (!quiz) {
+      throw new Error(`QUIZ_BANKS: no module quiz row for "${bank.moduleSlug}"`);
+    }
+
+    const existing = await db
+      .select({ id: courseQuizQuestions.id })
+      .from(courseQuizQuestions)
+      .where(eq(courseQuizQuestions.quizId, quiz.id));
+    if (existing.length > 0) {
+      skippedBanks++;
+      console.log(
+        `  questions for "${bank.moduleSlug}" already present (${existing.length}) — skip`,
+      );
+      continue;
+    }
+
+    for (let i = 0; i < bank.questions.length; i++) {
+      const q = bank.questions[i];
+      await db.insert(courseQuizQuestions).values({
+        quizId: quiz.id,
+        questionText: q.questionText,
+        optionA: q.optionA,
+        optionB: q.optionB,
+        optionC: q.optionC,
+        optionD: q.optionD,
+        correctOption: q.correctOption,
+        explanation: q.explanation,
+        order: i + 1,
+      });
+      inserted++;
+    }
+    console.log(`  questions for "${bank.moduleSlug}" inserted (${bank.questions.length})`);
+  }
+  console.log(`  quiz questions: ${inserted} inserted, ${skippedBanks} bank(s) already present`);
+}
+
 // ── Main ───────────────────────────────────────────────────────────────
 async function main() {
-  console.log("Seeding writing course (modules → lessons → quizzes)...");
+  console.log("Seeding writing course (modules → lessons → quizzes → content → questions)...");
   const slugToId = await seedModules();
   await seedLessons(slugToId);
   await seedQuizzes(slugToId);
-  console.log("Done. NO quiz questions seeded yet — those land in Batch 3.");
+  await updateLessonContentFromFiles();
+  await seedQuizQuestions(slugToId);
+  console.log("Done.");
 }
 
 main()
