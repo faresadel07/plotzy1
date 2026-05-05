@@ -516,6 +516,61 @@ const QUIZ_BANKS: QuizBank[] = [
       },
     ],
   },
+  {
+    moduleSlug: "characters",
+    questions: [
+      {
+        questionText: "Which of the following best matches the wound/want/need framework from Lesson 1?",
+        optionA: "The wound is what the character feels generally; the want is their preference; the need is their goal.",
+        optionB: "The wound is a specific past event; the want is what the character can name in a sentence; the need is what they actually require for the story to resolve, which is rarely the same as the want.",
+        optionC: "The wound is whatever the protagonist has trauma about; the want is the antagonist's goal; the need is the climax.",
+        optionD: "The wound, the want, and the need are three names for the same thing — what motivates the protagonist.",
+        correctOption: "b",
+        explanation:
+          "Lesson 1's framework is precise. (a) generalises the wound (it's a moment, not a feeling). (c) garbles the antagonist's role. (d) collapses three distinct concepts. Only (b) keeps the three layered: an event, a sentence-level pursuit, and an underlying requirement the character usually doesn't see.",
+      },
+      {
+        questionText: "A writer's draft opens with a five-page flashback to the protagonist's childhood, intended to give the reader context for the present-day chapter that follows. According to Lesson 2, what's most likely happening?",
+        optionA: "The opening is good — readers need context before they can care about a protagonist.",
+        optionB: "The opening is a backstory dump that moves the reader backward in time before they have a reason to care; the same context could likely land in single-sentence revelations across the first three chapters.",
+        optionC: "The opening should be longer to give more context.",
+        optionD: "The opening should be cut entirely; backstory has no place in fiction.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads how readers form investment — care comes from the want on page one, not from background. (c) makes the failure mode worse. (d) overcorrects. (b) is the L2 diagnosis: backstory dumps move the reader backward before they're invested; the cure is revelation, not removal.",
+      },
+      {
+        questionText: "A writer drafts an antagonist whose only motivation is \"she wants to ruin Sarah's life because she's jealous.\" Per Lesson 3, what is the most useful next step?",
+        optionA: "Add more obstacles in the antagonist's way to make her seem stronger.",
+        optionB: "Make the antagonist evil instead of merely jealous, since evil is a stronger motive.",
+        optionC: "Build the antagonist's wound and want with the same tools you used for Sarah, then write a paragraph from her point of view in which she explains why she is right.",
+        optionD: "Cut the antagonist; an unsympathetic antagonist hurts the book.",
+        correctOption: "c",
+        explanation:
+          "(a) addresses a different problem (obstacle weakness, not character depth). (b) misreads when evil works — evil is a choice for mythic-scale antagonists, not a default upgrade. (d) is wrong; the protagonist needs an opponent. (c) is L3's specific instruction: mirror the protagonist's framework on the antagonist, then test by writing the antagonist's case in their own voice.",
+      },
+      {
+        questionText: "A draft has fourteen named supporting characters. Two of them — a quirky bookshop owner and a quirky archivist — both deliver historical research to the protagonist at separate points. Per Lesson 4, what is the most useful move?",
+        optionA: "Add more distinguishing traits to each so readers can tell them apart.",
+        optionB: "Cut both and have the protagonist do the research themselves.",
+        optionC: "Merge them into one character whose function is \"researcher who helps the protagonist,\" then give that single character two unrelated traits to make them dimensional.",
+        optionD: "Keep both; supporting cast is supposed to feel populated.",
+        correctOption: "c",
+        explanation:
+          "(a) treats the symptom (confusion) without addressing the cause (redundant function). (b) loses a useful structural role. (d) ignores the cognitive load problem. (c) is L4's prescription: same function = merge candidates; the merger ends up richer than either original.",
+      },
+      {
+        questionText: "A writer reads back a scene of dialogue between their protagonist and antagonist. Both characters' lines could be spoken by the other without changing meaning. Per Lesson 5, what is most likely happening, and what's the diagnostic move?",
+        optionA: "The scene is well-balanced; matching dialogue between rivals is a sign of equal stature.",
+        optionB: "Voice differentiation is failing because the two characters are not yet rooted in distinct wounds — voice rises from what each character protects, and undifferentiated voices usually mean undifferentiated interiors.",
+        optionC: "The scene needs more dialogue tags so the reader can tell who's speaking.",
+        optionD: "The scene needs more quirks (a stutter, a catchphrase) for each character.",
+        correctOption: "b",
+        explanation:
+          "(a) misreads \"balanced\" as equivalence. (c) is a workaround that papers over the root cause. (d) confuses surface decoration with structural voice — quirks the reader notices once and ignores. (b) is L5's diagnosis: real voice differentiation is downstream of distinct interior architecture (wound, want), and the cure is in the character work, not in the dialogue itself.",
+      },
+    ],
+  },
 ];
 
 async function seedQuizQuestions(slugToId: Map<string, number>) {
