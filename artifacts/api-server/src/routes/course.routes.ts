@@ -616,8 +616,11 @@ router.post("/api/course/final-project/feedback", requireAuth, requireOpenAI, ai
       return res.status(404).json({ message: "Submit your final project before requesting feedback" });
     }
 
-    // Cache: return existing feedback unless the body explicitly
-    // requests regeneration.
+    // force=true: bypass cached aiFeedbackJson and burn 4 fresh AI
+    // calls. Used by the frontend "Re-analyze" button after a user
+    // resubmits revised chapters and wants new feedback against the
+    // updated content. Default (false) returns the cached blob to
+    // avoid accidental re-spend on idle dashboard visits.
     const force = req.body?.force === true;
     if (!force && project.aiFeedbackJson != null) {
       return res.json({ feedback: project.aiFeedbackJson, cached: true });

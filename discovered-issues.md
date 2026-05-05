@@ -1881,5 +1881,80 @@ discover this mid-implementation.
 
 _Logged 2026-05-05 during Phase A audit of feat/course-batch-1-schema._
 
+### LOW — Duplicate `openai` client instances at routes.ts:57 and helpers.ts:14
+
+**File**: `artifacts/api-server/src/routes.ts:57` and `artifacts/api-server/src/routes/helpers.ts:14`.
+
+**Observation**: two `new OpenAI({...})` instances exist with byte-for-byte identical config (same env vars, same SDK options). Pre-existing duplication; not introduced by this batch. The new `lib/ai-analysis.ts` (Commit 1 of feat/course-batch-1-2-api) imports the canonical instance from `routes/helpers.ts`, so going forward the canonical path is the helpers one.
+
+**Work**: delete the routes.ts:57 instance + the local `AI_TEXT_MODEL` constant. Update the remaining `routes.ts` AI handlers (the ones not yet refactored to use shared helpers) to import from `routes/helpers.ts`.
+
+**Risk**: low — both instances are configured identically, so the swap is a no-op behaviorally. Catch is making sure no AI handler is depending on a route-local override.
+
+**Estimated effort**: ~30 min including grep audit + smoke test of every AI route.
+
+_Logged 2026-05-05 during Commit 1 review of feat/course-batch-1-2-api._
+
+### MEDIUM — `tierAiLimiter` should accept an optional `cost` parameter
+
+**File**: `artifacts/api-server/src/middleware/rate-limit.ts:92`.
+
+**Observation**: the existing `tierAiLimiter` middleware charges exactly 1 daily-AI hit per request. For endpoints that consume multiple LLM calls in a single request (today: only `/api/course/final-project/feedback`, which runs 4 analyses), this forces a choice between (a) duplicating cost-aware logic inline, or (b) under-charging the user's budget. Approach (a) was taken in Commit 3 of feat/course-batch-1-2-api.
+
+**Work**: refactor `tierAiLimiter` from an Express middleware function into a factory: `tierAiLimiter({ cost?: number = 1 })`. The factory closes over `cost`, runs `checkAiLimit` with `(used + cost) <= limit` as the gate, and calls `incrementAiUsage` `cost` times on success. Update all 14 existing callsites to use the factory form (most pass nothing, getting the default `cost: 1`); update `/final-project/feedback` to use `cost: 4` and remove the inline cost-aware block.
+
+**Risk**: medium — touches a shared middleware that gates 14+ AI endpoints. Each callsite needs regression smoke-testing. The inline path in `course.routes.ts` becomes deletable, simplifying the orchestration handler.
+
+**Estimated effort**: ~2h. Affects 14 existing endpoints; requires regression testing of each AI feature.
+
+_Logged 2026-05-05 during DP2 of feat/course-batch-1-2-api._
+
+### LOW — Bulk `getAllUserQuizAttempts` if dashboard latency emerges
+
+**File**: `artifacts/api-server/src/storage.ts` + `artifacts/api-server/src/routes/course.routes.ts` (`GET /api/course/progress`).
+
+**Observation**: the course dashboard rollup currently calls `storage.getQuizAttempts(userId, quizId)` once per quiz via `Promise.all` — typically 7 parallel queries (6 module quizzes + 1 final). For v1 with ~7 quizzes this is fine, but if the course expands or many users hit the dashboard simultaneously, query volume grows linearly with quiz count.
+
+**Work**: add `getAllUserQuizAttempts(userId): Promise<CourseQuizAttempt[]>` to `IStorage` that pulls every attempt across every quiz in one query. Update the dashboard handler to use it and group in JS by `quizId`.
+
+**Trigger**: profile shows DB time on `/api/course/progress` becomes load-bearing OR course expands beyond ~10 quizzes.
+
+**Estimated effort**: ~30 min.
+
+_Logged 2026-05-05 during DP3 of feat/course-batch-1-2-api._
+
+### MEDIUM — Certificate PDF lazy-generation on first download
+
+**File**: future `artifacts/api-server/src/routes/course.routes.ts` (new endpoint) + likely a new `lib/pdf-generator.ts` helper.
+
+**Observation**: the cert schema has a nullable `pdf_url` column and the public verification page works as a web view. PDF generation was deferred from Batch 1.2 (D3) to keep that batch focused on the API surface. Without a PDF, users can share the verification URL but can't download a printable cert.
+
+**Work**: add `GET /api/certificates/:uuid/pdf` (path already in Phase A spec). On first hit: generate the PDF (pdfkit or render-then-print HTML), upload to whatever blob storage the app uses for book exports, then `setCertificatePdfUrl(uuid, url)` and serve. Subsequent hits redirect to the persisted URL. Also add the missing `setCertificatePdfUrl(uuid, pdfUrl)` storage method (intentionally deferred from Commit 2 of feat/course-batch-1-2-api).
+
+**Decisions needed before starting**:
+- pdfkit (programmatic, more control) vs HTML-to-PDF (easier templating, requires Chromium)?
+- Where to store: same blob path as book exports? Or a dedicated certificates/ prefix?
+- Cert template/layout — needs design input (logo, layout, fonts).
+
+**Estimated effort**: ~1 day including template design.
+
+_Logged 2026-05-05 during D3 deferral of feat/course-batch-1-2-api._
+
+### LOW — `routes/index.ts` is currently unused
+
+**File**: `artifacts/api-server/src/routes/index.ts`.
+
+**Observation**: the file aggregates every router (`booksRouter`, `coursesRouter`, etc.) but `grep` for any importer returns no matches — the active wire-up is in `routes.ts`'s `registerRoutes` function. We've kept it in sync with each new router (including `courseRouter` in Commit 4 of feat/course-batch-1-2-api) to avoid setting a trap for any future developer who resurrects it.
+
+**Work**: pick one of:
+- (a) Delete `routes/index.ts` entirely. Saves cognitive load; if a future contributor wants to consolidate wire-up they can build it fresh.
+- (b) Migrate `routes.ts`'s `registerRoutes` to call `app.use(routes/index.default)` and pull EVERY route registration from there. Significant refactor but reduces routes.ts from a 2400-line god-file.
+
+**Trigger**: post-Batch-1.3 cleanup pass, or when routes.ts becomes painful to navigate.
+
+**Estimated effort**: (a) 5 min. (b) ~3h with regression risk.
+
+_Logged 2026-05-05 during Commit 4 review of feat/course-batch-1-2-api._
+
 
 
