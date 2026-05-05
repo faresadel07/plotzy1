@@ -5,6 +5,8 @@ import confetti from "canvas-confetti";
 import { ShieldCheck, ExternalLink } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildEducationalCredentialSchema } from "@/lib/seo-schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CertificateDisplay } from "@/components/course/CertificateDisplay";
@@ -73,6 +75,15 @@ export default function CertificateVerifyPage() {
         }
         noindex
       />
+      {certQ.data && (
+        <JsonLd
+          data={buildEducationalCredentialSchema({
+            uuid: certQ.data.uuid,
+            holderName,
+            issuedAt: certQ.data.issuedAt,
+          })}
+        />
+      )}
 
       <main className="container mx-auto max-w-3xl px-4 py-10 sm:py-16 space-y-8">
         {certQ.isLoading && <CertSkeleton />}

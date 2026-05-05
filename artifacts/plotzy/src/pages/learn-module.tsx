@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, ChevronLeft, Clock, BookOpen, FileQuestion } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
@@ -79,6 +81,14 @@ export default function LearnModulePage() {
         title={moduleQ.data ? `${moduleQ.data.title} — Plotzy Writing Course` : "Plotzy Writing Course"}
         description={moduleQ.data?.subtitle ?? moduleQ.data?.description ?? undefined}
       />
+      {moduleQ.data && (
+        <JsonLd
+          data={buildBreadcrumbSchema([
+            { name: "Course", path: "/learn" },
+            { name: moduleQ.data.title, path: `/learn/module/${moduleQ.data.slug}` },
+          ])}
+        />
+      )}
 
       <main className="container mx-auto max-w-4xl px-4 py-8 sm:py-10 space-y-8">
         <CourseBreadcrumb

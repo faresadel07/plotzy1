@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, GraduationCap, Award } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { JsonLd } from "@/components/JsonLd";
+import { buildCourseSchema, buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ModuleCard } from "@/components/course/ModuleCard";
@@ -71,6 +73,8 @@ export default function LearnPage() {
         title="How to Write Your First Book — Free 6-Module Course"
         description="A free 6-module writing course: foundations, story architecture, characters, world-building, the writing process, and getting published. 27 lessons, quizzes, a final project, and a verified certificate of completion."
       />
+      <JsonLd data={buildCourseSchema()} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: "Course", path: "/learn" }])} />
 
       <main className="container mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-10">
         {/* Hero */}

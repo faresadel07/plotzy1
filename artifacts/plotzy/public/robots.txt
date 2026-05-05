@@ -12,5 +12,7 @@ Disallow: /account/
 Disallow: /reset-password/
 Disallow: /articles/
 Disallow: /books/
+Disallow: /learn/quiz/
+Disallow: /learn/final-project
 
 Sitemap: https://plotzy.com/sitemap.xml
