@@ -2014,4 +2014,27 @@ _Logged 2026-05-05 during Phase A of feat/course-batch-2-2-module-architecture._
 
 _Logged 2026-05-05 during B1 of feat/course-batch-2-7-visual-enhancements._
 
+### MEDIUM — Batch 2.7 B2 (Hero images) deferred pre-launch
+
+**Files**:
+- [lib/db/scripts/hero-config.ts](lib/db/scripts/hero-config.ts) (Batches A + B reduced to stubs to match C/D/E format)
+- [lib/db/scripts/fetch-course-heroes.ts](lib/db/scripts/fetch-course-heroes.ts) (DEFERRED header comment added; logic untouched)
+- [artifacts/plotzy/src/pages/learn-visuals-preview.tsx](artifacts/plotzy/src/pages/learn-visuals-preview.tsx) (Hero Gallery section removed; §1 Hero reverted to placeholder)
+
+**Context**: Batch 2.7 B2 (Hero images) deferred. The 6 visual components from B1 are merged at `4b9cfce` but unused. 9 Unsplash images were curated and tested (5 Batch A + 4 Batch B) but removed during the defer. Course shipped text-only (27 lessons, 36,203 words).
+
+**Why deferred**: pre-launch budget priorities. Visual layer is a polish pass best done after a paying user signal exists.
+
+**To resume**:
+1. Refill source data (cdnUrl, photographer, pageUrl, license) for Batches A + B in `hero-config.ts` (the 9 specific photo URLs + photographers used pre-defer are recorded in the `chore/defer-batch-2-7-b2` commit message).
+2. Curate the remaining 18 entries in Batches C / D / E (these were stubs from before defer too).
+3. Run `pnpm --filter @workspace/db run fetch:heroes -- --batch=A` (then B / C / D / E) to regenerate JPEG + WebP variants under `artifacts/plotzy/public/course-visuals/heroes/`.
+4. Wire each lesson's hero into the lesson renderer.
+
+**Infrastructure preserved**: `sharp` ^0.33.5 in `lib/db/devDependencies`, `fetch:heroes` script in `lib/db/package.json`, and the `fetch-course-heroes.ts` script itself. The `Hero` / `InlineImage` / etc. components stay in `artifacts/plotzy/src/components/course/visuals/` and `/learn/visuals-preview` still renders them with placeholder images for design reference.
+
+**Estimated effort to resume**: ~2-3h if all 27 photos are pre-curated and approved; ~1 day if Batches C / D / E need fresh curation.
+
+_Logged 2026-05-06 during chore/defer-batch-2-7-b2._
+
 
