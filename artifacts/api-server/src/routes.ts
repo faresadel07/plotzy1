@@ -22,6 +22,7 @@ import paymentsRouter from "./routes/payments.routes";
 import gutenbergRouter, { syncGutenbergCatalog, precacheTopBooks } from "./routes/gutenberg.routes";
 import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
+import courseRouter from "./routes/course.routes";
 import { logger } from "./lib/logger";
 import {
   analyzePlotHoles,
@@ -2427,6 +2428,12 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ── Social routes (extracted to ./routes/social.routes.ts) ─────────
   app.use(socialRouter);
+
+  // ── Writing course routes (extracted to ./routes/course.routes.ts) ──
+  // Handles both /api/course/* (mostly authenticated) and the public
+  // /api/certificates/:uuid verification endpoint. No prefix collisions
+  // with existing routes — neither namespace was in use before this batch.
+  app.use(courseRouter);
 
   // Trigger catalog sync, then pre-cache the top classics so the discover
   // page is reliable even when gutenberg.org is slow or unreachable. Both
