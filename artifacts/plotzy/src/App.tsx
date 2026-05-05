@@ -53,6 +53,7 @@ const AccountSubscription = lazy(() => import("@/pages/account-subscription"));
 const FaqPage = lazy(() => import("@/pages/faq"));
 const LearnPage = lazy(() => import("@/pages/learn"));
 const LearnModulePage = lazy(() => import("@/pages/learn-module"));
+const LearnLessonPage = lazy(() => import("@/pages/learn-lesson"));
 
 function EmailVerifyHandler() {
   const { toast } = useToast();
@@ -252,6 +253,7 @@ function Router() {
         <Route path="/marketplace" component={Marketplace} />
         <Route path="/learn" component={LearnPage} />
         <Route path="/learn/module/:slug" component={LearnModulePage} />
+        <Route path="/learn/lesson/:slug" component={LearnLessonPage} />
 
         {/* ── Auth-required routes ── */}
         <Route path="/dashboard" component={ProtectedRoute(DashboardDemo)} />

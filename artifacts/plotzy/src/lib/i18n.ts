@@ -238,6 +238,13 @@ export const translations: Record<Language, Record<string, string>> = {
     courseModuleQuizPassed: "You passed this quiz.",
     courseQuizStart: "Start quiz",
     courseQuizRetake: "Retake quiz",
+    courseLessonNumber: "Lesson",
+    courseLessonCompleted: "Completed",
+    courseLessonCompletedSubtle: "You've completed this lesson",
+    courseLessonMarkComplete: "Mark complete",
+    courseLessonCompleteError: "Couldn't save. Try again.",
+    courseLessonSignInPrompt: "Sign in to track progress and earn a certificate.",
+    courseLessonSignInCta: "Sign in",
   },
   ar: {
     appName: "بلوتزي",
