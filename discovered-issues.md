@@ -2037,4 +2037,16 @@ _Logged 2026-05-05 during B1 of feat/course-batch-2-7-visual-enhancements._
 
 _Logged 2026-05-06 during chore/defer-batch-2-7-b2._
 
+### LOW — Process gap: post-merge `seed:course` convention
+
+**Context**: Content-touching merges to master should be followed by `pnpm --filter @workspace/db run seed:course` against production. Caught during Batch 3.1 when M6's 5 publishing lessons (added at `cc9d6ea`, merged at `f8ea479`) had been merged to master but never seeded — the DB still carried the placeholder content `"_(Lesson content arrives in Batch 2.)_"` for those 5 rows. The idempotent seeder reconciled with no user impact (0 users pre-launch).
+
+**Forensic confirmation**: zero file-side drift since `cc9d6ea` (verified via `git diff f8ea479 master --stat` and per-file `git hash-object` against the HEAD blob). The drift was DB-side. The seeder's `updateLessonContentFromFiles` step at [lib/db/scripts/seed-course.ts:343](lib/db/scripts/seed-course.ts#L343) brought the 5 rows into sync during the Batch 3.1 run.
+
+**Recommendation**: future content batches' merge checklist should include the seed step. Post-launch with real users, this gap could result in users seeing placeholder content for the gap window between merge and seed. The seeder is idempotent and quick (~10s for the full run), so the cost of running it routinely is near-zero. An alternative is to wire `seed:course` into the deploy pipeline so it runs automatically on every deploy to production.
+
+**Estimated effort to add to checklist**: ~5 min (one line in the merge convention doc, if such a doc exists, or in CLAUDE.md). Pipeline automation: ~30 min.
+
+_Logged 2026-05-06 during Batch 3.1 post-mortem investigation of publishing-lesson DB drift._
+
 
