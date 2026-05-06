@@ -40,8 +40,34 @@ function getAllowedOrigins(): string[] {
     ?? ["http://localhost:5173"];
 }
 
+// Match `http://localhost:<any-port>` (and the IPv4/IPv6 loopback forms).
+// Used in dev only — see `originMatches` for the production gating. Vite's
+// dev server picks the next free port when 5173 is taken (5174, 5175, 5176,
+// …); without this fallback a developer with another service squatting on
+// 5173 would have to maintain `ALLOWED_ORIGINS` per-machine.
+function isLocalhostOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "http:") return false;
+    const h = url.hostname;
+    return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
 function originMatches(origin: string, allowedOrigins: string[], req: Request): boolean {
   if (allowedOrigins.includes(origin)) return true;
+
+  // Dev mode: accept any http://localhost:<port> origin. Production is
+  // unaffected — the strict allowlist is preserved there to prevent the
+  // class of "browser sends Origin from a malicious tab" CSRF where the
+  // attacker's tab happens to be on a localhost port (e.g., another local
+  // dev server). The trade-off (less strict locally, strict in prod) is
+  // intentional: in prod the threat model includes a hostile localhost
+  // origin only if the attacker already has code execution on the host.
+  if (process.env.NODE_ENV !== "production" && isLocalhostOrigin(origin)) return true;
+
   // Same-origin (proxying UI through the API): Origin matches the Host we
   // were reached at. We DELIBERATELY skip this same-origin fallback in
   // production because the Host header can be controlled by an attacker
