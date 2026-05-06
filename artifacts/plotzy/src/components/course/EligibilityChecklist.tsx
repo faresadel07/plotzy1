@@ -21,7 +21,6 @@ export interface CertificateMissing {
   moduleQuizzesPassed: number;
   totalModuleQuizzes: number;
   finalExamPassed: boolean;
-  finalProjectSubmitted: boolean;
 }
 
 interface EligibilityChecklistProps {
@@ -46,7 +45,6 @@ export function EligibilityChecklist({ missing, className = "" }: EligibilityChe
       detail: `${missing.moduleQuizzesPassed} / ${missing.totalModuleQuizzes}`,
     },
     { ok: missing.finalExamPassed, label: t("courseEligFinalExam") },
-    { ok: missing.finalProjectSubmitted, label: t("courseEligProject") },
   ];
 
   return (

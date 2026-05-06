@@ -313,6 +313,13 @@ router.get("/api/course/progress", requireAuth, generalLimiter, async (req, res)
         bestScore,
         passed,
         attemptCount: attempts.length,
+        // Quiz-definition fields surfaced for the FinalExamCard on /learn
+        // (renders the configured 60-min limit, 75% pass threshold, and
+        // 40-question count without making the frontend re-fetch the
+        // full quiz row).
+        questionCount: q.questionCount,
+        timeLimitMinutes: q.timeLimitMinutes,
+        passingPercentage: q.passingPercentage,
       };
     });
 

@@ -35,7 +35,6 @@ export interface CertificateEligibility {
     moduleQuizzesPassed: number;
     totalModuleQuizzes: number;
     finalExamPassed: boolean;
-    finalProjectSubmitted: boolean;
   };
   finalExamScore: number | null;
   modulesCompletedAt: Record<string, string>;
@@ -1294,7 +1293,11 @@ export class DatabaseStorage implements IStorage {
     // (passing %) are NOT hard-coded — the `passed` boolean was already
     // evaluated against each quiz's `passingPercentage` when the attempt
     // was recorded, so this method only counts passing rows.
-    const [allLessons, userProgress, allQuizzes, passingAttempts, project] = await Promise.all([
+    // Final-project query removed — the certificate no longer gates on
+    // final-project submission (it's an optional capstone now). The
+    // courseFinalProjects table + routes + UI are preserved for users
+    // who want the AI feedback flow.
+    const [allLessons, userProgress, allQuizzes, passingAttempts] = await Promise.all([
       db.select({ id: courseLessons.id, moduleId: courseLessons.moduleId }).from(courseLessons),
       db.select({ lessonId: courseProgress.lessonId, completedAt: courseProgress.completedAt })
         .from(courseProgress).where(eq(courseProgress.userId, userId)),
@@ -1303,9 +1306,6 @@ export class DatabaseStorage implements IStorage {
       db.select({ quizId: courseQuizAttempts.quizId, scorePercentage: courseQuizAttempts.scorePercentage })
         .from(courseQuizAttempts)
         .where(and(eq(courseQuizAttempts.userId, userId), eq(courseQuizAttempts.passed, true))),
-      db.select({ id: courseFinalProjects.id }).from(courseFinalProjects)
-        .where(eq(courseFinalProjects.userId, userId))
-        .then((rows) => rows[0]),
     ]);
 
     const totalLessons = allLessons.length;
@@ -1327,8 +1327,6 @@ export class DatabaseStorage implements IStorage {
         finalExamScore = Math.max(...finalAttempts.map((a) => a.scorePercentage));
       }
     }
-
-    const finalProjectSubmitted = !!project;
 
     // modulesCompletedAt: per module where ALL its lessons have been
     // completed, the timestamp of the last completion. Used by
@@ -1356,15 +1354,14 @@ export class DatabaseStorage implements IStorage {
     const eligible =
       lessonsCompleted === totalLessons &&
       moduleQuizzesPassed === totalModuleQuizzes &&
-      finalExamPassed &&
-      finalProjectSubmitted;
+      finalExamPassed;
 
     return {
       eligible,
       missing: {
         lessonsCompleted, totalLessons,
         moduleQuizzesPassed, totalModuleQuizzes,
-        finalExamPassed, finalProjectSubmitted,
+        finalExamPassed,
       },
       finalExamScore,
       modulesCompletedAt,
