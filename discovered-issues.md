@@ -2075,4 +2075,21 @@ Both run on the production `DATABASE_URL`. Both are idempotent — running them 
 
 _Logged 2026-05-06 during Batch 3.2 B1 setup, blocked by `drizzle-kit push` interactive prompt over an unrelated drift._
 
+### LOW — B6 E2E certificate download smoke deferred to first-deploy verification
+
+The certificate download flow (B1 storage layer + B2 pdf-lib generation + B3 endpoint + B4 frontend button) has unit-level + 5-PDF smoke coverage but has not been exercised end-to-end against a running stack. Faris doesn't run the dev server locally (established preference), and the integration risks (auth strip, URL routing, holder displayName fallback, cache headers) are real but bounded — first-deploy QA catches them in the same walk-through the team would do regardless.
+
+**On first deploy, manually walk**:
+- Complete a test course (27 lessons + 6 module quizzes + final project + final exam pass)
+- Click "Issue Certificate" → verify redirect to `/certificates/<uuid>?just-issued=true` with confetti
+- Click "Download PDF" button → verify PDF downloads with filename matching `plotzy-certificate-<uuid>.pdf`
+- Open PDF → verify content matches the `04-faris-hamdan.pdf` smoke-test pattern (template intact, 4 overlays correct positions)
+- Refresh and re-click download → verify cache hit (faster response, same bytes)
+- Test 404 on `/api/certificates/bogus-uuid/pdf`
+- Test public verify view in incognito or different browser to confirm auth strip works (anonymous user can view + download via UUID alone)
+
+**Effort**: ~10-15 min once deployed. No new code expected; this is verification, not implementation. If any step fails, the fix likely lives in the cert flow files modified during Batch 3.2: `course.routes.ts`, `certificate-pdf.ts`, `certificate-verify.tsx`.
+
+_Logged 2026-05-06 during Batch 3.2 B6 deferral decision (Path Y chosen)._
+
 
