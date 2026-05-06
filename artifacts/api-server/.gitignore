@@ -1,0 +1,4 @@
+# Smoke-test PDF outputs from certificate-pdf B2 work and any future
+# script that renders local test PDFs. Kept out of git because they're
+# regenerable from the renderer + the template at any time.
+tmp-cert-pdfs/
