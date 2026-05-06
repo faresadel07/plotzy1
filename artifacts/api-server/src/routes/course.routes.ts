@@ -24,6 +24,7 @@ import { logger } from "../lib/logger";
 import {
   analyzePlotHoles, analyzeDialogue, analyzePacing, analyzeVoiceConsistency,
 } from "../lib/ai-analysis";
+import { renderCertificatePdf } from "../services/certificate-pdf";
 import type { CourseLesson, CourseQuiz, CourseQuizAttempt } from "../../../../lib/db/src/schema";
 
 const router: Router = Router();
@@ -822,6 +823,92 @@ router.get("/api/certificates/:uuid", publicReadLimiter, async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Public certificate verify error");
+    return res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// GET /api/certificates/:uuid/pdf — PUBLIC PDF download
+//
+// Same security model as the verify endpoint above: anyone with the
+// UUID can download (that's the point of a shareable certificate).
+//
+// Lazy generation: the cert row's pdf_data is populated on first
+// download via setCertificatePdfData (race-safe conditional UPDATE).
+// All subsequent downloads serve the cached bytes. Cost of double
+// generation in a concurrent first-download race is one extra render
+// (the loser's bytes are discarded by the WHERE pdf_data IS NULL
+// condition); cost of all subsequent downloads is one DB read.
+//
+// Cache headers: 1y immutable. The PDF for a given UUID never changes
+// after generation — the holder name + score + date + UUID are all
+// fixed at the moment of issuance, so any CDN/browser may cache
+// indefinitely.
+router.get("/api/certificates/:uuid/pdf", publicReadLimiter, async (req, res) => {
+  try {
+    const uuid = String(req.params.uuid);
+    if (!uuid || uuid.length < 8) {
+      return res.status(400).json({ message: "Invalid certificate id" });
+    }
+
+    const cert = await storage.getCertificateByUuid(uuid);
+    if (!cert) return res.status(404).json({ message: "Certificate not found" });
+
+    // Try cache first.
+    let cached = await storage.getCertificatePdfData(uuid);
+
+    if (!cached) {
+      // Generate on first download. Look up holder for the displayName.
+      const holder = await storage.getUserById(cert.userId);
+      if (!holder) {
+        // CASCADE means cert is deleted with user — should be unreachable.
+        return res.status(404).json({ message: "Certificate holder no longer exists" });
+      }
+
+      // displayName falls back to "Author" when not set, matching the
+      // frontend's t("courseCertAnonymousHolder") behavior. The renderer
+      // requires a non-empty string. v1 is English-only PDFs so the
+      // literal string is correct here.
+      const holderName = holder.displayName?.trim() || "Author";
+
+      const pdfBuffer = await renderCertificatePdf({
+        holderName,
+        finalExamScore: cert.finalExamScore,
+        issuedAt: cert.issuedAt,
+        certUuid: cert.certificateUuid,
+      });
+
+      // Race-safe write: if a concurrent request already populated
+      // the row, our setCertificatePdfData returns false; we re-fetch
+      // to serve the winner's bytes. The user gets the same PDF
+      // regardless of which renderer won.
+      const won = await storage.setCertificatePdfData(uuid, pdfBuffer);
+      if (won) {
+        cached = {
+          pdfData: pdfBuffer,
+          pdfSizeBytes: pdfBuffer.length,
+          holderLanguage: cert.holderLanguage,
+        };
+      } else {
+        cached = await storage.getCertificatePdfData(uuid);
+        if (!cached) {
+          // Extremely unlikely: race lost, then row vanished. Treat as
+          // generation failure so the next request retries cleanly.
+          throw new Error(
+            `setCertificatePdfData lost race but getCertificatePdfData returned null for uuid ${uuid}`,
+          );
+        }
+      }
+    }
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="plotzy-certificate-${uuid}.pdf"`,
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Length": String(cached.pdfData.length),
+    });
+    return res.send(cached.pdfData);
+  } catch (err) {
+    logger.error({ err, uuid: req.params.uuid }, "Certificate PDF download error");
     return res.status(500).json({ message: "Internal error" });
   }
 });
