@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { ModuleCard } from "@/components/course/ModuleCard";
 import { CourseProgressBar } from "@/components/course/ProgressBar";
 import { IssueCertButton } from "@/components/course/IssueCertButton";
+import { FinalExamCard } from "@/components/course/FinalExamCard";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -39,11 +40,26 @@ interface ProgressModuleStat {
   completedAt: string | null;
 }
 
+interface ProgressQuizStat {
+  quizId: number;
+  moduleId: number | null;
+  type: "module" | "final";
+  bestScore: number | null;
+  passed: boolean;
+  attemptCount: number;
+  // Quiz-definition fields surfaced by the route so the FinalExamCard
+  // doesn't need to re-fetch the full quiz row to render its metadata.
+  questionCount: number;
+  timeLimitMinutes: number | null;
+  passingPercentage: number;
+}
+
 interface ProgressResponse {
   completedLessons: number;
   totalLessons: number;
   percentage: number;
   modules: ProgressModuleStat[];
+  quizzes: ProgressQuizStat[];
   certificate: { issued: boolean; uuid: string | null; issuedAt: string | null };
 }
 
@@ -67,6 +83,27 @@ export default function LearnPage() {
   if (progress.data) {
     for (const m of progress.data.modules) completedByModuleId.set(m.moduleId, m.completedLessons);
   }
+
+  // FinalExamCard summary: derive from progress.data.quizzes if the user
+  // is authed. eligibleToTake = all 6 module quizzes have been passed
+  // (computed client-side; no extra fetch).
+  const finalExamSummary = (() => {
+    if (!progress.data) return null;
+    const finalQuiz = progress.data.quizzes.find((q) => q.type === "final");
+    if (!finalQuiz) return null;
+    const moduleQuizzes = progress.data.quizzes.filter((q) => q.type === "module");
+    const moduleQuizzesPassed = moduleQuizzes.filter((q) => q.passed).length;
+    const totalModuleQuizzes = moduleQuizzes.length;
+    return {
+      quizId: finalQuiz.quizId,
+      questionCount: finalQuiz.questionCount,
+      timeLimitMinutes: finalQuiz.timeLimitMinutes,
+      passingPercentage: finalQuiz.passingPercentage,
+      passed: finalQuiz.passed,
+      bestScore: finalQuiz.bestScore,
+      eligibleToTake: totalModuleQuizzes > 0 && moduleQuizzesPassed === totalModuleQuizzes,
+    };
+  })();
 
   return (
     <Layout>
@@ -169,6 +206,14 @@ export default function LearnPage() {
                   completedLessons={isAuthed ? completedByModuleId.get(m.id) ?? 0 : undefined}
                 />
               ))}
+              {/* Final Exam card sits as the 7th tile after the 6 modules.
+                * Only rendered for authenticated users with a final quiz
+                * present in their progress payload. State (locked /
+                * unlocked / passed) is derived client-side from the
+                * quizzes array — no extra fetch. */}
+              {isAuthed && finalExamSummary && (
+                <FinalExamCard exam={finalExamSummary} />
+              )}
             </div>
           )}
         </section>
