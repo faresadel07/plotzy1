@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { rm, cp } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -118,6 +118,15 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
     `,
     },
   });
+
+  // Copy runtime asset files (fonts + logo for certificate PDF generation,
+  // plus any future static assets) from src/assets/ to dist/assets/. esbuild
+  // bundles JS but doesn't move binary asset files; without this step, the
+  // certificate-pdf service would fail at runtime trying to readFileSync
+  // the .ttf and .png files relative to the bundled __dirname.
+  const srcAssets = path.resolve(artifactDir, "src/assets");
+  const distAssets = path.resolve(distDir, "assets");
+  await cp(srcAssets, distAssets, { recursive: true });
 }
 
 buildAll().catch((err) => {
