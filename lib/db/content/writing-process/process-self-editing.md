@@ -8,9 +8,9 @@ The rest of this lesson is a working checklist. About twenty items, organised by
 
 ## A checklist organised by pass
 
-Three sections — Structural, Scene, Line — matching the three passes from L3. The order matters; structural items get checked first, line items last. Polishing prose in a chapter you'll cut is the failure mode the previous lesson warned you about.
+Three sections (Structural, Scene, Line) matching the three passes from L3. The order matters; structural items get checked first, line items last. Polishing prose in a chapter you'll cut is the failure mode the previous lesson warned you about.
 
-The checklist is not exhaustive. It is *load-bearing*. Every item earns its place by catching a specific problem the earlier modules taught you to recognise. Most items are diagnostic in disguise — a question that, if you answer no, points to a specific fix.
+The checklist is not exhaustive. It is *load-bearing*. Every item earns its place by catching a specific problem the earlier modules taught you to recognise. Most items are diagnostic in disguise: a question that, if you answer no, points to a specific fix.
 
 ## Pass 1: structural
 
@@ -38,7 +38,7 @@ The checklist is not exhaustive. It is *load-bearing*. Every item earns its plac
 
 **Is the conflict in the scene specific, not generic?** *Why:* "things go badly" is not a conflict; a specific want meeting a specific obstacle is. A vague conflict reads as a vague scene.
 
-**Does the scene either advance the plot or change the protagonist?** *Why:* if neither, the scene is filler — even if the prose is good. Beautiful prose around no movement is the most common form of slow chapter.
+**Does the scene either advance the plot or change the protagonist?** *Why:* if neither, the scene is filler, even if the prose is good. Beautiful prose around no movement is the most common form of slow chapter.
 
 **Is the setting doing work?** *Why:* a scene happens *somewhere*; the *where* should pull weight (callback to [M4 L3](/learn/lesson/world-setting-as-character)) or the scene's location is decoration the reader will skim over.
 
@@ -46,11 +46,11 @@ The checklist is not exhaustive. It is *load-bearing*. Every item earns its plac
 
 **Are dialogue tags mostly *said*?** *Why:* the eye trips on *exclaimed* and *muttered*; it does not trip on *said*. Variation in tags reads as nervous; *said* reads as transparent. (Callback to [M3 L5](/learn/lesson/characters-dialogue).)
 
-**Are there fewer than three adverbs per page?** *Why:* most adverbs are stronger when cut. *She walked quickly* loses nothing as *she walked*; the sentence around it can do the rest. An adverb is often a writer's signal that the verb wasn't strong enough — the fix is usually a stronger verb, not the adverb.
+**Are there fewer than three adverbs per page?** *Why:* most adverbs are stronger when cut. *She walked quickly* loses nothing as *she walked*; the sentence around it can do the rest. An adverb is often a writer's signal that the verb wasn't strong enough; the fix is usually a stronger verb, not the adverb.
 
 **Are there fewer than two adjectives in a row?** *Why:* stacked adjectives signal a writer who didn't pick. *The cold, dark, empty room* should be one of those words; pick the one that does the most work and cut the others.
 
-**Is the same word repeated within two paragraphs accidentally?** *Why:* the eye snags on accidental repetition. Deliberate repetition is fine — repetition for emphasis works — but accidental repetition reads as carelessness.
+**Is the same word repeated within two paragraphs accidentally?** *Why:* the eye snags on accidental repetition. Deliberate repetition is fine (repetition for emphasis works) but accidental repetition reads as carelessness.
 
 **Are sentences varied in length?** *Why:* paragraphs of all-similar-length sentences read as monotonous. Mix short, medium, long. The ear hears the rhythm even when the reader doesn't notice.
 
@@ -68,7 +68,7 @@ Read aloud anyway.
 
 The strangeness is the lesson. Sentences your eye accepts your tongue refuses. A paragraph that scans well silently can have a clause buried in it that catches the breath halfway through. Out loud, you find it.
 
-You don't need to read the whole manuscript aloud — that takes weeks. Read the chapters that feel slightly off. Read the scenes you're unsure about. Read the dialogue.
+You don't need to read the whole manuscript aloud (that takes weeks). Read the chapters that feel slightly off. Read the scenes you're unsure about. Read the dialogue.
 
 A reading-aloud session that lasts thirty minutes catches more line-level problems than three hours of silent re-reading.
 
@@ -78,13 +78,13 @@ The checklist is for one revision pass through the draft. Not for every paragrap
 
 After one full line-level pass with the checklist, stop.
 
-The next lesson — *when to stop revising entirely* — is the deeper version of this question. The signal that you've over-applied the checklist is that you're moving the same fixes back and forth between passes — putting an adverb in, taking it out, putting it back. That's the curve telling you to stop.
+The next lesson (*when to stop revising entirely*) is the deeper version of this question. The signal that you've over-applied the checklist is that you're moving the same fixes back and forth between passes: putting an adverb in, taking it out, putting it back. That's the curve telling you to stop.
 
 ## What this gives you
 
 A working checklist organised by pass.
 
-A reason for each item — so you can adapt the rule to your work, or break it where it serves the prose.
+A reason for each item, so you can adapt the rule to your work, or break it where it serves the prose.
 
 The discipline to apply the checklist *once* per pass, not forever.
 
@@ -92,8 +92,8 @@ The next lesson closes the module: how to know when the work is done.
 
 ## Try it
 
-> **Exercise 5.4.1 — One chapter, line-level pass.** Take a chapter you've already revised. Run it through the line-level checklist above.
+> **Exercise 5.4.1: One chapter, line-level pass.** Take a chapter you've already revised. Run it through the line-level checklist above.
 >
-> Count how many fixes you find — places where dialogue tags are wrong, places where description doesn't earn its keep, places where adverbs could be cut.
+> Count how many fixes you find: places where dialogue tags are wrong, places where description doesn't earn its keep, places where adverbs could be cut.
 >
 > The number is information about your *blind spots*. Most writers consistently miss the same two or three categories. Knowing which two or three is what lets you self-edit faster on the next book.

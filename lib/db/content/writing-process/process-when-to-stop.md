@@ -2,7 +2,7 @@
 
 Books are not finished. They are released.
 
-A writer who cannot tell when to stop revising spends a year polishing one book while their next book waits unwritten. The cure is concrete signs — three on each side — plus the *next-book remedy*, which is the closer of this module and of the course.
+A writer who cannot tell when to stop revising spends a year polishing one book while their next book waits unwritten. The cure is concrete signs (three on each side) plus the *next-book remedy*, which is the closer of this module and of the course.
 
 This lesson has teeth. The signs are observable, not feelings.
 
@@ -34,33 +34,33 @@ A sentence you signed off on in pass three has been rewritten in pass seven. In 
 
 **Beta readers stop having structural notes.**
 
-Earlier readers said *this chapter is too slow* and *the antagonist isn't believable*. Recent readers are saying *I really liked the part where she chose*. When the structural feedback dries up, the structural work is done. What remains is taste — and taste is infinite. You'll never finish satisfying everyone's taste; the question is whether the structure works.
+Earlier readers said *this chapter is too slow* and *the antagonist isn't believable*. Recent readers are saying *I really liked the part where she chose*. When the structural feedback dries up, the structural work is done. What remains is taste, and taste is infinite. You'll never finish satisfying everyone's taste; the question is whether the structure works.
 
 ## Three signs you're not done
 
 **You can't articulate what the book is about.**
 
-If you cannot say what the novel is *for* — its question, its argument, its central tension — in two sentences, the book hasn't found itself yet. Revision is needed, and probably at the structural level (Pass 1 from [the previous lesson](/learn/lesson/process-revision-passes)).
+If you cannot say what the novel is *for* (its question, its argument, its central tension) in two sentences, the book hasn't found itself yet. Revision is needed, and probably at the structural level (Pass 1 from [the previous lesson](/learn/lesson/process-revision-passes)).
 
 **The ending feels rushed to *you*.**
 
-Beta readers may not catch this; you will. If you are speeding through the climax in your own re-reads — flipping past pages instead of reading them — because the ending doesn't feel earned, more work is needed there specifically. The reader's experience of an ending is partly the writer's belief in it.
+Beta readers may not catch this; you will. If you are speeding through the climax in your own re-reads (flipping past pages instead of reading them) because the ending doesn't feel earned, more work is needed there specifically. The reader's experience of an ending is partly the writer's belief in it.
 
 **You're avoiding a specific section.**
 
 Most writers know which chapter they don't want to re-read. That chapter usually has a problem you haven't named yet. Read it. The problem will surface. Once named, it can be fixed.
 
-## Beta readers — calibrating their feedback
+## Beta readers: calibrating their feedback
 
 Three beta readers is usually enough. Five is better. Ten is too many.
 
-Each reader reads with their own preferences. Aggregating across many becomes noise — every comment is somebody's actual experience and not all of those experiences point in the same direction.
+Each reader reads with their own preferences. Aggregating across many becomes noise: every comment is somebody's actual experience and not all of those experiences point in the same direction.
 
 Trust the *patterns*, not the individual notes.
 
-If one reader says the antagonist is unbelievable, consider it. If three say so, fix it. If three say so but in different ways — one finds the antagonist too cruel, another too sympathetic, the third unclear — the antagonist isn't *unbelievable*; the antagonist is *unspecific*. The pattern is the diagnosis. The individual notes are not.
+If one reader says the antagonist is unbelievable, consider it. If three say so, fix it. If three say so but in different ways (one finds the antagonist too cruel, another too sympathetic, the third unclear) the antagonist isn't *unbelievable*; the antagonist is *unspecific*. The pattern is the diagnosis. The individual notes are not.
 
-The other discipline: do not solve every note. Solve the patterns. A reader who didn't like a chapter and a reader who loved the same chapter are giving you usable information about *which kind of reader your book is for* — that is not the same as a problem to fix.
+The other discipline: do not solve every note. Solve the patterns. A reader who didn't like a chapter and a reader who loved the same chapter are giving you usable information about *which kind of reader your book is for*. That is not the same as a problem to fix.
 
 ## Letting it go
 
@@ -70,9 +70,9 @@ You did the work. Further work belongs to the editor, the publisher, the next bo
 
 Books are not finished; they are released. The version you publish is the version you stopped working on; if you had kept going, the version a year later would be slightly different and probably not better. Probably the same set of strengths and weaknesses, with different specific words.
 
-The mindset that lets you ship is *this is good enough for the reader I imagined writing for*. Not perfect. Not the best version possible. Good enough that the reader the book is for — the reader you have been writing toward since you started — will get what the book promises them.
+The mindset that lets you ship is *this is good enough for the reader I imagined writing for*. Not perfect. Not the best version possible. Good enough that the reader the book is for (the reader you have been writing toward since you started) will get what the book promises them.
 
-If you have done the three ingredients (callback to [Module 1, Lesson 4](/learn/lesson/foundation-three-ingredients)) — character readers care about, conflict that resolves or earns its un-resolution, change the reader can feel — the book has done its job.
+If you have done the three ingredients (callback to [Module 1, Lesson 4](/learn/lesson/foundation-three-ingredients)) (character readers care about, conflict that resolves or earns its un-resolution, change the reader can feel) the book has done its job.
 
 Ship it.
 
@@ -80,7 +80,7 @@ Ship it.
 
 The single most reliable cure for over-revising one book is starting the next one.
 
-When the obsession has somewhere else to go, the previous book becomes shippable. The mind that was holding chapter twelve up to the light moves to drafting chapter one of something new. The previous book gets a final pass — usually a fast one — and goes out.
+When the obsession has somewhere else to go, the previous book becomes shippable. The mind that was holding chapter twelve up to the light moves to drafting chapter one of something new. The previous book gets a final pass (usually a fast one) and goes out.
 
 Beginning writers often resist this. They feel the next book should wait until the first is *done*.
 
@@ -98,15 +98,15 @@ The course you are finishing is not the end of anything. It is one revolution of
 
 ## Try it
 
-> **Exercise 5.5.1 — Define "done" for your draft.** Write three specific, observable conditions that would tell you your current draft is shippable.
+> **Exercise 5.5.1: Define "done" for your draft.** Write three specific, observable conditions that would tell you your current draft is shippable.
 >
 > *Specific* means a beta reader could verify it. *Observable* means it doesn't depend on your mood that day.
 >
 > Vague conditions don't count:
 >
-> - *"When it's good"* — too vague.
-> - *"When I'm happy with it"* — depends on the day.
-> - *"When the chapters all flow"* — what does *flow* mean operationally?
+> - *"When it's good"*: too vague.
+> - *"When I'm happy with it"*: depends on the day.
+> - *"When the chapters all flow"*: what does *flow* mean operationally?
 >
 > Concrete conditions count:
 >
@@ -118,4 +118,4 @@ The course you are finishing is not the end of anything. It is one revolution of
 
 ## Further reading
 
-- *An Autobiography* (Anthony Trollope, 1883). Trollope finished books at a rate that horrified his contemporaries and continues to horrify writers today. Read his account of starting a new novel the morning after finishing the previous one — the original demonstration of the *next-book remedy* in print. ([gutenberg.org/ebooks/5978](https://www.gutenberg.org/ebooks/5978))
+- *An Autobiography* (Anthony Trollope, 1883). Trollope finished books at a rate that horrified his contemporaries and continues to horrify writers today. Read his account of starting a new novel the morning after finishing the previous one: the original demonstration of the *next-book remedy* in print. ([gutenberg.org/ebooks/5978](https://www.gutenberg.org/ebooks/5978))

@@ -4,7 +4,7 @@ Pull out the 100-word premise you wrote at the end of [Lesson 3](/learn/lesson/f
 
 You're going to test it.
 
-A story — the patterned thing we defined in [Lesson 1](/learn/lesson/foundation-what-is-story) — needs three ingredients. Take one out and the thing falls down.
+A story (the patterned thing we defined in [Lesson 1](/learn/lesson/foundation-what-is-story)) needs three ingredients. Take one out and the thing falls down.
 
 1. A **character** we can care about.
 2. A **conflict** that won't go away.
@@ -24,7 +24,7 @@ The slowest way is to *tell* us they're kind, brave, sensitive, complicated. Adj
 
 Test for your premise: in one sentence, what does your protagonist *want*?
 
-If you can write the sentence and it's something a reader could feel themselves wanting — even an awful version of it — your character has the foundation to become cared-about. If the sentence is "she wants to find herself" or "he wants to be happy", you don't have a want yet. You have a vague yearning. Vague yearnings don't carry novels.
+If you can write the sentence and it's something a reader could feel themselves wanting (even an awful version of it) your character has the foundation to become cared-about. If the sentence is "she wants to find herself" or "he wants to be happy", you don't have a want yet. You have a vague yearning. Vague yearnings don't carry novels.
 
 ## Conflict: a specific want meeting a specific obstacle
 
@@ -38,7 +38,7 @@ The obstacle can be one of three things, or a stack of two or all three.
 
 **A circumstance.** The war. The illness. The sea. The hundred-year deadline. Circumstances make great conflicts when the character has to *change themselves* to survive them, because circumstances cannot be reasoned with.
 
-**The character's own self.** The pride that won't let her apologise. The fear that won't let him sleep. The need for approval that has cost three friendships. Internal obstacles are the densest of all because they cannot be escaped — the character has to live inside them every minute of the book.
+**The character's own self.** The pride that won't let her apologise. The fear that won't let him sleep. The need for approval that has cost three friendships. Internal obstacles are the densest of all because they cannot be escaped. The character has to live inside them every minute of the book.
 
 The strongest novels usually stack at least two. The conflict in the cleanest English Regency novel ever written runs on the heroine *and* the hero *and* both of their prides simultaneously. The conflict is not solved by removing any one obstacle. It's solved by the people changing.
 
@@ -58,7 +58,7 @@ Change comes in three flavours.
 
 **External.** The character ends with something they didn't have at the start, or without something they did. Someone wins a thing they couldn't win at the start. Someone loses what they were unable to protect. The change is *in the world*; the character is the agent.
 
-**Tragic.** The character learns the truth, but too late. Achilles, at the end of the *Iliad*, understands that he wanted his friend back more than he wanted glory — but his friend is dead. The reader is left with the knowing. The character is left with the knowing too late.
+**Tragic.** The character learns the truth, but too late. Achilles, at the end of the *Iliad*, understands that he wanted his friend back more than he wanted glory, but his friend is dead. The reader is left with the knowing. The character is left with the knowing too late.
 
 A common beginner mistake: change the *situation* but not the *character*. The protagonist solves the murder, but the person solving it on the last page is the same person we met on the first page. Readers feel cheated even when they can't articulate why. They came for rehearsal in transformation, and you handed them only events.
 
@@ -72,7 +72,7 @@ If you can't answer this without rewriting your premise, the premise isn't broke
 
 The three ingredients are how that rehearsal happens.
 
-The character is who they're rehearsing as. The conflict is the situation they get to test themselves in. The change is what the rehearsal *produces* — the thing they walk out of your book having learned without having lived.
+The character is who they're rehearsing as. The conflict is the situation they get to test themselves in. The change is what the rehearsal *produces*: the thing they walk out of your book having learned without having lived.
 
 Take any one out and the rehearsal collapses. No character: nobody to be. No conflict: nothing to test. No change: nothing learned. The reader closes the book at page sixty and forgets they read it.
 
@@ -82,7 +82,7 @@ Knowing this lets you diagnose what's going wrong before the symptom shows. Draf
 
 The exercise on the next screen is the test.
 
-Open your 100-word premise from Lesson 3. Don't change a word of it yet. Underneath, write three answers — one sentence each.
+Open your 100-word premise from Lesson 3. Don't change a word of it yet. Underneath, write three answers, one sentence each.
 
 Where each answer is hard to write, you've found the work that needs to happen before you start drafting. Not bad news. Specific news.
 
@@ -94,7 +94,7 @@ You finish Module 1 with:
 
 - A working **definition** of story.
 - A working **picture** of what a reader actually wants from one.
-- A working **premise** of your own — the one you wrote in Lesson 3.
+- A working **premise** of your own: the one you wrote in Lesson 3.
 - A way to **test** that premise against the three things every story needs.
 
 [Module 2](/learn/module/architecture) builds the architecture that holds these three ingredients across hundreds of pages. Plot frameworks. The shape of a three-act structure. The hero's journey, simplified. Beat sheets as a checking tool, not a religion.
@@ -103,15 +103,15 @@ But the ingredients are in your hands now. Take them seriously and the architect
 
 ## Try it
 
-> **Exercise 4.1 — The premise test.** Take the 100-word premise you wrote in Exercise 3.2. Don't change it yet. Underneath, write three sentences:
+> **Exercise 4.1: The premise test.** Take the 100-word premise you wrote in Exercise 3.2. Don't change it yet. Underneath, write three sentences:
 >
-> - **Character.** What does the protagonist want, in one sentence? Is it something a reader could feel themselves wanting — even a difficult, awkward, or unsympathetic version of it?
+> - **Character.** What does the protagonist want, in one sentence? Is it something a reader could feel themselves wanting, even a difficult, awkward, or unsympathetic version of it?
 > - **Conflict.** What is the specific obstacle, in one sentence? Is it another person, a circumstance, the protagonist's own nature, or some combination? Be concrete.
 > - **Change.** Who is the protagonist at the end of the book that they weren't at the start? In one sentence. Internal change, external change, or tragic change.
 >
-> If any of the three sentences is hard to write, the premise has a hole. That's good news — you now know what hole to fill before you draft a single page. A book that fails at month three usually fails because one of these three sentences was never written, only assumed.
+> If any of the three sentences is hard to write, the premise has a hole. That's good news. You now know what hole to fill before you draft a single page. A book that fails at month three usually fails because one of these three sentences was never written, only assumed.
 >
-> Save the answers with the premise. You'll bring all four — premise plus the three sentences — into Module 2.
+> Save the answers with the premise. You'll bring all four (premise plus the three sentences) into Module 2.
 
 ## Further reading
 

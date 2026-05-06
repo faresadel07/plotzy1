@@ -14,7 +14,7 @@ You have never lost a child. You read a novel about a woman who has lost a child
 
 What just happened to you?
 
-You ran her loss on your own simulator. The brain handed you the equipment of grief — the heaviness of it, the small involuntary glance at empty rooms — and let you experience them in safety. By the time you closed the book, you had practised an emotion you have never lived through.
+You ran her loss on your own simulator. The brain handed you the equipment of grief (the heaviness of it, the small involuntary glance at empty rooms) and let you experience them in safety. By the time you closed the book, you had practised an emotion you have never lived through.
 
 This is what fiction does that an argument cannot. An argument tells you about another person's life. Fiction puts you inside it. The first delivers data. The second delivers rehearsal.
 
@@ -40,7 +40,7 @@ This is one of the most useful tests for whether a scene is earning its place. A
 
 Each genre is a contract about which hunger the reader brought.
 
-A **mystery** reader walked in with the suspicion that the world is illegible — that bad things happen for no reason. They want, by the last page, the world to make sense. The contract is *something will be solved*.
+A **mystery** reader walked in with the suspicion that the world is illegible, that bad things happen for no reason. They want, by the last page, the world to make sense. The contract is *something will be solved*.
 
 A **romance** reader walked in with the suspicion that two people can meet and recognise each other accurately. They want, by the last page, evidence that this can happen. The contract is *recognition is possible*.
 
@@ -48,7 +48,7 @@ A **horror** reader walked in with a fear they keep just under the surface in da
 
 A **tragedy** reader walked in carrying a loss they don't know how to grieve. They want, by the last page, confirmation that some losses are real and unfixable. The contract is *some grief is allowed*.
 
-When you know which contract your reader signed, you know what they will and won't forgive you for. A mystery without resolution betrays the contract. A romance with no recognition does too. The contracts aren't formulas — within them you have enormous freedom — but breaking them costs you the reader you'd already won.
+When you know which contract your reader signed, you know what they will and won't forgive you for. A mystery without resolution betrays the contract. A romance with no recognition does too. The contracts aren't formulas (within them you have enormous freedom) but breaking them costs you the reader you'd already won.
 
 ## The reader is rooting for you
 
@@ -74,11 +74,11 @@ A reminder for hard drafting days: your reader is on your side before you've ear
 
 ## Try it
 
-> **Exercise 2.1 — The book that argued.** Pick a book that changed your view on something — a relationship, a place, a kind of person, an idea. In 250 words, describe what the book did that an argument couldn't.
+> **Exercise 2.1: The book that argued.** Pick a book that changed your view on something: a relationship, a place, a kind of person, an idea. In 250 words, describe what the book did that an argument couldn't.
 >
 > Be specific. What was the moment it landed? What did you understand differently after that moment than you'd understood before?
 >
-> If you can't think of a book that has done this, that's information too — about what you've been reading and what you might want to read next.
+> If you can't think of a book that has done this, that's information too, about what you've been reading and what you might want to read next.
 
 ## Further reading
 

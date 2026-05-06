@@ -4,7 +4,7 @@ You now have three structural lenses. Three acts. The hero's journey. Beat sheet
 
 The wrong move is to pick one and force the story to fit.
 
-The right move is to look at the premise you already have and ask which lens shows you the most about *that* story. The fourth answer — *none of these* — is sometimes the correct one. This lesson is about how to tell.
+The right move is to look at the premise you already have and ask which lens shows you the most about *that* story. The fourth answer, *none of these*, is sometimes the correct one. This lesson is about how to tell.
 
 ## Three tools, one story
 
@@ -12,7 +12,7 @@ These lenses are not competing. They are three resolutions of the same picture.
 
 The three-act structure is the most general. Almost every story has it underneath, even when the writer wasn't thinking about acts.
 
-The hero's journey is a transformation pattern. It's the three acts seen through the lens of the protagonist's *change* arc — when the engine of your book is "who does the protagonist become," this is the lens that explains why each beat has to be there.
+The hero's journey is a transformation pattern. It's the three acts seen through the lens of the protagonist's *change* arc. When the engine of your book is "who does the protagonist become," this is the lens that explains why each beat has to be there.
 
 A beat sheet is a granular map. It sits underneath either of the first two. Wherever a beat sheet places a checkpoint, that checkpoint usually corresponds to an act break or a journey beat. The beat sheet just gives you the page number.
 
@@ -22,7 +22,7 @@ You don't have to choose one and abandon the others. You choose one as your *pri
 
 Default to three acts when you don't yet know what kind of story you have.
 
-Most stories are most legible at this resolution. If you can name your inciting incident, your lock-in, your midpoint, your dark moment, and your climax — even loosely — you have enough structure to start drafting. The other lenses will come into focus once you've written the first hundred pages and discovered what your book is actually about.
+Most stories are most legible at this resolution. If you can name your inciting incident, your lock-in, your midpoint, your dark moment, and your climax (even loosely) you have enough structure to start drafting. The other lenses will come into focus once you've written the first hundred pages and discovered what your book is actually about.
 
 Three acts is also the right answer for stories where the *external events* are the engine and the protagonist's transformation is real but not the point. Heists. Family dramas where the question is "what happens to this house." Investigations where the world the protagonist is uncovering matters more than the protagonist themselves.
 
@@ -42,7 +42,7 @@ Reach for a beat sheet when you need precision and your mind already works in be
 
 Commercial thrillers where pacing is the contract. Romance with reader-promise structures. Page-turners where the reader expects a specific shape of escalation. Screenplay-shaped books that will be optioned, or that read like screenplays for reasons other than money.
 
-Beat sheets are also the right tool when you have a draft that feels slow and you don't know why. Reading your draft through a beat-sheet lens — *which beat is missing here? where should the gear have shifted?* — locates the sag faster than any other diagnostic.
+Beat sheets are also the right tool when you have a draft that feels slow and you don't know why. Reading your draft through a beat-sheet lens (*which beat is missing here? where should the gear have shifted?*) locates the sag faster than any other diagnostic.
 
 What beat sheets are *not* good at: generating ideas. They are diagnostic and corrective, not creative. A writer who outlines a book entirely from a borrowed beat sheet has produced an audition for the writer who wrote the sheet. Your beat sheet has to be derived from your specific story, as you read in [Lesson 3](/learn/lesson/architecture-beat-sheets).
 
@@ -56,11 +56,11 @@ Three kinds of book most often live here.
 
 **Literary fiction where the pleasure is the prose.** When the reason a reader is turning the page is the *sentence*, not the *event*, structural maps are the wrong tool. The reader didn't come for what happens next at the right page count. They came for the way this particular writer sees the world. A beat sheet would tell them when to feel what; the prose, when it's working, tells them what to feel.
 
-**Character studies where the structure is the interiority.** Books in which the events are deliberately small and the meaning is built by the slow accretion of the protagonist's inner life. *Middlemarch* — eight hundred pages of ordinary marriages and ordinary careers — has structure underneath, but it's not the structure. The structure is the slow build of a half-dozen lives crossing each other for years.
+**Character studies where the structure is the interiority.** Books in which the events are deliberately small and the meaning is built by the slow accretion of the protagonist's inner life. *Middlemarch* (eight hundred pages of ordinary marriages and ordinary careers) has structure underneath, but it's not the structure. The structure is the slow build of a half-dozen lives crossing each other for years.
 
-**Fiction that resembles essay or memoir.** Where the meaning is built by *juxtaposition* — this scene next to that scene — rather than by climax. Books that read like a series of essays held together by a sensibility.
+**Fiction that resembles essay or memoir.** Where the meaning is built by *juxtaposition* (this scene next to that scene) rather than by climax. Books that read like a series of essays held together by a sensibility.
 
-The honest answer for these: trust your reader, trust your sentences, and use three acts only as a *check* late in the draft. If the book is meandering even by its own slow standards, the diagnostic still works. But don't reach for any of these tools as a generative aid — they will produce a different book, and not the one you wanted to write.
+The honest answer for these: trust your reader, trust your sentences, and use three acts only as a *check* late in the draft. If the book is meandering even by its own slow standards, the diagnostic still works. But don't reach for any of these tools as a generative aid; they will produce a different book, and not the one you wanted to write.
 
 This is the most important opinion in this lesson. The structures in this module are good tools. They are not *right answers*. The right answer is whatever your story needs, even when that answer is *less of all this*.
 
@@ -84,7 +84,7 @@ Pick up your premise. Read it once, slowly. Ask three questions.
 
 **Three.** Could you tell this story in a fixed page count without losing what makes it interesting?
 
-External events with strong transformation: hero's journey. External events with tight pacing: beat sheets. External events with neither: three acts. Mostly internal change with prose-led attention: none of these — three acts as a late-draft diagnostic only.
+External events with strong transformation: hero's journey. External events with tight pacing: beat sheets. External events with neither: three acts. Mostly internal change with prose-led attention: none of these. Three acts as a late-draft diagnostic only.
 
 If the answer is unclear, the answer is three acts. It will work for almost any story you can't otherwise classify, and it will hand the diagnostic back to you when you have written enough to know better.
 
@@ -98,9 +98,9 @@ A framework that will make Module 3 (characters) and Module 4 (world) work toget
 
 ## Try it
 
-> **Exercise 2.4.1 — Pick the structure for your book.** Take the premise you wrote at the end of [Module 1, Exercise 3.2](/learn/lesson/foundation-finding-idea). In exactly 100 words, answer two questions:
+> **Exercise 2.4.1: Pick the structure for your book.** Take the premise you wrote at the end of [Module 1, Exercise 3.2](/learn/lesson/foundation-finding-idea). In exactly 100 words, answer two questions:
 >
-> 1. Which of the four options — three acts, hero's journey, beat sheets, or none — does your story want? Cite something specific in your premise that points to that answer.
+> 1. Which of the four options (three acts, hero's journey, beat sheets, or none) does your story want? Cite something specific in your premise that points to that answer.
 > 2. What is the *engine* of your book? External events, internal transformation, or pacing? One sentence.
 >
 > Save this answer next to the premise. You'll bring both into Module 3, where the engine you named here decides how much of your page count goes to interiority versus action.

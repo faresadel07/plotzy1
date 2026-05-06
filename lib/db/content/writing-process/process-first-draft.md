@@ -16,7 +16,7 @@ Every writer has two voices in their head when working.
 
 The two cannot run at once.
 
-Editor-mode running during writer-mode is the most common reason a first draft never finishes. Every sentence is judged before the next one arrives. The judging slows the writing past the rate at which a book gets written. The writer feels they are working hard — every sentence is being polished — and the page count creeps up by ten words a day.
+Editor-mode running during writer-mode is the most common reason a first draft never finishes. Every sentence is judged before the next one arrives. The judging slows the writing past the rate at which a book gets written. The writer feels they are working hard (every sentence is being polished) and the page count creeps up by ten words a day.
 
 The fix is mechanical:
 
@@ -37,9 +37,9 @@ The drafts you read on shelves have been through three to ten passes by the writ
 
 This does not mean *try to be bad*. It means *don't expect to be good yet*. The good comes in revision. The first draft is the raw material the revision works on.
 
-A first draft you'd be embarrassed to show anyone is a first draft that has done its job. A first draft you're proud of after one pass is usually a first draft you've been polishing instead of finishing — and the embarrassment was, paradoxically, the cost-free path through.
+A first draft you'd be embarrassed to show anyone is a first draft that has done its job. A first draft you're proud of after one pass is usually a first draft you've been polishing instead of finishing, and the embarrassment was, paradoxically, the cost-free path through.
 
-## The daily habit — small, sustainable, unfailable
+## The daily habit: small, sustainable, unfailable
 
 The single most reliable upgrade to a writing life is a daily wordcount you cannot fail.
 
@@ -53,17 +53,17 @@ The number was small. The consistency wasn't.
 
 The habit is not about output. It is about *finishing*. Most novels die at month three because the writer skipped a week, then two weeks, then a month, and never came back. The habit makes the book inevitable. It is not glamorous. Writers' descriptions of their morning routines are mostly identical and mostly boring; that's the point.
 
-If you find yourself negotiating with the count — *I'll do 500 today and 0 tomorrow because I'm tired* — lower the count. The number you do every day is the right number. The number you sometimes hit and sometimes don't is the wrong number, no matter how big.
+If you find yourself negotiating with the count (*I'll do 500 today and 0 tomorrow because I'm tired*) lower the count. The number you do every day is the right number. The number you sometimes hit and sometimes don't is the wrong number, no matter how big.
 
 ## Outline vs discovery write
 
 Some writers outline before drafting. Some discover the story by writing it. Both work.
 
-**Outlining** suits writers who want a route map. The work in [Module 2](/learn/module/architecture) — three acts, the hero's journey, beat sheets — is here for *use* in this draft, not for enforcement. An outline is a hypothesis about your story, not a contract.
+**Outlining** suits writers who want a route map. The work in [Module 2](/learn/module/architecture) (three acts, the hero's journey, beat sheets) is here for *use* in this draft, not for enforcement. An outline is a hypothesis about your story, not a contract.
 
 **Discovery writing** suits writers who find their plot by drafting it. The trade-off: discovery drafts are often messier, longer, and require deeper structural revision. Plan accordingly.
 
-**The hybrid** most professional writers use: a loose outline of major beats — inciting incident, lock-in, midpoint, dark moment, climax (callback to [Module 2, Lesson 1](/learn/lesson/architecture-three-acts)) — and discovery writing the scenes between them.
+**The hybrid** most professional writers use: a loose outline of major beats (inciting incident, lock-in, midpoint, dark moment, climax, callback to [Module 2, Lesson 1](/learn/lesson/architecture-three-acts)) and discovery writing the scenes between them.
 
 The choice is one of temperament. There is no right answer. The wrong answer is to insist on a method that fights how your mind actually works. A discovery writer trying to outline a fifty-page beat sheet will stall at week two; an outliner trying to discovery-write 80,000 words will produce a directionless mess. Use the method that lets you finish.
 
@@ -89,11 +89,11 @@ The recognition that bad first drafts are the standard, not failure.
 
 Permission, when you need it, to write the worst chapter of your life and continue.
 
-The next lesson is the answer to *now what?* — what you do with the bad first draft you've finished.
+The next lesson is the answer to *now what?*: what you do with the bad first draft you've finished.
 
 ## Try it
 
-> **Exercise 5.2.1 — Seven days of small.** Set a daily word count you'd be embarrassed to fail. Two hundred and fifty is fine. Three hundred is better. *Do not pick five hundred unless you know you'll hit it for seven days.*
+> **Exercise 5.2.1: Seven days of small.** Set a daily word count you'd be embarrassed to fail. Two hundred and fifty is fine. Three hundred is better. *Do not pick five hundred unless you know you'll hit it for seven days.*
 >
 > Write that count every day for seven days. The goal is not quality. The goal is the habit.
 >
@@ -103,4 +103,4 @@ The next lesson is the answer to *now what?* — what you do with the bad first 
 
 ## Further reading
 
-- *An Autobiography* (Anthony Trollope, 1883). The single most useful pre-1900 description of professional writing as a practice — and the source of the postal-clerk-with-a-watch detail. Read the chapter on his daily routine alone. ([gutenberg.org/ebooks/5978](https://www.gutenberg.org/ebooks/5978))
+- *An Autobiography* (Anthony Trollope, 1883). The single most useful pre-1900 description of professional writing as a practice, and the source of the postal-clerk-with-a-watch detail. Read the chapter on his daily routine alone. ([gutenberg.org/ebooks/5978](https://www.gutenberg.org/ebooks/5978))

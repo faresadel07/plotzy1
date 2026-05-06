@@ -16,9 +16,9 @@ Sixty-three words. Touch (warm). Sound (the ticking, the uneven step). Smell (th
 
 A paragraph that does this isn't longer than a paragraph that doesn't; it's *denser*. Every sense is delivered in a single phrase. *A faint sweetness from the windowsill.* Eight words. That's the entire smell.
 
-The principle that follows is the rest of the lesson. Engaged senses don't have to dominate. A single phrase per sense is enough — sometimes more than enough.
+The principle that follows is the rest of the lesson. Engaged senses don't have to dominate. A single phrase per sense is enough, sometimes more than enough.
 
-## Smell — the fastest emotional trigger
+## Smell: the fastest emotional trigger
 
 Smell goes more directly to memory than any other sense. A reader who reads *the smell of damp wool and chalk dust* is in a primary-school classroom faster than three paragraphs of visual description could place them there.
 
@@ -26,15 +26,15 @@ Smell is also under-written because writers can't *remember* smells the way they
 
 The cure is to ask of every important scene: *what does this room smell like, and what does that smell mean to the protagonist?*
 
-> He didn't know which detail bothered him more — the cold tea or the faint cigarette smoke that shouldn't have been there.
+> He didn't know which detail bothered him more: the cold tea or the faint cigarette smoke that shouldn't have been there.
 
 The smoke is one phrase. It changes the meaning of the rest of the scene. Smell is one of the fastest ways to land subtext.
 
-## Sound — for atmosphere
+## Sound: for atmosphere
 
 Sound builds atmosphere faster than sight. A scene with the wrong soundscape feels off even when nothing else is wrong.
 
-The trick is to use sound as a *frame* — not as something the protagonist consciously notices, but as something the reader feels at the edges.
+The trick is to use sound as a *frame*: not as something the protagonist consciously notices, but as something the reader feels at the edges.
 
 > Outside, a car passed and the windows shook a little. She watched the second hand move on the clock above the stove.
 
@@ -42,23 +42,23 @@ Two sentences. A motorised sound and a mechanical one. (The clock is implied; cl
 
 Sound is also how a writer signals time of day, weather, and mood without describing them directly. *The kitchen was warm and the only sound was the kettle starting to sing* places the reader in early morning, somewhere domestic, where someone has just begun their day. Three pieces of information from one sound.
 
-## Touch — for intimacy and physical presence
+## Touch: for intimacy and physical presence
 
-Touch puts the reader *in the body*. A character whose hands the reader has felt — the cold of a railing, the slick of a wet handle, the give of fabric — is a character the reader inhabits.
+Touch puts the reader *in the body*. A character whose hands the reader has felt (the cold of a railing, the slick of a wet handle, the give of fabric) is a character the reader inhabits.
 
 > She set the cup down on the counter. The radiator was warm against her elbow. She pressed her hand to it, briefly, and went to find her coat.
 
-Three sentences. The reader has the kitchen, the body in the kitchen, and the small private gesture of pressing a hand to a warm radiator before leaving. None of those sentences read as *description* — they read as action — and yet a kitchen has been described.
+Three sentences. The reader has the kitchen, the body in the kitchen, and the small private gesture of pressing a hand to a warm radiator before leaving. None of those sentences read as *description* (they read as action) and yet a kitchen has been described.
 
 Touch is also how a writer renders a body's wear without naming it. Stiff knees on stairs. The way a thumb finds a familiar callus. These are the sentences that age a character without an age in years.
 
-## Taste — for memory
+## Taste: for memory
 
-Taste is the rarest sense in fiction because most scenes don't centre on food. When taste shows up, it usually does memory work — a tea, a particular bread, the taste of a place.
+Taste is the rarest sense in fiction because most scenes don't centre on food. When taste shows up, it usually does memory work: a tea, a particular bread, the taste of a place.
 
 > The first sip of his uncle's tea, after eleven years away, was wrong. Then his second sip was right, and he understood that he had been remembering it wrong for the eleven years.
 
-Use taste sparingly. A scene with three tastes feels like a recipe. A scene with one taste — the right one — can do what a paragraph of summary couldn't.
+Use taste sparingly. A scene with three tastes feels like a recipe. A scene with one taste, the right one, can do what a paragraph of summary couldn't.
 
 ## The two-sense rule
 
@@ -68,9 +68,9 @@ Every important scene needs at least two distinct senses engaged.
 
 The rule is a floor, not a ceiling. Most scenes won't need five senses; many will work brilliantly with two well-chosen ones (sight + sound, sight + smell, sight + touch).
 
-In revision, scan for shown scenes engaging only one sense. Add one sense — a single phrase — and watch the scene gain weight. The phrase rarely costs more than a few words. The gain in immersion is disproportionate.
+In revision, scan for shown scenes engaging only one sense. Add one sense (a single phrase) and watch the scene gain weight. The phrase rarely costs more than a few words. The gain in immersion is disproportionate.
 
-There is a deeper principle underneath. Sensory choices rise from the same place as voice — what a character notices is downstream of what they protect (callback to [Module 3 on dialogue](/learn/lesson/characters-dialogue)). A character who notices the radiator first has different interior architecture from a character who notices the chip in the counter first. Sensory writing is character work in a different costume.
+There is a deeper principle underneath. Sensory choices rise from the same place as voice: what a character notices is downstream of what they protect (callback to [Module 3 on dialogue](/learn/lesson/characters-dialogue)). A character who notices the radiator first has different interior architecture from a character who notices the chip in the counter first. Sensory writing is character work in a different costume.
 
 ## What this gives you
 
@@ -80,13 +80,13 @@ A vocabulary for the four under-used.
 
 A specific cure for the *flat* feeling that beginner drafts have, even when the prose is fine line by line.
 
-The next lesson elevates the *world* itself from background to character — sensory writing is the technique that makes that elevation possible.
+The next lesson elevates the *world* itself from background to character. Sensory writing is the technique that makes that elevation possible.
 
 ## Try it
 
-> **Exercise 4.2.1 — Mark and supplement.** Take a scene you've written — one that's *shown*, not told. With a marker, highlight every sensory detail. Note the sense beside it: V, S (sound), T (touch), Sm (smell), Ta (taste).
+> **Exercise 4.2.1: Mark and supplement.** Take a scene you've written, one that's *shown*, not told. With a marker, highlight every sensory detail. Note the sense beside it: V, S (sound), T (touch), Sm (smell), Ta (taste).
 >
-> Identify which senses are missing. Pick the one that would matter most for *this* scene — *what's the smell of this room? what sound is at the edge?* — and add it. A single phrase.
+> Identify which senses are missing. Pick the one that would matter most for *this* scene (*what's the smell of this room? what sound is at the edge?*) and add it. A single phrase.
 >
 > Compare the two versions. The added phrase usually doubles the scene's grip on the reader without adding to its length by more than five percent. That ratio is the lesson.
 
@@ -94,6 +94,6 @@ The next lesson elevates the *world* itself from background to character — sen
 
 All public domain. Free at Project Gutenberg.
 
-- *Bleak House* (Dickens, 1852–53). The opening fog: sight, sound, touch, an implied smell, all in five paragraphs. The reader is inside London before they have read a single piece of dialogue. ([gutenberg.org/ebooks/1023](https://www.gutenberg.org/ebooks/1023))
-- *Madame Bovary* (Flaubert, 1856; 1886 Aveling translation). The agricultural fair chapter — one of the most multi-sensory passages in nineteenth-century fiction. Two scenes happen in parallel, a romantic conversation and a livestock auction, both rendered through smell and sound. ([gutenberg.org/ebooks/2413](https://www.gutenberg.org/ebooks/2413))
+- *Bleak House* (Dickens, 1852 to 1853). The opening fog: sight, sound, touch, an implied smell, all in five paragraphs. The reader is inside London before they have read a single piece of dialogue. ([gutenberg.org/ebooks/1023](https://www.gutenberg.org/ebooks/1023))
+- *Madame Bovary* (Flaubert, 1856; 1886 Aveling translation). The agricultural fair chapter: one of the most multi-sensory passages in nineteenth-century fiction. Two scenes happen in parallel, a romantic conversation and a livestock auction, both rendered through smell and sound. ([gutenberg.org/ebooks/2413](https://www.gutenberg.org/ebooks/2413))
 - *Wuthering Heights* (E. Brontë, 1847). For sensory rendering of weather. The wind across the moors is the canonical example of sound and touch doing the emotional work that sight alone could not. ([gutenberg.org/ebooks/768](https://www.gutenberg.org/ebooks/768))
