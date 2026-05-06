@@ -38,9 +38,9 @@ The wound is what *turns* the want into a stake. Without the wound, you can pile
 
 Stay specific.
 
-Not "abandonment issues", but *the morning his father packed a suitcase and didn't come back, and he watched from the upstairs window and didn't shout*.
+Not "abandonment issues". *The morning his father packed a suitcase and didn't come back, and he watched from the upstairs window and didn't shout*.
 
-Not "she's afraid of failure", but *the gym teacher who laughed at her in front of the class when she was eleven, and the specific sentence the teacher said, and the way nobody else laughed, which was somehow worse*.
+Not "she's afraid of failure". *The gym teacher who laughed at her in front of the class when she was eleven, and the specific sentence the teacher said, and the way nobody else laughed, which was somehow worse*.
 
 The therapy vocabulary generalises wounds because therapy is in the business of integration. Fiction is in the business of specificity. A wound that could fit any character is a wound that doesn't belong to *yours*.
 
@@ -98,5 +98,5 @@ All public domain. Free at Project Gutenberg.
 
 - *Great Expectations* (Dickens, 1861). Pip's wound (the kitchen, the hands, Estella) is delivered in a single specific scene early in the book. The rest of the novel is its consequence. ([gutenberg.org/ebooks/1400](https://www.gutenberg.org/ebooks/1400))
 - *Wuthering Heights* (E. Brontë, 1847). Heathcliff's rejection is the wound; everything he does in the next four hundred pages is the costume. Read it for the cleanest example in the language of how a wound shapes a life. ([gutenberg.org/ebooks/768](https://www.gutenberg.org/ebooks/768))
-- *The Count of Monte Cristo* (Dumas, 1844 to 1846). The wound (the cell, the false friend) and the want (vengeance) are textbook. The story is a long answer to the question of whether the want, when satisfied, was the need. ([gutenberg.org/ebooks/1184](https://www.gutenberg.org/ebooks/1184))
+- *The Count of Monte Cristo* (Dumas, 1844–46). The wound (the cell, the false friend) and the want (vengeance) are textbook. The story is a long answer to the question of whether the want, when satisfied, was the need. ([gutenberg.org/ebooks/1184](https://www.gutenberg.org/ebooks/1184))
 - *Jane Eyre* (C. Brontë, 1847). The red-room scene early in the novel is two pages of present-tense narration that contains the entire emotional architecture the rest of the book is built on. A masterclass in delivering a wound through *event*, not *summary*. ([gutenberg.org/ebooks/1260](https://www.gutenberg.org/ebooks/1260))
