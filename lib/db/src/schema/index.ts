@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean, jsonb, numeric, index, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb, numeric, index, uniqueIndex, check, customType } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -871,7 +871,21 @@ export type InsertCourseQuizAttempt = typeof courseQuizAttempts.$inferInsert;
 // schema's hard guarantee that we never double-issue.
 //
 // `certificateUuid` is a public-facing slug for /certificates/<uuid>.
-// `pdfUrl` is populated lazily on first download.
+//
+// PDF lazy-generated on first download (Batch 3.2):
+//   `pdfData` (bytea) holds the PDF bytes.
+//   `pdfUrl` is set to the self-link `/api/certificates/<uuid>/pdf`
+//     once data exists, doubling as a "is generated?" flag without
+//     loading the bytes when only existence matters.
+//   `pdfGeneratedAt` + `pdfSizeBytes` for monitoring/diagnostics.
+//   `holderLanguage` captured at issuance (PDF text language; viewer
+//     may differ from holder — used by future i18n batch).
+const bytea = customType<{ data: Buffer; default: false }>({
+  dataType() {
+    return "bytea";
+  },
+});
+
 export const courseCertificates = pgTable("course_certificates", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
@@ -880,6 +894,10 @@ export const courseCertificates = pgTable("course_certificates", {
   finalExamScore: integer("final_exam_score").notNull(),
   modulesCompletedAt: jsonb("modules_completed_at").notNull(),
   pdfUrl: text("pdf_url"),
+  pdfData: bytea("pdf_data"),
+  pdfGeneratedAt: timestamp("pdf_generated_at"),
+  pdfSizeBytes: integer("pdf_size_bytes"),
+  holderLanguage: text("holder_language"),
 }, (t) => [
   index("idx_course_certificates_uuid").on(t.certificateUuid),
 ]);

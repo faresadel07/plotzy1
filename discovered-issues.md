@@ -2049,4 +2049,30 @@ _Logged 2026-05-06 during chore/defer-batch-2-7-b2._
 
 _Logged 2026-05-06 during Batch 3.1 post-mortem investigation of publishing-lesson DB drift._
 
+### MEDIUM — Schema drift: unique constraint on `password_reset_tokens.token` not in production
+
+Schema drift discovered during Batch 3.2 setup. `password_reset_tokens.token` unique constraint exists in schema (added at commit `d034519`, polish batch) but was never pushed to production Neon. Same class of issue as the publishing-lesson drift — process gap where schema commits merged without the corresponding `drizzle-kit push`. The blocking row during Batch 3.2 setup was 1 expired/unused token from 2026-04-26 (already past TTL). Path A bypassed the drizzle-kit push to avoid scope creep. A dedicated schema-reconciliation batch should: (1) audit all commits since the last known successful push to find all drift, (2) clean up any blocking data, (3) run drizzle-kit push with full visibility into the plan, (4) verify schema matches code. Estimated ~2-3h.
+
+**Path A used in Batch 3.2**: surgical `ALTER TABLE course_certificates ADD COLUMN ...` for the 4 new PDF-related columns, applied directly via tsx + pg, bypassing drizzle-kit. Verified via `information_schema.columns` query immediately after. The drift on `password_reset_tokens` is unaddressed and remains for the dedicated reconciliation batch.
+
+**Post-merge checklist** (capturing both this and the previous LOW entry's convention):
+
+After every batch's merge to master, two reconciliation steps are required to keep production in sync with the merged code:
+
+1. **Content sync** — `pnpm --filter @workspace/db run seed:course`
+   - Runs the idempotent course seeder. Picks up new lesson markdown files, updated quiz banks, etc.
+   - Caught the publishing-lesson drift in Batch 3.1.
+   - Cost: ~10 seconds.
+
+2. **Schema sync** — `pnpm --filter @workspace/db run push` (or surgical SQL when drizzle-kit's interactive prompts block in non-TTY environments)
+   - Applies new tables, columns, indexes, constraints from the Drizzle schema to production.
+   - Would have caught the `password_reset_tokens.token` unique constraint drift in the polish batch.
+   - Cost: ~5-30 seconds depending on changes.
+
+Both run on the production `DATABASE_URL`. Both are idempotent — running them when nothing has changed is a no-op. Recommendation: wire both into the deploy pipeline so they run automatically on every push to master, removing the convention from human memory entirely.
+
+**Estimated effort to add to deploy pipeline**: ~30 min (one shell-script step in the deploy that exports `DATABASE_URL` and runs both commands sequentially).
+
+_Logged 2026-05-06 during Batch 3.2 B1 setup, blocked by `drizzle-kit push` interactive prompt over an unrelated drift._
+
 

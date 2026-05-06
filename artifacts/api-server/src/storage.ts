@@ -190,11 +190,32 @@ export interface IStorage {
   upsertFinalProject(userId: number, bookId: number, chapterIds: number[]): Promise<CourseFinalProject>;
   saveFinalProjectFeedback(userId: number, feedback: object): Promise<void>;
 
-  // Course: certificate (PDF generation deferred to Batch 3 — pdf_url stays NULL on issue)
+  // Course: certificate (PDF lazy-generated on first download — see Batch 3.2)
   getCertificateEligibility(userId: number): Promise<CertificateEligibility>;
-  issueCertificate(userId: number, finalExamScore: number, modulesCompletedAt: Record<string, string>): Promise<CourseCertificate>;
+  issueCertificate(
+    userId: number,
+    finalExamScore: number,
+    modulesCompletedAt: Record<string, string>,
+    holderLanguage: string | null,
+  ): Promise<CourseCertificate>;
   getCertificateForUser(userId: number): Promise<CourseCertificate | undefined>;
   getCertificateByUuid(uuid: string): Promise<CourseCertificate | undefined>;
+  // Batch 3.2 PDF generation methods.
+  // getCertificatePdfData returns the cached bytes (and metadata used by the
+  // route's response headers + future i18n re-render decisions). Returns null
+  // if the cert exists but the PDF hasn't been generated yet — the route
+  // generates and writes back, then re-reads.
+  getCertificatePdfData(uuid: string): Promise<{
+    pdfData: Buffer;
+    pdfSizeBytes: number;
+    holderLanguage: string | null;
+  } | null>;
+  // setCertificatePdfData writes the bytes conditional on pdf_data IS NULL.
+  // Returns true if this call won the write race (rowCount > 0), false if
+  // a concurrent request already populated the row (caller should re-fetch).
+  // Also sets pdf_url to the self-link, pdf_generated_at, and pdf_size_bytes
+  // in the same statement.
+  setCertificatePdfData(uuid: string, pdfBuffer: Buffer): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1354,18 +1375,21 @@ export class DatabaseStorage implements IStorage {
     userId: number,
     finalExamScore: number,
     modulesCompletedAt: Record<string, string>,
+    holderLanguage: string | null,
   ): Promise<CourseCertificate> {
     // Idempotent: schema has UNIQUE(user_id). Three steps:
     //   1. Try INSERT; ON CONFLICT DO NOTHING.
     //   2. If RETURNING came back with a row, we created it.
     //   3. If empty, the certificate already exists — re-fetch.
-    // pdfUrl is intentionally NOT set (Batch 3 lazy-generates on first download).
+    // pdfData / pdfUrl are intentionally NOT set here (Batch 3.2 lazy-
+    // generates on first download via setCertificatePdfData).
     const [created] = await db.insert(courseCertificates)
       .values({
         userId,
         certificateUuid: randomUUID(),
         finalExamScore,
         modulesCompletedAt,
+        holderLanguage,
       })
       .onConflictDoNothing({ target: courseCertificates.userId })
       .returning();
@@ -1391,6 +1415,50 @@ export class DatabaseStorage implements IStorage {
     const [c] = await db.select().from(courseCertificates)
       .where(eq(courseCertificates.certificateUuid, uuid));
     return c;
+  }
+
+  async getCertificatePdfData(uuid: string): Promise<{
+    pdfData: Buffer;
+    pdfSizeBytes: number;
+    holderLanguage: string | null;
+  } | null> {
+    const [row] = await db
+      .select({
+        pdfData: courseCertificates.pdfData,
+        pdfSizeBytes: courseCertificates.pdfSizeBytes,
+        holderLanguage: courseCertificates.holderLanguage,
+      })
+      .from(courseCertificates)
+      .where(eq(courseCertificates.certificateUuid, uuid));
+    if (!row || !row.pdfData) return null;
+    return {
+      pdfData: row.pdfData,
+      pdfSizeBytes: row.pdfSizeBytes ?? row.pdfData.length,
+      holderLanguage: row.holderLanguage,
+    };
+  }
+
+  async setCertificatePdfData(uuid: string, pdfBuffer: Buffer): Promise<boolean> {
+    // Conditional write: only set pdfData when it's currently NULL.
+    // Concurrent writers race here — the first one wins (rowCount=1),
+    // any later writer for the same uuid returns rowCount=0 and the
+    // caller re-reads to serve the now-cached bytes. Cost of double
+    // generation is small (one extra PDF rendered, then discarded).
+    const result = await db
+      .update(courseCertificates)
+      .set({
+        pdfData: pdfBuffer,
+        pdfSizeBytes: pdfBuffer.length,
+        pdfGeneratedAt: new Date(),
+        pdfUrl: `/api/certificates/${uuid}/pdf`,
+      })
+      .where(
+        and(
+          eq(courseCertificates.certificateUuid, uuid),
+          isNull(courseCertificates.pdfData),
+        ),
+      );
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

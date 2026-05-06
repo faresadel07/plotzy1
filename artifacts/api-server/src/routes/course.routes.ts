@@ -739,10 +739,16 @@ router.post("/api/course/certificate/issue", requireAuth, writeLimiter, async (r
     }
 
     // elig.finalExamScore is non-null when eligible (finalExamPassed === true).
+    // holderLanguage stays null in v1 — there's no `users.language` column
+    // (Plotzy stores UI language in localStorage via useLanguage()). When a
+    // future user-preference batch adds the column, this call site reads it
+    // and passes through. Schema column on courseCertificates exists already
+    // (Batch 3.2 / DP3) so no migration is needed at that point.
     const cert = await storage.issueCertificate(
       userId,
       elig.finalExamScore ?? 0,
       elig.modulesCompletedAt,
+      null,
     );
 
     return res.status(201).json({
