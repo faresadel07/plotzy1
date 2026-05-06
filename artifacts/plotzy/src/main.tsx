@@ -1,6 +1,13 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+// Font subsets used by the certificate web view (CertificateDisplay).
+// Lora-SemiBold is the holder-name + section title; Inter-SemiBold is
+// the score + date overlays. Both match the fonts the PDF download
+// embeds (artifacts/api-server/src/assets/fonts/), so the web cert and
+// the printable PDF are visually identical.
+import "@fontsource/lora/600.css";
+import "@fontsource/inter/600.css";
 import { initSentry } from "./lib/sentry";
 
 // ── One-time cleanup: force-unregister any stale Service Worker the
