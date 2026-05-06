@@ -2,7 +2,7 @@
 
 The launch ends. The slump arrives. The writer either ships book 2 or stops being a writer who ships books.
 
-This lesson is the realistic frame for what happens after launch — and the closer of the entire course.
+This lesson is the realistic frame for what happens after launch, and the closer of the entire course.
 
 ## The post-launch slump
 
@@ -10,15 +10,15 @@ About two weeks after launch, the noise dies. Sales drop. Reviews slow. The plat
 
 This is normal. It is also predictable, which is what makes it survivable. Plan for it.
 
-First-time authors often interpret the slump as *failure*. It is not. It is the curve. Every book — first or fortieth — has a launch spike, a slump, and a long tail. The skill is to keep working through the slump and into the next book.
+First-time authors often interpret the slump as *failure*. It is not. It is the curve. Every book (first or fortieth) has a launch spike, a slump, and a long tail. The skill is to keep working through the slump and into the next book.
 
-The discipline is to *not* spend the slump period checking sales hourly and refreshing reviews. That is the symptom of a writer who has stopped writing book 2. The cure is the daily wordcount habit from [Module 5, Lesson 2](/learn/lesson/process-first-draft) — the one that produced book 1 and will produce book 2 if you let it.
+The discipline is to *not* spend the slump period checking sales hourly and refreshing reviews. That is the symptom of a writer who has stopped writing book 2. The cure is the daily wordcount habit from [Module 5, Lesson 2](/learn/lesson/process-first-draft): the one that produced book 1 and will produce book 2 if you let it.
 
-## Reviews — how to read them, when to ignore them
+## Reviews: how to read them, when to ignore them
 
 Three categories.
 
-**Patterns of structural feedback** (callback to [M5 L5](/learn/lesson/process-when-to-stop)). If three readers say chapter four is slow, chapter four is slow. Use this for book 2. If five readers say the antagonist isn't believable, the antagonist isn't believable enough. Save the patterns; do not act on them for book 1 (which is published) — apply them to whatever you write next.
+**Patterns of structural feedback** (callback to [M5 L5](/learn/lesson/process-when-to-stop)). If three readers say chapter four is slow, chapter four is slow. Use this for book 2. If five readers say the antagonist isn't believable, the antagonist isn't believable enough. Save the patterns; do not act on them for book 1 (which is published). Apply them to whatever you write next.
 
 **Individual taste.** A reader who hates fantasy and bought your fantasy book by mistake. A reader who wanted a thriller and got a literary novel. The note tells you about *that reader*, not your book. Ignore the note; let the cover-and-blurb work from [Lesson 2](/learn/lesson/publishing-cover-blurb) reduce the mismatch on the next book.
 
@@ -30,19 +30,19 @@ The discipline more broadly is reading reviews *aggregated*, not *individually*.
 
 The second book is often harder than the first.
 
-Reasons: the freshness has worn off — you know more about what bad writing looks like, because you've revised your own. You are now writing under the implicit pressure of the readers from book 1. Some of them will not like book 2. Some will love it for reasons that didn't apply to book 1. Both will affect the writer.
+Reasons: the freshness has worn off. You know more about what bad writing looks like, because you've revised your own. You are now writing under the implicit pressure of the readers from book 1. Some of them will not like book 2. Some will love it for reasons that didn't apply to book 1. Both will affect the writer.
 
 The cure is the daily-wordcount habit from [M5 L2](/learn/lesson/process-first-draft). The habit doesn't care which book it's working on. The habit produces book 2 the same way it produced book 1, even when the writer's morale is worse.
 
 Most writers who finish book 1 do not finish book 2. The ones who do are usually not more talented than the ones who don't. They are more consistent.
 
-## The long arc — careers built over 5 to 10 books
+## The long arc: careers built over 5 to 10 books
 
 Most working writers' careers follow a shape: first book lands quietly, second book lands a little louder, third book finds an audience, somewhere around book five the writer has a readership that buys the next title without thinking about it.
 
-This is the median. There are exceptions in both directions — first-book breakouts; tenth-book debuts that explode after a decade of steady work. The exceptions are exceptional.
+This is the median. There are exceptions in both directions: first-book breakouts; tenth-book debuts that explode after a decade of steady work. The exceptions are exceptional.
 
-The point is not to plan around the exceptions. The point is to plan around the median: a slow build over five to ten books, compounding readership, gradual discovery. The audience you have at book 3 is partly the audience that started reading at book 1 and stayed; it is partly readers who discovered book 2 and went back; it is partly readers who came to book 3 directly. The list compounds the way money compounds — slowly, then less slowly, then visibly.
+The point is not to plan around the exceptions. The point is to plan around the median: a slow build over five to ten books, compounding readership, gradual discovery. The audience you have at book 3 is partly the audience that started reading at book 1 and stayed; it is partly readers who discovered book 2 and went back; it is partly readers who came to book 3 directly. The list compounds the way money compounds: slowly, then less slowly, then visibly.
 
 Trollope wrote forty-seven novels across his career; Dickens wrote fifteen plus serials and journalism. The shape was the same in their century. The pattern is older than the modern industry.
 
@@ -68,11 +68,11 @@ Most launches do not transform a writer's life. The slow accumulation of finishe
 
 A frame for the post-launch slump as predictable, not failure.
 
-A diagnostic for reviews — patterns to use, individual taste to ignore, attacks to skip.
+A diagnostic for reviews: patterns to use, individual taste to ignore, attacks to skip.
 
 The recognition that the second book is usually harder than the first, and that the cure is the same habit that produced the first.
 
-The shape of a career — five to ten books, slowly, compounding.
+The shape of a career: five to ten books, slowly, compounding.
 
 The closing section of this lesson is the closing section of the course.
 
@@ -84,11 +84,11 @@ A working definition of story. A working picture of what readers read for. A pre
 
 The course closes the way it opened.
 
-Every story you write — this one and the next twenty — needs the three ingredients. Someone we care about. Something that won't go away. Something changed by the end. (Callback to [Module 1, Lesson 4](/learn/lesson/foundation-three-ingredients).)
+Every story you write (this one and the next twenty) needs the three ingredients. Someone we care about. Something that won't go away. Something changed by the end. (Callback to [Module 1, Lesson 4](/learn/lesson/foundation-three-ingredients).)
 
 The frame is not the writing. The writing is the frame in motion. You will spend the rest of your life making versions of the same three ingredients land in front of readers who needed them.
 
-Trollope, in his *Autobiography*, described his daily writing routine — the watch on the desk, the chair, the morning before the post-office job, two hundred and fifty words every quarter-hour — and at the end of the book wrote *I do not know that I have anything further to say which would interest the reader*. He was wrong about that. The thing that interests every working writer who reads the *Autobiography* is the chair, the watch, the morning. The fact that a person can sit down at the same desk every day for forty years, and at the end of those forty years have produced forty-seven novels.
+Trollope, in his *Autobiography*, described his daily writing routine (the watch on the desk, the chair, the morning before the post-office job, two hundred and fifty words every quarter-hour) and at the end of the book wrote *I do not know that I have anything further to say which would interest the reader*. He was wrong about that. The thing that interests every working writer who reads the *Autobiography* is the chair, the watch, the morning. The fact that a person can sit down at the same desk every day for forty years, and at the end of those forty years have produced forty-seven novels.
 
 The course you are finishing is not the end of anything. It is one revolution of the loop you will spend the rest of your writing life inside.
 
@@ -98,7 +98,7 @@ Now go finish the book.
 
 ## Try it
 
-> **Exercise 6.5.1 — The 5-year plan.** Write a 200-word plan for your writing career across the next five years.
+> **Exercise 6.5.1: The 5-year plan.** Write a 200-word plan for your writing career across the next five years.
 >
 > Specific enough to test against. Vague answers don't count.
 >
@@ -116,4 +116,4 @@ Now go finish the book.
 
 - *An Autobiography* (Anthony Trollope, 1883). Read the final chapters as the closer to this course. Trollope describes a working writer's career across four decades; the patterns he names are the patterns the modern industry is still discovering. ([gutenberg.org/ebooks/5978](https://www.gutenberg.org/ebooks/5978))
 - *Life on the Mississippi* (Mark Twain, 1883). Twain's account of his own career as a working professional writer. ([gutenberg.org/ebooks/245](https://www.gutenberg.org/ebooks/245))
-- **For the current view of the long arc:** read three to five working novelists' Acknowledgements pages from books they wrote ten or more years into their careers. The thanks tell you what the long arc actually looks like — the agent who stuck around, the editor who saw two novels through a slump, the readers who came along. The pattern across many such pages is the most useful current resource on this topic.
+- **For the current view of the long arc:** read three to five working novelists' Acknowledgements pages from books they wrote ten or more years into their careers. The thanks tell you what the long arc actually looks like: the agent who stuck around, the editor who saw two novels through a slump, the readers who came along. The pattern across many such pages is the most useful current resource on this topic.

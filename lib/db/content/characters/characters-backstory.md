@@ -12,9 +12,9 @@ Picture an iceberg. A small fraction is above water. The bulk is below.
 
 A character should feel that way to a reader. Visible weight on the page; hidden mass underneath.
 
-The mass is what *you* know about your character — the streets they grew up on, the marriage they've never spoken about, the dog they had when they were nine. The visible part is what makes the page.
+The mass is what *you* know about your character: the streets they grew up on, the marriage they've never spoken about, the dog they had when they were nine. The visible part is what makes the page.
 
-Most beginners get this backwards. They write everything they know. The result is a draft that reads like a dossier — every sentence informative, no sentence carrying weight. The reader is being taught the character instead of meeting them.
+Most beginners get this backwards. They write everything they know. The result is a draft that reads like a dossier: every sentence informative, no sentence carrying weight. The reader is being taught the character instead of meeting them.
 
 The right ratio is roughly ten percent above water. Maybe less.
 
@@ -26,7 +26,7 @@ A **dump** interrupts the present-tense story to deliver a paragraph (or three p
 
 The reader is, somewhere around the second sentence, no longer reading a novel.
 
-A **revelation** is a single sentence — sometimes three words — that pivots the reader's understanding of what's happening *right now*.
+A **revelation** is a single sentence (sometimes three words) that pivots the reader's understanding of what's happening *right now*.
 
 Sarah refuses a dinner invitation. The host presses. *"My father always insisted on six,"* she says, *"and I didn't realise until last year that I still set the table for him."*
 
@@ -54,11 +54,11 @@ A reader wondering about your protagonist is a reader engaged.
 
 A reader wondering about your protagonist for two hundred pages without any payoff is a reader losing patience.
 
-The general rhythm: hold most of the backstory in reserve, release it where it pays the most. Backstory revelations land hardest at structural beats — the [midpoint reversal](/learn/lesson/architecture-three-acts), the dark moment, sometimes the climax itself. Releasing a key piece of backstory at the midpoint can *be* the midpoint reversal — the truth that re-frames everything.
+The general rhythm: hold most of the backstory in reserve, release it where it pays the most. Backstory revelations land hardest at structural beats: the [midpoint reversal](/learn/lesson/architecture-three-acts), the dark moment, sometimes the climax itself. Releasing a key piece of backstory at the midpoint can *be* the midpoint reversal: the truth that re-frames everything.
 
 Most beginners over-reveal in Act 1 and under-reveal in Acts 2 and 3. The reverse is the right rhythm: hold in Act 1, release in Acts 2 and 3.
 
-The instinct to over-reveal early comes from a worry that the reader won't otherwise care. The fix is in [Lesson 1](/learn/lesson/characters-protagonist-wound) — give the reader a strong *want* on page one and they will wait an entire book for the wound to surface.
+The instinct to over-reveal early comes from a worry that the reader won't otherwise care. The fix is in [Lesson 1](/learn/lesson/characters-protagonist-wound): give the reader a strong *want* on page one and they will wait an entire book for the wound to surface.
 
 ## Common backstory mistakes
 
@@ -68,7 +68,7 @@ The instinct to over-reveal early comes from a worry that the reader won't other
 
 **The retrofitted reveal.** A backstory invented in Act 3 to justify the climax. The reader can smell this. The wound from [Lesson 1](/learn/lesson/characters-protagonist-wound) needs to be in place from the first page, even when the reader can't see it yet. Glances and small reactions seed it. The reveal in Act 3 should *confirm* what the reader has been half-feeling, not introduce a new fact.
 
-**The exhaustive opening tour.** A chapter that walks the reader through the protagonist's apartment, their job, their relationships, their parents, their lunch. The reader hasn't asked. The reader hasn't met the character yet — there is no scaffolding to hang the information on. Open with the want. The rest accretes.
+**The exhaustive opening tour.** A chapter that walks the reader through the protagonist's apartment, their job, their relationships, their parents, their lunch. The reader hasn't asked. The reader hasn't met the character yet. There is no scaffolding to hang the information on. Open with the want. The rest accretes.
 
 ## What this gives you
 
@@ -82,13 +82,13 @@ The exercise asks you to write five hundred words of backstory and keep fifty. T
 
 ## Try it
 
-> **Exercise 3.2.1 — Write 500, keep 50.** Take your protagonist. Write five hundred words of backstory in any form: a list, a paragraph, scattered notes. Their family. The house. The teacher who mattered. The first thing they wanted that they didn't get. The job they had at sixteen.
+> **Exercise 3.2.1: Write 500, keep 50.** Take your protagonist. Write five hundred words of backstory in any form: a list, a paragraph, scattered notes. Their family. The house. The teacher who mattered. The first thing they wanted that they didn't get. The job they had at sixteen.
 >
-> Then identify the *fifty* words a reader of your novel actually needs to know — not what would be nice for them to know, but what would change a present-day choice if they didn't.
+> Then identify the *fifty* words a reader of your novel actually needs to know. Not what would be nice for them to know, but what would change a present-day choice if they didn't.
 >
 > Cut the other four hundred and fifty words from your manuscript permanently. Keep them in your notes.
 >
-> The four hundred and fifty are still doing work. They make the fifty you keep feel weighted. The reader feels the iceberg even when they only see the tip. This exercise — done properly, on a real character — is one of the fastest ways to upgrade a draft.
+> The four hundred and fifty are still doing work. They make the fifty you keep feel weighted. The reader feels the iceberg even when they only see the tip. This exercise, done properly on a real character, is one of the fastest ways to upgrade a draft.
 
 ## Further reading
 

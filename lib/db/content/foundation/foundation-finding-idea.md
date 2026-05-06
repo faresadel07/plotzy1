@@ -36,7 +36,7 @@ The questions you can't stop asking are gold.
 
 The arguments you've had three times. The kind of person you can't stop watching. The injustice that still makes you angry years after the people involved have forgiven each other. The thing you turn over before you fall asleep.
 
-These come bundled with motivation. Most novels die at month three because the writer doesn't actually care about the question they're answering. They picked a "good idea" the way you might pick a stock — for its expected returns. Eighty thousand words later, they don't recognise the book they've made and they can't remember why they started.
+These come bundled with motivation. Most novels die at month three because the writer doesn't actually care about the question they're answering. They picked a "good idea" the way you might pick a stock, for its expected returns. Eighty thousand words later, they don't recognise the book they've made and they can't remember why they started.
 
 You cannot fake-care for eighty thousand words.
 
@@ -52,7 +52,7 @@ Maps and lying. A nineteenth-century cartographer redraws a border for money and
 
 Lighthouse keeping and chess. Two keepers on a remote rock play one game over six years and lose the ability to speak about anything else.
 
-The intersection method works because it forces specificity. "A novel about grief" is dust — it could be anything, which means it's nothing yet. "A novel about a widow and her husband's bees" has a place to start. The bees demand sentences. The bees demand a season, a specific morning, a specific veil. The grief becomes a thing the bees expose, not a mood the prose has to keep up.
+The intersection method works because it forces specificity. "A novel about grief" is dust. It could be anything, which means it's nothing yet. "A novel about a widow and her husband's bees" has a place to start. The bees demand sentences. The bees demand a season, a specific morning, a specific veil. The grief becomes a thing the bees expose, not a mood the prose has to keep up.
 
 When you can't find an idea, this is one of the fastest ways out. Write down five things you know more about than most people. Pair them up at random. Look at each pair for ninety seconds. One of them will not let you go.
 
@@ -66,7 +66,7 @@ A **premise** is the kernel turned into a situation. *A grieving engineer builds
 
 Same kernel. The premise has a specific person, a specific situation, a specific tension. It has somewhere to start a first sentence that wouldn't be the same if the engineer were a chemist or the daughter were a wife.
 
-The translation step — from idea to premise — is what most beginners skip. They sit down to write *the robot novel* and discover, two scenes in, that they don't know whose novel it is. Of course they don't. They're trying to write a kernel.
+The translation step, from idea to premise, is what most beginners skip. They sit down to write *the robot novel* and discover, two scenes in, that they don't know whose novel it is. Of course they don't. They're trying to write a kernel.
 
 The exercise at the end of this lesson is the translation step done in public.
 
@@ -88,7 +88,7 @@ You generate ideas by writing "what ifs" in volume, not by waiting for the right
 
 You filter them by mining your obsessions for the ones you actually have energy for.
 
-You translate the survivor into a premise — kernel + character + situation + tension — because that's what you can actually write from.
+You translate the survivor into a premise (kernel + character + situation + tension) because that's what you can actually write from.
 
 You check the size of the premise before you start.
 
@@ -96,15 +96,15 @@ The exercise that follows is the whole machine in one sitting.
 
 ## Try it
 
-> **Exercise 3.1 — Ten what-ifs in fifteen minutes.** Set a timer. Write ten "what if?" questions. Out loud, in a notebook, in any document — only the ten matter, not where they live.
+> **Exercise 3.1: Ten what-ifs in fifteen minutes.** Set a timer. Write ten "what if?" questions. Out loud, in a notebook, in any document. Only the ten matter, not where they live.
 >
 > Rules: no editing, no filtering, no deleting. Some will be embarrassing. Some will be derivative. Some will be small. None of that matters now. The skill you are practising is volume; you cannot select for quality without quantity to choose from.
 
-> **Exercise 3.2 — The 100-word premise.** Look at your ten what-ifs.
+> **Exercise 3.2: The 100-word premise.** Look at your ten what-ifs.
 >
 > Pick the one you would most want to read.
 >
-> In exactly 100 words, expand it into a premise. Cover four things: who is the central character (not just their job — what they want), what specifically is in the way, what the central question of the book will be, and what time-frame the story will span.
+> In exactly 100 words, expand it into a premise. Cover four things: who is the central character (not just their job, but what they want), what specifically is in the way, what the central question of the book will be, and what time-frame the story will span.
 >
 > Save this premise. You will bring it into Lesson 4 to test it against the three ingredients, and you will keep returning to it across the next twenty-four lessons. This is your book.
 

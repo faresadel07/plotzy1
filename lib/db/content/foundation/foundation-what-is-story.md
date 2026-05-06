@@ -10,9 +10,9 @@ Eighteen words. That's a story. Small, but complete.
 
 The difference isn't that the second version is more interesting. (Someone else's coffee can be plenty interesting if you write it right.) The difference is shape. In the first version, things happen in sequence. In the second, someone *wants*, *fails*, and *changes*.
 
-That shape — wanting, hitting an obstacle, being changed by it — is what we'll mean by "story" for the next twenty-six lessons. Pin that definition somewhere. You'll come back to it.
+That shape (wanting, hitting an obstacle, being changed by it) is what we'll mean by "story" for the next twenty-six lessons. Pin that definition somewhere. You'll come back to it.
 
-Aristotle pinned it down once. A story has a beginning, a middle, and an end, he said. But a beginning isn't just the first thing that happens. The beginning is the thing that makes everything else necessary. Coffee, no matter how detailed, isn't a beginning. The promotion the woman didn't get — that's a beginning. It forces what comes next.
+Aristotle pinned it down once. A story has a beginning, a middle, and an end, he said. But a beginning isn't just the first thing that happens. The beginning is the thing that makes everything else necessary. Coffee, no matter how detailed, isn't a beginning. The promotion the woman didn't get. That's a beginning. It forces what comes next.
 
 ## Why your brain wants this
 
@@ -38,7 +38,7 @@ An **anecdote** is a small story. It has the parts (someone wants something, hit
 
 A **vignette** is a moment with no change. The light through the kitchen window. A face on a train. Beautiful, sometimes useful inside a story, never a story by itself.
 
-Most beginners write extended anecdotes and call them stories. They have the moments. They have the prose. They have a character. What they don't have is the change — the *because of this, that*. Knowing the difference is the first technical move. You can't fix a problem you can't name.
+Most beginners write extended anecdotes and call them stories. They have the moments. They have the prose. They have a character. What they don't have is the change: the *because of this, that*. Knowing the difference is the first technical move. You can't fix a problem you can't name.
 
 ## You're not transferring events. You're shaping meaning.
 
@@ -64,11 +64,11 @@ For now, the definition is enough.
 
 ## Try it
 
-> **Exercise 1.1 — The 200-word change.** Pick a moment when someone's mind changed about something. Real or invented; yours, a friend's, a stranger's you once watched on a train. Write 200 words *only* about that moment. Skip the lead-up. Skip the aftermath. The mind changing is the whole story.
+> **Exercise 1.1: The 200-word change.** Pick a moment when someone's mind changed about something. Real or invented; yours, a friend's, a stranger's you once watched on a train. Write 200 words *only* about that moment. Skip the lead-up. Skip the aftermath. The mind changing is the whole story.
 >
 > 200 words is shorter than you think. You'll have to cut everything that isn't the change itself. That's the exercise.
 
-> **Exercise 1.2 — The three sticky stories.** Think of three stories that have stayed with you — books, films, family stories, anything. For each, finish this sentence: "Someone wanted *X*, the obstacle was *Y*, and they ended up *Z*."
+> **Exercise 1.2: The three sticky stories.** Think of three stories that have stayed with you: books, films, family stories, anything. For each, finish this sentence: "Someone wanted *X*, the obstacle was *Y*, and they ended up *Z*."
 >
 > If a story you love is hard to fill in, that's information. It might be a vignette you'd been mistaking for a story. Or it might have a stranger shape than you'd noticed. Either way, useful.
 
@@ -76,6 +76,6 @@ For now, the definition is enough.
 
 All public domain. Free at Project Gutenberg.
 
-- Aristotle, *Poetics*. The oldest book on this subject and still the sharpest. Chapters 6–11 are where the structural argument lives. ([gutenberg.org/ebooks/1974](https://www.gutenberg.org/ebooks/1974))
+- Aristotle, *Poetics*. The oldest book on this subject and still the sharpest. Chapters 6 to 11 are where the structural argument lives. ([gutenberg.org/ebooks/1974](https://www.gutenberg.org/ebooks/1974))
 - Homer, *The Iliad*. The wrath of Achilles is the engine; everything else is the wreckage. Useful for seeing how one felt want can drive a 15,000-line poem. ([gutenberg.org/ebooks/6130](https://www.gutenberg.org/ebooks/6130))
 - Jane Austen, *Pride and Prejudice*. A perfect compact example of "two people misjudge each other and are changed by what it costs them." ([gutenberg.org/ebooks/1342](https://www.gutenberg.org/ebooks/1342))

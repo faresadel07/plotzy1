@@ -14,7 +14,7 @@ Picture a two-act story.
 
 It's a setup with no resolution. Or a resolution with no setup.
 
-Now picture a four-act story. What you have is a three-act story with the second act split — but the *shape* is still three. Beginning, middle, end. The fourth act, when people invent one, is just somewhere inside the middle.
+Now picture a four-act story. What you have is a three-act story with the second act split, but the *shape* is still three. Beginning, middle, end. The fourth act, when people invent one, is just somewhere inside the middle.
 
 Aristotle wrote, about tragedy, that a story has a beginning, a middle, and an end. The line is more than two thousand years old and people still quote it because it keeps being true. Centuries later a German playwright named Gustav Freytag drew the same idea as a pyramid with five points: the pyramid is a three-act shape with the middle expanded into rising action, climax, and falling action.
 
@@ -48,13 +48,13 @@ Three checkpoints inside this larger movement.
 
 **Dark moment.** Late Act 2. Everything she has tried has failed. The obstacle has won. She is at the lowest point in the book. The end of Act 2 is the floor.
 
-If your draft is sagging in the middle, the diagnosis is almost always: *the midpoint is missing or weak.* Without a reversal, Act 2's complications go in a straight line — no shape change, no second wind. The reader is bored before they can articulate why.
+If your draft is sagging in the middle, the diagnosis is almost always: *the midpoint is missing or weak.* Without a reversal, Act 2's complications go in a straight line. No shape change, no second wind. The reader is bored before they can articulate why.
 
 ## Act 3: climax, resolution
 
 Final quarter.
 
-Having been at the floor, the protagonist applies what she has learned and confronts the obstacle. She wins, loses, or learns the truth too late — the three flavours of change from [Module 1's third ingredient](/learn/lesson/foundation-three-ingredients).
+Having been at the floor, the protagonist applies what she has learned and confronts the obstacle. She wins, loses, or learns the truth too late: the three flavours of change from [Module 1's third ingredient](/learn/lesson/foundation-three-ingredients).
 
 The climax is short. Usually ten to fifteen percent of the book.
 
@@ -72,19 +72,19 @@ This isn't because anyone enforced it. It's because the human brain, which evolv
 
 A diagnostic tool. If your story is saggy: where am I in the act count? Probably late Act 2, with no midpoint reversal and a weak dark moment.
 
-A target. If you can name your inciting incident, your lock-in, your midpoint, your dark moment, and your climax — *in that order, in one sentence each* — you have enough structure to start drafting. The rest of the work is filling in.
+A target. If you can name your inciting incident, your lock-in, your midpoint, your dark moment, and your climax, *in that order, in one sentence each*, you have enough structure to start drafting. The rest of the work is filling in.
 
 The next two lessons offer alternatives. The hero's journey is the three acts seen through the lens of *transformation*. Beat sheets are granular maps that sit underneath either. But three acts are underneath all of them.
 
 ## Try it
 
-> **Exercise 2.1.1 — Map a story you know well.** Pick a novel or a film you know thoroughly. In one short sentence each:
+> **Exercise 2.1.1: Map a story you know well.** Pick a novel or a film you know thoroughly. In one short sentence each:
 >
-> - The **inciting incident** — the event that disturbs the protagonist's normal.
-> - The **lock-in** — the choice that ends Act 1.
-> - The **midpoint** — what shifts at the middle of the middle.
-> - The **dark moment** — the lowest point in late Act 2.
-> - The **climax** — what the protagonist confronts in Act 3.
+> - The **inciting incident**: the event that disturbs the protagonist's normal.
+> - The **lock-in**: the choice that ends Act 1.
+> - The **midpoint**: what shifts at the middle of the middle.
+> - The **dark moment**: the lowest point in late Act 2.
+> - The **climax**: what the protagonist confronts in Act 3.
 >
 > If any beat is hard to locate, write *unclear*. Then, in two sentences, say what it is about that story that survived a missing or weak beat.
 >
@@ -94,7 +94,7 @@ The next two lessons offer alternatives. The hero's journey is the three acts se
 
 All public domain. Free at Project Gutenberg.
 
-- Aristotle, *Poetics*. Chapters 6–11 are where the structural argument starts. ([gutenberg.org/ebooks/1974](https://www.gutenberg.org/ebooks/1974))
+- Aristotle, *Poetics*. Chapters 6 to 11 are where the structural argument starts. ([gutenberg.org/ebooks/1974](https://www.gutenberg.org/ebooks/1974))
 - Jane Austen, *Pride and Prejudice*. Read it once for pleasure, then once for structure: every act break lands exactly where the theory predicts. The militia arrives. Darcy's first proposal. Pemberley and the letter. Lydia's elopement. The second proposal. Five points, three acts. ([gutenberg.org/ebooks/1342](https://www.gutenberg.org/ebooks/1342))
 - Charles Dickens, *A Christmas Carol*. The cleanest 3-act shape in English fiction at any length. The whole thing fits in an evening of reading. ([gutenberg.org/ebooks/46](https://www.gutenberg.org/ebooks/46))
 - Mary Shelley, *Frankenstein*. The lock-in (the creature waking) and the dark moment (Elizabeth's death) are exceptionally clean. The book also offers a useful contrast: the *creature's* arc and *Victor's* arc fit different acts of the same novel. ([gutenberg.org/ebooks/84](https://www.gutenberg.org/ebooks/84))
