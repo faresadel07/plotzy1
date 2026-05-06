@@ -788,6 +788,607 @@ async function seedQuizQuestions(slugToId: Map<string, number>) {
   console.log(`  quiz questions: ${inserted} inserted, ${skippedBanks} bank(s) already present`);
 }
 
+// ── Final exam question bank (40 questions) ───────────────────────────
+//
+// Seeded into the final-exam quiz row (type='final', module_id=NULL).
+// Order is preserved into the question.order column; the public API
+// serves questions in `order` ascending, so the student experiences
+// the exam in this exact sequence.
+//
+// Sequencing (per Batch 3.1 Phase B spec):
+//   - Grouped by module: M1 → M6, then cross-module synthesis at end.
+//   - Within each module: applied → recall → synthesis. (Concrete
+//     diagnosis → conceptual identification → multi-lesson integration.)
+//   - Within each (module, type) bucket: the 8 originally-approved
+//     samples come first, then the 32 questions added in this batch.
+//
+// Distribution: 22 applied + 11 recall + 7 synthesis = 40.
+// Per-module: M1=6, M2=6, M3=7, M4=6, M5=7, M6=5, cross=3.
+// Time limit: 60 minutes (configured on the quiz row, not here).
+const FINAL_EXAM_QUESTIONS: QuizQuestionSeed[] = [
+  // ═══ M1 — Foundation (6: 3 applied + 2 recall + 1 synthesis) ═══
+
+  // 1 — applied — chronicle vs story
+  {
+    questionText:
+      "An aspiring novelist writes: \"Maya's grandfather died when she was twelve. After his funeral she moved in with her aunt. Years later she became a chef.\" She asks why this opening, despite covering significant events, feels lifeless to early readers. What single diagnostic move best identifies what's wrong?",
+    optionA: "Mark every sentence with the dominant verb tense; the lifelessness is a tense-mixing problem.",
+    optionB: "Underline each event and ask \"what does the next event CAUSE in Maya?\" — if no event causes the next, you have a chronicle, not a story.",
+    optionC: "Count the proper nouns; an opening with this many names confuses readers.",
+    optionD: "Replace each abstract noun with a concrete one; lifeless prose is almost always abstract-noun heavy.",
+    correctOption: "b",
+    explanation:
+      "M1 L1's central distinction. A chronicle lists events in time; a story is events bound by causation in a character whose desire makes them resist or pursue. The diagnostic — does the next event happen BECAUSE of the previous — is the lesson's most usable working definition.",
+  },
+
+  // 2 — applied — finding the idea (raw material vs question)
+  {
+    questionText:
+      "A writer pitches a memoir-novel about her grandmother's emigration. She has thirty pages of family research, photos, letters, and a clear chronological arc. After six months she still cannot start. She says: \"I have everything I need. I just don't know what it's about.\" What does the lesson on finding the idea suggest she's missing?",
+    optionA: "A working title; without one, novelists drift through scenes without an organizing label.",
+    optionB: "A daily writing routine; the block is procedural, not conceptual.",
+    optionC: "A central question the book is asking that the research is in service of; without that, \"everything I need\" is everything except the thing.",
+    optionD: "A first chapter; once the opening exists, the book unblocks itself.",
+    correctOption: "c",
+    explanation:
+      "M1 L3 separates raw material from idea. Material is what you have; the idea is the question the material is in service of. Thirty pages of research with no working question is the canonical pre-writing block — the lesson names this exact pattern and offers the question-finding exercise as the unblock.",
+  },
+
+  // 3 — applied — three ingredients / the missing change beat
+  {
+    questionText:
+      "A workshop reader gives this feedback on a draft chapter: \"It's beautifully written. The character is vivid. The setting is rich. But I can't tell you what the chapter is FOR.\" What does the three-ingredients framework suggest is absent?",
+    optionA: "A protagonist with a clear external goal in the chapter — writing without a goal in scene reads as decorative.",
+    optionB: "A turning point — even rich, vivid writing without a moment of change reads as a sketch, not a chapter.",
+    optionC: "Sensory grounding in a specific physical location — \"rich setting\" without one anchored sense reads as scenery, not place.",
+    optionD: "A second character to bounce against — solo chapters need either change or company to feel chaptered.",
+    correctOption: "b",
+    explanation:
+      "M1 L4 names three things every story unit needs: a desire-bearing character, a force resisting them, and a moment of change that could not have been predicted. The reader's \"for what\" question almost always points at the missing third — change. Vividness without change reads as a sketch.",
+  },
+
+  // 4 — recall (Sample 3) — plot vs story vs anecdote
+  {
+    questionText:
+      "Module 1 distinguishes between plot, story, and anecdote. Which of the following best captures the difference?",
+    optionA: "Plot is the sequence of events; story is the causal-emotional structure under that sequence; an anecdote is a small story that contains the parts (want, obstacle, change) at paragraph scale.",
+    optionB: "Plot is what happens; story is what the writer intended; an anecdote is a true story.",
+    optionC: "The three are synonyms for the same thing.",
+    optionD: "Plot is for novels; story is for short fiction; an anecdote is for non-fiction.",
+    correctOption: "a",
+    explanation:
+      "M1 L1 defines plot as the sequence (\"the king died, then the queen died\"), story as the causal-emotional structure (\"the king died, and then the queen died of grief\"), and anecdote as a small story complete in a paragraph.",
+  },
+
+  // 5 — recall — pleasures (moved + recognition)
+  {
+    questionText:
+      "The lesson on why people read distinguishes two pleasures readers seek from fiction: the pleasure of being moved (something the reader's life cannot easily provide) and the pleasure of recognition (seeing one's inner life named accurately by someone else). Which statement most accurately reflects how the lesson positions these two pleasures relative to one another?",
+    optionA: "Recognition is the lower pleasure; being moved is the higher one — readers grow into the higher one as they mature.",
+    optionB: "The two pleasures are roughly equal in weight, and most enduring books reach for both — neither is sufficient alone.",
+    optionC: "Being moved is what readers SAY they want; recognition is what actually keeps them returning to a writer.",
+    optionD: "Recognition is a side effect; books don't aim for it but it happens when the prose is honest enough.",
+    correctOption: "b",
+    explanation:
+      "M1 L2's core position. The lesson refuses the hierarchy in (a) and the cynicism in (c). Both pleasures are independent and additive — a thriller can move without recognising and a quiet domestic novel can recognise without moving — but the books that endure usually do both. (d) confuses byproduct with intention.",
+  },
+
+  // 6 — synthesis (M1 L1 + M1 L4) — premise without want
+  {
+    questionText:
+      "A first-time novelist sends you the opening of her book. Three pages in: a woman wakes up in a city she has never been to, with no memory of how she arrived. The prose is competent. The premise is intriguing. But you find yourself reading on out of duty rather than pull. By page eight you put it down. When you ask yourself why, the answer surprises you: nothing has been promised. The mystery of how she arrived doesn't function as a hook because the writer has not yet given you any reason to want to find out. Which single revision move best addresses what the opening is missing?",
+    optionA: "Move the woman's backstory to chapter one so the reader knows what is at stake before the disorientation begins.",
+    optionB: "Establish — within the first three pages — what the protagonist WANTS that the disorientation is now blocking, even if the want is small or partial.",
+    optionC: "Replace the third-person perspective with first-person so the reader is inside the disorientation rather than observing it.",
+    optionD: "Open earlier, in the city she came from, so the reader sees the journey rather than its disorienting aftermath.",
+    correctOption: "b",
+    explanation:
+      "Synthesises M1 L1 (story = causation rooted in desire) with M1 L4 (every story unit needs a desire-bearing character). A premise without a want is a situation, not a story. The reader does not pull through a mystery because of the mystery itself — she pulls through because she cares whether the protagonist gets what she wants. The other options are craft moves that might help secondarily, but none addresses the diagnosis.",
+  },
+
+  // ═══ M2 — Architecture (6: 3 applied + 2 recall + 1 synthesis) ═══
+
+  // 7 — applied (Sample 1) — midpoint reversal
+  {
+    questionText:
+      "A writer's draft has a clear inciting incident, lock-in, and climax, but readers report the third act feels \"rushed.\" Reviewing the manuscript, the writer notices Act 2 has rising complications but no moment where the protagonist's understanding of the problem shifts. According to Module 2, what is most likely missing?",
+    optionA: "The book is too long — cut Act 1.",
+    optionB: "The midpoint reversal is missing — without a re-framing moment in the middle of Act 2, complications stack linearly and the climax has no curve to land on.",
+    optionC: "The protagonist isn't likeable enough.",
+    optionD: "The structure is wrong — switch to the hero's journey.",
+    correctOption: "b",
+    explanation:
+      "M2 L1 identifies the midpoint as the moment that gives Act 2 a shape change. The \"rushed third act\" symptom in the presence of complete Act 1 and a clear climax almost always traces to a missing midpoint reversal. The cure is to find or write a midpoint where the protagonist's understanding of their want, the obstacle, or themselves changes.",
+  },
+
+  // 8 — applied — choosing-structure (quiet novel, three-act re-fit)
+  {
+    questionText:
+      "A writer is plotting a quiet, character-driven novel about a librarian who decides, in middle age, to leave the city she has lived in for thirty years. She tells you she has been told her novel \"needs more structure\" but the suggestion to use a three-act framework feels wrong for the kind of book she wants to write. Which structural framework is most likely to fit the book's quiet shape?",
+    optionA: "A four-quadrant beat sheet, since beat sheets are explicitly designed for novels with low external stakes.",
+    optionB: "The Hero's Journey, since the protagonist's departure from a known world maps cleanly to the Call to Adventure.",
+    optionC: "Three-act structure, refitted to a quiet shape: act one is the slow accumulation of dissatisfaction, act two is the choosing, act three is the leaving — the framework is shape-agnostic.",
+    optionD: "No framework — quiet novels are generally better off written intuitively, with structure imposed only in revision.",
+    correctOption: "c",
+    explanation:
+      "M2 L4's central argument. The frameworks are not genre-bound; they describe the SHAPE of change in a character. The librarian's slow accumulation, decision, and act of leaving is a recognisable three-act curve. (d) misreads the lesson, which positions structural awareness as a tool regardless of writing approach.",
+  },
+
+  // 9 — applied — Hero's Journey at domestic scale
+  {
+    questionText:
+      "A writer using the Hero's Journey framework reports that the structure feels \"too heroic\" for her domestic-realist novel. The protagonist is a teacher dealing with her ageing mother. She has resisted converting to three-act because she likes the journey's emotional milestones (the threshold-crossing, the ordeal, the return). What's the most useful revision-level move?",
+    optionA: "Drop the Hero's Journey entirely; it was designed for myth and does not fit domestic realism.",
+    optionB: "Keep the journey's emotional milestones but treat them as internal beats — the threshold is not leaving home, it's accepting that the relationship has already changed.",
+    optionC: "Rewrite the protagonist as someone who literally goes on a journey (a road trip, a return-to-hometown), so the milestones land at the genre's intended scale.",
+    optionD: "Use the Hero's Journey for plotting but switch to three-act for the writing itself, so the prose stays domestic in register.",
+    correctOption: "b",
+    explanation:
+      "M2 L2's central refit. The Hero's Journey describes a shape of psychological transformation; its milestones operate just as well as INTERNAL beats. A domestic novel's threshold can be the moment a daughter accepts her mother is no longer the parent — same beat, different scale. The lesson's working principle: structure describes shape, not scale.",
+  },
+
+  // 10 — recall — beat sheets as rhythm map
+  {
+    questionText:
+      "The lesson on beat sheets describes them as a \"granular plotting tool\" — finer than three-act, coarser than scene-by-scene. Which statement most accurately captures the FUNCTION the lesson assigns to beat sheets within a writer's process?",
+    optionA: "A beat sheet is a substitute for outlining; writers who use one do not need to outline separately.",
+    optionB: "A beat sheet is a rhythm map; it specifies the emotional turn each beat should make, leaving the scene-level execution to the writer.",
+    optionC: "A beat sheet is a marketing-driven structure; it aligns the manuscript with reader expectations in a given genre, increasing salability.",
+    optionD: "A beat sheet is a revision-only tool; it should never be consulted during drafting because it constrains discovery.",
+    correctOption: "b",
+    explanation:
+      "M2 L3 frames beat sheets as RHYTHM maps. Each beat names the emotional or structural turn that should happen by a particular point, without prescribing how it's executed. (a) confuses outlining and beating; (c) misreads the lesson's voice (it explicitly avoids the marketing frame); (d) is a partial truth distorted into an absolute.",
+  },
+
+  // 11 — recall — structural choice = camera in time
+  {
+    questionText:
+      "A \"structural choice\" decision in a novel is, per the choosing-structure lesson, primarily a decision about WHAT?",
+    optionA: "Genre — different genres demand different structural frameworks; getting genre right gives you structure for free.",
+    optionB: "Where the camera is in time — structure is the writer's decision about how the order of telling differs from the order of happening.",
+    optionC: "Length — short novels favour three-act, long novels favour Hero's Journey, very long novels favour beat sheets.",
+    optionD: "Voice — first-person novels resist tight structure; third-person novels welcome it.",
+    correctOption: "b",
+    explanation:
+      "M2 L4's most usable working definition: structural choice = the relation between order-of-telling and order-of-happening. The framework choices (3-act vs HJ vs beats) are surface choices; the deep choice is the camera-in-time. (a) reverses cause; (c) is false; (d) is unrelated.",
+  },
+
+  // 12 — synthesis (M2 L1 + M2 L4) — three-timeline novel
+  {
+    questionText:
+      "A writer has a 70,000-word draft of a novel that follows a young woman across three timelines: her childhood, her young adulthood abroad, and her present-day return to the country she was born in. In the draft, the timelines are interleaved scene-by-scene. Beta readers report that the prose is strong, the characters are vivid, but they \"lose track of which timeline they are in\" by the middle. The writer is committed to the three-timeline architecture but asks how she should reconsider its execution. Which is the most useful structural move?",
+    optionA: "Convert to chronological order — the three-timeline conceit is what is actually breaking the reader; the architecture is the problem.",
+    optionB: "Reorganise so each act of the three-act structure dominantly inhabits ONE timeline (act one = childhood, act two = young adulthood, act three = present), with the other two woven in as deliberate echoes — the architecture stays, but the camera-in-time is now act-anchored.",
+    optionC: "Add a subtitle to each scene specifying year and city — the problem is signposting, not structure.",
+    optionD: "Switch from three timelines to two (childhood + present) — three is one too many for most readers to track.",
+    correctOption: "b",
+    explanation:
+      "Synthesises M2 L1 (three-act as load-bearing shape) with M2 L4 (structural choice = camera-in-time). The diagnosis is not that three timelines are inherently confusing; it is that scene-by-scene interleaving gives the reader no anchor for the camera. Pinning each act to a dominant timeline preserves the architecture while solving the disorientation. (a) abandons the architecture; (c) treats a structural problem as a typographic one; (d) reduces complexity rather than organising it.",
+  },
+
+  // ═══ M3 — Characters (7: 4 applied + 2 recall + 1 synthesis) ═══
+
+  // 13 — applied (Sample 2) — antagonist mirror exercise
+  {
+    questionText:
+      "A writer's antagonist is described as \"she's just evil\" by beta readers — they can't articulate why beyond that. The protagonist's wound/want/need are richly layered. According to Module 3, what is the most useful next move?",
+    optionA: "Cut the antagonist; the protagonist can carry the book alone.",
+    optionB: "Mirror the protagonist's framework onto the antagonist — write a paragraph from the antagonist's POV in their own voice, sympathetic to themselves, explaining why they are right. If the writer cannot, the antagonist is a function, not a person.",
+    optionC: "Make the antagonist more obviously evil so readers stop hesitating.",
+    optionD: "Replace the antagonist with a system (poverty, war, illness).",
+    correctOption: "b",
+    explanation:
+      "M3 L3's specific prescription. The \"she's just evil\" feedback is the absence of architecture — the cure is to build it using the same wound/want/need scaffold M3 L1 used for the protagonist. The paragraph-in-their-voice exercise is the diagnostic.",
+  },
+
+  // 14 — applied (Sample 7) — antagonist wound concept vs event (boundary)
+  {
+    questionText:
+      "A writer's antagonist has a clear wound (mother died young), a clear want (recognition), and a sympathetic POV paragraph. Beta readers still find the antagonist flat. By contrast, the protagonist's wound is rendered through a specific 30-page event in chapter 4. What is most likely happening?",
+    optionA: "The antagonist needs more screen time.",
+    optionB: "The antagonist's wound exists as concept (\"mother died young\") but is not rendered as a specific event the way the protagonist's is. M3 L1's wounds-are-events test catches this — the cure is to render the antagonist's wound as a specific moment, even if that moment never appears on the page.",
+    optionC: "The protagonist is too well-developed; balance by making them flatter.",
+    optionD: "Cut the antagonist.",
+    correctOption: "b",
+    explanation:
+      "M3 L1's distinction between wound-as-concept (\"abandonment issues\") and wound-as-event (\"the morning his father packed a suitcase and didn't come back\") applies symmetrically to the antagonist. The wound exists in the writer's notes; it doesn't exist in the form the reader needs.",
+  },
+
+  // 15 — applied — supporting cast / two-trait rule
+  {
+    questionText:
+      "A writer has a 60,000-word draft. The protagonist is sharply rendered and the antagonist is doing exactly what she should be. But the supporting cast — the protagonist's sister, her mentor, her three colleagues — read flat to beta readers. The writer has given each one a name, an occupation, and a small physical detail. She asks what's missing.",
+    optionA: "Each supporting character needs a SECOND, unrelated trait — name + occupation + a detail in service of that occupation still adds up to one trait (the function trait); a single trait is cardboard, two unrelated traits are a person.",
+    optionB: "Each supporting character needs more screen time; flatness is almost always under-development.",
+    optionC: "Each supporting character needs her own backstory beat in the manuscript, otherwise she reads as decorative.",
+    optionD: "Each supporting character needs to be moved into act three, where the protagonist's choices have the highest weight.",
+    correctOption: "a",
+    explanation:
+      "M3 L4's two-trait rule. One trait — even a vivid one — reads as cardboard. Two specifically unrelated traits (\"the brave knight who is also a coward about heights\") cross the line into personhood because the reader's mind has to hold a small contradiction. (b) and (c) are surface fixes the lesson explicitly resists; (d) misreads the relationship problem as a placement problem.",
+  },
+
+  // 16 — applied — dialogue voice driven by wound
+  {
+    questionText:
+      "A writer's dialogue passes a flat-tongue test: every line could be said by any character. She has read the lesson on dialogue voice and understands she needs to differentiate. But when she tries to differentiate by giving each character a \"verbal tic\" (one says \"yeah\" a lot, one stutters, one uses formal vocabulary), her test readers report the dialogue now feels mannered and gimmicky. What's the most useful next move?",
+    optionA: "Strip the tics — voice differentiation is downstream of the WOUND. What each character protects, avoids, or reaches for verbally tracks to the thing the wound made them defensive about, and that level of differentiation doesn't read as mannered the way a tic does.",
+    optionB: "Remove all dialogue tags except \"said\" — most flat-dialogue diagnoses are actually tag-clutter problems in disguise.",
+    optionC: "Add manner-of-speaking verbs (whispered, muttered, growled) to differentiate HOW each character speaks, not WHAT they say.",
+    optionD: "Move the dialogue scenes to later in the manuscript, after each character has been physically described enough that the reader can hear them.",
+    correctOption: "a",
+    explanation:
+      "M3 L5's central diagnosis. Voice differentiation by quirk is the trap the lesson explicitly names: the reader notices a tic once and stops noticing. Real differentiation is structural and rooted in the character's wound (callback to L1) — what they protect, avoid, reach for verbally. (b) is real but adjacent; (c) is the beginner's instinct (the lesson explicitly counsels using \"said\" almost always); (d) is unrelated.",
+  },
+
+  // 17 — recall — supporting cast / cut question
+  {
+    questionText:
+      "The supporting-cast lesson offers a \"cut question\" for evaluating each secondary character. What is the question, and what is the principle behind asking it?",
+    optionA: "\"Does this character have a name and a clear physical description?\" — characters who lack either tend to feel flat; the cut question targets under-development.",
+    optionB: "\"What would the story lose if I removed this character?\" — if the answer is *nothing*, cut; if the answer is *another character would have to do their job*, consider merging instead.",
+    optionC: "\"Does this character appear in more than three scenes?\" — supporting characters who appear once or twice are usually patches; the cut question enforces minimum-presence discipline.",
+    optionD: "\"Could the protagonist achieve their want without this character?\" — characters who don't change the protagonist's path are dead weight; the cut question targets functional necessity.",
+    correctOption: "b",
+    explanation:
+      "M3 L4's central diagnostic for any secondary character. The two answers map to two moves: nothing-lost = cut; function-would-transfer = merge. Merging produces a character richer than either of the originals because the merged figure carries layered function (\"the mentor + the rival\" becomes guidance from someone with their own stake). (d) is closest as a distractor but inverts the test — not all supporting characters are in service of the protagonist's want.",
+  },
+
+  // 18 — recall — backstory dump vs revelation
+  {
+    questionText:
+      "The backstory lesson distinguishes between a backstory DUMP and a backstory REVELATION. What is the difference?",
+    optionA: "A dump is summarised in narration; a revelation is dramatised in scene — the difference is mode of delivery.",
+    optionB: "A dump moves the reader BACKWARD in time (paragraphs of historical context interrupting present-tense story); a revelation pulls the past FORWARD into the present moment, where it changes the meaning of what was already on the page.",
+    optionC: "A dump tells the reader something the protagonist already knows; a revelation tells the reader something the protagonist and reader are learning together.",
+    optionD: "A dump reveals backstory all at once; a revelation reveals it piece by piece across multiple chapters — the difference is pacing.",
+    correctOption: "b",
+    explanation:
+      "M3 L2's central distinction. A dump interrupts the present with paragraphs of context (the reader stops reading a novel, the lesson notes, around the second sentence); a revelation is a single sentence — sometimes three words — that pivots the reader's understanding of what's happening right now. The phrase \"pulls the past forward\" is the lesson's working test. (a), (c), (d) are plausible-sounding alternative distinctions the lesson does not make.",
+  },
+
+  // 19 — synthesis (M3 L3 + M3 L5) — closed-off protagonist
+  {
+    questionText:
+      "A writer's protagonist is a forty-year-old translator who, after her father's death, returns to her childhood home to clear it out. The opening fifty pages establish: her grief, her professional precision, her difficult relationship with her sister Yara, and her father's last days. Beta readers say the protagonist is \"vivid but oddly closed off\" — they can describe her but they don't feel WITH her. The writer suspects the protagonist's interiority is the problem, but when she adds more interior monologue, the closed-off feeling gets WORSE. Which combined move is most likely to open the protagonist?",
+    optionA: "Strengthen the antagonist (Yara) so the protagonist has to react more sharply, surfacing interiority through external pressure.",
+    optionB: "Move the dialogue with Yara earlier and harder — interior monologue cannot do what an honest scene with the right opponent can; combined with cutting some of the new monologue, the protagonist's closure starts to read as protection rather than authorial reticence.",
+    optionC: "Replace the third-person with first-person so the reader is positioned inside the protagonist's head from page one.",
+    optionD: "Add a confidant character (a colleague, a friend) the protagonist can be honest with on the page; the closure is a result of having no one to talk to.",
+    correctOption: "b",
+    explanation:
+      "Synthesises M3 L3 (the antagonist with parallel architecture as the protagonist's mirror — \"their collision IS the plot\") with M3 L5 (subtext + voice rooted in wound — the principle that important conversations happen around the thing, not at it). The closed-off protagonist usually doesn't need MORE interior — she needs the right opponent and dialogue with subtext, where the closure can read as protection rather than authorial reticence. (a) is half the answer (strengthen antagonist) without the second half (use dialogue + cut some monologue); (c) is a structural overhaul; (d) is a softer variant of (b) that misses the pressure principle.",
+  },
+
+  // ═══ M4 — World (6: 4 applied + 1 recall + 1 synthesis) ═══
+
+  // 20 — applied — show vs tell, gesture conversion
+  {
+    questionText:
+      "A writer is revising her opening chapter. The chapter contains the line: \"She felt deeply uncertain about the move.\" A workshop reader has flagged this as \"telling, not showing.\" The writer has tried three times to convert the line and each conversion either bloats the page or feels false. What's the most useful next move?",
+    optionA: "Replace the abstract noun \"uncertain\" with a more concrete one (e.g. \"a low dread about the move\") and accept that some interior states are best telled rather than shown.",
+    optionB: "Cut the line entirely and trust the surrounding scene to carry the uncertainty, returning to it only if a beta reader reports the feeling missing.",
+    optionC: "Convert the line to a physical gesture in scene: she pauses with one hand on the boxes, looks at the empty room, then keeps packing — the gesture shows what the abstraction told.",
+    optionD: "Move the line to a later chapter where the move is in motion; uncertainty BEFORE the action is harder to show than uncertainty IN the action.",
+    correctOption: "c",
+    explanation:
+      "M4 L1's standard show-conversion move. The conversion the writer needs is from abstract interior state (\"uncertain\") to physical gesture in scene (pause, glance, the small failure to keep packing). (a) is a surrender that the lesson explicitly resists; (b) is a sometimes-useful move but skips the conversion the writer wanted help with; (d) reframes the problem rather than solving it.",
+  },
+
+  // 21 — applied — sensory writing rooted in character
+  {
+    questionText:
+      "A writer is drafting a hospital scene. She wants the reader to feel the character's exhaustion. Her current draft includes: fluorescent lights, beeping monitors, the smell of antiseptic, the green pyjamas of an orderly walking past, the cold of the chair, the bitter coffee from the vending machine. She asks why the scene reads as \"competent generic hospital\" rather than the specific exhaustion she intended.",
+    optionA: "She needs to choose senses that rise from THIS character's body — what a character notices is downstream of what they protect; a translator's tired ear hears the beeps differently from a surgeon's hands feeling the cold of the chair. Six senses listed without character-anchoring read as inventory; well-chosen senses, even fewer, render the place this character is in.",
+    optionB: "She needs to add a seventh sense — the character's interior monologue about her exhaustion — to break the over-reliance on the five external senses.",
+    optionC: "She needs to move the scene from present-tense to past-tense; sensory overload reads as generic in present-tense and specific in retrospect.",
+    optionD: "She needs to add direct speech from another character to the scene so the senses anchor to a relational moment rather than a checklist.",
+    correctOption: "a",
+    explanation:
+      "M4 L2's two-sense rule (a floor, not a ceiling) plus the lesson's deeper principle: \"sensory choices rise from the same place as voice — what a character notices is downstream of what they protect.\" Six senses listed without character-anchoring read as inventory; well-chosen senses (whether two or four) render THIS character's experience of the place. (b) inverts the lesson; (c) and (d) miss the diagnosis.",
+  },
+
+  // 22 — applied — setting as character (pressure on protagonist)
+  {
+    questionText:
+      "A writer's setting (a small town in central Anatolia) is described carefully and accurately, with attention to the architecture, the climate, the food. Beta readers report that the setting \"doesn't do anything\" — they can picture the town but it doesn't seem to PRESS on the protagonist. What would convert her described setting into a setting that functions as a character?",
+    optionA: "Add a personification beat in the opening — describe the town as \"watching\" or \"waiting\" so the reader registers it as agentive.",
+    optionB: "Show the protagonist responding DIFFERENTLY to the town than she would in another place — the town becomes a character when its presence changes what she does or says, not when it is described well.",
+    optionC: "Move more of the action OUTDOORS so the setting has more screen time.",
+    optionD: "Reduce the setting description; over-described settings always feel decorative rather than agentive.",
+    correctOption: "b",
+    explanation:
+      "M4 L3's central diagnostic. A described setting is decoration; a character-setting is one whose presence CHANGES the protagonist's behavior. The reader registers a setting as agentive not from authorial description but from observed pressure. (a) is the easy reach that almost always reads as forced; (c) confuses screen time with function; (d) is sometimes useful but misses the diagnosis.",
+  },
+
+  // 23 — applied — load-bearing description
+  {
+    questionText:
+      "A writer's first draft has dense, careful description of every room, street, and meal. A revision pass has cut almost all of it. Now the manuscript reads \"weightless\" — beta readers say the world \"feels thin.\" What principle should guide her on the third pass?",
+    optionA: "Restore one sentence of description to every scene — even one anchoring sentence prevents the weightless feeling.",
+    optionB: "Restore description ONLY where the next dramatic beat depends on it — descriptive weight should follow dramatic weight, not be evenly distributed.",
+    optionC: "Restore description in proportion to its sensory richness — visually rich settings get more, sparse ones get less, regardless of dramatic function.",
+    optionD: "Restore description in a 1:5 ratio — one descriptive paragraph for every five paragraphs of action or dialogue.",
+    correctOption: "b",
+    explanation:
+      "M4 L4's central principle: descriptive pacing should be load-bearing. Description that supports a dramatic beat earns its weight; description distributed evenly reads as decoration when present, weightless when stripped. (a) and (d) are mechanical rules the lesson explicitly resists; (c) confuses sensory inventory with dramatic function.",
+  },
+
+  // 24 — recall (Sample 8) — two-sense rule scope (boundary)
+  {
+    questionText:
+      "The \"two-sense rule\" from M4 L2 states that every important scene should engage at least two senses. Does the rule apply to scenes that are told (summarised) rather than shown (rendered)?",
+    optionA: "Yes — the rule applies to all scenes regardless of mode.",
+    optionB: "No — the rule applies only to shown scenes. Told scenes are summarising past time, not rendering a moment, so the multi-sensory rule doesn't apply.",
+    optionC: "The rule doesn't exist; sensory writing is optional.",
+    optionD: "The rule applies only to literary fiction.",
+    correctOption: "b",
+    explanation:
+      "M4 L2 explicitly scopes the two-sense rule to shown scenes. M4 L1's show/tell framing distinguishes the two modes; sensory rendering is the technique that makes shown moments land — it isn't the technique for compressed time.",
+  },
+
+  // 25 — synthesis (M4 L2 + M4 L3) — fuse setting + sensation
+  {
+    questionText:
+      "A writer has been working on a quiet domestic novel for two years. The setting (a coastal town) is rendered with care across all 80,000 words. The protagonist (a widow in her sixties) is fully realised. But beta readers consistently report that the town and the widow feel like \"two adjacent novels\" — the description does not seem to do anything to the protagonist, and the protagonist's inner life does not seem to register the place. The writer suspects the problem is in the SCENES rather than the prose. What pair of moves is most likely to fuse them?",
+    optionA: "Cut all standalone description and require every detail of the town to either generate a sensory beat in the protagonist's body OR change a small decision she makes in the next paragraph.",
+    optionB: "Move the protagonist out of the town for the middle act; absence makes the place register on her return.",
+    optionC: "Add a second character native to the town who explains its history to the widow; explanation forces relation.",
+    optionD: "Rewrite the third-person prose in close third focused on the widow's senses, letting description happen ONLY through her perception.",
+    correctOption: "a",
+    explanation:
+      "Synthesises M4 L2 (sensory writing rooted in this character's body) with M4 L3 (setting as character = setting that PRESSES on the protagonist). The diagnosis is that the description is on a parallel track to the protagonist; the fix is to require every detail to either become a body-anchored sensation or alter a small decision. (d) is a useful move but does only half the work (perception without consequence); (b) and (c) are scope changes.",
+  },
+
+  // ═══ M5 — Writing Process (7: 5 applied + 2 recall + 0 synthesis) ═══
+
+  // 26 — applied — blank page (15-min permission)
+  {
+    questionText:
+      "A writer has been opening her laptop every morning for three weeks and has written nothing. She knows the next scene she needs to write — a difficult conversation between two estranged sisters — and she has notes for it. She is not blocked on the IDEA. She is blocked on the act of beginning. What's the most useful move?",
+    optionA: "Skip this scene — write the scene AFTER it for a week, then return to the difficult one with the destination already known.",
+    optionB: "Set a kitchen timer for fifteen minutes and write anything (descriptions, the room, what one sister is wearing) without permitting yourself to start the conversation; the conversation usually begins in minute thirteen on its own.",
+    optionC: "Switch tools — close the laptop, open a notebook, write the scene by hand; physical resistance to typing often dissolves into ink flow.",
+    optionD: "Postpone the scene to revision — many difficult scenes are easier to find on the second pass when the surrounding manuscript exists.",
+    correctOption: "b",
+    explanation:
+      "M5 L1's central technique. The blank page is rarely about the page; it is about the body's resistance to the act of beginning. The fifteen-minute permission to write SECONDARY material almost always becomes the doorway into the primary scene because the resistance was at the doorstep, not in the scene. (a), (c), (d) are all sometimes-useful moves but they dodge the threshold rather than crossing it.",
+  },
+
+  // 27 — applied — first draft / push through
+  {
+    questionText:
+      "A writer is two months into her first draft. She has 30,000 words. She has begun to read what she's written and finds large stretches she wants to fix immediately — a chapter that drags, a character who is inconsistent, a scene that should be cut. She asks whether she should fix these now or push through to the end of the draft.",
+    optionA: "Fix them now — letting bad pages accumulate makes the draft demoralising and makes finishing harder.",
+    optionB: "Push through to the end — first-draft revising compounds; the cleanest path is to mark the issues and keep moving forward, since many will resolve themselves once the destination is known.",
+    optionC: "Fix only the character inconsistency now — character problems propagate forward and corrupt later chapters in ways that are hard to undo; structural problems can wait.",
+    optionD: "Set aside one day a week for revision and the other days for forward progress; alternating prevents both demoralisation and propagation.",
+    correctOption: "b",
+    explanation:
+      "M5 L2's working rule for first-draft writers: the draft's job is to exist. Mid-draft revision compounds — every fix surfaces five new fixes, the destination shifts, the writer never finishes. The lesson's working aphorism: a complete bad draft is always more revisable than half a good one. (a) is the intuitive trap. (c) confuses character-tracking (which can be done with a margin note) with re-writing. (d) is a halfway compromise the lesson explicitly cautions against.",
+  },
+
+  // 28 — applied — revision passes / chapter compromise
+  {
+    questionText:
+      "A writer in revision flags her own draft with: \"Chapter 7 is beautifully written but adds nothing to the plot or to character X's arc. I love it. I cannot bring myself to cut it.\" How to decide?",
+    optionA: "Cut it — the rule is absolute; any chapter that fails BOTH plot and arc tests is dead weight regardless of prose quality.",
+    optionB: "Move it to the appendix or the website as bonus material so the prose is preserved without disrupting the manuscript.",
+    optionC: "Keep it for one more pass and reassess after structural revision is complete; sometimes a chapter that seems isolated reveals a function once neighboring chapters are tightened.",
+    optionD: "Keep it but cut it down to its single best paragraph and absorb that paragraph into a neighboring chapter; preserves the prose, removes the structural drag.",
+    correctOption: "d",
+    explanation:
+      "M5 L3's working compromise. Pure cutting (a) loses prose the writer fought for; preservation as appendix (b) is denial dressed as solution; deferring (c) is rarely the right call when both diagnostic tests have already failed. The compromise — single best paragraph absorbed elsewhere — converts the loss into a craft move and almost always strengthens the absorbing chapter. The lesson's working aphorism: a chapter dies for the manuscript, but its best sentence may live in a different room.",
+  },
+
+  // 29 — applied — self-editing / week distance
+  {
+    questionText:
+      "A writer at the line-editing stage has a paragraph she has rewritten seven times. Each version is different. She no longer knows which is best. She asks for a stopping rule.",
+    optionA: "Read all seven versions aloud back-to-back; the one that survives the comparison is the strongest.",
+    optionB: "Choose the third version — around the third pass, instinct has informed the writing without yet being eroded by overthinking.",
+    optionC: "Set the paragraph aside for a week and choose on return; line-quality fatigue is real and fades with distance.",
+    optionD: "Choose the version with the fewest commas — at the line stage, simplicity is almost always the right tiebreaker.",
+    correctOption: "c",
+    explanation:
+      "M5 L4's central self-editing principle: distance restores judgment. After seven rewrites, the writer's ear is saturated and cannot hear the relative quality of versions; a week's distance returns the freshness needed to choose. (a) reads as plausible but doesn't address the saturation; (b) and (d) are mechanical rules the lesson explicitly resists.",
+  },
+
+  // 30 — applied — when to stop / send it
+  {
+    questionText:
+      "A writer has done structural, scene, and line passes on her manuscript. Her agent has accepted it. She asks for the LAST stopping rule before she sends it.",
+    optionA: "Re-read the opening twenty pages; the rest of the manuscript is locked, but the opening's ear can shift in subtle ways during the revision arc and deserves one final pass.",
+    optionB: "Read the entire manuscript aloud to the empty room one more time — anything that snags the ear is the final fix.",
+    optionC: "Set the manuscript aside for two weeks, then run a final SEARCH for words she tends to overuse (e.g. \"just\", \"actually\", \"very\") — the unconscious vocabulary is what survives even thorough revision.",
+    optionD: "Send it without further revision — she has done all three passes; further work is procrastination dressed as conscientiousness.",
+    correctOption: "d",
+    explanation:
+      "M5 L5's central call. Once the three-pass discipline is complete and an external reader (agent) has accepted, further passes are almost always the writer postponing release rather than improving the book. The lesson's principal warning: the manuscript can absorb infinite revision, and \"one more pass\" rarely changes the book's standing in the world. (a), (b), (c) are all pretext-passes the lesson names by their rationalisations.",
+  },
+
+  // 31 — recall (Sample 4) — revision pass order
+  {
+    questionText:
+      "Module 5 prescribes three sequential revision passes. What is the order, and the principle behind the order?",
+    optionA: "Line → Scene → Structural; the prose must be polished before structural questions can be answered.",
+    optionB: "Scene → Structural → Line; the middle level is the highest-leverage starting point.",
+    optionC: "Structural → Scene → Line; line-level polish in chapters that will be cut at the structural pass is wasted work.",
+    optionD: "The order doesn't matter as long as all three passes happen.",
+    correctOption: "c",
+    explanation:
+      "M5 L3's spine line — don't fix sentences in chapters you'll cut. Structural pass identifies what stays; scene pass ensures each scene earns its place; line pass polishes prose only in the surviving material.",
+  },
+
+  // 32 — recall — finished vs released
+  {
+    questionText:
+      "The \"when to stop\" lesson distinguishes between FINISHED and RELEASED. What is the lesson's working position on the relation between them?",
+    optionA: "Finished and released are the same — a book is finished when the writer releases it; \"finished\" is a release decision, not a craft state.",
+    optionB: "A book is finished when the writer can no longer improve it without breaking it; release happens after, when the writer accepts that diminishing returns have been reached.",
+    optionC: "Books are not finished; they are released — the lesson's working aphorism, and a hedge against the perfectionism that prevents books from leaving the writer's desk.",
+    optionD: "A book is finished when the structural revision pass is complete; release happens after the line-editing pass and before publication.",
+    correctOption: "c",
+    explanation:
+      "M5 L5's most-quoted line. The lesson rewords a better-known but commonly misattributed aphorism into its working form. The framing is deliberate — it removes the perfectionist ideal of \"finished\" and replaces it with a release decision the writer makes despite knowing more revision is always possible. (a), (b), (d) are all rationalist re-statements that miss the lesson's voice.",
+  },
+
+  // ═══ M6 — Publishing (5: 3 applied + 2 recall + 0 synthesis) ═══
+
+  // 33 — applied — self vs traditional / audience-first
+  {
+    questionText:
+      "A writer of a quiet literary novel has two paths in front of her: a small literary press willing to publish in 18 months with modest distribution and a $1,000 advance, or self-publishing through a major retailer in 4 months with full royalties and full creative control. How should she choose?",
+    optionA: "Choose the press — literary fiction depends on the cultural authority that traditional publishing confers; self-publishing literary work almost always underperforms regardless of quality.",
+    optionB: "Choose self-publishing — the 18-month delay and the $1,000 advance reveal that the press is offering little she cannot offer herself, and creative control is the higher value for a literary novel.",
+    optionC: "Choose based on the audience question rather than the publisher question — if her readers are press-discoverable (literary review pages, prize lists, indie bookstores), the press is the path; if they are discoverable elsewhere (social media, podcasts, communities of taste she already inhabits), self-publishing is.",
+    optionD: "Negotiate with the press for a faster timeline and a higher advance, then accept; the press's curatorial validation is uniquely valuable.",
+    correctOption: "c",
+    explanation:
+      "M6 L1's central re-framing. The publisher question (press vs self) is the wrong primary question; the audience question (where are MY readers reachable) is the right one. The lesson explicitly refuses the (a) and (b) absolutes and treats the publisher decision as DOWNSTREAM of the audience question. (d) is a tactical move that doesn't address the strategic frame.",
+  },
+
+  // 34 — applied — spoken pitch / blurb not summary
+  {
+    questionText:
+      "A writer has 30 seconds with a stranger at a wedding to describe her novel. She has prepared a careful three-sentence summary. The stranger's eyes glaze over. What's wrong?",
+    optionA: "The summary is too plot-heavy — strangers respond to character and theme more than to plot.",
+    optionB: "Three sentences is too long; one sharp sentence outperforms three careful ones in spoken contexts.",
+    optionC: "She is summarising; she needs to tell the stranger what KIND of book it is in language the stranger already uses, then offer one line of distinction — the spoken version is closer to a back-cover blurb than to a synopsis.",
+    optionD: "She is targeting the wrong audience; a wedding stranger is not a reader and her book deserves a more discerning context.",
+    correctOption: "c",
+    explanation:
+      "M6 L2's central principle for the spoken pitch. A summary tells the stranger what HAPPENS; a blurb tells her what KIND of experience to expect. The spoken pitch must do the blurb's job in language the stranger already uses. (b) is a partial truth (length helps) without the diagnosis. (a) and (d) misread the genre of the moment.",
+  },
+
+  // 35 — applied — audience / 200-is-enough
+  {
+    questionText:
+      "A writer launches her debut novel with a mailing list of 200 readers, all of whom are people she has corresponded with personally over five years (writers she has supported, members of her old workshop, friends-of-friends from a podcast appearance). She is anxious that 200 is too small. Her launch sells 180 copies in week one. What does the audience lesson suggest she's actually achieved?",
+    optionA: "Below threshold — 200 is too small to count as an audience; she should have built to at least 1,000 before launch.",
+    optionB: "The threshold of viable launch — a list of 200 readers, when each one is engaged enough to buy in week one, is what a writer needs to start; the next 200 will come from these 200's recommendations.",
+    optionC: "A platform but not an audience — 200 personal contacts is a network; an audience is strangers who have chosen to follow you because of the work.",
+    optionD: "An audience but not a platform — 200 readers can sustain a small career, but only a public-facing platform converts an audience into one that grows.",
+    correctOption: "b",
+    explanation:
+      "M6 L3. The lesson's working aphorism: \"Two hundred is enough to start.\" 200 engaged readers, each of whom buys, is exactly what a debut novel needs. The 90% conversion (180/200 buying in week one) is the true metric of an audience, and recommendations from this base are the second-order growth path. (a) overstates the threshold. (c) and (d) misuse \"platform\" and \"audience\" — the lesson rejects the platform-audience distinction as a marketing-tier confusion.",
+  },
+
+  // 36 — recall — 1.5-second rule
+  {
+    questionText:
+      "The cover-and-blurb lesson invokes a \"1.5-second rule.\" What does this rule describe?",
+    optionA: "The maximum time a reader will give a cover before deciding whether to pick up the book or move on; the cover must communicate genre, register, and a hint of plot in that window.",
+    optionB: "The minimum time a reader needs to read a back-cover blurb; blurbs shorter than a 1.5-second read tend to underperform.",
+    optionC: "The pace at which a reader's eye scans a bookstore shelf; covers must register from peripheral vision in 1.5 seconds or less.",
+    optionD: "The optimal exposure time for a cover image in social-media advertising.",
+    correctOption: "a",
+    explanation:
+      "M6 L2. The 1.5-second rule names the cover's hardest job: in less than two seconds, communicate to a reader scanning a shelf or a screen what KIND of book this is and whether her tastes are likely to be served. The other options are plausible-sounding adjacent ideas; (c) is closest as a distractor but misframes the rule as a vision-physiology fact rather than a craft target.",
+  },
+
+  // 37 — recall — first week vs first year
+  {
+    questionText:
+      "The after-launch lesson distinguishes the FIRST WEEK from the FIRST YEAR of a book's life. Which is the lesson's working position on which window matters more?",
+    optionA: "The first week — most books that succeed signal their success in week-one sales; books that miss week one rarely recover.",
+    optionB: "The first year — most books that endure show their durability over twelve months of slow word-of-mouth, reviews, and reader-to-reader recommendation; week-one performance is a noisy signal.",
+    optionC: "Neither — book performance is not predictable on either window; the writer's job is to release the book and start the next one.",
+    optionD: "Both equally — week-one signals attention; year-one signals depth; a writer pays attention to both for different reasons.",
+    correctOption: "b",
+    explanation:
+      "M6 L5's central calibration. Week-one sales reflect the launch effort and the writer's existing reach; year-one performance reflects whether the book has the depth to spread by recommendation. The lesson explicitly counsels writers to ignore week-one anxiety and watch the year-one slope. (a) is the conventional industry wisdom the lesson resists. (c) is an over-correction that disclaims a useful signal. (d) is a near-true compromise that still gives week-one too much weight.",
+  },
+
+  // ═══ Cross-module synthesis (3) ═══
+
+  // 38 — synthesis (Sample 5) — M1+M3 wound as event
+  {
+    questionText:
+      "A writer's beta readers find the protagonist \"hard to root for\" despite richly written childhood backstory and a clear want (winning a dance competition). What combination of issues from Modules 1 and 3 best diagnoses the cause?",
+    optionA: "The story lacks all three ingredients; add a stronger antagonist.",
+    optionB: "The wound is rendered as concept (\"she had a difficult childhood\") rather than as a specific event; the want may also be a sentence-level pursuit on the surface (a competition) but rooted in a wound the reader can't feel. The cure is to name the moment the wound happened and verify the want connects to it.",
+    optionC: "The backstory has too many details; cut all childhood references.",
+    optionD: "The plot is too propulsive — slow it down with more interiority.",
+    correctOption: "b",
+    explanation:
+      "Cross-module diagnosis. M3 L1 — wounds must be events, not generalised conditions. M1 L4 — wants must be felt by the reader, which requires the wound underneath to be specific. \"Rich backstory + concrete want, but reader doesn't root for protagonist\" almost always traces to wound-as-concept rather than wound-as-event.",
+  },
+
+  // 39 — synthesis (Sample 6) — M4+M5 load-bearing + signs of done
+  {
+    questionText:
+      "A writer's third draft has clear structural beats, vivid sensory detail throughout, and polished line-level prose. After three revision passes, beta readers say \"the prose is beautiful but slow.\" The writer has begun moving commas back and forth and has not started book 2. According to course frameworks, what is the most likely diagnosis?",
+    optionA: "The book needs more events; add scenes.",
+    optionB: "The load-bearing-detail test (M4 L4) hasn't been fully applied — beautiful description that doesn't earn its place is the cumulative cause of \"slow.\" The writer is also showing two M5 L5 signs of done (commas back and forth, no book 2). Both interventions are needed: a final description cull, then ship and start book 2.",
+    optionC: "The structural beats are wrong; restart the structural pass.",
+    optionD: "The writer should add more dialogue.",
+    correctOption: "b",
+    explanation:
+      "Cross-module — M4 L4's load-bearing test catches the \"good but slow\" failure mode (beautiful prose around non-load-bearing description). M5 L5's signs of done point to over-revision, not incompleteness. The diagnosis is two-part: cut, then ship.",
+  },
+
+  // 40 — synthesis (M2 L1 + M5 L3) — manufactured vs structural fix
+  {
+    questionText:
+      "A writer has finished a 90,000-word draft of a literary thriller. She is now in revision. The structural pass has revealed a problem she did not see while drafting: act two's midpoint, around chapter 14, doesn't deliver a true reversal — the protagonist learns new information but does not change course. Beta readers report act two \"loses pull around chapter 14.\" She has two paths: PATH X — rewrite chapter 14 to manufacture the missing reversal (one new chapter, no shuffling). PATH Y — restructure act two so that what is currently the chapter-19 reveal becomes the new midpoint, shifting roughly six chapters earlier (reworking five subsequent chapters' continuity but no new writing). Which is the more disciplined revision move?",
+    optionA: "Path X — the diagnosis is local to chapter 14; a local diagnosis warrants a local fix, and writing a new chapter is faster than reworking five.",
+    optionB: "Path Y — the diagnosis is structural (the wrong beat is at the wrong place), and structural problems demand structural moves; manufacturing a reversal where the story does not have one is almost always the worse outcome.",
+    optionC: "Either path can work; the writer should choose based on which she has more energy for, since both require comparable drafting hours.",
+    optionD: "Neither — this is a draft-stage architectural error, and the manuscript should be re-outlined from the midpoint forward before any revision is attempted.",
+    correctOption: "b",
+    explanation:
+      "Synthesises M2 L1 (midpoint as load-bearing structural beat) with M5 L3 (revision pass discipline: structural problems get structural solutions, not scene-level patches). The lesson's working principle: when the diagnosis is \"the right beat is in the wrong place,\" the discipline is to MOVE the right beat, not to manufacture a fake one in the wrong place. (a) is the conventional reach that almost always produces a forced reversal that beta readers will flag again. (c) is false — manufactured reversals and structural restorations produce different books, and the difference is the lesson. (d) is over-correction; this is exactly the revision-stage problem the three-pass discipline is designed to handle.",
+  },
+];
+
+// Sanity check at module load — guards against accidentally landing
+// fewer or more than 40 entries via a bad merge. (Mirrors the
+// HEROES.length check pattern from hero-config.ts.)
+if (FINAL_EXAM_QUESTIONS.length !== 40) {
+  throw new Error(
+    `FINAL_EXAM_QUESTIONS: expected 40 entries, got ${FINAL_EXAM_QUESTIONS.length}`,
+  );
+}
+
+async function seedFinalExamQuestions() {
+  const [finalQuiz] = await db
+    .select({ id: courseQuizzes.id })
+    .from(courseQuizzes)
+    .where(eq(courseQuizzes.type, "final"));
+  if (!finalQuiz) {
+    throw new Error("FINAL_EXAM_QUESTIONS: no final-exam quiz row in DB (run seedQuizzes first)");
+  }
+
+  const existing = await db
+    .select({ id: courseQuizQuestions.id })
+    .from(courseQuizQuestions)
+    .where(eq(courseQuizQuestions.quizId, finalQuiz.id));
+  if (existing.length > 0) {
+    console.log(
+      `  final exam questions already present (${existing.length}) — skip`,
+    );
+    return;
+  }
+
+  for (let i = 0; i < FINAL_EXAM_QUESTIONS.length; i++) {
+    const q = FINAL_EXAM_QUESTIONS[i];
+    await db.insert(courseQuizQuestions).values({
+      quizId: finalQuiz.id,
+      questionText: q.questionText,
+      optionA: q.optionA,
+      optionB: q.optionB,
+      optionC: q.optionC,
+      optionD: q.optionD,
+      correctOption: q.correctOption,
+      explanation: q.explanation,
+      order: i + 1,
+    });
+  }
+  console.log(
+    `  final exam questions inserted (${FINAL_EXAM_QUESTIONS.length})`,
+  );
+}
+
 // ── Main ───────────────────────────────────────────────────────────────
 async function main() {
   console.log("Seeding writing course (modules → renames → lessons → quizzes → content → questions)...");
@@ -803,6 +1404,7 @@ async function main() {
   await seedQuizzes(slugToId);
   await updateLessonContentFromFiles();
   await seedQuizQuestions(slugToId);
+  await seedFinalExamQuestions();
   console.log("Done.");
 }
 
