@@ -14,11 +14,24 @@ initSentry();
 
 import app, { httpServer, setupApp } from "./app";
 import { logger } from "./lib/logger";
+import { verifyCertificatePdfAssets } from "./services/certificate-pdf";
 
 const port = env.PORT;
 
 (async () => {
   await setupApp();
+
+  // QA fix #2.2 — verify the certificate-PDF assets (template + fonts)
+  // are present before accepting traffic. The function is built to fail
+  // fast; without this call, a misconfigured deploy that's missing the
+  // bundled assets serves a silent 500 on the first user's certificate
+  // download instead of crashing visibly in deploy logs.
+  try {
+    verifyCertificatePdfAssets();
+  } catch (err) {
+    logger.error({ err }, "Certificate PDF assets verification failed at boot");
+    process.exit(1);
+  }
 
   httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {

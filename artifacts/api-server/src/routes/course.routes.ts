@@ -539,8 +539,13 @@ router.post("/api/course/final-project", requireAuth, writeLimiter, async (req, 
     }
 
     // Ownership chain: book belongs to user, chapters belong to that book.
+    // QA fix #1.3 — also reject soft-deleted books. Without this, the user
+    // can submit a trashed book as their final project and burn 4 AI calls
+    // on content they no longer consider part of their library. The 404
+    // (rather than a "this book is in trash" message) intentionally
+    // doesn't reveal trash state to the caller.
     const book = await storage.getBook(bookId);
-    if (!book || book.userId !== userId) {
+    if (!book || book.userId !== userId || book.isDeleted) {
       return res.status(404).json({ message: "Book not found" });
     }
     const chapters = await Promise.all(ids.map((id) => storage.getChapter(id)));
@@ -651,11 +656,16 @@ router.post("/api/course/final-project/feedback", requireAuth, requireOpenAI, ai
     // whole book) — that's the user's submission, not the full work.
     const chapterIds = project.chapterIds as number[];
     const book = await storage.getBook(project.bookId);
-    if (!book) {
-      // CASCADE on books → final_projects means this should never
-      // happen, but if a row exists pointing at a nonexistent book,
-      // surface it as a 422 the user can fix by resubmitting.
-      logger.error({ userId, projectId: project.id, bookId: project.bookId }, "Final project references missing book");
+    if (!book || book.isDeleted) {
+      // CASCADE on books → final_projects only fires on hard-delete; a
+      // soft-delete leaves the row pointing at a flag-deleted book, so we
+      // need an explicit isDeleted check (QA fix #1.3). Without this the
+      // user could trigger 4 AI analyses on a trashed manuscript, wasting
+      // their daily budget.
+      logger.error(
+        { userId, projectId: project.id, bookId: project.bookId, deleted: book?.isDeleted ?? "missing" },
+        "Final project references missing or soft-deleted book",
+      );
       return res.status(422).json({ message: "Submitted book no longer exists; please resubmit" });
     }
     const chapters = await Promise.all(chapterIds.map((id) => storage.getChapter(id)));
@@ -868,7 +878,14 @@ router.get("/api/certificates/:uuid/pdf", publicReadLimiter, async (req, res) =>
       // frontend's t("courseCertAnonymousHolder") behavior. The renderer
       // requires a non-empty string. v1 is English-only PDFs so the
       // literal string is correct here.
-      const holderName = holder.displayName?.trim() || "Author";
+      //
+      // QA fix #3.2 — cap to 50 chars before render. Without the cap,
+      // very long display names visibly clip against the side ribbon
+      // (the safe fit is ~60 chars at the 28pt Lora-SemiBold size; 50
+      // is conservative for variable-width characters). The HTML cert
+      // on the verify page is unaffected (responsive layout handles
+      // long names there).
+      const holderName = (holder.displayName?.trim() || "Author").slice(0, 50);
 
       const pdfBuffer = await renderCertificatePdf({
         holderName,

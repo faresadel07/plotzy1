@@ -40,7 +40,7 @@ export function LessonCard({
         {completed ? (
           <CheckCircle2
             className="h-5 w-5 text-primary shrink-0"
-            aria-label={t("courseQuizCorrect")}
+            aria-label={t("courseLessonCompleted")}
           />
         ) : (
           <Circle className="h-5 w-5 text-muted-foreground shrink-0" aria-hidden />
