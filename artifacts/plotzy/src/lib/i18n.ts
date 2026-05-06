@@ -283,6 +283,7 @@ export const translations: Record<Language, Record<string, string>> = {
     courseCertNotFoundCta: "Go to course",
     courseCertHolderProfile: "Holder",
     courseCertExploreCourse: "Explore the course",
+    courseCertDownloadPdf: "Download PDF",
   },
   ar: {
     appName: "بلوتزي",

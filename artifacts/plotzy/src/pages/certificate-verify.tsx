@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useRoute, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
-import { ShieldCheck, ExternalLink } from "lucide-react";
+import { ShieldCheck, ExternalLink, Download } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
@@ -119,6 +119,25 @@ export default function CertificateVerifyPage() {
               certUuid={certQ.data.uuid}
               courseTitle={certQ.data.courseTitle}
             />
+
+            {/* Download CTA — primary action after viewing the cert.
+              * Uses a plain <a download> link styled as a Button. The
+              * Content-Disposition: attachment header from the
+              * /api/certificates/:uuid/pdf endpoint forces the browser
+              * to save rather than render inline; the `download` attr is
+              * a belt-and-braces hint for some legacy browsers.
+              * First-time download triggers lazy server-side generation
+              * (~1-2s); subsequent downloads serve the cached bytes
+              * (~50ms). Browser's native download indicator provides
+              * progress feedback — no in-app spinner needed for v1. */}
+            <div className="flex justify-center">
+              <Button asChild size="lg">
+                <a href={`/api/certificates/${certQ.data.uuid}/pdf`} download>
+                  <Download className="me-2 h-4 w-4" aria-hidden />
+                  {t("courseCertDownloadPdf")}
+                </a>
+              </Button>
+            </div>
 
             <Card className="p-4 flex items-center justify-between gap-3 flex-wrap">
               <div className="text-sm">
