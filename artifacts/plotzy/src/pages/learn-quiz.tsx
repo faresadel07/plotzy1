@@ -107,7 +107,11 @@ export default function LearnQuizPage() {
   }, [quizId, validId]);
 
   const [answers, setAnswers] = useState<Record<string, Option>>(initial?.answers ?? {});
-  const [startedAt] = useState<string>(initial?.startedAt ?? new Date().toISOString());
+  // Setter exposed for retake (QA fix #1.2) — without resetting startedAt
+  // on retake, the QuizTimer for the timed final exam reads 00:00 on a
+  // retake initiated >60 min after the first attempt and auto-submits
+  // empty answers, causing 422 INVALID_ANSWERS with no recovery path.
+  const [startedAt, setStartedAt] = useState<string>(initial?.startedAt ?? new Date().toISOString());
   const [result, setResult] = useState<AttemptResponse | null>(null);
 
   // Persist answers + startedAt as the user fills in.
@@ -116,11 +120,15 @@ export default function LearnQuizPage() {
     saveDraft(quizId, startedAt, answers);
   }, [quizId, validId, startedAt, answers, result]);
 
+  // Mutation accepts the answers map as an argument so callers can
+  // pass a freshly-padded set without racing React's setState (QA fix
+  // #3.1). The closure-captured `answers` would otherwise be stale by
+  // one render at the timer-expiry moment.
   const submitMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (submittedAnswers: Record<string, Option>) => {
       const res = await apiRequest("POST", `/api/course/quizzes/${quizId}/attempts`, {
         startedAt,
-        answers,
+        answers: submittedAnswers,
       });
       return res.json() as Promise<AttemptResponse>;
     },
@@ -182,7 +190,21 @@ export default function LearnQuizPage() {
                 <QuizTimer
                   startedAt={startedAt}
                   limitMinutes={quizQ.data.timeLimitMinutes}
-                  onExpire={() => submitMutation.mutate()}
+                  onExpire={() => {
+                    // QA fix #3.1 — pad any unanswered questions with
+                    // "a" before submit. Server requires exact answer
+                    // count or returns 422 INVALID_ANSWERS; the user
+                    // who runs out of time deserves a recorded fail
+                    // with the answers they did give, not a silent
+                    // error. Padding makes unanswered = wrong, which
+                    // matches reality.
+                    const padded: Record<string, Option> = { ...answers };
+                    for (const q of quizQ.data?.questions ?? []) {
+                      if (!(String(q.id) in padded)) padded[String(q.id)] = "a";
+                    }
+                    setAnswers(padded);
+                    submitMutation.mutate(padded);
+                  }}
                 />
               )}
             </header>
@@ -207,7 +229,7 @@ export default function LearnQuizPage() {
                 {t("courseQuizAnswered")}
               </div>
               <Button
-                onClick={() => submitMutation.mutate()}
+                onClick={() => submitMutation.mutate(answers)}
                 disabled={!allAnswered || submitMutation.isPending}
                 className="gap-2"
               >
@@ -251,6 +273,13 @@ export default function LearnQuizPage() {
               {!result.passed && (
                 <Button
                   onClick={() => {
+                    // QA fix #1.2 — reset startedAt + clear the draft
+                    // so the QuizTimer starts from zero on retake. Without
+                    // these resets, the final exam's 60-minute timer
+                    // fires onExpire immediately for any retake started
+                    // >60 min after the first attempt.
+                    setStartedAt(new Date().toISOString());
+                    clearDraft(quizId);
                     setResult(null);
                     setAnswers({});
                   }}

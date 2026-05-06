@@ -239,7 +239,7 @@ export const translations: Record<Language, Record<string, string>> = {
     courseQuizStart: "Start quiz",
     courseQuizRetake: "Retake quiz",
     courseLessonNumber: "Lesson",
-    courseLessonCompleted: "Completed",
+    courseLessonCompleted: "Lesson complete",
     courseLessonCompletedSubtle: "You've completed this lesson",
     courseLessonMarkComplete: "Mark complete",
     courseLessonCompleteError: "Couldn't save. Try again.",
@@ -284,6 +284,7 @@ export const translations: Record<Language, Record<string, string>> = {
     courseCertHolderProfile: "Holder",
     courseCertExploreCourse: "Explore the course",
     courseCertDownloadPdf: "Download PDF",
+    courseLandingViewCertificate: "View your certificate",
   },
   ar: {
     appName: "بلوتزي",

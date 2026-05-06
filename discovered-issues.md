@@ -2092,4 +2092,18 @@ The certificate download flow (B1 storage layer + B2 pdf-lib generation + B3 end
 
 _Logged 2026-05-06 during Batch 3.2 B6 deferral decision (Path Y chosen)._
 
+### LOW — Course Final QA: 10 findings deferred to post-launch polish batch
+
+The pre-launch Final QA audit produced 18 findings (4 HIGH, 7 MEDIUM, 7 LOW). 8 findings (4 HIGH + 4 MEDIUM) were addressed in the `feat/course-final-qa-fixes` branch — see [course-feature-final-qa-report.md](course-feature-final-qa-report.md) for the full enumeration with FIXED markers next to addressed items.
+
+10 findings remain (3 MEDIUM + 7 LOW), deferred to a post-launch polish batch:
+- **MEDIUM** 1.4 — Frontend graceful handling when a previously-submitted final-project book is in trash (backend filter from #1.3 returns 422; the form still renders confusingly without a user-visible message).
+- **MEDIUM** 1.5 — `IssueCertButton` uses raw `fetch()` instead of `apiRequest()` (missing 429 handling + credentials propagation).
+- **MEDIUM** 6.1 — Final-project feedback handler loses generated AI feedback if `saveFinalProjectFeedback` throws after the LLMs succeed.
+- **LOW** items: 2.3 / 2.4 visual primitives + routes/index.ts already documented; 3.3 UUID format check; 3.4 lesson markdown strip regex; 4.1 / 4.2 defensive auth + cache-header re-eval; 5.1 / 5.3 / 5.4 i18n polish; 6.2 queryClient 429 propagation; 7.1 / 7.2 `(req.user as any)` casts + storage feedback shape; 8.1 / 8.2 / 8.3 hardcoded values; 9.1 / 9.2 doc updates; 10.0 zero test coverage.
+
+The deferred items are documentation gaps, low-impact UX polish, and edge cases unlikely to surface with launch-scale traffic. No security-critical or data-corruption items remain unfixed.
+
+_Logged 2026-05-06 during pre-launch Final QA fix batch._
+
 

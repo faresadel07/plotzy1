@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ModuleCard } from "@/components/course/ModuleCard";
 import { CourseProgressBar } from "@/components/course/ProgressBar";
+import { IssueCertButton } from "@/components/course/IssueCertButton";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -109,6 +110,25 @@ export default function LearnPage() {
                 {progress.data.completedLessons > 0 && progress.data.completedLessons < progress.data.totalLessons && (
                   <ContinueLearningLink catalog={catalog.data} progress={progress.data} />
                 )}
+
+                {/* Certificate CTA. Wires QA fix #1.1 / #2.1 — without
+                  * this the entire cert flow (B1+B2+B3+B4) is unreachable.
+                  * IssueCertButton self-handles the eligibility check via
+                  * its 409 → dialog flow, so we render it whenever the
+                  * cert hasn't been issued yet. Once issued, swap to a
+                  * "View your certificate" link. */}
+                <div className="pt-2 border-t">
+                  {progress.data.certificate.issued && progress.data.certificate.uuid ? (
+                    <Button asChild variant="outline" size="sm" className="gap-2">
+                      <Link href={`/certificates/${progress.data.certificate.uuid}`}>
+                        <Award className="h-4 w-4" aria-hidden />
+                        {t("courseLandingViewCertificate")}
+                      </Link>
+                    </Button>
+                  ) : (
+                    <IssueCertButton />
+                  )}
+                </div>
               </Card>
             </div>
           )}
