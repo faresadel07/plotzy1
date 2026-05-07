@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { courseQueryOpts } from "@/lib/queryClient";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
@@ -40,14 +41,14 @@ interface ProgressResponse {
 type SidebarState = React.ComponentProps<typeof CourseSidebarCard>["state"];
 
 export default function CourseLandingPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
   const isAuthed = !!user;
 
   // Catalog is public — visible to anonymous visitors so the curriculum
-  // preview renders without auth.
+  // preview renders without auth. Translated when lang !== "en".
   const catalog = useQuery<CatalogResponse>({
-    queryKey: ["/api/course/modules"],
+    ...courseQueryOpts(["/api/course/modules"], lang),
     staleTime: Infinity,
   });
 

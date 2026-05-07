@@ -14,7 +14,7 @@ import {
 import { QuizResult } from "@/components/course/QuizResult";
 import { QuizTimer } from "@/components/course/QuizTimer";
 import { useLanguage } from "@/contexts/language-context";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, courseQueryOpts } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
 
 type Option = "a" | "b" | "c" | "d";
@@ -85,7 +85,7 @@ function clearDraft(quizId: number) {
 }
 
 export default function LearnQuizPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [, params] = useRoute("/learn/quiz/:id");
   const [, navigate] = useLocation();
   const quizIdRaw = params?.id ?? "";
@@ -93,7 +93,7 @@ export default function LearnQuizPage() {
   const validId = Number.isFinite(quizId) && quizId > 0;
 
   const quizQ = useQuery<QuizResponse>({
-    queryKey: ["/api/course/quizzes", quizIdRaw],
+    ...courseQueryOpts(["/api/course/quizzes", quizIdRaw], lang),
     enabled: validId,
     staleTime: Infinity,
   });

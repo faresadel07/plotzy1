@@ -13,7 +13,7 @@ import { LessonNavigation } from "@/components/course/LessonNavigation";
 import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, courseQueryOpts } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
 
 interface LessonResponse {
@@ -33,7 +33,7 @@ interface LessonResponse {
 }
 
 export default function LearnLessonPage() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, lang } = useLanguage();
   const { user } = useAuth();
   const [, params] = useRoute("/learn/lesson/:slug");
   const slug = params?.slug ?? "";
@@ -41,7 +41,7 @@ export default function LearnLessonPage() {
   const [optimistic, setOptimistic] = useState<{ completedAt: string } | null>(null);
 
   const lessonQ = useQuery<LessonResponse>({
-    queryKey: ["/api/course/lessons", slug],
+    ...courseQueryOpts(["/api/course/lessons", slug], lang),
     enabled: !!slug,
     staleTime: Infinity,
   });

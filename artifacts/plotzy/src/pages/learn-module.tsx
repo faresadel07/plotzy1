@@ -1,5 +1,6 @@
 import { Link, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { courseQueryOpts } from "@/lib/queryClient";
 import { ChevronRight, ChevronLeft, Clock, BookOpen, FileQuestion } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
@@ -38,13 +39,13 @@ interface ProgressResponse {
 }
 
 export default function LearnModulePage() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, lang } = useLanguage();
   const { user } = useAuth();
   const [, params] = useRoute("/learn/module/:slug");
   const slug = params?.slug ?? "";
 
   const moduleQ = useQuery<ModuleResponse>({
-    queryKey: ["/api/course/modules", slug],
+    ...courseQueryOpts(["/api/course/modules", slug], lang),
     enabled: !!slug,
     staleTime: Infinity,
   });

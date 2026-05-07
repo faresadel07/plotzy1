@@ -929,6 +929,47 @@ export const courseFinalProjects = pgTable("course_final_projects", {
 export type CourseFinalProject = typeof courseFinalProjects.$inferSelect;
 export type InsertCourseFinalProject = typeof courseFinalProjects.$inferInsert;
 
+// ── Writing Course: Content Translations ─────────────────────────────────
+// Generic translations table for course content (lessons, modules, quiz
+// questions). Keyed by (entity_type, entity_id, lang, field) — every
+// translatable string is one row. The English text remains in the
+// canonical column on the source table; this table holds non-English
+// values only. Reads LEFT JOIN by (entity_type, entity_id, lang) and
+// COALESCE the translated value with the English fallback so partial
+// translations degrade gracefully during incremental rollout.
+//
+// One entity_type covers both module quizzes and the final exam because
+// they share the underlying course_quiz_questions table (discriminated
+// by course_quizzes.type).
+//
+// No FK on entity_id (the schema is generic across three target tables).
+// Referential integrity is enforced at app-layer; lesson/module deletes
+// are already manual operations protected by the RESTRICT chain on
+// course_progress.lessonId.
+export const courseContentTranslations = pgTable("course_content_translations", {
+  id: serial("id").primaryKey(),
+  entityType: text("entity_type").notNull(),
+  entityId: integer("entity_id").notNull(),
+  lang: text("lang").notNull(),
+  field: text("field").notNull(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("idx_course_content_translations_unique")
+    .on(t.entityType, t.entityId, t.lang, t.field),
+  check(
+    "course_content_translations_entity_type_check",
+    sql`${t.entityType} IN ('lesson', 'module', 'quiz_question')`,
+  ),
+  check(
+    "course_content_translations_field_check",
+    sql`${t.field} IN ('title', 'subtitle', 'description', 'content', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'explanation')`,
+  ),
+]);
+
+export type CourseContentTranslation = typeof courseContentTranslations.$inferSelect;
+export type InsertCourseContentTranslation = typeof courseContentTranslations.$inferInsert;
+
 // `.strict()` forces these schemas (and their `.partial()` / `.omit()` derivatives
 // in lib/shared/src/routes.ts) to reject unknown fields rather than silently
 // strip them. Every endpoint that consumes one of these is a write path —
