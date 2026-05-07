@@ -11,6 +11,8 @@ import { logger } from "../lib/logger";
 import { sendEmail, sendWelcomeEmailIfFirstTime } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { hashToken } from "../lib/token-hash";
+import { logAuditEvent } from "../lib/audit-log";
+import { logRouteError } from "../lib/log-route-error";
 import crypto from "crypto";
 import { db } from "../db";
 import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
@@ -112,6 +114,7 @@ router.get("/api/users/me/stats", async (req, res) => {
       xpForNextLevel: nextLevelXp,
     });
   } catch (err) {
+    logRouteError(req, err, "auth.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -123,6 +126,7 @@ router.get("/api/users/me/achievements", async (req, res) => {
     const achievements = await storage.getUserAchievements(userId);
     return res.json(achievements);
   } catch (err) {
+    logRouteError(req, err, "auth.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -153,6 +157,7 @@ router.get("/api/auth/user", async (req, res) => {
     }
     return res.status(401).json({ message: "Not authenticated" });
   } catch (err) {
+    logRouteError(req, err, "auth.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -207,6 +212,7 @@ router.post("/api/auth/register", sensitiveAuthLimiter, async (req, res) => {
     const { id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate } = user;
     return res.status(201).json({ id, email: e, displayName: d, avatarUrl, subscriptionStatus, subscriptionPlan, subscriptionEndDate });
   } catch (err: any) {
+    logRouteError(req, err, "auth.routes");
     if (err?.name === "ZodError") return res.status(400).json({ message: err.errors?.[0]?.message || "Invalid input" });
     return res.status(500).json({ message: "Registration failed" });
   }
@@ -313,6 +319,7 @@ router.patch("/api/auth/avatar", async (req, res) => {
     const { passwordHash: _ph, ...safe } = updated as any;
     return res.json(safe);
   } catch (err) {
+    logRouteError(req, err, "auth.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -326,6 +333,7 @@ router.patch("/api/auth/display-name", async (req, res) => {
     const updated = await storage.updateUser(req.user.id, { displayName });
     return res.json(updated);
   } catch (err) {
+    logRouteError(req, err, "auth.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -594,6 +602,8 @@ router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => 
     if (!vt) return res.status(400).json({ message: "Invalid or expired verification link" });
     await storage.updateUser(vt.userId, { emailVerified: true });
     await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, vt.userId));
+    // Audit trail — verification fraud detection signal.
+    await logAuditEvent({ actorId: vt.userId, action: "email_verified", targetType: "user", targetId: vt.userId, req });
     // Fire-and-forget welcome email. Helper is idempotent — re-clicks of the
     // verification link won't produce duplicate emails because welcomeEmailSentAt
     // gets set on first send. Doesn't block the verification response.
@@ -629,6 +639,10 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
 
     // Save new token (hashed at rest)
     await db.insert(passwordResetTokens).values({ userId: user.id, token: hashToken(token), expiresAt });
+
+    // Audit trail — pre-takeover signal. A flurry of forgot-password
+    // requests for the same account is a classic recon pattern.
+    await logAuditEvent({ actorId: user.id, action: "password_reset_requested", targetType: "user", targetId: user.id, req });
 
     // Send email
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
@@ -716,6 +730,11 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
 
     const passwordHash = await bcrypt.hash(password, 12);
     await storage.updateUser(consumed.userId, { passwordHash });
+
+    // Audit trail — silent account hijack would otherwise leave no
+    // record. Captures IP + UA so post-incident forensics can spot
+    // the unfamiliar device/region.
+    await logAuditEvent({ actorId: consumed.userId, action: "password_reset_completed", targetType: "user", targetId: consumed.userId, req });
 
     // Notify the user that their password was just changed. If the change
     // wasn't theirs (account takeover via compromised email), they need to

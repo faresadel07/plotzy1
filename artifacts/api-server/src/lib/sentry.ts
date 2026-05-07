@@ -1,5 +1,18 @@
 import * as Sentry from "@sentry/node";
 import { getEnv } from "./env";
+import { logger } from "./logger";
+
+/**
+ * Module-level flag set true when initSentry() successfully wires the
+ * SDK. Reads from /healthz so a deployed environment that forgot to
+ * set SENTRY_DSN surfaces the gap on every probe instead of silently
+ * swallowing every error in production.
+ *
+ * Plain boolean (no caching needed) — the value is set once at boot
+ * and never changes during process lifetime.
+ */
+let sentryActive = false;
+export function isSentryActive(): boolean { return sentryActive; }
 
 /**
  * Initialise Sentry for the API server.
@@ -12,10 +25,17 @@ import { getEnv } from "./env";
  * Call once at process start (from index.ts, after parseEnv()). Sentry's
  * beforeSend hook scrubs common PII (emails, tokens) so we don't leak
  * user data into our error reports.
+ *
+ * Boot-time log line confirms whether the SDK is active so a forgotten
+ * SENTRY_DSN env var on the deploy is visible immediately in logs
+ * rather than only surfacing as missing errors hours later.
  */
 export function initSentry(): void {
   const env = getEnv();
-  if (!env.SENTRY_DSN) return;
+  if (!env.SENTRY_DSN) {
+    logger.info({ active: false, env: env.NODE_ENV }, "Sentry init: SENTRY_DSN not set — error capture disabled");
+    return;
+  }
 
   // includeLocalVariables captures every stack frame's local vars on
   // crash. Triage gets much easier — but those vars can hold tokens,
@@ -90,6 +110,16 @@ export function initSentry(): void {
       return event;
     },
   });
+  sentryActive = true;
+  logger.info(
+    {
+      active: true,
+      environment: env.SENTRY_ENVIRONMENT || env.NODE_ENV,
+      tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1,
+      includeLocalVariables: includeLocals,
+    },
+    "Sentry init: active",
+  );
 }
 
 // Re-export the symbols callers actually use so the rest of the app

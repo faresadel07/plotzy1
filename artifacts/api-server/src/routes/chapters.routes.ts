@@ -20,6 +20,7 @@ import {
 } from "./helpers";
 import { logger } from "../lib/logger";
 
+import { logRouteError } from "../lib/log-route-error";
 const router = Router();
 
 // ─── List Chapters ──────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ router.get(api.chapters.list.path, async (req, res) => {
     const chapters = await storage.getChapters(Number(req.params.bookId));
     return res.json(chapters);
   } catch (err) {
+    logRouteError(req, err, "chapters.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -80,6 +82,7 @@ router.post(api.chapters.create.path, requireBookOwner, async (req, res) => {
     }
     return res.status(201).json(chapter);
   } catch (err) {
+    logRouteError(req, err, "chapters.routes");
     if (err instanceof z.ZodError)
       return res.status(400).json({ message: err.errors[0].message });
     return res.status(500).json({ message: "Internal error" });
@@ -163,6 +166,7 @@ router.put(api.chapters.update.path, requireChapterOwner, async (req, res) => {
     }
     return res.json(chapter);
   } catch (err) {
+    logRouteError(req, err, "chapters.routes");
     if (err instanceof z.ZodError)
       return res.status(400).json({ message: err.errors[0].message });
     return res.status(500).json({ message: "Internal error" });
@@ -179,6 +183,7 @@ router.delete(
       await storage.deleteChapter(Number(req.params.id));
       return res.status(204).send();
     } catch (err) {
+      logRouteError(req, err, "chapters.routes");
       return res.status(500).json({ message: "Internal error" });
     }
   }
@@ -202,6 +207,7 @@ router.patch(
       await storage.reorderChapters(body.updates);
       return res.status(200).json({ ok: true });
     } catch (err) {
+      logRouteError(req, err, "chapters.routes");
       if (err instanceof z.ZodError)
         return res
           .status(400)
@@ -218,7 +224,8 @@ router.get("/api/books/:bookId/progress", async (req, res) => {
     const bookId = Number(req.params.bookId);
     const progress = await storage.getDailyProgress(bookId);
     return res.json(progress);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "chapters.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -233,6 +240,7 @@ router.post("/api/books/:bookId/progress", async (req, res) => {
     const record = await storage.updateDailyProgress(bookId, wordsAdded);
     return res.json(record);
   } catch (err) {
+    logRouteError(req, err, "chapters.routes");
     if (err instanceof z.ZodError)
       return res
         .status(400)

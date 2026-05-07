@@ -11,24 +11,10 @@ import { sendEmail, sendSuspensionEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 import { hashToken } from "../lib/token-hash";
+import { logAdminAction } from "../lib/audit-log";
 import crypto from "crypto";
 
 const router = Router();
-
-// ── Audit Log Helper ────────────────────────────────────────────────────────
-async function logAdminAction(adminId: number, action: string, targetType: string, targetId: number | null, details?: Record<string, any>) {
-  try {
-    await db.insert(adminAuditLogs).values({
-      adminId,
-      action,
-      targetType,
-      targetId,
-      details: details ? JSON.stringify(details) : null,
-    });
-  } catch (err) {
-    logger.error({ err }, "Failed to write audit log");
-  }
-}
 
 // ── Book Series ─────────────────────────────────────────────────────────────
 
@@ -40,6 +26,7 @@ router.get("/api/series", async (req, res) => {
     const withBooks = await storage.getUserSeriesWithBooks(userId);
     return res.json(withBooks);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -54,6 +41,7 @@ router.post("/api/series", async (req, res) => {
     const series = await storage.createSeries({ userId, name: name.trim(), description: description?.trim() || null });
     return res.status(201).json({ ...series, books: [] });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -73,6 +61,7 @@ router.patch("/api/series/:id", async (req, res) => {
     const updated = await storage.updateSeries(seriesId, updates);
     return res.json(updated);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -189,6 +178,7 @@ router.get("/api/public/series/:id", async (req, res) => {
       ownerAvatarUrl: owner?.avatarUrl || null,
     });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -204,6 +194,7 @@ router.delete("/api/series/:id", async (req, res) => {
     await storage.deleteSeries(seriesId);
     return res.status(204).send();
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -225,6 +216,7 @@ router.post("/api/series/:id/books/:bookId", async (req, res) => {
     const updated = await storage.assignBookToSeries(bookId, seriesId, order);
     return res.json(updated);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -240,6 +232,7 @@ router.delete("/api/series/:id/books/:bookId", async (req, res) => {
     const updated = await storage.assignBookToSeries(bookId, null, 0);
     return res.json(updated);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -258,6 +251,7 @@ router.put("/api/series/:id/reorder", async (req, res) => {
     await storage.reorderSeriesBooks(updates);
     return res.json({ ok: true });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -291,6 +285,7 @@ router.get("/api/support/my-tickets", async (req, res) => {
       .orderBy(desc(supportMessages.createdAt));
     return res.json(tickets);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -486,6 +481,7 @@ router.get("/api/admin/stats", requireAdmin, async (req, res) => {
     const stats = await storage.getAdminStats();
     return res.json(stats);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -508,6 +504,7 @@ router.get("/api/admin/users", requireAdmin, async (req, res) => {
     }));
     return res.json(safe);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -520,6 +517,7 @@ router.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     await logAdminAction((req.user as any).id, "user_delete", "user", id);
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -537,6 +535,7 @@ router.patch("/api/admin/users/:id/subscription", requireAdmin, async (req, res)
     await logAdminAction((req.user as any).id, "user_grant_subscription", "user", id, { subscriptionStatus, subscriptionPlan });
     return res.json({ success: true, user: updated });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -550,6 +549,7 @@ router.delete("/api/admin/books/:id", requireAdmin, async (req, res) => {
     await logAdminAction((req.user as any).id, "book_delete", "book", id);
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -561,6 +561,7 @@ router.get("/api/banner", async (req, res) => {
     const color = await storage.getSetting("banner_color");
     return res.json({ message, color });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -591,7 +592,8 @@ router.post("/api/admin/social-links", requireAdmin, async (req, res) => {
     await storage.setSetting("social_tiktok", tiktok?.trim() || null);
     await logAdminAction((req.user as any).id, "social_links_update", "settings", null, { instagram, linkedin, youtube, twitter, tiktok });
     return res.json({ success: true });
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -606,6 +608,7 @@ router.post("/api/admin/banner", requireAdmin, async (req, res) => {
     await logAdminAction((req.user as any).id, "banner_update", "banner", null, { message: message.trim(), color });
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -616,6 +619,7 @@ router.delete("/api/admin/banner", requireAdmin, async (req, res) => {
     await storage.setSetting("banner_color", null);
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -642,6 +646,7 @@ router.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
     }
     return res.json(user);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -652,6 +657,7 @@ router.get("/api/admin/activity", requireAdmin, async (req, res) => {
     const feed = await storage.getActivityFeed();
     return res.json(feed);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -675,6 +681,7 @@ router.get("/api/admin/support", requireAdmin, async (req, res) => {
     const messages = await storage.getSupportMessages();
     return res.json(messages);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -687,6 +694,7 @@ router.patch("/api/admin/support/:id", requireAdmin, async (req, res) => {
     const msg = await storage.updateSupportMessage(id, { read, status });
     return res.json(msg);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -745,6 +753,7 @@ router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
     await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count, failed });
     return res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -769,6 +778,7 @@ router.post("/api/admin/users/bulk-delete", requireAdmin, async (req, res) => {
     await logAdminAction((req.user as any).id, "bulk_delete", "user", null, { userIds, count, failed });
     return res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -794,6 +804,7 @@ router.get("/api/admin/export/users.csv", requireAdmin, async (req, res) => {
     res.setHeader("Content-Disposition", "attachment; filename=plotzy-users.csv");
     return res.send([header, ...rows].join("\n"));
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Export failed" });
   }
 });
@@ -813,6 +824,7 @@ router.get("/api/admin/export/analytics.csv", requireAdmin, async (req, res) => 
     res.setHeader("Content-Disposition", `attachment; filename=plotzy-analytics-${days}d.csv`);
     return res.send([header, ...rows].join("\n"));
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Export failed" });
   }
 });
@@ -911,6 +923,7 @@ router.get("/api/books/:bookId/collaborators", requireBookOwner, async (req, res
 
     return res.json({ collaborators: collabs, pendingInvites });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -926,6 +939,7 @@ router.delete("/api/books/:bookId/collaborators/:collabId", requireBookOwner, as
     await db.delete(bookCollaborators).where(and(eq(bookCollaborators.id, collabId), eq(bookCollaborators.bookId, bookId)));
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -942,6 +956,7 @@ router.patch("/api/books/:bookId/collaborators/:collabId", requireBookOwner, asy
     const [updated] = await db.update(bookCollaborators).set({ role }).where(and(eq(bookCollaborators.id, collabId), eq(bookCollaborators.bookId, bookId))).returning();
     return res.json(updated);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -975,6 +990,7 @@ router.get("/api/marketplace/professionals", async (req, res) => {
       : rows;
     return res.json(filtered);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to fetch professionals" });
   }
 });
@@ -986,6 +1002,7 @@ router.get("/api/marketplace/professionals/:id", async (req, res) => {
     if (!pro) return res.status(404).json({ message: "Not found" });
     return res.json(pro);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to fetch professional" });
   }
 });
@@ -1008,6 +1025,7 @@ router.post("/api/marketplace/quote-requests", async (req, res) => {
     const [created] = await db.insert(quoteRequests).values({ professionalId: data.professionalId, authorName: data.authorName, authorEmail: data.authorEmail, bookTitle: data.bookTitle, wordCount: data.wordCount ?? null, genre: data.genre ?? null, description: data.description ?? null, deadline: data.deadline ?? null, service: data.service }).returning();
     return res.status(201).json(created);
   } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to submit quote request" });
   }
 });
@@ -1020,7 +1038,8 @@ router.get("/api/books/:bookId/research", requireBookOwner, async (req, res) => 
   try {
     const items = await db.select().from(researchItemsTable).where(eq(researchItemsTable.bookId, bookId));
     return res.json(items);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to fetch research items" });
   }
 });
@@ -1043,7 +1062,8 @@ router.post("/api/books/:bookId/research", requireBookOwner, async (req, res) =>
   try {
     const [item] = await db.insert(researchItemsTable).values({ bookId, type, title, content, previewImageUrl, description, color }).returning();
     return res.status(201).json(item);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to create research item" });
   }
 });
@@ -1056,7 +1076,8 @@ router.put("/api/books/:bookId/research/:id", requireBookOwner, async (req, res)
     const [item] = await db.update(researchItemsTable).set({ type, title, content, previewImageUrl, description, color }).where(eq(researchItemsTable.id, id)).returning();
     if (!item) return res.status(404).json({ message: "Not found" });
     return res.json(item);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to update research item" });
   }
 });
@@ -1067,7 +1088,8 @@ router.delete("/api/books/:bookId/research/:id", requireBookOwner, async (req, r
   try {
     await db.delete(researchItemsTable).where(eq(researchItemsTable.id, id));
     return res.status(204).send();
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to delete research item" });
   }
 });
@@ -1081,7 +1103,8 @@ router.patch("/api/books/:bookId/isbn", requireBookOwner, async (req: any, res: 
   try {
     const book = await storage.updateBook(bookId, { isbn: isbn ?? null } as any);
     return res.json(book);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to update ISBN" });
   }
 });
@@ -1161,7 +1184,8 @@ router.get("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: any
   try {
     const rows = await db.select().from(arcRecipientsTable).where(eq(arcRecipientsTable.bookId, bookId));
     return res.json(rows);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to fetch ARC recipients" });
   }
 });
@@ -1174,7 +1198,8 @@ router.post("/api/books/:bookId/arc", requireBookOwner, async (req: any, res: an
   try {
     const [row] = await db.insert(arcRecipientsTable).values({ bookId, name, email, note: note ?? null, status: "sent" }).returning();
     return res.status(201).json(row);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to add ARC recipient" });
   }
 });
@@ -1189,7 +1214,8 @@ router.patch("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, re
   try {
     const [row] = await db.update(arcRecipientsTable).set({ status }).where(eq(arcRecipientsTable.id, id)).returning();
     return res.json(row);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to update ARC recipient" });
   }
 });
@@ -1200,7 +1226,8 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
   try {
     await db.delete(arcRecipientsTable).where(eq(arcRecipientsTable.id, id));
     return res.status(204).send();
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Failed to delete ARC recipient" });
   }
 });
@@ -1219,6 +1246,7 @@ router.delete("/api/books/:bookId/arc/:id", requireBookOwner, async (req: any, r
 
 import { getUserTier, getTierLimits, checkMarketplaceLimit, getMarketplaceHistory } from "../lib/tier-limits";
 
+import { logRouteError } from "../lib/log-route-error";
 // GET /api/marketplace/usage — current user's marketplace usage + limits.
 // Admins bypass all tier enforcement so they can test the marketplace
 // end-to-end without a paid subscription.
@@ -1236,7 +1264,8 @@ router.get("/api/marketplace/usage", async (req, res) => {
     const limits = getTierLimits(tier);
     const usage = await checkMarketplaceLimit(req.user.id, tier);
     return res.json({ tier, ...usage, canUse: limits.canUseMarketplace });
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -1247,7 +1276,8 @@ router.get("/api/marketplace/history", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) return res.status(401).json({ message: "Not authenticated" });
     const history = await getMarketplaceHistory(req.user.id);
     return res.json(history);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -1281,7 +1311,8 @@ router.get("/api/tutorials", async (req, res) => {
       .where(eq(tutorials.published, true))
       .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
     return res.json(all);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -1292,7 +1323,8 @@ router.get("/api/admin/tutorials", requireAdmin, async (req, res) => {
     const all = await db.select().from(tutorials)
       .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
     return res.json(all);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -1315,7 +1347,8 @@ router.post("/api/admin/tutorials", requireAdmin, async (req, res) => {
       published: published !== false,
     }).returning();
     return res.status(201).json(tutorial);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -1334,7 +1367,8 @@ router.patch("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
     const [updated] = await db.update(tutorials).set(updates).where(eq(tutorials.id, id)).returning();
     if (!updated) return res.status(404).json({ message: "Tutorial not found" });
     return res.json(updated);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -1346,7 +1380,8 @@ router.delete("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await db.delete(tutorials).where(eq(tutorials.id, id));
     return res.json({ success: true });
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "misc.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });

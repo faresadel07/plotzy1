@@ -11,6 +11,7 @@ import {
 import { isSubscriptionActive } from "./helpers";
 import { sendEmail } from "../lib/email";
 import { logger } from "../lib/logger";
+import { logAuditEvent } from "../lib/audit-log";
 import { Sentry } from "../lib/sentry";
 import rateLimit from "express-rate-limit";
 
@@ -333,6 +334,19 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
       paymentMethod: "paypal",
     } as any);
 
+    // Audit trail — subscription activation. The companion
+    // subscription_payments row below has the financial data; this
+    // audit row captures the access-change event so the security log
+    // is queryable independently of the billing log.
+    await logAuditEvent({
+      actorId: userId,
+      action: "subscription_activated",
+      targetType: "subscription",
+      targetId: userId,
+      details: { tier, plan, cycle: isYearly ? "yearly" : "monthly", endDate: endDate.toISOString() },
+      req,
+    });
+
     // Audit row in subscription_payments. Wrapped in try/catch so a
     // history-write failure NEVER blocks activation — the user already
     // has their subscription; a missed audit row is recoverable later
@@ -436,6 +450,18 @@ router.post("/api/user/cancel-subscription", async (req, res) => {
     }
 
     await storage.updateUser(userId, { subscriptionStatus: "canceled" } as any);
+
+    // Audit trail — cancellations are critical for revenue/access
+    // forensics. Captures the previous plan + access-end date so
+    // the post-cancellation grace period is auditable.
+    await logAuditEvent({
+      actorId: userId,
+      action: "subscription_cancel",
+      targetType: "subscription",
+      targetId: userId,
+      details: { plan: user.subscriptionPlan, accessUntil: user.subscriptionEndDate?.toISOString() },
+      req,
+    });
 
     logger.info(
       {
