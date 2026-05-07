@@ -2269,4 +2269,51 @@ provisioned outside CI and pasted into a GitHub secret.
 _Logged 2026-05-07 during M-7 work. Runbook ships; automation
 follows once launch infrastructure stabilises._
 
+---
+
+## RESOLVED — Historical issues 1, 2, 3 (2026-05-07)
+
+The pre-launch verification batch (`db-historical-issues-
+verification.md`) re-checked four lingering issues from earlier
+sessions. Three were open; all three resolved in commit `f9ac8fc`
+(merge `3a5588b`):
+
+**Issue 1 — Schema-vs-DB drift documentation.** Three tables in
+production were not declared in `lib/db/src/schema/index.ts`:
+`user_sessions` (managed by connect-pg-simple), `marketplace_usage`
+(actively used via raw SQL in `lib/tier-limits.ts`), and
+`reading_progress` (dead/empty from an abandoned feature). A 32-line
+comment block at the top of the schema file now documents each one
+so a future developer doesn't (a) wonder why they're absent, (b)
+declare them blindly (drizzle-kit push would attempt destructive
+"fixes"), or (c) drop `marketplace_usage` thinking it's unused.
+
+**Issue 2 — Typecheck flow doesn't follow project references.**
+The api-server, plotzy, and lib/db `typecheck` scripts ran
+`tsc -p tsconfig.json --noEmit`, which doesn't follow `references`.
+Throughout this entire DB-hardening series, every schema edit
+required a manual `npx tsc --build` in lib/db before downstream
+typechecks would see the new exports. All three packages now use
+`tsc --build`, which builds composite references first then
+typechecks the current project. lib/db got a typecheck script
+for the first time. No more manual rebuild friction.
+
+**Issue 3 — `payment_method` silent column drop.** The PayPal
+capture handler at `payments.routes.ts` was writing
+`paymentMethod: "paypal"` into `storage.updateUser` against the
+`users` table — but `users` has no such column. Drizzle silently
+drops unknown keys, so the write was a dead no-op for weeks. The
+companion `subscription_payments` insert below correctly captures
+the value. Removed the dead key + the `as any` cast that masked
+it from TypeScript.
+
+**Issue 4 — `/api/auth/user` includes subscriptionTier.** Verified
+already resolved at audit time (line 153 of auth.routes.ts
+returns all four subscription fields). No code change needed;
+marked closed for completeness.
+
+This closes the audit-level backlog from prior sessions. All
+known historical issues are either resolved or have explicit
+documented deferral rationale.
+
 
