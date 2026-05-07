@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { AuthModal } from "@/components/auth-modal";
+import { LanguagePicker } from "@/components/language-picker";
 import { NotificationBell } from "@/components/notification-bell";
 import { DisplayNameModal } from "@/components/display-name-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -387,10 +388,9 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           {/* Notifications */}
           {user && <NotificationBell darkNav={false} />}
 
-          {/* Language picker removed from the nav until the multi-language UI
-              shell is rebuilt. The per-book writing language stays intact —
-              it's controlled inside the book editor (book.language) and is
-              not affected by the visibility of this widget. */}
+          {/* Language picker — drives both the UI translations (lib/i18n.ts)
+              and the course content language (?lang= on the course APIs). */}
+          <LanguagePicker />
 
           {/* Divider */}
           <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
