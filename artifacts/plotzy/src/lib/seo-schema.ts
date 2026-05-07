@@ -411,17 +411,20 @@ export function buildBreadcrumbSchema(
   };
 }
 
-// ── Course schemas (Batch 1.3) ────────────────────────────────────────────
-// Three builders for the writing course:
-//   1. Course           — for /learn (the course landing page)
-//   2. LearningResource — for /learn/lesson/:slug (each lesson)
-//   3. EducationalOccupationalCredential — for /certificates/:uuid
+// ── Course schemas ────────────────────────────────────────────────────────
+// Two builders for the writing course:
+//   1. Course           — for /course (the public course landing page)
+//   2. EducationalOccupationalCredential — for /certificates/:uuid
+//
+// Per-lesson LearningResource schema was removed when the course was
+// gated to members-only — lesson URLs are no longer publicly indexable,
+// so emitting JSON-LD pointing at them just confuses crawlers.
 //
 // schema.org's `CredentialDocument` is deprecated; the Educational
 // variant is the right type for course-completion certificates per
 // schema.org's pending docs.
 
-const COURSE_LANDING_PATH = "/learn";
+const COURSE_LANDING_PATH = "/course";
 
 export function buildCourseSchema(): Record<string, unknown> {
   return {
@@ -444,38 +447,6 @@ export function buildCourseSchema(): Record<string, unknown> {
       price: "0",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
-    },
-  };
-}
-
-export interface LearningResourceInput {
-  lessonSlug: string;
-  lessonTitle: string;
-  moduleTitle: string;
-  description?: string | null;
-}
-
-export function buildLearningResourceSchema(
-  lesson: LearningResourceInput,
-): Record<string, unknown> {
-  return {
-    "@context": "https://schema.org",
-    "@type": "LearningResource",
-    name: lesson.lessonTitle,
-    description: lesson.description || undefined,
-    learningResourceType: "Lecture",
-    educationalLevel: "Beginner",
-    inLanguage: "en",
-    url: `${SITE_URL}/learn/lesson/${lesson.lessonSlug}`,
-    isPartOf: {
-      "@type": "Course",
-      name: lesson.moduleTitle,
-      url: `${SITE_URL}${COURSE_LANDING_PATH}`,
-    },
-    provider: {
-      "@type": "Organization",
-      name: SITE_NAME,
-      url: SITE_URL,
     },
   };
 }

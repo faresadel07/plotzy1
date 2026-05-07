@@ -115,8 +115,11 @@ router.get("/api/course/modules", publicReadLimiter, async (_req, res) => {
   }
 });
 
-// GET /api/course/modules/:slug — single module with its lessons
-router.get("/api/course/modules/:slug", publicReadLimiter, async (req, res) => {
+// GET /api/course/modules/:slug — single module with its lessons.
+// Auth-required: module detail pages live under /learn/module/:slug,
+// which is now members-only. The public /course landing only needs the
+// catalog list (GET /modules), not per-module deep-dives.
+router.get("/api/course/modules/:slug", requireAuth, generalLimiter, async (req, res) => {
   try {
     const m = await storage.getCourseModuleBySlug(String(req.params.slug));
     if (!m) return res.status(404).json({ message: "Module not found" });
@@ -140,8 +143,12 @@ router.get("/api/course/modules/:slug", publicReadLimiter, async (req, res) => {
 });
 
 // GET /api/course/lessons/:slug — single lesson with markdown content
-// Public; if the user is authenticated, includes their completion state.
-router.get("/api/course/lessons/:slug", publicReadLimiter, async (req, res) => {
+// + the user's completion state for this lesson.
+//
+// Auth-required. Supersedes the earlier Batch 1.3 DP3/C1 decision that
+// allowed anonymous lesson access; the course is now members-only and
+// the public marketing surface is /course (the landing page).
+router.get("/api/course/lessons/:slug", requireAuth, generalLimiter, async (req, res) => {
   try {
     const lesson = await storage.getCourseLessonBySlug(String(req.params.slug));
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
@@ -163,17 +170,16 @@ router.get("/api/course/lessons/:slug", publicReadLimiter, async (req, res) => {
     const prev = idx > 0 ? allLessons[idx - 1] : null;
     const next = idx >= 0 && idx < allLessons.length - 1 ? allLessons[idx + 1] : null;
 
+    // requireAuth above guarantees req.user is present.
+    const userId = (req.user as any).id;
+    const progress = await storage.getCourseProgressForUser(userId);
+    const mine = progress.find((p) => p.lessonId === lesson.id);
     let myCompletion: { completedAt: string; timeSpentSeconds: number } | null = null;
-    if (req.isAuthenticated() && req.user) {
-      const userId = (req.user as any).id;
-      const progress = await storage.getCourseProgressForUser(userId);
-      const mine = progress.find((p) => p.lessonId === lesson.id);
-      if (mine) {
-        myCompletion = {
-          completedAt: mine.completedAt.toISOString(),
-          timeSpentSeconds: mine.timeSpentSeconds,
-        };
-      }
+    if (mine) {
+      myCompletion = {
+        completedAt: mine.completedAt.toISOString(),
+        timeSpentSeconds: mine.timeSpentSeconds,
+      };
     }
 
     return res.json({
