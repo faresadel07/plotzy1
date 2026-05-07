@@ -1,8 +1,5 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { courseQueryOpts } from "@/lib/queryClient";
-import { useCourseLanguage } from "@/hooks/use-course-language";
-import { CourseLanguageToggle } from "@/components/course/CourseLanguageToggle";
 import { ArrowRight, GraduationCap, Award } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
@@ -68,12 +65,11 @@ interface ProgressResponse {
 
 export default function LearnPage() {
   const { t } = useLanguage();
-  const { courseLang, isCourseRTL } = useCourseLanguage();
   const { user } = useAuth();
   const isAuthed = !!user;
 
   const catalog = useQuery<CatalogResponse>({
-    ...courseQueryOpts(["/api/course/modules"], courseLang),
+    queryKey: ["/api/course/modules"],
     staleTime: Infinity,
   });
 
@@ -118,14 +114,7 @@ export default function LearnPage() {
       <JsonLd data={buildCourseSchema()} />
       <JsonLd data={buildBreadcrumbSchema([{ name: "Course", path: "/learn" }])} />
 
-      <main
-        className="container mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-10"
-        dir={isCourseRTL ? "rtl" : "ltr"}
-      >
-        <div className="flex justify-end">
-          <CourseLanguageToggle />
-        </div>
-
+      <main className="container mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-10">
         {/* Hero */}
         <section className="space-y-4 text-center sm:text-start">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-secondary text-xs text-muted-foreground">

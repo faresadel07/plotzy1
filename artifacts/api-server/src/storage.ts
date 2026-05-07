@@ -8,7 +8,6 @@ import {
   follows, notifications, directMessages, bookLikes, bookComments, bookRatings, inlineComments,
   courseModules, courseLessons, courseQuizzes, courseQuizQuestions,
   courseProgress, courseQuizAttempts, courseCertificates, courseFinalProjects,
-  courseContentTranslations,
   type Book, type InsertBook, type InlineComment, type InsertInlineComment,
   type Chapter, type InsertChapter,
   type User, type InsertUser,
@@ -176,13 +175,6 @@ export interface IStorage {
   getCourseQuizQuestions(quizId: number): Promise<CourseQuizQuestion[]>;
   getModuleQuiz(moduleId: number): Promise<CourseQuiz | undefined>;
   getFinalQuiz(): Promise<CourseQuiz | undefined>;
-
-  // Course: i18n. Returns a flat list of translation rows; the route
-  // layer indexes by (entity_type, entity_id, field) for COALESCE.
-  getCourseTranslations(
-    lang: string,
-    entries: { entityType: "lesson" | "module" | "quiz_question"; entityId: number }[],
-  ): Promise<{ entityType: string; entityId: number; field: string; value: string }[]>;
 
   // Course: per-user progress
   getCourseProgressForUser(userId: number): Promise<CourseProgress[]>;
@@ -1227,43 +1219,6 @@ export class DatabaseStorage implements IStorage {
   async getFinalQuiz(): Promise<CourseQuiz | undefined> {
     const [q] = await db.select().from(courseQuizzes).where(eq(courseQuizzes.type, "final"));
     return q;
-  }
-
-  async getCourseTranslations(
-    lang: string,
-    entries: { entityType: "lesson" | "module" | "quiz_question"; entityId: number }[],
-  ): Promise<{ entityType: string; entityId: number; field: string; value: string }[]> {
-    if (entries.length === 0) return [];
-    // Bucket the requested entity_ids by entity_type, then fire one
-    // query per type with an IN-list. Drizzle doesn't have a clean way
-    // to express the disjunction of multiple (type, id IN (…)) clauses
-    // in one query, and the per-type fan-out here is at most 3 round-
-    // trips for a request that already touched the catalog.
-    const byType: Record<string, number[]> = { lesson: [], module: [], quiz_question: [] };
-    for (const e of entries) {
-      if (!byType[e.entityType].includes(e.entityId)) byType[e.entityType].push(e.entityId);
-    }
-    const results: { entityType: string; entityId: number; field: string; value: string }[] = [];
-    for (const [entityType, ids] of Object.entries(byType)) {
-      if (ids.length === 0) continue;
-      const rows = await db
-        .select({
-          entityType: courseContentTranslations.entityType,
-          entityId: courseContentTranslations.entityId,
-          field: courseContentTranslations.field,
-          value: courseContentTranslations.value,
-        })
-        .from(courseContentTranslations)
-        .where(
-          and(
-            eq(courseContentTranslations.entityType, entityType),
-            eq(courseContentTranslations.lang, lang),
-            inArray(courseContentTranslations.entityId, ids),
-          ),
-        );
-      for (const r of rows) results.push(r);
-    }
-    return results;
   }
 
   // ── Course: Per-user Progress ──────────────────────────────────────────

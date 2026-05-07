@@ -14,9 +14,7 @@ import {
 import { QuizResult } from "@/components/course/QuizResult";
 import { QuizTimer } from "@/components/course/QuizTimer";
 import { useLanguage } from "@/contexts/language-context";
-import { apiRequest, courseQueryOpts } from "@/lib/queryClient";
-import { useCourseLanguage } from "@/hooks/use-course-language";
-import { CourseLanguageToggle } from "@/components/course/CourseLanguageToggle";
+import { apiRequest } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
 
 type Option = "a" | "b" | "c" | "d";
@@ -88,7 +86,6 @@ function clearDraft(quizId: number) {
 
 export default function LearnQuizPage() {
   const { t } = useLanguage();
-  const { courseLang, isCourseRTL } = useCourseLanguage();
   const [, params] = useRoute("/learn/quiz/:id");
   const [, navigate] = useLocation();
   const quizIdRaw = params?.id ?? "";
@@ -96,7 +93,7 @@ export default function LearnQuizPage() {
   const validId = Number.isFinite(quizId) && quizId > 0;
 
   const quizQ = useQuery<QuizResponse>({
-    ...courseQueryOpts(["/api/course/quizzes", quizIdRaw], courseLang),
+    queryKey: ["/api/course/quizzes", quizIdRaw],
     enabled: validId,
     staleTime: Infinity,
   });
@@ -159,13 +156,7 @@ export default function LearnQuizPage() {
         noindex
       />
 
-      <main
-        className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6"
-        dir={isCourseRTL ? "rtl" : "ltr"}
-      >
-        <div className="flex justify-end">
-          <CourseLanguageToggle />
-        </div>
+      <main className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6">
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },
