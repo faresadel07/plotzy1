@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { courseQueryOpts } from "@/lib/queryClient";
+import { useCourseLanguage } from "@/hooks/use-course-language";
+import { CourseLanguageToggle } from "@/components/course/CourseLanguageToggle";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
@@ -41,14 +43,15 @@ interface ProgressResponse {
 type SidebarState = React.ComponentProps<typeof CourseSidebarCard>["state"];
 
 export default function CourseLandingPage() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
+  const { courseLang, isCourseRTL } = useCourseLanguage();
   const { user } = useAuth();
   const isAuthed = !!user;
 
   // Catalog is public — visible to anonymous visitors so the curriculum
-  // preview renders without auth. Translated when lang !== "en".
+  // preview renders without auth. Translated when courseLang !== "en".
   const catalog = useQuery<CatalogResponse>({
-    ...courseQueryOpts(["/api/course/modules"], lang),
+    ...courseQueryOpts(["/api/course/modules"], courseLang),
     staleTime: Infinity,
   });
 
@@ -98,7 +101,14 @@ export default function CourseLandingPage() {
         ])}
       />
 
-      <main className="container mx-auto max-w-6xl px-4 py-8 sm:py-12 space-y-12">
+      <main
+        className="container mx-auto max-w-6xl px-4 py-8 sm:py-12 space-y-12"
+        dir={isCourseRTL ? "rtl" : "ltr"}
+      >
+        <div className="flex justify-end">
+          <CourseLanguageToggle />
+        </div>
+
         <CourseLandingHero />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
