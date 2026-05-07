@@ -1283,53 +1283,60 @@ export default function Home() {
         <DevicesShowcase onCtaClick={openCreateBook} />
 
         {/* ===== FREE COURSE VIDEO ===== */}
-        <section className="py-16 md:py-24 bg-background">
-          <div className="container max-w-5xl mx-auto px-4">
-            <div className="text-center mb-10">
+        <section className="py-12 md:py-16 bg-background">
+          <div className="container max-w-7xl mx-auto px-4">
+            <div className="text-center mb-8">
               <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">
                 {t("courseHomeEyebrow")}
               </p>
-              <h2 className="text-3xl md:text-5xl font-bold mt-3">
+              <h2 className="text-3xl md:text-4xl font-bold mt-2">
                 {t("courseHomeTitle")}
               </h2>
-              <p className="text-lg text-muted-foreground mt-4">
+              <p className="text-base md:text-lg text-muted-foreground mt-2">
                 {t("courseHomeSubtitle")}
               </p>
             </div>
-            <div className="mb-8">
-              <img
-                src="/course-section-certificate.webp"
-                alt="Earn your verified completion certificate"
-                className="w-full h-auto rounded-xl shadow-lg"
-                loading="lazy"
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 mb-8">
+              <div className="md:col-span-8 rounded-xl shadow-lg overflow-hidden relative">
+                <video
+                  src="/course-intro-video.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                  preload="auto"
+                >
+                  Your browser does not support video playback.
+                </video>
+                <div
+                  aria-hidden="true"
+                  className="absolute bottom-2 right-2 bg-black rounded-md"
+                  style={{ width: 96, height: 32 }}
+                />
+              </div>
+
+              <div className="md:col-span-4 flex flex-col gap-4 md:gap-6">
+                <div className="rounded-xl shadow-lg overflow-hidden flex-1">
+                  <img
+                    src="/course-section-curriculum.webp"
+                    alt="How to Write Your First Book — course curriculum"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="rounded-xl shadow-lg overflow-hidden flex-1">
+                  <img
+                    src="/course-section-certificate.webp"
+                    alt="Earn your verified completion certificate"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="max-w-2xl mx-auto mb-8 rounded-xl overflow-hidden shadow-lg relative">
-              <video
-                src="/course-intro-video.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full aspect-video"
-                preload="auto"
-              >
-                Your browser does not support video playback.
-              </video>
-              <div
-                aria-hidden="true"
-                className="absolute bottom-2 right-2 bg-black rounded-md"
-                style={{ width: 96, height: 32 }}
-              />
-            </div>
-            <div className="mb-10">
-              <img
-                src="/course-section-curriculum.webp"
-                alt="How to Write Your First Book — course curriculum"
-                className="w-full h-auto rounded-xl shadow-lg"
-                loading="lazy"
-              />
-            </div>
+
             <div className="text-center">
               <Button asChild size="lg">
                 <Link href="/course">
