@@ -1282,6 +1282,41 @@ export default function Home() {
         {/* ===== DEVICES SHOWCASE ===== */}
         <DevicesShowcase onCtaClick={openCreateBook} />
 
+        {/* ===== FREE COURSE VIDEO ===== */}
+        <section className="py-16 md:py-24 bg-background">
+          <div className="container max-w-5xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">
+                {t("courseHomeEyebrow")}
+              </p>
+              <h2 className="text-3xl md:text-5xl font-bold mt-3">
+                {t("courseHomeTitle")}
+              </h2>
+              <p className="text-lg text-muted-foreground mt-4">
+                {t("courseHomeSubtitle")}
+              </p>
+            </div>
+            <div className="max-w-3xl mx-auto rounded-xl overflow-hidden shadow-lg">
+              <video
+                src="/course-intro-video.mp4"
+                controls
+                className="w-full aspect-video"
+                playsInline
+                preload="metadata"
+              >
+                Your browser does not support video playback.
+              </video>
+            </div>
+            <div className="text-center mt-10">
+              <Button asChild size="lg">
+                <Link href="/course">
+                  {t("courseHomeCta")} →
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* ===== CARD STACK FEATURES ===== */}
         <div id="platform-features" style={{ background: "#080808", padding: "80px 0 100px" }}>
           <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px" }}>
