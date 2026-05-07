@@ -1298,7 +1298,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 mb-8">
-              <div className="md:col-span-8 rounded-xl shadow-lg overflow-hidden relative">
+              <div className="md:col-span-7 rounded-xl shadow-lg overflow-hidden relative">
                 <video
                   src="/course-intro-video.mp4"
                   autoPlay
@@ -1310,14 +1310,13 @@ export default function Home() {
                 >
                   Your browser does not support video playback.
                 </video>
-                <div
-                  aria-hidden="true"
-                  className="absolute bottom-2 right-2 bg-black rounded-md"
-                  style={{ width: 96, height: 32 }}
-                />
+                <div className="absolute bottom-2 right-2 bg-zinc-900/95 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>Made with Plotzy</span>
+                </div>
               </div>
 
-              <div className="md:col-span-4 flex flex-col gap-4 md:gap-6">
+              <div className="md:col-span-5 flex flex-col gap-4 md:gap-6">
                 <div className="rounded-xl shadow-lg overflow-hidden flex-1">
                   <img
                     src="/course-section-curriculum.webp"
