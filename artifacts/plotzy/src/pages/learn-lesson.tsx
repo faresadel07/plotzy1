@@ -14,6 +14,8 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { apiRequest, courseQueryOpts } from "@/lib/queryClient";
+import { useCourseLanguage } from "@/hooks/use-course-language";
+import { CourseLanguageToggle } from "@/components/course/CourseLanguageToggle";
 import NotFound from "@/pages/not-found";
 
 interface LessonResponse {
@@ -33,7 +35,8 @@ interface LessonResponse {
 }
 
 export default function LearnLessonPage() {
-  const { t, isRTL, lang } = useLanguage();
+  const { t, isRTL } = useLanguage();
+  const { courseLang, isCourseRTL } = useCourseLanguage();
   const { user } = useAuth();
   const [, params] = useRoute("/learn/lesson/:slug");
   const slug = params?.slug ?? "";
@@ -41,7 +44,7 @@ export default function LearnLessonPage() {
   const [optimistic, setOptimistic] = useState<{ completedAt: string } | null>(null);
 
   const lessonQ = useQuery<LessonResponse>({
-    ...courseQueryOpts(["/api/course/lessons", slug], lang),
+    ...courseQueryOpts(["/api/course/lessons", slug], courseLang),
     enabled: !!slug,
     staleTime: Infinity,
   });
@@ -104,7 +107,13 @@ export default function LearnLessonPage() {
         />
       )}
 
-      <main className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6">
+      <main
+        className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6"
+        dir={isCourseRTL ? "rtl" : "ltr"}
+      >
+        <div className="flex justify-end">
+          <CourseLanguageToggle />
+        </div>
         {lessonQ.data && (
           <CourseBreadcrumb
             items={[
