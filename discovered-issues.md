@@ -2316,4 +2316,55 @@ This closes the audit-level backlog from prior sessions. All
 known historical issues are either resolved or have explicit
 documented deferral rationale.
 
+---
+
+## DEFERRED — Arabic course translation (post-launch)
+
+The course-translation infrastructure (schema table, API ?lang=
+support, frontend toggle, seed integration, glossary, Module 1
+translations) was built across `feat/course-i18n-infrastructure`,
+`feat/course-arabic-module-1`, and a course-specific language
+toggle iteration, then **fully reverted** in commit `9f232b7`
+("revert(course): remove Arabic translation feature"). The course
+ships English-only.
+
+**Why deferred:** Faris decided mid-cycle that the course should
+remain English-only at launch. The infrastructure approach was
+sound (translations table with COALESCE-to-English fallback,
+draft glossary locked with five Faris-decisions, Module 1
+already translated and verified em-dash-clean), but the launch
+scope contracted to English-only and the feature was removed
+cleanly rather than left half-built.
+
+**To revisit post-launch:** the work is recoverable from git
+history. Specifically:
+  - Schema definition for `course_content_translations` table:
+    revert the relevant hunk in commit `9f232b7`'s reverse.
+  - Drizzle migration: re-apply via Neon MCP (the SQL is in
+    the original infrastructure commit).
+  - Lib helpers (parseLang, indexTranslations, tr): revert hunks
+    of `course.routes.ts` from `9f232b7`.
+  - Storage method `getCourseTranslations`: same.
+  - Glossary draft: 39 writing-craft terms with five locked
+    judgement calls (premise, theme, beat sheet, show-don't-tell,
+    setting). Re-create from the conversation transcript or the
+    historical commit.
+  - Module 1 Arabic translation (4 lessons + 5 quiz questions +
+    module metadata): re-translate or recover the .ar.md files
+    from history.
+
+**Estimated effort to restore Module 1 + the infrastructure:**
+~6-8h (most of the original work was design + glossary lock-in,
+which carries over). Modules 2-6 + final exam: ~30-40h additional
+for high-quality literary Arabic translation per the original
+Phase A plan.
+
+**Trigger to revisit:** when Faris decides Arabic-language users
+are a launch-priority audience and is ready to commit to the
+QA gate (every translation reviewed by him as the native speaker
+before merge).
+
+_Logged 2026-05-07 during pre-launch verification audit. The
+Arabic feature was deferred deliberately, not silently dropped._
+
 
