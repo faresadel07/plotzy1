@@ -331,8 +331,7 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
       subscriptionTier: tier,
       subscriptionPlan: plan,
       subscriptionEndDate: endDate,
-      paymentMethod: "paypal",
-    } as any);
+    });
 
     // Audit trail — subscription activation. The companion
     // subscription_payments row below has the financial data; this

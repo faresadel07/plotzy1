@@ -3,6 +3,38 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
+/**
+ * Tables intentionally NOT declared in this schema (but present in
+ * the production DB):
+ *
+ *   - user_sessions: managed by express-session via connect-pg-simple.
+ *     The library creates the table at first runtime and owns its
+ *     lifecycle. Drizzle should NOT manage it — adding a declaration
+ *     here would let drizzle-kit push attempt to "fix" the columns
+ *     the session library already maintains.
+ *
+ *   - marketplace_usage: actively used via raw SQL in
+ *     artifacts/api-server/src/lib/tier-limits.ts (the
+ *     getMarketplaceUsageThisMonth, recordMarketplaceUsage,
+ *     checkMarketplaceLimit, and getMarketplaceHistory helpers all
+ *     issue raw SELECT/INSERT against it). Not declared here because
+ *     the table predates the typed-query refactor; the raw-SQL pattern
+ *     works correctly. Adding a Drizzle declaration is post-launch
+ *     cleanup — until then, do not touch.
+ *
+ *   - reading_progress: dead/empty table from an abandoned feature
+ *     (readers tracking position in a published book). 0 rows in
+ *     production, no code references in api-server or frontend.
+ *     Marked for DROP TABLE in a future cleanup batch.
+ *
+ * Do NOT add any of the three to this schema unless we are
+ * committing to manage them via Drizzle. drizzle-kit push would
+ * otherwise interpret the existing DB columns as drift and attempt
+ * to "correct" them in destructive ways (especially for
+ * user_sessions, where connect-pg-simple owns the column
+ * specification).
+ */
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").unique(),
