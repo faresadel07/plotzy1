@@ -70,17 +70,88 @@ function summarizeLesson(l: CourseLesson) {
   };
 }
 
+// ─── i18n: translation lookup ─────────────────────────────────────────
+// All non-English course content lives in course_content_translations
+// (one row per translatable field). Routes that surface course text
+// parse `?lang=` from the query string, fetch the translations for
+// the entities they're about to project, and use `tr(...)` to pick the
+// translated value with an English fallback (graceful degradation when
+// a field hasn't been translated yet).
+
+// Allowlist: keep in sync with SUPPORTED_UI_LANGS in
+// artifacts/plotzy/src/lib/i18n.ts. Restricted set defends against
+// arbitrary-string DB lookups; English never round-trips through this.
+const SUPPORTED_CONTENT_LANGS = new Set([
+  "ar", "fr", "es", "de", "pt", "ru", "zh", "ja", "ko", "hi", "tr", "he", "fa",
+]);
+
+/** Parse `?lang=` and return a normalised non-English lang or null. */
+function parseLang(req: { query: { lang?: unknown } }): string | null {
+  const raw = req.query?.lang;
+  if (typeof raw !== "string") return null;
+  const lang = raw.toLowerCase().trim();
+  if (lang === "en" || lang === "") return null;
+  return SUPPORTED_CONTENT_LANGS.has(lang) ? lang : null;
+}
+
+/** Indexed view over a translation result list: type → id → field → value. */
+type TranslationIndex = Map<string, Map<number, Map<string, string>>>;
+
+function indexTranslations(
+  rows: { entityType: string; entityId: number; field: string; value: string }[],
+): TranslationIndex {
+  const idx: TranslationIndex = new Map();
+  for (const r of rows) {
+    let byId = idx.get(r.entityType);
+    if (!byId) {
+      byId = new Map();
+      idx.set(r.entityType, byId);
+    }
+    let byField = byId.get(r.entityId);
+    if (!byField) {
+      byField = new Map();
+      byId.set(r.entityId, byField);
+    }
+    byField.set(r.field, r.value);
+  }
+  return idx;
+}
+
+/** Translation lookup with English fallback. Returns the fallback if the
+ *  index is null (English request) or the field hasn't been translated. */
+function tr<T>(
+  idx: TranslationIndex | null,
+  entityType: "lesson" | "module" | "quiz_question",
+  entityId: number,
+  field: string,
+  fallback: T,
+): T {
+  if (!idx) return fallback;
+  const v = idx.get(entityType)?.get(entityId)?.get(field);
+  return (v as T | undefined) ?? fallback;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Group 1 — Catalog (public reads)
 // ════════════════════════════════════════════════════════════════════════════
 
 // GET /api/course/modules — list all modules with lesson summaries
-router.get("/api/course/modules", publicReadLimiter, async (_req, res) => {
+router.get("/api/course/modules", publicReadLimiter, async (req, res) => {
   try {
+    const lang = parseLang(req);
     const [modules, lessons] = await Promise.all([
       storage.getCourseModules(),
       storage.getAllCourseLessons(),
     ]);
+
+    let trIdx: TranslationIndex | null = null;
+    if (lang) {
+      const trRows = await storage.getCourseTranslations(lang, [
+        ...modules.map((m) => ({ entityType: "module" as const, entityId: m.id })),
+        ...lessons.map((l) => ({ entityType: "lesson" as const, entityId: l.id })),
+      ]);
+      trIdx = indexTranslations(trRows);
+    }
 
     const lessonsByModule = new Map<number, CourseLesson[]>();
     for (const l of lessons) {
@@ -94,13 +165,16 @@ router.get("/api/course/modules", publicReadLimiter, async (_req, res) => {
       return {
         id: m.id,
         slug: m.slug,
-        title: m.title,
-        subtitle: m.subtitle,
-        description: m.description,
+        title: tr(trIdx, "module", m.id, "title", m.title),
+        subtitle: tr(trIdx, "module", m.id, "subtitle", m.subtitle),
+        description: tr(trIdx, "module", m.id, "description", m.description),
         order: m.order,
         estimatedMinutes: m.estimatedMinutes,
         lessonCount: ms.length,
-        lessons: ms.map(summarizeLesson),
+        lessons: ms.map((l) => ({
+          ...summarizeLesson(l),
+          title: tr(trIdx, "lesson", l.id, "title", l.title),
+        })),
       };
     });
 
@@ -121,20 +195,33 @@ router.get("/api/course/modules", publicReadLimiter, async (_req, res) => {
 // catalog list (GET /modules), not per-module deep-dives.
 router.get("/api/course/modules/:slug", requireAuth, generalLimiter, async (req, res) => {
   try {
+    const lang = parseLang(req);
     const m = await storage.getCourseModuleBySlug(String(req.params.slug));
     if (!m) return res.status(404).json({ message: "Module not found" });
 
     const lessons = await storage.getCourseLessons(m.id);
+    let trIdx: TranslationIndex | null = null;
+    if (lang) {
+      const trRows = await storage.getCourseTranslations(lang, [
+        { entityType: "module", entityId: m.id },
+        ...lessons.map((l) => ({ entityType: "lesson" as const, entityId: l.id })),
+      ]);
+      trIdx = indexTranslations(trRows);
+    }
+
     return res.json({
       id: m.id,
       slug: m.slug,
-      title: m.title,
-      subtitle: m.subtitle,
-      description: m.description,
+      title: tr(trIdx, "module", m.id, "title", m.title),
+      subtitle: tr(trIdx, "module", m.id, "subtitle", m.subtitle),
+      description: tr(trIdx, "module", m.id, "description", m.description),
       order: m.order,
       estimatedMinutes: m.estimatedMinutes,
       lessonCount: lessons.length,
-      lessons: lessons.map(summarizeLesson),
+      lessons: lessons.map((l) => ({
+        ...summarizeLesson(l),
+        title: tr(trIdx, "lesson", l.id, "title", l.title),
+      })),
     });
   } catch (err) {
     logger.error({ err }, "Course module error");
@@ -150,6 +237,7 @@ router.get("/api/course/modules/:slug", requireAuth, generalLimiter, async (req,
 // the public marketing surface is /course (the landing page).
 router.get("/api/course/lessons/:slug", requireAuth, generalLimiter, async (req, res) => {
   try {
+    const lang = parseLang(req);
     const lesson = await storage.getCourseLessonBySlug(String(req.params.slug));
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
@@ -170,6 +258,20 @@ router.get("/api/course/lessons/:slug", requireAuth, generalLimiter, async (req,
     const prev = idx > 0 ? allLessons[idx - 1] : null;
     const next = idx >= 0 && idx < allLessons.length - 1 ? allLessons[idx + 1] : null;
 
+    let trIdx: TranslationIndex | null = null;
+    if (lang) {
+      // Fetch translations for: this lesson (title + content), its
+      // module (title), and prev/next (title only — for the nav links).
+      const entries: { entityType: "lesson" | "module"; entityId: number }[] = [
+        { entityType: "lesson", entityId: lesson.id },
+        { entityType: "module", entityId: module.id },
+      ];
+      if (prev) entries.push({ entityType: "lesson", entityId: prev.id });
+      if (next) entries.push({ entityType: "lesson", entityId: next.id });
+      const trRows = await storage.getCourseTranslations(lang, entries);
+      trIdx = indexTranslations(trRows);
+    }
+
     // requireAuth above guarantees req.user is present.
     const userId = (req.user as any).id;
     const progress = await storage.getCourseProgressForUser(userId);
@@ -186,15 +288,19 @@ router.get("/api/course/lessons/:slug", requireAuth, generalLimiter, async (req,
       id: lesson.id,
       moduleId: lesson.moduleId,
       moduleSlug: module.slug,
-      moduleTitle: module.title,
+      moduleTitle: tr(trIdx, "module", module.id, "title", module.title),
       slug: lesson.slug,
-      title: lesson.title,
+      title: tr(trIdx, "lesson", lesson.id, "title", lesson.title),
       orderInModule: lesson.orderInModule,
       estimatedMinutes: lesson.estimatedMinutes,
-      content: lesson.content,
+      content: tr(trIdx, "lesson", lesson.id, "content", lesson.content),
       heroImageUrl: lesson.heroImageUrl,
-      prevLesson: prev ? { slug: prev.slug, title: prev.title } : null,
-      nextLesson: next ? { slug: next.slug, title: next.title } : null,
+      prevLesson: prev
+        ? { slug: prev.slug, title: tr(trIdx, "lesson", prev.id, "title", prev.title) }
+        : null,
+      nextLesson: next
+        ? { slug: next.slug, title: tr(trIdx, "lesson", next.id, "title", next.title) }
+        : null,
       myCompletion,
     });
   } catch (err) {
@@ -360,6 +466,7 @@ router.get("/api/course/progress", requireAuth, generalLimiter, async (req, res)
 // GET /api/course/quizzes/:quizId — quiz definition + questions WITHOUT answers
 router.get("/api/course/quizzes/:quizId", requireAuth, generalLimiter, async (req, res) => {
   try {
+    const lang = parseLang(req);
     const quizId = parseInt(String(req.params.quizId), 10);
     if (!Number.isFinite(quizId) || quizId <= 0) {
       return res.status(400).json({ message: "Invalid quiz id" });
@@ -369,6 +476,16 @@ router.get("/api/course/quizzes/:quizId", requireAuth, generalLimiter, async (re
     if (!quiz) return res.status(404).json({ message: "Quiz not found" });
 
     const questions = await storage.getCourseQuizQuestions(quizId);
+
+    let trIdx: TranslationIndex | null = null;
+    if (lang) {
+      const trRows = await storage.getCourseTranslations(
+        lang,
+        questions.map((q) => ({ entityType: "quiz_question" as const, entityId: q.id })),
+      );
+      trIdx = indexTranslations(trRows);
+    }
+
     return res.json({
       id: quiz.id,
       moduleId: quiz.moduleId,
@@ -376,7 +493,14 @@ router.get("/api/course/quizzes/:quizId", requireAuth, generalLimiter, async (re
       passingPercentage: quiz.passingPercentage,
       timeLimitMinutes: quiz.timeLimitMinutes,
       questionCount: quiz.questionCount,
-      questions: questions.map(publicQuestion),
+      questions: questions.map((q) => ({
+        ...publicQuestion(q),
+        questionText: tr(trIdx, "quiz_question", q.id, "question_text", q.questionText),
+        optionA: tr(trIdx, "quiz_question", q.id, "option_a", q.optionA),
+        optionB: tr(trIdx, "quiz_question", q.id, "option_b", q.optionB),
+        optionC: tr(trIdx, "quiz_question", q.id, "option_c", q.optionC),
+        optionD: tr(trIdx, "quiz_question", q.id, "option_d", q.optionD),
+      })),
     });
   } catch (err) {
     logger.error({ err }, "Quiz read error");

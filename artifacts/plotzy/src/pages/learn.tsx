@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { courseQueryOpts } from "@/lib/queryClient";
 import { ArrowRight, GraduationCap, Award } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
@@ -64,12 +65,12 @@ interface ProgressResponse {
 }
 
 export default function LearnPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
   const isAuthed = !!user;
 
   const catalog = useQuery<CatalogResponse>({
-    queryKey: ["/api/course/modules"],
+    ...courseQueryOpts(["/api/course/modules"], lang),
     staleTime: Infinity,
   });
 
