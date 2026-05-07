@@ -291,6 +291,9 @@ export const translations: Record<Language, Record<string, string>> = {
     courseFinalExamPassed: "Passed",
     courseFinalExamQuestions: "questions",
     courseFinalExamPassMark: "to pass",
+    // ── Coming-soon banners (image-API features pre-launch) ─────────────
+    featureComingSoon: "Coming Soon",
+    aiCoverComingSoon: "AI cover generation coming soon. Use Text, Images, Shapes, or Background tabs to design your cover in the meantime.",
     // ── Public course landing page (/course) ───────────────────────────
     courseLandingPageTitle: "How to Write Your First Book — A free writing course",
     courseLandingPageDescription: "A 6-module, self-paced writing course for first-time authors. Free with a Plotzy account. Foundations, story architecture, characters, world-building, the writing process, and getting published — plus quizzes, an optional final project, and a verified completion certificate.",

@@ -405,9 +405,14 @@ export default function Home() {
         language: lang,
       });
 
-      if (data.protagonist) {
-        generateCover.mutate({ id: newBook.id, prompt: `A ${data.genre} book cover featuring ${data.protagonist}` });
-      }
+      // AI cover auto-generation temporarily disabled — gpt-image-1 is
+      // a paid API and credits aren't provisioned pre-launch. The user
+      // lands on /books/<id> with a default placeholder cover and can
+      // pick "Upload cover" or design one from scratch in /cover-
+      // designer/<id>. Re-enable once image-API credits land.
+      // if (data.protagonist) {
+      //   generateCover.mutate({ id: newBook.id, prompt: `A ${data.genre} book cover featuring ${data.protagonist}` });
+      // }
 
       setLocation(`/books/${newBook.id}`);
     } catch (err: any) {
