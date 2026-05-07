@@ -45,28 +45,6 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
-/**
- * useQuery options builder for course endpoints that support `?lang=`.
- * Adds `{ lang }` to the queryKey for per-language cache separation
- * (so toggling language auto-refetches), and a custom queryFn that
- * appends the `?lang=` query string when the user is on a non-English
- * UI. Invalidation by the path prefix still works:
- *   queryClient.invalidateQueries({ queryKey: ["/api/course/lessons", slug] })
- * matches both `[path, slug, { lang: "en" }]` and `[path, slug, { lang: "ar" }]`.
- */
-export function courseQueryOpts(pathParts: (string | number)[], lang: string) {
-  const path = pathParts.join("/");
-  const url = lang && lang !== "en" ? `${path}?lang=${lang}` : path;
-  return {
-    queryKey: [...pathParts, { lang }] as const,
-    queryFn: async () => {
-      const res = await fetch(url, { credentials: "include" });
-      await throwIfResNotOk(res);
-      return res.json();
-    },
-  };
-}
-
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

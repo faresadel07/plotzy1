@@ -1,8 +1,5 @@
 import { Link, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { courseQueryOpts } from "@/lib/queryClient";
-import { useCourseLanguage } from "@/hooks/use-course-language";
-import { CourseLanguageToggle } from "@/components/course/CourseLanguageToggle";
 import { ChevronRight, ChevronLeft, Clock, BookOpen, FileQuestion } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
@@ -42,13 +39,12 @@ interface ProgressResponse {
 
 export default function LearnModulePage() {
   const { t, isRTL } = useLanguage();
-  const { courseLang, isCourseRTL } = useCourseLanguage();
   const { user } = useAuth();
   const [, params] = useRoute("/learn/module/:slug");
   const slug = params?.slug ?? "";
 
   const moduleQ = useQuery<ModuleResponse>({
-    ...courseQueryOpts(["/api/course/modules", slug], courseLang),
+    queryKey: ["/api/course/modules", slug],
     enabled: !!slug,
     staleTime: Infinity,
   });
@@ -94,13 +90,7 @@ export default function LearnModulePage() {
         />
       )}
 
-      <main
-        className="container mx-auto max-w-4xl px-4 py-8 sm:py-10 space-y-8"
-        dir={isCourseRTL ? "rtl" : "ltr"}
-      >
-        <div className="flex justify-end">
-          <CourseLanguageToggle />
-        </div>
+      <main className="container mx-auto max-w-4xl px-4 py-8 sm:py-10 space-y-8">
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },
