@@ -111,7 +111,21 @@ export const books = pgTable("books", {
   wordGoal: integer("word_goal"),
   // Genre/category for community library
   genre: text("genre"),
-  // Beta-reader share token (unique read-only link, no auth required)
+  // Beta-reader share token (unique read-only link, no auth required).
+  //
+  // CONVENTION FOR FUTURE IMPLEMENTERS: when wiring up the share-link
+  // feature (no route handler exists yet), apply the SAME hashing
+  // pattern as the other token surfaces (lib/token-hash.ts):
+  //
+  //   create:  raw = crypto.randomBytes(32).toString("hex")
+  //            store: hashToken(raw)
+  //            return raw to the owner (goes in the share URL)
+  //   lookup:  hash the URL-extracted token before WHERE compare
+  //
+  // The raw token in the URL is the "credential"; the DB should only
+  // ever see the hash so a leak of the books table can't be replayed
+  // to access private drafts. Same threat model as password-reset
+  // tokens, treat it identically.
   shareToken: text("share_token").unique(),
   // Publishing fields
   isPublished: boolean("is_published").default(false).notNull(),

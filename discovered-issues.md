@@ -2200,4 +2200,73 @@ _Logged 2026-05-07 during M-4 wiring. Tracking the deferred items
 keeps the audit-log work fully accountable rather than declaring
 "resolved" with two follow-ups silently dropped._
 
+---
+
+## RESOLVED — M-10 invite-code verification (2026-05-07)
+
+Spot-check during the Phase 3 GDPR audit confirmed that the three
+token surfaces hashed in commit `ec9e510` remain correctly hashed:
+- `email_verification_tokens.token` ✓
+- `password_reset_tokens.token` ✓
+- `book_collaborators.invite_code` ✓
+
+End-to-end mental trace of the book-collaborator invite redeem flow
+verified the symmetry:
+1. Owner: `generateInviteCode()` returns canonical uppercase `PLOT-XXXXXX`
+2. Server: `hashToken(code)` stored; raw returned to owner
+3. Recipient: pastes possibly-mixed-case-with-whitespace code
+4. Server: `hashToken(input.toUpperCase().trim())` matches what was stored
+
+One forward-looking finding: `books.shareToken` (an unimplemented
+share-link feature; column exists, frontend types reference it,
+no route handler exists yet) was given an inline comment in
+`lib/db/src/schema/index.ts:114-128` documenting the hashing
+convention so a future implementer can't accidentally store a raw
+share-link token. Not a regression — feature was never built.
+
+M-10 closed.
+
+---
+
+## DEFERRED — Nightly `pg_dump` automation to external storage (post-launch)
+
+The Phase 3 DR audit (M-7) approved the nightly `pg_dump` → OneDrive
+backup pattern as the right insurance for the 6-hour Neon PITR
+window. The runbook at `docs/disaster-recovery-runbook.md` documents
+the manual procedure. The automation is **not implemented** — per
+the approved Phase 3 escape clause, the runbook itself was the
+must-have; the automation is the nice-to-have.
+
+**Why deferred:** the OneDrive upload leg requires `rclone` OAuth
+token bootstrapping (interactive browser flow) which doesn't fit
+cleanly into a fresh GitHub Actions runner without pre-staging the
+token as a secret. Workable but adds 1-2 hours of setup that wasn't
+on the critical pre-launch path.
+
+**Operational compensating control during the gap:** weekly manual
+`pg_dump` per the runbook's "External backup storage" section. The
+gap window is ≤7 days of unrecoverable data if Neon PITR is also
+exhausted (i.e., a >6-hour-old loss event on a week the manual dump
+was missed). For pre-launch traffic this is acceptable; review at
+1 month post-launch.
+
+**Implementation outline for the future ticket:**
+- `.github/workflows/nightly-pg-dump.yml` — runs at `02:00 UTC` on
+  cron schedule
+- Steps: `apt install postgresql-client`, `pg_dump --no-owner --no-acl
+  $DATABASE_URL > backup.sql`, `gpg --symmetric --cipher-algo AES256
+  --batch --passphrase $GPG_PASSPHRASE backup.sql`, upload via
+  `rclone copy backup.sql.gpg onedrive:plotzy-backups/`
+- Retention: `rclone delete --min-age 30d` for daily, separate
+  monthly path for first-of-month dumps with 12-month retention
+- Notification on success/failure via the existing Resend integration
+- Secrets needed: `DATABASE_URL` (prod), `GPG_PASSPHRASE`,
+  `RCLONE_CONF` (Microsoft Graph token JSON for OneDrive)
+
+Estimated effort: 2-3h once the rclone OneDrive token is
+provisioned outside CI and pasted into a GitHub secret.
+
+_Logged 2026-05-07 during M-7 work. Runbook ships; automation
+follows once launch infrastructure stabilises._
+
 

@@ -4,9 +4,11 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { logger } from "../lib/logger";
 import { logAuditEvent } from "../lib/audit-log";
+import { exportUserData } from "../lib/data-export";
 import { sendNotificationEmail } from "../lib/email";
 import { logRouteError } from "../lib/log-route-error";
 import { requireEmailVerified } from "../middleware/auth";
+import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 
 // Extract the bare handle from any common paste form — bare handle,
 // @-prefixed, or a full profile URL with or without protocol. Keeps
@@ -228,6 +230,45 @@ router.patch("/api/me/profile", async (req, res) => {
       return res.status(400).json({ message: err.errors[0].message });
     }
     return res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// GET /api/me/export-data — GDPR Article 15 (right of access). Returns
+// a single JSON payload containing every piece of personal data tied
+// to the requesting user across 23+ tables. Sync (no email-link
+// indirection) since payload size is bounded by writing volume and
+// fits in the standard HTTP timeout window. Rate-limited via
+// sensitiveAuthLimiter (5 req / 15 min) so a misbehaving client
+// can't repeatedly trigger the heavy SELECT fan-out.
+//
+// The audit-log entry records the action without copying the export
+// payload itself (the payload IS the user's data; logging it would
+// double the storage and surface no new forensic value).
+router.get("/api/me/export-data", sensitiveAuthLimiter, async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const userId = (req.user as any).id;
+    const data = await exportUserData(userId);
+    if (!data) return res.status(404).json({ message: "User not found" });
+
+    await logAuditEvent({
+      actorId: userId,
+      action: "data_export",
+      targetType: "user",
+      targetId: userId,
+      details: { schemaVersion: data.schemaVersion },
+      req,
+    });
+
+    const filename = `plotzy-export-${userId}-${new Date().toISOString().split("T")[0]}.json`;
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/json");
+    return res.json(data);
+  } catch (err) {
+    logRouteError(req, err, "social.routes:export-data");
+    return res.status(500).json({ message: "Could not generate data export. Please try again." });
   }
 });
 
