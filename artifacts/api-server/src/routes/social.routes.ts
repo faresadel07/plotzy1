@@ -3,7 +3,9 @@ import multer from "multer";
 import { z } from "zod";
 import { storage } from "../storage";
 import { logger } from "../lib/logger";
+import { logAuditEvent } from "../lib/audit-log";
 import { sendNotificationEmail } from "../lib/email";
+import { logRouteError } from "../lib/log-route-error";
 import { requireEmailVerified } from "../middleware/auth";
 
 // Extract the bare handle from any common paste form — bare handle,
@@ -190,6 +192,7 @@ router.get("/api/authors/:userId/profile", async (req, res) => {
 
     return res.json({ ...publicUser, books: booksWithLikes, followersCount, followingCount, totalLikes, isFollowing });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -206,9 +209,21 @@ router.patch("/api/me/profile", async (req, res) => {
     // into the user row.
     const updates = profileUpdateSchema.parse(req.body);
     const updated = await storage.updateUser(req.user.id, updates);
+    // Audit trail — log which fields were touched (not the values, to
+    // keep PII out of audit details). Useful for "who changed my bio?"
+    // forensics if account-takeover ever happens.
+    await logAuditEvent({
+      actorId: req.user.id,
+      action: "profile_update",
+      targetType: "user",
+      targetId: req.user.id,
+      details: { fieldsChanged: Object.keys(updates) },
+      req,
+    });
     const { passwordHash, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     if (err instanceof z.ZodError) {
       return res.status(400).json({ message: err.errors[0].message });
     }
@@ -237,6 +252,7 @@ router.post("/api/authors/:userId/follow", requireEmailVerified, async (req, res
 
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -253,6 +269,7 @@ router.delete("/api/authors/:userId/follow", async (req, res) => {
     await storage.unfollowUser(req.user.id, targetId);
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -269,6 +286,7 @@ router.post("/api/books/:bookId/like", requireEmailVerified, async (req, res) =>
     const likesCount = await storage.getBookLikesCount(bookId);
     return res.json({ liked: true, likesCount });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -283,6 +301,7 @@ router.delete("/api/books/:bookId/like", async (req, res) => {
     const likesCount = await storage.getBookLikesCount(bookId);
     return res.json({ liked: false, likesCount });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -299,6 +318,7 @@ router.get("/api/books/:bookId/like", async (req, res) => {
     }
     return res.json({ liked, likesCount });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -312,6 +332,7 @@ router.get("/api/notifications", async (req, res) => {
     const notifs = await storage.getNotifications(req.user.id, 50);
     return res.json(notifs);
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -325,6 +346,7 @@ router.get("/api/notifications/unread-count", async (req, res) => {
     const count = await storage.getUnreadNotificationCount(req.user.id);
     return res.json({ count });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -341,6 +363,7 @@ router.patch("/api/notifications/:id/read", async (req, res) => {
     await storage.markNotificationRead(id, req.user.id);
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -354,6 +377,7 @@ router.post("/api/notifications/read-all", async (req, res) => {
     await storage.markAllNotificationsRead(req.user.id);
     return res.json({ success: true });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -367,6 +391,7 @@ router.get("/api/messages/unread-count", async (req, res) => {
     const count = await storage.getUnreadMessageCount(req.user.id);
     return res.json({ count });
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -380,6 +405,7 @@ router.get("/api/messages/conversations", async (req, res) => {
     const conversations = await storage.getConversations(req.user.id);
     return res.json(conversations);
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -398,6 +424,7 @@ router.get("/api/messages/:userId", async (req, res) => {
     await storage.markMessagesRead(req.user.id, otherUserId);
     return res.json(messages);
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -441,6 +468,7 @@ router.post("/api/messages/:userId", requireEmailVerified, async (req, res) => {
 
     return res.json(message);
   } catch (err) {
+    logRouteError(req, err, "social.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });

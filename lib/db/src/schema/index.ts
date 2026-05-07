@@ -703,14 +703,25 @@ export const loginAttempts = pgTable("login_attempts", {
 ]);
 
 // ── Admin Audit Logs ──────────────────────────────────────────────────────
+// Despite the name, this table also captures end-user-initiated events
+// (password reset, profile edits, cert issuance, subscription changes —
+// added 2026-05-07 per M-4 in db-health-audit-pre-launch.md). The
+// `admin_id` column accepts any user id (FK to users.id, not gated on
+// role) so the schema permits both. Renaming the column to `actor_id`
+// is post-launch hygiene tracked in discovered-issues.md.
+//
+// IP address + user-agent for end-user events are captured inside the
+// `details` JSONB field (keys: `ipAddress`, `userAgent`) by the shared
+// helper at lib/audit-log.ts, so no new columns required.
 
 export const adminAuditLogs = pgTable("admin_audit_logs", {
   id: serial("id").primaryKey(),
+  // Misnomer: stores ANY user id (admin or end-user). See note above.
   adminId: integer("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  action: text("action").notNull(), // user_suspend | user_delete | user_grant_sub | book_delete | flag_review | banner_update
-  targetType: text("target_type").notNull(), // user | book | flag | banner | tutorial
+  action: text("action").notNull(), // user_suspend | user_delete | user_grant_sub | book_delete | flag_review | banner_update | password_reset_requested | password_reset_completed | email_verified | profile_update | book_publish | book_unpublish | cert_issued | subscription_cancel | subscription_activated
+  targetType: text("target_type").notNull(), // user | book | flag | banner | tutorial | certificate | subscription
   targetId: integer("target_id"),
-  details: text("details"), // JSON string with action-specific data
+  details: text("details"), // JSON string with action-specific data (incl. ipAddress + userAgent for end-user events)
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("idx_audit_logs_admin_id").on(t.adminId),

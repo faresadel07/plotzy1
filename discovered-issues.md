@@ -2163,4 +2163,41 @@ This finding **closes H-8** in `db-health-audit-pre-launch.md`.
 _Logged 2026-05-07 during pre-launch security & hygiene batch
 (commits ec9e510, e4846d0, [Batch 3 SHA pending])._
 
+---
+
+## DEFERRED — `admin_audit_logs` retention cron (post-launch)
+
+The Phase 2 observability batch (M-4) wired audit-log calls onto 8
+sensitive routes (password reset, email verify, profile update, book
+publish/unpublish, cert issue, subscription cancel + activate). The
+`admin_audit_logs` table now records security-relevant events with IP
++ user-agent in `details` JSONB.
+
+**Retention policy (decided 2026-05-07):** keep audit rows for **1
+year**, then purge. Rationale: balances forensic value (incident
+investigation routinely needs 30-90 days; compliance audits look
+back ~1 year) against unbounded storage growth.
+
+**Implementation deferred — no cron yet.** A nightly job that runs
+`DELETE FROM admin_audit_logs WHERE created_at < NOW() - INTERVAL
+'365 days'` is the right shape but the codebase doesn't have any
+cron infrastructure today (no node-cron, no platform scheduler
+wired). The first cron job to land should bring the framework + this
+purge as its first user.
+
+**Cost of deferral:** at current event volume (rough estimate ~50
+events/user/year × ~1k users = 50k rows/year), the table grows by
+~10MB/year. No operational pressure for at least 12-18 months.
+
+**Schema-rename follow-up:** the `admin_id` column accepts non-admin
+actor ids since this batch. Renaming to `actor_id` (DROP/ADD
+constraint + ALTER COLUMN + Drizzle update) is a clean ~30-min
+post-launch migration. Schema comment at
+`lib/db/src/schema/index.ts:707-715` documents the misnomer until
+the rename happens.
+
+_Logged 2026-05-07 during M-4 wiring. Tracking the deferred items
+keeps the audit-log work fully accountable rather than declaring
+"resolved" with two follow-ups silently dropped._
+
 

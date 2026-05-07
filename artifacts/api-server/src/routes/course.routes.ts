@@ -25,6 +25,7 @@ import {
   analyzePlotHoles, analyzeDialogue, analyzePacing, analyzeVoiceConsistency,
 } from "../lib/ai-analysis";
 import { renderCertificatePdf } from "../services/certificate-pdf";
+import { logAuditEvent } from "../lib/audit-log";
 import type { CourseLesson, CourseQuiz, CourseQuizAttempt } from "../../../../lib/db/src/schema";
 
 const router: Router = Router();
@@ -791,6 +792,19 @@ router.post("/api/course/certificate/issue", requireAuth, writeLimiter, async (r
       elig.modulesCompletedAt,
       null,
     );
+
+    // Audit trail — credential issuance. Captures the score (so
+    // post-incident review can verify the legitimate grade behind a
+    // disputed cert) and the cert uuid (so the audit row can be
+    // joined back to course_certificates).
+    await logAuditEvent({
+      actorId: userId,
+      action: "cert_issued",
+      targetType: "certificate",
+      targetId: cert.id,
+      details: { certUuid: cert.certificateUuid, finalExamScore: cert.finalExamScore },
+      req,
+    });
 
     return res.status(201).json({
       uuid: cert.certificateUuid,

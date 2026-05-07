@@ -9,6 +9,7 @@ import {
 import { requireAdmin } from "../middleware/auth";
 import { logger } from "../lib/logger";
 
+import { logRouteError } from "../lib/log-route-error";
 const router = Router();
 
 // All routes require admin. Scope the middleware to the /api/admin/ prefix
@@ -93,7 +94,8 @@ router.get("/api/admin/analytics/signups", async (req, res) => {
       ORDER BY day
     `);
     return res.json(rows.rows);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "admin.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -110,7 +112,8 @@ router.get("/api/admin/analytics/writing-activity", async (req, res) => {
       ORDER BY day
     `);
     return res.json(rows.rows);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "admin.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -318,6 +321,7 @@ router.post("/api/admin/flags", async (req, res) => {
       .returning();
     return res.status(201).json(flag);
   } catch (err) {
+    logRouteError(req, err, "admin.routes");
     if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
     return res.status(500).json({ message: "Internal error" });
   }
@@ -339,7 +343,8 @@ router.get("/api/admin/flags", async (req, res) => {
       LIMIT 100
     `);
     return res.json(rows.rows);
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "admin.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -369,6 +374,7 @@ router.patch("/api/admin/flags/:id", async (req, res) => {
 
     return res.json(updated);
   } catch (err) {
+    logRouteError(req, err, "admin.routes");
     if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
     return res.status(500).json({ message: "Internal error" });
   }
@@ -389,7 +395,8 @@ router.get("/api/admin/analytics/leaderboard", async (_req, res) => {
       LIMIT 25
     `);
     return res.json(rows.rows);
-  } catch {
+  } catch (err) {
+    logRouteError(_req, err, "admin.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });
@@ -409,7 +416,8 @@ router.get("/api/admin/analytics/inactive-users", async (_req, res) => {
       LIMIT 50
     `);
     return res.json(rows.rows);
-  } catch {
+  } catch (err) {
+    logRouteError(_req, err, "admin.routes");
     return res.status(500).json({ message: "Internal error" });
   }
 });

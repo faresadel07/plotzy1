@@ -5,6 +5,7 @@ import { gutenbergBooks } from "../../../../lib/db/src/schema";
 
 import { logger } from "../lib/logger";
 
+import { logRouteError } from "../lib/log-route-error";
 const router = Router();
 
 // ── Gutenberg Public-Domain Library ──────────────────────────────────────────
@@ -359,6 +360,7 @@ router.get("/api/gutenberg/books", async (req: any, res: any) => {
       results,
     });
   } catch (err: any) {
+    logRouteError(req, err, "gutenberg.routes");
     res.status(500).json({ message: "Failed to fetch books" });
   }
 });
@@ -369,6 +371,7 @@ router.get("/api/gutenberg/sync-status", async (_req: any, res: any) => {
     const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(gutenbergBooks);
     res.json({ synced: (row?.n ?? 0) >= CATALOG_MIN_BOOKS, count: row?.n ?? 0, running: catalogSyncRunning });
   } catch (err) {
+    logRouteError(_req, err, "gutenberg.routes");
     res.status(500).json({ message: "Internal error" });
   }
 });
@@ -419,7 +422,8 @@ router.get("/api/gutenberg/books/:id", async (req: any, res: any) => {
       hasContent: !!row.content,
       contentCachedAt: row.contentCachedAt,
     });
-  } catch {
+  } catch (err) {
+    logRouteError(req, err, "gutenberg.routes");
     return res.status(502).json({ error: "Failed to fetch book metadata" });
   }
 });
@@ -472,6 +476,7 @@ router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
 
     return res.json({ content, fromCache: false, cachedAt: new Date() });
   } catch (err: any) {
+    logRouteError(req, err, "gutenberg.routes");
     return res.status(502).json({ message: "Failed to retrieve book text" });
   }
 });

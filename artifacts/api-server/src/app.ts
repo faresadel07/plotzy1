@@ -32,7 +32,7 @@ import { apiLogger } from "./middleware/api-logger";
 import { pageViewTracker } from "./middleware/page-view-tracker";
 import { csrfOriginCheck } from "./middleware/csrf";
 import { pool } from "./db";
-import { Sentry } from "./lib/sentry";
+import { Sentry, isSentryActive } from "./lib/sentry";
 
 declare module "http" {
   interface IncomingMessage {
@@ -133,12 +133,18 @@ app.get("/healthz", async (_req, res) => {
   // to most probers, which is the worst of all worlds).
   const ping = pool.query("SELECT 1").then(() => true);
   const timeout = new Promise<false>(resolve => setTimeout(() => resolve(false), 3000));
+  // Sentry status is a synchronous boolean lookup (no remote call), so
+  // surfacing it on /healthz is free. Catches the silent-DSN failure
+  // mode where a deploy forgets the env var and errors disappear into
+  // the void. "disabled" doesn't fail the probe (returns 200) — it's
+  // an observability signal, not a liveness gate.
+  const sentry = isSentryActive() ? "active" : "disabled";
   try {
     const ok = await Promise.race([ping, timeout]);
-    if (ok) return res.status(200).json({ status: "ok", db: "ok" });
-    return res.status(503).json({ status: "degraded", db: "timeout" });
+    if (ok) return res.status(200).json({ status: "ok", db: "ok", sentry });
+    return res.status(503).json({ status: "degraded", db: "timeout", sentry });
   } catch (err: any) {
-    return res.status(503).json({ status: "degraded", db: "error", message: err?.message });
+    return res.status(503).json({ status: "degraded", db: "error", message: err?.message, sentry });
   }
 });
 
