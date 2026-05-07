@@ -1299,10 +1299,12 @@ export default function Home() {
             <div className="max-w-3xl mx-auto rounded-xl overflow-hidden shadow-lg">
               <video
                 src="/course-intro-video.mp4"
-                controls
-                className="w-full aspect-video"
+                autoPlay
+                loop
+                muted
                 playsInline
-                preload="metadata"
+                className="w-full aspect-video"
+                preload="auto"
               >
                 Your browser does not support video playback.
               </video>
