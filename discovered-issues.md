@@ -2106,4 +2106,61 @@ The deferred items are documentation gaps, low-impact UX polish, and edge cases 
 
 _Logged 2026-05-06 during pre-launch Final QA fix batch._
 
+---
+
+## RESOLVED — Pre-launch dev/prod database separation (2026-05-07)
+
+Until 2026-05-07 the local development environment shared a single Neon
+DB with production. The pre-launch DB audit (`db-health-audit-pre-
+launch.md`, finding H-8) flagged the risk: local `pnpm` scripts hit
+prod silently, dev test data leaked into the public Community Library
+(13 of 13 books were dev junk; 2 of them were even published — see
+the Batch 2 cleanup commit), and any `drizzle-kit push` during dev
+mutated the prod schema instantly.
+
+**Resolution applied:** A Neon **branch** named `dev` was created off
+the production branch on 2026-05-07. Branches in Neon are zero-copy
+snapshots — schema mirrors prod exactly, and storage diverges only
+when one side writes. Cost: free (Neon Free tier supports up to 10
+branches per project).
+
+**Convention going forward:**
+
+| Environment | DATABASE_URL points at | Where it lives |
+|---|---|---|
+| Local development | Neon `dev` branch (host: `ep-cool-poetry-aky8xn3o-pooler.c-3.us-west-2.aws.neon.tech`) | `.env` file, gitignored, local only |
+| Production deployment | Neon `main`/`production` branch | Host platform env vars (Render/Railway/Fly), never on disk in this repo |
+
+**Branch metadata** for posterity:
+- Project ID: `round-hill-56996492`
+- Dev branch ID: `br-mute-block-aks7drtf`
+- Console: <https://console.neon.tech/app/projects/round-hill-56996492/branches/br-mute-block-aks7drtf>
+- Created: 2026-05-07 by Fares
+- Parent branch: `br-empty-resonance-akpxfjgr` (production)
+
+**Refreshing dev with current prod data** (when dev drifts too far):
+1. Open the Neon console branch view
+2. Select the `dev` branch
+3. Click "Reset from parent"
+4. Confirm — branch storage is replaced with the current prod snapshot
+
+**Reverting the split** (if ever needed): point the local `.env` back
+at the prod connection string. The dev branch can stay or be deleted
+from the Neon UI; deleting it has zero impact on prod.
+
+**Verification convention:** before running any destructive script
+(`pnpm seed:course`, `drizzle-kit push`, `DELETE FROM …`) verify the
+target host is the dev branch, not prod. The dev branch endpoint host
+contains `ep-cool-poetry-aky8xn3o`; prod contains `ep-withered-silence-
+ak3jivqx`. A one-liner safety check:
+
+```bash
+echo "$DATABASE_URL" | grep -q "cool-poetry" && echo "DEV ✓" || echo "PROD — STOP"
+```
+
+This finding **closes H-8** in `db-health-audit-pre-launch.md`.
+
+_Logged 2026-05-07 during pre-launch security & hygiene batch
+(commits ec9e510, e4846d0, [Batch 3 SHA pending])._
+
 
