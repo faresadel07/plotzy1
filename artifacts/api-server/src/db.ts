@@ -36,4 +36,17 @@ pool.on("error", (err) => {
   logger.error({ err: err.message, stack: err.stack }, "pg pool: idle client error");
 });
 
+// Per-client statement timeout. Each new connection (whether the pool
+// just opened it or recycled one after an idle drop) runs this SET
+// once on checkout, capping every subsequent query on that client at
+// 30 seconds. Defends against pathological queries (unindexed scans
+// on a growing notifications/api_logs table, runaway joins) holding a
+// pool slot indefinitely and starving every other request. Bulk seed
+// scripts run from their own pool and are not affected by this cap.
+pool.on("connect", (client) => {
+  client.query("SET statement_timeout = 30000").catch((err) => {
+    logger.error({ err: err.message }, "pg client: failed to set statement_timeout");
+  });
+});
+
 export const db = drizzle(pool, { schema });
