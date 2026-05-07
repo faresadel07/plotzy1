@@ -10,6 +10,7 @@ import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpFor
 import { logger } from "../lib/logger";
 import { sendEmail, sendWelcomeEmailIfFirstTime } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
+import { hashToken } from "../lib/token-hash";
 import crypto from "crypto";
 import { db } from "../db";
 import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
@@ -191,8 +192,10 @@ router.post("/api/auth/register", sensitiveAuthLimiter, async (req, res) => {
 
     // Send verification email
     try {
+      // verifyToken is the value emailed to the user; the DB stores
+      // only the SHA-256 hash so a leak of the table can't be replayed.
       const verifyToken = crypto.randomBytes(32).toString("hex");
-      await db.insert(emailVerificationTokens).values({ userId: user.id, token: verifyToken, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) });
+      await db.insert(emailVerificationTokens).values({ userId: user.id, token: hashToken(verifyToken), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) });
       const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? `https://${process.env.APP_DOMAIN || "localhost"}` : "http://localhost:5173");
       await sendEmail(
         email,
@@ -585,7 +588,9 @@ router.get("/auth/linkedin/callback", async (req, res) => {
 router.post("/api/auth/verify-email", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { token } = z.object({ token: z.string().min(1) }).strict().parse(req.body);
-    const [vt] = await db.select().from(emailVerificationTokens).where(and(eq(emailVerificationTokens.token, token), sql`expires_at > NOW()`));
+    // DB stores SHA-256 of the token; hash the incoming value before lookup.
+    const tokenHash = hashToken(token);
+    const [vt] = await db.select().from(emailVerificationTokens).where(and(eq(emailVerificationTokens.token, tokenHash), sql`expires_at > NOW()`));
     if (!vt) return res.status(400).json({ message: "Invalid or expired verification link" });
     await storage.updateUser(vt.userId, { emailVerified: true });
     await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, vt.userId));
@@ -610,7 +615,8 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
     // Always return success (don't reveal if email exists)
     if (!user) return res.json({ success: true });
 
-    // Generate token
+    // Generate token. The raw value goes in the email; the DB stores
+    // only the SHA-256 hash so a leak of the table can't be replayed.
     const token = crypto.randomBytes(32).toString("hex");
     // 30-minute window: short enough to limit risk if a reset email is
     // sniffed mid-flight, long enough that real users opening their
@@ -621,8 +627,8 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
     // Delete old tokens for this user
     await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, user.id));
 
-    // Save new token
-    await db.insert(passwordResetTokens).values({ userId: user.id, token, expiresAt });
+    // Save new token (hashed at rest)
+    await db.insert(passwordResetTokens).values({ userId: user.id, token: hashToken(token), expiresAt });
 
     // Send email
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
@@ -666,8 +672,10 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
 router.post("/api/auth/verify-reset-token", sensitiveAuthLimiter, async (req, res) => {
   try {
     const { token } = z.object({ token: z.string().min(1) }).strict().parse(req.body);
+    // DB stores SHA-256 of the token; hash the incoming value before lookup.
+    const tokenHash = hashToken(token);
     const [resetToken] = await db.select().from(passwordResetTokens)
-      .where(and(eq(passwordResetTokens.token, token), sql`used_at IS NULL AND expires_at > NOW()`));
+      .where(and(eq(passwordResetTokens.token, tokenHash), sql`used_at IS NULL AND expires_at > NOW()`));
     if (!resetToken) return res.status(400).json({ valid: false, message: "Invalid or expired reset link." });
     return res.json({ valid: true });
   } catch {
@@ -689,11 +697,14 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
     // caller with the same token gets zero rows and is rejected. This is
     // what makes "single use token" actually single-use under concurrency;
     // the old SELECT-then-UPDATE pattern was racey while bcrypt.hash ran.
+    // The DB stores the SHA-256 hash of the token; the WHERE compares
+    // against the hash, so the raw token never round-trips through SQL.
+    const tokenHash = hashToken(token);
     const [consumed] = await db
       .update(passwordResetTokens)
       .set({ usedAt: new Date() })
       .where(and(
-        eq(passwordResetTokens.token, token),
+        eq(passwordResetTokens.token, tokenHash),
         sql`used_at IS NULL`,
         sql`expires_at > NOW()`,
       ))

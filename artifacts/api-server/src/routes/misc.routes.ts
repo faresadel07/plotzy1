@@ -10,6 +10,7 @@ import { logger } from "../lib/logger";
 import { sendEmail, sendSuspensionEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
+import { hashToken } from "../lib/token-hash";
 import crypto from "crypto";
 
 const router = Router();
@@ -830,11 +831,16 @@ router.post("/api/books/:bookId/collaborators/invite", requireBookOwner, async (
     if (!book || book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can invite collaborators" });
 
     const { role } = z.object({ role: z.enum(["editor", "viewer"]).default("editor") }).strict().parse(req.body);
+    // `code` is the value handed to the user (and shared via whatever
+    // out-of-band channel they prefer); the DB stores only its SHA-256
+    // hash. generateInviteCode already returns the canonical
+    // uppercased form, so the hash input matches what the redeem
+    // endpoint will compute after normalising user input.
     const code = generateInviteCode();
 
     // Delete any existing pending invite for this book by owner, then insert new one
     await db.delete(bookCollaborators).where(and(eq(bookCollaborators.bookId, bookId), eq(bookCollaborators.userId, (req.user as any).id), sql`invite_code IS NOT NULL`));
-    await db.insert(bookCollaborators).values({ bookId, userId: (req.user as any).id, role, inviteCode: code });
+    await db.insert(bookCollaborators).values({ bookId, userId: (req.user as any).id, role, inviteCode: hashToken(code) });
 
     return res.json({ code, role });
   } catch (err) {
@@ -852,8 +858,11 @@ router.post("/api/books/join", sensitiveAuthLimiter, async (req, res) => {
     const { code } = z.object({ code: z.string().min(1) }).strict().parse(req.body);
     const userId = (req.user as any).id;
 
-    // Find the invite
-    const [invite] = await db.select().from(bookCollaborators).where(eq(bookCollaborators.inviteCode, code.toUpperCase().trim()));
+    // Find the invite. Normalise the user-typed code to its canonical
+    // form (uppercase + trim) before hashing so the lookup matches the
+    // hash stored at create time.
+    const codeHash = hashToken(code.toUpperCase().trim());
+    const [invite] = await db.select().from(bookCollaborators).where(eq(bookCollaborators.inviteCode, codeHash));
     if (!invite) return res.status(404).json({ message: "Invalid invite code" });
 
     const book = await storage.getBook(invite.bookId);
