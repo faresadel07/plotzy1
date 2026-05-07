@@ -175,6 +175,10 @@ export interface IStorage {
   getCourseQuizQuestions(quizId: number): Promise<CourseQuizQuestion[]>;
   getModuleQuiz(moduleId: number): Promise<CourseQuiz | undefined>;
   getFinalQuiz(): Promise<CourseQuiz | undefined>;
+  // Bulk variants used by the dashboard rollup at /api/course/progress
+  // to avoid the N+1 pattern (1 query per module + 1 per quiz attempt).
+  getAllCourseQuizzes(): Promise<CourseQuiz[]>;
+  getAllQuizAttemptsForUser(userId: number): Promise<CourseQuizAttempt[]>;
 
   // Course: per-user progress
   getCourseProgressForUser(userId: number): Promise<CourseProgress[]>;
@@ -1219,6 +1223,22 @@ export class DatabaseStorage implements IStorage {
   async getFinalQuiz(): Promise<CourseQuiz | undefined> {
     const [q] = await db.select().from(courseQuizzes).where(eq(courseQuizzes.type, "final"));
     return q;
+  }
+
+  async getAllCourseQuizzes(): Promise<CourseQuiz[]> {
+    // Course has 6 module quizzes + 1 final = 7 rows total. A single
+    // unfiltered select replaces the 6× getModuleQuiz + 1× getFinalQuiz
+    // pattern previously used by /api/course/progress.
+    return await db.select().from(courseQuizzes);
+  }
+
+  async getAllQuizAttemptsForUser(userId: number): Promise<CourseQuizAttempt[]> {
+    // One query for ALL of a user's quiz attempts across every quiz.
+    // Replaces the per-quiz getQuizAttempts loop in the progress route.
+    // Uses idx_course_quiz_attempts_user (user_id btree).
+    return await db.select().from(courseQuizAttempts)
+      .where(eq(courseQuizAttempts.userId, userId))
+      .orderBy(desc(courseQuizAttempts.startedAt));
   }
 
   // ── Course: Per-user Progress ──────────────────────────────────────────

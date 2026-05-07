@@ -257,28 +257,45 @@ router.get("/api/course/progress", requireAuth, generalLimiter, async (req, res)
   try {
     const userId = (req.user as any).id;
 
-    const [modules, allLessons, userProgress, finalProject, cert] = await Promise.all([
+    // One round-trip wave of 7 parallel queries replaces the previous
+    // 19-query / 3-wave pattern (5 + 6× getModuleQuiz + getFinalQuiz +
+    // 7× getQuizAttempts). The bulk methods are documented as the
+    // dashboard-rollup variants of their per-row siblings.
+    const [modules, allLessons, userProgress, finalProject, cert, allQuizzesRaw, allAttempts] = await Promise.all([
       storage.getCourseModules(),
       storage.getAllCourseLessons(),
       storage.getCourseProgressForUser(userId),
       storage.getFinalProjectForUser(userId),
       storage.getCertificateForUser(userId),
+      storage.getAllCourseQuizzes(),
+      storage.getAllQuizAttemptsForUser(userId),
     ]);
 
-    // Quizzes: per-module quiz + final, fetched in parallel.
-    const moduleQuizzes = await Promise.all(modules.map((m) => storage.getModuleQuiz(m.id)));
-    const finalQuiz = await storage.getFinalQuiz();
-
-    // Full quiz list (stable order: each module's quiz in module-order, then final).
+    // Reproduce the previous quiz ordering: each module's quiz in
+    // module-order, then the final exam at the end. Stable order
+    // matters for the FinalExamCard rendering position on /learn.
+    const moduleQuizByModuleId = new Map<number, CourseQuiz>();
+    let finalQuiz: CourseQuiz | undefined;
+    for (const q of allQuizzesRaw) {
+      if (q.type === "module" && q.moduleId != null) moduleQuizByModuleId.set(q.moduleId, q);
+      else if (q.type === "final") finalQuiz = q;
+    }
     const allQuizzes: Array<CourseQuiz> = [];
-    for (const q of moduleQuizzes) if (q) allQuizzes.push(q);
+    for (const m of modules) {
+      const q = moduleQuizByModuleId.get(m.id);
+      if (q) allQuizzes.push(q);
+    }
     if (finalQuiz) allQuizzes.push(finalQuiz);
 
-    // User's attempts per quiz, in parallel. ~14 small queries; fine
-    // for v1 — see Phase A DP3 for the bulk-method follow-up.
-    const allUserAttempts = await Promise.all(
-      allQuizzes.map((q) => storage.getQuizAttempts(userId, q.id)),
-    );
+    // Bucket the flat attempts list by quizId in JS — ~7 quizzes ×
+    // small handful of attempts apiece, so cost is negligible.
+    const attemptsByQuizId = new Map<number, typeof allAttempts>();
+    for (const a of allAttempts) {
+      const arr = attemptsByQuizId.get(a.quizId);
+      if (arr) arr.push(a);
+      else attemptsByQuizId.set(a.quizId, [a]);
+    }
+    const allUserAttempts = allQuizzes.map((q) => attemptsByQuizId.get(q.id) ?? []);
 
     const completedLessonIds = new Set(userProgress.map((p) => p.lessonId));
     const completionTime = new Map<number, Date>();

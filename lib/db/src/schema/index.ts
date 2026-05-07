@@ -266,7 +266,12 @@ export const professionals = pgTable("professionals", {
 
 export const quoteRequests = pgTable("quote_requests", {
   id: serial("id").primaryKey(),
-  professionalId: integer("professional_id").notNull().references(() => professionals.id),
+  // RESTRICT (was NO ACTION): quote requests are business records. Block
+  // deletion of a professional who still has outstanding quote requests
+  // so the cleanup decision is explicit, not silent. Matches the
+  // codebase's "hard to delete a referenced parent" pattern (see also
+  // course_progress.lessonId).
+  professionalId: integer("professional_id").notNull().references(() => professionals.id, { onDelete: "restrict" }),
   authorName: text("author_name").notNull(),
   authorEmail: text("author_email").notNull(),
   bookTitle: text("book_title").notNull(),
@@ -437,9 +442,14 @@ export const bookLikes = pgTable("book_likes", {
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-}, (t) => [
-  uniqueIndex("uq_book_likes_book_user").on(t.bookId, t.userId),
-]);
+});
+// Unique constraint on (book_id, user_id) is enforced in production
+// by `book_likes_book_id_user_id_key` (auto-generated from a previous
+// schema iteration). The duplicate `uq_book_likes_book_user` was
+// dropped 2026-05-07 as part of the M-1 cleanup; the schema-level
+// declaration is intentionally omitted to match the post-drop DB
+// state. Drizzle won't recreate the surviving index, but it also
+// won't drop it.
 
 export type BookRating = typeof bookRatings.$inferSelect;
 export type BookComment = typeof bookComments.$inferSelect;
@@ -506,9 +516,12 @@ export const follows = pgTable("follows", {
   followerId: integer("follower_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   followeeId: integer("followee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-}, (t) => [
-  uniqueIndex("uq_follows_follower_followee").on(t.followerId, t.followeeId),
-]);
+});
+// Unique constraint on (follower_id, followee_id) is enforced in
+// production by `idx_follows_unique` (the surviving index after the
+// 2026-05-07 M-1 cleanup; `uq_follows_follower_followee` was its
+// duplicate and got dropped). Schema-level declaration omitted to
+// match post-drop DB state.
 
 // ── Notifications ─────────────────────────────────────────────────────────
 
@@ -576,7 +589,10 @@ export const dailyAiUsage = pgTable("daily_ai_usage", {
   date: text("date").notNull(), // YYYY-MM-DD
   callCount: integer("call_count").notNull().default(0),
 }, (t) => [
-  uniqueIndex("uq_daily_ai_usage_user_date").on(t.userId, t.date),
+  // Unique constraint on (user_id, date) is enforced in production by
+  // `daily_ai_usage_user_id_date_key` (the auto-generated, more-used
+  // surviving index after the 2026-05-07 M-1 cleanup). The duplicate
+  // manual `uq_daily_ai_usage_user_date` was dropped.
   // Admin analytics aggregates per day across all users — without this it
   // ends up scanning the whole table to bucket by date.
   index("idx_daily_ai_usage_date").on(t.date),
@@ -898,9 +914,13 @@ export const courseCertificates = pgTable("course_certificates", {
   pdfGeneratedAt: timestamp("pdf_generated_at"),
   pdfSizeBytes: integer("pdf_size_bytes"),
   holderLanguage: text("holder_language"),
-}, (t) => [
-  index("idx_course_certificates_uuid").on(t.certificateUuid),
-]);
+});
+// UUID lookups use `course_certificates_certificate_uuid_key` (the
+// constraint-backed UNIQUE index, auto-generated from the column-level
+// `.unique()` modifier above). The duplicate plain `idx_course_
+// certificates_uuid` was dropped 2026-05-07 (M-1); queries on the
+// uuid now land on the UNIQUE index — same B-tree shape, same
+// performance, no functional change.
 
 export type CourseCertificate = typeof courseCertificates.$inferSelect;
 export type InsertCourseCertificate = typeof courseCertificates.$inferInsert;
