@@ -1,6 +1,6 @@
 # Arabic Translation Glossary — Plotzy Writing Course
 
-**Status:** DRAFT — awaiting Faris's review and lock-in.
+**Status:** LOCKED 2026-05-07. Five judgment calls reviewed by Faris; all locked terms below match his decisions. Use these throughout Module 1 onward.
 
 This glossary fixes the Arabic translation of every recurring writing-craft term across the 27 lessons + 70 quiz questions. Lock these once and use them everywhere — readers shouldn't see a term as `البطل` in lesson 1 and `الشخصية الرئيسية` in lesson 5.
 
@@ -16,8 +16,8 @@ This glossary fixes the Arabic translation of every recurring writing-craft term
 |---|---|---|
 | story | قصة | Universal. Not رواية (which is "novel"). |
 | plot | الحبكة | Standard literary-critical term. |
-| premise | المُنطَلق | Lit. "the launching point." Alternatives: الفكرة المحورية, البريميس (transliteration). I lean المُنطَلق — it captures the structural-idea sense better than "core idea." **Faris-decision.** |
-| theme | الموضوع المحوري | Lit. "the central topic." الثيمة (transliteration) is increasingly common in modern criticism; pick one and use it throughout. **Faris-decision.** |
+| premise | المُنطَلق | Lit. "the launching point." Locked. |
+| theme | الموضوع المحوري | Lit. "the central topic." Locked. |
 | genre | النوع الأدبي | Standard. |
 | conflict | الصراع | Universal. |
 | tension | التوتر | Standard. |
@@ -44,7 +44,7 @@ This glossary fixes the Arabic translation of every recurring writing-craft term
 |---|---|---|
 | three-act structure | البنية ثلاثية الفصول | Standard descriptive translation. |
 | hero's journey | رحلة البطل | Standard. Specifically Campbell's monomyth. |
-| beat sheet | ورقة المشاهد المحورية | Lit. "key-scenes sheet." There's no perfect Arabic idiom for "beat" in this writing-craft sense. Alternative: transliterate as بيت شيت. **Faris-decision — I lean descriptive.** |
+| beat sheet | جدول المشاهد المحورية | Lit. "key-scenes table." Faris prefers جدول over ورقة because beat sheets are table-like grids, not loose sheets. Locked. |
 | inciting incident | الحدث المُحرّض | Standard. الحدث المُفجِّر is also used. |
 | midpoint reversal | الانعطافة الوسطى | Lit. "the middle turn." |
 | climax | الذروة | Universal. |
@@ -56,7 +56,7 @@ This glossary fixes the Arabic translation of every recurring writing-craft term
 
 | English | Proposed Arabic | Notes / rationale |
 |---|---|---|
-| show, don't tell | أَظهِر ولا تَحكِ | Direct calque. The standard rendering in modern Arabic creative-writing crit. Alternative: التصوير لا السرد ("depict, not narrate"). **Faris-decision — I lean the calque.** |
+| show, don't tell | أَظهِر ولا تَحكِ | Direct calque. Standard in modern Arabic creative-writing crit. Locked. |
 | point of view (POV) | وجهة النظر السردية | Standard. |
 | first person | ضمير المتكلم | Grammatically standard. |
 | third person | ضمير الغائب | Grammatically standard. |
@@ -65,7 +65,7 @@ This glossary fixes the Arabic translation of every recurring writing-craft term
 | dialogue tag | علامة الحوار | Direct, clear. |
 | sensory writing | الكتابة الحسّية | Lit. "sense-based writing." Standard. |
 | world-building | بناء العالم | Direct calque, widely accepted. |
-| setting | المكان والزمان | Lit. "place and time." Arabic doesn't have a single word that covers both spatial and temporal context the way "setting" does. **Faris-decision — accept this two-word rendering, or pick a single-word alternative like البيئة السردية.** |
+| setting | المكان والزمان | Lit. "place and time." Default rendering. Locked. **Context note:** in world-building lessons specifically, expand to **المكان والزمان والأجواء** when atmosphere is part of the discussion. Do NOT substitute البيئة السردية — too academic for the course voice. |
 
 ## Section 5 — Process terms
 
@@ -105,14 +105,14 @@ This glossary fixes the Arabic translation of every recurring writing-craft term
 
 ---
 
-## What I need from Faris before Module 1
+## Locked decisions (2026-05-07)
 
-Quick yes/no on these three terms where I flagged judgment calls:
+| # | Term | Final |
+|---|------|-------|
+| 1 | premise | المُنطَلق |
+| 2 | theme | الموضوع المحوري |
+| 3 | beat sheet | جدول المشاهد المحورية |
+| 4 | show, don't tell | أَظهِر ولا تَحكِ |
+| 5 | setting | المكان والزمان (default), المكان والزمان والأجواء (in atmosphere contexts) |
 
-1. **premise → المُنطَلق** (vs الفكرة المحورية / البريميس)
-2. **theme → الموضوع المحوري** (vs الثيمة)
-3. **beat sheet → ورقة المشاهد المحورية** (vs transliterated بيت شيت)
-4. **show, don't tell → أَظهِر ولا تَحكِ** (vs التصوير لا السرد)
-5. **setting → المكان والزمان** (vs single-word البيئة السردية)
-
-Approve all five (or note the swap), and Module 1 translation starts in the next session.
+Module 1 translation begins immediately following lock-in.

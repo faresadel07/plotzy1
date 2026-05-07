@@ -27,6 +27,7 @@ import {
   courseLessons,
   courseQuizzes,
   courseQuizQuestions,
+  courseContentTranslations,
 } from "../src/schema";
 import { and, eq } from "drizzle-orm";
 
@@ -1508,6 +1509,209 @@ async function updateFinalExamTextFromBank() {
   console.log(`  final-exam text: ${updated} updated, ${unchanged} unchanged`);
 }
 
+// ── Arabic translations (Module 1 / Foundation) ───────────────────────
+//
+// Arabic content lives in two places:
+//   1. Lesson markdown bodies → lib/db/content/<module-slug>/<lesson-slug>.ar.md
+//      (one parallel file per English .md; only present for translated
+//      lessons. Mirror of updateLessonContentFromFiles above.)
+//   2. Module metadata + lesson titles + quiz question fields →
+//      ARABIC_TRANSLATIONS below (inline, structured by module slug).
+//
+// Both are pushed to the DB by seedArabicTranslations() into the
+// course_content_translations table, which the API layer COALESCEs
+// with the English fallback. Idempotent via UPSERT keyed on the
+// natural (entity_type, entity_id, lang, field) UNIQUE.
+//
+// Glossary lock-in 2026-05-07: see course-arabic-glossary.md.
+
+interface QuizQuestionTranslation {
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  explanation: string;
+}
+
+interface ModuleTranslation {
+  // Module-level fields
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  // Lesson titles, keyed by lesson slug
+  lessonTitles?: Record<string, string>;
+  // Module quiz questions, indexed by `order` (1-based) — the field
+  // mirrors the English QUIZ_BANKS array order.
+  quizQuestions?: QuizQuestionTranslation[];
+}
+
+const ARABIC_TRANSLATIONS: Record<string, ModuleTranslation> = {
+  foundation: {
+    title: "الأساس",
+    subtitle: "قبل أن تكتب: فهم القصة",
+    description: "مفاهيم تأسيسيّة يحتاجها كل كاتبٍ قبل أن يسوّد فصلَه الأول.",
+    lessonTitles: {
+      "foundation-what-is-story": "ما هي القصة؟ (سيكولوجيا السرد)",
+      "foundation-why-people-read": "لماذا يقرأ الناس الأدب القصصي",
+      "foundation-finding-idea": "كيف تجد فكرة قصّتك",
+      "foundation-three-ingredients": "المكوّنات الثلاثة التي تحتاجها كل قصّة",
+    },
+    quizQuestions: [
+      {
+        questionText: "أيٌّ مما يلي يطابق تعريف «القصة» المُعطى في الدرس الأول على نحوٍ أفضل؟",
+        optionA: "تسلسل أحداثٍ مرتّبةٍ زمنيًّا.",
+        optionB: "تسلسلٌ منمّط، شخصٌ ما فيه يريد شيئًا، يصطدم بعائق، ويتغيّر بفعل ما يحدث.",
+        optionC: "وصفٌ للحظةٍ لا تُنسى من حياة شخص.",
+        optionD: "نسخةٌ من نسج الخيال لأحداثٍ حقيقيّة، مصمّمةٌ للترفيه.",
+        explanation:
+          "القصة لا تتحدّد بكونها متسلسلةً زمنيًّا (أ)، أو لا تُنسى (ج)، أو من نسج الخيال (د). تتحدّد بنمط الإرادة والعائق والتغيّر. بدون النمط، ما لديك تسلسلٌ أو حكايةٌ قصيرة أو لقطة، لا قصّة.",
+      },
+      {
+        questionText: "حاجج الدرس الثاني بأنّ الأدب القصصي يفعل شيئًا لا تستطيعه الحجج والأدب غير القصصي. أيّ خيارٍ يلتقطه على نحوٍ أفضل؟",
+        optionA: "الأدب القصصي أكثر تسلية من الأدب غير القصصي.",
+        optionB: "الأدب القصصي أسهل تذكُّرًا من الأدب غير القصصي.",
+        optionC: "الأدب القصصي يتيح للقارئ أن يتمرّن على كونه شخصًا آخر، عبر محاكاة خياراته وانفعالاته.",
+        optionD: "الأدب القصصي يصل إلى جمهورٍ أوسع لأنّه لا يتطلّب اختصاصًا.",
+        explanation:
+          "(أ) و(ب) و(د) قد تكون صحيحةً عرضًا، لكنّ الشيء الفريد الذي يفعله الأدب القصصي هو توفير تمرّنٍ على حياةٍ أخرى، بإجراء خيارات الشخصية ومشاعرها على محاكي القارئ نفسه. الحجّة تستطيع أن تصف حياةً أخرى من الخارج؛ الأدب القصصي يضع القارئ داخلها.",
+      },
+      {
+        questionText: "طالبٌ يخبرك أنّ فكرته هي «رجلٌ يبني روبوتًا». ما الخطوة التالية الأنفع؟",
+        optionA: "أخبره أنّ الفكرة غير أصيلةٍ بدرجةٍ تجعل استخدامها متعذّرًا.",
+        optionB: "أخبره أن يوسّعها إلى مُنطَلَق يضيف الشخصية والموقف والتوتر.",
+        optionC: "أخبره أن يبحث عن فكرةٍ أقلّ شيوعًا.",
+        optionD: "أخبره أنّ الروبوتات أُنهِكت من كثرة الاستعمال.",
+        explanation:
+          "الأصالة تعيش في التنفيذ، لا في الفكرة (الدرس الثالث). الإصلاح ليس فكرةً مختلفة: هو ترجمة هذه الفكرة إلى مُنطَلَقٍ فيه شخصٌ برغبةٍ محسوسة وعائقٍ محدّد. «رجلٌ يبني روبوتًا» نواة؛ لا يمكنك أن تكتب من نواة، بل من مُنطَلَق فقط.",
+      },
+      {
+        questionText: "أيٌّ من المُنطَلَقات التالية يحتوي المكوّنات الثلاثة التي تحتاجها كل قصّة (شخصيّةٌ نكترث لها، صراع، تغيّر)؟",
+        optionA: "أرملةٌ ترث خلايا نحلٍ من زوجها.",
+        optionB: "أرملةٌ ترث خلايا نحلٍ من زوجها، فتعرف أنه احتفظ بها ملاذًا من زواجٍ كان يهمّ بتركه سرًّا، فتقرّر هل تغفر لرجلٍ ميت.",
+        optionC: "أرملةٌ في فناء بيتها خلايا نحل، وتكتب عنها في يوميّاتها.",
+        optionD: "أرملةٌ تتذكّر متى أراها زوجها الخلايا للمرّة الأولى.",
+        explanation:
+          "(أ) فكرة، ليست مُنطَلَقًا بعد، لا عائق، لا تغيّر. (ج) أقرب إلى لقطة. (د) ذكرى. (ب) وحدها فيها شخصيّةٌ برغبةٍ محسوسة (الغفران أو الرفض)، وعائقٌ محدّد (الاكتشاف)، وتغيّرٌ ضمنيّ (أيّ القرارين ستتّخذ).",
+      },
+      {
+        questionText: "روايةٌ تنتهي بالبطل وقد حلّ الجريمة، لكنّه الشخص نفسه تمامًا الذي كان عليه في الصفحة الأولى. وفقًا للدرس الرابع، ما الذي يغيب على الأرجح؟",
+        optionA: "الشخصيّة ليست محبوبةً بدرجةٍ كافية.",
+        optionB: "الصراع لم يكن دراميًّا بدرجةٍ كافية.",
+        optionC: "مكوّن التغيّر غائب: الموقف تغيّر، لكنّ الشخصيّة لم تتغيّر.",
+        optionD: "الحبكة كانت أقصر من اللازم.",
+        explanation:
+          "(أ) لا علاقة لها بالأمر: الشخصيّات لا تحتاج أن تكون محبوبةً كي يُكترَث لها (ماكبث، أهاب). (ب) و(د) تصفان أعراضًا، لا الجوهر. المكوّن الغائب هو التغيّر: عائد القارئ يُفترَض أن يكون الفرق بين مَن كانوا ومَن صاروا. لغزٌ يُحلّ بدون حلّاٍّ متحوّل هو حبكةٌ بدون قصّة.",
+      },
+    ],
+  },
+};
+
+async function seedArabicTranslations(slugToId: Map<string, number>) {
+  const lang = "ar";
+  let inserted = 0;
+  let updated = 0;
+  let unchanged = 0;
+
+  // Helper: idempotent UPSERT keyed on the unique
+  // (entity_type, entity_id, lang, field) constraint.
+  async function upsert(
+    entityType: "lesson" | "module" | "quiz_question",
+    entityId: number,
+    field: string,
+    value: string,
+  ) {
+    const [existing] = await db
+      .select({ id: courseContentTranslations.id, value: courseContentTranslations.value })
+      .from(courseContentTranslations)
+      .where(
+        and(
+          eq(courseContentTranslations.entityType, entityType),
+          eq(courseContentTranslations.entityId, entityId),
+          eq(courseContentTranslations.lang, lang),
+          eq(courseContentTranslations.field, field),
+        ),
+      );
+    if (!existing) {
+      await db.insert(courseContentTranslations).values({
+        entityType, entityId, lang, field, value,
+      });
+      inserted++;
+      return;
+    }
+    if (existing.value === value) {
+      unchanged++;
+      return;
+    }
+    await db
+      .update(courseContentTranslations)
+      .set({ value, updatedAt: new Date() })
+      .where(eq(courseContentTranslations.id, existing.id));
+    updated++;
+  }
+
+  for (const m of MODULES) {
+    const tr = ARABIC_TRANSLATIONS[m.slug];
+    if (!tr) continue;
+    const moduleId = slugToId.get(m.slug);
+    if (!moduleId) continue;
+
+    // Module-level fields
+    if (tr.title) await upsert("module", moduleId, "title", tr.title);
+    if (tr.subtitle) await upsert("module", moduleId, "subtitle", tr.subtitle);
+    if (tr.description) await upsert("module", moduleId, "description", tr.description);
+
+    // Lesson titles + lesson markdown content
+    for (const l of m.lessons) {
+      const [lessonRow] = await db
+        .select({ id: courseLessons.id })
+        .from(courseLessons)
+        .where(eq(courseLessons.slug, l.slug));
+      if (!lessonRow) continue;
+
+      const titleAr = tr.lessonTitles?.[l.slug];
+      if (titleAr) await upsert("lesson", lessonRow.id, "title", titleAr);
+
+      // Lesson body: read from <slug>.ar.md if present
+      const arPath = resolve(CONTENT_ROOT, m.slug, `${l.slug}.ar.md`);
+      if (existsSync(arPath)) {
+        const content = readFileSync(arPath, "utf-8");
+        await upsert("lesson", lessonRow.id, "content", content);
+      }
+    }
+
+    // Module quiz question translations
+    if (tr.quizQuestions && tr.quizQuestions.length > 0) {
+      const [moduleQuiz] = await db
+        .select({ id: courseQuizzes.id })
+        .from(courseQuizzes)
+        .where(and(eq(courseQuizzes.moduleId, moduleId), eq(courseQuizzes.type, "module")));
+      if (!moduleQuiz) continue;
+
+      for (let i = 0; i < tr.quizQuestions.length; i++) {
+        const q = tr.quizQuestions[i];
+        const order = i + 1;
+        const [qrow] = await db
+          .select({ id: courseQuizQuestions.id })
+          .from(courseQuizQuestions)
+          .where(and(eq(courseQuizQuestions.quizId, moduleQuiz.id), eq(courseQuizQuestions.order, order)));
+        if (!qrow) continue;
+
+        await upsert("quiz_question", qrow.id, "question_text", q.questionText);
+        await upsert("quiz_question", qrow.id, "option_a", q.optionA);
+        await upsert("quiz_question", qrow.id, "option_b", q.optionB);
+        await upsert("quiz_question", qrow.id, "option_c", q.optionC);
+        await upsert("quiz_question", qrow.id, "option_d", q.optionD);
+        await upsert("quiz_question", qrow.id, "explanation", q.explanation);
+      }
+    }
+  }
+
+  console.log(
+    `  ar translations: ${inserted} inserted, ${updated} updated, ${unchanged} unchanged`,
+  );
+}
+
 // ── Main ───────────────────────────────────────────────────────────────
 async function main() {
   console.log("Seeding writing course (modules → renames → lessons → quizzes → content → questions)...");
@@ -1528,6 +1732,10 @@ async function main() {
   // to existing question rows. No-ops when DB already matches.
   await updateQuizQuestionsTextFromBanks(slugToId);
   await updateFinalExamTextFromBank();
+  // Translations: pushes Arabic content (and any other languages added
+  // to ARABIC_TRANSLATIONS / *.<lang>.md files) to the translations
+  // table. Idempotent, no-ops when DB already matches.
+  await seedArabicTranslations(slugToId);
   console.log("Done.");
 }
 
