@@ -23,7 +23,11 @@ interface CourseSidebarCardProps {
  *   - anonymous           → "Start learning free"  (opens AuthModal)
  *   - authed, no progress → "Start learning free"  (links /learn)
  *   - authed, in progress → "Continue learning"    (links to next lesson)
- *   - authed, cert issued → "View your certificate" (links /certificates/:uuid)
+ *   - authed, cert issued → "View your certificate" (primary, links
+ *                            /certificates/:uuid) PLUS a secondary
+ *                            "Continue learning" outline button to /learn
+ *                            so graduates can still revisit the course
+ *                            content from the landing page.
  *
  * Three feature lines below the CTA spell out the practical things —
  * lesson count, time commitment, certificate — so visitors can size up
@@ -73,16 +77,30 @@ export function CourseSidebarCard({ state }: CourseSidebarCardProps) {
       </Button>
     );
   } else {
+    // Certificate earned: primary action stays the certificate (the
+    // graduate's reward), but pair it with a secondary outline button
+    // so they can still hop back into the course content to review
+    // lessons or retake quizzes.
     cta = (
-      <Button
-        size="lg"
-        variant="outline"
-        className="w-full gap-2"
-        onClick={() => navigate(`/certificates/${state.certUuid}`)}
-      >
-        <Award className="h-4 w-4" aria-hidden />
-        {t("courseLandingViewCertCta")}
-      </Button>
+      <div className="space-y-2.5">
+        <Button
+          size="lg"
+          className="w-full gap-2"
+          onClick={() => navigate(`/certificates/${state.certUuid}`)}
+        >
+          <Award className="h-4 w-4" aria-hidden />
+          {t("courseLandingViewCertCta")}
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => navigate("/learn")}
+        >
+          {t("courseLandingContinueLearningCta")}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Button>
+      </div>
     );
   }
 
