@@ -1296,7 +1296,15 @@ export default function Home() {
                 {t("courseHomeSubtitle")}
               </p>
             </div>
-            <div className="max-w-3xl mx-auto rounded-xl overflow-hidden shadow-lg">
+            <div className="mb-8">
+              <img
+                src="/course-section-certificate.webp"
+                alt="Earn your verified completion certificate"
+                className="w-full h-auto rounded-xl shadow-lg"
+                loading="lazy"
+              />
+            </div>
+            <div className="max-w-2xl mx-auto mb-8 rounded-xl overflow-hidden shadow-lg relative">
               <video
                 src="/course-intro-video.mp4"
                 autoPlay
@@ -1308,8 +1316,21 @@ export default function Home() {
               >
                 Your browser does not support video playback.
               </video>
+              <div
+                aria-hidden="true"
+                className="absolute bottom-2 right-2 bg-black rounded-md"
+                style={{ width: 96, height: 32 }}
+              />
             </div>
-            <div className="text-center mt-10">
+            <div className="mb-10">
+              <img
+                src="/course-section-curriculum.webp"
+                alt="How to Write Your First Book — course curriculum"
+                className="w-full h-auto rounded-xl shadow-lg"
+                loading="lazy"
+              />
+            </div>
+            <div className="text-center">
               <Button asChild size="lg">
                 <Link href="/course">
                   {t("courseHomeCta")} →
