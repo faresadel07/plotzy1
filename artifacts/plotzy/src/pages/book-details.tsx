@@ -320,45 +320,30 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
     }
   };
 
+  // AI cover dialog temporarily disabled — gpt-image-1 is a paid API
+  // and credits aren't provisioned pre-launch. The trigger button now
+  // shows as disabled with a "Coming Soon" caption; the dialog markup
+  // remains below for ease of re-enabling once credits land. Unused
+  // bindings (handleGenerateCover, coverPrompt, generateCover) stay in
+  // place since they're referenced by the dialog body.
+  void handleGenerateCover; void coverPrompt; void setCoverPrompt; void generateCover; void isCoverDialogOpen; void setIsCoverDialogOpen;
   const CoverDialog = ({ triggerLabel }: { triggerLabel: string }) => (
-    <Dialog open={isCoverDialogOpen} onOpenChange={setIsCoverDialogOpen}>
-      <DialogTrigger asChild>
-        <Button className="rounded-lg font-semibold text-[#111111] shadow-lg border-0" style={{ background: "#EFEFEF" }} size="sm" data-testid="button-generate-cover">
-          <Wand2 className="w-4 h-4 mr-2" />
-          {triggerLabel}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md rounded-2xl" dir={isRTL ? "rtl" : "ltr"}>
-        <form onSubmit={handleGenerateCover}>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">{t("designCover")}</DialogTitle>
-          </DialogHeader>
-          <div className="py-5 space-y-3">
-            <p className="text-sm text-muted-foreground">{t("coverPromptLabel")}</p>
-            <p className="text-xs text-accent-foreground bg-accent rounded-lg p-2.5">
-              {lang === "ar"
-                ? "سيُنشئ الذكاء الاصطناعي صورة الغلاف الأمامي. ستُعرض مع العمود والغلاف الخلفي تلقائياً."
-                : "AI generates the front cover art. The spine and back cover are automatically styled and combined into a full book wrap view."}
-            </p>
-            <Input
-              placeholder={t("coverPromptPlaceholder")}
-              value={coverPrompt}
-              onChange={(e) => setCoverPrompt(e.target.value)}
-              className="rounded-lg border-border focus:border-black/60 dark:focus:border-white/60"
-              autoFocus
-              dir={isRTL ? "rtl" : "ltr"}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={generateCover.isPending || !coverPrompt.trim()} className="w-full rounded-lg font-semibold text-[#111111] border-0" style={{ background: "#EFEFEF" }}>
-              {generateCover.isPending
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{lang === "ar" ? "جارٍ الإنشاء..." : "Generating..."}</>
-                : <><Sparkles className="w-4 h-4 mr-2" />{t("generateArt")}</>}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <div className="inline-flex flex-col items-stretch gap-1">
+      <Button
+        disabled
+        title={lang === "ar" ? "إنشاء الغلاف بالذكاء الاصطناعي قريباً" : "AI cover generation coming soon"}
+        className="rounded-lg font-semibold text-[#111111] shadow-lg border-0 opacity-60 cursor-not-allowed"
+        style={{ background: "#EFEFEF" }}
+        size="sm"
+        data-testid="button-generate-cover"
+      >
+        <Wand2 className="w-4 h-4 mr-2" />
+        {triggerLabel}
+      </Button>
+      <span className="text-[10px] text-muted-foreground text-center">
+        {t("featureComingSoon")}
+      </span>
+    </div>
   );
 
   return (

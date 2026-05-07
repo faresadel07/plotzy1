@@ -43,7 +43,11 @@ const TD = "rgba(255,255,255,0.25)";
 type FeatureItem = string | { text: string; caption: string };
 
 const FEATURES_FREE: FeatureItem[] = [
-  "AI book cover generator (front and back)",
+  // AI cover generator is intentionally tagged "(coming soon)" — the
+  // gpt-image-1 backend is paid and credits are not provisioned pre-
+  // launch. The Cover Designer's AI panel and other image-API entry
+  // points are gated to match. Drop the suffix once credits land.
+  { text: "AI book cover generator (front and back) (coming soon)", caption: "Available shortly after launch — image-generation credits arriving soon" },
   "Basic cover designer",
   "Community library: like, comment, follow, message",
   "Author profile page",

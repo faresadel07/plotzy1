@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
+import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
 import {
@@ -117,6 +118,7 @@ type ResizeState = { id: string; handle: string; startMX: number; startMY: numbe
 export default function CoverDesigner() {
   const [, params] = useRoute("/books/:id/cover-designer");
   const bookId = params?.id ? parseInt(params.id) : 0;
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { data: book, isLoading } = useBook(bookId);
   const updateBook = useUpdateBook();
@@ -930,63 +932,84 @@ export default function CoverDesigner() {
 
       case "ai": return (
         <div className="p-4 space-y-5">
-          {/* AI Cover Image */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Wand2 className="w-4 h-4 text-violet-400" />
-              <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">Generate Cover Image</p>
-            </div>
-            <p className="text-xs text-white/35 leading-relaxed">Describe the cover you want and AI will generate a professional image for it.</p>
+          {/* AI Cover Image — temporarily disabled. The underlying API
+             (gpt-image-1) is paid and the credits aren't provisioned
+             pre-launch. Whole sub-section dimmed and click-blocked,
+             with a "Coming Soon" overlay on top. Re-enable by removing
+             the wrapper + overlay below once image-API credits land. */}
+          <div className="relative">
+            <div className="space-y-3 opacity-40 pointer-events-none select-none" aria-hidden>
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-violet-400" />
+                <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">Generate Cover Image</p>
+              </div>
+              <p className="text-xs text-white/35 leading-relaxed">Describe the cover you want and AI will generate a professional image for it.</p>
 
-            {/* Side selector */}
-            <div className="flex gap-1.5 bg-white/5 rounded-xl p-1">
-              <button onClick={() => setAiCoverSide("front")} className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "front" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white"}`}>
-                Front Cover
+              {/* Side selector */}
+              <div className="flex gap-1.5 bg-white/5 rounded-xl p-1">
+                <button tabIndex={-1} className={`flex-1 text-xs py-1.5 rounded-lg font-semibold ${aiCoverSide === "front" ? "bg-violet-600 text-white" : "text-white/40"}`}>
+                  Front Cover
+                </button>
+                <button tabIndex={-1} className={`flex-1 text-xs py-1.5 rounded-lg font-semibold ${aiCoverSide === "back" ? "bg-violet-600 text-white" : "text-white/40"}`}>
+                  Back Cover
+                </button>
+              </div>
+
+              {/* Prompt input */}
+              <textarea
+                rows={4}
+                value={aiCoverPrompt}
+                readOnly
+                tabIndex={-1}
+                placeholder={aiCoverSide === "front"
+                  ? "e.g. Sci-fi cover with a glowing city under a starry sky, dark purple and blue tones..."
+                  : "e.g. Soft geometric patterns on a dark gradient background, minimal and elegant..."}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/80 placeholder:text-white/25 resize-none outline-none leading-relaxed"
+              />
+
+              {/* Quick prompt suggestions */}
+              <div className="space-y-1">
+                <p className="text-xs text-white/25">Quick suggestions:</p>
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    "Sci-fi futuristic",
+                    "Warm romance",
+                    "Mystery & thriller",
+                    "Classic literature",
+                    "Action adventure",
+                  ].map((s) => (
+                    <span key={s} className="text-xs px-2 py-1 bg-white/5 border border-white/8 rounded-lg text-white/50">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                tabIndex={-1}
+                disabled
+                className="w-full flex items-center justify-center gap-2 bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5"
+              >
+                <Sparkles className="w-4 h-4" /> Generate Cover with AI
               </button>
-              <button onClick={() => setAiCoverSide("back")} className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "back" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white"}`}>
-                Back Cover
-              </button>
             </div>
 
-            {/* Prompt input */}
-            <textarea
-              rows={4}
-              value={aiCoverPrompt}
-              onChange={(e) => setAiCoverPrompt(e.target.value)}
-              placeholder={aiCoverSide === "front"
-                ? "e.g. Sci-fi cover with a glowing city under a starry sky, dark purple and blue tones..."
-                : "e.g. Soft geometric patterns on a dark gradient background, minimal and elegant..."}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/80 placeholder:text-white/25 resize-none outline-none focus:border-violet-500/60 transition-colors leading-relaxed"
-            />
-
-            {/* Quick prompt suggestions */}
-            <div className="space-y-1">
-              <p className="text-xs text-white/25">Quick suggestions:</p>
-              <div className="flex flex-wrap gap-1">
-                {[
-                  "Sci-fi futuristic",
-                  "Warm romance",
-                  "Mystery & thriller",
-                  "Classic literature",
-                  "Action adventure",
-                ].map((s) => (
-                  <button key={s} onClick={() => setAiCoverPrompt((p) => p ? p + ", " + s : s)}
-                    className="text-xs px-2 py-1 bg-white/5 hover:bg-violet-600/30 border border-white/8 hover:border-violet-500/40 rounded-lg text-white/50 hover:text-violet-300 transition-all">
-                    {s}
-                  </button>
-                ))}
+            {/* Coming Soon overlay */}
+            <div
+              role="status"
+              aria-label="AI cover generation coming soon"
+              className="absolute inset-0 flex items-start justify-center pt-12 pointer-events-none"
+            >
+              <div className="pointer-events-auto bg-black/80 border border-violet-500/40 rounded-xl px-4 py-3 max-w-xs text-center backdrop-blur-sm shadow-xl">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-600/20 border border-violet-500/40 text-violet-300 text-[10px] font-semibold uppercase tracking-widest mb-2">
+                  <Sparkles className="w-3 h-3" />
+                  {t("featureComingSoon")}
+                </div>
+                <p className="text-xs text-white/80 leading-relaxed">
+                  {t("aiCoverComingSoon")}
+                </p>
               </div>
             </div>
-
-            <button
-              onClick={handleAiGenerateCover}
-              disabled={aiCoverLoading || !aiCoverPrompt.trim()}
-              className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
-            >
-              {aiCoverLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                : <><Sparkles className="w-4 h-4" /> Generate Cover with AI</>}
-            </button>
           </div>
 
           {/* Divider */}
