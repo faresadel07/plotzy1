@@ -96,7 +96,7 @@ export default function CertificateVerifyPage() {
             </p>
             <div className="pt-2">
               <Button asChild variant="outline">
-                <Link href="/learn">{t("courseCertNotFoundCta")}</Link>
+                <Link href="/course">{t("courseCertNotFoundCta")}</Link>
               </Button>
             </div>
           </Card>
@@ -152,7 +152,7 @@ export default function CertificateVerifyPage() {
                 </Link>
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link href="/learn">{t("courseCertExploreCourse")}</Link>
+                <Link href="/course">{t("courseCertExploreCourse")}</Link>
               </Button>
             </Card>
           </>

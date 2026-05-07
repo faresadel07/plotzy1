@@ -5,10 +5,7 @@ import { CheckCircle2, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
-import {
-  buildLearningResourceSchema,
-  buildBreadcrumbSchema,
-} from "@/lib/seo-schema";
+import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/course/Markdown";
@@ -98,23 +95,13 @@ export default function LearnLessonPage() {
         description={description}
       />
       {lessonQ.data && (
-        <>
-          <JsonLd
-            data={buildLearningResourceSchema({
-              lessonSlug: lessonQ.data.slug,
-              lessonTitle: lessonQ.data.title,
-              moduleTitle: lessonQ.data.moduleTitle,
-              description,
-            })}
-          />
-          <JsonLd
-            data={buildBreadcrumbSchema([
-              { name: "Course", path: "/learn" },
-              { name: lessonQ.data.moduleTitle, path: `/learn/module/${lessonQ.data.moduleSlug}` },
-              { name: lessonQ.data.title, path: `/learn/lesson/${lessonQ.data.slug}` },
-            ])}
-          />
-        </>
+        <JsonLd
+          data={buildBreadcrumbSchema([
+            { name: "Course", path: "/course" },
+            { name: lessonQ.data.moduleTitle, path: `/learn/module/${lessonQ.data.moduleSlug}` },
+            { name: lessonQ.data.title, path: `/learn/lesson/${lessonQ.data.slug}` },
+          ])}
+        />
       )}
 
       <main className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6">
