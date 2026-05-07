@@ -88,7 +88,28 @@ export function CourseSidebarCard({ state }: CourseSidebarCardProps) {
 
   return (
     <>
-      <Card className="p-6 space-y-5 lg:sticky lg:top-24">
+      <Card className="overflow-hidden lg:sticky lg:top-24">
+        {/* Thumbnail — same panoramic illustration as the hero, scaled
+           down. Matches the brand surface so the sidebar feels visually
+           tied to the hero rather than an unrelated card. */}
+        <div
+          className="relative w-full bg-secondary"
+          style={{ aspectRatio: "2021 / 778" }}
+        >
+          <img
+            src="/course-hero.png"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+
+        <div className="p-6 space-y-5">
         <div>
           <div className="font-serif text-xl">{t("courseLandingTitle")}</div>
           <div className="text-xs text-muted-foreground mt-1">
@@ -112,6 +133,7 @@ export function CourseSidebarCard({ state }: CourseSidebarCardProps) {
             <span>{t("courseLandingFeatureCert")}</span>
           </li>
         </ul>
+        </div>
       </Card>
 
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
