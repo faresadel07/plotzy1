@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronDown, ArrowRight } from "lucide-react";
+import { Check, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
@@ -47,7 +47,7 @@ const FEATURES_FREE: FeatureItem[] = [
   // gpt-image-1 backend is paid and credits are not provisioned pre-
   // launch. The Cover Designer's AI panel and other image-API entry
   // points are gated to match. Drop the suffix once credits land.
-  { text: "AI book cover generator (front and back) (coming soon)", caption: "Available shortly after launch — image-generation credits arriving soon" },
+  { text: "AI book cover generator (front and back) (coming soon)", caption: "Available shortly after launch, image-generation credits arriving soon" },
   "Basic cover designer",
   "Community library: like, comment, follow, message",
   "Author profile page",
@@ -253,16 +253,16 @@ export default function Pricing() {
 
   const isYearly = billingCycle === "yearly";
 
-  const proPrice = isYearly ? 79.99 : 8.99;
+  const proPrice = isYearly ? 50.99 : 4.99;
   const proOriginalPrice = isYearly ? 108.00 : 11.99;
   const proPriceSuffix = isYearly ? "/yr" : "/mo";
-  const proLabel = isYearly ? "Billed $79.99 per year" : "Billed $8.99 every month";
+  const proLabel = isYearly ? "Billed $50.99 per year" : "Billed $4.99 every month";
   const proPlan: PayPalPlan = isYearly ? "pro_yearly" : "pro_monthly";
 
-  const premiumPrice = isYearly ? 159.99 : 16.99;
+  const premiumPrice = isYearly ? 91.99 : 8.99;
   const premiumOriginalPrice = isYearly ? 240.00 : 20.00;
   const premiumPriceSuffix = isYearly ? "/yr" : "/mo";
-  const premiumLabel = isYearly ? "Billed $159.99 per year" : "Billed $16.99 every month";
+  const premiumLabel = isYearly ? "Billed $91.99 per year" : "Billed $8.99 every month";
   const premiumPlan: PayPalPlan = isYearly ? "premium_yearly" : "premium_monthly";
 
   // Tier-aware CTAs: depend on the currently-selected billing cycle so the
@@ -327,7 +327,7 @@ export default function Pricing() {
     <Layout isLanding darkNav>
       <SEO
         title="Pricing"
-        description="Free, Pro, and Premium plans for writers — write, design covers, publish, and produce audiobooks with AI assistance."
+        description="Free, Pro, and Premium plans for writers, with AI-assisted writing, cover design, publishing, and audiobook production."
       />
       <JsonLd data={buildBreadcrumbSchema([{ name: "Pricing", path: "/pricing" }])} />
       <div style={{ backgroundColor: BG, minHeight: "100vh", color: T, fontFamily: SF }}>
@@ -396,7 +396,7 @@ export default function Pricing() {
                         color: billingCycle === "yearly" ? "#333" : TS,
                       }}
                     >
-                      Save 33%
+                      Save 15%
                     </span>
                   )}
                 </button>
@@ -501,6 +501,12 @@ export default function Pricing() {
                 />
 
                 <div style={{ padding: "24px 24px 20px", position: "relative" }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12, padding: "4px 10px", borderRadius: 100, background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
+                    <Sparkles style={{ width: 11, height: 11, color: "#f59e0b" }} />
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#f59e0b", textTransform: "uppercase" }}>
+                      Founders Pricing
+                    </span>
+                  </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                     <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#60a5fa", textTransform: "uppercase" }}>
                       Pro
@@ -519,7 +525,8 @@ export default function Pricing() {
                       ✦ Most Popular
                     </span>
                   </div>
-                  <p style={{ fontSize: 13, color: TS, marginBottom: 14 }}>For serious writers</p>
+                  <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>For serious writers</p>
+                  <p style={{ fontSize: 11, color: "rgba(245, 158, 11, 0.7)", marginBottom: 14, lineHeight: 1.4 }}>Locked-in early-supporter rates. First 500 members only.</p>
 
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                     {proOriginalPrice && (
@@ -538,12 +545,12 @@ export default function Pricing() {
 
                   {proOriginalPrice && (
                     <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                      Save {Math.round((1 - proPrice / proOriginalPrice) * 100)}% — Limited offer
+                      Save {Math.round((1 - proPrice / proOriginalPrice) * 100)}% (limited offer)
                     </p>
                   )}
                   {isYearly && (
                     <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                      $6.67/mo — Save 33%
+                      $4.25/mo, save 15%
                     </p>
                   )}
 
@@ -590,10 +597,17 @@ export default function Pricing() {
               />
 
               <div style={{ padding: "24px 24px 20px", position: "relative" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12, padding: "4px 10px", borderRadius: 100, background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
+                  <Sparkles style={{ width: 11, height: 11, color: "#f59e0b" }} />
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#f59e0b", textTransform: "uppercase" }}>
+                    Founders Pricing
+                  </span>
+                </div>
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#c084fc", textTransform: "uppercase", marginBottom: 6 }}>
                   Premium
                 </p>
-                <p style={{ fontSize: 13, color: TS, marginBottom: 14 }}>For full-time writers and authors</p>
+                <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>For full-time writers and authors</p>
+                <p style={{ fontSize: 11, color: "rgba(245, 158, 11, 0.7)", marginBottom: 14, lineHeight: 1.4 }}>Locked-in early-supporter rates. First 500 members only.</p>
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                   {premiumOriginalPrice && (
@@ -612,12 +626,12 @@ export default function Pricing() {
 
                 {premiumOriginalPrice && (
                   <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                    Save {Math.round((1 - premiumPrice / premiumOriginalPrice) * 100)}% — Limited offer
+                    Save {Math.round((1 - premiumPrice / premiumOriginalPrice) * 100)}% (limited offer)
                   </p>
                 )}
                 {isYearly && (
                   <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                    $13.33/mo — Save 33%
+                    $7.67/mo, save 15%
                   </p>
                 )}
 

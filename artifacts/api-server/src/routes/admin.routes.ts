@@ -5,6 +5,7 @@ import { sql, eq, desc, and, gte, count, sum } from "drizzle-orm";
 import {
   users, books, chapters, userStats, aiUsageLogs, apiLogs,
   contentFlags, dailyProgress, supportMessages, pageViews,
+  PRO_MONTHLY_CENTS, PRO_YEARLY_CENTS,
 } from "../../../../lib/db/src/schema";
 import { requireAdmin } from "../middleware/auth";
 import { logger } from "../lib/logger";
@@ -136,7 +137,12 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
     const [activeSubs] = await db.select({ c: count() }).from(users)
       .where(eq(users.subscriptionStatus, "active"));
 
-    // Estimate MRR: monthly subs * $13 + yearly subs * ($99.99/12)
+    // Estimate MRR using the Pro monthly rate as a rough average across
+    // the Pro and Premium tiers. This is an undercount for Premium subs
+    // and an overcount for the legacy 'monthly'/'yearly' plan rows that
+    // predate the Pro/Premium split, but the snapshot is a directional
+    // signal, not a financial report. Real cash is sourced separately
+    // from subscription_payments below.
     const monthlyResult = await db.execute(sql`
       SELECT COUNT(*) as c FROM users
       WHERE subscription_status = 'active' AND subscription_plan = 'monthly'
@@ -148,7 +154,7 @@ router.get("/api/admin/analytics/revenue", async (_req, res) => {
 
     const monthlySubs = Number(monthlyResult.rows?.[0]?.c || 0);
     const yearlySubs = Number(yearlyResult.rows?.[0]?.c || 0);
-    const mrrCents = (monthlySubs * 1300) + Math.round(yearlySubs * (9999 / 12));
+    const mrrCents = (monthlySubs * PRO_MONTHLY_CENTS) + Math.round(yearlySubs * (PRO_YEARLY_CENTS / 12));
 
     // Recently churned (subscription ended in last 30 days)
     const churnResult = await db.execute(sql`

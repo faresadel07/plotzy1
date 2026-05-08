@@ -166,13 +166,13 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "what-plans",
         question: "What plans does Plotzy offer?",
         answer:
-          "Plotzy has three tiers. Free has no cost and practical limits suitable for trying the platform. Pro is $8.99 per month or $79.99 per year. Premium is $16.99 per month or $159.99 per year. The yearly cycles save roughly 26 and 22 percent over monthly billing for Pro and Premium respectively.",
+          "Plotzy has three tiers. Free has no cost and practical limits suitable for trying the platform. Pro is $4.99 per month or $50.99 per year (founders pricing). Premium is $8.99 per month or $91.99 per year (founders pricing). The yearly cycles save 15 percent over the monthly rates for both Pro and Premium. Founders pricing is locked in for the first 500 members.",
       },
       {
         id: "pro-vs-premium",
         question: "What's the difference between Pro and Premium?",
         answer:
-          "Pro ($8.99/month) raises Free's daily AI assists from 10 to 100 and unlocks 3 AI Marketplace analyses per month. Premium ($16.99/month) raises the daily AI assists to 200 and unlocks 9 AI Marketplace analyses per month. Beyond AI quotas, all three plans currently share the same feature set; Pro and Premium remove the Free plan's chapter and per-chapter word caps.",
+          "Pro ($4.99/month) raises Free's daily AI assists from 10 to 100 and unlocks 3 AI Marketplace analyses per month. Premium ($8.99/month) raises the daily AI assists to 200 and unlocks 9 AI Marketplace analyses per month. Beyond AI quotas, all three plans currently share the same feature set; Pro and Premium remove the Free plan's chapter and per-chapter word caps.",
       },
       {
         id: "upgrade-downgrade",
@@ -190,7 +190,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "what-happens-if-i-cancel",
         question: "What happens if I cancel my subscription?",
         answer:
-          "Your books remain in your account; nothing is deleted. After the current period ends, your account returns to the Free plan limits — your daily AI assist budget drops back to 10 per day, and creating new chapters or words above the Free caps is blocked. Existing content stays in your library and remains readable. If you resubscribe later, the higher AI assist quota returns immediately.",
+          "Your books remain in your account; nothing is deleted. After the current period ends, your account returns to the Free plan limits, so your daily AI assist budget drops back to 10 per day, and creating new chapters or words above the Free caps is blocked. Existing content stays in your library and remains readable. If you resubscribe later, the higher AI assist quota returns immediately.",
       },
       {
         id: "auto-renewal",
@@ -214,7 +214,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "annual-discount",
         question: "Are there annual discounts?",
         answer:
-          "Yes. Pro yearly is $79.99 versus $107.88 if you paid monthly for 12 months, a 26 percent saving. Premium yearly is $159.99 versus $203.88 for 12 monthly payments, a 22 percent saving.",
+          "Yes. Pro yearly is $50.99 versus $59.88 if you paid monthly for 12 months, a 15 percent saving. Premium yearly is $91.99 versus $107.88 for 12 monthly payments, also a 15 percent saving.",
       },
       {
         id: "payment-methods",

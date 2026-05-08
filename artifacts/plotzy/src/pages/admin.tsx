@@ -1467,8 +1467,8 @@ function RevenueTab() {
       <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
         <MiniStat label="MRR (estimated)" value={`$${data.mrrDollars}`} sub="From active subs" />
         <MiniStat label="Active Subscribers" value={data.activeSubscribers} />
-        <MiniStat label="Monthly Plans" value={data.monthlySubs} sub="@ $13/mo" />
-        <MiniStat label="Yearly Plans" value={data.yearlySubs} sub="@ $99.99/yr" />
+        <MiniStat label="Monthly Plans" value={data.monthlySubs} sub="Pro and Premium" />
+        <MiniStat label="Yearly Plans" value={data.yearlySubs} sub="Pro and Premium" />
         <MiniStat label="Churned (30d)" value={data.churnedLast30Days} sub="Cancelled recently" />
       </div>
 

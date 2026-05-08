@@ -117,14 +117,14 @@ function paypalPlanAmount(plan: PayPalPlan): string {
 
 function paypalPlanDescription(plan: PayPalPlan): string {
   switch (plan) {
-    case "pro_monthly":      return "Plotzy Pro — Monthly ($8.99/mo)";
-    case "pro_yearly":       return "Plotzy Pro — Annual ($79.99/yr)";
-    case "premium_monthly":  return "Plotzy Premium — Monthly ($16.99/mo)";
-    case "premium_yearly":   return "Plotzy Premium — Annual ($159.99/yr)";
-    case "monthly":          return "Plotzy Pro — Monthly ($8.99/mo)";
-    case "yearly_monthly":   return "Plotzy Pro — Monthly ($8.99/mo)";
-    case "yearly_annual":    return "Plotzy Pro — Annual ($79.99/yr)";
-    default:                 return "Plotzy Pro — Monthly ($8.99/mo)";
+    case "pro_monthly":      return "Plotzy Pro Monthly ($4.99/mo)";
+    case "pro_yearly":       return "Plotzy Pro Annual ($50.99/yr)";
+    case "premium_monthly":  return "Plotzy Premium Monthly ($8.99/mo)";
+    case "premium_yearly":   return "Plotzy Premium Annual ($91.99/yr)";
+    case "monthly":          return "Plotzy Pro Monthly ($4.99/mo)";
+    case "yearly_monthly":   return "Plotzy Pro Monthly ($4.99/mo)";
+    case "yearly_annual":    return "Plotzy Pro Annual ($50.99/yr)";
+    default:                 return "Plotzy Pro Monthly ($4.99/mo)";
   }
 }
 
@@ -262,8 +262,8 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
     // The client tells us which `plan` they're paying for, but PayPal tells
     // us the actual amount and currency that were charged. If the two don't
     // match, the client is attempting to upgrade themselves to a higher
-    // tier at a lower price (e.g. create a "pro_monthly" $9.99 order, then
-    // call capture-order with plan: "premium_yearly" $159.99). Refuse
+    // tier at a lower price (e.g. create a "pro_monthly" $4.99 order, then
+    // call capture-order with plan: "premium_yearly" $91.99). Refuse
     // activation, alert via Sentry, and don't create any subscription
     // record.
     //
@@ -493,12 +493,12 @@ router.post("/api/user/cancel-subscription", async (req, res) => {
             after which your account will return to the Free plan.
           </p>
           <p style="color:#555;line-height:1.6;">
-            Your books are always yours — none of your content is deleted.
+            Your books are always yours, none of your content is deleted.
             If you change your mind, you can resubscribe anytime.
           </p>
           <a href="${frontendUrl}/account/subscription" style="display:inline-block;margin:24px 0;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:14px;">View subscription</a>
           <hr style="border:none;border-top:1px solid #eee;margin:32px 0;" />
-          <p style="color:#bbb;font-size:11px;">Plotzy — The modern platform for writers</p>
+          <p style="color:#bbb;font-size:11px;">Plotzy, the modern platform for writers</p>
         </div>
       `;
       sendEmail(user.email, "Your Plotzy subscription has been canceled", html).catch(() => {});
