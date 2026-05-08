@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
-import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, UserPlus, Search } from "lucide-react";
+import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, UserPlus, Search, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
@@ -1283,22 +1283,28 @@ export default function Home() {
         <DevicesShowcase onCtaClick={openCreateBook} />
 
         {/* ===== FREE COURSE VIDEO ===== */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container max-w-7xl mx-auto px-4">
-            <div className="text-center mb-8">
-              <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">
+        <section
+          aria-labelledby="course-section-heading"
+          className="bg-gradient-to-b from-[#fafafa] to-white border-b border-[#f0f0f0] px-6 py-16 md:py-24"
+        >
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12 md:mb-16">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#888] mb-5">
                 {t("courseHomeEyebrow")}
               </p>
-              <h2 className="text-3xl md:text-4xl font-bold mt-2">
+              <h2
+                id="course-section-heading"
+                className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#111] tracking-[-0.03em] leading-[1.05] mb-4"
+              >
                 {t("courseHomeTitle")}
               </h2>
-              <p className="text-base md:text-lg text-muted-foreground mt-2">
+              <p className="text-base sm:text-lg text-[#555] leading-relaxed max-w-2xl mx-auto">
                 {t("courseHomeSubtitle")}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 mb-8">
-              <div className="md:col-span-7 rounded-xl shadow-lg overflow-hidden relative">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+              <div className="md:col-span-7 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] relative">
                 <video
                   src="/course-intro-video.mp4"
                   autoPlay
@@ -1310,14 +1316,14 @@ export default function Home() {
                 >
                   Your browser does not support video playback.
                 </video>
-                <div className="absolute bottom-2 right-2 bg-zinc-900/95 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-sm text-white text-[11px] font-medium px-3.5 py-1.5 rounded-full ring-1 ring-white/10 flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   <span>Made with Plotzy</span>
                 </div>
               </div>
 
-              <div className="md:col-span-5 flex flex-col gap-4 md:gap-6">
-                <div className="rounded-xl shadow-lg overflow-hidden flex-1">
+              <div className="md:col-span-5 flex flex-col gap-3 md:gap-4">
+                <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] flex-1">
                   <img
                     src="/course-section-curriculum.webp"
                     alt="How to Write Your First Book — course curriculum"
@@ -1325,7 +1331,7 @@ export default function Home() {
                     loading="lazy"
                   />
                 </div>
-                <div className="rounded-xl shadow-lg overflow-hidden flex-1">
+                <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] flex-1">
                   <img
                     src="/course-section-certificate.webp"
                     alt="Earn your verified completion certificate"
@@ -1336,10 +1342,15 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="text-center">
-              <Button asChild size="lg">
-                <Link href="/course">
-                  {t("courseHomeCta")} →
+            <div className="text-center mt-12 md:mt-14">
+              <Button
+                asChild
+                size="lg"
+                className="bg-[#111] hover:bg-[#000] text-white px-8 py-6 text-base font-semibold rounded-full shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all"
+              >
+                <Link href="/course" className="flex items-center gap-2">
+                  {t("courseHomeCta")}
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
             </div>
