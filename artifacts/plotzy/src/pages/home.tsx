@@ -1288,23 +1288,8 @@ export default function Home() {
           className="bg-gradient-to-b from-[#fafafa] to-white border-b border-[#f0f0f0] px-6 py-16 md:py-24"
         >
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12 md:mb-16">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#888] mb-5">
-                {t("courseHomeEyebrow")}
-              </p>
-              <h2
-                id="course-section-heading"
-                className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#111] tracking-[-0.03em] leading-[1.05] mb-4"
-              >
-                {t("courseHomeTitle")}
-              </h2>
-              <p className="text-base sm:text-lg text-[#555] leading-relaxed max-w-2xl mx-auto">
-                {t("courseHomeSubtitle")}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-              <div className="md:col-span-7 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] relative">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10 items-center">
+              <div className="md:col-span-7 aspect-video rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] relative">
                 <video
                   src="/course-intro-video.mp4"
                   autoPlay
@@ -1322,23 +1307,56 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="md:col-span-5 flex flex-col gap-3 md:gap-4">
-                <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] flex-1">
-                  <img
-                    src="/course-section-curriculum.webp"
-                    alt="How to Write Your First Book — course curriculum"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)] flex-1">
-                  <img
-                    src="/course-section-certificate.webp"
-                    alt="Earn your verified completion certificate"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
+              <div className="md:col-span-5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#888] mb-4">
+                  {t("courseHomeEyebrow")}
+                </p>
+                <h2
+                  id="course-section-heading"
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#111] tracking-[-0.03em] leading-[1.1] mb-5"
+                >
+                  {t("courseHomeTitle")}
+                </h2>
+                <p className="text-base text-[#555] leading-relaxed mb-6">
+                  {t("courseHomeBody")}
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3 text-sm sm:text-base text-[#333]">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <span>{t("courseHomeFeature1")}</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm sm:text-base text-[#333]">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <span>{t("courseHomeFeature2")}</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm sm:text-base text-[#333]">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <span>{t("courseHomeFeature3")}</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm sm:text-base text-[#333]">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <span>{t("courseHomeFeature4")}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-12 md:mt-16">
+              <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)]">
+                <img
+                  src="/course-section-curriculum.webp"
+                  alt="How to Write Your First Book, course curriculum"
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
+              <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)]">
+                <img
+                  src="/course-section-certificate.webp"
+                  alt="Earn your verified completion certificate"
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
               </div>
             </div>
 
