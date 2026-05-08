@@ -8,7 +8,7 @@ import { SEO } from "@/components/SEO";
 import {
   ArrowLeft, Play, Pause, Download, Loader2, Mic2, Music2,
   Volume2, VolumeX, CheckCircle2, Circle, ChevronDown, ChevronUp,
-  Headphones, Sparkles, Radio, Gauge, Layers, BookOpen,
+  Headphones, Sparkles, Radio, Layers, BookOpen,
 } from "lucide-react";
 
 // ── Voice definitions ────────────────────────────────────────────────────────
@@ -57,8 +57,8 @@ function countWords(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function estimateMinutes(words: number, speed: number) {
-  const wpm = 150 * speed;
+function estimateMinutes(words: number) {
+  const wpm = 150;
   return Math.max(0.5, words / wpm);
 }
 
@@ -356,8 +356,6 @@ export default function AudiobookStudio() {
   const ar = lang === "ar";
 
   const [selectedVoice, setSelectedVoice] = useState("ryan");
-  const [quality, setQuality] = useState<"tts-1" | "tts-1-hd">("tts-1");
-  const [speed, setSpeed] = useState(1.0);
   const [selectedChapterIds, setSelectedChapterIds] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(true);
 
@@ -394,7 +392,7 @@ export default function AudiobookStudio() {
   const totalWords = chapterList.reduce((s, c) => s + countWords(c.text), 0);
   const activeChapters = selectAll ? chapterList : chapterList.filter(c => selectedChapterIds.has(c.id));
   const activeWords = activeChapters.reduce((s, c) => s + countWords(c.text), 0);
-  const estMinutes = estimateMinutes(activeWords, speed);
+  const estMinutes = estimateMinutes(activeWords);
 
   const toggleChapter = (id: number) => {
     setSelectAll(false);
@@ -417,7 +415,7 @@ export default function AudiobookStudio() {
       const res = await fetch(`/api/books/${bookId}/audiobook/preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chapterId, voice: selectedVoice, speed, model: quality }),
+        body: JSON.stringify({ chapterId, voice: selectedVoice }),
       });
       if (!res.ok) throw new Error("Preview failed");
       const data = await res.json() as { audio: string; mimeType: string; isMock?: boolean };
@@ -438,7 +436,7 @@ export default function AudiobookStudio() {
       const res = await fetch(`/api/books/${bookId}/audiobook/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voice: selectedVoice, speed, model: quality, chapterIds: [chapterId] }),
+        body: JSON.stringify({ voice: selectedVoice, chapterIds: [chapterId] }),
       });
       if (res.status === 402) {
         const data = await res.json();
@@ -485,7 +483,7 @@ export default function AudiobookStudio() {
       const res = await fetch(`/api/books/${bookId}/audiobook/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voice: selectedVoice, speed, model: quality, chapterIds: chapIds }),
+        body: JSON.stringify({ voice: selectedVoice, chapterIds: chapIds }),
       });
       if (res.status === 402) {
         const data = await res.json();
@@ -684,49 +682,6 @@ export default function AudiobookStudio() {
                 </div>
               </div>
 
-              {/* Quality & Speed */}
-              <div className="rounded-2xl p-5 anim-fade-up-2" style={{ background: "#111111", border: "1px solid #252525" }}>
-                <div className="flex items-center gap-2 mb-4">
-                  <Gauge className="w-4 h-4 text-gray-300" />
-                  <h3 className="text-sm font-bold">{ar ? "الجودة والسرعة" : "Quality & Speed"}</h3>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-[11px] font-bold mb-2 text-gray-400 uppercase tracking-wider">{ar ? "جودة الصوت" : "Audio Quality"}</label>
-                  <div className="flex gap-2">
-                    {(["tts-1", "tts-1-hd"] as const).map(q => (
-                      <button key={q} onClick={() => setQuality(q)}
-                        className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                        style={{
-                          background: quality === q ? "#fff" : "#1a1a1a",
-                          color: quality === q ? "#111" : "#666",
-                          border: quality === q ? "1px solid #fff" : "1px solid #252525",
-                          cursor: "pointer",
-                        }}>
-                        {q === "tts-1" ? (ar ? "⚡ قياسي" : "⚡ Standard") : (ar ? "💎 HD" : "💎 HD")}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center justify-between text-[11px] font-bold mb-2 text-gray-400 uppercase tracking-wider">
-                    <span>{ar ? "سرعة القراءة" : "Reading Speed"}</span>
-                    <span className="font-black text-gray-800">{speed.toFixed(2)}×</span>
-                  </label>
-                  <input type="range" min={0.25} max={4.0} step={0.05} value={speed}
-                    onChange={e => setSpeed(parseFloat(e.target.value))}
-                    className="w-full accent-gray-800"
-                    style={{ height: 4 }}
-                  />
-                  <div className="flex justify-between text-[10px] mt-1 text-gray-300">
-                    <span>0.25×</span>
-                    <span>{ar ? "طبيعي" : "Normal"} 1.0×</span>
-                    <span>4.0×</span>
-                  </div>
-                </div>
-              </div>
-
               {/* Export button */}
               <div className="rounded-2xl p-5 anim-fade-up-3" style={{ background: "#111111", border: "1px solid #252525" }}>
                 <div className="flex items-center gap-2 mb-3">
@@ -809,7 +764,7 @@ export default function AudiobookStudio() {
                       const isSelected = selectAll || selectedChapterIds.has(chapter.id);
                       const isExpanded = expandedChapters.has(chapter.id);
                       const words = countWords(chapter.text);
-                      const dur = fmtMin(estimateMinutes(words, speed));
+                      const dur = fmtMin(estimateMinutes(words));
                       const preview = previews[chapter.id];
                       const isLoadingPreview = previewLoading[chapter.id];
                       const isDownloading = downloadingChapter[chapter.id];
@@ -910,7 +865,6 @@ export default function AudiobookStudio() {
                                 mimeType={preview.mimeType}
                                 isMock={preview.isMock}
                                 text={preview.text}
-                                speed={speed}
                                 voiceGender={voice.gender}
                                 voiceId={selectedVoice}
                               />

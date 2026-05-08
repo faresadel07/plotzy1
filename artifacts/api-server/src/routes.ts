@@ -2335,8 +2335,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   app.post("/api/books/:id/audiobook/preview", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(String(req.params.id));
-      const { chapterId, voice = "ryan", speed = 1.0 } = req.body as {
-        chapterId: number; voice?: string; speed?: number;
+      const { chapterId, voice = "ryan" } = req.body as {
+        chapterId: number; voice?: string;
       };
 
       const book = await storage.getBook(bookId);
@@ -2354,7 +2354,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       const previewText = fullText.slice(0, 500) || `Preview of ${chapter.title || "Chapter"}`;
 
       const { synthesizeToMp3 } = await import("./lib/piper-tts");
-      const mp3 = await synthesizeToMp3({ text: previewText, voice, speed });
+      const mp3 = await synthesizeToMp3({ text: previewText, voice });
 
       if (mp3.length === 0) {
         return res.status(500).json({ message: "Synthesizer produced empty audio" });
@@ -2379,8 +2379,8 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   app.post("/api/books/:id/audiobook/export", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(String(req.params.id));
-      const { voice = "ryan", speed = 1.0, chapterIds } = req.body as {
-        voice?: string; speed?: number; chapterIds?: number[];
+      const { voice = "ryan", chapterIds } = req.body as {
+        voice?: string; chapterIds?: number[];
       };
 
       const book = await storage.getBook(bookId);
@@ -2426,7 +2426,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       for (const { text } of chapterTexts) {
         for (const segment of splitForTts(text)) {
           if (!segment) continue;
-          const buf = await synthesizeToMp3({ text: segment, voice, speed });
+          const buf = await synthesizeToMp3({ text: segment, voice });
           if (buf.length === 0) continue; // shouldn't happen — synthesizeToMp3 throws on empty — defensive
           audioChunks.push(buf);
         }
