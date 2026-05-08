@@ -600,7 +600,7 @@ export function SeriesSection({ books }: Props) {
             </div>
             <h3 className="text-white/60 font-semibold mb-2">No series yet</h3>
             <p className="text-white/30 text-sm mb-6 max-w-xs mx-auto">
-              Group your books into a trilogy, saga, or series — keep your universe organized.
+              Group your books into a trilogy, saga, or series, and keep your universe organized.
             </p>
             <Button
               onClick={() => setCreateOpen(true)}
