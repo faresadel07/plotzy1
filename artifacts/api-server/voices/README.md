@@ -34,9 +34,16 @@ done
 
 ## Production (Docker)
 
-The Dockerfile fetches these models at build time via the same `curl`
-loop. See `Dockerfile` (Piper integration block, deferred to a follow-up
-batch). The voices end up baked into the image at `/app/artifacts/api-server/voices/`.
+**The Dockerfile auto-downloads these models during build** via the same
+`curl` loop shown above. See the `# ── Piper voice models` block in the
+project root `Dockerfile` (runtime stage). The voices end up baked into
+the final image at `/app/artifacts/api-server/voices/` and add ~350 MB
+to the image size. No manual steps are needed for production deploys;
+just `docker build`.
+
+The voice download is a single Docker layer that only invalidates when
+the voice list itself changes, so application-code changes do NOT
+re-download voices on rebuild.
 
 ## Licenses
 

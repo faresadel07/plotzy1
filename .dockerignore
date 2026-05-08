@@ -11,3 +11,9 @@ server.log
 .DS_Store
 attached_assets
 *.zip
+
+# Piper voice models — downloaded fresh in the runtime stage.
+# Local-dev copies of the .onnx / .onnx.json files would bloat
+# the build context and bust caches unnecessarily.
+artifacts/api-server/voices/*.onnx
+artifacts/api-server/voices/*.onnx.json
