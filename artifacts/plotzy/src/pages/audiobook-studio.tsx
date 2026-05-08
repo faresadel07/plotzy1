@@ -25,24 +25,16 @@ interface VoiceOption {
   emoji: string;
 }
 
-// English-only voice catalogue. Edge TTS supports many Arabic voices
-// (and we kept the backend mapping for them) but Arabic narration
-// quality on user content has been inconsistent — bilingual chapters
-// produce near-silent or garbled audio. Until we ship per-chapter
-// language detection + voice auto-selection, the audiobook studio
-// only exposes English voices and a "English-only" notice greets
-// the user above the picker.
+// Piper TTS voice catalogue. Backed by self-hosted Piper neural
+// voices on the api-server. English (American + British) plus an
+// Arabic Jordanian voice. Voice IDs map to the entries in
+// artifacts/api-server/src/lib/piper-tts.ts > PIPER_VOICES.
 const VOICES: VoiceOption[] = [
-  { id: "nova",    name: "Nova",    nameAr: "نوفا",    gender: "Female",  accent: "American",  accentAr: "أمريكي",  tone: "Warm & Upbeat",        toneAr: "دافئ ومشرق",      emoji: "🌟" },
-  { id: "alloy",   name: "Alloy",   nameAr: "ألوي",   gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Versatile & Clear",    toneAr: "متعدد الاستخدام", emoji: "⚡" },
-  { id: "shimmer", name: "Shimmer", nameAr: "شيمر",  gender: "Female",  accent: "American",  accentAr: "أمريكي",  tone: "Light & Feminine",     toneAr: "خفيف وأنثوي",     emoji: "✨" },
-  { id: "onyx",    name: "Onyx",    nameAr: "أونيكس", gender: "Male",    accent: "American",  accentAr: "أمريكي",  tone: "Deep & Authoritative", toneAr: "عميق وموثوق",     emoji: "🔮" },
-  { id: "echo",    name: "Echo",    nameAr: "إيكو",   gender: "Male",    accent: "American",  accentAr: "أمريكي",  tone: "Resonant & Clear",     toneAr: "رنان وواضح",      emoji: "🔊" },
-  { id: "fable",   name: "Fable",   nameAr: "فيبل",   gender: "Neutral", accent: "British",   accentAr: "بريطاني", tone: "Storytelling",          toneAr: "حكاية وسرد",      emoji: "📖" },
-  { id: "coral",   name: "Coral",   nameAr: "كورال",  gender: "Female",  accent: "American",  accentAr: "أمريكي",  tone: "Clear & Warm",         toneAr: "واضح ودافئ",      emoji: "🪸" },
-  { id: "ash",     name: "Ash",     nameAr: "آش",     gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Warm & Engaging",      toneAr: "دافئ وجذاب",      emoji: "🌿" },
-  { id: "ballad",  name: "Ballad",  nameAr: "بالاد",  gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Expressive",           toneAr: "معبر",             emoji: "🎵" },
-  { id: "sage",    name: "Sage",    nameAr: "سيج",    gender: "Neutral", accent: "American",  accentAr: "أمريكي",  tone: "Calm & Thoughtful",    toneAr: "هادئ ومتأمل",     emoji: "🌿" },
+  { id: "ryan",    name: "Ryan",    nameAr: "رايان",  gender: "Male",   accent: "American",  accentAr: "أمريكي",  tone: "Warm",         toneAr: "دافئ",         emoji: "🌟" },
+  { id: "sophie",  name: "Sophie",  nameAr: "صوفي",  gender: "Female", accent: "American",  accentAr: "أمريكي",  tone: "Clear",        toneAr: "واضح",         emoji: "✨" },
+  { id: "jenny",   name: "Jenny",   nameAr: "جيني",  gender: "Female", accent: "British",   accentAr: "بريطاني", tone: "Storytelling", toneAr: "حكاية وسرد",  emoji: "📖" },
+  { id: "james",   name: "James",   nameAr: "جيمس",  gender: "Male",   accent: "British",   accentAr: "بريطاني", tone: "Northern",     toneAr: "بريطاني شمالي", emoji: "🎩" },
+  { id: "kareem",  name: "Kareem",  nameAr: "كريم",  gender: "Male",   accent: "Jordanian", accentAr: "أردني",   tone: "Clear",        toneAr: "واضح",         emoji: "🌙" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -363,7 +355,7 @@ export default function AudiobookStudio() {
   const { toast } = useToast();
   const ar = lang === "ar";
 
-  const [selectedVoice, setSelectedVoice] = useState("nova");
+  const [selectedVoice, setSelectedVoice] = useState("ryan");
   const [quality, setQuality] = useState<"tts-1" | "tts-1-hd">("tts-1");
   const [speed, setSpeed] = useState(1.0);
   const [selectedChapterIds, setSelectedChapterIds] = useState<Set<number>>(new Set());
@@ -638,22 +630,6 @@ export default function AudiobookStudio() {
                 <div className="flex items-center gap-2 mb-2">
                   <Mic2 className="w-4 h-4" style={{ color: "#fff" }} />
                   <h3 className="text-sm font-bold">{ar ? "اختر الصوت" : "Choose Voice"}</h3>
-                </div>
-
-                {/* English-only notice. Edge TTS supports Arabic but the
-                    output on bilingual / heavy-Arabic content is
-                    inconsistent today — better to set the expectation
-                    than to surprise the user with silent playback. */}
-                <div
-                  className="mb-4 px-3 py-2 rounded-lg flex items-start gap-2"
-                  style={{ background: "rgba(250, 204, 21, 0.06)", border: "1px solid rgba(250, 204, 21, 0.18)" }}
-                >
-                  <span style={{ fontSize: 13 }}>🌐</span>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "rgba(250, 204, 21, 0.85)" }}>
-                    {ar
-                      ? "الكتاب الصوتي متاح حالياً للنصوص الإنجليزية فقط. دعم العربية قريباً."
-                      : "Audiobook generation is currently English-only. Arabic narration is coming soon."}
-                  </p>
                 </div>
 
                 {/* Gender filter tabs */}

@@ -2286,47 +2286,56 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── Audiobook Studio ───────────────────────────────────────────────────────
 
-  // Helper: extract plain text from a chapter's content (PageBlock[] JSON)
+  // Helper: extract plain text from a chapter's content (PageBlock[] JSON).
+  // Filters to text-only blocks; image/drawing block content is base64
+  // image data or SVG markup, not narratable text, so it must be dropped
+  // here. This was Phase A Fix 1 of the audiobook bug audit.
   function extractChapterPlainText(content: string): string {
     if (!content) return "";
     try {
       const blocks = JSON.parse(content);
       if (Array.isArray(blocks)) {
-        return blocks.map((b: unknown) => {
-          if (typeof b === "string") return b;
-          if (b && typeof b === "object" && "content" in b) return (b as { content: string }).content;
-          return "";
-        }).join("\n\n").trim();
+        return blocks
+          .map((b: unknown) => {
+            if (typeof b === "string") return b;
+            if (
+              b &&
+              typeof b === "object" &&
+              "type" in b &&
+              (b as { type: string }).type === "text" &&
+              "content" in b
+            ) {
+              return (b as { content: string }).content;
+            }
+            return ""; // image / drawing / unknown blocks → skip
+          })
+          .join("\n\n")
+          .trim();
       }
-    } catch { }
+    } catch { /* fall through to plain-text branch */ }
     return content.trim();
   }
 
-  // Generate a minimal WAV mock for demo mode (1 sec of silence)
-  function makeMockWav(): Buffer {
-    const sampleRate = 22050;
-    const numSamples = sampleRate; // 1 second
-    const numChannels = 1;
-    const bitsPerSample = 16;
-    const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
-    const blockAlign = numChannels * (bitsPerSample / 8);
-    const dataSize = numSamples * blockAlign;
-    const buf = Buffer.alloc(44 + dataSize, 0);
-    buf.write("RIFF", 0); buf.writeUInt32LE(36 + dataSize, 4); buf.write("WAVE", 8);
-    buf.write("fmt ", 12); buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20);
-    buf.writeUInt16LE(numChannels, 22); buf.writeUInt32LE(sampleRate, 24);
-    buf.writeUInt32LE(byteRate, 28); buf.writeUInt16LE(blockAlign, 32);
-    buf.writeUInt16LE(bitsPerSample, 34); buf.write("data", 36); buf.writeUInt32LE(dataSize, 40);
-    return buf;
+  // Sync export size guard. We synthesize on the request thread (B.1
+  // design) so the browser's fetch timeout caps how long an export
+  // can run. At ~7-13 seconds per 100 words on the medium voices,
+  // 8000 words is roughly 9-17 minutes of synthesis time, comfortably
+  // beyond a typical 60s timeout. Background-job mode (B.3) will lift
+  // this; until then we refuse oversized exports with a clear error
+  // so the user knows what to do (split the export into smaller batches).
+  const MAX_EXPORT_WORDS = 8000;
+  function countWords(text: string): number {
+    return text.trim().split(/\s+/).filter(Boolean).length;
   }
 
-  // Preview: synthesize first ~500 chars of a chapter via Edge TTS.
-  // SECURITY: ownership-gated; aiLimiter caps abuse-rate. Edge TTS is
-  // free so the cost concern is server CPU/socket time, not dollars.
+  // Preview: synthesize first ~500 chars of a chapter via Piper.
+  // SECURITY: ownership-gated; aiLimiter caps abuse-rate. Piper runs
+  // entirely on our hardware so the cost concern is server CPU/RAM,
+  // not API dollars. tierAiLimiter still caps usage by tier.
   app.post("/api/books/:id/audiobook/preview", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(String(req.params.id));
-      const { chapterId, voice = "nova", speed = 1.0 } = req.body as {
+      const { chapterId, voice = "ryan", speed = 1.0 } = req.body as {
         chapterId: number; voice?: string; speed?: number;
       };
 
@@ -2338,11 +2347,18 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       if (!chapter) return res.status(404).json({ message: "Chapter not found" });
 
       const fullText = extractChapterPlainText(chapter.content || "");
-      // Limit preview to first 500 characters (~60-90 seconds of audio)
+      // Limit preview to first 500 characters (~60-90 seconds of audio).
+      // If the chapter has no narratable text (e.g. only image blocks),
+      // fall back to a brief placeholder so the user still hears the
+      // selected voice instead of a blank response.
       const previewText = fullText.slice(0, 500) || `Preview of ${chapter.title || "Chapter"}`;
 
-      const { synthesizeToMp3 } = await import("./lib/edge-tts");
+      const { synthesizeToMp3 } = await import("./lib/piper-tts");
       const mp3 = await synthesizeToMp3({ text: previewText, voice, speed });
+
+      if (mp3.length === 0) {
+        return res.status(500).json({ message: "Synthesizer produced empty audio" });
+      }
 
       return res.json({ audio: mp3.toString("base64"), mimeType: "audio/mpeg", chapterId });
     } catch (err) {
@@ -2351,15 +2367,19 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
-  // Export: synthesize all (or selected) chapters, merge, return as single MP3 download
-  // SECURITY: export reads the ENTIRE book and produces a downloadable file
-  // — full content leak if unauthenticated. At tts-1-hd rates a 500k-char
-  // novel is ~$15 of OpenAI spend; without ownership + limits an attacker
-  // can burn arbitrary dollars on a loop across every bookId.
+  // Export: synthesize all (or selected) chapters, merge with ffmpeg
+  // (NOT Buffer.concat — that produced unplayable multi-stream MP3s in
+  // the previous Edge TTS path), return as single MP3 download.
+  //
+  // SECURITY: export reads the ENTIRE book and produces a downloadable
+  // file; a leak of an unauthenticated path here would expose every
+  // user's book content. requireBookOwner gates this. tierAiLimiter
+  // caps quota per tier so a malicious client can't spin up arbitrary
+  // CPU on a loop.
   app.post("/api/books/:id/audiobook/export", requireBookOwner, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const bookId = parseInt(String(req.params.id));
-      const { voice = "nova", speed = 1.0, chapterIds } = req.body as {
+      const { voice = "ryan", speed = 1.0, chapterIds } = req.body as {
         voice?: string; speed?: number; chapterIds?: number[];
       };
 
@@ -2375,20 +2395,53 @@ Write the query letter specifically tailored to this publisher, mentioning why t
         return res.status(400).json({ message: "No chapters to export" });
       }
 
-      const { synthesizeToMp3, splitForTts } = await import("./lib/edge-tts");
-      const audioChunks: Buffer[] = [];
-
+      // Guard: total word count across all selected chapters. Refuse
+      // oversized exports up front so the user gets a clear error
+      // instead of a request that silently hangs past the browser's
+      // fetch timeout.
+      let totalWords = 0;
+      const chapterTexts: { chapter: typeof chaptersToExport[number]; text: string }[] = [];
       for (const chapter of chaptersToExport) {
         const text = extractChapterPlainText(chapter.content || "");
         if (!text) continue;
+        chapterTexts.push({ chapter, text });
+        totalWords += countWords(text);
+      }
+
+      if (chapterTexts.length === 0) {
+        return res.status(400).json({
+          message: "Selected chapters contain no narratable text. Image and drawing blocks are not narrated.",
+        });
+      }
+
+      if (totalWords > MAX_EXPORT_WORDS) {
+        return res.status(400).json({
+          message: `Selected chapters total ${totalWords.toLocaleString()} words, which exceeds the current synchronous-export limit of ${MAX_EXPORT_WORDS.toLocaleString()} words. Export fewer chapters at a time, or wait for the upcoming background-job export mode.`,
+        });
+      }
+
+      const { synthesizeToMp3, splitForTts, concatMp3Buffers } = await import("./lib/piper-tts");
+      const audioChunks: Buffer[] = [];
+
+      for (const { text } of chapterTexts) {
         for (const segment of splitForTts(text)) {
           if (!segment) continue;
           const buf = await synthesizeToMp3({ text: segment, voice, speed });
+          if (buf.length === 0) continue; // shouldn't happen — synthesizeToMp3 throws on empty — defensive
           audioChunks.push(buf);
         }
       }
 
-      const merged = Buffer.concat(audioChunks);
+      if (audioChunks.length === 0) {
+        return res.status(500).json({ message: "Synthesizer produced no audio for the selected chapters" });
+      }
+
+      const merged = await concatMp3Buffers(audioChunks);
+
+      if (merged.length === 0) {
+        return res.status(500).json({ message: "Audio concatenation produced empty file" });
+      }
+
       const safeTitle = (book.title || "audiobook").replace(/[^a-z0-9]/gi, "_").slice(0, 50);
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}_audiobook.mp3"`);

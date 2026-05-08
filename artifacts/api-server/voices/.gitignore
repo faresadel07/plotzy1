@@ -1,0 +1,10 @@
+# Voice models are large (~350 MB total) and exceed GitHub's 100 MB
+# per-file limit. They are downloaded at Docker-build time instead of
+# being committed to the repo (see Dockerfile, deferred to follow-up
+# batch). For local dev, run scripts/download-voices.sh to fetch them.
+*.onnx
+*.onnx.json
+
+# Keep the README so the directory exists in git
+!.gitignore
+!README.md
