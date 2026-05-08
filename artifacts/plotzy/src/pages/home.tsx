@@ -1342,19 +1342,19 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-12 md:mt-16">
-              <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)]">
+              <div className="aspect-[16/10] rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)]">
                 <img
                   src="/course-section-curriculum.webp"
                   alt="How to Write Your First Book, course curriculum"
-                  className="w-full h-auto"
+                  className="w-full h-full object-cover"
                   loading="lazy"
                 />
               </div>
-              <div className="rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)]">
+              <div className="aspect-[16/10] rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12),0_2px_4px_-2px_rgba(0,0,0,0.06)]">
                 <img
                   src="/course-section-certificate.webp"
                   alt="Earn your verified completion certificate"
-                  className="w-full h-auto"
+                  className="w-full h-full object-cover"
                   loading="lazy"
                 />
               </div>
