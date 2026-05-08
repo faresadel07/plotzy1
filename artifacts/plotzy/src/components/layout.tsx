@@ -685,6 +685,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
             {/* Learn */}
             <FooterCol title="Learn" links={[
+              { label: 'Free Writing Course', href: '/course' },
               { label: 'FAQ', href: '/faq' },
               { label: 'Writing Guide', href: '/writing-guide' },
               { label: 'Tutorial Videos', href: '/tutorial' },
