@@ -233,7 +233,7 @@ export default function TermsOfService() {
                   </P>
                   <H2>Billing</H2>
                   <P>
-                    Paid subscriptions are billed in advance at the beginning of each billing cycle. All payments are processed securely through Stripe or PayPal. By subscribing, you authorize us to charge your designated payment method on a recurring basis until you cancel.
+                    Paid subscriptions are billed in advance at the beginning of each billing cycle. All payments are processed securely through PayPal. By subscribing, you authorize us to charge your designated payment method on a recurring basis until you cancel.
                   </P>
                   <H2>Free Trial</H2>
                   <P>

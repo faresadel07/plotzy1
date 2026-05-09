@@ -155,7 +155,7 @@ export default function PrivacyPolicy() {
                       <strong>Communications:</strong> messages you send to our support team and any feedback or reports you submit.
                     </li>
                     <li>
-                      <strong>Payment information:</strong> billing address and payment method details. We do not store your full card number — all payment processing is handled securely by Stripe and PayPal.
+                      <strong>Payment information:</strong> billing address and payment method details. We do not store your full card number — all payment processing is handled securely by PayPal.
                     </li>
                   </ul>
 
@@ -181,7 +181,7 @@ export default function PrivacyPolicy() {
                       <strong>OAuth providers:</strong> when you sign in via Google, Apple, LinkedIn, or Facebook, we receive your name, email address, and profile picture from that provider, as permitted by your settings on that platform.
                     </li>
                     <li>
-                      <strong>Payment processors:</strong> Stripe and PayPal may share transaction status and billing information with us to confirm successful payments.
+                      <strong>Payment processor:</strong> PayPal shares transaction status and billing information with us to confirm successful payments.
                     </li>
                   </ul>
                 </S>
@@ -227,7 +227,7 @@ export default function PrivacyPolicy() {
                     We share data with trusted third-party vendors who help us operate the Service. These providers are contractually bound to use your data only to perform services for us and to protect your information:
                   </P>
                   <ul>
-                    <li><strong>Stripe / PayPal</strong> — payment processing</li>
+                    <li><strong>PayPal</strong> — payment processing</li>
                     <li><strong>OpenAI</strong> — AI writing assistance features (prompts only; no private content stored)</li>
                     <li><strong>Cloud infrastructure providers</strong> — database hosting and storage</li>
                   </ul>
