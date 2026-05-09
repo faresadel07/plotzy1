@@ -34,10 +34,12 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// Default From address. When the production custom domain is verified
-// in Resend (per discovered-issues.md HIGH entry), swap this constant
-// (or read from process.env.EMAIL_FROM) and every caller benefits.
-const DEFAULT_FROM = "Plotzy <onboarding@resend.dev>";
+// Default From address for transactional emails (welcome, password
+// reset, cancel confirmations, etc.). Uses noreply@ because these
+// messages are not reply-targets — replies should go to support
+// channels, not to the automation mailbox. Domain plotzy.co was
+// verified in Resend on 2026-05-09 (closes pre-launch audit C-2).
+const DEFAULT_FROM = "Plotzy <noreply@plotzy.co>";
 
 export async function sendEmail(
   to: string,

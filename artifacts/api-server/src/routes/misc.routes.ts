@@ -397,8 +397,8 @@ router.post("/api/admin/support/:id/reply", requireAdmin, async (req, res) => {
         </div>
       `,
       {
-        from: "Plotzy Support <onboarding@resend.dev>",
-        replyTo: process.env.ADMIN_EMAIL || "onboarding@resend.dev",
+        from: "Plotzy Support <support@plotzy.co>",
+        replyTo: process.env.ADMIN_EMAIL || "support@plotzy.co",
       },
     ).catch(() => {});
 
