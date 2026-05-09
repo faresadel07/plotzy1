@@ -94,7 +94,7 @@ export default function PrivacyPolicy() {
 
               <div style={{ marginTop: 32, padding: "16px", borderRadius: 10, background: "var(--muted)", fontSize: 12, lineHeight: 1.6, color: "var(--muted-foreground)" }}>
                 <p style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: 4 }}>Privacy questions?</p>
-                <a href="mailto:privacy@plotzy.app" style={{ color: "var(--muted-foreground)" }}>privacy@plotzy.app</a>
+                <a href="mailto:privacy@plotzy.co" style={{ color: "var(--muted-foreground)" }}>privacy@plotzy.co</a>
               </div>
             </aside>
 
@@ -263,7 +263,7 @@ export default function PrivacyPolicy() {
                     <li>Information required for legal, tax, or audit purposes may be retained for up to 7 years as required by law</li>
                   </ul>
                   <P>
-                    To request deletion of your data, contact us at <a href="mailto:privacy@plotzy.app">privacy@plotzy.app</a> or use the account deletion option in Settings.
+                    To request deletion of your data, contact us at <a href="mailto:privacy@plotzy.co">privacy@plotzy.co</a> or use the account deletion option in Settings.
                   </P>
                 </S>
 
@@ -298,7 +298,7 @@ export default function PrivacyPolicy() {
                   </ul>
 
                   <P>
-                    To exercise any of these rights, contact us at <a href="mailto:privacy@plotzy.app">privacy@plotzy.app</a>. We will respond to all requests within 30 days.
+                    To exercise any of these rights, contact us at <a href="mailto:privacy@plotzy.co">privacy@plotzy.co</a>. We will respond to all requests within 30 days.
                   </P>
                 </S>
 
@@ -352,13 +352,13 @@ export default function PrivacyPolicy() {
                     However, no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to protect your personal information, we cannot guarantee its absolute security.
                   </P>
                   <P>
-                    If you believe your account has been compromised or you discover a security vulnerability, please contact us immediately at <a href="mailto:security@plotzy.app">security@plotzy.app</a>.
+                    If you believe your account has been compromised or you discover a security vulnerability, please contact us immediately at <a href="mailto:security@plotzy.co">security@plotzy.co</a>.
                   </P>
                 </S>
 
                 <S id="children" title="9. Children's Privacy">
                   <P>
-                    The Service is not directed to children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:privacy@plotzy.app">privacy@plotzy.app</a> and we will delete the information promptly.
+                    The Service is not directed to children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:privacy@plotzy.co">privacy@plotzy.co</a> and we will delete the information promptly.
                   </P>
                   <P>
                     Users between 13 and 18 years old must have a parent or guardian review and agree to these policies on their behalf. We encourage parents to supervise their children's use of online services.
@@ -394,9 +394,9 @@ export default function PrivacyPolicy() {
                   </P>
                   <div style={{ borderRadius: 12, padding: "24px", marginTop: 8, background: "var(--muted)", display: "flex", flexDirection: "column", gap: 8 }}>
                     <p style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>Plotzy — Privacy Team</p>
-                    <Row label="Privacy requests" value="privacy@plotzy.app" href="mailto:privacy@plotzy.app" />
-                    <Row label="Security issues" value="security@plotzy.app" href="mailto:security@plotzy.app" />
-                    <Row label="General support" value="support@plotzy.app" href="mailto:support@plotzy.app" />
+                    <Row label="Privacy requests" value="privacy@plotzy.co" href="mailto:privacy@plotzy.co" />
+                    <Row label="Security issues" value="security@plotzy.co" href="mailto:security@plotzy.co" />
+                    <Row label="General support" value="support@plotzy.co" href="mailto:support@plotzy.co" />
                   </div>
                   <P style={{ fontSize: 13, marginTop: 24 }}>
                     Response time: We aim to respond to all privacy requests within <strong>5 business days</strong> and complete them within <strong>30 days</strong>.

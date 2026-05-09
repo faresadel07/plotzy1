@@ -99,7 +99,7 @@ export default function TermsOfService() {
 
               <div style={{ marginTop: 32, padding: "16px", borderRadius: 10, background: "var(--muted)", fontSize: 12, lineHeight: 1.6, color: "var(--muted-foreground)" }}>
                 <p style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: 4 }}>Have questions?</p>
-                <a href="mailto:legal@plotzy.app" style={{ color: "var(--muted-foreground)" }}>legal@plotzy.app</a>
+                <a href="mailto:legal@plotzy.co" style={{ color: "var(--muted-foreground)" }}>legal@plotzy.co</a>
               </div>
             </aside>
 
@@ -166,7 +166,7 @@ export default function TermsOfService() {
                     To access most features, you must create an account by providing accurate and complete information. You agree to keep your account information up to date and to maintain the security and confidentiality of your login credentials.
                   </P>
                   <P>
-                    You are solely responsible for all activities that occur under your account. You agree to immediately notify us at <a href="mailto:support@plotzy.app">support@plotzy.app</a> of any unauthorized use of your account or any other security breach.
+                    You are solely responsible for all activities that occur under your account. You agree to immediately notify us at <a href="mailto:support@plotzy.co">support@plotzy.co</a> of any unauthorized use of your account or any other security breach.
                   </P>
                   <H2>One Account Per Person</H2>
                   <P>
@@ -245,7 +245,7 @@ export default function TermsOfService() {
                   </P>
                   <H2>Refunds</H2>
                   <P>
-                    All subscription payments are non-refundable, except where required by applicable law. If you believe a charge was made in error, please contact us at <a href="mailto:billing@plotzy.app">billing@plotzy.app</a> within 7 days of the charge.
+                    All subscription payments are non-refundable, except where required by applicable law. If you believe a charge was made in error, please contact us at <a href="mailto:billing@plotzy.co">billing@plotzy.co</a> within 7 days of the charge.
                   </P>
                   <H2>Price Changes</H2>
                   <P>
@@ -294,7 +294,7 @@ export default function TermsOfService() {
                   </P>
                   <H2>Content Moderation</H2>
                   <P>
-                    We reserve the right to remove any content from the Community Library or Marketplace that violates these Terms, without notice or liability. If you believe content posted by another user violates your rights or these Terms, please report it to <a href="mailto:support@plotzy.app">support@plotzy.app</a>.
+                    We reserve the right to remove any content from the Community Library or Marketplace that violates these Terms, without notice or liability. If you believe content posted by another user violates your rights or these Terms, please report it to <a href="mailto:support@plotzy.co">support@plotzy.co</a>.
                   </P>
                   <H2>User Interactions</H2>
                   <P>
@@ -317,7 +317,7 @@ export default function TermsOfService() {
                   </P>
                   <H2>Reporting Infringement</H2>
                   <P>
-                    If you believe that content on Plotzy infringes your copyright, please send a written notice ("DMCA Takedown Notice") to our designated agent at <a href="mailto:legal@plotzy.app">legal@plotzy.app</a> containing:
+                    If you believe that content on Plotzy infringes your copyright, please send a written notice ("DMCA Takedown Notice") to our designated agent at <a href="mailto:legal@plotzy.co">legal@plotzy.co</a> containing:
                   </P>
                   <ul>
                     <li>Your name, address, and contact information</li>
@@ -388,7 +388,7 @@ export default function TermsOfService() {
                   </P>
                   <H2>Informal Resolution</H2>
                   <P>
-                    Before filing any formal legal claim, you agree to attempt to resolve the dispute informally by contacting us at <a href="mailto:legal@plotzy.app">legal@plotzy.app</a>. We will try to resolve the dispute informally within 30 days.
+                    Before filing any formal legal claim, you agree to attempt to resolve the dispute informally by contacting us at <a href="mailto:legal@plotzy.co">legal@plotzy.co</a>. We will try to resolve the dispute informally within 30 days.
                   </P>
                   <H2>Binding Arbitration</H2>
                   <P>
@@ -418,10 +418,10 @@ export default function TermsOfService() {
                   <P>If you have any questions, concerns, or requests regarding these Terms, please reach out to us:</P>
                   <div style={{ borderRadius: 12, padding: "24px", marginTop: 8, background: "var(--muted)", display: "flex", flexDirection: "column", gap: 8 }}>
                     <p style={{ margin: 0, fontWeight: 700, fontSize: 16 }}>Plotzy</p>
-                    <Row label="General inquiries" value="support@plotzy.app" href="mailto:support@plotzy.app" />
-                    <Row label="Legal & DMCA" value="legal@plotzy.app" href="mailto:legal@plotzy.app" />
-                    <Row label="Billing & payments" value="billing@plotzy.app" href="mailto:billing@plotzy.app" />
-                    <Row label="Privacy requests" value="privacy@plotzy.app" href="mailto:privacy@plotzy.app" />
+                    <Row label="General inquiries" value="support@plotzy.co" href="mailto:support@plotzy.co" />
+                    <Row label="Legal & DMCA" value="legal@plotzy.co" href="mailto:legal@plotzy.co" />
+                    <Row label="Billing & payments" value="billing@plotzy.co" href="mailto:billing@plotzy.co" />
+                    <Row label="Privacy requests" value="privacy@plotzy.co" href="mailto:privacy@plotzy.co" />
                   </div>
                   <P style={{ fontSize: 13, marginTop: 24 }}>
                     Also see: <Link href="/privacy" style={{ color: "var(--muted-foreground)", textDecoration: "underline" }}>Privacy Policy</Link>
