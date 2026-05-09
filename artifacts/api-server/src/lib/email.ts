@@ -199,6 +199,91 @@ export async function sendSuspensionEmail(toEmail: string, reason?: string | nul
 }
 
 /**
+ * "Confirm your new email address" — sent to the NEW address when
+ * a logged-in user requests an email change. Contains the
+ * verification link that, once clicked, atomically swaps the
+ * users.email column to the new value.
+ */
+export async function sendEmailChangeVerifyEmail(
+  toNewEmail: string,
+  rawToken: string,
+): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const subject = "Confirm your new Plotzy email";
+  const verifyUrl = `${frontendUrl}/?verify-email-change=${encodeURIComponent(rawToken)}`;
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Confirm your new email</h2>
+      <p style="color: #555; line-height: 1.6;">A request was made from your Plotzy account to change the sign-in email to this address. Click below to confirm and switch over:</p>
+      <a href="${escapeHtml(verifyUrl)}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Confirm new email</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">This link expires in 24 hours. If you did not request this change, you can safely ignore this email — nothing changes until you click the link.</p>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 12px;">Questions? <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a></p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toNewEmail, subject, html);
+}
+
+/**
+ * "Email change requested" — sent to the OLD address as soon as the
+ * change is initiated, before the new address has confirmed. Gives
+ * the legitimate owner a one-click cancel path so an attacker who
+ * compromises the new-email side cannot silently move the account
+ * away from them.
+ */
+export async function sendEmailChangeRequestedEmail(
+  toOldEmail: string,
+  newEmail: string,
+  rawToken: string,
+): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const subject = "Email change requested for your Plotzy account";
+  const cancelUrl = `${frontendUrl}/?cancel-email-change=${encodeURIComponent(rawToken)}`;
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Email change requested</h2>
+      <p style="color: #555; line-height: 1.6;">Someone (hopefully you) requested to change the email on your Plotzy account from this address to:</p>
+      <div style="margin: 14px 0; padding: 12px 14px; background: #f7f7f7; border-radius: 8px; font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 14px; color: #111;">
+        ${escapeHtml(newEmail)}
+      </div>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;">The change is <strong>not yet active</strong> — it will only take effect once the new address confirms.</p>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>If this wasn't you</strong>, cancel the request immediately:</p>
+      <a href="${escapeHtml(cancelUrl)}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #b91c1c; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Cancel the request</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">Then change your password right away. Reach support at <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a> if you need help.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toOldEmail, subject, html);
+}
+
+/**
+ * "Your email was changed" — confirmation sent to the NEW address
+ * after the verify token is consumed and users.email is swapped.
+ * Mirrors the password-changed pattern: a positive confirmation so
+ * the user knows the action completed.
+ */
+export async function sendEmailChangedConfirmationEmail(
+  toNewEmail: string,
+): Promise<void> {
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const subject = "Your Plotzy email has been updated";
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Email updated</h2>
+      <p style="color: #555; line-height: 1.6;">This email address is now the sign-in email for your Plotzy account. Use it to sign in from now on.</p>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">Did not expect this? Contact us at <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a>.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toNewEmail, subject, html);
+}
+
+/**
  * "Your password was changed" notification.
  *
  * Sent after BOTH the forgot-password reset flow and the

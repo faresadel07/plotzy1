@@ -8,7 +8,7 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
-import { sendEmail, sendWelcomeEmailIfFirstTime, sendNewLoginEmail, sendPasswordChangedEmail } from "../lib/email";
+import { sendEmail, sendWelcomeEmailIfFirstTime, sendNewLoginEmail, sendPasswordChangedEmail, sendEmailChangeVerifyEmail, sendEmailChangeRequestedEmail, sendEmailChangedConfirmationEmail } from "../lib/email";
 import { checkAndRecordLogin } from "../lib/login-device";
 import { isAdminUser } from "../lib/admin";
 import { hashToken } from "../lib/token-hash";
@@ -16,7 +16,7 @@ import { logAuditEvent } from "../lib/audit-log";
 import { logRouteError } from "../lib/log-route-error";
 import crypto from "crypto";
 import { db } from "../db";
-import { passwordResetTokens, emailVerificationTokens, loginAttempts } from "../../../../lib/db/src/schema";
+import { passwordResetTokens, emailVerificationTokens, emailChangeTokens, loginAttempts } from "../../../../lib/db/src/schema";
 import { eq, and, sql, gt, count } from "drizzle-orm";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 
@@ -147,6 +147,32 @@ router.get("/api/auth/user", async (req, res) => {
       // give it that without exposing the id.
       const { id, email, displayName, avatarUrl, googleId, appleId, passwordHash, subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
       const isAdmin = isAdminUser(dbUser);
+
+      // Surface any pending email-change request so the account
+      // settings page can render a "you have a pending change to
+      // X@Y.com" banner with a re-send / cancel option. Only the
+      // most recent unexpired unconsumed row counts; older ones
+      // are pruned by the next request to PATCH /api/auth/email.
+      let pendingEmailChange: string | null = null;
+      try {
+        const [pending] = await db
+          .select({ newEmail: emailChangeTokens.newEmail })
+          .from(emailChangeTokens)
+          .where(and(
+            eq(emailChangeTokens.userId, id),
+            sql`used_at IS NULL`,
+            sql`expires_at > NOW()`,
+          ))
+          .orderBy(sql`created_at DESC`)
+          .limit(1);
+        pendingEmailChange = pending?.newEmail ?? null;
+      } catch (err) {
+        // Pending-change lookup is informational only. A DB hiccup
+        // here MUST NOT 401 the auth-user request, which is on
+        // every page load. Log + degrade.
+        logger.warn({ err, userId: id }, "Pending-email lookup failed");
+      }
+
       return res.json({
         id, email, displayName, avatarUrl,
         hasGoogle: !!googleId,
@@ -158,6 +184,7 @@ router.get("/api/auth/user", async (req, res) => {
         subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate,
         isAdmin,
         suspended: !!suspended,
+        pendingEmailChange,
       });
     }
     return res.status(401).json({ message: "Not authenticated" });
@@ -1046,6 +1073,203 @@ router.patch("/api/auth/password", sensitiveAuthLimiter, async (req, res) => {
     }
     logger.error({ err, userId }, "Change-password failed");
     return res.status(500).json({ message: "Failed to change password" });
+  }
+});
+
+// ── Change email (logged-in users) ─────────────────────────────────
+//
+// Three-endpoint flow:
+//   PATCH  /api/auth/email          — initiate (validates + emails)
+//   POST   /api/auth/email/verify   — confirm via token from new-email link
+//   POST   /api/auth/email/cancel   — abort via token from old-email link
+//
+// Re-authentication requires the current password (same as
+// account-deletion) so a borrowed session can't silently move the
+// account to an attacker-controlled address. OAuth-only users
+// (no passwordHash) cannot use the flow at all — their email is
+// owned by the upstream provider; the frontend renders an
+// informational notice instead of the form.
+//
+// Race / concurrency notes:
+//   - Re-requests replace the previous pending row (delete-by-userId
+//     before insert) so the user always has at most one pending
+//     change. The token in their email becomes the only valid one.
+//   - The verify path uses an UPDATE ... WHERE used_at IS NULL
+//     RETURNING to single-shot consume the token under concurrent
+//     clicks (same pattern as password reset).
+//   - Email uniqueness is re-checked at verify time too. If someone
+//     else snagged the new address between request and confirm, the
+//     verify step rejects with a clear message.
+
+const EMAIL_CHANGE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+router.patch("/api/auth/email", sensitiveAuthLimiter, async (req, res) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const userId = (req.user as any).id as number;
+  try {
+    const { newEmail, currentPassword } = z
+      .object({
+        newEmail: z.string().email().max(254),
+        currentPassword: z.string().min(1, "Current password is required"),
+      })
+      .strict()
+      .parse(req.body);
+
+    const user = await storage.getUserById(userId);
+    if (!user) return res.status(401).json({ message: "Account not found" });
+    if (!user.passwordHash) {
+      return res.status(400).json({
+        message: "This account uses social sign-in. Update your email through your sign-in provider.",
+      });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Current password is incorrect." });
+    }
+
+    const normalized = newEmail.trim().toLowerCase();
+    if (user.email && normalized === user.email.trim().toLowerCase()) {
+      return res.status(400).json({ message: "New email must be different from your current email." });
+    }
+    const existing = await storage.getUserByEmail(normalized);
+    if (existing && existing.id !== userId) {
+      // Generic message: don't confirm whether an address is registered
+      // or not, to avoid an account-enumeration oracle.
+      return res.status(409).json({ message: "That email cannot be used for this change. Try another." });
+    }
+
+    // Replace any prior pending request for this user — only one
+    // pending change at a time keeps the cancel UX unambiguous.
+    await db.delete(emailChangeTokens).where(eq(emailChangeTokens.userId, userId));
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + EMAIL_CHANGE_TOKEN_TTL_MS);
+    await db.insert(emailChangeTokens).values({
+      userId,
+      token: tokenHash,
+      newEmail: normalized,
+      expiresAt,
+    });
+
+    // Verify-link to the NEW address; cancel-link to the OLD. Both
+    // fire-and-forget so a transient Resend failure doesn't roll
+    // back the pending-change record. Sequencing: send verify
+    // first, THEN cancel notice — if Resend is down only for some
+    // recipients, the user at least sees the verify link in the
+    // most common case.
+    sendEmailChangeVerifyEmail(normalized, rawToken).catch((err) =>
+      logger.warn({ err, userId }, "Failed to send email-change verify email"),
+    );
+    if (user.email) {
+      sendEmailChangeRequestedEmail(user.email, normalized, rawToken).catch((err) =>
+        logger.warn({ err, userId }, "Failed to send email-change requested notification"),
+      );
+    }
+
+    await logAuditEvent({
+      actorId: userId,
+      action: "email_change_requested",
+      targetType: "user",
+      targetId: userId,
+      req,
+      details: { newEmail: normalized },
+    });
+
+    return res.json({ success: true, pendingEmail: normalized });
+  } catch (err: any) {
+    if (err?.name === "ZodError") {
+      const msg = err.issues?.[0]?.message || "Invalid request";
+      return res.status(400).json({ message: msg });
+    }
+    logger.error({ err, userId }, "Email-change request failed");
+    return res.status(500).json({ message: "Failed to start email change" });
+  }
+});
+
+router.post("/api/auth/email/verify", sensitiveAuthLimiter, async (req, res) => {
+  try {
+    const { token } = z.object({ token: z.string().min(1) }).strict().parse(req.body);
+    const tokenHash = hashToken(token);
+
+    // Atomic single-shot consume. Returns the userId + newEmail in
+    // one round trip; returns no rows if the token is missing,
+    // already used, or expired.
+    const [consumed] = await db
+      .update(emailChangeTokens)
+      .set({ usedAt: new Date() })
+      .where(and(
+        eq(emailChangeTokens.token, tokenHash),
+        sql`used_at IS NULL`,
+        sql`expires_at > NOW()`,
+      ))
+      .returning({ userId: emailChangeTokens.userId, newEmail: emailChangeTokens.newEmail });
+
+    if (!consumed) {
+      return res.status(400).json({ message: "This link is invalid, expired, or already used." });
+    }
+
+    // Re-check email uniqueness at verify time. If someone else
+    // grabbed the address in the gap between request and confirm,
+    // refuse the swap rather than creating a 23505 unique-violation
+    // crash deeper in the update.
+    const conflict = await storage.getUserByEmail(consumed.newEmail);
+    if (conflict && conflict.id !== consumed.userId) {
+      return res.status(409).json({ message: "That email is already in use by another account." });
+    }
+
+    await storage.updateUser(consumed.userId, { email: consumed.newEmail });
+
+    await logAuditEvent({
+      actorId: consumed.userId,
+      action: "email_changed",
+      targetType: "user",
+      targetId: consumed.userId,
+      req,
+      details: { newEmail: consumed.newEmail },
+    });
+
+    sendEmailChangedConfirmationEmail(consumed.newEmail).catch((err) =>
+      logger.warn({ err, userId: consumed.userId }, "Failed to send email-changed confirmation"),
+    );
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid request" });
+    logger.error({ err }, "Email-change verify failed");
+    return res.status(500).json({ message: "Failed to verify email change" });
+  }
+});
+
+router.post("/api/auth/email/cancel", sensitiveAuthLimiter, async (req, res) => {
+  try {
+    const { token } = z.object({ token: z.string().min(1) }).strict().parse(req.body);
+    const tokenHash = hashToken(token);
+    // Cancel = delete the token row. Idempotent: a second click
+    // returns the same success shape so the user never sees an
+    // "already cancelled" error from re-clicking the link.
+    const deleted = await db
+      .delete(emailChangeTokens)
+      .where(eq(emailChangeTokens.token, tokenHash))
+      .returning({ userId: emailChangeTokens.userId });
+
+    if (deleted[0]?.userId) {
+      await logAuditEvent({
+        actorId: deleted[0].userId,
+        action: "email_change_cancelled",
+        targetType: "user",
+        targetId: deleted[0].userId,
+        req,
+      });
+    }
+    return res.json({ success: true });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid request" });
+    logger.error({ err }, "Email-change cancel failed");
+    return res.status(500).json({ message: "Failed to cancel email change" });
   }
 });
 

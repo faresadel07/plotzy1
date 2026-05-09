@@ -135,12 +135,225 @@ export default function AccountSubscription() {
             isError={isHistoryError}
           />
 
+          <ChangeEmailSection />
+
           <ChangePasswordSection />
 
           <DangerZoneSection />
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ── Change email (logged-in users only) ───────────────────────────
+//
+// Two-stage flow: user submits new email + current password ->
+// server stores a pending token + sends a verify link to the new
+// address (and a "change requested" notice with cancel link to the
+// old address). users.email only flips when the new address clicks
+// the verify link. This panel:
+//   - shows the current sign-in email,
+//   - if a change is pending, surfaces a banner with the new
+//     address + a "Cancel pending change" button (calls the cancel
+//     endpoint without a token by re-issuing through the user's
+//     own session — wait, the cancel endpoint takes a token, so the
+//     in-app cancel uses a separate endpoint NOT the email link
+//     path; we wire that as POST /api/auth/email with a special
+//     "cancel" intent below — see comments).
+//
+// Actually simpler: the in-app cancel just needs to clear the
+// pending row. The email-link-cancel is for users whose old email
+// account got compromised AND they want to abort from the email
+// itself. For the in-app cancel we call POST /api/auth/email/cancel
+// with the rawToken... which the frontend doesn't have. So instead
+// we expose a small cancel-by-session-only endpoint? No — let's keep
+// the surface minimal: in-app, the user just submits a new request
+// with the SAME current email, which gets rejected. To actually
+// abort in-app without the token, the user can either click cancel
+// link in the old-email notification OR start a new request (which
+// replaces the old token). For v1 the cancel button in this panel
+// will issue a token-less DELETE-by-session that we have not built;
+// instead, the panel labels the action "If you didn't mean this,
+// the link in the notification email cancels it." That keeps the
+// security boundary clean (cancel = proves possession of either
+// the new address OR the old address via the token sent there).
+function ChangeEmailSection() {
+  const { user, refetch } = useAuth();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [newEmail, setNewEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const isPasswordUser = !!user?.hasPassword;
+  const pending = user?.pendingEmailChange ?? null;
+
+  const reset = () => {
+    setNewEmail("");
+    setPassword("");
+    setSubmitting(false);
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ newEmail: newEmail.trim(), currentPassword: password }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast({
+          title: t("changeEmailFailure"),
+          description: data?.message || undefined,
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+      toast({ title: t("changeEmailRequestSent") });
+      reset();
+      // Refetch so the pending banner appears
+      await refetch();
+    } catch {
+      toast({ title: t("changeEmailFailure"), variant: "destructive" });
+      setSubmitting(false);
+    }
+  };
+
+  if (!isPasswordUser) {
+    return (
+      <div
+        className="mt-12 p-6 rounded-2xl"
+        style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+      >
+        <h3 className="text-sm font-bold mb-2" style={{ color: T }}>
+          {t("changeEmailTitle")}
+        </h3>
+        <p className="text-sm mb-2" style={{ color: TS, lineHeight: 1.6 }}>
+          <strong style={{ color: T }}>{t("changeEmailCurrentLabel")}:</strong>{" "}
+          <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{user?.email || "—"}</span>
+        </p>
+        <p className="text-sm" style={{ color: TS, lineHeight: 1.6 }}>
+          {t("changeEmailOauthNotice")}
+        </p>
+      </div>
+    );
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    background: "rgba(255,255,255,0.04)",
+    border: `1px solid ${B}`,
+    color: T,
+    fontSize: 14,
+    outline: "none",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: TS,
+    marginBottom: 6,
+  };
+
+  return (
+    <div
+      className="mt-12 p-6 rounded-2xl"
+      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+    >
+      <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
+        {t("changeEmailTitle")}
+      </h3>
+      <p className="text-xs mb-4" style={{ color: TS, lineHeight: 1.6 }}>
+        {t("changeEmailSubtitle")}
+      </p>
+
+      <p className="text-sm mb-5" style={{ color: TS, lineHeight: 1.6 }}>
+        <strong style={{ color: T }}>{t("changeEmailCurrentLabel")}:</strong>{" "}
+        <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{user?.email || "—"}</span>
+      </p>
+
+      {pending && (
+        <div
+          className="mb-5 p-3 rounded-lg"
+          style={{
+            background: "rgba(245, 158, 11, 0.06)",
+            border: "1px solid rgba(245, 158, 11, 0.25)",
+          }}
+        >
+          <p className="text-xs mb-1" style={{ color: "#f59e0b", fontWeight: 600 }}>
+            {t("changeEmailPendingTitle")}
+          </p>
+          <p className="text-sm" style={{ color: TS, lineHeight: 1.5 }}>
+            {t("changeEmailPendingBody")}{" "}
+            <span style={{ color: T, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{pending}</span>
+          </p>
+          <p className="text-xs mt-2" style={{ color: TD, lineHeight: 1.5 }}>
+            {t("changeEmailPendingCancelHint")}
+          </p>
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} className="space-y-4" style={{ maxWidth: 400 }}>
+        <div>
+          <label htmlFor="ce-new-email" style={labelStyle}>
+            {t("changeEmailNewLabel")}
+          </label>
+          <input
+            id="ce-new-email"
+            type="email"
+            autoComplete="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder={t("changeEmailNewPlaceholder")}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label htmlFor="ce-password" style={labelStyle}>
+            {t("changeEmailPasswordLabel")}
+          </label>
+          <input
+            id="ce-password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t("changeEmailPasswordPlaceholder")}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={submitting || !newEmail || !password}
+          style={{
+            padding: "10px 20px",
+            borderRadius: 10,
+            background: !submitting && newEmail && password ? "#fff" : "rgba(255,255,255,0.06)",
+            color: !submitting && newEmail && password ? "#000" : "rgba(255,255,255,0.3)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: submitting || !newEmail || !password ? "not-allowed" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {t("changeEmailSubmit")}
+        </button>
+      </form>
+    </div>
   );
 }
 

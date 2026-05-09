@@ -700,6 +700,32 @@ export const emailVerificationTokens = pgTable("email_verification_tokens", {
   index("idx_email_verification_tokens_user_id").on(t.userId),
 ]);
 
+// ── Email Change Tokens ──────────────────────────────────────────────────
+//
+// Holds pending email-change requests made by logged-in users. The
+// new email is NOT written to users.email until the user clicks the
+// verification link sent to that new address. Storing the new email
+// alongside the token (rather than passing it through the link as a
+// query param) means the link itself only needs to carry the
+// hashed-on-the-server token; the server is the single source of
+// truth for what address the change targets.
+//
+// `usedAt` follows the same single-shot pattern as
+// password_reset_tokens: an UPDATE ... WHERE used_at IS NULL ...
+// RETURNING is the atomic compare-and-swap so concurrent verify
+// clicks can't double-execute.
+export const emailChangeTokens = pgTable("email_change_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  newEmail: text("new_email").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("idx_email_change_tokens_user_id").on(t.userId),
+]);
+
 // ── Password Reset Tokens ────────────────────────────────────────────────
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {

@@ -102,6 +102,104 @@ function EmailVerifyHandler() {
   );
 }
 
+/**
+ * Handles the email-change-from-account-settings flow:
+ *   - ?verify-email-change=TOKEN  -> POST to /api/auth/email/verify
+ *   - ?cancel-email-change=TOKEN  -> POST to /api/auth/email/cancel
+ *
+ * Both surfaces sit on the homepage URL because the existing
+ * email-verification flow already chose that pattern (single
+ * EmailVerifyHandler reading `?verify=...`); doing the same keeps
+ * the link format consistent across all transactional emails.
+ *
+ * Renders an overlay with success / error feedback. On success,
+ * invalidates the auth-user query so the account-settings page
+ * sees the updated email + cleared pendingEmailChange on next
+ * navigation.
+ */
+function EmailChangeLinkHandler() {
+  const [params] = useState(() => new URLSearchParams(window.location.search));
+  const verifyToken = params.get("verify-email-change");
+  const cancelToken = params.get("cancel-email-change");
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [message, setMessage] = useState<string>("");
+  const isVerify = !!verifyToken;
+  const isCancel = !!cancelToken;
+
+  useEffect(() => {
+    if (!isVerify && !isCancel) return;
+    const path = isVerify ? "/api/auth/email/verify" : "/api/auth/email/cancel";
+    const body = JSON.stringify({ token: verifyToken || cancelToken });
+    fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body,
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (r.ok) {
+          setStatus("success");
+          // Refresh /api/auth/user so the account-settings page
+          // reflects the updated email (or cleared pending state).
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        } else {
+          setStatus("error");
+          setMessage(data?.message || "");
+        }
+      })
+      .catch(() => setStatus("error"));
+  }, [isVerify, isCancel, verifyToken, cancelToken]);
+
+  if (!isVerify && !isCancel) return null;
+
+  const close = () => {
+    window.history.replaceState({}, "", window.location.pathname);
+    window.location.reload();
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.8)", padding: 24 }}>
+      <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 28, width: "100%", maxWidth: 400, textAlign: "center" }}>
+        {status === "loading" && (
+          <p style={{ color: "rgba(255,255,255,0.5)" }}>
+            {isVerify ? "Confirming new email..." : "Cancelling email change..."}
+          </p>
+        )}
+        {status === "success" && (
+          <>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+              {isVerify ? "Email updated" : "Email change cancelled"}
+            </h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>
+              {isVerify
+                ? "Sign in with your new email from now on."
+                : "Your account email is unchanged."}
+            </p>
+            <button onClick={close} style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+              Continue
+            </button>
+          </>
+        )}
+        {status === "error" && (
+          <>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+              {isVerify ? "Verification failed" : "Cancellation failed"}
+            </h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>
+              {message || "This link may have expired. Please try again from your account settings."}
+            </p>
+            <button onClick={close} style={{ padding: "12px 32px", borderRadius: 10, background: "#fff", color: "#000", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+              Go Home
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function LazyFallback() {
   return (
     <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -306,6 +404,7 @@ function App() {
                   <ScrollToTop />
                   <OAuthCallbackHandler />
                   <EmailVerifyHandler />
+                  <EmailChangeLinkHandler />
                   <GoogleOneTap />
                   <Router />
                   <QuickDropNotepad />

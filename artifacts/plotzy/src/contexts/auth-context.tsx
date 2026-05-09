@@ -18,6 +18,12 @@ interface AuthUser {
   // dialog to choose between a password-confirm and a typed-phrase
   // confirmation flow. The hash itself is never exposed to the browser.
   hasPassword?: boolean;
+  // Address the user is currently in the middle of switching to,
+  // populated when an unexpired unconsumed email_change_tokens row
+  // exists for this user. Lets the account settings page render a
+  // "you have a pending change to X@Y.com" banner. Null when no
+  // change is pending.
+  pendingEmailChange?: string | null;
   subscriptionStatus?: string | null;
   subscriptionTier?: string | null;
   subscriptionPlan?: string | null;
