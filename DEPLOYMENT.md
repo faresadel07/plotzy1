@@ -47,7 +47,7 @@ Variables are grouped by which feature they unlock.
 | `PORT` | `8080` | Server cannot bind. Most hosts auto-set this. |
 | `DATABASE_URL` | `postgres://user:pass@host.neon.tech/db?sslmode=require` | Server refuses to start (DB is required) |
 | `SESSION_SECRET` | (random 48+ hex chars, see below) | Server refuses to start in production |
-| `ALLOWED_ORIGINS` | `https://plotzy.com,https://www.plotzy.com` | Server refuses to start in production |
+| `ALLOWED_ORIGINS` | `https://plotzy.co,https://www.plotzy.co` | Server refuses to start in production |
 
 Generate `SESSION_SECRET`:
 ```sh
@@ -91,7 +91,7 @@ errors. The rest of the site is unaffected.
 | Variable | Notes |
 |---|---|
 | `RESEND_API_KEY` | From Resend.com dashboard |
-| `FRONTEND_URL` | `https://plotzy.com` — used in email links |
+| `FRONTEND_URL` | `https://plotzy.co` — used in email links |
 
 Without these, emails silently fail. Auth still works (no email
 verification required).
@@ -106,7 +106,7 @@ verification required).
 | `LOG_LEVEL` | `info` for production. `debug` floods logs and slows the server. |
 | `COOKIE_SAME_SITE` | `lax` (default). Use `none` only if you split frontend + backend onto different hosts. |
 | `TRUST_PROXY` | `1` if behind a reverse proxy. Most hosts (Railway, Render, Fly) need this. |
-| `APP_DOMAIN` | `plotzy.com` — used in OAuth callback URL fallback. |
+| `APP_DOMAIN` | `plotzy.co` — used in OAuth callback URL fallback. |
 
 ### Apple Sign-In (optional, four-piece set)
 
@@ -133,7 +133,7 @@ The app refuses to start if you set some but not all.
    variable from the lists above.
 6. Click **Settings** → **Networking** → **Generate Domain** to get a
    `*.up.railway.app` URL. Test the site there first.
-7. **DNS:** point your `plotzy.com` A/CNAME records at Railway's domain.
+7. **DNS:** point your `plotzy.co` A/CNAME records at Railway's domain.
    Railway issues a free SSL certificate automatically.
 8. Update `ALLOWED_ORIGINS` to include your final domain after DNS is live.
 

@@ -12,7 +12,7 @@ import { absolutizeImage, SITE_URL } from "@/lib/seo-schema";
  * legitimately need the verbatim site title (e.g. landing) can pass
  * `titleOverride` to skip the suffix.
  *
- * Canonical URL is built from `https://plotzy.com${pathname}` with the
+ * Canonical URL is built from `https://plotzy.co${pathname}` with the
  * trailing slash stripped except at the root. Override with `canonical`
  * for special cases (e.g. dropping query strings or fragments).
  *
@@ -60,7 +60,7 @@ export interface SEOProps {
    */
   noindex?: boolean;
   /**
-   * Canonical URL override. Defaults to `https://plotzy.com${pathname}`
+   * Canonical URL override. Defaults to `https://plotzy.co${pathname}`
    * with trailing slash stripped (except `/`).
    */
   canonical?: string;

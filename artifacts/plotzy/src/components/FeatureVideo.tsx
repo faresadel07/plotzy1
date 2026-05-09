@@ -27,7 +27,7 @@ interface FeatureVideoProps {
  * Drop video files into:   client/public/videos/
  * Reference them as:       /videos/<filename>.mp4
  */
-export function FeatureVideo({ src, fallback, label = "plotzy.app", dark = false }: FeatureVideoProps) {
+export function FeatureVideo({ src, fallback, label = "plotzy.co", dark = false }: FeatureVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 

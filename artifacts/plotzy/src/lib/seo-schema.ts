@@ -17,14 +17,14 @@
  */
 
 export const SITE_NAME = "Plotzy";
-export const SITE_URL = "https://plotzy.com";
+export const SITE_URL = "https://plotzy.co";
 const SITE_LOGO = `${SITE_URL}/plotzy-logo.png`;
 const DEFAULT_OG_IMAGE = "/opengraph.jpg";
 const SITE_DESCRIPTION =
   "Plotzy is a complete platform for writers — write, design covers, publish, and produce audiobooks with AI assistance.";
 
 /**
- * Resolve any image URL to an absolute https://plotzy.com URL.
+ * Resolve any image URL to an absolute https://plotzy.co URL.
  *
  * Used by both the <SEO> component (for og:image) and JSON-LD schema
  * builders (for image, logo, sameAs URLs). Schema validators accept
@@ -373,7 +373,7 @@ export interface BreadcrumbItem {
 /**
  * BreadcrumbList JSON-LD for nested public routes.
  *
- * The home item (`Plotzy` → `https://plotzy.com`) is prepended
+ * The home item (`Plotzy` → `https://plotzy.co`) is prepended
  * automatically — Google's BreadcrumbList rich result requires
  * position 1 to be the site root, so building it in keeps every call
  * site honest and avoids forgetting it.

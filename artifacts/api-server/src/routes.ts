@@ -1266,7 +1266,7 @@ export async function registerRoutes(
           language: book.language || "en",
           description: book.summary || "",
           contents: "Table of Contents",
-          source: "https://plotzy.app",
+          source: "https://plotzy.co",
           images: [],
         };
 

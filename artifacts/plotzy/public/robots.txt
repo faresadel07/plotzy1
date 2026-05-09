@@ -16,4 +16,4 @@ Disallow: /learn/quiz/
 Disallow: /learn/final-project
 Disallow: /learn/visuals-preview
 
-Sitemap: https://plotzy.com/sitemap.xml
+Sitemap: https://plotzy.co/sitemap.xml

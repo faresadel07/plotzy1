@@ -127,7 +127,7 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ["ALLOWED_ORIGINS"],
         message:
-          "ALLOWED_ORIGINS must be set in production (comma-separated list of front-end origins, e.g. https://plotzy.com,https://www.plotzy.com)",
+          "ALLOWED_ORIGINS must be set in production (comma-separated list of front-end origins, e.g. https://plotzy.co,https://www.plotzy.co)",
       });
     }
 

@@ -97,7 +97,7 @@ export function MarketplaceMockup() {
           className="flex-1 rounded-md px-2 py-1 text-center"
           style={{ background: "rgba(255,255,255,0.05)", fontSize: "8px", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}
         >
-          plotzy.app/marketplace
+          plotzy.co/marketplace
         </div>
       </div>
 

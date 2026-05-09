@@ -804,7 +804,7 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
         language: book.language || "en",
         description: book.summary || "",
         contents: "Table of Contents",
-        source: "https://plotzy.app",
+        source: "https://plotzy.co",
         images: [],
       };
 
