@@ -140,25 +140,38 @@ function FooterSocialIcons() {
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+type FooterLink =
+  | { label: string; href: string; onClick?: never }
+  | { label: string; onClick: () => void; href?: never };
+
+function FooterCol({ title, links }: { title: string; links: FooterLink[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', margin: '0 0 6px', fontFamily: SF_FONT }}>
         {title}
       </p>
-      {links.map(({ label, href }) =>
-        href.startsWith('/') ? (
-          <Link key={label} href={href} style={FOOTER_LINK_STYLE}
+      {links.map((link) => {
+        if ('onClick' in link && link.onClick) {
+          return (
+            <button key={link.label} type="button" onClick={link.onClick}
+              style={{ ...FOOTER_LINK_STYLE, background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'inherit' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
+            >{link.label}</button>
+          );
+        }
+        return link.href!.startsWith('/') ? (
+          <Link key={link.label} href={link.href!} style={FOOTER_LINK_STYLE}
             onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
             onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
-          >{label}</Link>
+          >{link.label}</Link>
         ) : (
-          <a key={label} href={href} style={FOOTER_LINK_STYLE}
+          <a key={link.label} href={link.href!} style={FOOTER_LINK_STYLE}
             onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
-          >{label}</a>
-        )
-      )}
+          >{link.label}</a>
+        );
+      })}
     </div>
   );
 }
@@ -696,6 +709,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             <FooterCol title="Legal" links={[
               { label: 'Privacy Policy', href: '/privacy' },
               { label: 'Terms of Service', href: '/terms' },
+              { label: 'Cookie Settings', onClick: () => { import('@/components/CookieBanner').then(m => m.openCookieSettings()); } },
             ]} />
 
           </div>

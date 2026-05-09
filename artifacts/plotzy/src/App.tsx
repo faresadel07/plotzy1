@@ -18,6 +18,7 @@ import NotFound from "@/pages/not-found";
 import QuickDropNotepad from "@/components/QuickDropNotepad";
 import MobileBlocker from "@/components/MobileBlocker";
 import GoogleOneTap from "@/components/GoogleOneTap";
+import { CookieBanner } from "@/components/CookieBanner";
 
 /* Eager: landing page (must load instantly) */
 import Home from "@/pages/home";
@@ -309,6 +310,7 @@ function App() {
                   <Router />
                   <QuickDropNotepad />
                   <Toaster />
+                  <CookieBanner />
                   <MobileBlocker />
                 </TooltipProvider>
               </AuthProvider>

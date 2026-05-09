@@ -189,6 +189,25 @@ export const translations: Record<Language, Record<string, string>> = {
     courseHomeFeature3: "Verified completion certificate, shareable on LinkedIn",
     courseHomeFeature4: "Lifetime access, completely free with your account",
     courseHomeCta: "Start the free course",
+
+    // ── Cookie consent banner ─────────────────────────────────
+    // English-only for now; t() resolver falls back to en for the
+    // other 13 SUPPORTED_UI_LANGS.
+    cookieTitle: "We use cookies",
+    cookieBody: "We use essential cookies to keep you signed in and protect against attacks. With your permission we also use analytics cookies to understand how the site is used. Read more in our Privacy Policy.",
+    cookieAcceptAll: "Accept all",
+    cookieRejectAll: "Reject all",
+    cookieCustomize: "Customize",
+    cookieSavePrefs: "Save preferences",
+    cookieEssentialLabel: "Essential",
+    cookieEssentialBody: "Required to sign in, keep you logged in, and protect against cross-site request forgery. These cannot be disabled.",
+    cookieAnalyticsLabel: "Analytics",
+    cookieAnalyticsBody: "Helps us understand which pages are popular and where users drop off, so we can improve the platform. Anonymized device fingerprint only, no personal identifiers.",
+    cookieMarketingLabel: "Marketing",
+    cookieMarketingBody: "Currently unused. Reserved for future advertising or partner-attribution features. We will never enable this without your explicit consent.",
+    cookieAlwaysOn: "Always on",
+    cookiePrivacyLink: "Privacy Policy",
+    footerCookieSettings: "Cookie Settings",
     courseProgressLabel: "complete",
     courseModuleNumber: "Module",
     courseLessonsLabel: "lessons",

@@ -17,7 +17,34 @@ import { logger } from "../lib/logger";
  * admin can count *unique devices* without having to store raw PII keyed on
  * each row's index. The raw IP and UA are kept for debugging / device-type
  * breakdown and are only visible to admins.
+ *
+ * GDPR / consent: a page view is only logged when the visitor's
+ * `plotzy_analytics_consent` cookie is set to "accepted". When the cookie
+ * is absent (first-time visitor before they interact with the banner) or
+ * set to "denied", no insert happens. The cookie is written by the
+ * frontend's CookieBanner component when the user makes a choice.
+ * Default-deny: missing cookie = no logging.
  */
+
+const CONSENT_COOKIE = "plotzy_analytics_consent";
+
+function hasAnalyticsConsent(req: Request): boolean {
+  // req.headers.cookie is a single string like "a=1; b=2; plotzy_analytics_consent=accepted"
+  const raw = req.headers.cookie;
+  if (!raw) return false;
+  // Cheap split rather than pulling in a cookie-parser middleware dep just
+  // for one read. Cookies are name=value; any "=" inside the value would
+  // be encoded, so a single split on "=" is safe.
+  for (const pair of raw.split(";")) {
+    const idx = pair.indexOf("=");
+    if (idx < 0) continue;
+    const name = pair.slice(0, idx).trim();
+    if (name !== CONSENT_COOKIE) continue;
+    const value = pair.slice(idx + 1).trim();
+    return value === "accepted";
+  }
+  return false;
+}
 
 // Paths that should never be tracked. Anything starting with these is an API
 // call, health check, or asset — not a page view.
@@ -80,6 +107,11 @@ export function pageViewTracker(req: Request, res: Response, next: NextFunction)
   // Only log GETs — POST/PUT/PATCH/DELETE aren't page views.
   if (req.method !== "GET") return next();
   if (shouldSkip(req.path)) return next();
+  // GDPR: skip when the visitor has not granted analytics consent.
+  // Default-deny: a missing cookie is treated as "denied" so first-visit
+  // requests never enter the table until the user has interacted with
+  // the banner.
+  if (!hasAnalyticsConsent(req)) return next();
 
   // Capture identity info synchronously; the insert runs after we hand off
   // control so request latency is untouched.
