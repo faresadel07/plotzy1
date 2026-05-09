@@ -261,6 +261,14 @@ export const translations: Record<Language, Record<string, string>> = {
     changeEmailPendingTitle: "PENDING EMAIL CHANGE",
     changeEmailPendingBody: "We are waiting for confirmation from",
     changeEmailPendingCancelHint: "Did not request this? The notification email sent to your current address has a one-click cancel link.",
+
+    // ── Notification preferences ──────────────────────────────
+    notifyPrefsTitle: "Notifications",
+    notifyPrefsSubtitle: "Choose which emails Plotzy sends you.",
+    notifyPrefsEngagementLabel: "Comments and likes on my books",
+    notifyPrefsEngagementHint: "We will email you when someone comments on or likes a book you wrote. Likes are batched to one email per hour at most.",
+    notifyPrefsSavedToast: "Preferences saved.",
+    notifyPrefsFailureToast: "Could not save preferences. Please try again.",
     courseProgressLabel: "complete",
     courseModuleNumber: "Module",
     courseLessonsLabel: "lessons",

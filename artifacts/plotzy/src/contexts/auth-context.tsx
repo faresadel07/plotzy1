@@ -24,6 +24,12 @@ interface AuthUser {
   // "you have a pending change to X@Y.com" banner. Null when no
   // change is pending.
   pendingEmailChange?: string | null;
+  // True when the user wants emails about engagement on their books
+  // (comments and likes). Default true; toggleable from the
+  // notification-preferences panel in account settings. Drives the
+  // suppression check inside lib/engagement-notifications.ts on
+  // the api-server.
+  emailEngagementNotifications?: boolean;
   subscriptionStatus?: string | null;
   subscriptionTier?: string | null;
   subscriptionPlan?: string | null;

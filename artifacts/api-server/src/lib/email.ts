@@ -199,6 +199,116 @@ export async function sendSuspensionEmail(toEmail: string, reason?: string | nul
 }
 
 /**
+ * Comment-on-book notification — sent to the book author when
+ * someone (anonymous or signed-in) leaves a comment on their book.
+ * Excerpts the comment to ~150 chars so a long comment doesn't
+ * blow up the email body.
+ *
+ * Suppression (handled by the caller, not here):
+ *   - skip if author === commenter
+ *   - skip if author has email_engagement_notifications=false
+ */
+export async function sendCommentNotificationEmail(
+  toAuthorEmail: string,
+  args: {
+    /** Display name of the commenter (or "Anonymous" for unauth). */
+    commenterName: string;
+    /** Title of the book that was commented on. */
+    bookTitle: string;
+    /** Full comment body — function trims to a 150-char excerpt. */
+    commentBody: string;
+    /** Numeric book id for the deep link. */
+    bookId: number;
+    /** Author profile URL fragment (e.g., "/authors/42") if the
+     *  commenter is signed-in. Pass null for anonymous so we omit
+     *  the profile link from the email. */
+    commenterProfilePath: string | null;
+  },
+): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const trimmed = args.commentBody.trim();
+  const excerpt = trimmed.length > 150 ? `${trimmed.slice(0, 147)}…` : trimmed;
+  const subject = `${args.commenterName} commented on ${args.bookTitle}`;
+  const commenterLine = args.commenterProfilePath
+    ? `<a href="${escapeHtml(frontendUrl)}${escapeHtml(args.commenterProfilePath)}" style="color: #111; font-weight: 600;">${escapeHtml(args.commenterName)}</a>`
+    : `<span style="color: #111; font-weight: 600;">${escapeHtml(args.commenterName)}</span>`;
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">New comment on your book</h2>
+      <p style="color: #555; line-height: 1.6;">
+        ${commenterLine} just commented on <strong>${escapeHtml(args.bookTitle)}</strong>:
+      </p>
+      <blockquote style="margin: 14px 0; padding: 14px 16px; background: #f7f7f7; border-left: 3px solid #111; border-radius: 6px; color: #333; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(excerpt)}</blockquote>
+      <a href="${escapeHtml(frontendUrl)}/read/${args.bookId}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">View on Plotzy</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">
+        Don't want these emails? Turn engagement notifications off in
+        <a href="${escapeHtml(frontendUrl)}/account/subscription" style="color: #111;">your account settings</a>.
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toAuthorEmail, subject, html);
+}
+
+/**
+ * Like-on-book notification — sent to the book author when one or
+ * more people have liked their book. The caller's 1-hour debounce
+ * passes a per-batch count: 1 means "X liked your book", greater
+ * than 1 means "X and N-1 others liked your book in the past hour".
+ *
+ * Suppression (handled by the caller):
+ *   - skip if author === liker
+ *   - skip if author has email_engagement_notifications=false
+ *   - skip if the previous like email for this book was within the
+ *     last hour (debounce; the next email's batchCount will include
+ *     the silenced interim likes)
+ */
+export async function sendLikeNotificationEmail(
+  toAuthorEmail: string,
+  args: {
+    /** Display name of the most recent liker. */
+    likerName: string;
+    /** Title of the liked book. */
+    bookTitle: string;
+    /** Numeric book id for the deep link. */
+    bookId: number;
+    /** Most-recent liker's profile URL fragment (e.g. "/authors/42")
+     *  if signed-in; null for anonymous. */
+    likerProfilePath: string | null;
+    /** Total likes received during this debounce window (>= 1).
+     *  1 means "Alice liked your book"; 5 means "Alice and 4 others
+     *  liked your book in the past hour". */
+    batchCount: number;
+  },
+): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const subject = args.batchCount > 1
+    ? `${args.likerName} and ${args.batchCount - 1} others liked ${args.bookTitle}`
+    : `${args.likerName} liked ${args.bookTitle}`;
+  const likerLine = args.likerProfilePath
+    ? `<a href="${escapeHtml(frontendUrl)}${escapeHtml(args.likerProfilePath)}" style="color: #111; font-weight: 600;">${escapeHtml(args.likerName)}</a>`
+    : `<span style="color: #111; font-weight: 600;">${escapeHtml(args.likerName)}</span>`;
+  const headerLine = args.batchCount > 1
+    ? `<p style="color: #555; line-height: 1.6;">${likerLine} and <strong>${args.batchCount - 1} others</strong> liked your book <strong>${escapeHtml(args.bookTitle)}</strong> in the past hour.</p>`
+    : `<p style="color: #555; line-height: 1.6;">${likerLine} just liked your book <strong>${escapeHtml(args.bookTitle)}</strong>.</p>`;
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">${args.batchCount > 1 ? "New likes on your book" : "Someone liked your book"}</h2>
+      ${headerLine}
+      <a href="${escapeHtml(frontendUrl)}/read/${args.bookId}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">View on Plotzy</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">
+        Don't want these emails? Turn engagement notifications off in
+        <a href="${escapeHtml(frontendUrl)}/account/subscription" style="color: #111;">your account settings</a>.
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toAuthorEmail, subject, html);
+}
+
+/**
  * "Your Plotzy subscription expires in 3 days" — sent by the daily
  * cron when a user's subscription_end_date is exactly 3 days out.
  *

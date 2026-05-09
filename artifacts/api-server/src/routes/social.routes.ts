@@ -6,6 +6,7 @@ import { logger } from "../lib/logger";
 import { logAuditEvent } from "../lib/audit-log";
 import { exportUserData } from "../lib/data-export";
 import { sendNotificationEmail } from "../lib/email";
+import { notifyAuthorOfLike } from "../lib/engagement-notifications";
 import { logRouteError } from "../lib/log-route-error";
 import { requireEmailVerified } from "../middleware/auth";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
@@ -325,6 +326,18 @@ router.post("/api/books/:bookId/like", requireEmailVerified, async (req, res) =>
     if (isNaN(bookId)) return res.status(400).json({ message: "Invalid book ID" });
     await storage.likeBook(req.user.id, bookId);
     const likesCount = await storage.getBookLikesCount(bookId);
+
+    // Fire-and-forget like-notification email to the book author.
+    // notifyAuthorOfLike enforces the three suppression rules
+    // (self-action / pref / no-email) plus the 1-hour debounce
+    // anchored on books.last_like_email_sent_at; see lib/
+    // engagement-notifications.ts.
+    notifyAuthorOfLike({
+      bookId,
+      likerUserId: req.user.id,
+      likerName: (req.user as any)?.displayName || "Someone",
+    });
+
     return res.json({ liked: true, likesCount });
   } catch (err) {
     logRouteError(req, err, "social.routes");

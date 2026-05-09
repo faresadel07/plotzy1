@@ -64,6 +64,13 @@ export const users = pgTable("users", {
   // mismatch makes them eligible for a fresh reminder against the new
   // expiry. See lib/expiry-reminder-cron.ts.
   expiryReminderSentForEndDate: timestamp("expiry_reminder_sent_for_end_date"),
+  // User preference: receive emails for comments and likes on books
+  // they authored. Default true so users get notified of engagement
+  // out of the box; toggleable from /account/subscription. Both the
+  // comment-notification and like-notification senders read this
+  // value before firing. See lib/email.ts and the comment / like
+  // route handlers in social.routes.ts and routes.ts.
+  emailEngagementNotifications: boolean("email_engagement_notifications").default(true).notNull(),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   suspended: boolean("suspended").default(false),
@@ -173,6 +180,15 @@ export const books = pgTable("books", {
   viewCount: integer("view_count").default(0).notNull(),
   // Featured by admin in community library
   featured: boolean("featured").default(false),
+  // Idempotency / debounce anchor for the like-notification email.
+  // Set when an author is emailed about a like; subsequent likes
+  // within the next hour are silenced (no email per like). The
+  // first like after the 1h window opens fires another email and
+  // includes a count of likes received during the silenced
+  // interval, giving a "5 people liked your book" digest feel
+  // without needing a separate cron. Null means "no like email
+  // has ever been sent for this book".
+  lastLikeEmailSentAt: timestamp("last_like_email_sent_at"),
 }, (t) => [
   index("idx_books_user_id").on(t.userId),
   index("idx_books_is_published").on(t.isPublished),

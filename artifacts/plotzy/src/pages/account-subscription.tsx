@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 // Theme tokens — mirror /checkout for visual consistency.
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
@@ -136,6 +137,8 @@ export default function AccountSubscription() {
           />
 
           <ChangeEmailSection />
+
+          <NotificationPrefsSection />
 
           <ChangePasswordSection />
 
@@ -353,6 +356,94 @@ function ChangeEmailSection() {
           {t("changeEmailSubmit")}
         </button>
       </form>
+    </div>
+  );
+}
+
+// ── Notification preferences (logged-in users only) ───────────────
+//
+// Single toggle that controls whether engagement emails (comments
+// and likes on the user's books) are sent to them. Backed by
+// users.email_engagement_notifications. The toggle reads from
+// `useAuth()` so it always reflects server truth after refetch.
+//
+// We optimistically flip the local switch state while the PATCH is
+// in flight so the UI feels instant; on failure we revert and toast.
+function NotificationPrefsSection() {
+  const { user, refetch } = useAuth();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  // `?? true` matches the server's coercion (legacy NULL rows are
+  // treated as opted-in); the column is .notNull() going forward but
+  // a brand-new auth fetch may briefly resolve to undefined before
+  // the field is populated.
+  const serverValue = user?.emailEngagementNotifications ?? true;
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const checked = optimistic ?? serverValue;
+
+  const onChange = async (next: boolean) => {
+    setOptimistic(next);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/notification-prefs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ emailEngagementNotifications: next }),
+      });
+      if (!res.ok) {
+        toast({ title: t("notifyPrefsFailureToast"), variant: "destructive" });
+        setOptimistic(null);
+        setSubmitting(false);
+        return;
+      }
+      toast({ title: t("notifyPrefsSavedToast") });
+      await refetch();
+      setOptimistic(null);
+      setSubmitting(false);
+    } catch {
+      toast({ title: t("notifyPrefsFailureToast"), variant: "destructive" });
+      setOptimistic(null);
+      setSubmitting(false);
+    }
+  };
+
+  // OAuth-only and password users alike receive engagement emails,
+  // so we render the toggle for everyone signed in.
+  if (!user) return null;
+
+  return (
+    <div
+      className="mt-12 p-6 rounded-2xl"
+      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+    >
+      <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
+        {t("notifyPrefsTitle")}
+      </h3>
+      <p className="text-xs mb-5" style={{ color: TS, lineHeight: 1.6 }}>
+        {t("notifyPrefsSubtitle")}
+      </p>
+
+      <div
+        className="flex items-start justify-between gap-6"
+        style={{ maxWidth: 560 }}
+      >
+        <div style={{ flex: 1 }}>
+          <p className="text-sm font-medium" style={{ color: T }}>
+            {t("notifyPrefsEngagementLabel")}
+          </p>
+          <p className="text-xs mt-1" style={{ color: TS, lineHeight: 1.5 }}>
+            {t("notifyPrefsEngagementHint")}
+          </p>
+        </div>
+        <Switch
+          checked={checked}
+          disabled={submitting}
+          onCheckedChange={onChange}
+          aria-label={t("notifyPrefsEngagementLabel")}
+        />
+      </div>
     </div>
   );
 }

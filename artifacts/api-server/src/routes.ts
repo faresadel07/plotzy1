@@ -3,6 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "../../../lib/shared/src/routes";
 import { checkAndUnlockAchievements } from "./achievements-engine";
+import { notifyAuthorOfComment } from "./lib/engagement-notifications";
 import { z } from "zod";
 import OpenAI, { toFile } from "openai";
 import express from "express";
@@ -565,6 +566,20 @@ export async function registerRoutes(
         ? ((req.user as any)?.displayName || "Anonymous")
         : (typeof authorName === "string" ? authorName.trim().slice(0, 80) : "") || "Anonymous";
       const comment = await storage.addBookComment({ bookId, userId, authorName: safeAuthor, content: safeContent });
+
+      // Fire-and-forget comment-notification email to the book
+      // author. Suppression (self-action / pref / no-email) is
+      // enforced inside notifyAuthorOfComment in
+      // lib/engagement-notifications.ts. Anonymous commenters
+      // pass commenterUserId=null so the helper omits the
+      // commenter-profile link from the email.
+      notifyAuthorOfComment({
+        bookId,
+        commenterUserId: userId,
+        commenterName: safeAuthor,
+        commentBody: safeContent,
+      });
+
       return res.status(201).json(comment);
     } catch (err) {
       logger.error({ err }, "Failed to post comment");

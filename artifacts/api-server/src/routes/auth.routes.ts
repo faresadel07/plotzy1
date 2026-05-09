@@ -145,7 +145,7 @@ router.get("/api/auth/user", async (req, res) => {
       // attacks against those providers (or correlating across sites). The
       // UI only needs to know "is a provider connected?" — boolean flags
       // give it that without exposing the id.
-      const { id, email, displayName, avatarUrl, googleId, appleId, passwordHash, subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
+      const { id, email, displayName, avatarUrl, googleId, appleId, passwordHash, subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate, suspended, emailEngagementNotifications } = dbUser as any;
       const isAdmin = isAdminUser(dbUser);
 
       // Surface any pending email-change request so the account
@@ -185,6 +185,12 @@ router.get("/api/auth/user", async (req, res) => {
         isAdmin,
         suspended: !!suspended,
         pendingEmailChange,
+        // Drives the toggle in the engagement-notifications panel of
+        // the account settings page. Default true at the schema layer
+        // so a missing column would fall back gracefully; we coerce
+        // here too because legacy users may have null until the
+        // column default backfills.
+        emailEngagementNotifications: emailEngagementNotifications !== false,
       });
     }
     return res.status(401).json({ message: "Not authenticated" });
@@ -1073,6 +1079,34 @@ router.patch("/api/auth/password", sensitiveAuthLimiter, async (req, res) => {
     }
     logger.error({ err, userId }, "Change-password failed");
     return res.status(500).json({ message: "Failed to change password" });
+  }
+});
+
+// ── Notification preferences ──────────────────────────────────────
+// Single endpoint surface for the user-facing notification toggles.
+// Currently only emailEngagementNotifications (covers the
+// comment-on-book and like-on-book emails). New booleans get added
+// here as the catalogue grows; one endpoint keeps the frontend
+// UX simple ("save preferences" instead of one PATCH per toggle).
+router.patch("/api/auth/notification-prefs", async (req, res) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const userId = (req.user as any).id as number;
+  try {
+    const { emailEngagementNotifications } = z
+      .object({
+        emailEngagementNotifications: z.boolean(),
+      })
+      .strict()
+      .parse(req.body);
+
+    await storage.updateUser(userId, { emailEngagementNotifications } as any);
+    return res.json({ success: true, emailEngagementNotifications });
+  } catch (err: any) {
+    if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid request" });
+    logger.error({ err, userId }, "notification-prefs update failed");
+    return res.status(500).json({ message: "Failed to update preferences" });
   }
 });
 
