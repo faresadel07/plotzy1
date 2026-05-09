@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
@@ -12,7 +12,13 @@ import { AnimatedFolder } from "@/components/ui/3d-folder";
 import { CardStack } from "@/components/ui/card-stack";
 import { BookCarousel } from "@/components/BookCarousel";
 import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
-import { BookViewerOverlay } from "@/components/BookViewerOverlay";
+// Lazy: BookViewerOverlay pulls in three.js + react-three (~880 kB
+// of vendor code). The landing page mounts it eagerly only when the
+// user actually clicks a book on the shelf, so we defer the import
+// until that moment to keep the initial paint lean.
+const BookViewerOverlay = lazy(() =>
+  import("@/components/BookViewerOverlay").then((m) => ({ default: m.BookViewerOverlay })),
+);
 import { useBooks, useCreateBook, useGenerateCover, useTrashBook, useDuplicateBook, useUpdateBook } from "@/hooks/use-books";
 import { SeriesSection } from "@/components/SeriesSection";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
@@ -533,7 +539,11 @@ export default function Home() {
         }}
       />
 
-      <BookViewerOverlay isOpen={!!selectedShelfBook} onClose={() => setSelectedShelfBook(null)} bookData={selectedShelfBook} />
+      {selectedShelfBook && (
+        <Suspense fallback={null}>
+          <BookViewerOverlay isOpen={!!selectedShelfBook} onClose={() => setSelectedShelfBook(null)} bookData={selectedShelfBook} />
+        </Suspense>
+      )}
 
       <ConfirmModal
         isOpen={confirmTrashId !== null}
