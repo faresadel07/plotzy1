@@ -199,6 +199,39 @@ export async function sendSuspensionEmail(toEmail: string, reason?: string | nul
 }
 
 /**
+ * "Your password was changed" notification.
+ *
+ * Sent after BOTH the forgot-password reset flow and the
+ * logged-in change-password flow finish updating the hash. Single
+ * helper so both call sites stay in sync (subject, body, support
+ * link, footer). The body adapts a single sentence to the source
+ * so the user can tell which flow ran.
+ */
+export async function sendPasswordChangedEmail(
+  toEmail: string,
+  source: "reset" | "logged-in-change",
+): Promise<void> {
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const subject = "Your Plotzy password was changed";
+  const sourceLine = source === "reset"
+    ? "Your Plotzy account password was just reset successfully via the forgot-password flow."
+    : "Your Plotzy account password was just changed successfully from your account settings.";
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Your password was changed</h2>
+      <p style="color: #555; line-height: 1.6;">${sourceLine} If this was you, no action is needed.</p>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>If you didn't do this</strong>, your account may be compromised. Reset your password immediately and contact us:</p>
+      <a href="${escapeHtml(frontendUrl)}/forgot-password" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Reset password</a>
+      <p style="color: #555; font-size: 13px; margin-top: 12px;">Or email <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a> for urgent help.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toEmail, subject, html);
+}
+
+/**
  * "New login from an unrecognised device" notification.
  *
  * Sent by the /api/auth/login handler when a successful login lands

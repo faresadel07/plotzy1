@@ -8,7 +8,7 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
-import { sendEmail, sendWelcomeEmailIfFirstTime, sendNewLoginEmail } from "../lib/email";
+import { sendEmail, sendWelcomeEmailIfFirstTime, sendNewLoginEmail, sendPasswordChangedEmail } from "../lib/email";
 import { checkAndRecordLogin } from "../lib/login-device";
 import { isAdminUser } from "../lib/admin";
 import { hashToken } from "../lib/token-hash";
@@ -930,28 +930,7 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
     try {
       const user = await storage.getUserById(consumed.userId);
       if (user?.email) {
-        const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
-          ? `https://${process.env.APP_DOMAIN || "localhost"}`
-          : "http://localhost:5173");
-        // Configurable so prod can use a proper support@plotzy domain
-        // address when it exists; dev/staging falls back to the founder's
-        // personal email until then. Single env var change, no redeploy.
-        const supportEmail = process.env.SUPPORT_EMAIL || "faresadel@gmail.com";
-        await sendEmail(
-          user.email,
-          "Your Plotzy password was changed",
-          `
-            <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-              <h2 style="color: #111; margin-bottom: 16px;">Your password was changed</h2>
-              <p style="color: #555; line-height: 1.6;">Your Plotzy account password was just changed successfully. If this was you, no action is needed.</p>
-              <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>If you didn't do this</strong>, your account may be compromised. Reset your password again immediately and contact us:</p>
-              <a href="${frontendUrl}/forgot-password" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Reset password again</a>
-              <p style="color: #555; font-size: 13px; margin-top: 12px;">Or email <a href="mailto:${supportEmail}" style="color: #111;">${supportEmail}</a> for urgent help.</p>
-              <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
-              <p style="color: #bbb; font-size: 11px;">Plotzy — The modern platform for writers</p>
-            </div>
-          `,
-        );
+        await sendPasswordChangedEmail(user.email, "reset");
         logger.info({ userId: user.id }, "Password-changed notification sent");
       }
     } catch (emailErr) {
@@ -965,6 +944,108 @@ router.post("/api/auth/reset-password", sensitiveAuthLimiter, async (req, res) =
     if (err?.name === "ZodError") return res.status(400).json({ message: "Password must be at least 8 characters" });
     logger.error({ err }, "Reset password error");
     return res.status(500).json({ message: "Internal error" });
+  }
+});
+
+// ── Change password while logged in ───────────────────────────────
+//
+// Distinct from the forgot-password / reset-password flow: this is for
+// users who already know their current password and want to rotate it
+// from account settings. Re-authentication via the current password
+// is required so a borrowed session can't silently change the
+// credentials and lock the legitimate owner out.
+//
+// OAuth-only users (no passwordHash on file) can't use this endpoint;
+// the frontend gates the form on user.hasPassword and shows a
+// "manage your password through Google" message instead. The backend
+// also checks server-side as defence-in-depth.
+//
+// Side effects after a successful update:
+//   - Bcrypt the new password at cost 12 (matches register +
+//     reset-password).
+//   - Audit log entry via logAuditEvent.
+//   - Fire the same "Your password was changed" email used by the
+//     reset-password flow (single helper, both endpoints stay in
+//     sync).
+//   - Regenerate the session ID (defence against session-fixation in
+//     case the new password leaked the old session token in some
+//     way). Other devices' sessions stay valid until natural expiry;
+//     a "log out of all other sessions" feature is a deliberate
+//     follow-up batch (would need user_sessions table introspection
+//     since that table is managed by connect-pg-simple, not drizzle).
+router.patch("/api/auth/password", sensitiveAuthLimiter, async (req, res) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  const userId = (req.user as any).id as number;
+  try {
+    const { currentPassword, newPassword } = z
+      .object({
+        currentPassword: z.string().min(1, "Current password is required"),
+        newPassword: z.string().min(8, "New password must be at least 8 characters"),
+      })
+      .strict()
+      .parse(req.body);
+
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "Account not found" });
+    }
+    if (!user.passwordHash) {
+      return res.status(400).json({
+        message: "This account uses social sign-in. Manage your password through your sign-in provider.",
+      });
+    }
+
+    const currentValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!currentValid) {
+      return res.status(401).json({ message: "Current password is incorrect." });
+    }
+
+    // Reject same-as-current password. Cheap UX guard against the
+    // "I just clicked save without changing anything" footgun, and
+    // discourages no-op rotations that give a false sense of
+    // security action being taken.
+    const sameAsCurrent = await bcrypt.compare(newPassword, user.passwordHash);
+    if (sameAsCurrent) {
+      return res.status(400).json({ message: "New password must be different from your current password." });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await storage.updateUser(userId, { passwordHash });
+    await logAuditEvent({
+      actorId: userId,
+      action: "password_changed_logged_in",
+      targetType: "user",
+      targetId: userId,
+      req,
+    });
+
+    // Session-fixation defence: rotate the session id. Doesn't kill
+    // other devices' sessions but invalidates any stale token tied
+    // to the pre-rotation password.
+    await new Promise<void>((resolve, reject) =>
+      req.session.regenerate((err) => (err ? reject(err) : resolve())),
+    );
+    await new Promise<void>((resolve, reject) =>
+      req.login(user, (err) => (err ? reject(err) : resolve())),
+    );
+
+    // Best-effort email — never block success on Resend latency.
+    if (user.email) {
+      sendPasswordChangedEmail(user.email, "logged-in-change").catch((err) =>
+        logger.warn({ err, userId }, "Failed to send password-changed email"),
+      );
+    }
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    if (err?.name === "ZodError") {
+      const msg = err.issues?.[0]?.message || "Invalid request body";
+      return res.status(400).json({ message: msg });
+    }
+    logger.error({ err, userId }, "Change-password failed");
+    return res.status(500).json({ message: "Failed to change password" });
   }
 });
 

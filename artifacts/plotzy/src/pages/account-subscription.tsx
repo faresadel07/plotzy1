@@ -135,10 +135,206 @@ export default function AccountSubscription() {
             isError={isHistoryError}
           />
 
+          <ChangePasswordSection />
+
           <DangerZoneSection />
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ── Change password (logged-in users only) ────────────────────────
+//
+// Inline form in the account settings page. Distinct from the
+// forgot-password reset flow (which requires an email reset token):
+// this is for users who already know their current password and
+// want to rotate it.
+//
+// OAuth-only users (no passwordHash on file) see an informational
+// notice instead — managing the password is the OAuth provider's
+// job.
+function ChangePasswordSection() {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const isPasswordUser = !!user?.hasPassword;
+
+  const reset = () => {
+    setCurrent("");
+    setNext("");
+    setConfirm("");
+    setSubmitting(false);
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 8) {
+      toast({ title: t("changePasswordValidationLength"), variant: "destructive" });
+      return;
+    }
+    if (next !== confirm) {
+      toast({ title: t("changePasswordValidationMismatch"), variant: "destructive" });
+      return;
+    }
+    if (next === current) {
+      toast({ title: t("changePasswordValidationSame"), variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ currentPassword: current, newPassword: next }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast({
+          title: t("changePasswordFailure"),
+          description: data?.message || undefined,
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+      toast({ title: t("changePasswordSuccess") });
+      reset();
+    } catch {
+      toast({ title: t("changePasswordFailure"), variant: "destructive" });
+      setSubmitting(false);
+    }
+  };
+
+  if (!isPasswordUser) {
+    return (
+      <div
+        className="mt-12 p-6 rounded-2xl"
+        style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+      >
+        <h3 className="text-sm font-bold mb-2" style={{ color: T }}>
+          {t("changePasswordTitle")}
+        </h3>
+        <p className="text-sm" style={{ color: TS, lineHeight: 1.6 }}>
+          {t("changePasswordOauthNotice")}
+        </p>
+      </div>
+    );
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    background: "rgba(255,255,255,0.04)",
+    border: `1px solid ${B}`,
+    color: T,
+    fontSize: 14,
+    outline: "none",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: TS,
+    marginBottom: 6,
+  };
+
+  return (
+    <div
+      className="mt-12 p-6 rounded-2xl"
+      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+    >
+      <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
+        {t("changePasswordTitle")}
+      </h3>
+      <p className="text-xs mb-5" style={{ color: TS, lineHeight: 1.6 }}>
+        {t("changePasswordSubtitle")}
+      </p>
+      <form onSubmit={onSubmit} className="space-y-4" style={{ maxWidth: 400 }}>
+        <div>
+          <label htmlFor="cp-current" style={labelStyle}>
+            {t("changePasswordCurrentLabel")}
+          </label>
+          <input
+            id="cp-current"
+            type="password"
+            autoComplete="current-password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            placeholder={t("changePasswordCurrentPlaceholder")}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label htmlFor="cp-new" style={labelStyle}>
+            {t("changePasswordNewLabel")}
+          </label>
+          <input
+            id="cp-new"
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            placeholder={t("changePasswordNewPlaceholder")}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label htmlFor="cp-confirm" style={labelStyle}>
+            {t("changePasswordConfirmLabel")}
+          </label>
+          <input
+            id="cp-confirm"
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder={t("changePasswordConfirmPlaceholder")}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={submitting || !current || next.length < 8 || next !== confirm}
+          style={{
+            padding: "10px 20px",
+            borderRadius: 10,
+            background:
+              !submitting && current && next.length >= 8 && next === confirm
+                ? "#fff"
+                : "rgba(255,255,255,0.06)",
+            color:
+              !submitting && current && next.length >= 8 && next === confirm
+                ? "#000"
+                : "rgba(255,255,255,0.3)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: submitting || !current || next.length < 8 || next !== confirm
+              ? "not-allowed"
+              : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {t("changePasswordSubmit")}
+        </button>
+      </form>
+    </div>
   );
 }
 
