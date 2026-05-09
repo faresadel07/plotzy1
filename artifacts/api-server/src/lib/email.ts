@@ -167,27 +167,54 @@ export async function sendNotificationEmail(to: string, title: string, body: str
  * transient email failure cannot roll back the actual suspension.
  *
  * NO USER-SUPPLIED CONTENT IS INTERPOLATED INTO THE TEMPLATE TODAY.
- * If a `reason` field is added in the future (see discovered-issues.md
- * follow-up), it MUST flow through escapeHtml() before being dropped
- * into the body — otherwise an admin who can suspend users could craft
- * an HTML-injection payload as the "reason" and weaponise the email
- * pipeline against the suspended user.
+ * The optional `reason` argument flows through escapeHtml() before being
+ * dropped into the body — otherwise an admin who can suspend users
+ * could craft an HTML-injection payload as the "reason" and weaponise
+ * the email pipeline against the suspended user.
  */
-export async function sendSuspensionEmail(toEmail: string): Promise<void> {
+export async function sendSuspensionEmail(toEmail: string, reason?: string | null): Promise<void> {
   // Configurable so prod can point appeal traffic at a real support@
-  // address when one exists. Dev/staging falls back to the founder's
-  // personal email until then. Single env var change, no redeploy.
-  const supportEmail = process.env.SUPPORT_EMAIL || "faresadel@gmail.com";
+  // address when one exists. Defaults to support@plotzy.co (the
+  // verified Resend domain we own); operators can override via the
+  // SUPPORT_EMAIL env var without a redeploy.
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
   const subject = "Your Plotzy account has been suspended";
+  const reasonBlock = reason && reason.trim()
+    ? `<p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>Reason given by our team:</strong></p>
+       <blockquote style="margin: 8px 0 0; padding: 12px 14px; background: #f7f7f7; border-left: 3px solid #111; border-radius: 6px; color: #333; font-size: 14px; line-height: 1.6;">${escapeHtml(reason.trim())}</blockquote>`
+    : "";
   const html = `
     <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
       <h2 style="color: #111; margin-bottom: 16px;">Your account has been suspended</h2>
       <p style="color: #555; line-height: 1.6;">Your Plotzy account has been suspended. You will not be able to sign in or use the platform while the suspension is in effect.</p>
+      ${reasonBlock}
       <p style="color: #555; line-height: 1.6; margin-top: 16px;">If you believe this was a mistake, or if you'd like to appeal, please contact us:</p>
       <a href="mailto:${supportEmail}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">${supportEmail}</a>
       <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">We review appeals as quickly as we can.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
-      <p style="color: #bbb; font-size: 11px;">Plotzy — The modern platform for writers</p>
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toEmail, subject, html);
+}
+
+/**
+ * Restoration email — sent when an admin un-suspends a previously
+ * suspended account. Subject is intentionally positive so it doesn't
+ * get filed as a security alert.
+ */
+export async function sendRestorationEmail(toEmail: string): Promise<void> {
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const subject = "Your Plotzy account has been restored";
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Welcome back</h2>
+      <p style="color: #555; line-height: 1.6;">Your Plotzy account has been restored. You can sign in again and pick up right where you left off — your books, chapters, and subscription are exactly as you left them.</p>
+      <a href="${escapeHtml(frontendUrl)}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Sign in to Plotzy</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">If you have any questions, reach us at <a href="mailto:${supportEmail}" style="color: #111;">${supportEmail}</a>.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
     </div>
   `;
   await sendEmail(toEmail, subject, html);

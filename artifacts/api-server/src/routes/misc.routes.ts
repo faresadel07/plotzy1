@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
-import { sendEmail, sendSuspensionEmail } from "../lib/email";
+import { sendEmail, sendSuspensionEmail, sendRestorationEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
 import { hashToken } from "../lib/token-hash";
@@ -629,20 +629,38 @@ router.patch("/api/admin/users/:id/suspend", requireAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    const { suspended } = req.body;
-    // Read BEFORE the update so we can detect the false→true transition.
-    // Suppresses repeat emails on double-clicks and on unsuspend→suspend
-    // cycles where the email was already sent on the prior suspension.
+    // `reason` is optional and only used by the suspension email body.
+    // Capped at 500 chars to keep the email readable and to give a
+    // ceiling on what an admin can blast into a recipient's inbox.
+    const { suspended, reason } = req.body as { suspended?: boolean; reason?: string };
+    const safeReason = typeof reason === "string" ? reason.slice(0, 500) : null;
+    // Read BEFORE the update so we can detect the false→true and
+    // true→false transitions. Suppresses repeat emails on double-clicks
+    // and on unsuspend→suspend cycles where the same email was already
+    // sent on the prior transition.
     const before = await storage.getUserById(id);
     const user = await storage.suspendUser(id, !!suspended);
-    await logAdminAction((req.user as any).id, suspended ? "user_suspend" : "user_unsuspend", "user", id);
-    // Notify the suspended user — only on the false→true transition,
-    // only if they have an email on file. Fire-and-forget so a transient
-    // email failure cannot roll back the suspension itself.
-    if (suspended && !before?.suspended && before?.email) {
-      sendSuspensionEmail(before.email).catch((err) =>
-        logger.error({ err, userId: id }, "Failed to send suspension email"),
-      );
+    await logAdminAction(
+      (req.user as any).id,
+      suspended ? "user_suspend" : "user_unsuspend",
+      "user",
+      id,
+      safeReason ? { reason: safeReason } : undefined,
+    );
+    // Notify the affected user. Fire-and-forget for both transitions —
+    // a transient Resend failure must NOT roll back the (un)suspension
+    // itself, and a slow email send must NOT stretch admin response
+    // time past the 30s mark.
+    if (before?.email) {
+      if (suspended && !before.suspended) {
+        sendSuspensionEmail(before.email, safeReason).catch((err) =>
+          logger.error({ err, userId: id }, "Failed to send suspension email"),
+        );
+      } else if (!suspended && before.suspended) {
+        sendRestorationEmail(before.email).catch((err) =>
+          logger.error({ err, userId: id }, "Failed to send restoration email"),
+        );
+      }
     }
     return res.json(user);
   } catch (err) {
@@ -725,32 +743,45 @@ router.get("/api/admin/audit-logs", requireAdmin, async (req, res) => {
 // ── Admin: bulk suspend users ───────────────────────────────────────────────
 router.post("/api/admin/users/bulk-suspend", requireAdmin, async (req, res) => {
   try {
-    const { userIds, suspended } = req.body;
+    const { userIds, suspended, reason } = req.body as { userIds?: unknown; suspended?: boolean; reason?: string };
     if (!Array.isArray(userIds) || userIds.length === 0) return res.status(400).json({ message: "userIds required" });
     if (userIds.length > 50) return res.status(400).json({ message: "Max 50 users at once" });
+    const safeReason = typeof reason === "string" ? reason.slice(0, 500) : null;
     let count = 0;
     const failed: number[] = [];
     for (const id of userIds) {
       try {
         // Same per-user pattern as the single-suspend endpoint: read
-        // before, suspend, then notify on the false→true transition.
+        // before, suspend, then notify on the relevant transition.
         // Loop is sequential because each suspend is its own transaction;
         // emails are fire-and-forget so a slow Resend call doesn't block
         // the loop and stretch admin response time past the 30s mark.
         const before = await storage.getUserById(Number(id));
         await storage.suspendUser(Number(id), !!suspended);
         count++;
-        if (suspended && !before?.suspended && before?.email) {
-          sendSuspensionEmail(before.email).catch((err) =>
-            logger.error({ err, userId: id }, "Failed to send bulk suspension email"),
-          );
+        if (before?.email) {
+          if (suspended && !before.suspended) {
+            sendSuspensionEmail(before.email, safeReason).catch((err) =>
+              logger.error({ err, userId: id }, "Failed to send bulk suspension email"),
+            );
+          } else if (!suspended && before.suspended) {
+            sendRestorationEmail(before.email).catch((err) =>
+              logger.error({ err, userId: id }, "Failed to send bulk restoration email"),
+            );
+          }
         }
       } catch (e) {
         failed.push(Number(id));
         logger.error({ err: e, userId: id, suspended }, `Failed to ${suspended ? "suspend" : "unsuspend"} user`);
       }
     }
-    await logAdminAction((req.user as any).id, suspended ? "bulk_suspend" : "bulk_unsuspend", "user", null, { userIds, count, failed });
+    await logAdminAction(
+      (req.user as any).id,
+      suspended ? "bulk_suspend" : "bulk_unsuspend",
+      "user",
+      null,
+      { userIds, count, failed, ...(safeReason ? { reason: safeReason } : {}) },
+    );
     return res.json({ success: true, count, ...(failed.length ? { failed } : {}) });
   } catch (err) {
     logRouteError(req, err, "misc.routes");
