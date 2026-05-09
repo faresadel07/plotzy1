@@ -34,6 +34,7 @@ export function CourseLandingHero() {
       <img
         src="/course-hero.png"
         alt=""
+        role="presentation"
         aria-hidden="true"
         loading="eager"
         decoding="async"

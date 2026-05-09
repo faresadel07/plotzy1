@@ -686,7 +686,7 @@ export default function CoverDesigner() {
           )
         )}
         {el.type === "image" && (
-          <img src={el.src} alt="" style={{ width: "100%", height: "100%", objectFit: el.objectFit, borderRadius: el.borderRadius, opacity: el.opacity, display: "block", pointerEvents: "none" }} />
+          <img src={el.src} alt="" role="presentation" style={{ width: "100%", height: "100%", objectFit: el.objectFit, borderRadius: el.borderRadius, opacity: el.opacity, display: "block", pointerEvents: "none" }} />
         )}
         {el.type === "shape" && (
           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ pointerEvents: "none" }}>

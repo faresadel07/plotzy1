@@ -108,6 +108,7 @@ export function CertificateDisplay({
         <img
           src="/certificate-template.png"
           alt=""
+          role="presentation"
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover"
           // Eager-load: the cert is the page's primary content; LCP optimization.

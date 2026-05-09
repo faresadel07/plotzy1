@@ -562,7 +562,7 @@ export default function AuthorProfile() {
         {/* ── Banner ── */}
         <div className="author-banner" style={{ position: "relative", width: "100%", height: profile.bannerUrl ? 220 : 140, overflow: "hidden" }}>
           {profile.bannerUrl ? (
-            <img src={profile.bannerUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={profile.bannerUrl} alt={`${profile.displayName || "Author"} profile banner`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #0a0a0a 0%, #111 50%, #1a1a2e 100%)" }} />
           )}

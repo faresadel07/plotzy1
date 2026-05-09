@@ -2110,7 +2110,7 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
     const y = Math.max(0, Math.round(fi.y ?? 0));
     const w = fi.width && fi.width > 0 ? Math.round(fi.width) : 200;
     const h = fi.height && fi.height > 0 ? ` height:${Math.round(fi.height)}px;` : "";
-    return `<img class="floating" src="${fi.safeSrc}" alt="" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;${h}" />`;
+    return `<img class="floating" src="${fi.safeSrc}" alt="" role="presentation" style="position:absolute;left:${x}px;top:${y}px;width:${w}px;${h}" />`;
   }).join("\n");
 
   const title = article.title || "Untitled";
@@ -2293,7 +2293,7 @@ function openArticleAsPdf(article: any, publicUrl: string, editorCanvasWidth: nu
         ${date ? `${author ? " · " : ""}${escape(date)}` : ""}
       </p>
     </header>
-    ${featured && safeImgSrc(featured) ? `<div class="featured"><img src="${safeImgSrc(featured)}" alt="" /></div>` : ""}
+    ${featured && safeImgSrc(featured) ? `<div class="featured"><img src="${safeImgSrc(featured)}" alt="${escape(title)}" /></div>` : ""}
     <div class="canvas"${canvasMinHeight > 0 ? ` style="min-height:${canvasMinHeight}px"` : ""}>
       <div class="article-body">${safeHtml}</div>
       ${floatingHtml}

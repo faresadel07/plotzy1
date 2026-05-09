@@ -117,6 +117,7 @@ export function CourseSidebarCard({ state }: CourseSidebarCardProps) {
           <img
             src="/course-hero.png"
             alt=""
+            role="presentation"
             aria-hidden="true"
             loading="lazy"
             decoding="async"

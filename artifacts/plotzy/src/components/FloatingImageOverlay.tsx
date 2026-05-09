@@ -214,6 +214,7 @@ export function FloatingImageOverlay({ images, pageWidth, pageHeight, zoom, onUp
             <img
               src={img.src}
               alt=""
+              role="presentation"
               draggable={false}
               style={{
                 width: "100%",

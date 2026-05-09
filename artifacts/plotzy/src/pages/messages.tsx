@@ -337,7 +337,7 @@ export default function Messages() {
               {previewFile && (
                 <div style={{ padding: "8px 20px", borderTop: `1px solid ${B}`, background: SIDEBAR, display: "flex", alignItems: "center", gap: 10 }}>
                   {previewFile.url ? (
-                    <img src={previewFile.url} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }} />
+                    <img src={previewFile.url} alt="Selected attachment preview" style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: 48, height: 48, borderRadius: 8, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <FileText style={{ width: 22, height: 22, color: TS }} />

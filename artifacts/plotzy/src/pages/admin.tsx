@@ -2163,7 +2163,7 @@ function TutorialsTab() {
             <label style={lbl}>Thumbnail</label>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               {form.thumbnailUrl && (
-                <img src={form.thumbnailUrl} alt="" style={{ width: 120, height: 68, objectFit: "cover", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }} />
+                <img src={form.thumbnailUrl} alt="Tutorial thumbnail preview" style={{ width: 120, height: 68, objectFit: "cover", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }} />
               )}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button onClick={() => thumbInputRef.current?.click()} style={{ ...S.btn("ghost"), padding: "6px 14px", fontSize: 11 }}>
@@ -2225,7 +2225,7 @@ function TutorialsTab() {
               {/* Thumbnail */}
               <div style={{ aspectRatio: "16/9", background: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                 {t.thumbnailUrl ? (
-                  <img src={t.thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={t.thumbnailUrl} alt={`${t.title} thumbnail`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <span style={{ fontSize: 24, opacity: 0.3 }}>🎬</span>
                 )}
