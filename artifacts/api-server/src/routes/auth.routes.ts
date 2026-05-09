@@ -8,7 +8,8 @@ import { storage } from "../storage";
 import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
-import { sendEmail, sendWelcomeEmailIfFirstTime } from "../lib/email";
+import { sendEmail, sendWelcomeEmailIfFirstTime, sendNewLoginEmail } from "../lib/email";
+import { checkAndRecordLogin } from "../lib/login-device";
 import { isAdminUser } from "../lib/admin";
 import { hashToken } from "../lib/token-hash";
 import { logAuditEvent } from "../lib/audit-log";
@@ -256,6 +257,38 @@ router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
 
     // Successful login — record it and clear old attempts
     await recordLoginAttempt(email, clientIp, true);
+
+    // New-device notification. Fingerprint = sha256(browser × os × ip).
+    // Fire-and-forget: a failure to record or send the email must NOT
+    // block the login response, and the entire flow runs concurrent
+    // with the rest of the handler (session regeneration, guest-book
+    // claim, etc.) so the user-facing latency stays unchanged.
+    //
+    // Suppression: skip the email on first-ever login (welcome email
+    // already covered "you're in" and a security alert on top of that
+    // confuses users) and on already-known devices (no surprise to
+    // alert about). We always perform the upsert though, so the FIRST
+    // login lands in the table and the SECOND login from a different
+    // device correctly fires the alert.
+    (async () => {
+      try {
+        const result = await checkAndRecordLogin(
+          user.id,
+          (req.headers["user-agent"] as string | undefined),
+          clientIp ?? "0.0.0.0",
+        );
+        if (result.isNewDevice && !result.isFirstLogin && user.email) {
+          await sendNewLoginEmail(user.email, {
+            browser: result.device.browser,
+            os: result.device.os,
+            ip: result.device.ip,
+            whenIso: new Date().toISOString(),
+          });
+        }
+      } catch (err) {
+        logger.warn({ err, userId: user.id }, "new-device tracking / notification failed");
+      }
+    })();
 
     // Capture guest book IDs before the session may change
     const guestIds: number[] = (req.session as any).guestBookIds || [];

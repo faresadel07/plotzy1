@@ -733,6 +733,43 @@ export type BookCollaborator = typeof bookCollaborators.$inferSelect;
 
 // ── Login Attempts (brute-force protection) ─────────────────────────────
 
+// ── Known login devices ────────────────────────────────────────
+//
+// One row per (user, device-fingerprint) pair the user has ever
+// successfully signed in from. Used to decide whether a given
+// successful login is from a "new device" and therefore worth a
+// notification email.
+//
+// Fingerprint composition:
+//   sha256( browser_name || os_name || ip ).slice(0, 32)
+// browser+os comes from ua-parser-js; ip is the resolved req.ip
+// (already trust-proxy aware). Stable enough to recognise the
+// same Chrome-on-Windows-on-the-same-WiFi across logins, narrow
+// enough that a different browser, OS, or network produces a
+// new row + email.
+//
+// We keep the raw browser/os/ip for the email body — without
+// them the alert ("New login from a fingerprint") would be
+// useless to the recipient. The IP is admin-equivalent PII so
+// it stays in this admin-gated table only; it is never returned
+// to other users.
+export const knownLoginDevices = pgTable("known_login_devices", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  fingerprint: text("fingerprint").notNull(),
+  browser: text("browser"),
+  os: text("os"),
+  ip: text("ip"),
+  firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
+  lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+}, (t) => [
+  // Lookup pattern is "does this user already have this fingerprint?"
+  uniqueIndex("idx_known_devices_user_fp").on(t.userId, t.fingerprint),
+  // First-login detection ("does this user have ANY device on file?")
+  // benefits from a userId-only index too.
+  index("idx_known_devices_user").on(t.userId),
+]);
+
 export const loginAttempts = pgTable("login_attempts", {
   id: serial("id").primaryKey(),
   email: text("email").notNull(),

@@ -199,6 +199,60 @@ export async function sendSuspensionEmail(toEmail: string, reason?: string | nul
 }
 
 /**
+ * "New login from an unrecognised device" notification.
+ *
+ * Sent by the /api/auth/login handler when a successful login lands
+ * from a device fingerprint (browser × OS × IP) the user has not
+ * signed in from before. NEVER sent on the user's first-ever login —
+ * the welcome email already says "you're in", a security alert on
+ * top of that confuses people.
+ *
+ * All caller-supplied strings flow through escapeHtml() so a
+ * compromised UA / IP path can't smuggle markup into the body.
+ */
+export async function sendNewLoginEmail(
+  toEmail: string,
+  info: { browser?: string | null; os?: string | null; ip?: string | null; whenIso?: string },
+): Promise<void> {
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const subject = "New login to your Plotzy account";
+
+  const browser = info.browser ?? "Unknown browser";
+  const os = info.os ?? "Unknown OS";
+  const ip = info.ip ?? "Unknown";
+  const when = info.whenIso ?? new Date().toISOString();
+  // Format: "Saturday, May 9, 2026 at 12:34 PM UTC"
+  const formattedWhen = (() => {
+    try {
+      const d = new Date(when);
+      return d.toUTCString();
+    } catch {
+      return when;
+    }
+  })();
+
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">New sign-in to your Plotzy account</h2>
+      <p style="color: #555; line-height: 1.6;">A successful sign-in to your Plotzy account just happened from a device we have not seen before:</p>
+      <div style="margin: 18px 0; padding: 14px 16px; background: #f7f7f7; border-radius: 8px; font-size: 14px; line-height: 1.7; color: #333;">
+        <strong>When:</strong> ${escapeHtml(formattedWhen)}<br>
+        <strong>Device:</strong> ${escapeHtml(browser)} on ${escapeHtml(os)}<br>
+        <strong>IP address:</strong> ${escapeHtml(ip)}
+      </div>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>Was this you?</strong> No action needed.</p>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>Don't recognise this sign-in?</strong> Someone else may have your password. Change it immediately:</p>
+      <a href="${escapeHtml(frontendUrl)}/account/subscription" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Secure your account</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">You can also reach our team at <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a>.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toEmail, subject, html);
+}
+
+/**
  * Restoration email — sent when an admin un-suspends a previously
  * suspended account. Subject is intentionally positive so it doesn't
  * get filed as a security alert.
