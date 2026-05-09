@@ -14,6 +14,8 @@ import {
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
+import { useToast } from "@/hooks/use-toast";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
 import {
   Dialog,
@@ -132,9 +134,218 @@ export default function AccountSubscription() {
             isLoading={isHistoryLoading}
             isError={isHistoryError}
           />
+
+          <DangerZoneSection />
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ── Danger zone: self-service account deletion ────────────────────
+//
+// GDPR Article 17 right-to-erasure surface. Lives at the bottom of
+// /account/subscription so every signed-in user can find it from
+// one obvious place. The destructive action is gated by a
+// confirmation dialog with re-authentication (password for password
+// users, typed phrase for OAuth-only users) so a borrowed session
+// can't trigger deletion.
+function DangerZoneSection() {
+  const { user, refetch } = useAuth();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPhrase, setConfirmPhrase] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // OAuth-only users have no passwordHash on the backend; the
+  // /api/auth/user response includes a `hasPassword` boolean so the
+  // dialog can pick the right re-auth flow without exposing the hash.
+  const isPasswordUser = !!user?.hasPassword;
+
+  const reset = () => {
+    setPassword("");
+    setConfirmPhrase("");
+    setSubmitting(false);
+  };
+
+  const onConfirm = async () => {
+    setSubmitting(true);
+    try {
+      const body = isPasswordUser ? { password } : { confirmPhrase };
+      const res = await fetch("/api/auth/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast({
+          title: t("accountDeleteFailure"),
+          description: data?.message || undefined,
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+      // Success: server already destroyed the session.
+      toast({ title: t("accountDeleteSuccess") });
+      setOpen(false);
+      reset();
+      // Refresh the auth state so /api/auth/user returns null and the
+      // header switches to logged-out, then send the user to the home
+      // page where they can sign up again if they change their mind.
+      await refetch();
+      navigate("/");
+    } catch {
+      toast({ title: t("accountDeleteFailure"), variant: "destructive" });
+      setSubmitting(false);
+    }
+  };
+
+  const canSubmit = isPasswordUser ? password.length > 0 : confirmPhrase.trim() === "DELETE MY ACCOUNT";
+
+  return (
+    <div
+      className="mt-12 p-6 rounded-2xl"
+      style={{ background: "rgba(220, 38, 38, 0.04)", border: "1px solid rgba(220, 38, 38, 0.18)" }}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <AlertCircle className="w-4 h-4" style={{ color: "#f87171" }} />
+        <h3 className="text-sm font-bold" style={{ color: "#f87171" }}>
+          {t("accountDeleteSectionTitle")}
+        </h3>
+      </div>
+      <p className="text-sm mb-4" style={{ color: TS, lineHeight: 1.6 }}>
+        {t("accountDeleteSectionBody")}
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        style={{
+          padding: "10px 18px",
+          borderRadius: 10,
+          background: "transparent",
+          border: "1px solid rgba(220, 38, 38, 0.5)",
+          color: "#f87171",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        {t("accountDeleteButton")}
+      </button>
+
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("accountDeleteDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("accountDeleteDialogIntro")}</DialogDescription>
+          </DialogHeader>
+
+          <ul className="text-sm space-y-2 mb-3" style={{ color: "rgba(255,255,255,0.7)", paddingLeft: 18, listStyleType: "disc" }}>
+            <li>{t("accountDeleteWarn1")}</li>
+            <li>{t("accountDeleteWarn2")}</li>
+            <li>{t("accountDeleteWarn3")}</li>
+            <li>{t("accountDeleteWarn4")}</li>
+            <li style={{ color: "#f87171", fontWeight: 600 }}>{t("accountDeleteWarn5")}</li>
+          </ul>
+
+          {isPasswordUser ? (
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: TS }}>
+                {t("accountDeletePasswordLabel")}
+              </label>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("accountDeletePasswordPlaceholder")}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: T,
+                  fontSize: 14,
+                  outline: "none",
+                }}
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: TS }}>
+                {t("accountDeleteConfirmPhraseLabel")}
+              </label>
+              <input
+                type="text"
+                autoComplete="off"
+                value={confirmPhrase}
+                onChange={(e) => setConfirmPhrase(e.target.value)}
+                placeholder={t("accountDeleteConfirmPhrasePlaceholder")}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: T,
+                  fontSize: 14,
+                  fontFamily: "monospace",
+                  outline: "none",
+                }}
+              />
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 gap-2">
+            <button
+              type="button"
+              onClick={() => { setOpen(false); reset(); }}
+              disabled={submitting}
+              style={{
+                padding: "10px 18px",
+                borderRadius: 10,
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.18)",
+                color: TS,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: submitting ? "not-allowed" : "pointer",
+              }}
+            >
+              {t("accountDeleteCancel")}
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={submitting || !canSubmit}
+              style={{
+                padding: "10px 18px",
+                borderRadius: 10,
+                background: canSubmit && !submitting ? "#dc2626" : "rgba(220, 38, 38, 0.3)",
+                border: "1px solid #dc2626",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: submitting || !canSubmit ? "not-allowed" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {t("accountDeleteConfirm")}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

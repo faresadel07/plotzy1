@@ -144,12 +144,16 @@ router.get("/api/auth/user", async (req, res) => {
       // attacks against those providers (or correlating across sites). The
       // UI only needs to know "is a provider connected?" — boolean flags
       // give it that without exposing the id.
-      const { id, email, displayName, avatarUrl, googleId, appleId, subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
+      const { id, email, displayName, avatarUrl, googleId, appleId, passwordHash, subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate, suspended } = dbUser;
       const isAdmin = isAdminUser(dbUser);
       return res.json({
         id, email, displayName, avatarUrl,
         hasGoogle: !!googleId,
         hasApple: !!appleId,
+        // hasPassword tells the UI which re-auth flow to render in the
+        // account-deletion dialog: a password input vs a typed
+        // confirmation phrase. The hash itself is never shipped.
+        hasPassword: !!passwordHash,
         subscriptionStatus, subscriptionTier, subscriptionPlan, subscriptionEndDate,
         isAdmin,
         suspended: !!suspended,
@@ -280,6 +284,155 @@ router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
     if (err?.name === "ZodError") return res.status(400).json({ message: "Invalid input" });
     logger.error({ err }, "Login error");
     return res.status(500).json({ message: "Login failed" });
+  }
+});
+
+// ── Self-service account deletion ─────────────────────────────────
+//
+// GDPR Article 17 ("right to erasure"): users can permanently delete
+// their account from /account/subscription without contacting support.
+//
+// Auth model: a re-authentication step is required so a borrowed
+// session can't trigger deletion. Two paths:
+//   - Password users: must supply their current password (bcrypt
+//     verified against the stored hash).
+//   - OAuth-only users (no passwordHash): must type the literal
+//     phrase "DELETE MY ACCOUNT" since they have no password to
+//     verify against.
+//
+// Side-effects (in order):
+//   1. Capture user's email + displayName for the confirmation email
+//      (the row is about to be deleted; can't read it after).
+//   2. Call storage.deleteUser(id), which inside a transaction:
+//      orphans books (sets userId=null) and deletes the users row.
+//      ON DELETE CASCADE on related tables (chapters, follows,
+//      messages, notifications, support tickets, AI usage logs,
+//      subscription payments, etc.) removes the rest.
+//   3. Send a "Your Plotzy account has been deleted" email to the
+//      captured address (best-effort; never blocks completion).
+//   4. Destroy the session and clear the cookie so the now-stale
+//      browser can't accidentally reach a 401-protected page.
+//
+// Note on PayPal: Plotzy uses PayPal Capture Intent (one-time
+// orders), not Recurring Subscriptions, so there is no remote
+// PayPal subscription to cancel via the PayPal API. Deleting the
+// users row removes the subscription record locally; no further
+// charges are possible because each next renewal is a separate
+// user-initiated checkout, not an automatic recurring debit.
+router.delete("/api/auth/account", sensitiveAuthLimiter, async (req, res) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const userId = (req.user as any).id as number;
+
+  try {
+    const { password, confirmPhrase } = z
+      .object({
+        password: z.string().max(200).optional(),
+        confirmPhrase: z.string().max(200).optional(),
+      })
+      .strict()
+      .parse(req.body);
+
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      // Session points at a row that doesn't exist; treat as already
+      // deleted, tear the session down so the client can recover, and
+      // return 410 inside the destroy callback so the cookie clear and
+      // the response are guaranteed to happen on the same path.
+      return req.logout(() => {
+        req.session.destroy(() => {
+          res.clearCookie("connect.sid", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.COOKIE_SAME_SITE === "none" ? "none" : "lax",
+          });
+          res.status(410).json({ message: "Account no longer exists" });
+        });
+      });
+    }
+
+    // Re-authentication gate.
+    if (user.passwordHash) {
+      if (!password) {
+        return res.status(400).json({ message: "Password is required to delete this account." });
+      }
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ message: "Incorrect password." });
+      }
+    } else {
+      // OAuth-only user: require typed confirmation phrase instead.
+      const REQUIRED = "DELETE MY ACCOUNT";
+      if (!confirmPhrase || confirmPhrase.trim() !== REQUIRED) {
+        return res
+          .status(400)
+          .json({ message: `Please type ${REQUIRED} exactly to confirm deletion.` });
+      }
+    }
+
+    // Capture identity BEFORE deletion so the confirmation email can go
+    // out using the now-vanished address.
+    const capturedEmail = user.email;
+    const capturedName = user.displayName || user.email?.split("@")[0] || "there";
+
+    await storage.deleteUser(userId);
+
+    // Best-effort confirmation email. Never block the response on email
+    // delivery — the user already pressed Delete and the row is gone.
+    if (capturedEmail) {
+      const html = `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#111;">
+          <div style="border-bottom:1px solid #eee;padding-bottom:16px;margin-bottom:24px;">
+            <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#888;">Plotzy account</p>
+            <h2 style="margin:8px 0 0;font-size:18px;font-weight:700;color:#111;">Your account has been deleted</h2>
+          </div>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:#444;">Hi ${capturedName.replace(/[<>&]/g, "")},</p>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:#444;">
+            We have permanently deleted your Plotzy account at your request. Your session has been signed out, and the following data has been removed from our systems:
+          </p>
+          <ul style="margin:0 0 18px 0;padding-left:20px;font-size:14px;line-height:1.65;color:#444;">
+            <li>Account profile, password, and login records</li>
+            <li>Chapters, drafts, story bibles, and version history</li>
+            <li>Comments, likes, follows, direct messages, and notifications</li>
+            <li>Subscription records and AI usage logs</li>
+          </ul>
+          <p style="margin:0 0 12px;font-size:13px;line-height:1.65;color:#666;">
+            Books you published to the Community Library remain readable but are no longer attributed to you. Receipts for past payments stay in your PayPal account; we do not control those.
+          </p>
+          <p style="margin:24px 0 0;font-size:13px;line-height:1.65;color:#666;">
+            If this was not you, contact us immediately at <a href="mailto:support@plotzy.co" style="color:#111;">support@plotzy.co</a>.
+          </p>
+          <hr style="border:none;border-top:1px solid #eee;margin:32px 0;" />
+          <p style="color:#bbb;font-size:11px;">Plotzy, the modern platform for writers</p>
+        </div>
+      `;
+      sendEmail(capturedEmail, "Your Plotzy account has been deleted", html).catch((err) => {
+        logger.warn({ err, userId }, "Failed to send account-deletion confirmation email");
+      });
+    }
+
+    // Tear down the session so the browser is fully signed out.
+    req.logout((logoutErr) => {
+      if (logoutErr) {
+        logger.warn({ err: logoutErr, userId }, "Logout after account deletion failed");
+      }
+      req.session.destroy(() => {
+        res.clearCookie("connect.sid", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.COOKIE_SAME_SITE === "none" ? "none" : "lax",
+        });
+        return res.json({ success: true });
+      });
+    });
+  } catch (err: any) {
+    if (err?.name === "ZodError") {
+      return res.status(400).json({ message: "Invalid request body" });
+    }
+    logger.error({ err, userId }, "Account deletion failed");
+    return res.status(500).json({ message: "Failed to delete account" });
   }
 });
 

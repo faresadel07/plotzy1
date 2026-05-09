@@ -13,6 +13,11 @@ interface AuthUser {
   // connected?" so it can render the right Connect/Disconnect button.
   hasGoogle?: boolean;
   hasApple?: boolean;
+  // True when the user has a bcrypt password on file (i.e., signed up
+  // via email or set a password later). Used by the account-deletion
+  // dialog to choose between a password-confirm and a typed-phrase
+  // confirmation flow. The hash itself is never exposed to the browser.
+  hasPassword?: boolean;
   subscriptionStatus?: string | null;
   subscriptionTier?: string | null;
   subscriptionPlan?: string | null;
