@@ -199,6 +199,195 @@ export async function sendSuspensionEmail(toEmail: string, reason?: string | nul
 }
 
 /**
+ * "Your Plotzy subscription expires in 3 days" — sent by the daily
+ * cron when a user's subscription_end_date is exactly 3 days out.
+ *
+ * Plotzy uses PayPal Capture Intent (one-time orders), NOT recurring
+ * subscriptions, so this is a "you need to manually re-checkout"
+ * reminder, not a "we are about to charge your card" warning. The
+ * body explicitly says no automatic charge will happen so users
+ * don't expect one.
+ */
+export async function sendExpiryReminderEmail(
+  toEmail: string,
+  args: {
+    /** "Plotzy Pro" / "Plotzy Premium" — already-formatted display name. */
+    planName: string;
+    /** Pre-formatted human date like "May 12, 2026". */
+    expiryDateLabel: string;
+  },
+): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const subject = "Your Plotzy subscription expires in 3 days";
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+      <h2 style="color: #111; margin-bottom: 16px;">Your subscription expires in 3 days</h2>
+      <p style="color: #555; line-height: 1.6;">
+        Heads up — your <strong>${escapeHtml(args.planName)}</strong> access ends on
+        <strong>${escapeHtml(args.expiryDateLabel)}</strong> unless you choose to renew.
+      </p>
+      <p style="color: #555; line-height: 1.6; margin-top: 16px;">
+        <strong>No automatic charge will happen.</strong> Plotzy never auto-bills your card. To keep
+        your access, start a fresh checkout below; otherwise your account will return to the Free
+        plan after the expiry date and your books will remain readable in your library.
+      </p>
+      <a href="${escapeHtml(frontendUrl)}/pricing" style="display: inline-block; margin: 16px 0 8px; padding: 14px 32px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Renew now</a>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">
+        Manage your subscription anytime at <a href="${escapeHtml(frontendUrl)}/account/subscription" style="color: #111;">${escapeHtml(frontendUrl)}/account/subscription</a>.
+      </p>
+      <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 8px;">
+        Questions? <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a>
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
+      <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
+    </div>
+  `;
+  await sendEmail(toEmail, subject, html);
+}
+
+/**
+ * Polished payment receipt — sent immediately after a successful
+ * PayPal capture. Stripe-style layout: amount block, line items in
+ * a "label : value" table, "What you get" summary, support footer.
+ * Mobile-responsive (max-width 560px container, fluid padding).
+ */
+export interface ReceiptData {
+  /** Order ID from PayPal (used in subject + receipt body). */
+  paypalOrderId: string;
+  /** Capture/transaction ID — distinct from order ID for support lookups. */
+  paypalCaptureId: string;
+  /** Amount in cents; formatted as USD with two decimals in the body. */
+  amountCents: number;
+  /** ISO 4217 (e.g. "USD"). Surfaced as the suffix, not converted. */
+  currency: string;
+  /** "Plotzy Pro" / "Plotzy Premium". */
+  planName: string;
+  /** "monthly" or "yearly". Drives the cycle label. */
+  cycle: "monthly" | "yearly";
+  /** "PayPal" or "PayPal (Card)" — Capture Intent never exposes card last-4. */
+  paymentMethodLabel: string;
+  /** Pre-formatted period start (charge date), e.g. "May 9, 2026". */
+  periodStartLabel: string;
+  /** Pre-formatted period end (next renewal cutoff), e.g. "June 9, 2026". */
+  periodEndLabel: string;
+  /** Bullet list shown under "What you get". */
+  features: string[];
+}
+
+export async function sendPaymentReceiptEmail(
+  toEmail: string,
+  data: ReceiptData,
+): Promise<void> {
+  const frontendUrl = process.env.FRONTEND_URL || "https://plotzy.co";
+  const supportEmail = process.env.SUPPORT_EMAIL || "support@plotzy.co";
+  const amount = (data.amountCents / 100).toFixed(2);
+  const subject = `Receipt from Plotzy (#${data.paypalOrderId})`;
+  const cycleLabel = data.cycle === "yearly" ? "Annual" : "Monthly";
+  const featureRows = data.features
+    .map(
+      (f) => `<li style="padding: 6px 0; color: #444; font-size: 14px; line-height: 1.5;">${escapeHtml(f)}</li>`,
+    )
+    .join("");
+
+  // Single nested-table layout because that is the only HTML email
+  // pattern that lays out reliably across Gmail, Outlook, Apple Mail,
+  // and the various webmail surfaces. Inline styles only — no
+  // <style> block (Outlook strips many of them).
+  const html = `
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${escapeHtml(subject)}</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; color: #111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f4f5; padding: 32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; width: 100%; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 28px 32px 20px; border-bottom: 1px solid #f0f0f0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: #111;">Plotzy</td>
+                  <td align="right" style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: #888; text-transform: uppercase;">Receipt</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Amount block -->
+          <tr>
+            <td style="padding: 28px 32px 12px;">
+              <p style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: #888; text-transform: uppercase;">Amount paid</p>
+              <p style="margin: 6px 0 0; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; color: #111;">$${escapeHtml(amount)} <span style="font-size: 14px; font-weight: 500; color: #888;">${escapeHtml(data.currency.toUpperCase())}</span></p>
+              <p style="margin: 8px 0 0; font-size: 13px; color: #666;">Charged on ${escapeHtml(data.periodStartLabel)}</p>
+            </td>
+          </tr>
+
+          <!-- Line items -->
+          <tr>
+            <td style="padding: 8px 32px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #f0f0f0; margin-top: 16px;">
+                ${receiptRow("Plan", `${escapeHtml(data.planName)} (${cycleLabel})`)}
+                ${receiptRow("Subscription period", `${escapeHtml(data.periodStartLabel)} to ${escapeHtml(data.periodEndLabel)}`)}
+                ${receiptRow("Payment method", escapeHtml(data.paymentMethodLabel))}
+                ${receiptRow("Order ID", `<span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;">${escapeHtml(data.paypalOrderId)}</span>`)}
+                ${receiptRow("Transaction ID", `<span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;">${escapeHtml(data.paypalCaptureId)}</span>`)}
+              </table>
+            </td>
+          </tr>
+
+          <!-- What you get -->
+          <tr>
+            <td style="padding: 4px 32px 24px;">
+              <p style="margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: #888; text-transform: uppercase;">What you get</p>
+              <ul style="margin: 0; padding-left: 18px;">
+                ${featureRows}
+              </ul>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 32px 28px; border-top: 1px solid #f0f0f0; background: #fafafa;">
+              <p style="margin: 0 0 6px; font-size: 13px; line-height: 1.6; color: #666;">
+                Thanks for supporting Plotzy. You can manage your subscription anytime from
+                <a href="${escapeHtml(frontendUrl)}/account/subscription" style="color: #111; text-decoration: underline;">your account</a>.
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #888;">
+                Questions about this charge? Email
+                <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a>.
+                See our <a href="${escapeHtml(frontendUrl)}/terms" style="color: #888; text-decoration: underline;">Terms</a>.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin: 18px 0 0; font-size: 11px; color: #aaa; text-align: center;">Plotzy, the modern platform for writers.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+  await sendEmail(toEmail, subject, html);
+}
+
+function receiptRow(label: string, value: string): string {
+  return `
+    <tr>
+      <td style="padding: 14px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; color: #888; vertical-align: top; width: 40%;">${label}</td>
+      <td style="padding: 14px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; color: #111; vertical-align: top; text-align: right;">${value}</td>
+    </tr>
+  `;
+}
+
+/**
  * "Confirm your new email address" — sent to the NEW address when
  * a logged-in user requests an email change. Contains the
  * verification link that, once clicked, atomically swaps the

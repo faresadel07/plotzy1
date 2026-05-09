@@ -56,6 +56,14 @@ export const users = pgTable("users", {
   subscriptionStatus: text("subscription_status").default("free_trial"), // free_trial | active | canceled | expired
   subscriptionPlan: text("subscription_plan"), // monthly | yearly_monthly | yearly_annual
   subscriptionEndDate: timestamp("subscription_end_date"),
+  // Idempotency anchor for the daily expiry-reminder cron. Set to the
+  // user's current subscription_end_date when we send the "expires in
+  // 3 days" email; the next cron tick skips users where this column
+  // already equals the current end_date (so re-runs don't re-email).
+  // When the user re-subscribes and end_date moves forward, the
+  // mismatch makes them eligible for a fresh reminder against the new
+  // expiry. See lib/expiry-reminder-cron.ts.
+  expiryReminderSentForEndDate: timestamp("expiry_reminder_sent_for_end_date"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   suspended: boolean("suspended").default(false),

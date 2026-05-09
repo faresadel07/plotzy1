@@ -9,7 +9,7 @@ import {
   subscriptionPayments,
 } from "../../../../lib/db/src/schema";
 import { isSubscriptionActive } from "./helpers";
-import { sendEmail } from "../lib/email";
+import { sendEmail, sendPaymentReceiptEmail } from "../lib/email";
 import { logger } from "../lib/logger";
 import { logAuditEvent } from "../lib/audit-log";
 import { Sentry } from "../lib/sentry";
@@ -388,12 +388,69 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
       );
     }
 
+    // Fire-and-forget receipt email. Pulls user.email + uses the
+    // already-computed plan/tier/cycle/amount values from the
+    // capture flow above. Never blocks the response on Resend
+    // latency. The receipt template (sendPaymentReceiptEmail) is
+    // a polished Stripe-style HTML; see lib/email.ts.
+    (async () => {
+      try {
+        const u = await storage.getUserById(userId);
+        if (!u?.email) return;
+        const tierForReceipt = planToTier(plan);
+        const isYearlyForReceipt =
+          plan === "yearly_annual" || plan === "pro_yearly" || plan === "premium_yearly";
+        const features =
+          tierForReceipt === "premium"
+            ? PREMIUM_RECEIPT_FEATURES
+            : PRO_RECEIPT_FEATURES;
+        const fmt = (d: Date) =>
+          d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+        await sendPaymentReceiptEmail(u.email, {
+          paypalOrderId: orderId,
+          paypalCaptureId: captureDetail.id,
+          amountCents: Math.round(parseFloat(captureDetail.amount.value) * 100),
+          currency: captureDetail.amount.currency_code,
+          planName: planToDisplayName(plan),
+          cycle: isYearlyForReceipt ? "yearly" : "monthly",
+          paymentMethodLabel:
+            paymentSource === "card" ? "PayPal (Card)" : "PayPal",
+          periodStartLabel: fmt(new Date()),
+          periodEndLabel: fmt(endDate),
+          features,
+        });
+      } catch (err) {
+        logger.warn({ err, userId, orderId }, "Failed to send payment receipt email");
+      }
+    })();
+
     return res.json({ success: true });
   } catch (err) {
     logger.error({ err }, "PayPal capture error");
     return res.status(500).json({ message: "PayPal capture error" });
   }
 });
+
+// Plan feature lists for the receipt email's "What you get" block.
+// Kept inline here (not imported from artifacts/plotzy) because the
+// api-server workspace package does not depend on the plotzy frontend.
+// Mirror of PRO_FEATURES / PREMIUM_FEATURES in
+// artifacts/plotzy/src/lib/checkout-plans.ts; if the canonical list
+// changes there, update both.
+const PRO_RECEIPT_FEATURES = [
+  "100 AI requests per day",
+  "3 AI Marketplace analyses per month",
+  "No chapter limits",
+  "No word limits",
+  "No publishing limits on Community Library",
+];
+
+const PREMIUM_RECEIPT_FEATURES = [
+  "200 AI requests per day",
+  "9 AI Marketplace analyses per month",
+  "No book, chapter, or word limits",
+  "No limits on Community Library publishing",
+];
 
 // Read-only history of subscription captures for the authenticated user.
 // Powers the /account/subscription page. Limit 50 — subscriptions are

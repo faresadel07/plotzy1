@@ -15,6 +15,7 @@ initSentry();
 import app, { httpServer, setupApp } from "./app";
 import { logger } from "./lib/logger";
 import { verifyCertificatePdfAssets } from "./services/certificate-pdf";
+import { startExpiryReminderCron } from "./lib/expiry-reminder-cron";
 
 const port = env.PORT;
 
@@ -45,6 +46,13 @@ const port = env.PORT;
   httpServer.listen({ port, host: "0.0.0.0" }, () => {
     logger.info({ port }, "Server listening");
   });
+
+  // Background schedulers — started AFTER the server is listening so a
+  // first-tick failure can't keep the HTTP listener from coming up.
+  // Single-instance assumption documented inside the helper. If we ever
+  // run multiple api-server replicas, hoist this trigger to an external
+  // scheduler or add a leader-election lock.
+  startExpiryReminderCron();
 
   // Graceful shutdown — drain connections before exit
   const shutdown = (signal: string) => {

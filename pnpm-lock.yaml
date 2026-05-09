@@ -6,12 +6,57 @@ settings:
 
 catalogs:
   default:
+    '@tailwindcss/vite':
+      specifier: ^4.1.14
+      version: 4.2.2
+    '@tanstack/react-query':
+      specifier: ^5.90.21
+      version: 5.97.0
     '@types/node':
       specifier: ^25.3.3
       version: 25.5.2
+    '@types/react':
+      specifier: ^19.2.0
+      version: 19.2.14
+    '@types/react-dom':
+      specifier: ^19.2.0
+      version: 19.2.3
+    '@vitejs/plugin-react':
+      specifier: ^5.0.4
+      version: 5.2.0
+    class-variance-authority:
+      specifier: ^0.7.1
+      version: 0.7.1
+    clsx:
+      specifier: ^2.1.1
+      version: 2.1.1
     drizzle-orm:
       specifier: ^0.45.1
       version: 0.45.2
+    framer-motion:
+      specifier: ^12.23.24
+      version: 12.38.0
+    lucide-react:
+      specifier: ^0.545.0
+      version: 0.545.0
+    react:
+      specifier: 19.1.0
+      version: 19.1.0
+    react-dom:
+      specifier: 19.1.0
+      version: 19.1.0
+    tailwind-merge:
+      specifier: ^3.3.1
+      version: 3.5.0
+    tailwindcss:
+      specifier: ^4.1.14
+      version: 4.2.2
+    tsx:
+      specifier: ^4.21.0
+      version: 4.21.0
+    vite:
+      specifier: ^7.3.0
+      version: 7.3.2
     zod:
       specifier: ^3.25.76
       version: 3.25.76
@@ -38,6 +83,9 @@ importers:
       '@sentry/node':
         specifier: ^10.49.0
         version: 10.49.0
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
       '@upstash/redis':
         specifier: ^1.37.0
         version: 1.37.0
@@ -101,6 +149,9 @@ importers:
       nanoid:
         specifier: ^5.1.7
         version: 5.1.7
+      node-cron:
+        specifier: ^4.2.1
+        version: 4.2.1
       nodepub:
         specifier: ^3.2.1
         version: 3.2.1
@@ -3714,6 +3765,9 @@ packages:
   '@types/mysql@2.15.27':
     resolution: {integrity: sha512-YfWiV16IY0OeBfBCk8+hXKmdTKrKlwKN1MNKAPBu5JYxLwBEZl7QzeEpGnlZb3VMGJrrGmB84gXiH+ofs/TezA==}
 
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
+
   '@types/node@10.17.60':
     resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
 
@@ -5614,6 +5668,10 @@ packages:
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
+  node-cron@4.2.1:
+    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
+    engines: {node: '>=6.0.0'}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -10168,6 +10226,8 @@ snapshots:
     dependencies:
       '@types/node': 25.5.2
 
+  '@types/node-cron@3.0.11': {}
+
   '@types/node@10.17.60': {}
 
   '@types/node@25.5.2':
@@ -12079,6 +12139,8 @@ snapshots:
       semver: 7.7.4
 
   node-addon-api@7.1.1: {}
+
+  node-cron@4.2.1: {}
 
   node-domexception@1.0.0: {}
 
