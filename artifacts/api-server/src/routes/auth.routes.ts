@@ -356,7 +356,7 @@ router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
 // ── Self-service account deletion ─────────────────────────────────
 //
 // GDPR Article 17 ("right to erasure"): users can permanently delete
-// their account from /account/subscription without contacting support.
+// their account from /account/settings without contacting support.
 //
 // Auth model: a re-authentication step is required so a borrowed
 // session can't trigger deletion. Two paths:

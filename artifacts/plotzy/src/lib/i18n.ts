@@ -78,6 +78,7 @@ export const translations: Record<Language, Record<string, string>> = {
     tagline: "Write your story. Share your world.",
     myLibrary: "My Library",
     mySubscription: "My Subscription",
+    mySettings: "Settings",
     myProfile: "My Profile",
     startNewStory: "Start a New Story",
     createMasterpiece: "Create Your First Book with AI",

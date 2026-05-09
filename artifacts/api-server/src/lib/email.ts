@@ -242,7 +242,7 @@ export async function sendCommentNotificationEmail(
       <a href="${escapeHtml(frontendUrl)}/read/${args.bookId}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">View on Plotzy</a>
       <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">
         Don't want these emails? Turn engagement notifications off in
-        <a href="${escapeHtml(frontendUrl)}/account/subscription" style="color: #111;">your account settings</a>.
+        <a href="${escapeHtml(frontendUrl)}/account/settings" style="color: #111;">your account settings</a>.
       </p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
       <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
@@ -299,7 +299,7 @@ export async function sendLikeNotificationEmail(
       <a href="${escapeHtml(frontendUrl)}/read/${args.bookId}" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">View on Plotzy</a>
       <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">
         Don't want these emails? Turn engagement notifications off in
-        <a href="${escapeHtml(frontendUrl)}/account/subscription" style="color: #111;">your account settings</a>.
+        <a href="${escapeHtml(frontendUrl)}/account/settings" style="color: #111;">your account settings</a>.
       </p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
       <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>
@@ -660,7 +660,7 @@ export async function sendNewLoginEmail(
       </div>
       <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>Was this you?</strong> No action needed.</p>
       <p style="color: #555; line-height: 1.6; margin-top: 16px;"><strong>Don't recognise this sign-in?</strong> Someone else may have your password. Change it immediately:</p>
-      <a href="${escapeHtml(frontendUrl)}/account/subscription" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Secure your account</a>
+      <a href="${escapeHtml(frontendUrl)}/account/settings" style="display: inline-block; margin: 16px 0 8px; padding: 14px 28px; background: #111; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px;">Secure your account</a>
       <p style="color: #999; font-size: 13px; line-height: 1.5; margin-top: 16px;">You can also reach our team at <a href="mailto:${escapeHtml(supportEmail)}" style="color: #111;">${escapeHtml(supportEmail)}</a>.</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
       <p style="color: #bbb; font-size: 11px;">Plotzy, the modern platform for writers</p>

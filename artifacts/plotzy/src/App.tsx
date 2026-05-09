@@ -51,6 +51,7 @@ const ArticleView = lazy(() => import("@/pages/article-view"));
 const SeriesView = lazy(() => import("@/pages/series-view"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const AccountSubscription = lazy(() => import("@/pages/account-subscription"));
+const AccountSettings = lazy(() => import("@/pages/account-settings"));
 const FaqPage = lazy(() => import("@/pages/faq"));
 const CourseLandingPage = lazy(() => import("@/pages/course-landing"));
 const LearnPage = lazy(() => import("@/pages/learn"));
@@ -370,6 +371,7 @@ function Router() {
         <Route path="/books/:id/audiobook" component={ProtectedRoute(AudiobookStudio)} />
         <Route path="/checkout" component={ProtectedRoute(Checkout)} />
         <Route path="/account/subscription" component={ProtectedRoute(AccountSubscription)} />
+        <Route path="/account/settings" component={ProtectedRoute(AccountSettings)} />
         <Route path="/support" component={ProtectedRoute(SupportPage)} />
         <Route path="/learn" component={ProtectedRoute(LearnPage)} />
         <Route path="/learn/module/:slug" component={ProtectedRoute(LearnModulePage)} />
