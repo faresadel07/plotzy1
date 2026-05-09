@@ -127,6 +127,35 @@ export async function registerRoutes(
   // Set up multer for memory storage
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
+  // ─── Sitemap ───────────────────────────────────────────────────────────────
+  // Dynamic sitemap.xml that includes static surfaces + every published
+  // book, article, and author profile. Replaces the hand-coded static
+  // file at artifacts/plotzy/public/sitemap.xml. See lib/sitemap.ts for
+  // the full generator (1-hour in-process cache, fail-soft fallback to
+  // static set on DB error).
+  app.get("/sitemap.xml", async (_req, res) => {
+    try {
+      const { generateSitemap } = await import("./lib/sitemap");
+      const xml = await generateSitemap();
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      // Match the in-process cache TTL so a CDN / Cloudflare in front of
+      // the api-server doesn't out-of-sync our cache. public so any
+      // caching proxy can hold it; max-age + s-maxage at the same value
+      // for safety across CDN profiles.
+      res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=3600");
+      return res.send(xml);
+    } catch (err) {
+      logger.error({ err }, "sitemap generation failed");
+      // Crawlers treat 5xx as a temporary outage and re-crawl, but a
+      // sustained 5xx will cause them to drop cached entries. Returning
+      // a minimal valid sitemap is better than nothing.
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      return res.status(500).send(
+        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://plotzy.co/</loc></url>\n</urlset>\n`,
+      );
+    }
+  });
+
   // ─── Books ─────────────────────────────────────────────────────────────────
 
   app.get(api.books.list.path, async (req, res) => {
