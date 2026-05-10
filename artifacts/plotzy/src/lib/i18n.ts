@@ -270,6 +270,16 @@ export const translations: Record<Language, Record<string, string>> = {
     notifyPrefsEngagementHint: "We will email you when someone comments on or likes a book you wrote. Likes are batched to one email per hour at most.",
     notifyPrefsSavedToast: "Preferences saved.",
     notifyPrefsFailureToast: "Could not save preferences. Please try again.",
+
+    // ── Your data (GDPR Article 15 / 20 export) ───────────────
+    yourDataTitle: "Your data",
+    yourDataSubtitle: "Download a copy of everything you've created on Plotzy. You can do this at any time. Your data is yours.",
+    yourDataIncludes: "Includes your books, chapters, comments, ratings, subscription history, and account data.",
+    yourDataDownloadButton: "Download all my data",
+    yourDataDownloadingLabel: "Preparing export...",
+    yourDataDownloadSuccess: "Your data is downloading.",
+    yourDataDownloadFailure: "Could not start the download. Please try again.",
+    yourDataRateLimited: "You've requested an export recently. Please try again in a few minutes.",
     courseProgressLabel: "complete",
     courseModuleNumber: "Module",
     courseLessonsLabel: "lessons",

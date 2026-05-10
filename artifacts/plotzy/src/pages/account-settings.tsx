@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { AlertCircle, ChevronLeft, Loader2 } from "lucide-react";
+import { AlertCircle, ChevronLeft, Download, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/auth-context";
@@ -56,6 +56,7 @@ export default function AccountSettings() {
           <ChangeEmailSection />
           <NotificationPrefsSection />
           <ChangePasswordSection />
+          <YourDataSection />
           <DangerZoneSection />
         </div>
       </div>
@@ -522,6 +523,98 @@ function ChangePasswordSection() {
           {t("changePasswordSubmit")}
         </button>
       </form>
+    </div>
+  );
+}
+
+// ── Your data: GDPR Article 15 / 20 export ────────────────────────
+//
+// Calls GET /api/me/export-data, which returns a single JSON payload
+// covering every personal-data row tied to this user across 23+
+// tables (books, chapters, snapshots, comments, ratings, payments,
+// course progress, social graph, audit log, …). The endpoint is
+// rate-limited server-side to 5 requests / 15 minutes via
+// sensitiveAuthLimiter, so we surface 429 as a distinct toast rather
+// than the generic failure copy — otherwise a user clicking twice
+// thinks the export is broken.
+//
+// The download itself runs through fetch -> blob -> object-URL ->
+// synthetic <a> click, so we control the filename (and avoid the
+// browser opening the JSON inline as a new tab).
+function YourDataSection() {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [submitting, setSubmitting] = useState(false);
+
+  const onDownload = async () => {
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/me/export-data", { credentials: "include" });
+      if (res.status === 429) {
+        toast({ title: t("yourDataRateLimited"), variant: "destructive" });
+        return;
+      }
+      if (!res.ok) {
+        toast({ title: t("yourDataDownloadFailure"), variant: "destructive" });
+        return;
+      }
+      const blob = await res.blob();
+      const today = new Date().toISOString().split("T")[0];
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `plotzy-export-${today}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: t("yourDataDownloadSuccess") });
+    } catch {
+      toast({ title: t("yourDataDownloadFailure"), variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="mt-12 p-6 rounded-2xl"
+      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+    >
+      <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
+        {t("yourDataTitle")}
+      </h3>
+      <p className="text-xs mb-2" style={{ color: TS, lineHeight: 1.6 }}>
+        {t("yourDataSubtitle")}
+      </p>
+      <p className="text-xs mb-5" style={{ color: TD, lineHeight: 1.6 }}>
+        {t("yourDataIncludes")}
+      </p>
+      <button
+        type="button"
+        onClick={onDownload}
+        disabled={submitting}
+        style={{
+          padding: "10px 20px",
+          borderRadius: 10,
+          background: submitting ? "rgba(255,255,255,0.06)" : "#fff",
+          color: submitting ? "rgba(255,255,255,0.3)" : "#000",
+          border: "1px solid rgba(255,255,255,0.18)",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: submitting ? "not-allowed" : "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        {submitting ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Download className="w-3.5 h-3.5" />
+        )}
+        {submitting ? t("yourDataDownloadingLabel") : t("yourDataDownloadButton")}
+      </button>
     </div>
   );
 }
