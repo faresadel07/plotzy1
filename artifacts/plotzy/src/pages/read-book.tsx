@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
+import { useContentProtection } from "@/hooks/use-content-protection";
 
 /* ─── Content Parser ─────────────────────────────────────── */
 
@@ -554,6 +555,11 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
 export default function ReadBook() {
   const [, params] = useRoute("/read/:id");
   const bookId = Number(params?.id);
+
+  // Friction-grade IP protection on rendered chapter HTML. Pairs with
+  // the user-select:none CSS rule below; see hook source for what
+  // is/isn't covered.
+  useContentProtection(".book-reader-content");
 
   const { data: book, isLoading: bookLoading } = usePublishedBook(bookId);
   const { data: chapters, isLoading: chaptersLoading } = usePublishedBookChapters(bookId);
@@ -1153,6 +1159,7 @@ export default function ReadBook() {
 
         /* Book reader content styles — preserves formatting from the editor */
         .book-reader-content { user-select: none; -webkit-user-select: none; cursor: text; }
+        .book-reader-content img { -webkit-user-drag: none; user-drag: none; }
         .book-reader-content p { margin: 0 0 1.1em; text-indent: 1.8em; orphans: 2; widows: 2; }
         .book-reader-content p:first-child { text-indent: 0; }
         .book-reader-content p:first-child::first-letter { font-size: 1.8em; font-weight: 700; line-height: 1; float: left; margin-right: 0.08em; }

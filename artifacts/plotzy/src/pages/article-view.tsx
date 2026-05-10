@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ArrowLeft, Calendar, Clock, Eye, Heart, BookOpen, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useContentProtection } from "@/hooks/use-content-protection";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
@@ -28,6 +29,11 @@ export default function ArticleView() {
   const [, params] = useRoute("/blog/:id");
   const articleId = Number(params?.id);
   const { toast } = useToast();
+
+  // Friction-grade IP protection on the rendered article HTML. Pairs
+  // with the user-select:none CSS rule below; see hook source for what
+  // is/isn't covered.
+  useContentProtection(".article-content");
 
   const { data: article, isLoading } = useQuery<any>({
     queryKey: ["public-article", articleId],
@@ -182,6 +188,8 @@ export default function ArticleView() {
 
       {/* Article content styles */}
       <style>{`
+        .article-content { user-select: none; -webkit-user-select: none; cursor: text; }
+        .article-content img { -webkit-user-drag: none; user-drag: none; }
         .article-content p { margin: 0 0 1.4em; }
         .article-content h1 { font-size: 1.8em; font-weight: 800; margin: 1.5em 0 0.6em; color: #fff; }
         .article-content h2 { font-size: 1.5em; font-weight: 700; margin: 1.4em 0 0.5em; color: #fff; }
