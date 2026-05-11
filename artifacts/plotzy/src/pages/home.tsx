@@ -1464,7 +1464,7 @@ export default function Home() {
                 color: "rgba(255,255,255,0.4)",
                 marginBottom: 16,
               }}>
-                🛡️ Writer Protection
+                Writer Protection
               </p>
               <h2 style={{
                 fontSize: "clamp(1.9rem, 4.2vw, 2.9rem)",
@@ -1474,7 +1474,7 @@ export default function Home() {
                 letterSpacing: "-0.035em",
                 marginBottom: 14,
               }}>
-                Built for writers who care about their rights ✨
+                Built for writers who care about their rights
               </h2>
               <p style={{
                 fontSize: 16,
@@ -1483,7 +1483,7 @@ export default function Home() {
                 maxWidth: 560,
                 margin: "0 auto",
               }}>
-                Your words, your story, your rights. We protect what matters most. 📖
+                Your words, your story, your rights. We protect what matters most.
               </p>
             </div>
 
@@ -1494,10 +1494,10 @@ export default function Home() {
               marginBottom: 40,
             }}>
               {[
-                { emoji: "📝", title: "You own everything", desc: "100% of your writing belongs to you. Always." },
-                { emoji: "🤖", title: "AI never trains on you", desc: "Your text is never used to train any AI model." },
-                { emoji: "🔒", title: "Private by default", desc: "Nothing leaves your account without your consent." },
-                { emoji: "🗑️", title: "Delete anytime", desc: "One click and every byte is gone. No questions asked." },
+                { title: "You own everything", desc: "100% of your writing belongs to you. Always." },
+                { title: "AI never trains on you", desc: "Your text is never used to train any AI model." },
+                { title: "Private by default", desc: "Nothing leaves your account without your consent." },
+                { title: "Delete anytime", desc: "One click and every byte is gone. No questions asked." },
               ].map((item, i) => (
                 <div key={i} style={{
                   background: "rgba(255,255,255,0.025)",
@@ -1506,7 +1506,6 @@ export default function Home() {
                   padding: "22px 20px",
                   textAlign: "left",
                 }}>
-                  <div style={{ fontSize: 26, marginBottom: 12, lineHeight: 1 }}>{item.emoji}</div>
                   <h3 style={{
                     fontSize: 15,
                     fontWeight: 700,
@@ -1553,7 +1552,7 @@ export default function Home() {
                   e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
                 }}
                 >
-                  🔍 See how we protect your work
+                  See how we protect your work
                   <ChevronRight className="w-4 h-4 opacity-70" />
                 </a>
               </Link>

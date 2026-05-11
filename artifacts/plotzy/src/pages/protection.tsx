@@ -6,49 +6,40 @@ import { SEO } from "@/components/SEO";
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
 interface Pillar {
-  emoji: string;
   title: string;
   desc: string;
 }
 
 const PILLARS: Pillar[] = [
   {
-    emoji: "📝",
     title: "You own 100% of your work",
     desc: "Every word you write on Plotzy belongs to you. We never claim copyright, royalties, or any rights to your manuscripts.",
   },
   {
-    emoji: "🤖",
     title: "AI never trains on your writing",
     desc: "Your text is sent to AI models (like OpenAI) only to fulfill your immediate request. It is never stored, logged, or used to train any model.",
   },
   {
-    emoji: "🔒",
     title: "Private by default",
     desc: "Every book you create is private until you explicitly choose to publish it. Nothing leaks, nothing surfaces, nothing gets shared without your consent.",
   },
   {
-    emoji: "🔐",
     title: "Encrypted in transit and at rest",
     desc: "All your data travels over TLS 1.3 and sits in encrypted databases hosted by trusted providers. Industry-standard security at every layer.",
   },
   {
-    emoji: "🗑️",
     title: "Delete anytime, no questions asked",
     desc: "Want out? One click in Settings deletes your account and every byte of your data. We do not keep hidden backups or shadow profiles.",
   },
   {
-    emoji: "⚖️",
     title: "Copyright protection on your side",
     desc: "If someone copies your published work without permission, we honor DMCA takedown requests within 48 hours. Your IP, our enforcement.",
   },
   {
-    emoji: "📤",
     title: "Export freely, no lock-in",
     desc: "Your manuscript is yours to take anywhere. Export to PDF, EPUB, or plain text at any time, on any plan. Your work is never held hostage.",
   },
   {
-    emoji: "🚫",
     title: "We will never sell your data",
     desc: "No data brokers, no advertising networks, no shadowy partnerships. We make money from subscriptions, not from selling you out.",
   },
@@ -85,7 +76,7 @@ export default function Protection() {
             color: "rgba(255,255,255,0.45)",
             marginBottom: 20,
           }}>
-            🛡️ Writer Protection
+            Writer Protection
           </p>
           <h1 style={{
             fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
@@ -105,7 +96,7 @@ export default function Protection() {
             maxWidth: 620,
             margin: "0 auto",
           }}>
-            We built Plotzy for writers who take their craft seriously. That means real protection for your work, your data, and your creative ownership. ✨
+            We built Plotzy for writers who take their craft seriously. That means real protection for your work, your data, and your creative ownership.
           </p>
         </section>
 
@@ -135,7 +126,6 @@ export default function Protection() {
                 e.currentTarget.style.transform = "translateY(0)";
               }}
               >
-                <div style={{ fontSize: 32, marginBottom: 16, lineHeight: 1 }}>{pillar.emoji}</div>
                 <h3 style={{
                   fontSize: 17,
                   fontWeight: 700,
@@ -175,7 +165,7 @@ export default function Protection() {
                 color: "rgba(255,80,80,0.55)",
                 marginBottom: 16,
               }}>
-                🚫 The Promises We Keep
+                The Promises We Keep
               </p>
               <h2 style={{
                 fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -194,7 +184,7 @@ export default function Protection() {
                 maxWidth: 520,
                 margin: "0 auto",
               }}>
-                Sometimes what we don't do matters as much as what we do. These are the lines we will never cross. ✋
+                Sometimes what we don't do matters as much as what we do. These are the lines we will never cross.
               </p>
             </div>
 
@@ -209,7 +199,14 @@ export default function Protection() {
                   border: "1px solid rgba(255,80,80,0.12)",
                   borderRadius: 14,
                 }}>
-                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>❌</span>
+                  <span style={{
+                    flexShrink: 0,
+                    marginTop: 6,
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "rgba(255,80,80,0.6)",
+                  }} />
                   <p style={{
                     fontSize: 15,
                     color: "rgba(255,255,255,0.78)",
@@ -236,7 +233,7 @@ export default function Protection() {
               color: "rgba(140,180,255,0.6)",
               marginBottom: 16,
             }}>
-              🔬 Full Transparency
+              Full Transparency
             </p>
             <h2 style={{
               fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -255,33 +252,28 @@ export default function Protection() {
               maxWidth: 520,
               margin: "0 auto",
             }}>
-              No legal jargon, no marketing fluff. Here is the real picture, in plain English. 🔍
+              No legal jargon, no marketing fluff. Here is the real picture, in plain English.
             </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
             <TechBlock
-              emoji="🤖"
               title="When you use AI features"
               text="Your selected text is sent over an encrypted connection to our AI provider (currently OpenAI). They process the request and send the result back. Per the OpenAI API terms, your text is not stored beyond a short safety review window, and it is never used to train future models. We log only metadata (which feature, how many tokens, response time), never the content itself."
             />
             <TechBlock
-              emoji="💾"
               title="Where your books live"
               text="Your manuscripts are stored in a managed PostgreSQL database hosted on Neon, with encryption at rest (AES-256) and automatic daily backups retained for 7 days. Backups are also encrypted and never accessible to humans on our team without an explicit security incident."
             />
             <TechBlock
-              emoji="🔑"
               title="Authentication and sessions"
               text="Passwords are hashed with bcrypt (never stored in plain text). Sessions use HTTP-only secure cookies and rotate on login. We support sign-in with Google, Apple, and LinkedIn for added security, and we never see your provider passwords."
             />
             <TechBlock
-              emoji="📊"
               title="What we collect for analytics"
               text="We track anonymous page views, device types, and feature usage so we can improve the product. We do not track you across other websites, we do not use third-party advertising trackers, and you can disable analytics cookies anytime from the cookie banner."
             />
             <TechBlock
-              emoji="🌍"
               title="Data location and transfers"
               text="Your data is stored in data centers within the European Union and the United States. When required by international laws (such as GDPR), we apply standard contractual clauses to keep your data protected wherever it travels."
             />
@@ -294,7 +286,6 @@ export default function Protection() {
           background: "linear-gradient(180deg, #000 0%, #0a0a0a 100%)",
         }}>
           <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 20 }}>⚖️</div>
             <h2 style={{
               fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
               fontWeight: 800,
@@ -311,7 +302,7 @@ export default function Protection() {
               lineHeight: 1.65,
               marginBottom: 28,
             }}>
-              If a published book on Plotzy infringes your copyright, we take it seriously. Send us a DMCA notice with proof of ownership and the infringing URL, and we will review and act within 48 hours. ⏱️
+              If a published book on Plotzy infringes your copyright, we take it seriously. Send us a DMCA notice with proof of ownership and the infringing URL, and we will review and act within 48 hours.
             </p>
             <a
               href="mailto:legal@plotzy.co?subject=DMCA%20Takedown%20Request"
@@ -331,7 +322,7 @@ export default function Protection() {
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
             >
-              📧 Send DMCA Notice
+              Send DMCA Notice
             </a>
           </div>
         </section>
@@ -346,7 +337,7 @@ export default function Protection() {
             lineHeight: 1.15,
             marginBottom: 16,
           }}>
-            Write with confidence ✍️
+            Write with confidence
           </h2>
           <p style={{
             fontSize: 16,
@@ -354,7 +345,7 @@ export default function Protection() {
             lineHeight: 1.65,
             marginBottom: 32,
           }}>
-            Now you know exactly how we treat your work. Ready to start your next book? 📖
+            Now you know exactly how we treat your work. Ready to start your next book?
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/" style={{
@@ -384,7 +375,7 @@ export default function Protection() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              📋 Read Privacy Policy
+              Read Privacy Policy
             </Link>
             <Link href="/terms" style={{
               display: "inline-flex",
@@ -399,7 +390,7 @@ export default function Protection() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              📜 Read Terms of Service
+              Read Terms of Service
             </Link>
           </div>
         </section>
@@ -409,36 +400,31 @@ export default function Protection() {
   );
 }
 
-function TechBlock({ emoji, title, text }: { emoji: string; title: string; text: string }) {
+function TechBlock({ title, text }: { title: string; text: string }) {
   return (
     <div style={{
-      display: "flex",
-      gap: 18,
       padding: "24px 24px",
       background: "rgba(255,255,255,0.02)",
       border: "1px solid rgba(255,255,255,0.07)",
       borderRadius: 16,
     }}>
-      <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>{emoji}</div>
-      <div>
-        <h3 style={{
-          fontSize: 17,
-          fontWeight: 700,
-          color: "#fff",
-          marginBottom: 8,
-          letterSpacing: "-0.01em",
-        }}>
-          {title}
-        </h3>
-        <p style={{
-          fontSize: 14.5,
-          color: "rgba(255,255,255,0.6)",
-          lineHeight: 1.65,
-          margin: 0,
-        }}>
-          {text}
-        </p>
-      </div>
+      <h3 style={{
+        fontSize: 17,
+        fontWeight: 700,
+        color: "#fff",
+        marginBottom: 8,
+        letterSpacing: "-0.01em",
+      }}>
+        {title}
+      </h3>
+      <p style={{
+        fontSize: 14.5,
+        color: "rgba(255,255,255,0.6)",
+        lineHeight: 1.65,
+        margin: 0,
+      }}>
+        {text}
+      </p>
     </div>
   );
 }

@@ -711,7 +711,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
             {/* Legal */}
             <FooterCol title="Legal" links={[
-              { label: '🛡️ Writer Protection', href: '/protection' },
+              { label: 'Writer Protection', href: '/protection' },
               { label: 'Privacy Policy', href: '/privacy' },
               { label: 'Terms of Service', href: '/terms' },
               { label: 'Cookie Settings', onClick: () => { import('@/components/CookieBanner').then(m => m.openCookieSettings()); } },
