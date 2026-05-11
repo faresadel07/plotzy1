@@ -106,8 +106,10 @@ export default defineConfig({
     // unaffected — only initial paint gets faster.
     modulePreload: {
       resolveDependencies(_filename, deps) {
+        // vendor-three removed from this list — three.js no longer has
+        // its own manual chunk (auto-chunked by Vite to keep its React
+        // dependency in scope).
         const lazyVendors = [
-          "vendor-three",
           "vendor-charts",
           "vendor-mammoth",
           "vendor-html2canvas",
@@ -160,12 +162,15 @@ export default defineConfig({
             return "vendor-sentry";
           }
           if (id.includes("/node_modules/@tanstack/")) return "vendor-query";
-          if (
-            id.includes("/node_modules/three/") ||
-            id.includes("/node_modules/@react-three/")
-          ) {
-            return "vendor-three";
-          }
+          // NOTE: three/* and @react-three/* used to be split into their
+          // own vendor-three chunk. That broke production: @react-three
+          // imports React, and chunk-load ordering meant vendor-three
+          // executed before vendor-react was ready, throwing
+          // "Cannot read properties of undefined (reading 'useLayoutEffect')"
+          // at startup. Letting Vite's automatic chunking handle three +
+          // @react-three keeps them in chunks where their React import
+          // resolves correctly. Three.js is still only loaded when
+          // BookViewerOverlay mounts (it's lazy-imported in home.tsx).
           if (
             id.includes("/node_modules/motion/") ||
             id.includes("/node_modules/framer-motion/") ||
