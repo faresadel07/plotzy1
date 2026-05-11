@@ -5,6 +5,13 @@ import { api } from "../../../lib/shared/src/routes";
 import { checkAndUnlockAchievements } from "./achievements-engine";
 import { notifyAuthorOfComment } from "./lib/engagement-notifications";
 import { generateBookDocx } from "./lib/docx-export";
+import {
+  buildDuplicateMessage,
+  fingerprintBookContent,
+  findDuplicateMatch,
+  persistBookFingerprints,
+} from "./lib/content-fingerprint";
+import { logAuditEvent } from "./lib/audit-log";
 import { z } from "zod";
 import OpenAI, { toFile } from "openai";
 import express from "express";
@@ -423,6 +430,69 @@ export async function registerRoutes(
       }
 
       const { publish } = req.body as { publish: boolean };
+
+      // ── Duplicate-content check ──
+      // Only fires on the new-publish transition (publish === true and
+      // the book wasn't already published). Re-publishing a previously
+      // published book, unpublishing, or admin-bypassed books all skip
+      // the check. We compute fingerprints from the current title +
+      // chapter-1 content (or articleContent for articles) and look
+      // for matches across published Plotzy books and the Gutenberg
+      // corpus.
+      if (publish && !book.isPublished && !(book as any).duplicateCheckBypassed) {
+        let body = "";
+        if ((book as any).contentType === "article") {
+          body = (book as any).articleContent || "";
+        } else {
+          const chs = await storage.getChapters(bookId);
+          if (chs.length > 0) {
+            // Concatenate all paginated chunks for chapter 1.
+            body = getChapterPages(chs[0].content)
+              .join("\n\n");
+          }
+        }
+
+        const fp = fingerprintBookContent(book.title, body);
+
+        const match = await findDuplicateMatch({
+          candidateBookId: bookId,
+          candidateUserId: book.userId ?? null,
+          titleFingerprint: fp.titleFingerprint,
+          openingFingerprint: fp.openingFingerprint,
+        });
+
+        if (match) {
+          // Audit-log the attempt for admin review. Includes which
+          // dimension matched and the matched book's internal id, so
+          // an admin can quickly inspect the conflict and decide
+          // whether to grant the bypass.
+          if (isAuthenticated) {
+            await logAuditEvent({
+              actorId: (req.user as any).id,
+              action: "book_publish_duplicate_blocked",
+              targetType: "book",
+              targetId: bookId,
+              details: {
+                matchedSource: match.source,
+                matchedOn: match.matchedOn,
+                matchedInternalId: match.internalId,
+                matchedTitle: match.title,
+              },
+              req,
+            });
+          }
+          return res.status(409).json({
+            code: "DUPLICATE_CONTENT",
+            message: buildDuplicateMessage(match),
+          });
+        }
+
+        // No match — persist the freshly-computed fingerprints so
+        // future checks against this book are O(index lookup) and so
+        // it joins the comparison set for everyone else.
+        await persistBookFingerprints({ bookId, title: book.title, body });
+      }
+
       const updated = await storage.publishBook(bookId, !!publish);
 
       // Gamification: track publish stats and check achievements (auth users only)

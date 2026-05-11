@@ -189,11 +189,38 @@ export const books = pgTable("books", {
   // without needing a separate cron. Null means "no like email
   // has ever been sent for this book".
   lastLikeEmailSentAt: timestamp("last_like_email_sent_at"),
+  // Duplicate-content detection at publish time. Both are SHA-256
+  // hex digests of normalized text (lowercased, punctuation stripped,
+  // whitespace collapsed). titleFingerprint covers the book title;
+  // openingFingerprint covers the first ~1000 words of chapter 1
+  // (or the article body for content_type='article'). Stored on the
+  // books row rather than a separate table because we look them up
+  // by exact equality against indexed columns — a join would just
+  // add latency.
+  //
+  // NULL means "not yet fingerprinted" — populated lazily on the
+  // next publish attempt and on an offline backfill of existing
+  // rows. The publish handler treats NULL as "skip the comparison
+  // for this candidate" so the rollout doesn't false-positive on
+  // unfingerprinted neighbours.
+  titleFingerprint: text("title_fingerprint"),
+  openingFingerprint: text("opening_fingerprint"),
+  // Admin escape hatch. When TRUE, the duplicate check at publish
+  // time is bypassed for this specific book. Set by an admin after
+  // the author contests a false positive (e.g., they really do hold
+  // the rights to the matched work). Per-book scope so the bypass
+  // doesn't leak across the catalog.
+  duplicateCheckBypassed: boolean("duplicate_check_bypassed").default(false).notNull(),
 }, (t) => [
   index("idx_books_user_id").on(t.userId),
   index("idx_books_is_published").on(t.isPublished),
   index("idx_books_is_deleted").on(t.isDeleted),
   index("idx_books_series_id").on(t.seriesId),
+  // Lookup paths for the duplicate-detection check. Both are partial
+  // (only published, non-deleted books are candidates) so the indexes
+  // stay small even as the corpus grows.
+  index("idx_books_title_fingerprint").on(t.titleFingerprint),
+  index("idx_books_opening_fingerprint").on(t.openingFingerprint),
 ]);
 
 export const chapters = pgTable("chapters", {
@@ -540,12 +567,20 @@ export const gutenbergBooks = pgTable("gutenberg_books", {
   // Cached full text — NULL until first read, then persists across deployments
   content: text("content"),
   contentCachedAt: timestamp("content_cached_at"),
+  // Same fingerprint columns as books.* so the publish-time duplicate
+  // check can union against the public-domain corpus. Populated by
+  // the precache job when it first reads the text URL; NULL until then.
+  titleFingerprint: text("title_fingerprint"),
+  openingFingerprint: text("opening_fingerprint"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   // The discover query filters out broken rows via `text_url IS NOT NULL`
   // and the precache job scans `content IS NULL AND text_url IS NOT NULL`.
   // A small index on text_url helps both without indexing the (huge) text.
   index("idx_gutenberg_text_url").on(t.textUrl),
+  // Lookup paths for the duplicate-detection check.
+  index("idx_gutenberg_title_fingerprint").on(t.titleFingerprint),
+  index("idx_gutenberg_opening_fingerprint").on(t.openingFingerprint),
 ]);
 
 export type GutenbergBook = typeof gutenbergBooks.$inferSelect;

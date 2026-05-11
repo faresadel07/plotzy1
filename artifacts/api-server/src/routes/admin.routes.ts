@@ -725,4 +725,45 @@ router.get("/api/admin/analytics/daily-traffic", async (req, res) => {
   }
 });
 
+// ─── Duplicate-content bypass ────────────────────────────────────────────
+//
+// Admin escape hatch for the publish-time duplicate detector. When an
+// author legitimately holds the rights to a flagged work and contests
+// the block, an admin sets `duplicate_check_bypassed = TRUE` on that
+// specific book row and the next publish attempt skips the check.
+//
+// Per-book scope (not per-user): we never want a blanket bypass that
+// could let a previously-flagged author quietly publish other
+// duplicates later.
+import { logAuditEvent } from "../lib/audit-log";
+
+router.post("/api/admin/books/:id/duplicate-bypass", async (req, res) => {
+  try {
+    const bookId = Number(req.params.id);
+    if (!bookId || Number.isNaN(bookId)) {
+      return res.status(400).json({ message: "Invalid book id" });
+    }
+    const bypass = req.body?.bypass !== false; // default true
+    const [updated] = await db
+      .update(books)
+      .set({ duplicateCheckBypassed: bypass })
+      .where(eq(books.id, bookId))
+      .returning({ id: books.id, duplicateCheckBypassed: books.duplicateCheckBypassed });
+    if (!updated) return res.status(404).json({ message: "Book not found" });
+
+    await logAuditEvent({
+      actorId: (req.user as any).id,
+      action: bypass ? "book_duplicate_bypass_grant" : "book_duplicate_bypass_revoke",
+      targetType: "book",
+      targetId: bookId,
+      req,
+    });
+
+    return res.json(updated);
+  } catch (err) {
+    logger.error({ err }, "duplicate-bypass admin endpoint error");
+    return res.status(500).json({ message: "Internal error" });
+  }
+});
+
 export default router;
