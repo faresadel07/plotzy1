@@ -62,7 +62,12 @@ async function buildAll() {
       "@swc/*",
       "@aws-sdk/*",
       "@azure/*",
-      "@opentelemetry/*",
+      // NOTE: @opentelemetry/* removed from externals (was here as a
+      // defensive default). @sentry/node v10+ pulls in opentelemetry
+      // as a transitive runtime dep; if we leave it external, the
+      // Docker image's prod node_modules don't have it and the
+      // runtime crashes with ERR_MODULE_NOT_FOUND. Bundling is safe
+      // because opentelemetry is pure JS, no native bindings.
       "@google-cloud/*",
       "@google/*",
       "googleapis",
