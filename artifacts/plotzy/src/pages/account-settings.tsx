@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { AlertCircle, ChevronLeft, Download, Loader2 } from "lucide-react";
+import { AlertCircle, ChevronLeft, Database, FileText, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/auth-context";
@@ -529,30 +529,31 @@ function ChangePasswordSection() {
 
 // ── Your data: GDPR Article 15 / 20 export ────────────────────────
 //
-// Calls GET /api/me/export-data, which returns a single JSON payload
-// covering every personal-data row tied to this user across 23+
-// tables (books, chapters, snapshots, comments, ratings, payments,
-// course progress, social graph, audit log, …). The endpoint is
-// rate-limited server-side to 5 requests / 15 minutes via
-// sensitiveAuthLimiter, so we surface 429 as a distinct toast rather
-// than the generic failure copy — otherwise a user clicking twice
-// thinks the export is broken.
+// Two side-by-side cards (stacked on narrow viewports). Both call the
+// same /api/me/export-data endpoint with a different `?format=` query
+// param so they share the single rate limiter (sensitiveAuthLimiter,
+// 5 req / 15 min) — neither button can be hammered around the limit
+// by switching format mid-stream.
 //
-// The download itself runs through fetch -> blob -> object-URL ->
-// synthetic <a> click, so we control the filename (and avoid the
-// browser opening the JSON inline as a new tab).
+// Each card has its own loading state and toast handlers so a slow
+// or failed download on one format doesn't visually contaminate the
+// other.
+//
+// Download mechanics: fetch -> blob -> object-URL -> synthetic <a>
+// click. This gives us control over the filename and prevents the
+// browser from opening JSON / PDF inline as a new tab.
 function YourDataSection() {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
-  const [submitting, setSubmitting] = useState(false);
+  const [busyFormat, setBusyFormat] = useState<"pdf" | "json" | null>(null);
 
-  const onDownload = async () => {
-    setSubmitting(true);
+  const download = async (format: "pdf" | "json") => {
+    setBusyFormat(format);
     try {
-      // Pass the user's current UI language so the PDF summary's
-      // section labels are in their preferred language. The JSON file
-      // inside the ZIP is language-agnostic.
-      const res = await fetch(`/api/me/export-data?lang=${encodeURIComponent(lang)}`, { credentials: "include" });
+      const params = format === "pdf"
+        ? `?format=pdf&lang=${encodeURIComponent(lang)}`
+        : `?format=json`;
+      const res = await fetch(`/api/me/export-data${params}`, { credentials: "include" });
       if (res.status === 429) {
         toast({ title: t("yourDataRateLimited"), variant: "destructive" });
         return;
@@ -563,19 +564,22 @@ function YourDataSection() {
       }
       const blob = await res.blob();
       const today = new Date().toISOString().split("T")[0];
+      const filename = format === "pdf"
+        ? `plotzy-summary-${today}.pdf`
+        : `plotzy-export-${today}.json`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `plotzy-export-${today}.zip`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast({ title: t("yourDataDownloadSuccess") });
+      toast({ title: t(format === "pdf" ? "yourDataPdfSuccess" : "yourDataJsonSuccess") });
     } catch {
       toast({ title: t("yourDataDownloadFailure"), variant: "destructive" });
     } finally {
-      setSubmitting(false);
+      setBusyFormat(null);
     }
   };
 
@@ -587,38 +591,89 @@ function YourDataSection() {
       <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
         {t("yourDataTitle")}
       </h3>
-      <p className="text-xs mb-2" style={{ color: TS, lineHeight: 1.6 }}>
+      <p className="text-xs mb-5" style={{ color: TS, lineHeight: 1.6 }}>
         {t("yourDataSubtitle")}
       </p>
-      <p className="text-xs mb-5" style={{ color: TD, lineHeight: 1.6 }}>
-        {t("yourDataIncludes")}
-      </p>
-      <button
-        type="button"
-        onClick={onDownload}
-        disabled={submitting}
-        style={{
-          padding: "10px 20px",
-          borderRadius: 10,
-          background: submitting ? "rgba(255,255,255,0.06)" : "#fff",
-          color: submitting ? "rgba(255,255,255,0.3)" : "#000",
-          border: "1px solid rgba(255,255,255,0.18)",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: submitting ? "not-allowed" : "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-        }}
-      >
-        {submitting ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        ) : (
-          <Download className="w-3.5 h-3.5" />
-        )}
-        {submitting ? t("yourDataDownloadingLabel") : t("yourDataDownloadButton")}
-      </button>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <DataExportCard
+          title={t("yourDataPdfTitle")}
+          subtext={t("yourDataPdfSubtext")}
+          icon={<FileText className="w-4 h-4" />}
+          loading={busyFormat === "pdf"}
+          disabled={busyFormat !== null}
+          onClick={() => download("pdf")}
+          loadingLabel={t("yourDataDownloadingLabel")}
+        />
+        <DataExportCard
+          title={t("yourDataJsonTitle")}
+          subtext={t("yourDataJsonSubtext")}
+          icon={<Database className="w-4 h-4" />}
+          loading={busyFormat === "json"}
+          disabled={busyFormat !== null}
+          onClick={() => download("json")}
+          loadingLabel={t("yourDataDownloadingLabel")}
+        />
+      </div>
     </div>
+  );
+}
+
+function DataExportCard({
+  title,
+  subtext,
+  icon,
+  loading,
+  disabled,
+  onClick,
+  loadingLabel,
+}: {
+  title: string;
+  subtext: string;
+  icon: React.ReactNode;
+  loading: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  loadingLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        flex: 1,
+        textAlign: "left",
+        padding: "16px 18px",
+        borderRadius: 12,
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        color: T,
+        cursor: disabled ? (loading ? "wait" : "not-allowed") : "pointer",
+        opacity: disabled && !loading ? 0.5 : 1,
+        transition: "background 0.15s, border-color 0.15s",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+      onMouseEnter={(e) => {
+        if (disabled) return;
+        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
+      }}
+    >
+      <div className="flex items-center gap-2" style={{ fontSize: 13, fontWeight: 600 }}>
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : icon}
+        <span>{loading ? loadingLabel : title}</span>
+      </div>
+      <p style={{ fontSize: 12, color: TS, lineHeight: 1.5, margin: 0 }}>
+        {subtext}
+      </p>
+    </button>
   );
 }
 
