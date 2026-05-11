@@ -28,7 +28,7 @@ export default defineConfig({
       devOptions: { enabled: false },
       includeAssets: ["favicon.png"],
       manifest: {
-        name: "Plotzy — Write Your Story",
+        name: "Plotzy",
         short_name: "Plotzy",
         description: "A full-featured book writing platform with AI-assisted tools",
         theme_color: "#000000",

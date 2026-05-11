@@ -31,7 +31,7 @@ import { absolutizeImage, SITE_URL } from "@/lib/seo-schema";
  */
 
 const SITE_BRAND = "Plotzy";
-const SITE_BRAND_FULL = "Plotzy — Write Your Story";
+const SITE_BRAND_FULL = "Plotzy";
 const DEFAULT_DESCRIPTION =
   "Plotzy is a professional book writing platform with AI-assisted tools, audiobook studio, cover designer, and a community library.";
 
@@ -45,7 +45,7 @@ export interface SEOProps {
   title?: string;
   /**
    * Verbatim title override that bypasses the brand suffix. Use for the
-   * landing page when you want to keep "Plotzy — Write Your Story" intact.
+   * landing page when you want to keep the bare "Plotzy" brand intact.
    */
   titleOverride?: string;
   /**

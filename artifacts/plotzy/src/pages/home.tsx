@@ -528,7 +528,7 @@ export default function Home() {
 
   return (
     <>
-      <SEO titleOverride="Plotzy — Write Your Story" />
+      <SEO titleOverride="Plotzy" />
       {/* ── Scroll Progress Bar ── */}
       <motion.div
         style={{
