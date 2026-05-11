@@ -328,7 +328,7 @@ export default function TermsOfService() {
                     <li>Your physical or electronic signature</li>
                   </ul>
                   <P>
-                    We will respond to valid DMCA notices promptly, typically within 72 hours. We reserve the right to terminate the accounts of repeat infringers.
+                    We will respond to valid DMCA notices as soon as possible, typically within 72 hours. We reserve the right to terminate the accounts of repeat infringers.
                   </P>
                 </S>
 

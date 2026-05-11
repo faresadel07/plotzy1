@@ -33,7 +33,7 @@ const PILLARS: Pillar[] = [
   },
   {
     title: "Copyright protection on your side",
-    desc: "If someone copies your published work without permission, we honor DMCA takedown requests within 48 hours. Your IP, our enforcement.",
+    desc: "If someone copies your published work without permission, we honor DMCA takedown requests as soon as possible, typically within 72 hours. Your IP, our enforcement.",
   },
   {
     title: "Export freely, no lock-in",
@@ -344,7 +344,7 @@ export default function Protection() {
               lineHeight: 1.65,
               marginBottom: 28,
             }}>
-              If a published book on Plotzy infringes your copyright, we take it seriously. Send us a DMCA notice with proof of ownership and the infringing URL, and we will review and act within 48 hours.
+              If a published book on Plotzy infringes your copyright, we take it seriously. Send us a DMCA notice with proof of ownership and the infringing URL, and we will review and act as soon as possible, typically within 72 hours.
             </p>
             <a
               href="mailto:legal@plotzy.co?subject=DMCA%20Takedown%20Request"
