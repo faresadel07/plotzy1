@@ -13,15 +13,25 @@
 // to the Docker batch).
 
 import { spawn } from "child_process";
+import { existsSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import ffmpegStatic from "ffmpeg-static";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// voices/ lives at artifacts/api-server/voices/, two levels up from
-// this source file (src/lib/ → src/ → artifacts/api-server/).
-const VOICES_DIR = path.resolve(__dirname, "..", "..", "voices");
+// voices/ lives at artifacts/api-server/voices/. The relative path
+// from this file changes between dev (tsx) and production (esbuild
+// bundled to dist/index.mjs):
+//   - dev:  __dirname = src/lib/ → ../../voices ✓
+//   - prod: __dirname = dist/    → ../voices    ✓
+// Try the bundled (prod) layout first; fall back to the source layout
+// for local dev. Same pattern as services/certificate-pdf.ts and
+// lib/data-export-pdf.ts.
+const VOICES_DIR = (() => {
+  const bundled = path.resolve(__dirname, "..", "voices");
+  return existsSync(bundled) ? bundled : path.resolve(__dirname, "..", "..", "voices");
+})();
 
 const PYTHON_CMD = process.env.PYTHON_BIN || (process.platform === "win32" ? "python" : "python3");
 
