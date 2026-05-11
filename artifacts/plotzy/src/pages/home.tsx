@@ -1454,44 +1454,97 @@ export default function Home() {
 
         {/* ===== WRITER PROTECTION TEASER ===== */}
         <section className="relative bg-[#080808] py-20 px-6 sm:px-8 overflow-hidden">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-14">
-              <p style={{
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.4)",
-                marginBottom: 16,
-              }}>
-                Writer Protection
-              </p>
-              <h2 style={{
-                fontSize: "clamp(1.9rem, 4.2vw, 2.9rem)",
-                fontWeight: 800,
-                color: "#fff",
-                lineHeight: 1.1,
-                letterSpacing: "-0.035em",
-                marginBottom: 14,
-              }}>
-                Built for writers who care about their rights
-              </h2>
-              <p style={{
-                fontSize: 16,
-                color: "rgba(255,255,255,0.5)",
-                lineHeight: 1.6,
-                maxWidth: 560,
-                margin: "0 auto",
-              }}>
-                Your words, your story, your rights. We protect what matters most.
-              </p>
+          <div className="max-w-6xl mx-auto">
+
+            {/* Image LEFT + Text RIGHT */}
+            <div className="protection-split" style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 48,
+              alignItems: "center",
+              marginBottom: 48,
+            }}>
+              {/* LEFT: Image */}
+              <div>
+                <img
+                  src={`${import.meta.env.BASE_URL}protection-hero.png`}
+                  alt="A writer's desk showing how Plotzy protects creative work"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    borderRadius: 16,
+                    border: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                />
+              </div>
+
+              {/* RIGHT: Text */}
+              <div>
+                <p style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.4)",
+                  marginBottom: 16,
+                }}>
+                  Writer Protection
+                </p>
+                <h2 style={{
+                  fontSize: "clamp(1.7rem, 3.2vw, 2.6rem)",
+                  fontWeight: 800,
+                  color: "#fff",
+                  lineHeight: 1.1,
+                  letterSpacing: "-0.035em",
+                  marginBottom: 16,
+                }}>
+                  Built for writers who care about their rights
+                </h2>
+                <p style={{
+                  fontSize: 16,
+                  color: "rgba(255,255,255,0.5)",
+                  lineHeight: 1.6,
+                  marginBottom: 28,
+                }}>
+                  Your words, your story, your rights. We protect what matters most.
+                </p>
+                <Link href="/protection">
+                  <a style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "14px 30px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    textDecoration: "none",
+                    transition: "all 0.25s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                  }}
+                  >
+                    See how we protect your work
+                    <ChevronRight className="w-4 h-4 opacity-70" />
+                  </a>
+                </Link>
+              </div>
             </div>
 
+            {/* 4 pillar cards below the split */}
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
               gap: 16,
-              marginBottom: 40,
             }}>
               {[
                 { title: "You own everything", desc: "100% of your writing belongs to you. Always." },
@@ -1526,38 +1579,16 @@ export default function Home() {
                 </div>
               ))}
             </div>
-
-            <div className="text-center">
-              <Link href="/protection">
-                <a style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "14px 30px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  textDecoration: "none",
-                  transition: "all 0.25s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
-                }}
-                >
-                  See how we protect your work
-                  <ChevronRight className="w-4 h-4 opacity-70" />
-                </a>
-              </Link>
-            </div>
           </div>
+
+          <style>{`
+            @media (max-width: 768px) {
+              .protection-split {
+                grid-template-columns: 1fr !important;
+                gap: 28px !important;
+              }
+            }
+          `}</style>
         </section>
 
         {/* ===== CTA SECTION ===== */}
