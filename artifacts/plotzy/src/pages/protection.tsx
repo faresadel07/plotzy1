@@ -145,12 +145,15 @@ export default function Protection() {
         {/* ===== PILLARS GRID ===== */}
         <section style={{ padding: "16px 24px 40px", maxWidth: 1200, margin: "0 auto" }}>
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
             gap: 20,
           }}>
             {PILLARS.map((pillar, i) => (
               <div key={i} style={{
+                flex: "1 1 280px",
+                maxWidth: 360,
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 20,
