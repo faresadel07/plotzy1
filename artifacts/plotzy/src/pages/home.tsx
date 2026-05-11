@@ -33,7 +33,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
 import { format } from "date-fns";
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, useScroll, useInView } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, useInView } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
 import { BOOK_LANGUAGES } from "@/lib/i18n";
@@ -523,21 +523,9 @@ export default function Home() {
     document.getElementById('platform-features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const { scrollYProgress } = useScroll();
-  const progressScaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 30, restDelta: 0.001 });
-
   return (
     <>
       <SEO titleOverride="Plotzy" />
-      {/* ── Scroll Progress Bar ── */}
-      <motion.div
-        style={{
-          position: "fixed", top: 0, left: 0, right: 0, height: 2, zIndex: 99999,
-          background: "linear-gradient(90deg, #a78bfa, #818cf8)",
-          transformOrigin: "0%",
-          scaleX: progressScaleX,
-        }}
-      />
 
       {selectedShelfBook && (
         <Suspense fallback={null}>
