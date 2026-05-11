@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 
@@ -64,7 +64,49 @@ export default function Protection() {
         description="Your words, your rights, always yours. Learn how Plotzy protects your intellectual property, privacy, and creative work."
       />
 
-      <div style={{ minHeight: "100vh", background: "#000", color: "#fff", fontFamily: SF }}>
+      <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: SF }}>
+
+        {/* ===== BACK BUTTON (fixed, top-left) ===== */}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = "/";
+          }}
+          aria-label="Go back"
+          style={{
+            position: "fixed",
+            top: 76,
+            left: 20,
+            zIndex: 50,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 16px",
+            borderRadius: 999,
+            background: "rgba(20,20,20,0.85)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.85)",
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            fontFamily: SF,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(35,35,35,0.95)";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(20,20,20,0.85)";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+          }}
+        >
+          <ArrowLeft style={{ width: 14, height: 14 }} />
+          Back
+        </button>
 
         {/* ===== HERO ===== */}
         <section style={{ padding: "100px 24px 60px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
@@ -153,7 +195,7 @@ export default function Protection() {
         {/* ===== WHAT WE NEVER DO ===== */}
         <section style={{
           padding: "80px 24px",
-          background: "linear-gradient(180deg, #000 0%, #0a0a0a 50%, #000 100%)",
+          background: "#080808",
         }}>
           <div style={{ maxWidth: 880, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -283,7 +325,7 @@ export default function Protection() {
         {/* ===== DMCA / COPYRIGHT ===== */}
         <section style={{
           padding: "80px 24px",
-          background: "linear-gradient(180deg, #000 0%, #0a0a0a 100%)",
+          background: "#080808",
         }}>
           <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
             <h2 style={{
