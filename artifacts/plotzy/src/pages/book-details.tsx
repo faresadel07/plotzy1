@@ -295,7 +295,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
     setEditingChapterId(null);
   };
 
-  const handleDownload = async (format: "pdf" | "epub" | "txt") => {
+  const handleDownload = async (format: "pdf" | "epub" | "txt" | "docx") => {
     if (format === "pdf") { setShowTemplatePicker(true); return; }
     setIsDownloading(true);
     try {
@@ -442,6 +442,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               <DropdownMenuContent className="w-52 rounded-xl">
                 <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf")} data-testid="download-pdf">
                   <FileDown className="w-4 h-4 mr-2 text-red-400" />PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("docx")} data-testid="download-docx">
+                  <FileText className="w-4 h-4 mr-2 text-blue-400" />Word (.docx)
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("epub")} data-testid="download-epub">
                   <BookOpen className="w-4 h-4 mr-2" />EPUB

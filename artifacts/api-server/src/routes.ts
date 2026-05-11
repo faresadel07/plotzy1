@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { api } from "../../../lib/shared/src/routes";
 import { checkAndUnlockAchievements } from "./achievements-engine";
 import { notifyAuthorOfComment } from "./lib/engagement-notifications";
+import { generateBookDocx } from "./lib/docx-export";
 import { z } from "zod";
 import OpenAI, { toFile } from "openai";
 import express from "express";
@@ -1268,6 +1269,33 @@ export async function registerRoutes(
 
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         return res.send(html);
+      }
+
+      if (format === "docx") {
+        if (chapters.length === 0) {
+          return res.status(400).json({ message: "Cannot export an empty book. Add at least one chapter first." });
+        }
+        const buf = await generateBookDocx(
+          {
+            title: book.title,
+            authorName: book.authorName ?? null,
+            copyrightYear: new Date().getFullYear(),
+          },
+          chapters.map(ch => ({
+            title: ch.title,
+            // Pre-join the paginated chunks the editor produces so the
+            // converter sees one continuous HTML stream per chapter.
+            html: getChapterPages(ch.content)
+              .map(pg => isHtmlContent(pg)
+                ? pg
+                : `<p>${escapeHtml(pg).replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br/>")}</p>`)
+              .join(""),
+          })),
+        );
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.docx"`);
+        res.setHeader("Content-Length", String(buf.length));
+        return res.send(buf);
       }
 
       if (format === "epub") {
