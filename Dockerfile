@@ -18,7 +18,11 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 COPY . .
 ENV NODE_ENV=production
-RUN pnpm run build
+# Scope to api-server and its workspace dependencies (e.g. @workspace/db).
+# The trailing "..." is pnpm filter syntax for "this package + transitive
+# workspace deps". Excludes plotzy / mockup-sandbox / scripts which are
+# either deployed elsewhere (plotzy → Vercel) or dev-only.
+RUN pnpm --filter @workspace/api-server... run build
 
 # ── Production image ─────────────────────────────────────
 FROM node:22-slim AS runtime
@@ -69,7 +73,6 @@ COPY --from=deps /app/lib/db/node_modules ./lib/db/node_modules
 COPY --from=deps /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
 COPY --from=build /app/artifacts/api-server/dist ./artifacts/api-server/dist
 COPY --from=build /app/artifacts/api-server/healthcheck.mjs ./artifacts/api-server/healthcheck.mjs
-COPY --from=build /app/artifacts/plotzy/dist ./artifacts/plotzy/dist
 COPY --from=build /app/lib ./lib
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/artifacts/api-server/package.json ./artifacts/api-server/package.json
