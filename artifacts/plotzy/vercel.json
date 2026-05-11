@@ -7,8 +7,28 @@
       "destination": "https://workspaceapi-server-production-14b0.up.railway.app/api/:path*"
     },
     {
-      "source": "/auth/:path*",
-      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/:path*"
+      "source": "/auth/google/callback",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/google/callback"
+    },
+    {
+      "source": "/auth/google",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/google"
+    },
+    {
+      "source": "/auth/apple/callback",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/apple/callback"
+    },
+    {
+      "source": "/auth/apple",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/apple"
+    },
+    {
+      "source": "/auth/linkedin/callback",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/linkedin/callback"
+    },
+    {
+      "source": "/auth/linkedin",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/linkedin"
     },
     {
       "source": "/(.*)",
@@ -16,4 +36,3 @@
     }
   ]
 }
-
