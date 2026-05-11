@@ -140,6 +140,24 @@ export default function Protection() {
           }}>
             We built Plotzy for writers who take their craft seriously. That means real protection for your work, your data, and your creative ownership.
           </p>
+          <div style={{
+            marginTop: 36,
+            maxWidth: 720,
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}>
+            <img
+              src={`${import.meta.env.BASE_URL}protection-hero.png`}
+              alt="A writer's desk showcasing how Plotzy protects creative work"
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                borderRadius: 16,
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            />
+          </div>
         </section>
 
         {/* ===== PILLARS GRID ===== */}
