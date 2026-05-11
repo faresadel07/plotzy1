@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
 import { Sentry } from "@/lib/sentry";
 import { SEO } from "@/components/SEO";
+import { AuthModal } from "@/components/auth-modal";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#000";
@@ -132,6 +133,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
   const [status, setStatus] = useState<CheckoutStatus>("form");
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Mount-time reset. Every fresh /checkout visit must start from a clean
   // form state — without this, Vite HMR + React Fast Refresh can preserve
@@ -147,7 +149,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
   const createOrder = async () => {
     setError(null);
     if (!user) {
-      navigate("/?auth=required");
+      setShowAuthModal(true);
       throw new Error("Not authenticated");
     }
     setIsProcessing(true);
@@ -159,7 +161,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
         credentials: "include",
       });
       if (res.status === 401) {
-        navigate("/?auth=required");
+        setShowAuthModal(true);
         throw new Error("Not authenticated");
       }
       if (res.status === 429) {
@@ -287,6 +289,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
           />
         )}
       </div>
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </Frame>
   );
 }

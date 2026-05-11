@@ -4,6 +4,7 @@ import { Check, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
+import { AuthModal } from "@/components/auth-modal";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
@@ -153,10 +154,12 @@ function PlanButton({
   state,
   tier,
   navigate,
+  onAuthRequired,
 }: {
   state: ButtonState;
   tier: "pro" | "premium";
   navigate: (path: string) => void;
+  onAuthRequired?: () => void;
 }) {
   const { kind, label, href, showCycleDisclosure } = state;
 
@@ -222,7 +225,13 @@ function PlanButton({
     <>
       <button
         type="button"
-        onClick={() => { if (href) navigate(href); }}
+        onClick={() => {
+          // Logged-out users get the auth modal in place rather than a
+          // redirect to home — `getCardButtonState` returns this exact
+          // href when there is no user, so it doubles as the auth signal.
+          if (href === "/?auth=required") { onAuthRequired?.(); return; }
+          if (href) navigate(href);
+        }}
         disabled={kind === "current"}
         style={style}
         onMouseEnter={onEnter}
@@ -248,6 +257,7 @@ function PlanButton({
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [showFaq, setShowFaq] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
@@ -557,7 +567,7 @@ export default function Pricing() {
                   <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{proLabel}</p>
 
                   <div style={{ marginTop: 4 }}>
-                    <PlanButton state={proButton} tier="pro" navigate={navigate} />
+                    <PlanButton state={proButton} tier="pro" navigate={navigate} onAuthRequired={() => setShowAuthModal(true)} />
                   </div>
                 </div>
 
@@ -638,7 +648,7 @@ export default function Pricing() {
                 <p style={{ fontSize: 12, color: TD, marginTop: 4, marginBottom: 16 }}>{premiumLabel}</p>
 
                 <div style={{ marginTop: 4 }}>
-                  <PlanButton state={premiumButton} tier="premium" navigate={navigate} />
+                  <PlanButton state={premiumButton} tier="premium" navigate={navigate} onAuthRequired={() => setShowAuthModal(true)} />
                 </div>
               </div>
 
@@ -739,6 +749,7 @@ export default function Pricing() {
 
         </div>
       </div>
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </Layout>
   );
 }
