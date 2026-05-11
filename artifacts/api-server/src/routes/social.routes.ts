@@ -280,12 +280,14 @@ router.get("/api/me/export-data", sensitiveAuthLimiter, async (req, res) => {
 
       // Lazy import — pdfkit pulls in ~2 MB of font + glyph data and
       // we don't want every JSON-format request to pay that hit.
-      const { generateDataExportPdf } = await import("../lib/data-export-pdf");
-      const pdfBuf = await generateDataExportPdf(data, { language: lang });
+      const { streamDataExportPdf } = await import("../lib/data-export-pdf");
+      // Headers committed BEFORE piping starts (once pdfkit writes
+      // into res, headers are locked). No Content-Length: the PDF
+      // streams chunk-by-chunk, so the size isn't known up front.
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename="plotzy-summary-${dateStamp}.pdf"`);
-      res.setHeader("Content-Length", String(pdfBuf.length));
-      return res.send(pdfBuf);
+      await streamDataExportPdf(data, res, { language: lang });
+      return;
     }
 
     res.setHeader("Content-Type", "application/json");
