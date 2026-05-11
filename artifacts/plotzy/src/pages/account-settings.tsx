@@ -542,14 +542,17 @@ function ChangePasswordSection() {
 // synthetic <a> click, so we control the filename (and avoid the
 // browser opening the JSON inline as a new tab).
 function YourDataSection() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
   const onDownload = async () => {
     setSubmitting(true);
     try {
-      const res = await fetch("/api/me/export-data", { credentials: "include" });
+      // Pass the user's current UI language so the PDF summary's
+      // section labels are in their preferred language. The JSON file
+      // inside the ZIP is language-agnostic.
+      const res = await fetch(`/api/me/export-data?lang=${encodeURIComponent(lang)}`, { credentials: "include" });
       if (res.status === 429) {
         toast({ title: t("yourDataRateLimited"), variant: "destructive" });
         return;
@@ -563,7 +566,7 @@ function YourDataSection() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `plotzy-export-${today}.json`;
+      a.download = `plotzy-export-${today}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

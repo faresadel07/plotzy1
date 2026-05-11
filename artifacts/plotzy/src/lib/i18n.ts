@@ -274,7 +274,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // ── Your data (GDPR Article 15 / 20 export) ───────────────
     yourDataTitle: "Your data",
     yourDataSubtitle: "Download a copy of everything you've created on Plotzy. You can do this at any time. Your data is yours.",
-    yourDataIncludes: "Includes your books, chapters, comments, ratings, subscription history, and account data.",
+    yourDataIncludes: "You'll get a ZIP containing a readable PDF summary and a complete JSON file. Includes your books, chapters, comments, ratings, subscription history, and account data.",
     yourDataDownloadButton: "Download all my data",
     yourDataDownloadingLabel: "Preparing export...",
     yourDataDownloadSuccess: "Your data is downloading.",

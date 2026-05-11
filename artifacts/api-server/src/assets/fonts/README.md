@@ -20,13 +20,15 @@ PDF reader has it built in; no asset file needed).
 |---|---:|---|
 | `Lora-SemiBold.ttf` | 218,792 | `a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81` |
 | `Inter-SemiBold.ttf` | 419,744 | `78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3` |
+| `Cairo.ttf`         | 600,632 | `667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964` |
 
-Total bundled: ~638 KB. Verify integrity:
+Total bundled: ~1.21 MB. Verify integrity:
 
 ```bash
 sha256sum -c <<EOF
 a9f5bbcebb6b53d53b6d7d571b2076f3db4931026693397200f69801b6701a81 *Lora-SemiBold.ttf
 78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3 *Inter-SemiBold.ttf
+667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964 *Cairo.ttf
 EOF
 ```
 
@@ -37,10 +39,15 @@ EOF
   https://raw.githubusercontent.com/cyrealtype/Lora-Cyrillic/master/fonts/ttf/Lora-SemiBold.ttf
   ```
 - **Inter-SemiBold**: [rsms/inter v4.1 release zip](https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip) → `extras/ttf/Inter-SemiBold.ttf`. The variable forms (`InterVariable.ttf`, `Inter.ttc`) at the zip's top level have fontkit subsetting issues with pdf-lib; the static `extras/ttf/` files work cleanly.
+- **Cairo**: variable-axis Latin + Arabic font from [google/fonts/ofl/cairo](https://github.com/google/fonts/tree/main/ofl/cairo). Direct URL:
+  ```
+  https://github.com/google/fonts/raw/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf
+  ```
+  Used by `lib/data-export-pdf.ts` (the GDPR Article 15 / 20 PDF summary). PDFKit handles the variable axis cleanly — no static-instance subsetting needed because we don't use bold (visual hierarchy comes from size + color, not weight). Single TTF covers both English and Arabic labels in the report.
 
-Both ship under [SIL Open Font License (OFL) 1.1](https://openfontlicense.org/) — permissive, embed in commercial PDFs, redistribute, etc.
+All three ship under [SIL Open Font License (OFL) 1.1](https://openfontlicense.org/) — permissive, embed in commercial PDFs, redistribute, etc.
 
-Downloaded 2026-05-06. Re-download steps documented above; SHA-256 hashes pin the exact byte content for build reproducibility.
+Downloaded 2026-05-06 (Lora, Inter) and 2026-05-11 (Cairo). Re-download steps documented above; SHA-256 hashes pin the exact byte content for build reproducibility.
 
 ## Why static TTFs instead of variable fonts
 
@@ -48,8 +55,14 @@ The Google Fonts main repo only ships variable-axis `.ttf` for both Lora and Int
 
 Static TTFs (one file per weight) sidestep the variable-font code path entirely. The bundle cost is ~638 KB instead of ~1.1 MB for the variable fonts — net win.
 
-## v1 limitations (English-only)
+## i18n coverage status
 
-These fonts cover Latin + a handful of extended-Latin code blocks. Non-Latin scripts (Arabic, Hebrew, CJK, Devanagari) render as missing-glyph boxes. This is the v1 scope decision (Batch 3.2 DP3). Post-launch i18n batch should add NotoSans CJK + NotoSans Arabic + NotoSans Devanagari + NotoSans Hebrew for the full 14-language UI matrix.
+| Surface | English | Arabic | Other (CJK / Hebrew / Devanagari / …) |
+|---|---|---|---|
+| Certificate PDF (Lora + Inter) | ✅ | ❌ boxes | ❌ boxes |
+| Book PDF export (pdf-lib defaults) | ✅ | ❌ boxes | ❌ boxes |
+| Data export PDF (Cairo) | ✅ | ✅ | ❌ boxes |
 
-Smoke test #5 (CJK holder name "张伟") verified the renderer degrades gracefully (boxes, not crash) under the missing-glyph case.
+The Cairo bundle closes the Arabic gap on the data-export PDF specifically. The certificate and book-PDF surfaces remain English-only for v1 (their templates assume Latin metrics; bundling Cairo there is a follow-up).
+
+Smoke test #5 (CJK holder name "张伟") on the certificate verified the renderer degrades gracefully (boxes, not crash) under the missing-glyph case. The data-export PDF degrades the same way for CJK / Hebrew / Devanagari user content — labels are always Latin or Arabic per the requested ?lang=, but book titles in those scripts will render as boxes until a CJK / Hebrew / Devanagari font is added.

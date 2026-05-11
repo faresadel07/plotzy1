@@ -263,13 +263,56 @@ router.get("/api/me/export-data", sensitiveAuthLimiter, async (req, res) => {
       req,
     });
 
-    const filename = `plotzy-export-${userId}-${new Date().toISOString().split("T")[0]}.json`;
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Type", "application/json");
-    return res.json(data);
+    // Language for PDF labels — comes from the client because we don't
+    // persist a per-user language column. Default to English.
+    const lang = (typeof req.query.lang === "string" && req.query.lang.toLowerCase() === "ar") ? "ar" : "en";
+
+    const dateStamp = new Date().toISOString().split("T")[0];
+    const jsonName = `plotzy-export-${dateStamp}.json`;
+    const pdfName = `plotzy-summary-${dateStamp}.pdf`;
+    const zipName = `plotzy-export-${dateStamp}.zip`;
+
+    // Generate the PDF first so a generation failure surfaces as a 500
+    // BEFORE we commit to streaming a partial ZIP. Imported lazily —
+    // pdfkit pulls in ~2 MB of font + glyph data and we don't want
+    // every cold-start route to pay that hit.
+    const { generateDataExportPdf } = await import("../lib/data-export-pdf");
+    const pdfBuf = await generateDataExportPdf(data, { language: lang });
+    const jsonBuf = Buffer.from(JSON.stringify(data, null, 2), "utf-8");
+
+    // Stream the ZIP straight to the response. archiver is the standard
+    // pick — pure JS, supports streaming, handles concurrent file
+    // additions cleanly. Compression level 6 = default DEFLATE; JSON
+    // compresses ~70%, PDFs are already deflated internally.
+    //
+    // Pinned to archiver v7 because @types/archiver tracks the v7 CJS
+    // factory API (`archiver('zip', opts)`); v8 went ESM with class
+    // constructors but the bundled types haven't caught up.
+    const archiver = (await import("archiver")).default;
+    const archive = archiver("zip", { zlib: { level: 6 } });
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${zipName}"`);
+
+    archive.on("error", (err) => {
+      logRouteError(req, err, "social.routes:export-data:archive");
+      // If headers are already sent (response is mid-stream) we can't
+      // recover with a proper status code; just abort the stream.
+      if (!res.headersSent) res.status(500).json({ message: "Could not generate data export. Please try again." });
+      else res.end();
+    });
+
+    archive.pipe(res);
+    archive.append(jsonBuf, { name: jsonName });
+    archive.append(pdfBuf, { name: pdfName });
+    await archive.finalize();
+    return;
   } catch (err) {
     logRouteError(req, err, "social.routes:export-data");
-    return res.status(500).json({ message: "Could not generate data export. Please try again." });
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Could not generate data export. Please try again." });
+    }
+    return;
   }
 });
 
