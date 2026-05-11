@@ -107,7 +107,7 @@ export default function PrivacyPolicy() {
                   Privacy Policy
                 </h1>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 14, color: "var(--muted-foreground)" }}>Effective: April 3, 2026</span>
+                  <span style={{ fontSize: 14, color: "var(--muted-foreground)" }}>Effective: May 11, 2026</span>
                   <span style={{ fontSize: 14, color: "var(--muted-foreground)" }}>·</span>
                   <Link href="/terms" style={{ fontSize: 14, color: "var(--muted-foreground)", textDecoration: "underline" }}>
                     Terms of Service
@@ -143,7 +143,7 @@ export default function PrivacyPolicy() {
                   <H2>Information You Provide Directly</H2>
                   <ul>
                     <li>
-                      <strong>Account information:</strong> display name, email address, and profile picture when you register or connect via Google, Apple, LinkedIn, or Facebook OAuth.
+                      <strong>Account information:</strong> display name, email address, and profile picture when you register or connect via Google, Apple, or LinkedIn OAuth.
                     </li>
                     <li>
                       <strong>Your creative content:</strong> books, chapters, articles, cover images, lore notes, and any other writing you create and store on Plotzy. This content belongs to you.
@@ -178,7 +178,7 @@ export default function PrivacyPolicy() {
                   <H2>Information from Third Parties</H2>
                   <ul>
                     <li>
-                      <strong>OAuth providers:</strong> when you sign in via Google, Apple, LinkedIn, or Facebook, we receive your name, email address, and profile picture from that provider, as permitted by your settings on that platform.
+                      <strong>OAuth providers:</strong> when you sign in via Google, Apple, or LinkedIn, we receive your name, email address, and profile picture from that provider, as permitted by your settings on that platform.
                     </li>
                     <li>
                       <strong>Payment processor:</strong> PayPal shares transaction status and billing information with us to confirm successful payments.
@@ -222,15 +222,47 @@ export default function PrivacyPolicy() {
                   <P>
                     <strong>We do not sell your personal information.</strong> We only share your data in the following limited circumstances:
                   </P>
-                  <H2>Service Providers</H2>
+                  <H2>Service Providers (Subprocessors)</H2>
                   <P>
-                    We share data with trusted third-party vendors who help us operate the Service. These providers are contractually bound to use your data only to perform services for us and to protect your information:
+                    We share data with trusted third-party vendors who help us operate the Service. These providers are contractually bound to use your data only to perform services for us and to protect your information. The complete list is below; each entry links to the provider's own privacy policy:
                   </P>
                   <ul>
-                    <li><strong>PayPal</strong> — payment processing</li>
-                    <li><strong>OpenAI</strong> — AI writing assistance features (prompts only; no private content stored)</li>
-                    <li><strong>Cloud infrastructure providers</strong> — database hosting and storage</li>
+                    <li>
+                      <strong>PayPal</strong> — payment processing for subscriptions and Marketplace transactions.{" "}
+                      <a href="https://www.paypal.com/us/legalhub/privacy-full" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>OpenAI</strong> — AI writing assistance features. Your prompts and the relevant context are sent to OpenAI only when you trigger an AI feature; we do not send your private books or chapters for any background processing.{" "}
+                      <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>Resend</strong> — transactional email delivery (account verification, password resets, subscription receipts, comment and like notifications).{" "}
+                      <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>Sentry</strong> — error tracking. When something crashes, Sentry receives the stack trace, the URL you were on, and your numeric user ID so we can debug; it does not receive your book or chapter content.{" "}
+                      <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>Neon</strong> — managed PostgreSQL hosting. Your account data and writing are stored on Neon-managed Postgres clusters in the United States.{" "}
+                      <a href="https://neon.tech/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>Google</strong> — Sign in with Google (OAuth). Used only when you choose to sign in via Google; we receive your name, email, and profile picture from Google.{" "}
+                      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>Apple</strong> — Sign in with Apple (OAuth). Used only when you choose to sign in via Apple; we receive your name and a (possibly relayed) email address from Apple.{" "}
+                      <a href="https://www.apple.com/legal/privacy/en-ww/" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
+                    <li>
+                      <strong>LinkedIn</strong> — Sign in with LinkedIn (OAuth). Used only when you choose to sign in via LinkedIn; we receive your name, email, and profile picture from LinkedIn.{" "}
+                      <a href="https://www.linkedin.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+                    </li>
                   </ul>
+                  <P>
+                    We will update this list when we add or remove a subprocessor. If you'd like to be notified of changes in advance, email us at <a href="mailto:privacy@plotzy.co">privacy@plotzy.co</a>.
+                  </P>
                   <H2>Public Content</H2>
                   <P>
                     Content you explicitly publish to the Community Library, Marketplace, or your public author profile is visible to other Plotzy users and potentially to the public. This includes your display name, profile picture, bio, and published works.
@@ -262,6 +294,15 @@ export default function PrivacyPolicy() {
                     <li>Anonymized usage data and aggregated analytics may be retained indefinitely</li>
                     <li>Information required for legal, tax, or audit purposes may be retained for up to 7 years as required by law</li>
                   </ul>
+
+                  <H2>Backups</H2>
+                  <P>
+                    We take encrypted database backups for disaster recovery. Backups are kept for up to <strong>30 days</strong> on a rolling window. After that period, any data you've deleted is permanently removed from our backup systems too &mdash; we cannot retrieve it for you, and no one else can either. This is a standard industry practice that gives us a short safety net for catastrophic incidents (e.g., a corrupt database) without keeping deleted data around indefinitely.
+                  </P>
+                  <P>
+                    During the 30-day window, deleted data continues to exist in immutable backup snapshots. We do not query, browse, or operate against backups except in a genuine recovery scenario, and any access is logged.
+                  </P>
+
                   <P>
                     To request deletion of your data, contact us at <a href="mailto:privacy@plotzy.co">privacy@plotzy.co</a> or use the account deletion option in Settings.
                   </P>
@@ -277,7 +318,13 @@ export default function PrivacyPolicy() {
                     <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
                     <li><strong>Correction:</strong> Update or correct inaccurate or incomplete information (most data can be updated directly in Settings)</li>
                     <li><strong>Deletion:</strong> Request erasure of your account and personal data</li>
-                    <li><strong>Portability:</strong> Request your content in a machine-readable format (e.g., export your books as plain text or PDF)</li>
+                    <li>
+                      <strong>Portability:</strong> Take your content with you in machine-readable formats. Two surfaces are built into the product:
+                      <ul style={{ marginTop: 6, marginBottom: 0 }}>
+                        <li><strong>Per-book export</strong> &mdash; download any individual book as PDF, EPUB, TXT, or DOCX (Microsoft Word) from the book's page.</li>
+                        <li><strong>Complete account export</strong> &mdash; download a single JSON file containing every piece of personal data we hold about you (books, chapters, snapshots, comments, ratings, subscription history, course progress, social graph, audit log, and account profile) from <a href="/account/settings">/account/settings</a> &rarr; "Your data" &rarr; "Download all my data".</li>
+                      </ul>
+                    </li>
                     <li><strong>Opt-out:</strong> Unsubscribe from marketing emails at any time via the unsubscribe link in any email</li>
                   </ul>
 
