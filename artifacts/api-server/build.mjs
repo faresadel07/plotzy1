@@ -36,6 +36,13 @@ async function buildAll() {
       "bcrypt",
       "argon2",
       "fsevents",
+      // ffmpeg-static ships a prebuilt ffmpeg binary inside its
+      // node_modules folder and resolves the binary path at runtime
+      // via __dirname relative to its own location. Bundling it
+      // breaks that resolution (the resolved path ends up under
+      // dist/ where there is no binary), so keep it external and
+      // let Node load it from node_modules at runtime.
+      "ffmpeg-static",
       "re2",
       "farmhash",
       "xxhash-addon",
