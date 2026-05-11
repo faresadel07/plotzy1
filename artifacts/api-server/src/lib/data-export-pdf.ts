@@ -1,5 +1,5 @@
 import PDFDocument from "pdfkit";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Writable } from "node:stream";
@@ -32,7 +32,14 @@ import type { UserDataExport } from "./data-export";
  */
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ASSETS_DIR = resolve(__dirname, "../assets");
+// In dev (tsx) __dirname is src/lib/, assets are one up at src/assets/.
+// In production (esbuild bundled) __dirname is dist/, assets are at
+// dist/assets/ (build.mjs copies them there). Try the bundled layout
+// first; fall back to the source layout for local dev.
+const ASSETS_DIR = (() => {
+  const bundled = resolve(__dirname, "assets");
+  return existsSync(bundled) ? bundled : resolve(__dirname, "../assets");
+})();
 const CAIRO_PATH = resolve(ASSETS_DIR, "fonts", "Cairo.ttf");
 
 type Lang = "en" | "ar";

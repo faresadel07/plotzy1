@@ -31,12 +31,19 @@
  */
 import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ASSETS_DIR = resolve(__dirname, "../assets");
+// In dev (tsx) __dirname is src/services/, assets are one up at src/assets/.
+// In production (esbuild bundled) __dirname is dist/, assets are at
+// dist/assets/ (build.mjs copies them there). Try the bundled layout
+// first; fall back to the source layout for local dev.
+const ASSETS_DIR = (() => {
+  const bundled = resolve(__dirname, "assets");
+  return existsSync(bundled) ? bundled : resolve(__dirname, "../assets");
+})();
 const TEMPLATE_PATH = resolve(ASSETS_DIR, "certificate-template.pdf");
 const LORA_SEMIBOLD_PATH = resolve(ASSETS_DIR, "fonts", "Lora-SemiBold.ttf");
 const INTER_SEMIBOLD_PATH = resolve(ASSETS_DIR, "fonts", "Inter-SemiBold.ttf");
