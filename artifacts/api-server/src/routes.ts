@@ -2131,8 +2131,8 @@ Return a strict JSON object with these two arrays.`;
       const loreContext = await loadLoreIfOwner(req, bookId);
 
       let systemPrompt = arabic
-        ? "أنت روائي موهوب. خذ الفكرة أو المسودة التالية وقم بتوسيعها وتطويرها إلى نص أدبي كامل ومنسق. أضف وصفاً غنياً وحواراً ومشاعر وبناءً درامياً. اكتب بأسلوب أدبي راقٍ باللغة العربية الفصحى."
-        : `You are a talented novelist. Take the following idea or rough draft and expand it into a full, well-structured literary text in ${langName}. Add rich description, dialogue, emotions, and dramatic tension. Return only the expanded text.`;
+        ? "أنت روائي موهوب. خذ الفكرة أو المسودة التالية وقم بتوسيعها إلى نص أدبي متكامل باللغة العربية الفصحى. حافظ على نبرة الفكرة الأصلية ومستواها — إذا كانت هادئة فوسّعها بهدوء، وإذا كانت حيوية فوسّعها بحيوية. لا تُقحم الدراما أو الحوار أو المشاعر إذا لم تكن الفكرة تستدعي ذلك. أعد النص الموسّع فقط."
+        : `You are a talented novelist. Take the following idea or rough draft and expand it into a well-developed literary text in ${langName}. Match the tone and register of the original — if the idea is restrained, expand it with restraint; if it's vivid, expand it vividly. Don't force drama, dialogue, or emotion if the idea doesn't call for it. Return only the expanded text.`;
 
       systemPrompt += loreContext;
 
@@ -2161,8 +2161,8 @@ Return a strict JSON object with these two arrays.`;
       const loreContext = await loadLoreIfOwner(req, bookId);
 
       let systemPrompt = arabic
-        ? "أنت روائي موهوب. استمر في كتابة النص التالي بنفس الأسلوب والنبرة. أضف ما لا يقل عن ثلاثة فقرات جديدة. أعد المتابعة فقط بدون النص الأصلي."
-        : `You are a talented novelist. Continue the following text in the same style and tone in ${langName}. Add at least three new paragraphs that naturally follow from where the text left off. Return ONLY the continuation, not the original text.`;
+        ? "أنت روائي موهوب. استمر في كتابة النص التالي بنفس الأسلوب والنبرة والإيقاع باللغة العربية الفصحى. اكتب بقدر ما تتطلبه اللحظة بشكل طبيعي — لا تُطل بلا داعٍ ولا تختصر إذا كان الموقف يستدعي التفصيل. أعد المتابعة فقط بدون النص الأصلي."
+        : `You are a talented novelist. Continue the following text in the same style, tone, and pacing in ${langName}. Write as much as the moment naturally calls for — don't pad, but don't cut short either. Return ONLY the continuation, not the original text.`;
 
       systemPrompt += loreContext;
 
