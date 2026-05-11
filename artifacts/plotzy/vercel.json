@@ -3,6 +3,10 @@
   "outputDirectory": "dist/public",
   "rewrites": [
     {
+      "source": "/favicon.ico",
+      "destination": "/favicon.png"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://workspaceapi-server-production-14b0.up.railway.app/api/:path*"
     },
