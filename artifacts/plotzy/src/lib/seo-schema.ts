@@ -21,7 +21,7 @@ export const SITE_URL = "https://plotzy.co";
 const SITE_LOGO = `${SITE_URL}/plotzy-logo.png`;
 const DEFAULT_OG_IMAGE = "/opengraph.jpg";
 const SITE_DESCRIPTION =
-  "Plotzy is a complete platform for writers — write, design covers, publish, and produce audiobooks with AI assistance.";
+  "Plotzy is a complete platform for writers. Write, design covers, publish, and produce audiobooks with AI assistance.";
 
 /**
  * Resolve any image URL to an absolute https://plotzy.co URL.
@@ -463,7 +463,7 @@ export function buildEducationalCredentialSchema(
   return {
     "@context": "https://schema.org",
     "@type": "EducationalOccupationalCredential",
-    name: "Certificate of Completion — How to Write Your First Book",
+    name: "Certificate of Completion: How to Write Your First Book",
     url: `${SITE_URL}/certificates/${cert.uuid}`,
     credentialCategory: "Certificate",
     dateCreated: cert.issuedAt,

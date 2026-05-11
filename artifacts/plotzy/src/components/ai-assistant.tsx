@@ -140,7 +140,7 @@ export function AIAssistant({ bookId, currentContent, onApply, onClose }: AIAssi
       }
       setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
     } catch {
-      toast({ title: ar ? "فشل الطلب — تحقق من مفتاح OpenAI" : "Request failed — check OpenAI key", variant: "destructive" });
+      toast({ title: ar ? "فشل الطلب. تحقق من مفتاح OpenAI" : "Request failed. Check OpenAI key", variant: "destructive" });
     } finally {
       setLoading(false);
     }

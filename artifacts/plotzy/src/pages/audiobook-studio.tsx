@@ -591,7 +591,7 @@ export default function AudiobookStudio() {
               color: "#fff",
               letterSpacing: "-0.03em",
             }}>
-              {ar ? `${book?.title || "..."} — استوديو` : `${book?.title || "Your Book"} — Audiobook`}
+              {ar ? `${book?.title || "..."} · استوديو` : `${book?.title || "Your Book"} · Audiobook`}
             </h1>
             <p className="text-sm max-w-xl mx-auto" style={{ color: "#666" }}>
               {ar
@@ -814,7 +814,7 @@ export default function AudiobookStudio() {
                                 border: stale ? "1px solid #7a5c00" : preview ? "1px solid #333" : "1px solid #2a2a2a",
                                 cursor: isLoadingPreview ? "not-allowed" : "pointer",
                               }}
-                              title={stale ? (ar ? "الصوت تغير، أعد المعاينة" : "Voice changed — regenerate preview") : undefined}
+                              title={stale ? (ar ? "الصوت تغير، أعد المعاينة" : "Voice changed. Regenerate preview") : undefined}
                             >
                               {isLoadingPreview
                                 ? <Loader2 className="w-3 h-3 animate-spin" />

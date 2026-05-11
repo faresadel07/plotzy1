@@ -17,10 +17,10 @@ function Cursor() {
    CARD 1 — Chapter Editor
 ════════════════════════════════════════ */
 const CH_LINES = [
-  { t: "title", text: "Chapter 7 — The Return" },
+  { t: "title", text: "Chapter 7: The Return" },
   { t: "blank", text: "" },
   { t: "prose", text: "The village looked exactly the same, and that was the worst part." },
-  { t: "prose", text: "Elena had expected something to have changed in three years —" },
+  { t: "prose", text: "Elena had expected something to have changed in three years." },
   { t: "prose", text: "a new face, a demolished wall. But nothing moved." },
 ];
 
@@ -100,7 +100,7 @@ function ChapterEditorCard() {
    CARD 2 — AI Writing Assistant
 ════════════════════════════════════════ */
 const AI_PROMPT = "Continue the scene. Elena just found the letter in the drawer.";
-const AI_TEXT = `She didn't dare unfold it. Instead, she held it by the edges the way you hold something that might dissolve — or detonate. Her name was on the front in his handwriting: careful, deliberate.
+const AI_TEXT = `She didn't dare unfold it. Instead, she held it by the edges the way you hold something that might dissolve, or detonate. Her name was on the front in his handwriting: careful, deliberate.
 
 She hadn't.`;
 
@@ -207,7 +207,7 @@ function PrintCard() {
       </div>
       <div>
         <p className="text-white font-semibold text-sm mb-1.5 leading-snug" style={{ fontFamily: SF }}>See your book exactly as it will print</p>
-        <p className="text-white/40 text-xs leading-relaxed" style={{ fontFamily: SF }}>Two-page spread with real margins, chapter breaks, and page numbers — export to PDF when ready.</p>
+        <p className="text-white/40 text-xs leading-relaxed" style={{ fontFamily: SF }}>Two-page spread with real margins, chapter breaks, and page numbers. Export to PDF when ready.</p>
       </div>
     </div>
   );
@@ -255,7 +255,7 @@ function CoverCard() {
         </AnimatePresence>
       </div>
       <p className="text-white font-semibold text-sm leading-snug" style={{ fontFamily: SF }}>Professional covers in seconds</p>
-      <p className="text-white/40 text-xs leading-relaxed" style={{ fontFamily: SF }}>Describe your book's mood and Plotzy generates a unique cover — no design skills needed.</p>
+      <p className="text-white/40 text-xs leading-relaxed" style={{ fontFamily: SF }}>Describe your book's mood and Plotzy generates a unique cover. No design skills needed.</p>
     </div>
   );
 }
@@ -289,7 +289,7 @@ function LibraryCard() {
           </motion.div>
         ))}
       </div>
-      <p className="text-white/35 text-xs leading-relaxed mt-3" style={{ fontFamily: SF }}>All your books in one place — organized and always ready to continue.</p>
+      <p className="text-white/35 text-xs leading-relaxed mt-3" style={{ fontFamily: SF }}>All your books in one place, organized and always ready to continue.</p>
     </div>
   );
 }
@@ -332,7 +332,7 @@ function ArticleCard() {
         <p className="text-white/25 text-[10px] font-bold uppercase tracking-widest mb-3" style={{ fontFamily: SF }}>Article & Blog Editor</p>
         <p className="text-white font-semibold text-sm mb-2 leading-snug" style={{ fontFamily: SF }}>Write beyond the book</p>
         <p className="text-white/40 text-xs leading-relaxed mb-3" style={{ fontFamily: SF }}>
-          A dedicated editor for articles, essays, and blog posts — with featured images, categories, word-goal tracking, and a clean reading preview.
+          A dedicated editor for articles, essays, and blog posts, with featured images, categories, word-goal tracking, and a clean reading preview.
         </p>
         <div className="flex flex-wrap gap-1.5">
           {ATAGS.map((t, i) => (
@@ -486,9 +486,9 @@ function AchievementsCard() {
    CARD 9 — Outline Board
 ════════════════════════════════════════ */
 const ACTS = [
-  { label: "Act I — Setup", beats: ["The ordinary world", "Call to adventure"] },
-  { label: "Act II — Conflict", beats: ["Crossing the threshold", "Tests & allies", "The ordeal"] },
-  { label: "Act III — Resolution", beats: ["The road back", "Return transformed"] },
+  { label: "Act I: Setup", beats: ["The ordinary world", "Call to adventure"] },
+  { label: "Act II: Conflict", beats: ["Crossing the threshold", "Tests & allies", "The ordeal"] },
+  { label: "Act III: Resolution", beats: ["The road back", "Return transformed"] },
 ];
 
 function OutlineCard() {
@@ -515,7 +515,7 @@ function OutlineCard() {
         ))}
       </div>
       <p className="text-white/30 text-xs mt-4 leading-relaxed" style={{ fontFamily: SF }}>
-        Map your entire story before writing a word — drag story beats across acts to restructure your narrative.
+        Map your entire story before writing a word. Drag story beats across acts to restructure your narrative.
       </p>
     </div>
   );
@@ -576,7 +576,7 @@ function StoryBibleCard() {
           </motion.div>
         </AnimatePresence>
       </div>
-      <p className="text-white/30 text-xs mt-3 leading-relaxed" style={{ fontFamily: SF }}>Build rich character profiles, locations, items, and lore — all linked to your chapters.</p>
+      <p className="text-white/30 text-xs mt-3 leading-relaxed" style={{ fontFamily: SF }}>Build rich character profiles, locations, items, and lore, all linked to your chapters.</p>
     </div>
   );
 }
@@ -637,7 +637,7 @@ function SoundCard() {
           })}
         </div>
         <p className="text-white/30 text-xs mt-3 leading-relaxed" style={{ fontFamily: SF }}>
-          Write to the sound of rain, birdsong, or a busy café — right inside the editor.
+          Write to the sound of rain, birdsong, or a busy café, right inside the editor.
         </p>
       </div>
     </div>
@@ -672,7 +672,7 @@ export function FeaturesSection() {
             <span className="text-white">in a single place.</span>
           </h2>
           <p className="text-white/80 text-lg font-light max-w-xl mx-auto leading-relaxed" style={{ fontFamily: SF }}>
-            From the first draft to the finished book — built around how writers actually work.
+            From the first draft to the finished book, built around how writers actually work.
           </p>
         </motion.div>
 
@@ -685,7 +685,7 @@ export function FeaturesSection() {
               <div className="mb-4">
                 <p className="text-white/25 text-[10px] font-bold uppercase tracking-widest mb-1" style={{ fontFamily: SF }}>Chapter Editor</p>
                 <p className="text-white font-semibold text-sm leading-snug" style={{ fontFamily: SF }}>A focused space for your story</p>
-                <p className="text-white/35 text-xs mt-1" style={{ fontFamily: SF }}>Rich formatting, chapter navigation, and live word count — all while staying out of your way.</p>
+                <p className="text-white/35 text-xs mt-1" style={{ fontFamily: SF }}>Rich formatting, chapter navigation, and live word count, all while staying out of your way.</p>
               </div>
               <div className="h-[210px]"><ChapterEditorCard /></div>
             </Card>
