@@ -45,6 +45,7 @@ const DiscoverPage = lazy(() => import("@/pages/discover"));
 const GutenbergReader = lazy(() => import("@/pages/gutenberg-reader"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
+const Protection = lazy(() => import("@/pages/protection"));
 const Messages = lazy(() => import("@/pages/messages"));
 const Blog = lazy(() => import("@/pages/blog"));
 const ArticleView = lazy(() => import("@/pages/article-view"));
@@ -354,6 +355,7 @@ function Router() {
         <Route path="/tutorial" component={TutorialPage} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/terms" component={TermsOfService} />
+        <Route path="/protection" component={Protection} />
         <Route path="/faq" component={FaqPage} />
         <Route path="/marketplace" component={Marketplace} />
         <Route path="/course" component={CourseLandingPage} />

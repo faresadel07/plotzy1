@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
-import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, UserPlus, Search, ArrowRight } from "lucide-react";
+import { BookOpen, Loader2, Sparkles, Library, Zap, ChevronDown, ChevronRight, CheckCircle, PenLine, Grid, Activity, Shield, Globe, FileText, Plus, Trash2, Users, UserPlus, Search, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { HeroMockup } from "@/components/HeroMockup";
@@ -1451,6 +1451,115 @@ export default function Home() {
 
         {/* ===== BOOK CAROUSEL ===== */}
         <BookCarousel />
+
+        {/* ===== WRITER PROTECTION TEASER ===== */}
+        <section className="relative bg-[#080808] py-20 px-6 sm:px-8 overflow-hidden">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-14">
+              <p style={{
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.4)",
+                marginBottom: 16,
+              }}>
+                🛡️ Writer Protection
+              </p>
+              <h2 style={{
+                fontSize: "clamp(1.9rem, 4.2vw, 2.9rem)",
+                fontWeight: 800,
+                color: "#fff",
+                lineHeight: 1.1,
+                letterSpacing: "-0.035em",
+                marginBottom: 14,
+              }}>
+                Built for writers who care about their rights ✨
+              </h2>
+              <p style={{
+                fontSize: 16,
+                color: "rgba(255,255,255,0.5)",
+                lineHeight: 1.6,
+                maxWidth: 560,
+                margin: "0 auto",
+              }}>
+                Your words, your story, your rights. We protect what matters most. 📖
+              </p>
+            </div>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 16,
+              marginBottom: 40,
+            }}>
+              {[
+                { emoji: "📝", title: "You own everything", desc: "100% of your writing belongs to you. Always." },
+                { emoji: "🤖", title: "AI never trains on you", desc: "Your text is never used to train any AI model." },
+                { emoji: "🔒", title: "Private by default", desc: "Nothing leaves your account without your consent." },
+                { emoji: "🗑️", title: "Delete anytime", desc: "One click and every byte is gone. No questions asked." },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 16,
+                  padding: "22px 20px",
+                  textAlign: "left",
+                }}>
+                  <div style={{ fontSize: 26, marginBottom: 12, lineHeight: 1 }}>{item.emoji}</div>
+                  <h3 style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: "#fff",
+                    marginBottom: 6,
+                    letterSpacing: "-0.005em",
+                  }}>
+                    {item.title}
+                  </h3>
+                  <p style={{
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.55)",
+                    lineHeight: 1.55,
+                    margin: 0,
+                  }}>
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link href="/protection">
+                <a style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "14px 30px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  textDecoration: "none",
+                  transition: "all 0.25s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                }}
+                >
+                  🔍 See how we protect your work
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                </a>
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {/* ===== CTA SECTION ===== */}
         <section className="relative bg-[#080808] text-center py-10 px-6 sm:px-8 overflow-hidden">
