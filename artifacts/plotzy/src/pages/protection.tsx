@@ -64,7 +64,7 @@ export default function Protection() {
         description="Your words, your rights, always yours. Learn how Plotzy protects your intellectual property, privacy, and creative work."
       />
 
-      <div style={{ minHeight: "100vh", background: "#080808", color: "#fff", fontFamily: SF }}>
+      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#fff", fontFamily: SF }}>
 
         {/* ===== BACK BUTTON (fixed, top-left) ===== */}
         <button
@@ -195,7 +195,7 @@ export default function Protection() {
         {/* ===== WHAT WE NEVER DO ===== */}
         <section style={{
           padding: "80px 24px",
-          background: "#080808",
+          background: "#0A0A0A",
         }}>
           <div style={{ maxWidth: 880, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -325,7 +325,7 @@ export default function Protection() {
         {/* ===== DMCA / COPYRIGHT ===== */}
         <section style={{
           padding: "80px 24px",
-          background: "#080808",
+          background: "#0A0A0A",
         }}>
           <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
             <h2 style={{
