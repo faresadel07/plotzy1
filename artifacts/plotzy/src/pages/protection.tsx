@@ -109,7 +109,7 @@ export default function Protection() {
         </button>
 
         {/* ===== HERO ===== */}
-        <section style={{ padding: "100px 24px 60px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
+        <section style={{ padding: "60px 24px 32px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
           <p style={{
             fontSize: 13,
             fontWeight: 600,
@@ -143,7 +143,7 @@ export default function Protection() {
         </section>
 
         {/* ===== PILLARS GRID ===== */}
-        <section style={{ padding: "40px 24px 80px", maxWidth: 1200, margin: "0 auto" }}>
+        <section style={{ padding: "16px 24px 40px", maxWidth: 1200, margin: "0 auto" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -194,11 +194,11 @@ export default function Protection() {
 
         {/* ===== WHAT WE NEVER DO ===== */}
         <section style={{
-          padding: "80px 24px",
+          padding: "44px 24px",
           background: "#0A0A0A",
         }}>
           <div style={{ maxWidth: 880, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
               <p style={{
                 fontSize: 13,
                 fontWeight: 600,
@@ -265,8 +265,8 @@ export default function Protection() {
         </section>
 
         {/* ===== TECHNICAL TRANSPARENCY ===== */}
-        <section style={{ padding: "80px 24px", maxWidth: 880, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <section style={{ padding: "44px 24px", maxWidth: 880, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
             <p style={{
               fontSize: 13,
               fontWeight: 600,
@@ -324,7 +324,7 @@ export default function Protection() {
 
         {/* ===== DMCA / COPYRIGHT ===== */}
         <section style={{
-          padding: "80px 24px",
+          padding: "44px 24px",
           background: "#0A0A0A",
         }}>
           <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
@@ -370,7 +370,7 @@ export default function Protection() {
         </section>
 
         {/* ===== CTA FOOTER ===== */}
-        <section style={{ padding: "80px 24px", textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
+        <section style={{ padding: "44px 24px 60px", textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
             fontWeight: 800,
@@ -385,7 +385,7 @@ export default function Protection() {
             fontSize: 16,
             color: "rgba(255,255,255,0.55)",
             lineHeight: 1.65,
-            marginBottom: 32,
+            marginBottom: 24,
           }}>
             Now you know exactly how we treat your work. Ready to start your next book?
           </p>
