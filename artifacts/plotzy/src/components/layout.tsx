@@ -698,6 +698,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               { label: 'Community Library', href: '/library' },
               { label: 'Public Domain Books', href: '/discover' },
               { label: 'Messages', href: '/messages' },
+              { label: 'About Plotzy', href: '/about' },
             ]} />
 
             {/* Learn */}

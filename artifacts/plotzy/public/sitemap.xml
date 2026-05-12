@@ -24,6 +24,13 @@
   </url>
 
   <url>
+    <loc>https://plotzy.co/about</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
     <loc>https://plotzy.co/course</loc>
     <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
