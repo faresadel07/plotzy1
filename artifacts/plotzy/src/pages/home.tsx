@@ -562,9 +562,20 @@ export default function Home() {
         {/* ===== MOBILE HERO (< 700px only) ===== */}
         {/* Phones get a static, lightweight hero. The 3D ContainerScroll
             below is heavy and looks cramped on a 5" screen. iPad and
-            laptop are unaffected: this section is hidden at 700px+. */}
+            laptop are unaffected: this section is hidden via the
+            media query in the <style> block below. !important is
+            required because the inline display:flex would otherwise
+            beat any class-based hiding. */}
+        <style>{`
+          @media (min-width: 700px) {
+            .plotzy-mobile-hero { display: none !important; }
+          }
+          @media (max-width: 699px) {
+            .plotzy-desktop-hero { display: none !important; }
+          }
+        `}</style>
         <section
-          className="min-[700px]:hidden bg-[#080808]"
+          className="plotzy-mobile-hero bg-[#080808]"
           style={{
             minHeight: "calc(100vh - 60px)",
             display: "flex",
@@ -628,7 +639,7 @@ export default function Home() {
         </section>
 
         {/* ===== HERO SECTION — ContainerScroll 3D (>= 700px only) ===== */}
-        <div className="bg-[#080808] max-[699px]:hidden">
+        <div className="plotzy-desktop-hero bg-[#080808]">
           <ContainerScroll
             titleComponent={
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
