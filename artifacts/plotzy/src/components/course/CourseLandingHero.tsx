@@ -31,6 +31,14 @@ export function CourseLandingHero() {
         minHeight: "clamp(180px, 42vw, 360px)",
       }}
     >
+      {/* Hide the heavy 1.4MB hero illustration on phones — it loads
+          slowly on cellular and feels cramped at <700px. iPad and
+          laptop still get the full image. */}
+      <style>{`
+        @media (max-width: 699px) {
+          .course-hero-image { display: none !important; }
+        }
+      `}</style>
       <img
         src="/course-hero.png"
         alt=""
@@ -38,7 +46,7 @@ export function CourseLandingHero() {
         aria-hidden="true"
         loading="eager"
         decoding="async"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="course-hero-image absolute inset-0 h-full w-full object-cover"
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
