@@ -1,9 +1,26 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Laptop, Tablet, Smartphone, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
 const BREAKPOINT = 700;
+
+// Routes that remain blocked on phones because their UI relies on
+// desktop-only interactions (multi-pane editors, drag-and-drop canvases,
+// large data tables). Everything not matching these patterns now opens
+// on mobile. Patterns are pathname-prefix regexes.
+const DESKTOP_ONLY_PATTERNS: RegExp[] = [
+  /^\/books\//,        // /books/:id details + cover-designer + publish + audiobook-studio + chapter editor
+  /^\/articles\//,     // /articles/:id article editor
+  /^\/admin($|\/)/,    // /admin and any sub-route
+  /^\/dashboard($|\/)/, // /dashboard (My Library workspace)
+  /^\/trash($|\/)/,    // /trash recycle bin view
+];
+
+function isDesktopOnlyRoute(pathname: string): boolean {
+  return DESKTOP_ONLY_PATTERNS.some((pattern) => pattern.test(pathname));
+}
 
 const COPY: Record<string, {
   brand: string;
@@ -39,12 +56,13 @@ const COPY: Record<string, {
 
 export default function MobileBlocker() {
   const { lang } = useLanguage();
-  const [blocked, setBlocked] = useState<boolean>(() =>
+  const [pathname] = useLocation();
+  const [isNarrow, setIsNarrow] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth < BREAKPOINT : false
   );
 
   useEffect(() => {
-    const onResize = () => setBlocked(window.innerWidth < BREAKPOINT);
+    const onResize = () => setIsNarrow(window.innerWidth < BREAKPOINT);
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     return () => {
@@ -52,6 +70,11 @@ export default function MobileBlocker() {
       window.removeEventListener("orientationchange", onResize);
     };
   }, []);
+
+  // The blocker now only fires when (a) the viewport is below 700px AND
+  // (b) the user is on a route that legitimately can't function on a phone.
+  // Marketing, browse, read, auth, account, etc. now pass through.
+  const blocked = isNarrow && isDesktopOnlyRoute(pathname);
 
   const copy = COPY[lang === "ar" ? "ar" : "en"];
 

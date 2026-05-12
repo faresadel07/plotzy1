@@ -559,8 +559,76 @@ export default function Home() {
       */}
       <Layout isLanding>
 
-        {/* ===== HERO SECTION — ContainerScroll 3D ===== */}
-        <div className="bg-[#080808]">
+        {/* ===== MOBILE HERO (< 700px only) ===== */}
+        {/* Phones get a static, lightweight hero. The 3D ContainerScroll
+            below is heavy and looks cramped on a 5" screen. iPad and
+            laptop are unaffected: this section is hidden at 700px+. */}
+        <section
+          className="min-[700px]:hidden bg-[#080808]"
+          style={{
+            minHeight: "calc(100vh - 60px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "40px 24px",
+            textAlign: "center",
+          }}
+        >
+          <p style={{
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+            fontSize: 18,
+            fontWeight: 400,
+            color: "rgba(255,255,255,0.72)",
+            marginBottom: 12,
+            letterSpacing: "0.01em",
+          }}>
+            write your first book with
+          </p>
+          <h1 style={{
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+            fontSize: "clamp(3.5rem, 18vw, 5rem)",
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: "-0.05em",
+            color: "#EFEFEF",
+            margin: "0 0 24px",
+            userSelect: "none",
+          }}>
+            PLOTZY
+          </h1>
+          <p style={{
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+            fontSize: 15,
+            color: "rgba(255,255,255,0.5)",
+            maxWidth: 320,
+            margin: "0 0 32px",
+            lineHeight: 1.5,
+          }}>
+            The complete platform for writers.
+          </p>
+          <button
+            onClick={openCreateBook}
+            style={{
+              padding: "14px 36px",
+              borderRadius: 999,
+              background: "#EFEFEF",
+              color: "#111",
+              fontWeight: 700,
+              fontSize: 14,
+              letterSpacing: "0.01em",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+            }}
+          >
+            Start Writing
+          </button>
+        </section>
+
+        {/* ===== HERO SECTION — ContainerScroll 3D (>= 700px only) ===== */}
+        <div className="bg-[#080808] max-[699px]:hidden">
           <ContainerScroll
             titleComponent={
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
