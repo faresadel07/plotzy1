@@ -750,6 +750,11 @@ export default function Pricing() {
         </div>
       </div>
       <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <style>{`
+        @media (max-width: 699px) {
+          .pricing-faq-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </Layout>
   );
 }

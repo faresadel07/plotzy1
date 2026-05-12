@@ -69,6 +69,13 @@ export default function PrivacyPolicy() {
       <div style={{ paddingTop: 40, paddingBottom: 120 }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 clamp(14px, 4vw, 24px)" }}>
 
+          <style>{`
+            @media (max-width: 699px) {
+              .terms-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+              .terms-grid > aside { display: none !important; }
+              .terms-grid h1 { font-size: 32px !important; }
+            }
+          `}</style>
           <div className="terms-grid" style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 64, alignItems: "start" }}>
 
             <aside style={{ position: "sticky", top: 88 }}>
