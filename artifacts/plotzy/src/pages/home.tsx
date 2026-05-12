@@ -775,7 +775,7 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="workspace-actions flex items-center gap-3">
                   {books && books.length > 0 && (
                     <span className="text-[11px] font-semibold text-white/20 uppercase tracking-widest hidden sm:block">
                       {books.length} {books.length === 1 ? "Project" : "Projects"}
@@ -783,7 +783,7 @@ export default function Home() {
                   )}
                   <Link href="/trash">
                     <button
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                      className="workspace-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -794,7 +794,7 @@ export default function Home() {
                     <>
                       <button
                         onClick={() => { setShowJoinModal(true); setJoinCode(""); setJoinError(""); }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                        className="workspace-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                         style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
                       >
                         <Users className="w-3.5 h-3.5" />
@@ -802,7 +802,7 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => setIsOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+                        className="workspace-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
                         style={{ background: '#ffffff', color: '#111111' }}
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -811,6 +811,20 @@ export default function Home() {
                     </>
                   )}
                 </div>
+                <style>{`
+                  @media (max-width: 699px) {
+                    .workspace-actions {
+                      flex-wrap: wrap !important;
+                      gap: 8px !important;
+                      justify-content: flex-start !important;
+                    }
+                    .workspace-btn {
+                      padding: 6px 12px !important;
+                      font-size: 12px !important;
+                      gap: 6px !important;
+                    }
+                  }
+                `}</style>
               </div>
 
               {/* Shelf display */}
