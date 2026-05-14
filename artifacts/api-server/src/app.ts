@@ -154,8 +154,15 @@ app.get("/healthz", async (_req, res) => {
 // need more (chapter content, audio transcription, AI prompt
 // expansion) opt in explicitly via per-route audioBodyParser /
 // largeBodyParser. URL-encoded form bodies are also clamped.
-app.use(express.json({ limit: "2mb", verify: (req, _res, buf) => { req.rawBody = buf; } }));
-app.use(express.urlencoded({ extended: false, limit: "2mb" }));
+// Global JSON limit raised from 2mb to 15mb. The cover designer save
+// bundles uploaded images as base64 and routinely exceeds the old
+// limit, and the per-route bookUpdateBodyParser was ineffective because
+// this global parser runs first in the middleware chain. 15mb stays
+// well under the 50mb audio/chapter ceilings that already exist for
+// truly large payloads, and remains restrictive enough to fend off
+// casual abuse.
+app.use(express.json({ limit: "15mb", verify: (req, _res, buf) => { req.rawBody = buf; } }));
+app.use(express.urlencoded({ extended: false, limit: "15mb" }));
 
 setupPassport();
 const PgSession = ConnectPgSimple(session);
