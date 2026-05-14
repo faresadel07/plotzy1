@@ -285,24 +285,14 @@ function KDPSection({ bookId, bookTitle }: { bookId: number; bookTitle: string }
               </a>
               <button
                 type="button"
-                onClick={async () => {
-                  // fetch + blob instead of <a download>: a stale service
-                  // worker on the apex domain was intercepting the
-                  // download request and returning the cached SPA 404
-                  // HTML, which the <a> would then render as a page
-                  // instead of triggering a download.
-                  try {
-                    const res = await fetch(`/api/books/${bookId}/download?format=pdf`);
-                    if (!res.ok) throw new Error("Download failed");
-                    const blob = await res.blob();
-                    const a = document.createElement("a");
-                    a.href = URL.createObjectURL(blob);
-                    a.download = "book.pdf";
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                  } catch {
-                    toast({ title: ar ? "فشل التحميل" : "Download failed", variant: "destructive" });
-                  }
+                onClick={() => {
+                  // The download endpoint returns HTML with window.print()
+                  // for PDF format, not real PDF bytes. window.open is
+                  // required so the browser renders the page and the print
+                  // dialog opens for the user to save as PDF. fetch+blob
+                  // or <a download> would just save the HTML as book.pdf
+                  // and any PDF reader would refuse to open it.
+                  window.open(`/api/books/${bookId}/download?format=pdf`, "_blank");
                 }}
                 className="w-full text-[12px] font-medium py-2 rounded-lg"
                 style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}
