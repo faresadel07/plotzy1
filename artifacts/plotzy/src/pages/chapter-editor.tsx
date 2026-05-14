@@ -624,9 +624,18 @@ export default function ChapterEditor() {
       setPages(parsed);
       const html = pagesToHtml(parsed);
       setRichHtml(html);
-      const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
-      const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
-      setRichPages(splitHtmlIntoPages(html, wpp));
+
+      // Prefer the explicit page-break markers written by performSave so
+      // the user gets back the exact pagination they authored. Fall back
+      // to the word-count estimate only for legacy chapters saved before
+      // markers were introduced.
+      if (html.includes('<!-- PAGE_BREAK -->')) {
+        setRichPages(html.split(/\s*<!--\s*PAGE_BREAK\s*-->\s*/));
+      } else {
+        const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+        const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+        setRichPages(splitHtmlIntoPages(html, wpp));
+      }
 
       // After loading the server copy, check IndexedDB for a local draft
       // that was never flushed (e.g. the user lost network mid-save or
@@ -1092,8 +1101,12 @@ export default function ChapterEditor() {
     if (!options.silent) setAutoSaving(false);
     else setAutoSaving(true);
     try {
-      // Join all rich pages into a single HTML string
-      const htmlContent = richPages.join('') || richHtml;
+      // Join all rich pages with explicit page-break markers so the load
+      // path can restore the exact same pagination the user authored.
+      // Without these markers, save loses page boundaries and load has to
+      // guess them via a word-count estimate, which inflates the page
+      // count (a typed 37-page chapter would re-load as 51).
+      const htmlContent = richPages.join('\n<!-- PAGE_BREAK -->\n') || richHtml;
       // v2 format: includes floating images
       const currentContent = JSON.stringify({
         v: 2,
@@ -1217,9 +1230,16 @@ export default function ChapterEditor() {
     setPages(parsed);
     const html = pagesToHtml(parsed);
     setRichHtml(html);
-    const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
-    const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
-    setRichPages(splitHtmlIntoPages(html, wpp));
+    // Same marker-aware split as the chapter-load path so a restored
+    // draft preserves the user's pagination instead of being re-cut by
+    // the word-count estimate.
+    if (html.includes('<!-- PAGE_BREAK -->')) {
+      setRichPages(html.split(/\s*<!--\s*PAGE_BREAK\s*-->\s*/));
+    } else {
+      const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+      const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+      setRichPages(splitHtmlIntoPages(html, wpp));
+    }
     // Mark as dirty so the user is nudged to save, and so the init
     // effect doesn't immediately overwrite what we just restored with
     // the stale server copy.
