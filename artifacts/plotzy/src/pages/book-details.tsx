@@ -1145,8 +1145,25 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                   setShowTemplatePicker(false);
                   setIsDownloading(true);
                   try {
+                    // Fetch + blob download instead of window.open. window.open
+                    // navigates to the URL in a new tab on the current origin,
+                    // which means a stale service worker on the apex domain
+                    // (plotzy.co without www) was intercepting the request and
+                    // returning the cached SPA 404 page. fetch from the same
+                    // origin streams the PDF bytes through, then we trigger
+                    // a download via a synthetic anchor click.
                     const url = `/api/books/${bookId}/download?format=pdf&template=${exportTemplate}`;
-                    window.open(url, "_blank");
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error("Download failed");
+                    const blob = await res.blob();
+                    const safeTitle = book.title.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `${safeTitle}.pdf`;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                  } catch {
+                    toast({ title: lang === "ar" ? "فشل التحميل" : "Download failed", variant: "destructive" });
                   } finally { setIsDownloading(false); }
                 }}>
                 <FileDown className="w-4 h-4 mr-2" />{lang === "ar" ? "تنزيل PDF" : "Download PDF"}
