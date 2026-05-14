@@ -282,11 +282,32 @@ function KDPSection({ bookId, bookTitle }: { bookId: number; bookTitle: string }
                   {ar ? "افتح KDP" : "Open KDP"} ↗
                 </button>
               </a>
-              <a href={`/api/books/${bookId}/download?format=pdf`} download>
-                <button className="w-full text-[12px] font-medium py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  {ar ? "تحميل PDF" : "Download PDF"}
-                </button>
-              </a>
+              <button
+                type="button"
+                onClick={async () => {
+                  // fetch + blob instead of <a download>: a stale service
+                  // worker on the apex domain was intercepting the
+                  // download request and returning the cached SPA 404
+                  // HTML, which the <a> would then render as a page
+                  // instead of triggering a download.
+                  try {
+                    const res = await fetch(`/api/books/${bookId}/download?format=pdf`);
+                    if (!res.ok) throw new Error("Download failed");
+                    const blob = await res.blob();
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = "book.pdf";
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                  } catch {
+                    toast({ title: ar ? "فشل التحميل" : "Download failed", variant: "destructive" });
+                  }
+                }}
+                className="w-full text-[12px] font-medium py-2 rounded-lg"
+                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                {ar ? "تحميل PDF" : "Download PDF"}
+              </button>
             </div>
           </div>
         )}

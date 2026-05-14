@@ -64,6 +64,17 @@ export default defineConfig({
             },
           },
           {
+            // Never go through the service worker for download endpoints.
+            // The previous NetworkFirst rule was caching the SPA's 404
+            // HTML for /api/books/:id/download (because Vercel was
+            // returning that page during a transient routing miss), and
+            // every subsequent click on Download → PDF then served the
+            // cached HTML instead of the real PDF, leaving the browser
+            // showing the 404 screen at the API URL.
+            urlPattern: /\/api\/.*\/download/,
+            handler: "NetworkOnly",
+          },
+          {
             // Cache API reads with network-first strategy so offline
             // falls back to last-seen data
             urlPattern: /^\/api\/(books|chapters|lore|auth\/user)/,
