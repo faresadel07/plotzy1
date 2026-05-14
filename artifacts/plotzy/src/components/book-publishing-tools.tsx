@@ -247,6 +247,7 @@ function ARCSection({ bookId }: { bookId: number }) {
 
 function KDPSection({ bookId, bookTitle }: { bookId: number; bookTitle: string }) {
   const { lang } = useLanguage();
+  const { toast } = useToast();
   const ar = lang === "ar";
   const [expanded, setExpanded] = useState(false);
 
