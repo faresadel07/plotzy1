@@ -364,7 +364,13 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.books.update.path, requireBookOwner, async (req, res) => {
+  // The cover designer save bundles the full coverData (uploaded images
+  // as base64 + a JPEG thumbnail of the front face) into this PUT, which
+  // routinely exceeds the global 2MB JSON limit and produces a generic
+  // "Save failed" toast on the client. Bumped to 10MB for this endpoint
+  // only so the cover save round-trips reliably.
+  const bookUpdateBodyParser = express.json({ limit: "10mb" });
+  app.put(api.books.update.path, bookUpdateBodyParser, requireBookOwner, async (req, res) => {
     try {
       const input = api.books.update.input.parse(req.body);
       const book = await storage.updateBook(Number(req.params.id), input);
