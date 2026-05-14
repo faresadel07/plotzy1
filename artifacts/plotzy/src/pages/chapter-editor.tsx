@@ -650,48 +650,13 @@ export default function ChapterEditor() {
     }
   }, [chapter, isDirty]);
 
-  // ── Re-paginate oversized pages after chapter loads ───────────────────────
-  // Fixes old data that was saved with too-long pages (duplication bug).
-  // Runs once per chapter load after the measureEl div is in the DOM.
-  useEffect(() => {
-    if (!chapter || isDirty) return;
-    const measureEl = measureRef.current;
-    if (!measureEl) return;
-
-    // Use rAF to ensure the DOM is fully painted before measuring
-    const raf = requestAnimationFrame(() => {
-      setPages(prev => {
-        let changed = false;
-        const result: PageBlock[] = [];
-
-        for (const block of prev) {
-          const text = getPageText(block);
-          const fontId = typeof block === 'string'
-            ? 'eb-garamond'
-            : ((block as { type: string; fontFamily?: string }).fontFamily ?? 'eb-garamond');
-          const fontFamily = (FONT_STYLE_MAP[fontId] || {}).fontFamily as string | undefined;
-          if (fontFamily) measureEl.style.fontFamily = fontFamily;
-
-          measureEl.textContent = text;
-          const maxH = dynDimsForHook.contentHeight;
-          if (measureEl.offsetHeight > maxH) {
-            const chunks = splitIntoPages(text, measureEl, maxH);
-            for (const chunk of chunks) {
-              result.push({ type: 'text', content: chunk, fontFamily: fontId || undefined } as PageBlock);
-            }
-            changed = true;
-          } else {
-            result.push(block);
-          }
-        }
-
-        return changed ? result : prev;
-      });
-    });
-
-    return () => cancelAnimationFrame(raf);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter?.id]);
+  // Re-pagination on chapter load was removed: it fired after every Save
+  // (because save flips isDirty back to false, which the effect treated as
+  // "fresh load"), and its measureEl-vs-render dimension mismatch caused
+  // user-typed pages to be split into many smaller ones with empty space.
+  // Pages typed in the editor are already paginated correctly by the
+  // splitIntoPages call in the typing flow, so no re-pagination is needed
+  // on load. If old data ever needs migration, do it server-side once.
 
   /* ── Print View keyboard navigation ── */
   useEffect(() => {
