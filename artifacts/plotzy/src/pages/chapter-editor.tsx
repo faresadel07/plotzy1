@@ -648,7 +648,16 @@ export default function ChapterEditor() {
         });
       }
     }
-  }, [chapter, isDirty]);
+  // Depend only on chapter?.id, NOT on isDirty or the chapter object
+  // reference. With isDirty in the deps, this effect re-fired after every
+  // successful save (isDirty flips from true to false), and the
+  // splitHtmlIntoPages call below would re-cut the user's pages by a
+  // word-count estimate that disagrees with the live editor's visual
+  // pagination — turning a typed 37-page chapter into 51 pages with
+  // empty whitespace. The id-only dep means we only re-initialize when
+  // the user actually navigates to a different chapter.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapter?.id]);
 
   // Re-pagination on chapter load was removed: it fired after every Save
   // (because save flips isDirty back to false, which the effect treated as
