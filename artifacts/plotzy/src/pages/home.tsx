@@ -10,7 +10,7 @@ import { MarketplaceMockup } from "@/components/MarketplaceMockup";
 import { AudiobookMockup } from "@/components/AudiobookMockup";
 import { AnimatedFolder } from "@/components/ui/3d-folder";
 import { CardStack } from "@/components/ui/card-stack";
-import { BookCarousel } from "@/components/BookCarousel";
+import { BookCarousel, ArabicBookCarousel } from "@/components/BookCarousel";
 import { LibraryBookshelf, type ShelfBookData } from "@/components/LibraryBookshelf";
 // Lazy: BookViewerOverlay pulls in three.js + react-three (~880 kB
 // of vendor code). The landing page mounts it eagerly only when the
@@ -1544,6 +1544,9 @@ export default function Home() {
 
         {/* ===== BOOK CAROUSEL ===== */}
         <BookCarousel />
+
+        {/* ===== ARABIC (HINDAWI) BOOK CAROUSEL ===== */}
+        <ArabicBookCarousel />
 
         {/* ===== WRITER PROTECTION TEASER ===== */}
         <section className="relative bg-[#080808] py-20 px-6 sm:px-8 overflow-hidden">

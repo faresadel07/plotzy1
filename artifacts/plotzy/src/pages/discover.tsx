@@ -252,7 +252,12 @@ export default function DiscoverPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
-  const [source, setSource] = useState<BookSource>(lang === "ar" ? "hindawi" : "gutenberg");
+  const [source, setSource] = useState<BookSource>(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("src") === "hindawi") return "hindawi";
+    } catch { /* noop */ }
+    return lang === "ar" ? "hindawi" : "gutenberg";
+  });
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState("en");

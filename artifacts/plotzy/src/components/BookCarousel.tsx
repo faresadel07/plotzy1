@@ -9,6 +9,9 @@ const gutCover = (id: number) =>
 const olCover = (isbn: string) =>
   `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
 
+const hindawiCover = (id: number) =>
+  `https://downloads.hindawi.org/covers/304x406/${id}.jpg`;
+
 const ROW1 = [
   { title: "Pride and Prejudice",               cover: gutCover(1342) },
   { title: "Moby Dick",                         cover: gutCover(2701) },
@@ -48,6 +51,48 @@ const ROW2 = [
   { title: "The Scarlet Letter",                cover: olCover("9780142437261") },
   { title: "Tess of the d'Urbervilles",         cover: olCover("9780141439594") },
   { title: "Far from the Madding Crowd",        cover: olCover("9780140432312") },
+];
+
+/* Hindawi Foundation Arabic public-domain covers (CC BY 4.0).
+   Cover URL is derived from the Hindawi book id. */
+const HROW1 = [
+  { title: "لؤلؤة الحب",                cover: hindawiCover(13028368) },
+  { title: "مغامرة العميل المرموق",     cover: hindawiCover(13035305) },
+  { title: "ثلاثة دروس في ديكارت",      cover: hindawiCover(13050381) },
+  { title: "كشف المُخبَّا عن فنون أوربا", cover: hindawiCover(13068491) },
+  { title: "حقائق الإسلام وأباطيل خصومه", cover: hindawiCover(13082050) },
+  { title: "مدينة زحلة",               cover: hindawiCover(13149739) },
+  { title: "لاسلكيًّا",                 cover: hindawiCover(13153615) },
+  { title: "الفاروق عمر",              cover: hindawiCover(13538483) },
+  { title: "إبراهيم الثاني",            cover: hindawiCover(13572470) },
+  { title: "الحجاج بن يوسف",           cover: hindawiCover(13595164) },
+  { title: "المسألة السودانية",         cover: hindawiCover(13603829) },
+  { title: "غادة كربلاء",              cover: hindawiCover(13604281) },
+  { title: "أبيض الناب",               cover: hindawiCover(13639135) },
+  { title: "البدوية",                  cover: hindawiCover(13680727) },
+  { title: "قصة الأيام القادمة",        cover: hindawiCover(13736816) },
+  { title: "ألف ليلة وليلة",            cover: hindawiCover(13815802) },
+  { title: "نماذج بشرية",              cover: hindawiCover(13919315) },
+];
+
+const HROW2 = [
+  { title: "الإسلام والحضارة الإنسانية", cover: hindawiCover(13920718) },
+  { title: "رواية الشقيقتين",           cover: hindawiCover(13925094) },
+  { title: "فلسفة ابن رشد",            cover: hindawiCover(13939717) },
+  { title: "فضيحة في بوهيميا",          cover: hindawiCover(13949592) },
+  { title: "صلاح الدين الأيوبي وعصره",  cover: hindawiCover(13950286) },
+  { title: "الأوابد",                  cover: hindawiCover(13957902) },
+  { title: "صانع الألماس",             cover: hindawiCover(13964931) },
+  { title: "الأمومة عند العرب",         cover: hindawiCover(14024730) },
+  { title: "بنت قسطنطين",              cover: hindawiCover(14035374) },
+  { title: "مغامرة مخططات بروس بارتينجتون", cover: hindawiCover(14042824) },
+  { title: "محاضرات عن خليل مطران",      cover: hindawiCover(14136317) },
+  { title: "نباتات الزينة العشبية",      cover: hindawiCover(14136905) },
+  { title: "شرق وغرب",                 cover: hindawiCover(14159130) },
+  { title: "سمسمة",                    cover: hindawiCover(14253527) },
+  { title: "الحضارة الإسلامية",         cover: hindawiCover(14602927) },
+  { title: "الفاروق عمر",              cover: hindawiCover(13538483) },
+  { title: "أنت من فعلها!",            cover: hindawiCover(13649293) },
 ];
 
 function makeFallback(el: HTMLElement, title: string) {
@@ -189,6 +234,77 @@ export function BookCarousel() {
       <Track books={ROW1} />
       <div style={{ height: 14 }} />
       <Track books={ROW2} reverse />
+
+      <style>{`
+        @keyframes bookMarquee    { from { transform: translateX(0);    } to { transform: translateX(-50%); } }
+        @keyframes bookMarqueeRev { from { transform: translateX(-50%); } to { transform: translateX(0);    } }
+      `}</style>
+    </div>
+  );
+}
+
+/* Arabic public-domain library (Hindawi Foundation, CC BY 4.0). Same
+   auto-scrolling two-row marquee as the English carousel above, so the two
+   sit together as one continuous "free books" band on the landing page. */
+export function ArabicBookCarousel() {
+  return (
+    <div
+      dir="rtl"
+      style={{
+        width: "100%",
+        overflow: "hidden",
+        padding: "36px 0",
+        background: "linear-gradient(to bottom, #f1f1f1 0%, #ececec 100%)",
+        borderBottom: "1px solid rgba(0,0,0,0.05)",
+        position: "relative",
+      }}
+    >
+      <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#f1f1f1,transparent)", zIndex: 2, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#ececec,transparent)", zIndex: 2, pointerEvents: "none" }} />
+
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <Link href="/discover?src=hindawi">
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 14,
+            fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif",
+            fontWeight: 700,
+            color: "#000",
+            cursor: "pointer",
+            borderBottom: "1.5px solid rgba(0,0,0,0.25)",
+            paddingBottom: 2,
+            transition: "color 0.2s, border-color 0.2s",
+          }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = "#333";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.55)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = "#000";
+              (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.25)";
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            مكتبة هنداوي العربية المجانية: كتب من المجال العام، اقرأها فوراً
+          </span>
+        </Link>
+        <p style={{
+          marginTop: 8,
+          fontSize: 11,
+          color: "rgba(0,0,0,0.4)",
+          fontFamily: "-apple-system,'SF Pro Text',sans-serif",
+        }}>
+          بإذنٍ من مؤسسة هنداوي، برخصة المشاع الإبداعي نَسَب المُصنَّف 4.0 (CC BY 4.0)
+        </p>
+      </div>
+
+      <Track books={HROW1} />
+      <div style={{ height: 14 }} />
+      <Track books={HROW2} reverse />
 
       <style>{`
         @keyframes bookMarquee    { from { transform: translateX(0);    } to { transform: translateX(-50%); } }
