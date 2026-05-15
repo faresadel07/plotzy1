@@ -1354,18 +1354,48 @@ export async function registerRoutes(
           const browser = await puppeteer.launch({
             executablePath,
             headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-dev-shm-usage",
+              "--disable-gpu",
+              "--disable-software-rasterizer",
+              "--no-zygote",
+              "--single-process",
+              "--font-render-hinting=none",
+            ],
           });
           try {
             const page = await browser.newPage();
+            // emulateMediaType('print') is required so the @media print
+            // / @page rules in the generated CSS are applied while the
+            // page lays out, not only at PDF time. Without it Chromium
+            // sees a screen-mode layout and the printToPDF backend can
+            // throw "Printing failed" when @page sizing is invalid for
+            // the chosen format.
+            await page.emulateMediaType("print");
             await page.setContent(html, { waitUntil: "load", timeout: 60_000 });
-            // Make sure web fonts have loaded before snapshotting,
-            // otherwise the PDF can ship with fallback fonts.
             await page.evaluate("document.fonts ? document.fonts.ready : Promise.resolve()");
+            // Map the editor's paperSize preference to puppeteer's
+            // format / explicit dimensions. preferCSSPageSize is dropped
+            // because it interacted badly with @page nested inside
+            // @media print and triggered the same printToPDF crash.
+            const PAPER_PDF: Record<string, { format?: any; width?: string; height?: string }> = {
+              a5:     { format: "a5" },
+              a4:     { format: "a4" },
+              pocket: { width: "11.0cm", height: "18.0cm" },
+              trade:  { width: "15.24cm", height: "22.86cm" },
+            };
+            const paperOpts = PAPER_PDF[prefPaperSize] || PAPER_PDF.a5;
             const pdfBuffer = await page.pdf({
               printBackground: true,
-              preferCSSPageSize: true,
-              margin: { top: 0, right: 0, bottom: 0, left: 0 },
+              ...paperOpts,
+              margin: {
+                top:    `${prefMT}px`,
+                right:  `${prefMR}px`,
+                bottom: `${prefMB}px`,
+                left:   `${prefML}px`,
+              },
             });
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.pdf"`);
