@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useContentProtection } from "@/hooks/use-content-protection";
+import { useLanguage } from "@/contexts/language-context";
 
 /* ─── Content Parser ─────────────────────────────────────── */
 
@@ -156,6 +157,7 @@ function StarRating({ bookId, currentAvg, count }: { bookId: number; currentAvg:
   const [selected, setSelected] = useState(0);
   const rateBook = useRateBook();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const display = hovered || selected || currentAvg;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
@@ -166,8 +168,8 @@ function StarRating({ bookId, currentAvg, count }: { bookId: number; currentAvg:
             onClick={() => {
               setSelected(s);
               rateBook.mutate({ bookId, rating: s }, {
-                onSuccess: () => toast({ title: "Thanks for rating!" }),
-                onError: () => toast({ title: "Failed", variant: "destructive" }),
+                onSuccess: () => toast({ title: t("rbThanksRating") }),
+                onError: () => toast({ title: t("rbFailed"), variant: "destructive" }),
               });
             }}
             style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
@@ -177,8 +179,8 @@ function StarRating({ bookId, currentAvg, count }: { bookId: number; currentAvg:
         ))}
       </div>
       {count > 0
-        ? <p style={{ fontSize: 13, color: "#888" }}><strong style={{ color: "#333" }}>{currentAvg.toFixed(1)}</strong> / 5 · {count} {count === 1 ? "rating" : "ratings"}</p>
-        : <p style={{ fontSize: 13, color: "#888" }}>Be the first to rate</p>
+        ? <p style={{ fontSize: 13, color: "#888" }}><strong style={{ color: "#333" }}>{currentAvg.toFixed(1)}</strong> / 5 · {count} {count === 1 ? t("rbRating") : t("rbRatings")}</p>
+        : <p style={{ fontSize: 13, color: "#888" }}>{t("rbBeFirstRate")}</p>
       }
     </div>
   );
@@ -191,6 +193,7 @@ function CommentsSection({ bookId }: { bookId: number }) {
   const addComment = useAddBookComment();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [content, setContent] = useState("");
   const [guestName, setGuestName] = useState("");
 
@@ -198,10 +201,10 @@ function CommentsSection({ bookId }: { bookId: number }) {
     e.preventDefault();
     if (!content.trim()) return;
     addComment.mutate(
-      { bookId, content, authorName: user ? undefined : guestName || "Anonymous" },
+      { bookId, content, authorName: user ? undefined : guestName || t("rbAnonymous") },
       {
-        onSuccess: () => { setContent(""); setGuestName(""); toast({ title: "Comment posted!" }); },
-        onError: () => toast({ title: "Failed to post comment", variant: "destructive" }),
+        onSuccess: () => { setContent(""); setGuestName(""); toast({ title: t("rbCommentPosted") }); },
+        onError: () => toast({ title: t("rbCommentFailed"), variant: "destructive" }),
       }
     );
   };
@@ -211,19 +214,19 @@ function CommentsSection({ bookId }: { bookId: number }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
         <MessageSquare style={{ width: 16, height: 16, color: "#888" }} />
         <h3 style={{ fontSize: 15, fontWeight: 700, color: "#222", fontFamily: "Georgia, serif" }}>
-          Reader Comments {comments && comments.length > 0 && <span style={{ fontWeight: 400, color: "#888" }}>({comments.length})</span>}
+          {t("rbReaderComments")} {comments && comments.length > 0 && <span style={{ fontWeight: 400, color: "#888" }}>({comments.length})</span>}
         </h3>
       </div>
       <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
         <div style={{ background: "#f9f7f4", border: "1px solid #e4ddd4", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          {!user && <Input placeholder="Your name (optional)" value={guestName} onChange={e => setGuestName(e.target.value)} style={{ borderColor: "#ddd5c8", background: "#fff", fontFamily: "Georgia, serif", fontSize: 14 }} maxLength={50} />}
-          <Textarea placeholder="Share your thoughts…" value={content} onChange={e => setContent(e.target.value)} style={{ borderColor: "rgba(255,255,255,0.1)", background: "#111", color: "#fff", fontFamily: "Georgia, serif", fontSize: 14, minHeight: 88, resize: "none" }} maxLength={1000} />
+          {!user && <Input placeholder={t("rbYourNameOptional")} value={guestName} onChange={e => setGuestName(e.target.value)} style={{ borderColor: "#ddd5c8", background: "#fff", fontFamily: "Georgia, serif", fontSize: 14 }} maxLength={50} />}
+          <Textarea placeholder={t("rbShareThoughts")} value={content} onChange={e => setContent(e.target.value)} style={{ borderColor: "rgba(255,255,255,0.1)", background: "#111", color: "#fff", fontFamily: "Georgia, serif", fontSize: 14, minHeight: 88, resize: "none" }} maxLength={1000} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 11, color: "#aaa" }}>{content.length}/1000</span>
             <button type="submit" disabled={!content.trim() || addComment.isPending}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: "#1c1410", color: "#fff", border: "none", cursor: "pointer", opacity: !content.trim() ? 0.5 : 1 }}>
               {addComment.isPending ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Send style={{ width: 14, height: 14 }} />}
-              Post
+              {t("rbPost")}
             </button>
           </div>
         </div>
@@ -233,7 +236,7 @@ function CommentsSection({ bookId }: { bookId: number }) {
       ) : !comments || comments.length === 0 ? (
         <div style={{ textAlign: "center", padding: "32px 0", color: "#aaa", border: "1px dashed #ddd", borderRadius: 12 }}>
           <MessageSquare style={{ width: 28, height: 28, margin: "0 auto 8px", opacity: 0.4 }} />
-          <p style={{ fontSize: 13 }}>No comments yet — be the first!</p>
+          <p style={{ fontSize: 13 }}>{t("rbNoComments")}</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -275,6 +278,7 @@ interface BookSpreadProps {
 }
 
 function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPrev, onNext }: BookSpreadProps) {
+  const { t } = useLanguage();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [containerW, setContainerW] = useState(0);
@@ -480,7 +484,7 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
       {spreadIndex > 0 && (
         <div
           onClick={onPrev}
-          title="Previous pages"
+          title={t("rbPrevPages")}
           style={{
             position: "absolute", left: 0, top: 0, bottom: FOOTER_H,
             width: "22%", zIndex: 5, cursor: "w-resize",
@@ -505,7 +509,7 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
       {spreadIndex < totalSpreads - 1 && (
         <div
           onClick={onNext}
-          title="Next pages"
+          title={t("rbNextPages")}
           style={{
             position: "absolute", right: 0, top: 0, bottom: FOOTER_H,
             width: "22%", zIndex: 5, cursor: "e-resize",
@@ -583,6 +587,7 @@ export default function ReadBook() {
   const resolveInlineComment = useResolveInlineComment();
 
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
 
   // Redirect articles to /blog/:id
   useEffect(() => {
@@ -631,13 +636,13 @@ export default function ReadBook() {
     if (unit.kind === "chapter") {
       const ch = unit.chapter;
       const titleIsNumber = ch.title && /^\d+$/.test(ch.title.trim());
-      if (titleIsNumber) return `Chapter ${ch.title}`;
-      return ch.title?.trim() || `Chapter ${unit.chapterIndex + 1}`;
+      if (titleIsNumber) return `${t("rbChapter")} ${ch.title}`;
+      return ch.title?.trim() || `${t("rbChapter")} ${unit.chapterIndex + 1}`;
     }
-    if (unit.kind === "front-copyright")   return "Copyright";
-    if (unit.kind === "front-dedication")  return "Dedication";
-    if (unit.kind === "front-epigraph")    return "Epigraph";
-    return "About the Author";
+    if (unit.kind === "front-copyright")   return t("rbCopyright");
+    if (unit.kind === "front-dedication")  return t("rbDedication");
+    if (unit.kind === "front-epigraph")    return t("rbEpigraph");
+    return t("rbAboutAuthor");
   };
 
   const goSpread = useCallback((idx: number) => {
@@ -709,12 +714,12 @@ export default function ReadBook() {
   if (!book) {
     return (
       <div style={{ minHeight: "100vh", background: "#181614", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <SEO title="Book not found" noindex />
+        <SEO title={t("rbBookNotFound")} noindex />
         <BookOpen style={{ width: 48, height: 48, opacity: 0.4 }} />
-        <p style={{ fontSize: 20, fontWeight: 600, fontFamily: "Georgia, serif" }}>Book not found</p>
+        <p style={{ fontSize: 20, fontWeight: 600, fontFamily: "Georgia, serif" }}>{t("rbBookNotFound")}</p>
         <Link href="/library">
           <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "#888", cursor: "pointer", fontSize: 14 }}>
-            <ArrowLeft style={{ width: 16, height: 16 }} /> Back to Library
+            <ArrowLeft style={{ width: 16, height: 16 }} /> {t("rbBackToLibrary")}
           </button>
         </Link>
       </div>
@@ -725,13 +730,13 @@ export default function ReadBook() {
     <div style={{ minHeight: "100vh", background: "#181614" }}>
       <SEO
         title={book.title}
-        description={book.summary || `${book.title} by ${book.authorName || "an anonymous author"} — read free on Plotzy.`}
+        description={book.summary || `${book.title} ${t("rbBy")} ${book.authorName || t("rbAnonAuthor")}. ${t("rbReadFreeOn")}`}
         ogType="book"
         ogImage={book.coverImage || undefined}
       />
       <JsonLd data={buildBookSchema(book, ratingStats)} />
       <JsonLd data={buildBreadcrumbSchema([
-        { name: "Community Library", path: "/library" },
+        { name: t("rbLibrary"), path: "/library" },
         { name: book.title, path: `/read/${book.id}` },
       ])} />
 
@@ -748,7 +753,7 @@ export default function ReadBook() {
               onMouseLeave={e => (e.currentTarget.style.color = "#777")}
             >
               <ArrowLeft style={{ width: 15, height: 15 }} />
-              <span>Library</span>
+              <span>{t("rbLibrary")}</span>
             </button>
           </Link>
 
@@ -758,7 +763,7 @@ export default function ReadBook() {
             <p style={{ fontSize: 14, fontWeight: 600, color: "#ddd", fontFamily: "Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {book.title}
             </p>
-            <p style={{ fontSize: 11, color: "#555", marginTop: 1 }}>by {authorName}</p>
+            <p style={{ fontSize: 11, color: "#555", marginTop: 1 }}>{t("rbBy")} {authorName}</p>
           </div>
 
           {ratingStats && ratingStats.count > 0 && (
@@ -770,7 +775,7 @@ export default function ReadBook() {
 
           {sortedChapters.length > 0 && (
             <span style={{ fontSize: 11, color: "#444", fontFamily: "Georgia, serif", flexShrink: 0 }}>
-              {sortedChapters.length} {sortedChapters.length === 1 ? "chapter" : "chapters"}
+              {sortedChapters.length} {sortedChapters.length === 1 ? t("rbChapterWord") : t("rbChaptersWord")}
             </span>
           )}
 
@@ -780,7 +785,7 @@ export default function ReadBook() {
             onMouseLeave={e => (e.currentTarget.style.color = "#666")}
           >
             {showToc ? <X style={{ width: 15, height: 15 }} /> : <List style={{ width: 15, height: 15 }} />}
-            <span>Contents</span>
+            <span>{t("rbContents")}</span>
           </button>
 
           {/* Inline comments sidebar toggle */}
@@ -790,7 +795,7 @@ export default function ReadBook() {
             onMouseLeave={e => { if (!showCommentsSidebar) e.currentTarget.style.color = "#666"; }}
           >
             <MessageSquarePlus style={{ width: 15, height: 15 }} />
-            <span>Notes</span>
+            <span>{t("rbNotes")}</span>
             {inlineComments.length > 0 && (
               <span style={{ background: "#facc15", color: "#000", fontSize: 9, fontWeight: 700, borderRadius: 10, padding: "1px 5px", minWidth: 16, textAlign: "center" }}>
                 {inlineComments.length}
@@ -830,13 +835,13 @@ export default function ReadBook() {
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
               <div>
-                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#444", textTransform: "uppercase", marginBottom: 10, fontFamily: "Georgia, serif" }}>Contents</p>
+                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#444", textTransform: "uppercase", marginBottom: 10, fontFamily: "Georgia, serif" }}>{t("rbContents")}</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {readerUnits.map((unit, i) => {
                     const isActive = currentChapterIdx === i;
                     const isMatter = unit.kind !== "chapter";
                     // For chapter units keep the running number; for front/back matter show a dash.
-                    const numberCell = unit.kind === "chapter" ? String(unit.chapterIndex + 1) : "—";
+                    const numberCell = unit.kind === "chapter" ? String(unit.chapterIndex + 1) : "·";
                     return (
                       <button key={i} onClick={() => { setCurrentChapterIdx(i); setCurrentPageInChapter(0); setShowToc(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                         style={{ textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 10, border: "none", background: isActive ? "rgba(255,255,255,0.08)" : "transparent", color: isActive ? "#fff" : "#555", cursor: "pointer", fontFamily: "Georgia, serif", fontStyle: isMatter ? "italic" : "normal" }}
@@ -876,12 +881,12 @@ export default function ReadBook() {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <MessageSquarePlus style={{ width: 16, height: 16, color: "#facc15" }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif" }}>
-                    Reader Notes
+                    {t("rbReaderNotes")}
                   </span>
                   <span style={{ fontSize: 11, color: "#555", fontWeight: 600 }}>({inlineComments.length})</span>
                 </div>
                 <button onClick={() => setShowCommentsSidebar(false)}
-                  aria-label="Close comments"
+                  aria-label={t("rbCloseComments")}
                   style={{ background: "none", border: "none", color: "#555", cursor: "pointer", padding: 4 }}>
                   <X style={{ width: 16, height: 16 }} />
                 </button>
@@ -893,7 +898,7 @@ export default function ReadBook() {
                   <div style={{ textAlign: "center", padding: "48px 20px", color: "#444" }}>
                     <MessageSquare style={{ width: 32, height: 32, margin: "0 auto 12px", opacity: 0.3 }} />
                     <p style={{ fontSize: 13, fontFamily: "Georgia, serif", lineHeight: 1.6 }}>
-                      No notes yet.<br />Select any text to add a comment.
+                      {t("rbNoNotes")}<br />{t("rbSelectToComment")}
                     </p>
                   </div>
                 ) : (
@@ -922,7 +927,7 @@ export default function ReadBook() {
                             </div>
                             {chapter && (
                               <span style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                Ch. {sortedChapters.indexOf(chapter) + 1}
+                                {t("rbCh")} {sortedChapters.indexOf(chapter) + 1}
                               </span>
                             )}
                           </div>
@@ -949,8 +954,8 @@ export default function ReadBook() {
                             </span>
                             <div style={{ display: "flex", gap: 4 }}>
                               <button onClick={() => resolveInlineComment.mutate({ bookId, commentId: c.id })}
-                                title="Resolve"
-                                aria-label="Resolve comment"
+                                title={t("rbResolve")}
+                                aria-label={t("rbResolveComment")}
                                 style={{ background: "none", border: "none", color: "rgba(34,197,94,0.5)", cursor: "pointer", padding: 3, borderRadius: 4 }}
                                 onMouseEnter={e => (e.currentTarget.style.color = "#22c55e")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(34,197,94,0.5)")}
@@ -958,8 +963,8 @@ export default function ReadBook() {
                                 <Check style={{ width: 13, height: 13 }} />
                               </button>
                               <button onClick={() => deleteInlineComment.mutate({ bookId, commentId: c.id })}
-                                title="Delete"
-                                aria-label="Delete comment"
+                                title={t("rbDelete")}
+                                aria-label={t("rbDeleteComment")}
                                 style={{ background: "none", border: "none", color: "rgba(239,68,68,0.4)", cursor: "pointer", padding: 3, borderRadius: 4 }}
                                 onMouseEnter={e => (e.currentTarget.style.color = "#ef4444")}
                                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(239,68,68,0.4)")}
@@ -985,7 +990,7 @@ export default function ReadBook() {
         {!readerUnits.length ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#555" }}>
             <BookOpen style={{ width: 48, height: 48, margin: "0 auto 16px", opacity: 0.3 }} />
-            <p style={{ fontFamily: "Georgia, serif", fontSize: 16 }}>This book has no chapters yet.</p>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 16 }}>{t("rbNoChapters")}</p>
           </div>
         ) : (
           <>
@@ -1089,7 +1094,7 @@ export default function ReadBook() {
                         />
                       ) : (
                         <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
-                          This chapter has no content yet.
+                          {t("rbNoContent")}
                         </p>
                       )}
 
@@ -1097,7 +1102,7 @@ export default function ReadBook() {
                       <div style={{ marginTop: 40, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>{book?.authorName || book?.title}</span>
                         <span style={{ fontSize: 10, color: "#b0a898", fontFamily: "Georgia, serif" }}>
-                          {chapterLabel} · Page {pageIdx + 1} of {totalPagesInChapter}
+                          {chapterLabel} · {t("rbPage")} {pageIdx + 1} {t("rbOf")} {totalPagesInChapter}
                         </span>
                       </div>
                     </div>
@@ -1114,7 +1119,7 @@ export default function ReadBook() {
                         border: "1px solid rgba(255,255,255,0.08)", color: isVeryFirst ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.6)",
                         fontSize: 13, fontWeight: 500, cursor: isVeryFirst ? "default" : "pointer", fontFamily: "Georgia, serif",
                       }}>
-                      <ChevronLeft style={{ width: 16, height: 16 }} /> Previous
+                      <ChevronLeft style={{ width: 16, height: 16 }} /> {t("rbPrevious")}
                     </button>
 
                     <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "Georgia, serif", textAlign: "center" }}>
@@ -1128,7 +1133,7 @@ export default function ReadBook() {
                         border: "none", color: isVeryLast ? "rgba(255,255,255,0.15)" : "#000",
                         fontSize: 13, fontWeight: 600, cursor: isVeryLast ? "default" : "pointer", fontFamily: "Georgia, serif",
                       }}>
-                      Next <ChevronRight style={{ width: 16, height: 16 }} />
+                      {t("rbNext")} <ChevronRight style={{ width: 16, height: 16 }} />
                     </button>
                   </div>
                 </div>
@@ -1138,9 +1143,9 @@ export default function ReadBook() {
             {/* Rating & Comments */}
             <div style={{ maxWidth: 600, margin: "40px auto", paddingBottom: 64 }}>
               <div style={{ background: "#1a1815", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 32px", textAlign: "center", marginBottom: 28 }}>
-                <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>You've reached the end</p>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>Did you enjoy this story?</h3>
-                <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>Your rating helps other readers discover great books</p>
+                <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>{t("rbReachedEnd")}</p>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>{t("rbEnjoyStory")}</h3>
+                <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>{t("rbRatingHelps")}</p>
                 <StarRating bookId={bookId} currentAvg={ratingStats?.avg ?? 0} count={ratingStats?.count ?? 0} />
               </div>
               <CommentsSection bookId={bookId} />
@@ -1213,11 +1218,11 @@ export default function ReadBook() {
               <Highlighter style={{ width: 14, height: 14, color: "#facc15" }} />
             </div>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#d4c89a", letterSpacing: "0.02em" }}>
-              Reader Notes
+              {t("rbReaderNotes")}
             </span>
           </div>
           <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, margin: 0 }}>
-            Select any text on the page to leave a note or comment.
+            {t("rbSelectNoteLong")}
           </p>
         </div>
       )}
@@ -1244,6 +1249,7 @@ function MatterPage({
   authorName: string;
   pageShell: React.CSSProperties;
 }) {
+  const { t } = useLanguage();
   const GEORGIA = "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
   // Preserve line breaks but keep simple text-only rendering — these fields
   // are plain-text inputs.
@@ -1308,7 +1314,7 @@ function MatterPage({
     <div style={{ ...pageShell }}>
       <div style={{ textAlign: "center", marginBottom: 28 }}>
         <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: GEORGIA, marginBottom: 12 }}>
-          About the Author
+          {t("rbAboutAuthor")}
         </p>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1c1410", fontFamily: fontFam, lineHeight: 1.25, margin: "0 0 14px" }}>
           {authorName}
