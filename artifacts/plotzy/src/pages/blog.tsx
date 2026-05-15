@@ -5,6 +5,7 @@ import { BookOpen, Calendar, Clock, Eye, ArrowLeft, Search, User } from "lucide-
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
+import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const ACC = "#7c6af7";
@@ -14,6 +15,10 @@ const CATEGORIES = [
   "Inspiration", "Author Interviews", "Book Reviews", "Industry News",
   "Self-Publishing", "Marketing", "Grammar & Style", "Research", "Other",
 ];
+
+// Category VALUES stay English (they match the DB articleCategory and the
+// filter logic); only the display label is localized via catKey().
+const catKey = (c: string) => ("blCat" + c.replace(/[^A-Za-z]/g, "")) as any;
 
 function stripHtml(h: string) { return h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(); }
 function wordCount(t: string) { return t.trim().split(/\s+/).filter(Boolean).length; }
@@ -32,6 +37,7 @@ function parseArticleText(raw: string | null): string {
 export default function Blog() {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const { t } = useLanguage();
 
   const { data: articles = [], isLoading } = useQuery<any[]>({
     queryKey: ["published-articles"],
@@ -55,23 +61,23 @@ export default function Blog() {
   return (
     <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF }}>
       <SEO
-        title="Articles"
-        description="Long-form articles from Plotzy authors — writing craft, publishing, and industry voices."
+        title={t("avArticles")}
+        description={t("blSeoDesc")}
       />
-      <JsonLd data={buildBreadcrumbSchema([{ name: "Articles", path: "/blog" }])} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: t("avArticles"), path: "/blog" }])} />
 
       {/* Header */}
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "48px 20px 40px", textAlign: "center" }}>
         <Link href="/">
           <button style={{ position: "absolute", top: 16, left: 20, display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-            <ArrowLeft size={15} /> Home
+            <ArrowLeft size={15} /> {t("blHome")}
           </button>
         </Link>
         <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginBottom: 8 }}>
-          Blog
+          {t("blBlog")}
         </h1>
         <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, margin: "0 auto" }}>
-          Writing tips, craft techniques, and stories from the Plotzy community
+          {t("blSubtitle")}
         </p>
       </header>
 
@@ -80,7 +86,7 @@ export default function Blog() {
         {/* Search */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, marginBottom: 20 }}>
           <Search size={15} style={{ color: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search articles..."
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("blSearchPlaceholder")}
             style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#fff", fontSize: 14, fontFamily: SF }} />
         </div>
 
@@ -95,7 +101,7 @@ export default function Blog() {
                 border: category === cat ? "none" : "1px solid rgba(255,255,255,0.06)",
                 transition: "all 0.15s",
               }}>
-              {cat}
+              {t(catKey(cat))}
             </button>
           ))}
         </div>
@@ -110,7 +116,7 @@ export default function Blog() {
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "80px 20px", color: "rgba(255,255,255,0.3)" }}>
             <BookOpen style={{ width: 40, height: 40, margin: "0 auto 12px", opacity: 0.3 }} />
-            <p style={{ fontSize: 15 }}>{search ? "No articles match your search" : "No articles published yet"}</p>
+            <p style={{ fontSize: 15 }}>{search ? t("blNoMatch") : t("blNonePublished")}</p>
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
@@ -119,7 +125,7 @@ export default function Blog() {
               const excerpt = plain.length > 150 ? plain.slice(0, 150) + "..." : plain;
               const rt = readTime(plain);
               const img = a.featuredImage || a.coverImage;
-              const authorName = a.authorName || a.authorDisplayName || "Anonymous";
+              const authorName = a.authorName || a.authorDisplayName || t("rbAnonymous");
               const date = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
 
               return (
@@ -176,7 +182,7 @@ export default function Blog() {
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
                           <span>{date}</span>
-                          <span>{rt} min</span>
+                          <span>{rt} {t("blMin")}</span>
                         </div>
                       </div>
                     </div>

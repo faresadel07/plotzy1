@@ -8,6 +8,7 @@ import { useContentProtection } from "@/hooks/use-content-protection";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
+import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 
@@ -29,6 +30,7 @@ export default function ArticleView() {
   const [, params] = useRoute("/blog/:id");
   const articleId = Number(params?.id);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Friction-grade IP protection on the rendered article HTML. Pairs
   // with the user-select:none CSS rule below; see hook source for what
@@ -58,7 +60,7 @@ export default function ArticleView() {
   const plain = stripHtml(html);
   const wc = wordCount(plain);
   const rt = readTime(plain);
-  const authorName = article?.authorName || article?.authorDisplayName || "Anonymous";
+  const authorName = article?.authorName || article?.authorDisplayName || t("rbAnonymous");
   const publishDate = article?.publishedAt ? new Date(article.publishedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "";
   const category = article?.articleCategory;
   const tags: string[] = article?.tags || [];
@@ -75,10 +77,10 @@ export default function ArticleView() {
   if (!article || !article.isPublished) {
     return (
       <div style={{ minHeight: "100vh", background: "#080808", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: SF }}>
-        <SEO title="Article not found" noindex />
+        <SEO title={t("avNotFound")} noindex />
         <BookOpen style={{ width: 48, height: 48, opacity: 0.3 }} />
-        <p style={{ fontSize: 18, fontWeight: 600 }}>Article not found</p>
-        <Link href="/blog"><button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>Back to Blog</button></Link>
+        <p style={{ fontSize: 18, fontWeight: 600 }}>{t("avNotFound")}</p>
+        <Link href="/blog"><button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>{t("avBackToBlog")}</button></Link>
       </div>
     );
   }
@@ -86,7 +88,7 @@ export default function ArticleView() {
   const articleExcerpt = (() => {
     const raw = article.articleContent || article.summary || "";
     const text = stripHtml(raw).slice(0, 160).trim();
-    return text || `An article by ${article.authorName || article.authorDisplayName || "a Plotzy author"}.`;
+    return text || `${t("avExcerptBy")} ${article.authorName || article.authorDisplayName || t("avPlotzyAuthor")}.`;
   })();
 
   return (
@@ -98,7 +100,7 @@ export default function ArticleView() {
         ogImage={article.featuredImage || undefined}
       />
       <JsonLd data={buildBreadcrumbSchema([
-        { name: "Articles", path: "/blog" },
+        { name: t("avArticles"), path: "/blog" },
         { name: article.title, path: `/blog/${article.id}` },
       ])} />
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -107,14 +109,14 @@ export default function ArticleView() {
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 16px", height: 48, display: "flex", alignItems: "center", gap: 10 }}>
         <Link href="/blog">
           <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 13, padding: "4px 6px", borderRadius: 6, flexShrink: 0 }}>
-            <ArrowLeft size={15} /> <span className="hidden sm:inline">Blog</span>
+            <ArrowLeft size={15} /> <span className="hidden sm:inline">{t("avBlog")}</span>
           </button>
         </Link>
         <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
         <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
           {article.title}
         </span>
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{article.viewCount || 0} views</span>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{article.viewCount || 0} {t("avViews")}</span>
       </header>
 
       {/* Featured Image */}
@@ -158,10 +160,10 @@ export default function ArticleView() {
             <Calendar size={12} /> {publishDate}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-            <Clock size={12} /> {rt} min read
+            <Clock size={12} /> {rt} {t("avMinRead")}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-            <Eye size={12} /> {article.viewCount || 0} views
+            <Eye size={12} /> {article.viewCount || 0} {t("avViews")}
           </div>
         </div>
       </div>

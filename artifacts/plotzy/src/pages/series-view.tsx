@@ -5,6 +5,7 @@ import { ArrowLeft, BookOpen, Calendar, Copy, Check, User, Layers } from "lucide
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
+import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const ACC = "#7c6af7";
@@ -37,6 +38,7 @@ export default function SeriesView() {
   const [, params] = useRoute("/series/:id");
   const seriesId = Number(params?.id);
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   const { data: series, isLoading } = useQuery<PublicSeries>({
     queryKey: ["public-series", seriesId],
@@ -73,11 +75,11 @@ export default function SeriesView() {
   if (!series) {
     return (
       <div style={{ minHeight: "100vh", background: "#080808", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: SF }}>
-        <SEO title="Series not found" noindex />
+        <SEO title={t("svNotFound")} noindex />
         <Layers style={{ width: 48, height: 48, opacity: 0.3 }} />
-        <p style={{ fontSize: 18, fontWeight: 600 }}>Series not found</p>
+        <p style={{ fontSize: 18, fontWeight: 600 }}>{t("svNotFound")}</p>
         <Link href="/library">
-          <button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>Back to Library</button>
+          <button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>{t("rbBackToLibrary")}</button>
         </Link>
       </div>
     );
@@ -89,11 +91,11 @@ export default function SeriesView() {
     <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF, color: "#fff" }}>
       <SEO
         title={series.name}
-        description={series.description || `${series.name} — a book series on Plotzy.`}
+        description={series.description || `${series.name}. ${t("svSeoDesc")}`}
         ogImage={series.coverImage || series.books?.[0]?.coverImage || undefined}
       />
       <JsonLd data={buildBreadcrumbSchema([
-        { name: "Community Library", path: "/library" },
+        { name: t("rbLibrary"), path: "/library" },
         { name: series.name, path: `/series/${series.id}` },
       ])} />
 
@@ -101,13 +103,13 @@ export default function SeriesView() {
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px", height: 48, display: "flex", alignItems: "center", gap: 12 }}>
         <Link href="/library">
           <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 13, padding: "4px 8px", borderRadius: 6 }}>
-            <ArrowLeft size={15} /> Library
+            <ArrowLeft size={15} /> {t("rbLibrary")}
           </button>
         </Link>
         <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Layers size={12} color="rgba(255,255,255,0.3)" />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>Book Series</span>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>{t("ssBookSeries")}</span>
         </div>
       </header>
 
@@ -143,7 +145,7 @@ export default function SeriesView() {
           )}
           <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
           <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-            <BookOpen size={12} /> {series.books.length} {series.books.length === 1 ? "book" : "books"}
+            <BookOpen size={12} /> {series.books.length} {series.books.length === 1 ? t("ssBookWord") : t("ssBooksWord")}
           </div>
           {publishDate && (
             <>
@@ -161,7 +163,7 @@ export default function SeriesView() {
         {series.books.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.4)" }}>
             <BookOpen style={{ width: 36, height: 36, margin: "0 auto 12px", opacity: 0.3 }} />
-            <p style={{ fontSize: 14 }}>No books published in this series yet</p>
+            <p style={{ fontSize: 14 }}>{t("svNoBooks")}</p>
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 24 }}>
@@ -189,7 +191,7 @@ export default function SeriesView() {
                     )}
                     {/* Volume badge */}
                     <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: "0.05em" }}>
-                      VOL. {i + 1}
+                      {t("svVol")} {i + 1}
                     </div>
                   </div>
 
@@ -210,7 +212,7 @@ export default function SeriesView() {
                         </span>
                       )}
                       <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
-                        {book.viewCount.toLocaleString()} views
+                        {book.viewCount.toLocaleString()} {t("svViews")}
                       </span>
                     </div>
                   </div>
@@ -224,17 +226,17 @@ export default function SeriesView() {
       {/* Share section */}
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 20px 48px" }}>
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, textAlign: "center" }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Share this series</p>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>{t("svShareSeries")}</p>
 
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={handleCopyLink}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 12, color: copied ? "#34d399" : "rgba(255,255,255,0.6)", transition: "all 0.15s" }}>
-              {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Link</>}
+              {copied ? <><Check size={13} /> {t("svCopied")}</> : <><Copy size={13} /> {t("svCopyLink")}</>}
             </button>
 
             <button onClick={shareX}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
-              𝕏 Post
+              𝕏 {t("svPostX")}
             </button>
 
             <button onClick={shareWhatsApp}
