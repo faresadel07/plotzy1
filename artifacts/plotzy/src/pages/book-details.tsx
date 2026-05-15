@@ -1150,7 +1150,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     const res = await fetch(`/api/books/${bookId}/collaborators/invite`, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ role: inviteRole }) });
                     const data = await res.json();
                     if (data.code) setInviteCode(data.code);
-                  } catch { toast({ title: "Failed to generate code", variant: "destructive" }); }
+                  } catch { toast({ title: lang === "ar" ? "فشل إنشاء الكود" : "Failed to generate code", variant: "destructive" }); }
                 }} className="flex-1 rounded-xl text-sm font-semibold py-2" style={{ background: "#fff", color: "#000" }}>
                   {lang === "ar" ? "إنشاء كود دعوة" : "Generate Invite Code"}
                 </button>
