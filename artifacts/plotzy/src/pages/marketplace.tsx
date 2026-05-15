@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useBooks } from "@/hooks/use-books";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -100,12 +102,12 @@ interface AIService {
   id: string;
   category: Category;
   icon: React.ReactNode;
-  name: string;
-  tagline: string;
-  description: string;
-  features: string[];
+  nameKey: TranslationKey;
+  taglineKey: TranslationKey;
+  descKey: TranslationKey;
+  featureKeys: TranslationKey[];
   delivery: string;
-  badge?: string;
+  badgeKey?: TranslationKey;
 }
 
 interface Scores {
@@ -141,56 +143,56 @@ const SERVICES: AIService[] = [
   {
     id: "dev-editor", category: "editing",
     icon: <BookOpen className="w-5 h-5" />,
-    name: "AI Developmental Editor",
-    tagline: "Full manuscript structure analysis",
-    description: "Reads your entire manuscript and delivers a professional editorial report covering story arc, pacing, character development, and plot holes.",
-    features: ["Chapter-by-chapter pacing analysis", "Character arc & motivation review", "Plot hole detection report"],
-    delivery: "~3 min", badge: "Most Used",
+    nameKey: "mkSvc1Name",
+    taglineKey: "mkSvc1Tag",
+    descKey: "mkSvc1Desc",
+    featureKeys: ["mkSvc1F1", "mkSvc1F2", "mkSvc1F3"],
+    delivery: "~3 min", badgeKey: "mkBadgeMostUsed",
   },
   {
     id: "copy-editor", category: "editing",
     icon: <Pen className="w-5 h-5" />,
-    name: "AI Copy Editor",
-    tagline: "Grammar, style & voice consistency",
-    description: "Deep grammar, style, and voice consistency pass that preserves your unique voice while eliminating repetition and awkward phrasing.",
-    features: ["Grammar & punctuation correction", "Voice consistency analysis", "Repetition & redundancy flagging"],
+    nameKey: "mkSvc2Name",
+    taglineKey: "mkSvc2Tag",
+    descKey: "mkSvc2Desc",
+    featureKeys: ["mkSvc2F1", "mkSvc2F2", "mkSvc2F3"],
     delivery: "~2 min",
   },
   {
     id: "beta-reader", category: "analysis",
     icon: <MessageSquare className="w-5 h-5" />,
-    name: "AI Beta Reader",
-    tagline: "Simulated reader feedback",
-    description: "Simulates 5 different reader personas going through your manuscript and provides detailed feedback on what resonated and what confused.",
-    features: ["5 reader persona perspectives", "Emotional impact mapping", "Page-turn prediction score"],
-    delivery: "~5 min", badge: "New",
+    nameKey: "mkSvc3Name",
+    taglineKey: "mkSvc3Tag",
+    descKey: "mkSvc3Desc",
+    featureKeys: ["mkSvc3F1", "mkSvc3F2", "mkSvc3F3"],
+    delivery: "~5 min", badgeKey: "mkBadgeNew",
   },
   {
     id: "cover-generator", category: "design",
     icon: <Palette className="w-5 h-5" />,
-    name: "AI Cover Generator",
-    tagline: "Professional covers from your blurb",
-    description: "Generates a professional AI book cover based on your description, genre, and title — ready for publishing.",
-    features: ["AI-generated artwork", "Genre-appropriate styling", "Front & back cover support"],
-    delivery: "~45 sec", badge: "Popular",
+    nameKey: "mkSvc4Name",
+    taglineKey: "mkSvc4Tag",
+    descKey: "mkSvc4Desc",
+    featureKeys: ["mkSvc4F1", "mkSvc4F2", "mkSvc4F3"],
+    delivery: "~45 sec", badgeKey: "mkBadgePopular",
   },
   {
     id: "blurb-writer", category: "marketing",
     icon: <FileText className="w-5 h-5" />,
-    name: "AI Book Blurb Writer",
-    tagline: "Back cover copy that sells",
-    description: "Crafts compelling back-cover blurbs and Amazon descriptions optimized for your genre's conventions and reader expectations.",
-    features: ["3 blurb variations", "Genre-specific tone & hooks", "Amazon & back-cover formats"],
+    nameKey: "mkSvc5Name",
+    taglineKey: "mkSvc5Tag",
+    descKey: "mkSvc5Desc",
+    featureKeys: ["mkSvc5F1", "mkSvc5F2", "mkSvc5F3"],
     delivery: "~30 sec",
   },
 ];
 
-const CATEGORIES: { id: Category; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "editing", label: "Editing" },
-  { id: "design", label: "Design" },
-  { id: "marketing", label: "Marketing" },
-  { id: "analysis", label: "Analysis" },
+const CATEGORIES: { id: Category; labelKey: TranslationKey }[] = [
+  { id: "all", labelKey: "mkCatAll" },
+  { id: "editing", labelKey: "mkCatEditing" },
+  { id: "design", labelKey: "mkCatDesign" },
+  { id: "marketing", labelKey: "mkCatMarketing" },
+  { id: "analysis", labelKey: "mkCatAnalysis" },
 ];
 
 /* ─── Score Card Component ───────────────────────────────── */
@@ -236,6 +238,7 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 }
 
 function ScoreCard({ scores }: { scores: Scores }) {
+  const { t } = useLanguage();
   return (
     <div style={{
       padding: "24px",
@@ -245,11 +248,11 @@ function ScoreCard({ scores }: { scores: Scores }) {
       <div style={{ display: "flex", alignItems: "center", gap: 24, width: "100%" }}>
         <CircularGauge score={scores.overall} />
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: TD, margin: 0 }}>Category Breakdown</p>
-          <ScoreBar label="Structure" score={scores.structure} />
-          <ScoreBar label="Characters" score={scores.characters} />
-          <ScoreBar label="Pacing" score={scores.pacing} />
-          <ScoreBar label="Writing Quality" score={scores.quality} />
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: TD, margin: 0 }}>{t("mkCategoryBreakdown")}</p>
+          <ScoreBar label={t("mkScoreStructure")} score={scores.structure} />
+          <ScoreBar label={t("mkScoreCharacters")} score={scores.characters} />
+          <ScoreBar label={t("mkScorePacing")} score={scores.pacing} />
+          <ScoreBar label={t("mkScoreQuality")} score={scores.quality} />
         </div>
       </div>
     </div>
@@ -284,6 +287,7 @@ function parseScores(report: string): { scores: Scores | null; cleanReport: stri
 /* ─── Multi-step Processing Animation ────────────────────── */
 
 function ProcessingSteps({ serviceName, delivery }: { serviceName: string; delivery: string }) {
+  const { t } = useLanguage();
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
@@ -293,9 +297,9 @@ function ProcessingSteps({ serviceName, delivery }: { serviceName: string; deliv
   }, []);
 
   const steps = [
-    "Reading your manuscript...",
-    "Analyzing structure & characters...",
-    "Generating editorial report...",
+    t("mkProc1"),
+    t("mkProc2"),
+    t("mkProc3"),
   ];
 
   return (
@@ -375,7 +379,7 @@ function ProcessingSteps({ serviceName, delivery }: { serviceName: string; deliv
 
       <div style={{ textAlign: "center", marginTop: 4 }}>
         <p style={{ fontSize: 12, color: TD }}>
-          {serviceName} &middot; Estimated time: {delivery}
+          {serviceName} &middot; {t("mkEstimatedTime")} {delivery}
         </p>
       </div>
     </motion.div>
@@ -397,6 +401,7 @@ function LaunchModal({
   usage: UsageInfo | null;
   onAnalysisComplete: () => void;
 }) {
+  const { t } = useLanguage();
   const [step, setStep] = useState<ModalStep>(initialService ? "upload" : "service");
   const [service, setService] = useState<AIService | null>(initialService);
   const [file, setFile] = useState<File | null>(null);
@@ -449,7 +454,7 @@ function LaunchModal({
       let manuscriptText = "";
       if (sourceTab === "upload" && file) {
         if (file.type === "application/pdf" || file.name.endsWith(".docx") || file.name.endsWith(".doc")) {
-          setApiError("PDF and DOCX parsing isn't supported yet -- please use the 'Paste Text' tab or a .txt file instead.");
+          setApiError(t("mkErrParseUnsupported"));
           setStep("upload");
           return;
         }
@@ -461,7 +466,7 @@ function LaunchModal({
       }
 
       if (manuscriptText.trim().length < 30) {
-        setApiError("Not enough content to analyze. Please provide more text.");
+        setApiError(t("mkErrNotEnough"));
         setStep("upload");
         return;
       }
@@ -483,8 +488,8 @@ function LaunchModal({
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Analysis failed" }));
-        throw new Error(err.message || "Analysis failed");
+        const err = await res.json().catch(() => ({ message: t("mkErrAnalysisFailed") }));
+        throw new Error(err.message || t("mkErrAnalysisFailed"));
       }
 
       const { report } = await res.json();
@@ -497,7 +502,7 @@ function LaunchModal({
       onAnalysisComplete();
       setStep("done");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Something went wrong";
+      const msg = err instanceof Error ? err.message : t("mkErrSomethingWrong");
       setApiError(msg);
       setStep("upload");
     }
@@ -516,10 +521,10 @@ function LaunchModal({
     : ["service", "upload", "processing", "done"];
 
   const STEP_LABEL: Record<ModalStep, string> = {
-    service: "Choose Service",
-    upload: "Upload Manuscript",
-    processing: "Processing",
-    done: "Complete",
+    service: t("mkStepChoose"),
+    upload: t("mkStepUpload"),
+    processing: t("mkStepProcessing"),
+    done: t("mkStepComplete"),
   };
 
   const stepIdx = STEP_FLOW.indexOf(step);
@@ -577,7 +582,7 @@ function LaunchModal({
             )}
             <div>
               <p style={{ fontWeight: 700, fontSize: 15, color: T, lineHeight: 1.2, margin: 0 }}>
-                {service ? service.name : "AI Publishing Suite"}
+                {service ? t(service.nameKey) : t("mkPublishingSuite")}
               </p>
               <p style={{ fontSize: 12, color: TD, marginTop: 2 }}>
                 {STEP_LABEL[step]}
@@ -647,7 +652,7 @@ function LaunchModal({
                 style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 8 }}
               >
                 <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>
-                  Which AI service would you like to run on your manuscript?
+                  {t("mkWhichService")}
                 </p>
                 {SERVICES.map(s => (
                   <button
@@ -682,8 +687,8 @@ function LaunchModal({
                       {s.icon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontWeight: 600, fontSize: 13, color: T, margin: 0 }}>{s.name}</p>
-                      <p style={{ fontSize: 11, color: TS, marginTop: 2 }}>{s.tagline}</p>
+                      <p style={{ fontWeight: 600, fontSize: 13, color: T, margin: 0 }}>{t(s.nameKey)}</p>
+                      <p style={{ fontSize: 11, color: TS, marginTop: 2 }}>{t(s.taglineKey)}</p>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, color: TD, flexShrink: 0 }}>
                       <Clock style={{ width: 11, height: 11 }} />
@@ -721,9 +726,9 @@ function LaunchModal({
                       <Lock style={{ width: 22, height: 22, color: "#fbbf24" }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: T, margin: "0 0 6px" }}>Upgrade to Unlock</p>
+                      <p style={{ fontSize: 16, fontWeight: 700, color: T, margin: "0 0 6px" }}>{t("mkUpgradeUnlock")}</p>
                       <p style={{ fontSize: 13, color: TS, lineHeight: 1.6, margin: 0 }}>
-                        AI Marketplace services are available on paid plans. Upgrade to start analyzing your manuscripts with AI.
+                        {t("mkUpgradeUnlockBody")}
                       </p>
                     </div>
                     <Link
@@ -737,7 +742,7 @@ function LaunchModal({
                       }}
                     >
                       <Zap style={{ width: 14, height: 14 }} />
-                      Upgrade Now
+                      {t("mkUpgradeNow")}
                     </Link>
                   </div>
                 )}
@@ -761,9 +766,9 @@ function LaunchModal({
                       <AlertCircle style={{ width: 22, height: 22, color: "#f87171" }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: T, margin: "0 0 6px" }}>Monthly Limit Reached</p>
+                      <p style={{ fontSize: 16, fontWeight: 700, color: T, margin: "0 0 6px" }}>{t("mkLimitReached")}</p>
                       <p style={{ fontSize: 13, color: TS, lineHeight: 1.6, margin: 0 }}>
-                        {usage.used}/{usage.limit} analyses used this month. Upgrade for more.
+                        {usage.used}/{usage.limit} {t("mkLimitReachedBody")}
                       </p>
                     </div>
                     <Link
@@ -777,7 +782,7 @@ function LaunchModal({
                       }}
                     >
                       <Zap style={{ width: 14, height: 14 }} />
-                      Upgrade for More
+                      {t("mkUpgradeForMore")}
                     </Link>
                   </div>
                 )}
@@ -786,8 +791,8 @@ function LaunchModal({
                 {!blocked && !limitReached && (
                   <>
                     <p style={{ fontSize: 13, color: TS, lineHeight: 1.6, margin: 0 }}>
-                      Choose your manuscript source. The AI will analyze it using{" "}
-                      <span style={{ color: "#ddd", fontWeight: 600 }}>{service?.name}</span>.
+                      {t("mkChooseSourcePre")}{" "}
+                      <span style={{ color: "#ddd", fontWeight: 600 }}>{service ? t(service.nameKey) : ""}</span>.
                     </p>
 
                     {/* Source tabs */}
@@ -798,9 +803,9 @@ function LaunchModal({
                       borderRadius: 12, padding: 5,
                     }}>
                       {([
-                        { id: "upload" as const, icon: <Upload style={{ width: 13, height: 13 }} />, label: "Upload File" },
-                        { id: "book"   as const, icon: <Library style={{ width: 13, height: 13 }} />, label: "My Books" },
-                        { id: "paste"  as const, icon: <FileText style={{ width: 13, height: 13 }} />, label: "Paste Text" },
+                        { id: "upload" as const, icon: <Upload style={{ width: 13, height: 13 }} />, label: t("mkTabUpload") },
+                        { id: "book"   as const, icon: <Library style={{ width: 13, height: 13 }} />, label: t("mkTabBooks") },
+                        { id: "paste"  as const, icon: <FileText style={{ width: 13, height: 13 }} />, label: t("mkTabPaste") },
                       ] as const).map(tab => (
                         <button
                           key={tab.id}
@@ -870,17 +875,17 @@ function LaunchModal({
                             <p style={{ fontSize: 12, color: TS, marginTop: 4 }}>
                               {(file.size / 1024).toFixed(1)} KB &middot;{" "}
                               <span style={{ color: "#888", textDecoration: "underline", cursor: "pointer" }}>
-                                Click to change
+                                {t("mkClickToChange")}
                               </span>
                             </p>
                           </div>
                         ) : (
                           <div style={{ textAlign: "center" }}>
                             <p style={{ fontSize: 14, color: "#ccc", fontWeight: 500 }}>
-                              Drop your manuscript here
+                              {t("mkDropHere")}
                             </p>
                             <p style={{ fontSize: 12, color: TS, marginTop: 4 }}>
-                              Supports PDF, DOCX, TXT -- or click to browse
+                              {t("mkSupportsFormats")}
                             </p>
                           </div>
                         )}
@@ -903,7 +908,7 @@ function LaunchModal({
                             color: TD,
                           }}>
                             <Library style={{ width: 32, height: 32, opacity: 0.4 }} />
-                            <p style={{ fontSize: 13, textAlign: "center" }}>No books found. Write something first!</p>
+                            <p style={{ fontSize: 13, textAlign: "center" }}>{t("mkNoBooksFound")}</p>
                           </div>
                         ) : (
                           myBooks.map((book, idx) => {
@@ -964,7 +969,7 @@ function LaunchModal({
                     {/* Tab: Paste text */}
                     {sourceTab === "paste" && (
                       <textarea
-                        placeholder="Paste your manuscript, chapter, or any portion of your text here..."
+                        placeholder={t("mkPastePlaceholder")}
                         value={text}
                         onChange={e => setText(e.target.value)}
                         style={{
@@ -1015,7 +1020,7 @@ function LaunchModal({
                         }}
                       >
                         <ChevronLeft style={{ width: 14, height: 14 }} />
-                        Back
+                        {t("mkBack")}
                       </button>
                     )}
                     <button
@@ -1034,7 +1039,7 @@ function LaunchModal({
                       }}
                     >
                       <Zap style={{ width: 15, height: 15 }} />
-                      Run {service?.name}
+                      {t("mkRun")} {service ? t(service.nameKey) : ""}
                     </button>
                   </div>
                 )}
@@ -1044,7 +1049,7 @@ function LaunchModal({
             {/* Step: Processing */}
             {step === "processing" && (
               <ProcessingSteps
-                serviceName={service?.name || "Service"}
+                serviceName={service ? t(service.nameKey) : ""}
                 delivery={service?.delivery || "~2 min"}
               />
             )}
@@ -1070,8 +1075,8 @@ function LaunchModal({
                     <Check style={{ width: 14, height: 14, color: "#34d399" }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: T, margin: 0 }}>{service?.name} Report</p>
-                    <p style={{ fontSize: 11, color: TS, margin: "2px 0 0" }}>Analysis complete</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: T, margin: 0 }}>{service ? t(service.nameKey) : ""} {t("mkReportSuffix")}</p>
+                    <p style={{ fontSize: 11, color: TS, margin: "2px 0 0" }}>{t("mkAnalysisComplete")}</p>
                   </div>
                   <button
                     onClick={handleCopyReport}
@@ -1084,7 +1089,7 @@ function LaunchModal({
                     }}
                   >
                     <Copy style={{ width: 11, height: 11 }} />
-                    {copied ? "Copied!" : "Copy"}
+                    {copied ? t("mkCopied") : t("mkCopy")}
                   </button>
                 </div>
 
@@ -1095,7 +1100,7 @@ function LaunchModal({
                 <div style={{ padding: "20px 24px" }}>
                   {reportText
                     ? <SimpleMarkdown text={reportText} />
-                    : <p style={{ fontSize: 13, color: TS }}>No report content.</p>}
+                    : <p style={{ fontSize: 13, color: TS }}>{t("mkNoReport")}</p>}
                 </div>
 
                 {/* Actions */}
@@ -1111,7 +1116,7 @@ function LaunchModal({
                       border: `1px solid rgba(255,255,255,0.09)`,
                     }}
                   >
-                    Close
+                    {t("mkClose")}
                   </button>
                   <button
                     onClick={() => {
@@ -1127,7 +1132,7 @@ function LaunchModal({
                     }}
                   >
                     <Zap style={{ width: 13, height: 13 }} />
-                    Run another service
+                    {t("mkRunAnother")}
                   </button>
                 </div>
               </motion.div>
@@ -1148,13 +1153,9 @@ function ServiceCard({
 }: {
   s: AIService; i: number; onLaunch: (s: AIService) => void;
 }) {
+  const { t } = useLanguage();
   const accent = ACCENT[s.id] || "#888";
-
-  const BADGE: Record<string, React.CSSProperties> = {
-    "Most Used": { background: `${accent}18`, color: accent, border: `1px solid ${accent}33` },
-    "Popular":   { background: `${accent}18`, color: accent, border: `1px solid ${accent}33` },
-    "New":       { background: `${accent}18`, color: accent, border: `1px solid ${accent}33` },
-  };
+  const badgeStyle: React.CSSProperties = { background: `${accent}18`, color: accent, border: `1px solid ${accent}33` };
 
   return (
     <motion.div
@@ -1195,26 +1196,26 @@ function ServiceCard({
               {s.icon}
             </div>
             <div>
-              <p style={{ fontWeight: 700, fontSize: 13, color: T, lineHeight: 1.3, margin: 0 }}>{s.name}</p>
-              <p style={{ fontSize: 11, color: TS, marginTop: 3 }}>{s.tagline}</p>
+              <p style={{ fontWeight: 700, fontSize: 13, color: T, lineHeight: 1.3, margin: 0 }}>{t(s.nameKey)}</p>
+              <p style={{ fontSize: 11, color: TS, marginTop: 3 }}>{t(s.taglineKey)}</p>
             </div>
           </div>
-          {s.badge && (
-            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 99, flexShrink: 0, marginLeft: 8, ...BADGE[s.badge] }}>
-              {s.badge}
+          {s.badgeKey && (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 99, flexShrink: 0, marginLeft: 8, ...badgeStyle }}>
+              {t(s.badgeKey)}
             </span>
           )}
         </div>
 
         {/* Description */}
-        <p style={{ fontSize: 12, color: TS, lineHeight: 1.7, flex: 1, margin: 0 }}>{s.description}</p>
+        <p style={{ fontSize: 12, color: TS, lineHeight: 1.7, flex: 1, margin: 0 }}>{t(s.descKey)}</p>
 
         {/* Features */}
         <ul style={{ display: "flex", flexDirection: "column", gap: 5, margin: 0, padding: 0, listStyle: "none" }}>
-          {s.features.map(f => (
+          {s.featureKeys.map(f => (
             <li key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: TD }}>
               <span style={{ width: 4, height: 4, borderRadius: "50%", background: accent, flexShrink: 0, opacity: 0.6 }} />
-              {f}
+              {t(f)}
             </li>
           ))}
         </ul>
@@ -1242,7 +1243,7 @@ function ServiceCard({
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
           >
             <Zap style={{ width: 11, height: 11 }} />
-            Analyze
+            {t("mkAnalyze")}
           </button>
         </div>
       </div>
@@ -1294,6 +1295,7 @@ function HistoryCard({ entry }: { entry: HistoryEntry }) {
 /* ─── Page ────────────────────────────────────────────────── */
 
 export default function Marketplace() {
+  const { t } = useLanguage();
   const [cat, setCat] = useState<Category>("all");
   const [q, setQ] = useState("");
   const [modal, setModal] = useState<AIService | null | undefined>(undefined);
@@ -1335,17 +1337,17 @@ export default function Marketplace() {
   const filtered = SERVICES.filter(s => {
     const catOk = cat === "all" || s.category === cat;
     const qLow = q.toLowerCase();
-    const qOk = !q || s.name.toLowerCase().includes(qLow) || s.tagline.toLowerCase().includes(qLow);
+    const qOk = !q || t(s.nameKey).toLowerCase().includes(qLow) || t(s.taglineKey).toLowerCase().includes(qLow);
     return catOk && qOk;
   });
 
   return (
     <Layout isLanding darkNav>
       <SEO
-        title="Marketplace"
-        description="Connect with editors, cover designers, and audiobook narrators for your book."
+        title={t("mkSeoTitle")}
+        description={t("mkSeoDesc")}
       />
-      <JsonLd data={buildBreadcrumbSchema([{ name: "Marketplace", path: "/marketplace" }])} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: t("mkBreadcrumb"), path: "/marketplace" }])} />
     <div style={{ minHeight: "100vh", background: BG, color: "#f0f0f0", fontFamily: SF }}>
 
       {/* Top ambient glow */}
@@ -1370,7 +1372,7 @@ export default function Marketplace() {
           onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = TD; }}
         >
           <ArrowLeft style={{ width: 15, height: 15 }} />
-          Back to Home
+          {t("mkBackHome")}
         </Link>
 
         {/* Hero */}
@@ -1382,11 +1384,11 @@ export default function Marketplace() {
         >
           <div style={{ maxWidth: 640, textAlign: "center" }}>
             <h1 style={{ fontSize: 46, fontWeight: 800, lineHeight: 1.06, color: T, margin: 0, fontFamily: SF }}>
-              Every publishing service,<br />
-              <span style={{ color: T }}>powered by AI.</span>
+              {t("mkHeroTitle1")}<br />
+              <span style={{ color: T }}>{t("mkHeroTitle2")}</span>
             </h1>
             <p style={{ marginTop: 16, fontSize: 15, color: TS, lineHeight: 1.65 }}>
-              Professional editorial, design, and marketing delivered in minutes. No waitlists. No humans.
+              {t("mkHeroSub")}
             </p>
           </div>
 
@@ -1401,7 +1403,7 @@ export default function Marketplace() {
             }}>
               <BarChart3 style={{ width: 13, height: 13, color: TS }} />
               <span style={{ fontSize: 12, color: TS }}>
-                {usage.used} of {usage.limit} analyses used this month
+                {usage.used} {t("mkUsageBadge")} {usage.limit} {t("mkAnalysesUsedMonth")}
               </span>
             </div>
           )}
@@ -1422,7 +1424,7 @@ export default function Marketplace() {
                   border: cat === c.id ? "none" : `1px solid ${B}`,
                 }}
               >
-                {c.label}
+                {t(c.labelKey)}
               </button>
             ))}
           </div>
@@ -1430,7 +1432,7 @@ export default function Marketplace() {
           <div style={{ position: "relative", marginLeft: "auto" }}>
             <Search style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 14, height: 14, color: TD, pointerEvents: "none" }} />
             <input
-              placeholder="Search services..."
+              placeholder={t("mkSearchPlaceholder")}
               value={q}
               onChange={e => setQ(e.target.value)}
               style={{
@@ -1449,7 +1451,7 @@ export default function Marketplace() {
         </div>
 
         <p style={{ fontSize: 12, color: TD, marginBottom: 20 }}>
-          {filtered.length} service{filtered.length !== 1 ? "s" : ""} available
+          {filtered.length} {filtered.length !== 1 ? t("mkServicesWord") : t("mkServiceWord")} {t("mkServicesAvailable")}
         </p>
 
         {/* Flex-wrap so the last row centers instead of hugging the left
@@ -1457,7 +1459,7 @@ export default function Marketplace() {
              column count. Each card keeps a consistent width (flex-grow: 0). */}
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: TD }}>
-            <p style={{ fontSize: 14 }}>No services match your search</p>
+            <p style={{ fontSize: 14 }}>{t("mkNoMatch")}</p>
           </div>
         ) : (
           <div style={{
@@ -1489,8 +1491,8 @@ export default function Marketplace() {
             transition={{ delay: 0.3 }}
             style={{ marginTop: 56 }}
           >
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: TD, marginBottom: 8 }}>History</p>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: T, marginBottom: 20, marginTop: 0, fontFamily: SF }}>Recent Analyses</h2>
+            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: TD, marginBottom: 8 }}>{t("mkHistoryEyebrow")}</p>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: T, marginBottom: 20, marginTop: 0, fontFamily: SF }}>{t("mkRecentAnalyses")}</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {history.slice(0, 10).map((entry, idx) => (
                 <HistoryCard key={idx} entry={entry} />
@@ -1509,13 +1511,13 @@ export default function Marketplace() {
             background: "rgba(255,255,255,0.02)", border: `1px solid rgba(255,255,255,0.05)`,
           }}
         >
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", textAlign: "center", color: TD, marginBottom: 8 }}>Process</p>
-          <h2 style={{ fontSize: 22, fontWeight: 700, textAlign: "center", color: T, marginBottom: 36, marginTop: 0, fontFamily: SF }}>Ready in three steps</h2>
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", textAlign: "center", color: TD, marginBottom: 8 }}>{t("mkProcessEyebrow")}</p>
+          <h2 style={{ fontSize: 22, fontWeight: 700, textAlign: "center", color: T, marginBottom: 36, marginTop: 0, fontFamily: SF }}>{t("mkReadyThreeSteps")}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 32 }}>
             {[
-              { n: "01", icon: <Palette style={{ width: 20, height: 20 }} />, title: "Select a Service", desc: "Pick the AI service that fits where you are in the writing process." },
-              { n: "02", icon: <Upload style={{ width: 20, height: 20 }} />, title: "Upload Manuscript", desc: "Drop your file or paste text. Supports PDF, DOCX, and TXT." },
-              { n: "03", icon: <Zap style={{ width: 20, height: 20 }} />, title: "Get Results Instantly", desc: "Receive a professional-grade report in minutes, ready to apply." },
+              { n: "01", icon: <Palette style={{ width: 20, height: 20 }} />, title: t("mkStep1T"), desc: t("mkStep1D") },
+              { n: "02", icon: <Upload style={{ width: 20, height: 20 }} />, title: t("mkStep2T"), desc: t("mkStep2D") },
+              { n: "03", icon: <Zap style={{ width: 20, height: 20 }} />, title: t("mkStep3T"), desc: t("mkStep3D") },
             ].map(st => (
               <div key={st.n} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 12 }}>
                 <div style={{
