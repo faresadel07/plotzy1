@@ -14,6 +14,7 @@ import {
   Headphones, Shield, Settings, Mail,
 } from "lucide-react";
 import { FAQ_CATEGORIES, type FaqCategory } from "@/data/faq-data";
+import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
@@ -42,6 +43,7 @@ const CATEGORY_ICONS: Record<string, IconCmp> = {
 };
 
 export default function FaqPage() {
+  const { t } = useLanguage();
   // Scroll to the hash target on first mount (e.g. /faq#pricing). Run
   // after a tick so the lazy-loaded section has actually rendered.
   useEffect(() => {
@@ -60,26 +62,23 @@ export default function FaqPage() {
   return (
     <Layout darkNav>
       <SEO
-        title="Frequently Asked Questions"
-        description="Answers about getting started, pricing, AI features, publishing, and account on Plotzy."
+        title={t("fqSeoTitle")}
+        description={t("fqSeoDesc")}
       />
       <JsonLd data={buildFaqPageSchema(allCategories)} />
-      <JsonLd data={buildBreadcrumbSchema([{ name: "FAQ", path: "/faq" }])} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: t("fqBreadcrumb"), path: "/faq" }])} />
       <div style={{ background: BG, color: T, fontFamily: SF, minHeight: "100vh" }}>
         {/* ── Hero ── */}
         <section style={{ borderBottom: `1px solid ${B}` }}>
           <div style={{ maxWidth: 980, margin: "0 auto", padding: "72px 24px 56px" }}>
             <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: TD, fontWeight: 600, marginBottom: 18 }}>
-              FAQ
+              {t("fqEyebrow")}
             </div>
             <h1 style={{ fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.05, color: T, margin: 0, marginBottom: 18 }}>
-              Frequently asked questions.
+              {t("fqTitle")}
             </h1>
             <p style={{ fontSize: 16, lineHeight: 1.6, color: TS, maxWidth: 640, margin: 0 }}>
-              Honest answers about how Plotzy works today, what's on the
-              roadmap, and what we don't do. Every answer here corresponds to
-              actual product behaviour. If you find one that doesn't match what
-              you see in the app, that's a bug we want to know about.
+              {t("fqHeroBody")}
             </p>
           </div>
         </section>
@@ -138,11 +137,10 @@ export default function FaqPage() {
           <div style={{ maxWidth: 980, margin: "0 auto", padding: "56px 24px", textAlign: "center" }}>
             <Mail size={28} style={{ color: TS, margin: "0 auto 16px", display: "block" }} />
             <h2 style={{ fontSize: 22, fontWeight: 700, color: T, marginBottom: 10, letterSpacing: "-0.01em" }}>
-              Still have questions?
+              {t("fqStillQuestions")}
             </h2>
             <p style={{ fontSize: 14, color: TS, marginBottom: 22, maxWidth: 480, margin: "0 auto 22px" }}>
-              We read every email. Premium subscribers get priority response;
-              everyone else hears back within a business day.
+              {t("fqCtaBody")}
             </p>
             <a
               href="mailto:faresadel@gmail.com"
