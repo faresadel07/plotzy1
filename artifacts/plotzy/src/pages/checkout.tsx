@@ -17,6 +17,7 @@ import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
 import { Sentry } from "@/lib/sentry";
 import { SEO } from "@/components/SEO";
 import { AuthModal } from "@/components/auth-modal";
+import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#000";
@@ -43,23 +44,24 @@ export default function Checkout() {
 
 function InvalidPlan() {
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   return (
     <div
       style={{ background: BG, color: T, fontFamily: SF }}
       className="min-h-screen flex items-center justify-center p-6"
     >
-      <SEO title="Invalid plan" noindex />
+      <SEO title={t("coInvalidPlan")} noindex />
       <div className="max-w-sm w-full text-center space-y-5">
-        <h1 className="text-2xl font-bold">Invalid plan</h1>
+        <h1 className="text-2xl font-bold">{t("coInvalidPlan")}</h1>
         <p style={{ color: TS }} className="text-sm">
-          We couldn't recognize this plan. Please choose one from our pricing page.
+          {t("coInvalidPlanBody")}
         </p>
         <button
           onClick={() => navigate("/pricing")}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm"
           style={{ background: T, color: "#000" }}
         >
-          Return to pricing
+          {t("coReturnPricing")}
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -68,6 +70,7 @@ function InvalidPlan() {
 }
 
 function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
+  const { t } = useLanguage();
   const [clientId, setClientId] = useState<string | null>(null);
   const [sandbox, setSandbox] = useState(false);
   const [sdkUnavailable, setSdkUnavailable] = useState(false);
@@ -90,9 +93,9 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
     return (
       <Frame>
         <CenterBlock>
-          <h1 className="text-2xl font-bold">Payments are temporarily unavailable</h1>
+          <h1 className="text-2xl font-bold">{t("coUnavailable")}</h1>
           <p style={{ color: TS }} className="text-sm">
-            Please try again in a few minutes.
+            {t("coUnavailableBody")}
           </p>
         </CenterBlock>
       </Frame>
@@ -105,7 +108,7 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
         <CenterBlock>
           <Spinner />
           <p style={{ color: TS }} className="text-sm">
-            Loading checkout…
+            {t("coLoadingCheckout")}
           </p>
         </CenterBlock>
       </Frame>
@@ -121,7 +124,7 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
         components: "buttons,card-fields,applepay",
       }}
     >
-      <SEO title={`Checkout · ${plan.displayName}`} noindex />
+      <SEO title={`${t("coCheckout")} · ${plan.displayName}`} noindex />
       <CheckoutLayout plan={plan} sandbox={sandbox} />
     </PayPalScriptProvider>
   );
@@ -129,6 +132,7 @@ function CheckoutWithSdk({ plan }: { plan: PlanDetails }) {
 
 function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean }) {
   const { user, refetch } = useAuth();
+  const { t } = useLanguage();
   const [, navigate] = useLocation();
   const [status, setStatus] = useState<CheckoutStatus>("form");
   const [error, setError] = useState<string | null>(null);
@@ -165,9 +169,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
         throw new Error("Not authenticated");
       }
       if (res.status === 429) {
-        setError(
-          "You've made several payment attempts in a short time. Please wait a few minutes before trying again.",
-        );
+        setError(t("coRateLimited"));
         setIsProcessing(false);
         throw new Error("Rate limited");
       }
@@ -198,16 +200,12 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
         credentials: "include",
       });
       if (res.status === 429) {
-        setError(
-          "You've made several payment attempts in a short time. Please wait a few minutes before trying again.",
-        );
+        setError(t("coRateLimited"));
         setIsProcessing(false);
         return;
       }
       if (!res.ok) {
-        setError(
-          "Payment couldn't be processed. Please try again or use a different payment method.",
-        );
+        setError(t("coPaymentFailed"));
         setIsProcessing(false);
         return;
       }
@@ -224,11 +222,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
       // (offline, DNS, blocked by an extension, CORS, …). Anything else
       // is more likely an internal logic error and gets the generic copy.
       const isNetworkError = err instanceof TypeError;
-      setError(
-        isNetworkError
-          ? "Could not reach our payment servers. Please check your internet connection and try again."
-          : "Payment couldn't be processed. Please try again or use a different payment method.",
-      );
+      setError(isNetworkError ? t("coNetworkError") : t("coPaymentFailed"));
       setIsProcessing(false);
     }
   };
@@ -237,9 +231,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
     Sentry.captureException(err, {
       tags: { area: "checkout", source: "paypal_sdk" },
     });
-    setError(
-      "Payment couldn't be processed. Please try again or use a different payment method."
-    );
+    setError(t("coPaymentFailed"));
     setIsProcessing(false);
   };
 
@@ -259,7 +251,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
           onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
         >
           <ChevronLeft className="w-4 h-4" />
-          Back to plans
+          {t("coBackToPlans")}
         </button>
       )}
       <header className="mb-10 flex items-center gap-2 flex-wrap">
@@ -267,7 +259,7 @@ function CheckoutLayout({ plan, sandbox }: { plan: PlanDetails; sandbox: boolean
           Plotzy
         </span>
         <span style={{ color: TD }} className="text-sm">
-          · Checkout
+          · {t("coCheckout")}
         </span>
         {sandbox && <TestModeBadge />}
       </header>
@@ -301,6 +293,7 @@ function OrderSummaryPanel({
   plan: PlanDetails;
   paid: boolean;
 }) {
+  const { t } = useLanguage();
   return (
     <section
       className="rounded-2xl p-5 md:p-8"
@@ -318,7 +311,7 @@ function OrderSummaryPanel({
             className="text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-1 rounded-full"
             style={{ background: "rgba(16,185,129,0.15)", color: SUCCESS }}
           >
-            Paid
+            {t("coPaid")}
           </span>
         )}
       </div>
@@ -342,7 +335,7 @@ function OrderSummaryPanel({
         className="text-xs font-semibold uppercase tracking-[0.18em] mb-4"
         style={{ color: TD }}
       >
-        What's included
+        {t("asWhatsIncluded")}
       </p>
       <ul className="space-y-3">
         {plan.features.map((f) => (
@@ -361,11 +354,11 @@ function OrderSummaryPanel({
       <Separator />
 
       <div className="space-y-2">
-        <PriceRow label="Subtotal" value={`$${plan.priceUsd.toFixed(2)}`} />
-        <PriceRow label="Tax" value="$0.00" />
+        <PriceRow label={t("coSubtotal")} value={`$${plan.priceUsd.toFixed(2)}`} />
+        <PriceRow label={t("coTax")} value="$0.00" />
         <div className="pt-2" style={{ borderTop: `1px solid ${B}` }} />
         <div className="flex items-center justify-between pt-2">
-          <span className="text-base font-semibold">Total due today</span>
+          <span className="text-base font-semibold">{t("coTotalDue")}</span>
           <span className="text-xl font-bold">${plan.priceUsd.toFixed(2)}</span>
         </div>
       </div>
@@ -376,7 +369,7 @@ function OrderSummaryPanel({
         className="mt-5 inline-flex items-center gap-1 text-xs font-medium opacity-40 cursor-not-allowed"
         style={{ color: TS }}
       >
-        + Add promotion code
+        {t("coAddPromo")}
       </button>
     </section>
   );
@@ -401,6 +394,7 @@ function PaymentFormPanel({
   onError: (err: unknown) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [method, setMethod] = useState<PaymentMethod>("card");
 
   // The previous single dimming wrapper around the whole form
@@ -425,8 +419,8 @@ function PaymentFormPanel({
       {error && <ErrorBanner message={error} />}
 
       <div style={dimStyle}>
-        <SectionLabel>Contact information</SectionLabel>
-        <Field label="Email">
+        <SectionLabel>{t("coContactInfo")}</SectionLabel>
+        <Field label={t("coEmail")}>
           <input
             type="email"
             value={userEmail}
@@ -443,7 +437,7 @@ function PaymentFormPanel({
 
       <div>
         <div style={dimStyle}>
-          <SectionLabel>Payment method</SectionLabel>
+          <SectionLabel>{t("coPaymentMethod")}</SectionLabel>
         </div>
         <div className="space-y-3">
           <MethodOption
@@ -451,7 +445,7 @@ function PaymentFormPanel({
             selected={method === "card"}
             onSelect={() => { if (!isProcessing) setMethod("card"); }}
             icon={<CreditCard className="w-4 h-4" style={{ color: T }} />}
-            title="Card"
+            title={t("coCard")}
           >
             {method === "card" && (
               <div className="pt-3">
@@ -470,7 +464,7 @@ function PaymentFormPanel({
                   className="text-[10px] font-semibold uppercase tracking-[0.18em] mb-2"
                   style={{ color: TD }}
                 >
-                  Payment by card
+                  {t("coPaymentByCard")}
                 </p>
                 <div
                   style={{
@@ -499,7 +493,7 @@ function PaymentFormPanel({
                   />
                 </div>
                 <p className="mt-2 text-xs" style={{ color: TD }}>
-                  You'll enter your card details securely in a PayPal popup.
+                  {t("coCardPopupNote")}
                 </p>
               </div>
             )}
@@ -537,13 +531,13 @@ function PaymentFormPanel({
 
       <div style={dimStyle}>
         <p style={{ color: TD }} className="text-xs leading-relaxed">
-          By continuing, you agree to our{" "}
+          {t("coAgreePre")}{" "}
           <a href="/terms" style={{ color: TS }} className="underline underline-offset-2">
-            Terms
+            {t("coTerms")}
           </a>{" "}
-          and{" "}
+          {t("coAnd")}{" "}
           <a href="/privacy" style={{ color: TS }} className="underline underline-offset-2">
-            Privacy Policy
+            {t("coPrivacy")}
           </a>
           .
         </p>
@@ -557,10 +551,10 @@ function PaymentFormPanel({
           <Spinner large />
           <div className="text-center">
             <p className="text-sm font-semibold" style={{ color: T }}>
-              Processing payment…
+              {t("coProcessing")}
             </p>
             <p className="text-xs mt-1" style={{ color: TS }}>
-              Please don't close this window.
+              {t("coDontClose")}
             </p>
           </div>
         </div>
@@ -571,6 +565,7 @@ function PaymentFormPanel({
 
 function SuccessPanel({ plan }: { plan: PlanDetails }) {
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   const nextCharge = computeNextCharge(plan.cycle);
   return (
     <section
@@ -584,10 +579,10 @@ function SuccessPanel({ plan }: { plan: PlanDetails }) {
         <CheckCircle2 className="w-9 h-9" style={{ color: SUCCESS }} />
       </div>
       <h2 className="text-2xl font-bold leading-tight">
-        Welcome to {plan.displayName}!
+        {t("coWelcomeTo")} {plan.displayName}!
       </h2>
       <p style={{ color: TS }} className="text-sm mt-2">
-        Your subscription is now active.
+        {t("coSubActive")}
       </p>
 
       <div
@@ -595,11 +590,11 @@ function SuccessPanel({ plan }: { plan: PlanDetails }) {
         style={{ background: C3, border: `1px solid ${B}` }}
       >
         <div className="flex items-baseline justify-between gap-3">
-          <span style={{ color: TS }} className="flex-shrink-0">Plan</span>
+          <span style={{ color: TS }} className="flex-shrink-0">{t("coPlanLabel")}</span>
           <span className="text-right">{plan.displayName} ({plan.cycle})</span>
         </div>
         <div className="flex items-baseline justify-between gap-3">
-          <span style={{ color: TS }} className="flex-shrink-0">Next charge</span>
+          <span style={{ color: TS }} className="flex-shrink-0">{t("coNextCharge")}</span>
           <span className="text-right">{nextCharge} · ${plan.priceUsd.toFixed(2)}</span>
         </div>
       </div>
@@ -609,7 +604,7 @@ function SuccessPanel({ plan }: { plan: PlanDetails }) {
         className="mt-6 inline-flex items-center justify-center gap-2 w-full rounded-xl py-3.5 text-base font-semibold"
         style={{ background: T, color: "#000" }}
       >
-        Continue to your library
+        {t("coContinueLibrary")}
         <ChevronRight className="w-4 h-4" />
       </button>
     </section>
@@ -767,6 +762,7 @@ function CenterBlock({ children }: { children: React.ReactNode }) {
 }
 
 function TestModeBadge() {
+  const { t } = useLanguage();
   return (
     <span
       className="text-[10px] font-bold uppercase tracking-[0.18em] px-2 py-0.5 rounded-full inline-flex items-center"
@@ -775,9 +771,9 @@ function TestModeBadge() {
         color: "#F59E0B",
         border: "1px solid rgba(245,158,11,0.35)",
       }}
-      title="PayPal Sandbox — no real charges"
+      title={t("asTestModeTitle")}
     >
-      Test mode
+      {t("asTestMode")}
     </span>
   );
 }
