@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/language-context";
 import { PerspectiveBook } from "@/components/ui/perspective-book";
 import { BookCoverShader } from "@/components/ui/book-cover-shader";
 import {
@@ -25,6 +26,7 @@ type Props = { books: Book[] | undefined };
 
 // Book cover matching the original library style
 function MiniCover({ book, onClick }: { book: { id: number; title: string; coverImage?: string | null; spineColor?: string | null; genre?: string | null }; onClick: () => void }) {
+  const { t } = useLanguage();
   const spine = book.spineColor ?? "#1a1a2e";
   const [hover, setHover] = useState(false);
   const { data: chapterCount } = useQuery<number>({
@@ -57,8 +59,8 @@ function MiniCover({ book, onClick }: { book: { id: number; title: string; cover
           <p className="text-xs font-semibold text-white mb-0.5">{book.title}</p>
           <p className="text-[10px] text-white/40">
             {chapterCount !== undefined
-              ? `${chapterCount} ${chapterCount === 1 ? "chapter" : "chapters"}`
-              : "Loading..."}
+              ? `${chapterCount} ${chapterCount === 1 ? t("ssChapter") : t("ssChapters")}`
+              : t("ssLoading")}
           </p>
           {/* Arrow */}
           <div
@@ -83,7 +85,7 @@ function MiniCover({ book, onClick }: { book: { id: number; title: string; cover
         {/* Title overlay */}
         <div className="absolute bottom-0 inset-x-0 p-2 flex flex-col justify-end z-20" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}>
           <h3 className="text-white font-bold leading-tight line-clamp-2" style={{ fontSize: 8, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif", textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>{book.title}</h3>
-          <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '7px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ?? 'Book'}</div>
+          <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '7px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ?? t("ssBookGenre")}</div>
         </div>
       </PerspectiveBook>
     </button>
@@ -105,6 +107,7 @@ function ManageBooksDialog({
   const addBook = useAddBookToSeries();
   const removeBook = useRemoveBookFromSeries();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
 
   const seriesBookIds = new Set(series.books.map((b) => b.id));
   const candidates = allBooks.filter((b) => b.contentType !== "article");
@@ -112,10 +115,10 @@ function ManageBooksDialog({
   async function toggle(book: Book) {
     if (seriesBookIds.has(book.id)) {
       await removeBook.mutateAsync({ seriesId: series.id, bookId: book.id });
-      toast({ title: `Removed from "${series.name}"` });
+      toast({ title: lang === "ar" ? `أُزيل من "${series.name}"` : `Removed from "${series.name}"` });
     } else {
       await addBook.mutateAsync({ seriesId: series.id, bookId: book.id });
-      toast({ title: `Added to "${series.name}"` });
+      toast({ title: lang === "ar" ? `أُضيف إلى "${series.name}"` : `Added to "${series.name}"` });
     }
   }
 
@@ -123,12 +126,12 @@ function ManageBooksDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#111] border border-white/10 text-white max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white text-base font-semibold">Manage Books — {series.name}</DialogTitle>
+          <DialogTitle className="text-white text-base font-semibold">{t("ssManageBooksTitle")} · {series.name}</DialogTitle>
         </DialogHeader>
-        <p className="text-white/40 text-xs mb-4">Toggle books to add or remove them from this series.</p>
+        <p className="text-white/40 text-xs mb-4">{t("ssManageHint")}</p>
         <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
           {candidates.length === 0 && (
-            <p className="text-white/30 text-sm text-center py-6">No books yet.</p>
+            <p className="text-white/30 text-sm text-center py-6">{t("ssNoBooksYet")}</p>
           )}
           {candidates.map((book) => {
             const spine = book.spineColor ?? "#333";
@@ -174,6 +177,7 @@ function SeriesCard({
 }) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
   const updateSeries = useUpdateSeries();
   const deleteSeries = useDeleteSeries();
   const reorder = useReorderSeriesBooks();
@@ -193,14 +197,14 @@ function SeriesCard({
     if (!nameVal.trim() || nameVal.trim() === series.name) { setEditingName(false); return; }
     await updateSeries.mutateAsync({ id: series.id, name: nameVal.trim() });
     setEditingName(false);
-    toast({ title: "Series renamed" });
+    toast({ title: t("ssRenamed") });
   }
 
   async function saveDesc() {
     if (descVal.trim() === (series.description || "")) { setEditingDesc(false); return; }
     await updateSeries.mutateAsync({ id: series.id, description: descVal.trim() });
     setEditingDesc(false);
-    toast({ title: "Description updated" });
+    toast({ title: t("ssDescUpdated") });
   }
 
   // Series stats (coming from backend)
@@ -211,9 +215,9 @@ function SeriesCard({
   async function togglePublish() {
     try {
       await publishSeries.mutateAsync({ id: series.id, publish: !isPublished });
-      toast({ title: isPublished ? "Series unpublished" : "Series published!" });
+      toast({ title: isPublished ? t("ssUnpublishedToast") : t("ssPublishedToast") });
     } catch {
-      toast({ title: "Failed to update", variant: "destructive" });
+      toast({ title: t("ssUpdateFailed"), variant: "destructive" });
     }
   }
 
@@ -222,12 +226,12 @@ function SeriesCard({
     navigator.clipboard.writeText(url);
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
-    toast({ title: "Link copied!" });
+    toast({ title: t("ssLinkCopied") });
   }
 
   async function handleDelete() {
     await deleteSeries.mutateAsync(series.id);
-    toast({ title: `Series "${series.name}" deleted` });
+    toast({ title: lang === "ar" ? `تم حذف السلسلة "${series.name}"` : `Series "${series.name}" deleted` });
     setShowConfirmDelete(false);
   }
 
@@ -253,7 +257,7 @@ function SeriesCard({
         <button
           onClick={() => setExpanded(e => !e)}
           className="w-8 h-8 rounded-lg bg-white/8 border border-white/12 flex items-center justify-center flex-shrink-0 mt-0.5 hover:bg-white/12 transition-colors"
-          title={expanded ? "Collapse" : "Expand"}
+          title={expanded ? t("ssCollapse") : t("ssExpand")}
         >
           {expanded ? <ChevronUp className="w-4 h-4 text-white/50" /> : <ChevronDown className="w-4 h-4 text-white/50" />}
         </button>
@@ -274,9 +278,9 @@ function SeriesCard({
             <h3 className="text-base font-semibold text-white leading-tight truncate">{series.name}</h3>
           )}
           <p className="text-[10px] text-white/25 mt-1 font-medium tracking-wider uppercase">
-            {isEmpty ? "No books yet" : `${series.books.length} book${series.books.length !== 1 ? "s" : ""}`}
-            {stats && stats.totalChapters > 0 && ` · ${stats.totalChapters} ${stats.totalChapters === 1 ? "chapter" : "chapters"}`}
-            {stats && stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
+            {isEmpty ? (lang === "ar" ? "لا توجد كتب بعد" : "No books yet") : `${series.books.length} ${series.books.length === 1 ? t("ssBookWord") : t("ssBooksWord")}`}
+            {stats && stats.totalChapters > 0 && ` · ${stats.totalChapters} ${stats.totalChapters === 1 ? t("ssChapter") : t("ssChapters")}`}
+            {stats && stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} ${t("ssWordsWord")}`}
           </p>
         </div>
         {/* Action buttons */}
@@ -284,7 +288,7 @@ function SeriesCard({
           {/* Published badge — always visible when published */}
           {isPublished && (
             <span className="hidden sm:flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ background: "rgba(124,106,247,0.15)", color: "#a78bfa", border: "1px solid rgba(124,106,247,0.3)" }}>
-              <Globe className="w-2.5 h-2.5" /> Live
+              <Globe className="w-2.5 h-2.5" /> {t("ssLive")}
             </span>
           )}
           {/* Share link button — only when published */}
@@ -292,7 +296,7 @@ function SeriesCard({
             <button
               onClick={copyShareLink}
               className="p-1.5 rounded-lg text-white/40 hover:text-violet-400 hover:bg-violet-500/10 transition-all"
-              title="Copy public link"
+              title={t("ssCopyLink")}
             >
               {shareCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
             </button>
@@ -301,21 +305,21 @@ function SeriesCard({
             <button
               onClick={() => setEditingName(true)}
               className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
-              title="Rename"
+              title={t("ssRename")}
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setManageOpen(true)}
               className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all"
-              title="Manage books"
+              title={t("ssManageBooksTitle")}
             >
               <BookOpen className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setShowConfirmDelete(true)}
               className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
-              title="Delete series"
+              title={t("ssDeleteSeriesTitle")}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -332,23 +336,23 @@ function SeriesCard({
                 autoFocus
                 value={descVal}
                 onChange={(e) => setDescVal(e.target.value)}
-                placeholder="Describe your series — genre, setting, characters, themes..."
+                placeholder={t("ssDescPlaceholder")}
                 rows={3}
                 className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-white/30 resize-none text-sm"
               />
               <div className="flex gap-2 justify-end">
-                <button type="button" onClick={() => { setDescVal(series.description || ""); setEditingDesc(false); }} className="text-xs text-white/40 hover:text-white/70 px-3 py-1">Cancel</button>
-                <button type="button" onClick={saveDesc} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-md border border-white/15">Save</button>
+                <button type="button" onClick={() => { setDescVal(series.description || ""); setEditingDesc(false); }} className="text-xs text-white/40 hover:text-white/70 px-3 py-1">{t("ssCancel")}</button>
+                <button type="button" onClick={saveDesc} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-md border border-white/15">{t("ssSave")}</button>
               </div>
             </div>
           ) : series.description ? (
             <button type="button" onClick={() => setEditingDesc(true)} className="group/desc cursor-pointer p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all w-full text-left">
               <p className="text-sm text-white/60 leading-relaxed">{series.description}</p>
-              <span className="text-[10px] text-white/25 mt-1 block opacity-0 group-hover/desc:opacity-100 transition-opacity">Click to edit</span>
+              <span className="text-[10px] text-white/25 mt-1 block opacity-0 group-hover/desc:opacity-100 transition-opacity">{t("ssClickToEdit")}</span>
             </button>
           ) : (
             <button onClick={() => setEditingDesc(true)} className="w-full text-left text-xs text-white/30 hover:text-white/60 transition-colors border border-dashed border-white/10 hover:border-white/20 rounded-lg px-3 py-2">
-              + Add description
+              {t("ssAddDescription")}
             </button>
           )}
         </div>
@@ -359,24 +363,24 @@ function SeriesCard({
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
             <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase tracking-wider font-semibold">
-              <FileText className="w-3 h-3" /> Chapters
+              <FileText className="w-3 h-3" /> {t("ssChaptersLabel")}
             </div>
             <p className="text-base font-bold text-white mt-0.5">{stats.totalChapters.toLocaleString()}</p>
           </div>
           <div className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
             <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase tracking-wider font-semibold">
-              <Type className="w-3 h-3" /> Words
+              <Type className="w-3 h-3" /> {t("ssWordsLabel")}
             </div>
             <p className="text-base font-bold text-white mt-0.5">{stats.totalWords.toLocaleString()}</p>
           </div>
           <div className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
             <div className="flex items-center gap-1.5 text-white/40 text-[9px] uppercase tracking-wider font-semibold">
-              <Target className="w-3 h-3" /> Progress
+              <Target className="w-3 h-3" /> {t("ssProgressLabel")}
             </div>
             <p className="text-base font-bold text-white mt-0.5">
               {stats.totalWordGoal > 0
                 ? `${Math.min(100, Math.round((stats.totalWords / stats.totalWordGoal) * 100))}%`
-                : "—"}
+                : "-"}
             </p>
           </div>
         </div>
@@ -389,7 +393,7 @@ function SeriesCard({
           className="w-full h-24 rounded-xl border border-dashed border-white/10 flex items-center justify-center gap-2 text-white/25 hover:text-white/40 hover:border-white/20 transition-all text-sm"
         >
           <Plus className="w-4 h-4" />
-          Add books to this series
+          {t("ssAddBooks")}
         </button>
       ) : (
         <div className="flex items-end gap-3 overflow-x-auto pb-2 scrollbar-thin">
@@ -419,7 +423,7 @@ function SeriesCard({
               <MiniCover book={fullBook} onClick={() => setLocation(`/books/${seriesBook.id}`)} />
               {/* Volume badge */}
               <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider mt-1">
-                Vol. {idx + 1}
+                {t("ssVol")} {idx + 1}
               </span>
             </div>
             );
@@ -442,12 +446,12 @@ function SeriesCard({
         <div className="mt-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-white/70">
-              {isPublished ? "Published as a series" : "Publish this series"}
+              {isPublished ? t("ssPublishedAsSeries") : t("ssPublishThisSeries")}
             </p>
             <p className="text-[11px] text-white/35 mt-0.5">
               {isPublished
-                ? "Readers can discover & share all books together"
-                : "Share one link that shows all your books in order"}
+                ? t("ssPublishedDesc")
+                : t("ssUnpublishedDesc")}
             </p>
           </div>
           <button
@@ -460,9 +464,9 @@ function SeriesCard({
             }`}
           >
             {isPublished ? (
-              <><Globe className="w-3 h-3" /> Unpublish</>
+              <><Globe className="w-3 h-3" /> {t("ssUnpublish")}</>
             ) : (
-              <><Send className="w-3 h-3" /> Publish Series</>
+              <><Send className="w-3 h-3" /> {t("ssPublishSeries")}</>
             )}
           </button>
         </div>
@@ -484,14 +488,14 @@ function SeriesCard({
             className="absolute inset-0 z-10 bg-[#0c0c0c]/95 rounded-2xl flex flex-col items-center justify-center gap-3 px-6 text-center"
           >
             <Trash2 className="w-6 h-6 text-white/50" />
-            <p className="text-sm text-white/80">Delete <span className="font-semibold text-white">"{series.name}"</span>?</p>
-            <p className="text-xs text-white/35">Your books won't be deleted, just unlinked from this series.</p>
+            <p className="text-sm text-white/80">{lang === "ar" ? "حذف" : "Delete"} <span className="font-semibold text-white">"{series.name}"</span>{lang === "ar" ? "؟" : "?"}</p>
+            <p className="text-xs text-white/35">{t("ssDeleteWarn")}</p>
             <div className="flex gap-2 mt-1">
               <Button size="sm" variant="ghost" onClick={() => setShowConfirmDelete(false)} className="text-white/50 hover:text-white/80 hover:bg-white/8 border border-white/10 text-xs h-8">
-                Cancel
+                {t("ssCancel")}
               </Button>
               <Button size="sm" onClick={handleDelete} className="bg-white/10 hover:bg-white/20 text-white text-xs h-8 border border-white/15">
-                Delete Series
+                {t("ssDeleteSeriesBtn")}
               </Button>
             </div>
           </motion.div>
@@ -505,6 +509,7 @@ function SeriesCard({
 function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const create = useCreateSeries();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
 
@@ -512,7 +517,7 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
     e.preventDefault();
     if (!name.trim()) return;
     await create.mutateAsync({ name: name.trim(), description: desc.trim() || undefined });
-    toast({ title: `Series "${name.trim()}" created!` });
+    toast({ title: lang === "ar" ? `تم إنشاء السلسلة "${name.trim()}"!` : `Series "${name.trim()}" created!` });
     setName(""); setDesc("");
     onOpenChange(false);
   }
@@ -522,15 +527,15 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
       <DialogContent className="bg-[#111] border border-white/10 text-white max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-white text-base font-semibold flex items-center gap-2">
-            <Layers className="w-4 h-4 text-white/50" /> New Book Series
+            <Layers className="w-4 h-4 text-white/50" /> {t("ssNewBookSeries")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-1">
           <div>
-            <label className="text-xs text-white/40 uppercase tracking-wider font-semibold block mb-1.5">Series Name</label>
+            <label className="text-xs text-white/40 uppercase tracking-wider font-semibold block mb-1.5">{t("ssSeriesName")}</label>
             <Input
               autoFocus
-              placeholder='e.g. "The Dark Tower" or "Mistborn"'
+              placeholder={t("ssNamePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="bg-white/5 border-white/15 text-white placeholder:text-white/20 focus:border-white/40"
@@ -538,10 +543,10 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div>
             <label className="text-xs text-white/40 uppercase tracking-wider font-semibold block mb-1.5">
-              Description <span className="text-white/20 normal-case tracking-normal font-normal">(optional)</span>
+              {t("ssDescription")} <span className="text-white/20 normal-case tracking-normal font-normal">{t("ssOptional")}</span>
             </label>
             <Textarea
-              placeholder="A short description of this series…"
+              placeholder={t("ssCreateDescPlaceholder")}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               rows={2}
@@ -550,10 +555,10 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5 text-sm">
-              Cancel
+              {t("ssCancel")}
             </Button>
             <Button type="submit" disabled={!name.trim() || create.isPending} className="flex-1 bg-white text-black hover:bg-white/90 text-sm border-0">
-              {create.isPending ? "Creating…" : "Create Series"}
+              {create.isPending ? t("ssCreating") : t("ssCreateSeries")}
             </Button>
           </div>
         </form>
@@ -565,6 +570,7 @@ function CreateSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 // ── Main exported component ──────────────────────────────────────────────────
 export function SeriesSection({ books }: Props) {
   const { data: seriesList, isLoading } = useSeries();
+  const { t } = useLanguage();
   const [createOpen, setCreateOpen] = useState(false);
 
   if (isLoading) return null;
@@ -575,8 +581,8 @@ export function SeriesSection({ books }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">Collections</p>
-            <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Book Series</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">{t("ssCollections")}</p>
+            <h2 className="text-2xl font-bold text-white tracking-tight leading-none">{t("ssBookSeries")}</h2>
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
@@ -584,7 +590,7 @@ export function SeriesSection({ books }: Props) {
             variant="ghost"
           >
             <Plus className="w-3.5 h-3.5" />
-            New Series
+            {t("ssNewSeries")}
           </Button>
         </div>
 
@@ -598,16 +604,16 @@ export function SeriesSection({ books }: Props) {
             <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
               <Layers className="w-6 h-6 text-white/30" />
             </div>
-            <h3 className="text-white/60 font-semibold mb-2">No series yet</h3>
+            <h3 className="text-white/60 font-semibold mb-2">{t("ssNoSeriesYet")}</h3>
             <p className="text-white/30 text-sm mb-6 max-w-xs mx-auto">
-              Group your books into a trilogy, saga, or series, and keep your universe organized.
+              {t("ssEmptyDesc")}
             </p>
             <Button
               onClick={() => setCreateOpen(true)}
               className="bg-white text-black hover:bg-white/90 border-0 gap-2 text-sm"
             >
               <Plus className="w-3.5 h-3.5" />
-              Create your first series
+              {t("ssCreateFirst")}
             </Button>
           </motion.div>
         ) : (
