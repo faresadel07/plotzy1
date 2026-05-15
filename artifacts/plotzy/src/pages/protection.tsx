@@ -2,66 +2,42 @@ import { Link } from "wouter";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-interface Pillar {
-  title: string;
-  desc: string;
-}
-
-const PILLARS: Pillar[] = [
-  {
-    title: "You own 100% of your work",
-    desc: "Every word you write on Plotzy belongs to you. We never claim copyright, royalties, or any rights to your manuscripts.",
-  },
-  {
-    title: "AI never trains on your writing",
-    desc: "Your text is sent to AI models (like OpenAI) only to fulfill your immediate request. It is never stored, logged, or used to train any model.",
-  },
-  {
-    title: "Private by default",
-    desc: "Every book you create is private until you explicitly choose to publish it. Nothing leaks, nothing surfaces, nothing gets shared without your consent.",
-  },
-  {
-    title: "Encrypted in transit and at rest",
-    desc: "All your data travels over TLS 1.3 and sits in encrypted databases hosted by trusted providers. Industry-standard security at every layer.",
-  },
-  {
-    title: "Delete anytime, no questions asked",
-    desc: "Want out? One click in Settings deletes your account and every byte of your data. We do not keep hidden backups or shadow profiles.",
-  },
-  {
-    title: "Copyright protection on your side",
-    desc: "If someone copies your published work without permission, we honor DMCA takedown requests as soon as possible, typically within 72 hours. Your IP, our enforcement.",
-  },
-  {
-    title: "Export freely, no lock-in",
-    desc: "Your manuscript is yours to take anywhere. Export to PDF, EPUB, or plain text at any time, on any plan. Your work is never held hostage.",
-  },
-  {
-    title: "We will never sell your data",
-    desc: "No data brokers, no advertising networks, no shadowy partnerships. We make money from subscriptions, not from selling you out.",
-  },
+const PILLAR_KEYS: { title: TranslationKey; desc: TranslationKey }[] = [
+  { title: "ptP1T", desc: "ptP1D" },
+  { title: "ptP2T", desc: "ptP2D" },
+  { title: "ptP3T", desc: "ptP3D" },
+  { title: "ptP4T", desc: "ptP4D" },
+  { title: "ptP5T", desc: "ptP5D" },
+  { title: "ptP6T", desc: "ptP6D" },
+  { title: "ptP7T", desc: "ptP7D" },
+  { title: "ptP8T", desc: "ptP8D" },
 ];
 
-const NEVER_LIST = [
-  "Sell, share, or license your manuscripts to third parties",
-  "Use your writing as training data for AI models",
-  "Read your private books or analyze them without your permission",
-  "Lock your exports behind premium tiers",
-  "Hide what data we collect or how we use it",
-  "Make it difficult to delete your account or your data",
-  "Run advertising on top of your work",
-  "Send your data to advertising or analytics brokers",
+const NEVER_KEYS: TranslationKey[] = [
+  "ptNever1", "ptNever2", "ptNever3", "ptNever4",
+  "ptNever5", "ptNever6", "ptNever7", "ptNever8",
+];
+
+const TECH_KEYS: { title: TranslationKey; text: TranslationKey }[] = [
+  { title: "ptTech1T", text: "ptTech1X" },
+  { title: "ptTech2T", text: "ptTech2X" },
+  { title: "ptTech3T", text: "ptTech3X" },
+  { title: "ptTech4T", text: "ptTech4X" },
+  { title: "ptTech5T", text: "ptTech5X" },
 ];
 
 export default function Protection() {
+  const { t } = useLanguage();
   return (
     <Layout>
       <SEO
-        title="Writer Protection"
-        description="Your words, your rights, always yours. Learn how Plotzy protects your intellectual property, privacy, and creative work."
+        title={t("ptSeoTitle")}
+        description={t("ptSeoDesc")}
       />
 
       <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#fff", fontFamily: SF }}>
@@ -73,7 +49,7 @@ export default function Protection() {
             if (window.history.length > 1) window.history.back();
             else window.location.href = "/";
           }}
-          aria-label="Go back"
+          aria-label={t("abGoBack")}
           style={{
             position: "fixed",
             top: 76,
@@ -105,7 +81,7 @@ export default function Protection() {
           }}
         >
           <ArrowLeft style={{ width: 14, height: 14 }} />
-          Back
+          {t("abBack")}
         </button>
 
         {/* ===== HERO ===== */}
@@ -118,7 +94,7 @@ export default function Protection() {
             color: "rgba(255,255,255,0.45)",
             marginBottom: 20,
           }}>
-            Writer Protection
+            {t("ptEyebrow")}
           </p>
           <h1 style={{
             fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
@@ -128,7 +104,7 @@ export default function Protection() {
             color: "#fff",
             marginBottom: 24,
           }}>
-            Your words. Your rights. Always.
+            {t("ptHeroTitle")}
           </h1>
           <p style={{
             fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
@@ -138,7 +114,7 @@ export default function Protection() {
             maxWidth: 620,
             margin: "0 auto",
           }}>
-            We built Plotzy for writers who take their craft seriously. That means real protection for your work, your data, and your creative ownership.
+            {t("ptHeroSub")}
           </p>
         </section>
 
@@ -150,7 +126,7 @@ export default function Protection() {
             justifyContent: "center",
             gap: 20,
           }}>
-            {PILLARS.map((pillar, i) => (
+            {PILLAR_KEYS.map((pillar, i) => (
               <div key={i} style={{
                 flex: "1 1 280px",
                 maxWidth: 360,
@@ -179,7 +155,7 @@ export default function Protection() {
                   letterSpacing: "-0.01em",
                   lineHeight: 1.3,
                 }}>
-                  {pillar.title}
+                  {t(pillar.title)}
                 </h3>
                 <p style={{
                   fontSize: 14,
@@ -188,7 +164,7 @@ export default function Protection() {
                   lineHeight: 1.6,
                   margin: 0,
                 }}>
-                  {pillar.desc}
+                  {t(pillar.desc)}
                 </p>
               </div>
             ))}
@@ -210,7 +186,7 @@ export default function Protection() {
                 color: "rgba(255,80,80,0.55)",
                 marginBottom: 16,
               }}>
-                The Promises We Keep
+                {t("ptPromisesEyebrow")}
               </p>
               <h2 style={{
                 fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -220,7 +196,7 @@ export default function Protection() {
                 lineHeight: 1.1,
                 marginBottom: 16,
               }}>
-                What we will never do
+                {t("ptNeverTitle")}
               </h2>
               <p style={{
                 fontSize: 16,
@@ -229,12 +205,12 @@ export default function Protection() {
                 maxWidth: 520,
                 margin: "0 auto",
               }}>
-                Sometimes what we don't do matters as much as what we do. These are the lines we will never cross.
+                {t("ptNeverSub")}
               </p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {NEVER_LIST.map((item, i) => (
+              {NEVER_KEYS.map((item, i) => (
                 <div key={i} style={{
                   display: "flex",
                   alignItems: "flex-start",
@@ -259,7 +235,7 @@ export default function Protection() {
                     margin: 0,
                     fontWeight: 400,
                   }}>
-                    {item}
+                    {t(item)}
                   </p>
                 </div>
               ))}
@@ -278,7 +254,7 @@ export default function Protection() {
               color: "rgba(140,180,255,0.6)",
               marginBottom: 16,
             }}>
-              Full Transparency
+              {t("ptTransparencyEyebrow")}
             </p>
             <h2 style={{
               fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -288,7 +264,7 @@ export default function Protection() {
               lineHeight: 1.1,
               marginBottom: 16,
             }}>
-              How it actually works
+              {t("ptTransparencyTitle")}
             </h2>
             <p style={{
               fontSize: 16,
@@ -297,31 +273,14 @@ export default function Protection() {
               maxWidth: 520,
               margin: "0 auto",
             }}>
-              No legal jargon, no marketing fluff. Here is the real picture, in plain English.
+              {t("ptTransparencySub")}
             </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-            <TechBlock
-              title="When you use AI features"
-              text="Your selected text is sent over an encrypted connection to our AI provider (currently OpenAI). They process the request and send the result back. Per the OpenAI API terms, your text is not stored beyond a short safety review window, and it is never used to train future models. We log only metadata (which feature, how many tokens, response time), never the content itself."
-            />
-            <TechBlock
-              title="Where your books live"
-              text="Your manuscripts are stored in a managed PostgreSQL database hosted on Neon, with encryption at rest (AES-256) and automatic daily backups retained for 7 days. Backups are also encrypted and never accessible to humans on our team without an explicit security incident."
-            />
-            <TechBlock
-              title="Authentication and sessions"
-              text="Passwords are hashed with bcrypt (never stored in plain text). Sessions use HTTP-only secure cookies and rotate on login. We support sign-in with Google, Apple, and LinkedIn for added security, and we never see your provider passwords."
-            />
-            <TechBlock
-              title="What we collect for analytics"
-              text="We track anonymous page views, device types, and feature usage so we can improve the product. We do not track you across other websites, we do not use third-party advertising trackers, and you can disable analytics cookies anytime from the cookie banner."
-            />
-            <TechBlock
-              title="Data location and transfers"
-              text="Your data is stored in data centers within the European Union and the United States. When required by international laws (such as GDPR), we apply standard contractual clauses to keep your data protected wherever it travels."
-            />
+            {TECH_KEYS.map((b) => (
+              <TechBlock key={b.title} title={t(b.title)} text={t(b.text)} />
+            ))}
           </div>
         </section>
 
@@ -339,7 +298,7 @@ export default function Protection() {
               lineHeight: 1.15,
               marginBottom: 16,
             }}>
-              Found someone copying your work?
+              {t("ptDmcaTitle")}
             </h2>
             <p style={{
               fontSize: 16,
@@ -347,7 +306,7 @@ export default function Protection() {
               lineHeight: 1.65,
               marginBottom: 28,
             }}>
-              If a published book on Plotzy infringes your copyright, we take it seriously. Send us a DMCA notice with proof of ownership and the infringing URL, and we will review and act as soon as possible, typically within 72 hours.
+              {t("ptDmcaBody")}
             </p>
             <a
               href="mailto:legal@plotzy.co?subject=DMCA%20Takedown%20Request"
@@ -367,7 +326,7 @@ export default function Protection() {
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
             >
-              Send DMCA Notice
+              {t("ptSendDmca")}
             </a>
           </div>
         </section>
@@ -382,7 +341,7 @@ export default function Protection() {
             lineHeight: 1.15,
             marginBottom: 16,
           }}>
-            Write with confidence
+            {t("ptCtaTitle")}
           </h2>
           <p style={{
             fontSize: 16,
@@ -390,7 +349,7 @@ export default function Protection() {
             lineHeight: 1.65,
             marginBottom: 24,
           }}>
-            Now you know exactly how we treat your work. Ready to start your next book?
+            {t("ptCtaSub")}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/" style={{
@@ -405,7 +364,7 @@ export default function Protection() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              Start Writing <ArrowRight style={{ width: 16, height: 16 }} />
+              {t("abStartWriting")} <ArrowRight style={{ width: 16, height: 16 }} />
             </Link>
             <Link href="/privacy" style={{
               display: "inline-flex",
@@ -420,7 +379,7 @@ export default function Protection() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              Read Privacy Policy
+              {t("ptReadPrivacy")}
             </Link>
             <Link href="/terms" style={{
               display: "inline-flex",
@@ -435,7 +394,7 @@ export default function Protection() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              Read Terms of Service
+              {t("ptReadTerms")}
             </Link>
           </div>
         </section>
