@@ -577,7 +577,7 @@ export default function GutenbergReader() {
               <span className="text-xs hidden sm:block">{ar ? "المكتبة" : "Library"}</span>
             </button>
           </Link>
-          <div className="w-px h-4 shrink-0" style={{ background: border }} />
+          <div className="w-px h-4 shrink-0 hidden sm:block" style={{ background: border }} />
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate leading-tight" style={{ color: fg, maxWidth: "min(260px, calc(100vw - 180px))" }}>{title}</p>
             {currentChapterName && (
@@ -595,7 +595,9 @@ export default function GutenbergReader() {
           <IconBtn onClick={toggleBookmark} title={isBookmarked ? "Remove bookmark" : "Bookmark"} color={isBookmarked ? accent : fgMuted}>
             <Bookmark className="w-4 h-4" style={{ fill: isBookmarked ? accent : "none" }} />
           </IconBtn>
-          <IconBtn onClick={handleDownload} title="Download" color={fgMuted}><Download className="w-4 h-4" /></IconBtn>
+          {twoPage && (
+            <IconBtn onClick={handleDownload} title="Download" color={fgMuted}><Download className="w-4 h-4" /></IconBtn>
+          )}
           {chapters.length > 0 && (
             <IconBtn onClick={() => setShowToc(v => !v)} title="Contents" color={fgMuted}><List className="w-4 h-4" /></IconBtn>
           )}
@@ -607,9 +609,11 @@ export default function GutenbergReader() {
             <LayoutGrid className="w-4 h-4" />
           </IconBtn>
           <IconBtn onClick={() => setShowSettings(v => !v)} title="Settings" color={fgMuted}><Settings className="w-4 h-4" /></IconBtn>
-          <IconBtn onClick={() => setDark(d => { const next = !d; try { localStorage.setItem("plotzy_reader_dark", String(next)); } catch {} return next; })} title={dark ? "Light" : "Dark"} color={fgMuted}>
-            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </IconBtn>
+          {twoPage && (
+            <IconBtn onClick={() => setDark(d => { const next = !d; try { localStorage.setItem("plotzy_reader_dark", String(next)); } catch {} return next; })} title={dark ? "Light" : "Dark"} color={fgMuted}>
+              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </IconBtn>
+          )}
         </div>
       </div>
 
@@ -667,7 +671,7 @@ export default function GutenbergReader() {
         <button
           onClick={prevSpread}
           disabled={clampedSpread === 0}
-          className="absolute left-2 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
+          className="absolute left-2 z-20 w-9 h-9 rounded-full hidden sm:flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
           style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.10)", color: fg }}
           aria-label={ar ? "السابق" : "Previous"}
         >
@@ -804,7 +808,7 @@ export default function GutenbergReader() {
         <button
           onClick={nextSpread}
           disabled={clampedSpread >= totalSpreads - 1}
-          className="absolute right-2 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
+          className="absolute right-2 z-20 w-9 h-9 rounded-full hidden sm:flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
           style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.10)", color: fg }}
           aria-label={ar ? "التالي" : "Next"}
         >
@@ -1073,7 +1077,7 @@ export default function GutenbergReader() {
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.55)" }} onClick={() => setShowSettings(false)} />
-          <div className="relative w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 z-10"
+          <div className="relative w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 z-10 max-h-[88vh] overflow-y-auto"
             style={{ background: dark ? "#1a1917" : "#faf8f4", border: `1px solid ${border}` }}>
             <div className="flex items-center justify-between mb-6">
               <span className="font-semibold" style={{ color: fg }}>{ar ? "إعدادات القراءة" : "Reading Settings"}</span>
@@ -1107,6 +1111,14 @@ export default function GutenbergReader() {
                 <StepBtn onClick={() => setLineHeight(l => Math.min(2.5, parseFloat((l + 0.1).toFixed(1))))} color={fgMuted}><Plus className="w-3.5 h-3.5" /></StepBtn>
               </div>
             </SettingRow>
+            <SettingRow label={ar ? "الوضع الليلي" : "Dark mode"} icon={dark ? <Moon className="w-4 h-4" style={{ color: fgMuted }} /> : <Sun className="w-4 h-4" style={{ color: fgMuted }} />}>
+              <button
+                onClick={() => setDark(d => { const next = !d; try { localStorage.setItem("plotzy_reader_dark", String(next)); } catch {} return next; })}
+                className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                style={{ background: "rgba(128,128,128,0.15)", border: `1px solid ${border}`, color: fg }}>
+                {dark ? (ar ? "مفعّل" : "On") : (ar ? "معطّل" : "Off")}
+              </button>
+            </SettingRow>
             <button
               onClick={() => { handleDownload(); setShowSettings(false); }}
               className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl mt-2 text-sm font-medium"
@@ -1127,7 +1139,7 @@ function IconBtn({ children, onClick, title, color }: {
 }) {
   return (
     <button onClick={onClick} title={title}
-      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-60"
+      className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-60"
       style={{ color }}>
       {children}
     </button>

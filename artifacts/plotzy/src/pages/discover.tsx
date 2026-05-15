@@ -346,7 +346,7 @@ export default function DiscoverPage() {
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: "rgba(255,255,255,0.94)" }}>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: "rgba(255,255,255,0.94)" }}>
             {isHindawi
               ? (ar ? "اكتشف الكلاسيكيات العربية" : "Discover Arabic Classics")
               : (ar ? "اكتشف الكلاسيكيات" : "Discover Classics")}
@@ -360,14 +360,14 @@ export default function DiscoverPage() {
           </p>
 
           {/* Source toggle: Project Gutenberg (English) ⇄ Hindawi (Arabic) */}
-          <div className="inline-flex items-center gap-1 p-1 rounded-2xl mb-8"
+          <div className="inline-flex flex-wrap justify-center items-center gap-1 p-1 rounded-2xl mb-8 max-w-full"
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
             {([
               { v: "gutenberg" as BookSource, label: ar ? "الأدب العالمي (إنجليزي)" : "World Literature (English)" },
               { v: "hindawi" as BookSource, label: ar ? "مكتبة هنداوي (عربي)" : "Hindawi (Arabic)" },
             ]).map(opt => (
               <button key={opt.v} onClick={() => setSource(opt.v)}
-                className="text-xs px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap"
+                className="text-xs px-3 sm:px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap"
                 style={{
                   background: source === opt.v ? "rgba(255,255,255,0.14)" : "transparent",
                   color: source === opt.v ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.5)",
