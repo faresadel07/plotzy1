@@ -135,7 +135,7 @@ function EditProfileModal({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || `Save failed (${res.status})`);
+        throw new Error(data?.message || (ar ? `فشل الحفظ (${res.status})` : `Save failed (${res.status})`));
       }
       return data;
     },
@@ -168,14 +168,14 @@ function EditProfileModal({
         if (res.ok) {
           qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
           qc.invalidateQueries({ queryKey: ["/api/auth/user"] });
-          toast({ title: "Profile photo updated!" });
+          toast({ title: ar ? "تم تحديث صورة الملف الشخصي!" : "Profile photo updated!" });
         }
         setUploading(false);
       };
       reader.readAsDataURL(file);
     } catch {
       setUploading(false);
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ title: ar ? "فشل الرفع" : "Upload failed", variant: "destructive" });
     }
   };
 
@@ -191,12 +191,12 @@ function EditProfileModal({
         });
         if (res.ok) {
           qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
-          toast({ title: "Cover photo updated!" });
+          toast({ title: ar ? "تم تحديث صورة الغلاف!" : "Cover photo updated!" });
         }
         setBannerUploading(false);
       };
       reader.readAsDataURL(file);
-    } catch { setBannerUploading(false); toast({ title: "Upload failed", variant: "destructive" }); }
+    } catch { setBannerUploading(false); toast({ title: ar ? "فشل الرفع" : "Upload failed", variant: "destructive" }); }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -488,7 +488,7 @@ export default function AuthorProfile() {
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] }),
-    onError: () => toast({ title: "Please log in to follow authors", variant: "destructive" }),
+    onError: () => toast({ title: ar ? "سجّل الدخول لمتابعة الكتّاب" : "Please log in to follow authors", variant: "destructive" }),
   });
 
   const isOwnProfile = user && Number((user as any).id) === userId;
@@ -508,9 +508,9 @@ export default function AuthorProfile() {
         if (res.ok) {
           qc.invalidateQueries({ queryKey: ["/api/authors", userId, "profile"] });
           qc.invalidateQueries({ queryKey: ["/api/auth/user"] });
-          toast({ title: "Profile photo updated!" });
+          toast({ title: ar ? "تم تحديث صورة الملف الشخصي!" : "Profile photo updated!" });
         }
-      } catch { toast({ title: "Upload failed", variant: "destructive" }); }
+      } catch { toast({ title: ar ? "فشل الرفع" : "Upload failed", variant: "destructive" }); }
       finally { setAvatarUploading(false); }
     };
     reader.readAsDataURL(file);
@@ -546,8 +546,10 @@ export default function AuthorProfile() {
   return (
     <Layout isLanding darkNav>
       <SEO
-        title={profile.displayName || "Author"}
-        description={profile.bio || `${profile.displayName || "An author"} on Plotzy — read their books and follow.`}
+        title={profile.displayName || (ar ? "كاتب" : "Author")}
+        description={profile.bio || (ar
+          ? `${profile.displayName || "كاتب"} على بلوتزي. اقرأ كتبه وتابعه.`
+          : `${profile.displayName || "An author"} on Plotzy. Read their books and follow.`)}
         ogType="profile"
         ogImage={profile.avatarUrl || undefined}
       />
