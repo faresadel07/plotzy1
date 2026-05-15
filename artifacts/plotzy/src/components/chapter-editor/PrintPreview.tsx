@@ -68,8 +68,8 @@ export function PrintPreview({
       .pv-page p, .pv-page-first p { margin: 0 0 0.75em 0; line-height: ${pvLineh}; }
       .pv-page p + p { text-indent: 1.5em; }
       .pv-page-first p:first-child::first-letter {
-        float: left; font-size: 4.5em; line-height: 0.72;
-        padding-right: 0.08em; padding-top: 0.06em;
+        float: ${ar ? "right" : "left"}; font-size: 4.5em; line-height: 0.72;
+        ${ar ? "padding-left: 0.08em;" : "padding-right: 0.08em;"} padding-top: 0.06em;
         font-weight: 700; color: ${pageColor};
       }
       .pv-page strong, .pv-page-first strong { font-weight: 700; }

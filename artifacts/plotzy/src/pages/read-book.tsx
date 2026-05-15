@@ -1162,7 +1162,10 @@ export default function ReadBook() {
         .book-reader-content img { -webkit-user-drag: none; user-drag: none; }
         .book-reader-content p { margin: 0 0 1.1em; text-indent: 1.8em; orphans: 2; widows: 2; }
         .book-reader-content p:first-child { text-indent: 0; }
-        .book-reader-content p:first-child::first-letter { font-size: 1.8em; font-weight: 700; line-height: 1; float: left; margin-right: 0.08em; }
+        /* Logical float/margin so the drop cap sits on the correct side
+           in RTL Arabic books (the content wrapper carries an inline
+           direction: rtl, which inline-start / inline-end follow). */
+        .book-reader-content p:first-child::first-letter { font-size: 1.8em; font-weight: 700; line-height: 1; float: inline-start; margin-inline-end: 0.08em; }
         .book-reader-content h1 { font-size: 1.5em; font-weight: 800; margin: 1.2em 0 0.5em; text-indent: 0; color: #1c1410; }
         .book-reader-content h2 { font-size: 1.3em; font-weight: 700; margin: 1.1em 0 0.4em; text-indent: 0; color: #1c1410; }
         .book-reader-content h3 { font-size: 1.15em; font-weight: 700; margin: 1em 0 0.35em; text-indent: 0; color: #1c1410; }

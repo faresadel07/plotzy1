@@ -683,7 +683,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           content: attr(data-placeholder);
           color: rgba(0,0,0,0.22);
           pointer-events: none;
-          float: left;
+          float: ${direction === "rtl" ? "right" : "left"};
           height: 0;
         }
         .tiptap-editor:focus { outline: none; }

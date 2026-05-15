@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AuthModal } from "@/components/auth-modal";
 import { NotificationBell } from "@/components/notification-bell";
+import { LanguagePicker } from "@/components/language-picker";
 import { DisplayNameModal } from "@/components/display-name-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -400,10 +401,11 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           {/* Notifications */}
           {user && <NotificationBell darkNav={false} />}
 
-          {/* Global LanguagePicker stays out of the nav until the
-              full multi-language UI shell ships. Course content has
-              its own toggle inside /course and /learn (see
-              components/course/CourseLanguageToggle.tsx). */}
+          {/* Global language switcher. The full UI is now translated
+              (English + Arabic complete), so the picker is live in the
+              nav site-wide. Course content still has its own toggle
+              inside /course and /learn. */}
+          <LanguagePicker />
 
           {/* Divider */}
           <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
@@ -614,6 +616,11 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               </Link>
             )
           )}
+          {/* Language switcher inside the mobile menu too, so phone
+              users can reach Arabic without the desktop nav. */}
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "center" }}>
+            <LanguagePicker />
+          </div>
         </div>
       )}
 

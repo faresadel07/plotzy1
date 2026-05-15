@@ -2287,7 +2287,7 @@ export default function ChapterEditor() {
                     lineHeight={LINE_HEIGHT_MAP[effectivePrefs.lineHeight || "normal"] || "1.45"}
                     textColor={isFocusMode ? '#e4e4e7' : resolvedTextColor || undefined}
                     bgColor="transparent"
-                    textAlign={(effectivePrefs.textAlign as string) || "left"}
+                    textAlign={(effectivePrefs.textAlign as string) || (textDir === "rtl" ? "right" : "left")}
                     direction={textDir}
                     placeholder={index === 0
                       ? (ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here...")
