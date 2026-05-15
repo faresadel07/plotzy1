@@ -2,55 +2,29 @@ import { Link } from "wouter";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-interface Pillar {
-  title: string;
-  desc: string;
-}
-
-const PILLARS: Pillar[] = [
-  {
-    title: "Write without distraction",
-    desc: "A full-screen editor designed for the way real writers think. No banners, no clutter, just the page and your words.",
-  },
-  {
-    title: "AI that respects your work",
-    desc: "Polish, expand, continue, translate. Every AI feature runs on your terms and never trains on your manuscripts.",
-  },
-  {
-    title: "Design your own cover",
-    desc: "A complete cover designer built into the platform. Generate AI artwork or upload your own. Export print-ready files in minutes.",
-  },
-  {
-    title: "Turn your book into audio",
-    desc: "Pick from ten AI voices, preview every chapter, and export professional audiobook files ready for distribution.",
-  },
-  {
-    title: "Reach a real audience",
-    desc: "A community library where writers publish, readers discover, and conversations begin. Built into the platform from day one.",
-  },
-  {
-    title: "Track your story bible",
-    desc: "Characters, locations, timelines, and lore in one structured place. Linked to your chapters so the world stays consistent.",
-  },
-  {
-    title: "See your book printed",
-    desc: "A two-page print preview with real margins and chapter breaks. Know exactly how your book will feel before you publish.",
-  },
-  {
-    title: "Write in your language",
-    desc: "Full support for thirteen languages including Arabic, with right-to-left layouts handled correctly throughout the platform.",
-  },
+const PILLAR_KEYS: { title: TranslationKey; desc: TranslationKey }[] = [
+  { title: "abP1T", desc: "abP1D" },
+  { title: "abP2T", desc: "abP2D" },
+  { title: "abP3T", desc: "abP3D" },
+  { title: "abP4T", desc: "abP4D" },
+  { title: "abP5T", desc: "abP5D" },
+  { title: "abP6T", desc: "abP6D" },
+  { title: "abP7T", desc: "abP7D" },
+  { title: "abP8T", desc: "abP8D" },
 ];
 
 export default function About() {
+  const { t } = useLanguage();
   return (
     <Layout>
       <SEO
-        title="About"
-        description="Plotzy is built by Faris Adel, a solo founder from Jordan, on a mission to give writers one complete platform for their entire journey."
+        title={t("abSeoTitle")}
+        description={t("abSeoDesc")}
       />
 
       <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#fff", fontFamily: SF }}>
@@ -62,7 +36,7 @@ export default function About() {
             if (window.history.length > 1) window.history.back();
             else window.location.href = "/";
           }}
-          aria-label="Go back"
+          aria-label={t("abGoBack")}
           style={{
             position: "fixed",
             top: 76,
@@ -94,7 +68,7 @@ export default function About() {
           }}
         >
           <ArrowLeft style={{ width: 14, height: 14 }} />
-          Back
+          {t("abBack")}
         </button>
 
         {/* ===== HERO ===== */}
@@ -107,7 +81,7 @@ export default function About() {
             color: "rgba(255,255,255,0.45)",
             marginBottom: 20,
           }}>
-            About Plotzy
+            {t("abEyebrow")}
           </p>
           <h1 style={{
             fontSize: "clamp(2.4rem, 5.5vw, 4rem)",
@@ -117,7 +91,7 @@ export default function About() {
             color: "#fff",
             marginBottom: 24,
           }}>
-            We are building the writing platform writers wish existed.
+            {t("abHeroTitle")}
           </h1>
           <p style={{
             fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
@@ -127,7 +101,7 @@ export default function About() {
             maxWidth: 640,
             margin: "0 auto",
           }}>
-            One platform for the entire writer's journey: write, design, narrate, publish, and connect with readers. No more juggling five tools to ship one book.
+            {t("abHeroSub")}
           </p>
         </section>
 
@@ -142,7 +116,7 @@ export default function About() {
             marginBottom: 16,
             textAlign: "center",
           }}>
-            The Story
+            {t("abStoryEyebrow")}
           </p>
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
@@ -153,17 +127,17 @@ export default function About() {
             marginBottom: 28,
             textAlign: "center",
           }}>
-            Why Plotzy exists
+            {t("abStoryTitle")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              I had a million ideas. Plotzy was the one I chose to build first.
+              {t("abStory1")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              The reason is simple. There is no platform in the world that puts every part of the writing journey in one place. Writers today bounce between Word for drafting, Canva for covers, separate tools for audiobook generation, marketplaces for selling, and scattered communities for feedback. Each tool solves a slice. None of them solve the whole.
+              {t("abStory2")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              Plotzy is the answer to that fragmentation. Write, design, narrate, publish, and find your readers without ever leaving the platform.
+              {t("abStory3")}
             </p>
           </div>
         </section>
@@ -180,7 +154,7 @@ export default function About() {
                 color: "rgba(255,255,255,0.4)",
                 marginBottom: 16,
               }}>
-                What Makes Plotzy Different
+                {t("abDiffEyebrow")}
               </p>
               <h2 style={{
                 fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
@@ -190,7 +164,7 @@ export default function About() {
                 lineHeight: 1.15,
                 marginBottom: 16,
               }}>
-                Every step of the journey, in one place
+                {t("abDiffTitle")}
               </h2>
               <p style={{
                 fontSize: 16,
@@ -199,7 +173,7 @@ export default function About() {
                 maxWidth: 560,
                 margin: "0 auto",
               }}>
-                These are the things you would otherwise need five separate subscriptions for.
+                {t("abDiffSub")}
               </p>
             </div>
 
@@ -209,7 +183,7 @@ export default function About() {
               justifyContent: "center",
               gap: 20,
             }}>
-              {PILLARS.map((pillar, i) => (
+              {PILLAR_KEYS.map((pillar, i) => (
                 <div key={i} style={{
                   flex: "1 1 280px",
                   maxWidth: 360,
@@ -238,7 +212,7 @@ export default function About() {
                     letterSpacing: "-0.01em",
                     lineHeight: 1.3,
                   }}>
-                    {pillar.title}
+                    {t(pillar.title)}
                   </h3>
                   <p style={{
                     fontSize: 14,
@@ -247,7 +221,7 @@ export default function About() {
                     lineHeight: 1.6,
                     margin: 0,
                   }}>
-                    {pillar.desc}
+                    {t(pillar.desc)}
                   </p>
                 </div>
               ))}
@@ -266,7 +240,7 @@ export default function About() {
             marginBottom: 16,
             textAlign: "center",
           }}>
-            The Vision
+            {t("abVisionEyebrow")}
           </p>
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
@@ -277,17 +251,17 @@ export default function About() {
             marginBottom: 28,
             textAlign: "center",
           }}>
-            Where we are headed
+            {t("abVisionTitle")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              The first goal is concrete: ten thousand writers publishing their first book through Plotzy.
+              {t("abVision1")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              The bigger goal is the largest writing platform in the world. Not the noisiest, not the loudest. The one writers actually choose when they decide to take their craft seriously.
+              {t("abVision2")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              Every great novel starts with a writer who almost gave up. Plotzy exists to be the reason they did not.
+              {t("abVision3")}
             </p>
           </div>
         </section>
@@ -304,7 +278,7 @@ export default function About() {
               marginBottom: 16,
               textAlign: "center",
             }}>
-              The Founder
+              {t("abFounderEyebrow")}
             </p>
             <h2 style={{
               fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
@@ -315,18 +289,18 @@ export default function About() {
               marginBottom: 28,
               textAlign: "center",
             }}>
-              Faris Adel
+              {t("abFounderName")}
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-                Plotzy is built solo by Faris Adel, from Jordan. Full-stack engineer, painter on the side, and the person reading every email that comes through the platform.
+                {t("abFounder1")}
               </p>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-                If you have feedback, ideas, a bug to report, or simply want to talk about writing, write to me at {" "}
+                {t("abFounder2a")} {" "}
                 <a href="mailto:hello@plotzy.co" style={{ color: "#fff", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.3)", textUnderlineOffset: 4 }}>
                   hello@plotzy.co
                 </a>
-                . The reply comes from a human, not a queue.
+                {t("abFounder2b")}
               </p>
             </div>
           </div>
@@ -343,7 +317,7 @@ export default function About() {
             marginBottom: 16,
             textAlign: "center",
           }}>
-            The Logo
+            {t("abLogoEyebrow")}
           </p>
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
@@ -354,23 +328,23 @@ export default function About() {
             marginBottom: 28,
             textAlign: "center",
           }}>
-            A drawing from my mother
+            {t("abLogoTitle")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              This part is personal.
+              {t("abLogo1")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              I am a painter, but logos are a different kind of patience, and while building Plotzy I could not settle on one. So one evening I handed my mother, Ghadeer, a pen and a sheet of paper, and asked her to draw anything she wanted. Whatever she drew, I would make the logo.
+              {t("abLogo2")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              She drew a pen writing the letter G, for Ghadeer.
+              {t("abLogo3")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
-              That drawing is the mark you see on every Plotzy page. The platform is built on the writer's tools, but the symbol of it came from someone who simply trusted her son with a blank page.
+              {t("abLogo4")}
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0, fontStyle: "italic" }}>
-              Every writer should have someone like that.
+              {t("abLogo5")}
             </p>
           </div>
         </section>
@@ -385,7 +359,7 @@ export default function About() {
             lineHeight: 1.15,
             marginBottom: 16,
           }}>
-            Start your first book
+            {t("abCtaTitle")}
           </h2>
           <p style={{
             fontSize: 16,
@@ -393,7 +367,7 @@ export default function About() {
             lineHeight: 1.65,
             marginBottom: 28,
           }}>
-            Now you know who built this and why. The blank page is waiting.
+            {t("abCtaSub")}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/" style={{
@@ -408,7 +382,7 @@ export default function About() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              Start Writing <ArrowRight style={{ width: 16, height: 16 }} />
+              {t("abStartWriting")} <ArrowRight style={{ width: 16, height: 16 }} />
             </Link>
             <Link href="/protection" style={{
               display: "inline-flex",
@@ -423,7 +397,7 @@ export default function About() {
               fontSize: 14,
               textDecoration: "none",
             }}>
-              Read About Writer Protection
+              {t("abReadProtection")}
             </Link>
           </div>
         </section>
