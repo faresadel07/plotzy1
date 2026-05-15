@@ -1217,12 +1217,12 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#bbb] mb-4">How it works</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#bbb] mb-4">{t("hiwEyebrow")}</p>
               <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-4">
-                The first platform built<br className="hidden sm:block" /> for the full author journey
+                {t("hiwTitle1")}<br className="hidden sm:block" /> {t("hiwTitle2")}
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
-                From your first idea to a published, distributed book, every step is covered in one unified workspace.
+                {t("hiwSubtitle")}
               </p>
             </motion.div>
           </div>
@@ -1242,18 +1242,18 @@ export default function Home() {
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">1</div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Write</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwWriteTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">Write your story, your way</h3>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwWriteTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
-                    A distraction-free editor for serious authors. Outline chapters, structure your plot, and write in Arabic or English with full RTL support.
+                    {t("hiwWriteDesc")}
                   </p>
                 </div>
                 <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <WritingAnimation />
                 </div>
                 <ul className="space-y-2">
-                  {['Chapter-by-chapter with drag-to-reorder', 'Auto-save & version history', 'Ghost text AI as you type'].map(item => (
+                  {[t("hiwWriteLi1"), t("hiwWriteLi2"), t("hiwWriteLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
                       <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
                         <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1276,18 +1276,18 @@ export default function Home() {
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">2</div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Refine</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwRefineTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">AI that knows your story</h3>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwRefineTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
-                    Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice.
+                    {t("hiwRefineDesc")}
                   </p>
                 </div>
                 <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <AIAssistantAnimation />
                 </div>
                 <ul className="space-y-2">
-                  {['Context from all chapters, not just the current one', 'Plot hole detection & pacing analysis', 'Dialogue coaching & voice consistency'].map(item => (
+                  {[t("hiwRefineLi1"), t("hiwRefineLi2"), t("hiwRefineLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
                       <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
                         <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1310,18 +1310,18 @@ export default function Home() {
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">3</div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Publish</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwPublishTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">From manuscript to published book</h3>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwPublishTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
-                    Cover design, formatting, and distribution: Plotzy's professional tools take your story to the finish line.
+                    {t("hiwPublishDesc")}
                   </p>
                 </div>
                 <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <MarketplaceMockup />
                 </div>
                 <ul className="space-y-2">
-                  {['AI-generated professional book covers', 'One-click export to PDF & EPUB', '9 AI editorial services in the marketplace'].map(item => (
+                  {[t("hiwPublishLi1"), t("hiwPublishLi2"), t("hiwPublishLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
                       <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
                         <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1344,18 +1344,18 @@ export default function Home() {
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">4</div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">Listen</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwListenTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">Turn your book into an audiobook</h3>
+                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwListenTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
-                    With one click, Plotzy's AI narrates your entire book. Choose from 10 distinct voices, preview each chapter, and export.
+                    {t("hiwListenDesc")}
                   </p>
                 </div>
                 <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #e4e4e4", height: 320 }}>
                   <AudiobookMockup />
                 </div>
                 <ul className="space-y-2">
-                  {['10 distinct AI voices with unique pitch & tone', 'Chapter-by-chapter narration with live preview', 'Real-time waveform & export-ready audio'].map(item => (
+                  {[t("hiwListenLi1"), t("hiwListenLi2"), t("hiwListenLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
                       <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
                         <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
