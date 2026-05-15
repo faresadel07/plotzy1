@@ -130,7 +130,7 @@ export default function DashboardDemo() {
 
   return (
     <Layout isLanding darkNav>
-      <SEO title="Dashboard" noindex />
+      <SEO title={ar ? "لوحة التحكم" : "Dashboard"} noindex />
       <div style={{
         minHeight: "100vh",
         background: BG,
@@ -267,14 +267,14 @@ export default function DashboardDemo() {
                 {/* Join Book card */}
                 <div
                   onClick={() => {
-                    const code = prompt("Enter invite code:");
+                    const code = prompt(ar ? "أدخل كود الدعوة:" : "Enter invite code:");
                     if (!code?.trim()) return;
                     fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: code.trim() }) })
                       .then(r => r.json())
                       .then(data => {
-                        if (data.success) { alert(`Joined "${data.bookTitle}" as ${data.role}!`); window.location.reload(); }
-                        else alert(data.message || "Failed to join");
-                      }).catch(() => alert("Failed to join book"));
+                        if (data.success) { alert(ar ? `انضممت إلى "${data.bookTitle}" كـ${data.role}!` : `Joined "${data.bookTitle}" as ${data.role}!`); window.location.reload(); }
+                        else alert(data.message || (ar ? "فشل الانضمام" : "Failed to join"));
+                      }).catch(() => alert(ar ? "فشل الانضمام إلى الكتاب" : "Failed to join book"));
                   }}
                   style={{
                     background: C1, border: `1px dashed ${B}`, borderRadius: 12, padding: 20,
