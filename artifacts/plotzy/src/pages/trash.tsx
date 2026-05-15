@@ -7,6 +7,7 @@ import { BookOpen, RefreshCcw, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { useLanguage } from "@/contexts/language-context";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif';
 
@@ -16,6 +17,7 @@ export default function Trash() {
   const deleteBook = useDeleteBook();
   const [confirmDelete, setConfirmDelete] = useState<{ id: number; title: string } | null>(null);
   const [, navigate] = useLocation();
+  const { t, lang } = useLanguage();
 
   if (isLoading) {
     return (
@@ -29,14 +31,14 @@ export default function Trash() {
 
   return (
     <>
-      <SEO title="Trash" noindex />
+      <SEO title={t("trTrash")} noindex />
       <ConfirmModal
         isOpen={confirmDelete !== null}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => { if (confirmDelete) deleteBook.mutate(confirmDelete.id); }}
-        title={`Delete "${confirmDelete?.title}"?`}
-        message="This is permanent and cannot be undone. The project will be gone forever."
-        confirmLabel="Delete Forever"
+        title={lang === "ar" ? `حذف "${confirmDelete?.title}"؟` : `Delete "${confirmDelete?.title}"?`}
+        message={t("trDeleteMsg")}
+        confirmLabel={t("trDeleteForever")}
         variant="danger"
       />
 
@@ -63,10 +65,10 @@ export default function Trash() {
               </button>
               <div>
                 <p style={{ fontFamily: SF, fontSize: 10, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 2 }}>
-                  Workspace
+                  {t("hmWorkspace")}
                 </p>
                 <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                  Recycle Bin
+                  {t("trRecycleBin")}
                 </h1>
               </div>
             </div>
@@ -87,10 +89,10 @@ export default function Trash() {
               >
                 <Trash2 style={{ width: 40, height: 40, margin: "0 auto 16px", color: "rgba(255,255,255,0.12)" }} />
                 <p style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
-                  Trash is empty
+                  {t("trEmpty")}
                 </p>
                 <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
-                  Deleted projects will appear here.
+                  {t("trEmptyBody")}
                 </p>
               </motion.div>
             ) : (
@@ -192,7 +194,7 @@ export default function Trash() {
                           onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                         >
                           <RefreshCcw style={{ width: 12, height: 12 }} />
-                          Restore
+                          {t("trRestore")}
                         </button>
                         <button
                           onClick={() => setConfirmDelete({ id: book.id, title: book.title })}
@@ -223,7 +225,7 @@ export default function Trash() {
                           }}
                         >
                           <Trash2 style={{ width: 11, height: 11 }} />
-                          Delete Forever
+                          {t("trDeleteForever")}
                         </button>
                       </div>
                     </div>
