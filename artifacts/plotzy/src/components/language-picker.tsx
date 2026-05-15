@@ -6,6 +6,12 @@ import type { Language } from "@/lib/i18n";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif";
 
+// Only Arabic and English are offered in the picker for now. The other
+// UI_LANGUAGES entries stay defined (type/translations untouched) so this
+// is a one-line revert when more languages are ready.
+const PICKER_CODES: ReadonlyArray<string> = ["en", "ar"];
+const PICKER_LANGUAGES = UI_LANGUAGES.filter((l) => PICKER_CODES.includes(l.code));
+
 export function LanguagePicker() {
   const { lang, setLang, t } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -15,7 +21,7 @@ export function LanguagePicker() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
 
-  const filtered = UI_LANGUAGES.filter(
+  const filtered = PICKER_LANGUAGES.filter(
     (l) =>
       l.nativeName.toLowerCase().includes(query.toLowerCase()) ||
       l.name.toLowerCase().includes(query.toLowerCase())
