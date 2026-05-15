@@ -42,8 +42,18 @@ RUN apt-get update \
       python3-pip \
       ca-certificates \
       curl \
+      chromium \
+      fonts-liberation \
+      fonts-noto \
+      fonts-noto-cjk \
+      fonts-noto-color-emoji \
  && rm -rf /var/lib/apt/lists/* \
  && pip3 install --no-cache-dir --break-system-packages piper-tts==1.4.2
+
+# Tell puppeteer-core where the system Chromium lives so it can
+# launch headless Chrome for server-side PDF generation. See the
+# /api/books/:id/download?format=pdf handler.
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # ── Piper voice models (~350 MB) ─────────────────────────
 # Downloaded from huggingface.co/rhasspy/piper-voices. The 5 voices

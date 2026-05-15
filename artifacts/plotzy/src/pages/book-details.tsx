@@ -164,8 +164,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [sectionDraft, setSectionDraft] = useState("");
   // Export template picker
-  const [exportTemplate, setExportTemplate] = useState<"classic" | "modern" | "romance">("classic");
-  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  // Template picker was removed — PDF export hard-codes "classic".
+  // Saved here only to avoid touching every callsite that referenced it.
+  void 0;
   // Writing goal
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalDraft, setGoalDraft] = useState("");
@@ -296,23 +297,24 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   };
 
   const handleDownload = async (format: "pdf" | "epub" | "txt" | "docx") => {
-    if (format === "pdf") { setShowTemplatePicker(true); return; }
     setIsDownloading(true);
     try {
-      const url = `/api/books/${bookId}/download?format=${format}`;
-      if (false) {
-        window.open(url, "_blank");
-      } else {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Download failed");
-        const blob = await res.blob();
-        const safeTitle = book.title.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `${safeTitle}.${format}`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      }
+      // PDF now goes through server-side puppeteer which returns real
+      // PDF bytes, so it uses the same fetch+blob path as the other
+      // formats. The "classic" template is hard-wired for now (the
+      // template picker modal was removed because it added a click
+      // and most users were just clicking through with the default).
+      const params = format === "pdf" ? `?format=pdf&template=classic` : `?format=${format}`;
+      const url = `/api/books/${bookId}/download${params}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const safeTitle = book.title.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safeTitle}.${format}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
     } catch {
       toast({ title: lang === "ar" ? "فشل التحميل" : "Download failed", variant: "destructive" });
     } finally {
@@ -1119,55 +1121,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         </div>{/* end right column */}
       </div>{/* end grid */}
 
-      {/* Export Template Picker Dialog */}
-      {showTemplatePicker && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }}
-          onClick={e => { if (e.target === e.currentTarget) setShowTemplatePicker(false); }}>
-          <div className="bg-background rounded-2xl shadow-2xl w-full max-w-md border border-border p-6 space-y-5">
-            <h3 className="text-lg font-bold">{lang === "ar" ? "اختر قالب التصدير" : "Choose Export Template"}</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {([ { id: "classic", label: "Classic", desc: "Lora serif, elegant", icon: "📖" },
-                  { id: "modern",  label: "Modern",  desc: "Clean Inter + Playfair", icon: "✦" },
-                  { id: "romance", label: "Romance", desc: "Cormorant drop caps", icon: "❧" },
-              ] as const).map(t => (
-                <button key={t.id} onClick={() => setExportTemplate(t.id)}
-                  className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-sm font-medium transition-all ${exportTemplate === t.id ? "border-foreground bg-foreground/10" : "border-border hover:border-foreground/30"}`}>
-                  <span className="text-2xl">{t.icon}</span>
-                  <span>{t.label}</span>
-                  <span className="text-[10px] text-muted-foreground text-center">{t.desc}</span>
-                  {exportTemplate === t.id && <Check className="w-3.5 h-3.5 text-foreground" />}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-3 pt-1">
-              <Button className="flex-1 rounded-xl text-[#111111] border-0 font-semibold" style={{ background: "#EFEFEF" }}
-                onClick={async () => {
-                  setShowTemplatePicker(false);
-                  setIsDownloading(true);
-                  try {
-                    // The PDF "download" endpoint actually returns an HTML
-                    // page with `window.print()` baked in — the browser is
-                    // expected to render it and open the print dialog so
-                    // the user can save as PDF. window.open is required;
-                    // fetch+blob would just save the HTML bytes as
-                    // `book.pdf` and the PDF reader would fail to open it.
-                    // The service worker excludes /api/*/download from
-                    // caching so the new tab actually reaches Vercel/Railway
-                    // instead of being shadowed by a stale SPA 404.
-                    const url = `/api/books/${bookId}/download?format=pdf&template=${exportTemplate}`;
-                    window.open(url, "_blank");
-                  } finally { setIsDownloading(false); }
-                }}>
-                <FileDown className="w-4 h-4 mr-2" />{lang === "ar" ? "تنزيل PDF" : "Download PDF"}
-              </Button>
-              <Button variant="outline" className="rounded-xl" onClick={() => setShowTemplatePicker(false)}>
-                {lang === "ar" ? "إلغاء" : "Cancel"}
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
 
       <AuthModal open={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 

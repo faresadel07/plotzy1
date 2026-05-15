@@ -1339,12 +1339,45 @@ export async function registerRoutes(
   ${frontMatterSections.join("\n")}
   ${chaptersHtml}
   ${backMatterSections.join("\n")}
-  <script>window.onload = function() { window.print(); }</script>
 </body>
 </html>`;
 
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        return res.send(html);
+        // Render the print HTML to a real PDF with headless Chromium so
+        // the user gets a one-click .pdf download instead of a tab that
+        // pops a print dialog. Chromium is installed in the runtime
+        // image and PUPPETEER_EXECUTABLE_PATH is set there. Locally,
+        // fall back to whatever path the developer set, or to the
+        // common Linux location.
+        try {
+          const puppeteer = (await import("puppeteer-core")).default;
+          const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium";
+          const browser = await puppeteer.launch({
+            executablePath,
+            headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+          });
+          try {
+            const page = await browser.newPage();
+            await page.setContent(html, { waitUntil: "load", timeout: 60_000 });
+            // Make sure web fonts have loaded before snapshotting,
+            // otherwise the PDF can ship with fallback fonts.
+            await page.evaluate("document.fonts ? document.fonts.ready : Promise.resolve()");
+            const pdfBuffer = await page.pdf({
+              printBackground: true,
+              preferCSSPageSize: true,
+              margin: { top: 0, right: 0, bottom: 0, left: 0 },
+            });
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader("Content-Disposition", `attachment; filename="${safeTitle}.pdf"`);
+            res.setHeader("Content-Length", String(pdfBuffer.length));
+            return res.send(pdfBuffer);
+          } finally {
+            await browser.close().catch(() => {});
+          }
+        } catch (err) {
+          logger.error({ err }, "PDF generation via puppeteer failed");
+          return res.status(500).json({ message: "Failed to generate PDF" });
+        }
       }
 
       if (format === "docx") {
@@ -2681,6 +2714,15 @@ function getChapterPages(content: string): string[] {
         if (item && typeof item.content === "string") return item.content;
         return "";
       }).filter((s: string) => s.length > 0);
+    }
+    // v2 format the chapter editor now writes:
+    // { v: 2, pages: "<page1html><!-- PAGE_BREAK --><page2html>...", floatingImages: {...} }
+    // The PAGE_BREAK markers are exactly where the user laid out their
+    // editor pages, so splitting on them recovers the exact pagination.
+    if (parsed && parsed.v === 2 && typeof parsed.pages === "string") {
+      const pages = parsed.pages.split(/\s*<!--\s*PAGE_BREAK\s*-->\s*/);
+      const trimmed = pages.filter((s: string) => s.length > 0);
+      return trimmed.length > 0 ? trimmed : [parsed.pages];
     }
   } catch { }
   return [content];
