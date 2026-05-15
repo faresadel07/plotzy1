@@ -168,9 +168,13 @@ function Track({ books, reverse }: { books: { title: string; cover: string }[]; 
   const doubled = [...books, ...books];
   const animName = reverse ? "bookMarqueeRev" : "bookMarquee";
   return (
-    <div className="group" style={{ overflow: "hidden" }}>
+    // Force LTR: the marquee (translateX 0 -> -50% over a doubled, max-content
+    // flex row) only tiles seamlessly in LTR. When the site language is Arabic
+    // the document goes dir=rtl, which otherwise breaks the loop and leaves a
+    // large empty gap in every carousel.
+    <div dir="ltr" className="group" style={{ overflow: "hidden" }}>
       <div
-        style={{ display: "flex", width: "max-content", animation: `${animName} 45s linear infinite` }}
+        style={{ display: "flex", direction: "ltr", width: "max-content", animation: `${animName} 45s linear infinite` }}
         className="group-hover:[animation-play-state:paused]"
       >
         {doubled.map((book, i) => (
