@@ -208,6 +208,7 @@ app.use("/auth/", authLimiter);
 // Tighter limit on public endpoints to prevent content scraping
 app.use("/api/public", publicReadLimiter);
 app.use("/api/gutenberg", publicReadLimiter);
+app.use("/api/hindawi", publicReadLimiter);
 app.use("/api/authors", publicReadLimiter);
 // Write limiter on all POST/PUT/PATCH/DELETE — prevents spam
 app.use("/api", (req, res, next) => {

@@ -78,7 +78,10 @@ interface RecentBook {
   page: number;
   totalPages?: number;
   ts: number;
+  src?: "hindawi";
 }
+
+type BookSource = "gutenberg" | "hindawi";
 
 function formatAuthor(a: { name: string }): string {
   const parts = a.name.split(",").map(s => s.trim());
@@ -91,16 +94,17 @@ function loadRecent(): RecentBook[] {
 
 /* ── Book Card ──────────────────────────────────────────────────────────── */
 
-function BookCard({ book, size = "normal" }: { book: GutBook; size?: "normal" | "small" }) {
+function BookCard({ book, size = "normal", source }: { book: GutBook; size?: "normal" | "small"; source?: BookSource }) {
   const { lang } = useLanguage();
   const ar = lang === "ar";
   const [imgErr, setImgErr] = useState(false);
   const author = book.authors[0] ? formatAuthor(book.authors[0]) : (ar ? "غير معروف" : "Unknown");
   const hasImg = book.coverUrl && !imgErr;
   const sm = size === "small";
+  const href = `/discover/${book.id}${source === "hindawi" ? "?src=hindawi" : ""}`;
 
   return (
-    <Link href={`/discover/${book.id}`}>
+    <Link href={href}>
       <div className={`group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] ${sm ? "rounded-xl" : "rounded-2xl"}`}
         style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className={`relative overflow-hidden ${sm ? "aspect-[2/3]" : "aspect-[2/3]"} w-full`}>
@@ -144,7 +148,7 @@ function RecentCard({ book }: { book: RecentBook }) {
   const pct = book.page > 0 ? Math.min(99, Math.round((book.page / Math.max(1, book.totalPages || book.page + 20)) * 100)) : 0;
 
   return (
-    <Link href={`/discover/${book.id}`}>
+    <Link href={`/discover/${book.id}${book.src === "hindawi" ? "?src=hindawi" : ""}`}>
       <div className="group flex-shrink-0 w-28 cursor-pointer transition-all hover:scale-[1.04] duration-300">
         <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden mb-2"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -248,10 +252,12 @@ export default function DiscoverPage() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
+  const [source, setSource] = useState<BookSource>(lang === "ar" ? "hindawi" : "gutenberg");
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState("en");
   const [sort, setSort] = useState("popular");
+  const isHindawi = source === "hindawi";
   const [page, setPage] = useState(1);
   const [data, setData] = useState<BooksResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -273,9 +279,10 @@ export default function DiscoverPage() {
       const params = new URLSearchParams({ page: String(page) });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (topic) params.set("topic", topic);
-      if (language) params.set("lang", language);
+      if (!isHindawi && language) params.set("lang", language);
       if (sort === "ascending") params.set("sort", "ascending");
-      const res = await fetch(`${BASE}/api/gutenberg/books?${params}`);
+      const api = isHindawi ? "/api/hindawi" : "/api/gutenberg";
+      const res = await fetch(`${BASE}${api}/books?${params}`);
       if (!res.ok) throw new Error("Failed to load books");
       const json: BooksResponse = await res.json();
       setData(json);
@@ -293,20 +300,26 @@ export default function DiscoverPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, topic, language, sort, page]);
+  }, [debouncedSearch, topic, language, sort, page, isHindawi]);
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, topic, language, sort]);
+  useEffect(() => { setPage(1); }, [debouncedSearch, topic, language, sort, source]);
   useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
-  const hasActiveFilters = topic || language !== "en" || sort !== "popular";
+  const hasActiveFilters = topic || (!isHindawi && language !== "en") || sort !== "popular";
 
   return (
     <Layout darkNav isLanding>
       <SEO
-        title={ar ? "اكتشف كتب الملك العام" : "Discover Public-Domain Books"}
-        description={ar
-          ? "ابحث واقرأ أكثر من 60,000 كتاب من الملك العام من مشروع جوتنبرج، بتجربة قراءة بلوتزي."
-          : "Search and read 60,000+ public-domain books from Project Gutenberg, with Plotzy's reading experience."}
+        title={isHindawi
+          ? (ar ? "اكتشف الكتب العربية" : "Discover Arabic Public-Domain Books")
+          : (ar ? "اكتشف كتب الملك العام" : "Discover Public-Domain Books")}
+        description={isHindawi
+          ? (ar
+            ? "اقرأ كتب مؤسسة هنداوي العربية من المجال العام داخل Plotzy."
+            : "Read Hindawi Foundation's Arabic public-domain books inside Plotzy.")
+          : (ar
+            ? "ابحث واقرأ أكثر من 60,000 كتاب من الملك العام من مشروع جوتنبرج، بتجربة قراءة بلوتزي."
+            : "Search and read 60,000+ public-domain books from Project Gutenberg, with Plotzy's reading experience.")}
       />
       <JsonLd data={buildBreadcrumbSchema([{ name: ar ? "اكتشف" : "Discover", path: "/discover" }])} />
       <div className="min-h-screen" style={{ background: "#080808" }}>
@@ -322,17 +335,49 @@ export default function DiscoverPage() {
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <BookMarked className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.45)" }} />
             <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.45)" }}>
-              {ar ? "مكتبة الأدب العالمي" : "World Literature Library"}
+              {isHindawi
+                ? (ar ? "مكتبة هنداوي العربية" : "Hindawi Arabic Library")
+                : (ar ? "مكتبة الأدب العالمي" : "World Literature Library")}
             </span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: "rgba(255,255,255,0.94)" }}>
-            {ar ? "اكتشف الكلاسيكيات" : "Discover Classics"}
+            {isHindawi
+              ? (ar ? "اكتشف الكلاسيكيات العربية" : "Discover Arabic Classics")
+              : (ar ? "اكتشف الكلاسيكيات" : "Discover Classics")}
           </h1>
-          <p className="text-sm mx-auto mb-10 whitespace-nowrap" style={{ color: "rgba(255,255,255,0.35)" }}>
-            {ar ? "أكثر من 70,000 كتاب من المجال العام — اقرأها مجاناً داخل Plotzy"
-              : "Over 70,000 public-domain books — read them free, right inside Plotzy"}
+          <p className="text-sm mx-auto mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>
+            {isHindawi
+              ? (ar ? "كتب عربية من المجال العام من مؤسسة هنداوي — اقرأها مجاناً داخل Plotzy"
+                : "Arabic public-domain books from the Hindawi Foundation — read free inside Plotzy")
+              : (ar ? "أكثر من 70,000 كتاب من المجال العام — اقرأها مجاناً داخل Plotzy"
+                : "Over 70,000 public-domain books — read them free, right inside Plotzy")}
           </p>
+
+          {/* Source toggle: Project Gutenberg (English) ⇄ Hindawi (Arabic) */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-2xl mb-8"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
+            {([
+              { v: "gutenberg" as BookSource, label: ar ? "الأدب العالمي (إنجليزي)" : "World Literature (English)" },
+              { v: "hindawi" as BookSource, label: ar ? "مكتبة هنداوي (عربي)" : "Hindawi (Arabic)" },
+            ]).map(opt => (
+              <button key={opt.v} onClick={() => setSource(opt.v)}
+                className="text-xs px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap"
+                style={{
+                  background: source === opt.v ? "rgba(255,255,255,0.14)" : "transparent",
+                  color: source === opt.v ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.5)",
+                }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {isHindawi && (
+            <p className="text-xs mx-auto mb-8 px-4" style={{ color: "rgba(255,255,255,0.3)", maxWidth: 560 }}>
+              {ar
+                ? "جميع الكتب من مؤسسة هنداوي، مرخّصة برخصة المشاع الإبداعي: نَسَب المُصنَّف 4.0 (CC BY 4.0)"
+                : "All books courtesy of the Hindawi Foundation, licensed under Creative Commons Attribution 4.0 (CC BY 4.0)"}
+            </p>
+          )}
 
           {/* Search */}
           <div className="relative max-w-2xl mx-auto">
@@ -420,16 +465,18 @@ export default function DiscoverPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
-                    <Dropdown
-                      label={ar ? "اللغة" : "Language"}
-                      value={language}
-                      options={LANGUAGES}
-                      onChange={setLanguage}
-                      ar={ar}
-                    />
-                  </div>
+                  {!isHindawi && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
+                      <Dropdown
+                        label={ar ? "اللغة" : "Language"}
+                        value={language}
+                        options={LANGUAGES}
+                        onChange={setLanguage}
+                        ar={ar}
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
                     <Dropdown
@@ -519,7 +566,7 @@ export default function DiscoverPage() {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
                   {data.results.filter(b => b.hasText).map(book => (
-                    <BookCard key={book.id} book={book} />
+                    <BookCard key={book.id} book={book} source={source} />
                   ))}
                 </div>
               )}

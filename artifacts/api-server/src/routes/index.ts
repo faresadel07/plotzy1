@@ -7,6 +7,7 @@ import socialRouter from "./social.routes";
 import authRouter from "./auth.routes";
 import paymentsRouter from "./payments.routes";
 import gutenbergRouter from "./gutenberg.routes";
+import hindawiRouter from "./hindawi.routes";
 import miscRouter from "./misc.routes";
 import courseRouter from "./course.routes";
 
@@ -20,6 +21,7 @@ router.use(socialRouter);
 router.use(authRouter);
 router.use(paymentsRouter);
 router.use(gutenbergRouter);
+router.use(hindawiRouter);
 router.use(miscRouter);
 router.use(courseRouter);
 

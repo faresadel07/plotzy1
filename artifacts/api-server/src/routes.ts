@@ -29,6 +29,7 @@ import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
 import gutenbergRouter, { syncGutenbergCatalog, precacheTopBooks } from "./routes/gutenberg.routes";
+import hindawiRouter, { syncHindawiCatalog, precacheHindawiTopBooks } from "./routes/hindawi.routes";
 import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import courseRouter from "./routes/course.routes";
@@ -2687,6 +2688,9 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // ── Gutenberg routes (extracted to ./routes/gutenberg.routes.ts) ─────────
   app.use(gutenbergRouter);
 
+  // ── Hindawi Arabic public-domain routes (./routes/hindawi.routes.ts) ─────
+  app.use(hindawiRouter);
+
   // ── Series, Admin CRUD, Banner, Support (extracted to ./routes/misc.routes.ts) ──
   app.use(miscRouter);
 
@@ -2709,6 +2713,18 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       await precacheTopBooks();
     } catch (err) {
       logger.error({ err }, "Gutenberg startup jobs failed");
+    }
+  });
+
+  // Same idempotent catalog-sync + precache for the Arabic Hindawi library.
+  // Independent of the Gutenberg block so a stall in one never blocks the
+  // other.
+  setImmediate(async () => {
+    try {
+      await syncHindawiCatalog();
+      await precacheHindawiTopBooks();
+    } catch (err) {
+      logger.error({ err }, "Hindawi startup jobs failed");
     }
   });
 

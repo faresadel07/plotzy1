@@ -585,6 +585,44 @@ export const gutenbergBooks = pgTable("gutenberg_books", {
 
 export type GutenbergBook = typeof gutenbergBooks.$inferSelect;
 
+// ── Hindawi public-domain Arabic reading library ─────────────────────────────
+// Arabic counterpart to gutenbergBooks. Source content is the Hindawi
+// Foundation corpus: every title is public-domain in the original work plus
+// CC BY 4.0 on the Arabic translation/typesetting, so it is legal to host
+// and read on a commercial platform as long as attribution is shown.
+//
+// Both catalog metadata and clean reading text are pulled from the openly
+// licensed "The Arabic E-Book Corpus" mirror on Hugging Face (its `booknr`
+// column is the Hindawi book id). hindawi.org itself fingerprint-blocks
+// datacenter clients, so the server never fetches it directly; only the
+// cover images (a different, unprotected CDN) point at downloads.hindawi.org.
+export const hindawiBooks = pgTable("hindawi_books", {
+  id: serial("id").primaryKey(),
+  hindawiId: integer("hindawi_id").notNull().unique(),
+  title: text("title").notNull(),
+  // Arabic edition author (often the translator-credited author).
+  author: text("author"),
+  // Original-work author when the book is a translation (e.g. "Arthur Conan
+  // Doyle"); NULL for Arabic originals.
+  origAuthor: text("orig_author"),
+  subjects: jsonb("subjects").$type<string[]>().default([]),
+  languages: jsonb("languages").$type<string[]>().default(["ar"]),
+  coverUrl: text("cover_url"),
+  // Cached clean reading text — NULL until first read, then persists.
+  content: text("content"),
+  contentCachedAt: timestamp("content_cached_at"),
+  // Set true once a content fetch has definitively failed, so the discover
+  // query and precache scan skip the row for good (mirrors the
+  // gutenbergBooks.textUrl IS NULL "broken" sentinel).
+  unavailable: boolean("unavailable").default(false),
+  // Licence + the exact attribution line we must display per CC BY 4.0.
+  license: text("license").default("CC BY 4.0"),
+  attribution: text("attribution"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type HindawiBook = typeof hindawiBooks.$inferSelect;
+
 export const researchItems = pgTable("research_items", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),

@@ -29,6 +29,7 @@ interface RecentBook {
   page: number;
   totalPages?: number;
   ts: number;
+  src?: "hindawi";
 }
 
 function formatAuthor(a: { name: string }): string {
@@ -36,7 +37,7 @@ function formatAuthor(a: { name: string }): string {
   return parts.length === 2 ? `${parts[1]} ${parts[0]}` : a.name;
 }
 
-function saveRecent(book: BookMeta, page: number, totalPages?: number) {
+function saveRecent(book: BookMeta, page: number, totalPages?: number, src?: "hindawi") {
   try {
     const list: RecentBook[] = JSON.parse(localStorage.getItem(LS_RECENT) || "[]");
     const filtered = list.filter(b => b.id !== book.id);
@@ -48,6 +49,7 @@ function saveRecent(book: BookMeta, page: number, totalPages?: number) {
       page,
       totalPages,
       ts: Date.now(),
+      ...(src ? { src } : {}),
     });
     localStorage.setItem(LS_RECENT, JSON.stringify(filtered.slice(0, 24)));
   } catch { /* noop */ }
@@ -177,6 +179,17 @@ export default function GutenbergReader() {
   const { lang } = useLanguage();
   const ar = lang === "ar";
 
+  // A `?src=hindawi` query param routes this same reader at the Arabic
+  // Hindawi public-domain library instead of Gutenberg. Both APIs return the
+  // identical { content } / metadata shape so the rest of the reader is
+  // source-agnostic.
+  const isHindawi = useMemo(() => {
+    try { return new URLSearchParams(window.location.search).get("src") === "hindawi"; }
+    catch { return false; }
+  }, []);
+  const API = isHindawi ? "/api/hindawi" : "/api/gutenberg";
+  const [attribution, setAttribution] = useState<string | null>(null);
+
   const [meta, setMeta] = useState<BookMeta | null>(null);
   const [rawText, setRawText] = useState<string | null>(null);
   const [loadingMeta, setLoadingMeta] = useState(true);
@@ -274,23 +287,23 @@ export default function GutenbergReader() {
   // ── Load metadata ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!gutId) return;
-    fetch(`${BASE}/api/gutenberg/books/${gutId}`)
+    fetch(`${BASE}${API}/books/${gutId}`)
       .then(r => r.json())
-      .then(d => setMeta(d))
+      .then(d => { setMeta(d); if (d.attribution) setAttribution(d.attribution); })
       .catch(() => setError("Failed to load book info"))
       .finally(() => setLoadingMeta(false));
-  }, [gutId]);
+  }, [gutId, API]);
 
   // ── Load content ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!gutId) return;
     setLoadingContent(true);
-    fetch(`${BASE}/api/gutenberg/books/${gutId}/content`)
+    fetch(`${BASE}${API}/books/${gutId}/content`)
       .then(r => { if (!r.ok) throw new Error("no text"); return r.json(); })
-      .then(d => setRawText(d.content))
+      .then(d => { setRawText(d.content); if (d.attribution) setAttribution(d.attribution); })
       .catch(() => setError("This book's text is not available."))
       .finally(() => setLoadingContent(false));
-  }, [gutId]);
+  }, [gutId, API]);
 
   // ── Restore saved position ────────────────────────────────────────────────
   useEffect(() => {
@@ -310,8 +323,8 @@ export default function GutenbergReader() {
   useEffect(() => {
     if (!gutId || !pages.length) return;
     try { localStorage.setItem(LS_POS(gutId), String(leftPageIdx)); } catch { /* noop */ }
-    if (meta) saveRecent(meta, leftPageIdx, pages.length);
-  }, [gutId, leftPageIdx, pages.length, meta]);
+    if (meta) saveRecent(meta, leftPageIdx, pages.length, isHindawi ? "hindawi" : undefined);
+  }, [gutId, leftPageIdx, pages.length, meta, isHindawi]);
 
   // ── Spread navigation ─────────────────────────────────────────────────────
   const goToSpread = useCallback((next: number, dir: "forward" | "backward") => {
@@ -490,7 +503,7 @@ export default function GutenbergReader() {
   }
 
   if (error && !rawText) {
-    const gutenbergUrl = gutId ? `https://www.gutenberg.org/ebooks/${gutId}` : null;
+    const gutenbergUrl = (gutId && !isHindawi) ? `https://www.gutenberg.org/ebooks/${gutId}` : null;
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-5" style={{ background: dark ? "#07060d" : "#b8b3aa" }}>
         <BookOpen className="w-12 h-12" style={{ color: "rgba(28,22,16,0.22)" }} />
@@ -515,6 +528,11 @@ export default function GutenbergReader() {
               style={{ color: "rgba(28,22,16,0.45)" }}>
               {ar ? "افتح على موقع Gutenberg" : "Open on Gutenberg.org"}
             </a>
+          )}
+          {isHindawi && (
+            <p className="text-xs text-center max-w-xs" style={{ color: "rgba(28,22,16,0.45)" }}>
+              {attribution || "المصدر: مؤسسة هنداوي • الترخيص: المشاع الإبداعي نَسَب المُصنَّف 4.0 (CC BY 4.0)"}
+            </p>
           )}
         </div>
       </div>
@@ -564,6 +582,11 @@ export default function GutenbergReader() {
             <p className="text-sm font-semibold truncate leading-tight" style={{ color: fg, maxWidth: "min(260px, calc(100vw - 180px))" }}>{title}</p>
             {currentChapterName && (
               <p className="text-xs truncate leading-tight mt-0.5" style={{ color: fgMuted }}>{currentChapterName}</p>
+            )}
+            {isHindawi && !currentChapterName && (
+              <p className="text-xs truncate leading-tight mt-0.5" style={{ color: fgMuted }}>
+                مؤسسة هنداوي • المشاع الإبداعي نَسَب المُصنَّف 4.0 (CC BY 4.0)
+              </p>
             )}
           </div>
         </div>
@@ -681,6 +704,7 @@ export default function GutenbergReader() {
           >
             <div
               onMouseUp={handlePageMouseUp}
+              dir={isHindawi ? "rtl" : "ltr"}
               style={{
                 flex: 1,
                 padding: pagePad,
@@ -729,6 +753,7 @@ export default function GutenbergReader() {
               >
                 <div
                   onMouseUp={handlePageMouseUp}
+                  dir={isHindawi ? "rtl" : "ltr"}
                   style={{
                     flex: 1,
                     padding: pageRPad,
