@@ -678,6 +678,7 @@ export default function GutenbergReader() {
         <div
           style={{
             display: "flex",
+            flexDirection: isHindawi ? "row-reverse" : "row",
             width: PAGE_W * (twoPage ? 2 : 1) + SPINE_W,
             height: PAGE_H,
             transition: "opacity 180ms ease, transform 180ms ease",
@@ -697,8 +698,12 @@ export default function GutenbergReader() {
               flexShrink: 0,
               background: pageBg,
               border: `1px solid ${border}`,
-              borderRight: twoPage ? "none" : undefined,
-              borderRadius: twoPage ? "14px 0 0 14px" : "14px",
+              ...(twoPage
+                ? (isHindawi ? { borderLeft: "none" } : { borderRight: "none" })
+                : {}),
+              borderRadius: twoPage
+                ? (isHindawi ? "0 14px 14px 0" : "14px 0 0 14px")
+                : "14px",
               overflow: "hidden",
             }}
           >
@@ -746,8 +751,8 @@ export default function GutenbergReader() {
                   flexShrink: 0,
                   background: pageBg,
                   border: `1px solid ${border}`,
-                  borderLeft: "none",
-                  borderRadius: "0 14px 14px 0",
+                  ...(isHindawi ? { borderRight: "none" } : { borderLeft: "none" }),
+                  borderRadius: isHindawi ? "14px 0 0 14px" : "0 14px 14px 0",
                   overflow: "hidden",
                 }}
               >
@@ -787,8 +792,8 @@ export default function GutenbergReader() {
                   flexShrink: 0,
                   background: dark ? "rgba(18,16,26,0.7)" : "rgba(240,236,228,0.7)",
                   border: `1px solid ${border}`,
-                  borderLeft: "none",
-                  borderRadius: "0 14px 14px 0",
+                  ...(isHindawi ? { borderRight: "none" } : { borderLeft: "none" }),
+                  borderRadius: isHindawi ? "14px 0 0 14px" : "0 14px 14px 0",
                 }}
               />
             )

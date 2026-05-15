@@ -249,7 +249,6 @@ export function BookCarousel() {
 export function ArabicBookCarousel() {
   return (
     <div
-      dir="rtl"
       style={{
         width: "100%",
         overflow: "hidden",
@@ -259,10 +258,10 @@ export function ArabicBookCarousel() {
         position: "relative",
       }}
     >
-      <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#f1f1f1,transparent)", zIndex: 2, pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#ececec,transparent)", zIndex: 2, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#f1f1f1,transparent)", zIndex: 2, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#ececec,transparent)", zIndex: 2, pointerEvents: "none" }} />
 
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
+      <div dir="rtl" style={{ textAlign: "center", marginBottom: 20 }}>
         <Link href="/discover?src=hindawi">
           <span style={{
             display: "inline-flex",
