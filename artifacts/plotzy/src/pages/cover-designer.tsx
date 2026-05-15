@@ -11,7 +11,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, Bold, Italic,
   Move, Loader2, Eye, EyeOff, Lock, Unlock, RotateCcw,
   Circle, Triangle, Star, Minus, Copy, Check, Sparkles,
-  Wand2, FileText,
+  Wand2, FileText, Monitor,
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { nanoid } from "nanoid";
@@ -514,9 +514,9 @@ export default function CoverDesigner() {
       a.href = url;
       a.download = `${book?.title || "cover"}-design.png`;
       a.click();
-      toast({ title: "Cover exported as PNG!" });
+      toast({ title: t("cdExportedPng") });
     } catch {
-      toast({ title: "Export failed", variant: "destructive" });
+      toast({ title: t("cdExportFailed"), variant: "destructive" });
     } finally {
       setExporting(false);
       setSelectedId(prevSelected);
@@ -546,9 +546,9 @@ export default function CoverDesigner() {
         coverData: { elements, settings: coverSettings, spineWidth },
         ...(coverImage ? { coverImage } : {}),
       } as any);
-      toast({ title: "Design saved!" });
+      toast({ title: t("cdSaved") });
     } catch {
-      toast({ title: "Save failed", variant: "destructive" });
+      toast({ title: t("cdSaveFailed"), variant: "destructive" });
     } finally {
       setSaving(false);
       setSelectedId(prevSelected);
@@ -558,7 +558,7 @@ export default function CoverDesigner() {
   /* ─── AI: Generate Cover Image ─── */
   const handleAiGenerateCover = async () => {
     if (!aiCoverPrompt.trim()) {
-      toast({ title: "Please enter a cover description", variant: "destructive" });
+      toast({ title: t("cdEnterDesc"), variant: "destructive" });
       return;
     }
     setAiCoverLoading(true);
@@ -583,12 +583,12 @@ export default function CoverDesigner() {
             coverData: { elements: newEls, settings: coverSettings, spineWidth },
           } as any);
         } catch { /* auto-save failure is non-fatal */ }
-        toast({ title: `✨ ${aiCoverSide === "front" ? "Front" : "Back"} cover generated!` });
+        toast({ title: aiCoverSide === "front" ? t("cdFrontGen") : t("cdBackGen") });
       } else {
-        toast({ title: "Cover generated — refresh to see the image" });
+        toast({ title: t("cdGenerated") });
       }
     } catch {
-      toast({ title: "Failed to generate cover", variant: "destructive" });
+      toast({ title: t("cdGenFailed"), variant: "destructive" });
     } finally {
       setAiCoverLoading(false);
     }
@@ -612,10 +612,10 @@ export default function CoverDesigner() {
         updateElements([...elements, el]);
         setSelectedId(el.id);
         setActiveFace("back");
-        toast({ title: "✨ Back cover summary generated!" });
+        toast({ title: t("cdBlurbGenerated") });
       }
     } catch {
-      toast({ title: "Failed to generate summary", variant: "destructive" });
+      toast({ title: t("cdSummaryFailed"), variant: "destructive" });
     } finally {
       setAiBlurbLoading(false);
     }
@@ -793,12 +793,12 @@ export default function CoverDesigner() {
             <Plus className="w-4 h-4" /> Add Text Block
           </button>
           <div className="space-y-1.5">
-            {[{ label: "Large Title", size: 40, weight: "bold", family: "Playfair Display" }, { label: "Subtitle", size: 20, weight: "600", family: "Merriweather" }, { label: "Author Name", size: 14, weight: "normal", family: "Inter" }, { label: "Body Text", size: 12, weight: "normal", family: "Inter" }].map((preset) => (
-              <button key={preset.label} onClick={() => {
-                const el: CoverElement = { id: nanoid(), type: "text", face: activeFace, x: 20, y: 180, width: FACE_W[activeFace] - 40, height: 80, zIndex: elements.length + 1, visible: true, locked: false, content: preset.label, fontSize: preset.size, fontFamily: preset.family, fontWeight: preset.weight, color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 };
+            {[{ labelKey: "cdPresetLargeTitle" as const, size: 40, weight: "bold", family: "Playfair Display" }, { labelKey: "cdPresetSubtitle" as const, size: 20, weight: "600", family: "Merriweather" }, { labelKey: "cdPresetAuthor" as const, size: 14, weight: "normal", family: "Inter" }, { labelKey: "cdPresetBody" as const, size: 12, weight: "normal", family: "Inter" }].map((preset) => (
+              <button key={preset.labelKey} onClick={() => {
+                const el: CoverElement = { id: nanoid(), type: "text", face: activeFace, x: 20, y: 180, width: FACE_W[activeFace] - 40, height: 80, zIndex: elements.length + 1, visible: true, locked: false, content: t(preset.labelKey), fontSize: preset.size, fontFamily: preset.family, fontWeight: preset.weight, color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 };
                 updateElements([...elements, el]); setSelectedId(el.id);
               }} className="w-full text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm text-white/80" style={{ fontFamily: preset.family, fontWeight: preset.weight, fontSize: 13 }}>
-                {preset.label}
+                {t(preset.labelKey)}
               </button>
             ))}
           </div>
@@ -997,7 +997,7 @@ export default function CoverDesigner() {
             {/* Coming Soon overlay */}
             <div
               role="status"
-              aria-label="AI cover generation coming soon"
+              aria-label={t("cdComingSoon")}
               className="absolute inset-0 flex items-start justify-center pt-12 pointer-events-none"
             >
               <div className="pointer-events-auto bg-black/80 border border-violet-500/40 rounded-xl px-4 py-3 max-w-xs text-center backdrop-blur-sm shadow-xl">
@@ -1225,17 +1225,17 @@ export default function CoverDesigner() {
   /* ─── Render ─── */
   return (
     <>
-    <SEO title="Cover Designer" noindex />
+    <SEO title={t("cdSeo")} noindex />
     {/* Mobile warning — cover designer needs desktop */}
     <div className="md:hidden flex flex-col items-center justify-center h-screen p-8 text-center bg-[#111] text-white" style={{ fontFamily: "Inter, sans-serif" }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🖥️</div>
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Desktop Required</h2>
+      <Monitor style={{ width: 44, height: 44, marginBottom: 16, color: "rgba(255,255,255,0.4)" }} />
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{t("cdDesktopRequired")}</h2>
       <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 320 }}>
-        The Cover Designer needs more screen space. Please open this page on a tablet or desktop for the best experience.
+        {t("cdDesktopBody")}
       </p>
       <Link href={`/books/${bookId}`}>
         <button style={{ marginTop: 24, padding: "10px 20px", borderRadius: 10, background: "#fff", color: "#000", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-          Back to Book
+          {t("cdBackToBook")}
         </button>
       </Link>
     </div>
@@ -1246,11 +1246,11 @@ export default function CoverDesigner() {
         <Link href={`/books/${bookId}`}>
           <button className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Back</span>
+            <span className="hidden sm:inline">{t("cdBack")}</span>
           </button>
         </Link>
         <div className="h-4 w-px bg-white/10" />
-        <h1 className="text-sm font-semibold text-white/80 flex-1 truncate">{book?.title || "Book Cover Designer"}</h1>
+        <h1 className="text-sm font-semibold text-white/80 flex-1 truncate">{book?.title || t("cdTitleFallback")}</h1>
 
         {/* Face selector */}
         <div className="flex gap-1 bg-white/5 rounded-lg p-1">
