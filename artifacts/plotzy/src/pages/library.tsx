@@ -7,6 +7,7 @@ import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { usePublishedBooks, useBookRatingStats, useFeaturedBook, useSetFeaturedBook, useAdminDeleteBook } from "@/hooks/use-public-library";
 import type { PublishedBook } from "@/hooks/use-public-library";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import {
   BookOpen, Search, Eye, User, Loader2, Star, Heart,
   Trophy, Trash2, X, ChevronDown, Layers,
@@ -71,8 +72,14 @@ const GENRES = [
 ];
 
 /* ── Book Card ─────────────────────────────────────────────── */
+// Genre values stay English (they match book.genre in the DB and the
+// filter logic) but display through this i18n key so the pill labels
+// localize. "Non-Fiction" -> genreNonFiction, "Sci-Fi" -> genreSciFi.
+const genreKey = (g: string) => ("genre" + g.replace(/[^A-Za-z]/g, "")) as any;
+
 function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin: boolean; isFeatured: boolean }) {
-  const authorName = book.authorName || book.authorDisplayName || "Anonymous";
+  const { t } = useLanguage();
+  const authorName = book.authorName || book.authorDisplayName || t("libAnonymous");
   const { mutate: setFeatured } = useSetFeaturedBook();
   const { mutate: deleteBook } = useAdminDeleteBook();
   const [hover, setHover] = useState(false);
@@ -141,7 +148,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
               background: "rgba(251,191,36,0.9)", color: "#000", borderRadius: 6,
               padding: "3px 8px", fontSize: 10, fontWeight: 700, fontFamily: SF,
             }}>
-              <Trophy style={{ width: 10, height: 10 }} /> Featured
+              <Trophy style={{ width: 10, height: 10 }} /> {t("libFeatured")}
             </div>
           )}
 
@@ -153,7 +160,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
               color: "rgba(255,255,255,0.8)", borderRadius: 6,
               padding: "3px 8px", fontSize: 10, fontWeight: 600, fontFamily: SF,
             }}>
-              {book.genre}
+              {t(genreKey(book.genre))}
             </div>
           )}
 
@@ -161,21 +168,21 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           {isAdmin && hover && (
             <div style={{ position: "absolute", bottom: 8, right: 8, display: "flex", gap: 4, zIndex: 10 }}>
               <button
-                onClick={e => { e.preventDefault(); e.stopPropagation(); setFeatured({ bookId: book.id, feature: !isFeatured }, { onSuccess: () => toast({ title: isFeatured ? "Unfeatured" : "Featured!" }) }); }}
-                aria-label={isFeatured ? "Unfeature this book" : "Feature this book"}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setFeatured({ bookId: book.id, feature: !isFeatured }, { onSuccess: () => toast({ title: isFeatured ? t("libToastUnfeatured") : t("libToastFeatured") }) }); }}
+                aria-label={isFeatured ? t("libAriaUnfeature") : t("libAriaFeature")}
                 style={{ width: 26, height: 26, borderRadius: 6, background: isFeatured ? "#fbbf24" : "rgba(0,0,0,0.7)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: isFeatured ? "#000" : "#fff" }}
               ><Trophy style={{ width: 12, height: 12 }} /></button>
               {!confirmDelete ? (
                 <button
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDelete(true); }}
-                  aria-label="Delete book"
+                  aria-label={t("libAriaDelete")}
                   style={{ width: 26, height: 26, borderRadius: 6, background: "rgba(0,0,0,0.7)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}
                 ><Trash2 style={{ width: 12, height: 12 }} /></button>
               ) : (
                 <button
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); deleteBook(book.id, { onSuccess: () => toast({ title: "Deleted" }) }); setConfirmDelete(false); }}
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); deleteBook(book.id, { onSuccess: () => toast({ title: t("libToastDeleted") }) }); setConfirmDelete(false); }}
                   style={{ padding: "0 10px", height: 26, borderRadius: 6, background: "#ef4444", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 10, fontWeight: 700, color: "#fff" }}
-                >Confirm</button>
+                >{t("libConfirm")}</button>
               )}
             </div>
           )}
@@ -190,7 +197,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
               background: book.contentType === "article" ? "rgba(124,106,247,0.15)" : "rgba(255,255,255,0.06)",
               color: book.contentType === "article" ? "#a78bfa" : "rgba(255,255,255,0.35)",
             }}>
-              {book.contentType === "article" ? "Article" : "Book"}
+              {book.contentType === "article" ? t("libArticle") : t("libContentBook")}
             </span>
           </div>
           <p style={{
@@ -234,7 +241,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           {(book.genre || (book.language && book.language !== "en")) && (
             <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
               {book.genre && (
-                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(255,255,255,0.05)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px" }}>{book.genre}</span>
+                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(255,255,255,0.05)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px" }}>{t(genreKey(book.genre))}</span>
               )}
               {book.language && book.language !== "en" && (
                 <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(255,255,255,0.05)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px", textTransform: "uppercase" }}>{book.language}</span>
@@ -249,7 +256,8 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
 
 /* ── Featured Banner ───────────────────────────────────────── */
 function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boolean }) {
-  const authorName = book.authorName || book.authorDisplayName || "Anonymous";
+  const { t } = useLanguage();
+  const authorName = book.authorName || book.authorDisplayName || t("libAnonymous");
   const { mutate: setFeatured } = useSetFeaturedBook();
   const { data: rating } = useBookRatingStats(book.id);
 
@@ -287,13 +295,13 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, fontFamily: SF, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                <Trophy style={{ width: 12, height: 12 }} /> Featured
+                <Trophy style={{ width: 12, height: 12 }} /> {t("libFeatured")}
               </span>
-              {book.genre && <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: 4 }}>{book.genre}</span>}
+              {book.genre && <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: 4 }}>{t(genreKey(book.genre))}</span>}
             </div>
             <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 22, fontWeight: 700, color: T, margin: "0 0 6px", lineHeight: 1.3 }}>{book.title}</h2>
             <p style={{ fontFamily: SF, fontSize: 13, color: TS, margin: "0 0 10px" }}>
-              by{" "}
+              {t("libBy")}{" "}
               {book.userId ? (
                 <Link href={`/authors/${book.userId}`} onClick={e => e.stopPropagation()}>
                   <span
@@ -309,7 +317,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontFamily: SF, color: TS }}>
-                <Eye style={{ width: 13, height: 13 }} /> {book.viewCount.toLocaleString()} reads
+                <Eye style={{ width: 13, height: 13 }} /> {book.viewCount.toLocaleString()} {t("libReads")}
               </span>
               {rating && rating.count > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontFamily: SF, color: TS }}>
@@ -325,14 +333,14 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
             padding: "10px 24px", borderRadius: 10, background: "#fff", color: "#000",
             fontFamily: SF, fontSize: 14, fontWeight: 600, flexShrink: 0,
           }}>
-            Read Now
+            {t("libReadNow")}
           </div>
         </div>
 
         {/* Admin unfeature */}
         {isAdmin && (
           <button
-            onClick={e => { e.preventDefault(); e.stopPropagation(); setFeatured({ bookId: book.id, feature: false }, { onSuccess: () => toast({ title: "Unfeatured" }) }); }}
+            onClick={e => { e.preventDefault(); e.stopPropagation(); setFeatured({ bookId: book.id, feature: false }, { onSuccess: () => toast({ title: t("libToastUnfeatured") }) }); }}
             style={{ position: "absolute", top: 12, right: 12, width: 28, height: 28, borderRadius: 8, background: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TD }}
           ><X style={{ width: 14, height: 14 }} /></button>
         )}
@@ -355,6 +363,7 @@ type PublicSeries = {
 };
 
 export default function Library() {
+  const { t } = useLanguage();
   const { data: books, isLoading } = usePublishedBooks();
   const { data: publicSeries = [] } = useQuery<PublicSeries[]>({
     queryKey: ["/api/public/series"],
@@ -383,8 +392,8 @@ export default function Library() {
   return (
     <Layout isLanding darkNav>
       <SEO
-        title="Community Library"
-        description="Browse books published by writers on Plotzy. Read free, rate, and follow your favorite authors."
+        title={t("libSeoTitle")}
+        description={t("libSeoDesc")}
       />
       <JsonLd data={buildBreadcrumbSchema([{ name: "Community Library", path: "/library" }])} />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
@@ -393,10 +402,10 @@ export default function Library() {
           {/* Header */}
           <div style={{ marginBottom: 36 }}>
             <h1 style={{ fontSize: 28, fontWeight: 800, color: T, letterSpacing: "-0.03em", margin: "0 0 6px" }}>
-              Community Library
+              {t("libTitle")}
             </h1>
             <p style={{ fontSize: 14, color: TD, margin: 0 }}>
-              Discover stories written and shared by writers from around the world
+              {t("libSubtitle")}
             </p>
           </div>
 
@@ -413,8 +422,8 @@ export default function Library() {
                   <Layers style={{ width: 14, height: 14, color: "#a78bfa" }} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T, margin: 0 }}>Book Series</h3>
-                  <p style={{ fontSize: 11, color: TD, margin: 0 }}>Collections of books by our writers</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: T, margin: 0 }}>{t("libBookSeries")}</h3>
+                  <p style={{ fontSize: 11, color: TD, margin: 0 }}>{t("libSeriesSubtitle")}</p>
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
@@ -460,7 +469,7 @@ export default function Library() {
                           {s.name}
                         </h4>
                         <p style={{ fontSize: 11, color: TD, margin: "0 0 6px" }}>
-                          by {s.ownerName || "Unknown"} · {s.bookCount} {s.bookCount === 1 ? "book" : "books"}
+                          {t("libBy")} {s.ownerName || t("libUnknown")} · {s.bookCount} {s.bookCount === 1 ? t("libBook") : t("libBooks")}
                         </p>
                         {s.description && (
                           <p style={{ fontSize: 11, color: TS, margin: 0, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
@@ -483,7 +492,7 @@ export default function Library() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search by title or author..."
+                placeholder={t("libSearchPlaceholder")}
                 style={{
                   width: "100%", padding: "10px 12px 10px 36px", borderRadius: 10,
                   background: C2, border: `1px solid ${B}`, color: T,
@@ -505,7 +514,7 @@ export default function Library() {
                     color: genre === g ? "#000" : TD,
                     border: genre === g ? "none" : `1px solid ${B}`,
                   }}
-                >{g}</button>
+                >{t(genreKey(g))}</button>
               ))}
             </div>
 
@@ -518,7 +527,7 @@ export default function Library() {
                 fontFamily: SF, fontSize: 12, color: TS, cursor: "pointer",
               }}
             >
-              {sort === "recent" ? "Newest" : "Popular"}
+              {sort === "recent" ? t("libNewest") : t("libPopular")}
               <ChevronDown style={{ width: 12, height: 12 }} />
             </button>
           </div>}
@@ -526,8 +535,8 @@ export default function Library() {
           {/* Results count */}
           {user && books && books.length > 0 && !isEmpty && (
             <p style={{ fontSize: 12, color: TD, marginBottom: 20 }}>
-              <span style={{ color: TS, fontWeight: 600 }}>{filtered?.length ?? 0}</span> works published
-              {hasFilter && " (filtered)"}
+              <span style={{ color: TS, fontWeight: 600 }}>{filtered?.length ?? 0}</span> {t("libWorksPublished")}
+              {hasFilter && ` ${t("libFiltered")}`}
             </p>
           )}
 
@@ -546,10 +555,10 @@ export default function Library() {
                 <BookOpen style={{ width: 28, height: 28, color: "rgba(255,255,255,0.3)" }} />
               </div>
               <h3 style={{ fontFamily: SF, fontSize: 20, fontWeight: 700, color: T, margin: "0 0 8px" }}>
-                Sign in to explore the Community Library
+                {t("libSignInTitle")}
               </h3>
               <p style={{ fontFamily: SF, fontSize: 14, color: TD, margin: "0 0 28px", maxWidth: 420, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
-                Create a free account to browse stories written by writers from around the world, leave ratings, and share your own work.
+                {t("libSignInBody")}
               </p>
               <button
                 onClick={() => {
@@ -563,10 +572,10 @@ export default function Library() {
                 onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
               >
-                Sign In
+                {t("libSignIn")}
               </button>
               <p style={{ fontFamily: SF, fontSize: 12, color: TD, marginTop: 14 }}>
-                It's free — no credit card required
+                {t("libFreeNoCard")}
               </p>
             </div>
           ) : isLoading ? (
@@ -577,10 +586,10 @@ export default function Library() {
             <div style={{ textAlign: "center", padding: "80px 0" }}>
               <BookOpen style={{ width: 40, height: 40, color: TD, margin: "0 auto 16px", opacity: 0.4 }} />
               <p style={{ fontSize: 16, fontWeight: 600, color: TS, margin: "0 0 6px" }}>
-                {hasFilter ? "No results found" : "No stories published yet"}
+                {hasFilter ? t("libNoResults") : t("libNoStories")}
               </p>
               <p style={{ fontSize: 13, color: TD }}>
-                {hasFilter ? "Try a different search or genre" : "Be the first to share your story with the community"}
+                {hasFilter ? t("libTryDifferent") : t("libBeFirst")}
               </p>
             </div>
           ) : (
@@ -608,7 +617,7 @@ export default function Library() {
               background: C2, border: `1px solid ${B}`, borderRadius: 10, padding: "10px 16px",
             }}>
               <Trophy style={{ width: 12, height: 12, color: "#fbbf24", flexShrink: 0 }} />
-              Admin: hover over any book and click the trophy to feature it.
+              {t("libAdminTip")}
             </div>
           )}
         </div>
