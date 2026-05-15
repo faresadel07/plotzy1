@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown, Send, CheckCircle2, Clock,
@@ -25,39 +27,39 @@ const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 
  * its contact form, ticket history, and system status and points
  * product-question traffic to the FAQ via the banner below.
  * ─── */
-const SYSTEM_COMPONENTS = [
-  { name: "Writing Editor",        status: "operational" },
-  { name: "AI Assistant",          status: "operational" },
-  { name: "File Exports",          status: "operational" },
-  { name: "Marketplace",           status: "operational" },
-  { name: "Public Domain Library", status: "operational" },
-  { name: "Authentication",        status: "operational" },
+const SYSTEM_COMPONENTS: { nameKey: TranslationKey; status: string }[] = [
+  { nameKey: "spSysEditor",      status: "operational" },
+  { nameKey: "spSysAI",          status: "operational" },
+  { nameKey: "spSysExports",     status: "operational" },
+  { nameKey: "spSysMarketplace", status: "operational" },
+  { nameKey: "spSysLibrary",     status: "operational" },
+  { nameKey: "spSysAuth",        status: "operational" },
 ];
 
-const CONTACT_CATEGORIES = [
-  { value: "general",  label: "General Question" },
-  { value: "bug",      label: "Bug Report" },
-  { value: "billing",  label: "Billing & Subscription" },
-  { value: "account",  label: "Account Issue" },
-  { value: "feature",  label: "Feature Request" },
-  { value: "privacy",  label: "Privacy & Data" },
-  { value: "other",    label: "Other" },
+const CONTACT_CATEGORIES: { value: string; labelKey: TranslationKey }[] = [
+  { value: "general",  labelKey: "spCatGeneral" },
+  { value: "bug",      labelKey: "spCatBug" },
+  { value: "billing",  labelKey: "spCatBilling" },
+  { value: "account",  labelKey: "spCatAccount" },
+  { value: "feature",  labelKey: "spCatFeature" },
+  { value: "privacy",  labelKey: "spCatPrivacy" },
+  { value: "other",    labelKey: "spCatOther" },
 ];
 
-const CONTACT_PRIORITIES = [
-  { value: "low",    label: "Low",    desc: "General question",      time: "< 48h" },
-  { value: "normal", label: "Normal", desc: "Need help soon",        time: "< 24h" },
-  { value: "high",   label: "High",   desc: "Blocking my work",      time: "< 8h"  },
-  { value: "urgent", label: "Urgent", desc: "Complete data loss",    time: "< 2h"  },
+const CONTACT_PRIORITIES: { value: string; labelKey: TranslationKey; descKey: TranslationKey; time: string }[] = [
+  { value: "low",    labelKey: "spPrioLow",    descKey: "spPrioLowDesc",    time: "< 48h" },
+  { value: "normal", labelKey: "spPrioNormal", descKey: "spPrioNormalDesc", time: "< 24h" },
+  { value: "high",   labelKey: "spPrioHigh",   descKey: "spPrioHighDesc",   time: "< 8h"  },
+  { value: "urgent", labelKey: "spPrioUrgent", descKey: "spPrioUrgentDesc", time: "< 2h"  },
 ];
 
 /* ─── Sub-components ─── */
 
 type Tab = "contact" | "tickets";
 
-const TABS: { id: Tab; label: string; icon: typeof MessageSquare }[] = [
-  { id: "contact", label: "Contact", icon: MessageSquare },
-  { id: "tickets", label: "My Tickets", icon: FileText },
+const TABS: { id: Tab; labelKey: TranslationKey; icon: typeof MessageSquare }[] = [
+  { id: "contact", labelKey: "spTabContact", icon: MessageSquare },
+  { id: "tickets", labelKey: "spTabTickets", icon: FileText },
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -88,6 +90,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
   const [replyBody, setReplyBody] = useState("");
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const thread = useQuery<{ ticket: any; replies: ThreadReply[] }>({
     queryKey: [`/api/support/tickets/${ticket.id}/thread`],
@@ -106,17 +109,17 @@ function UserTicketCard({ ticket }: { ticket: any }) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.message || "Failed to send reply");
+        throw new Error(data?.message || t("spFailedReply"));
       }
       return res.json();
     },
     onSuccess: () => {
       setReplyBody("");
-      toast({ title: "Reply sent", description: "The support team has been notified." });
+      toast({ title: t("spReplySent"), description: t("spReplySentBody") });
       qc.invalidateQueries({ queryKey: [`/api/support/tickets/${ticket.id}/thread`] });
       qc.invalidateQueries({ queryKey: ["my-tickets"] });
     },
-    onError: (err: Error) => toast({ title: "Reply failed", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => toast({ title: t("spReplyFailed"), description: err.message, variant: "destructive" }),
   });
 
   const isClosed = ticket.status === "closed";
@@ -163,7 +166,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
               fontFamily: SF, fontSize: 11, fontWeight: 500,
               color: PRIORITY_COLORS[ticket.priority] || "rgba(255,255,255,0.35)",
             }}>
-              {ticket.priority} priority
+              {ticket.priority} {t("spPriorityWord")}
             </span>
           )}
           {ticket.createdAt && (
@@ -179,7 +182,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
           {/* Original message */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>
-              You  ·  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : ""}
+              {t("spYou")}  ·  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : ""}
             </div>
             <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.65, color: "rgba(255,255,255,0.75)", whiteSpace: "pre-wrap", margin: 0 }}>
               {ticket.message}
@@ -188,7 +191,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
 
           {/* Replies thread */}
           {thread.isLoading && (
-            <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)", padding: "4px 0" }}>Loading conversation…</div>
+            <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)", padding: "4px 0" }}>{t("spLoadingConvo")}</div>
           )}
           {thread.data && thread.data.replies.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
@@ -207,7 +210,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
                     }}
                   >
                     <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: isYou ? "rgba(255,255,255,0.45)" : "#7db5ff", marginBottom: 4 }}>
-                      {isYou ? "You" : r.senderName || "Plotzy Support"}  ·  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
+                      {isYou ? t("spYou") : r.senderName || t("spPlotzySupport")}  ·  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
                     </div>
                     <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap", margin: 0 }}>
                       {r.body}
@@ -221,14 +224,14 @@ function UserTicketCard({ ticket }: { ticket: any }) {
           {/* Reply composer */}
           {isClosed ? (
             <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginTop: 14, marginBottom: 0 }}>
-              This ticket is closed. If you need further help, please open a new ticket.
+              {t("spTicketClosed")}
             </p>
           ) : (
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
               <textarea
                 value={replyBody}
                 onChange={e => setReplyBody(e.target.value)}
-                placeholder="Write a reply to the support team…"
+                placeholder={t("spReplyPlaceholder")}
                 rows={3}
                 style={{
                   width: "100%",
@@ -265,7 +268,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
                     cursor: replyBody.trim() && !send.isPending ? "pointer" : "not-allowed",
                   }}
                 >
-                  {send.isPending ? "Sending…" : "Send reply"}
+                  {send.isPending ? t("spSendingShort") : t("spSendReply")}
                 </button>
               </div>
             </div>
@@ -280,6 +283,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
 export default function SupportPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>("contact");
@@ -319,14 +323,14 @@ export default function SupportPage() {
       setForm({ name: "", email: "", subject: "", message: "", category: "general", priority: "normal" });
     },
     onError: () => {
-      toast({ title: "Something went wrong", description: "Please try again or email us directly.", variant: "destructive" });
+      toast({ title: t("spSomethingWrong"), description: t("spTryAgainEmail"), variant: "destructive" });
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.subject.trim() || !form.message.trim()) {
-      toast({ title: "Please fill in all fields", variant: "destructive" });
+      toast({ title: t("spFillAll"), variant: "destructive" });
       return;
     }
     submitMutation.mutate(form);
@@ -349,7 +353,7 @@ export default function SupportPage() {
 
   return (
     <Layout isLanding darkNav>
-      <SEO title="Support" noindex />
+      <SEO title={t("spSeo")} noindex />
       <div style={{ background: "#000", minHeight: "100vh" }}>
       <style>{`
         @keyframes fadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
@@ -385,7 +389,7 @@ export default function SupportPage() {
         }}>
           <Circle size={5} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
           <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
-            {allOperational ? "All Systems Operational" : "Partial Outage"}
+            {allOperational ? t("spAllOperational") : t("spPartialOutage")}
           </span>
         </div>
 
@@ -393,13 +397,13 @@ export default function SupportPage() {
           fontFamily: SF, fontSize: 40, fontWeight: 700, color: "#fff",
           margin: "0 0 10px", letterSpacing: "-0.03em", lineHeight: 1.1,
         }}>
-          Help Center
+          {t("spHelpCenter")}
         </h1>
         <p style={{
           fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.35)",
           margin: "0 auto 28px", maxWidth: 460, lineHeight: 1.6,
         }}>
-          Get in touch with our team or check the status of an existing ticket.
+          {t("spHeroSub")}
         </p>
       </div>
 
@@ -421,10 +425,10 @@ export default function SupportPage() {
           </div>
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ fontFamily: SF, fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.9)", marginBottom: 2 }}>
-              Looking for answers?
+              {t("spLookingAnswers")}
             </div>
             <div style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
-              Browse our FAQ for instant answers about plans, AI features, and account questions.
+              {t("spFaqBannerBody")}
             </div>
           </div>
           <Link
@@ -437,7 +441,7 @@ export default function SupportPage() {
               textDecoration: "none", whiteSpace: "nowrap",
             }}
           >
-            Browse FAQ
+            {t("spBrowseFaq")}
             <ArrowRight size={13} />
           </Link>
         </div>
@@ -470,7 +474,7 @@ export default function SupportPage() {
                 }}
               >
                 <tab.icon size={14} />
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             );
           })}
@@ -491,10 +495,10 @@ export default function SupportPage() {
               }}>
                 <CheckCircle2 size={40} color="#4ade80" style={{ marginBottom: 14 }} />
                 <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.9)", margin: "0 0 8px" }}>
-                  Message sent
+                  {t("spMessageSent")}
                 </h3>
                 <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(255,255,255,0.4)", margin: "0 0 24px", lineHeight: 1.65 }}>
-                  We have received your message and will respond as soon as possible. Check your email for a confirmation.
+                  {t("spMessageSentBody")}
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
@@ -505,7 +509,7 @@ export default function SupportPage() {
                     padding: "8px 18px", cursor: "pointer",
                   }}
                 >
-                  Send another message
+                  {t("spSendAnother")}
                 </button>
               </div>
             ) : (
@@ -516,47 +520,47 @@ export default function SupportPage() {
                     color: "rgba(255,255,255,0.9)", margin: "0 0 6px",
                     letterSpacing: "-0.02em",
                   }}>
-                    Contact Support
+                    {t("spContactSupport")}
                   </h2>
                   <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
-                    Our team reads every message and typically responds within 24 hours.
+                    {t("spContactSub")}
                   </p>
                 </div>
 
                 <form ref={formRef} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div className="support-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Name</label>
-                      <input className="s-input" type="text" placeholder="Your name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spName")}</label>
+                      <input className="s-input" type="text" placeholder={t("spNamePlaceholder")} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
                     </div>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Email</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spEmail")}</label>
                       <input className="s-input" type="email" placeholder="you@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Subject</label>
-                    <input className="s-input" type="text" placeholder="Brief description of your issue" value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} required />
+                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spSubject")}</label>
+                    <input className="s-input" type="text" placeholder={t("spSubjectPlaceholder")} value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} required />
                   </div>
                   <div className="support-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Category</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spCategory")}</label>
                       <select className="s-input s-select" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                        {CONTACT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        {CONTACT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{t(c.labelKey)}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Priority</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spPriority")}</label>
                       <select className="s-input s-select" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
-                        {CONTACT_PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}: {p.desc}</option>)}
+                        {CONTACT_PRIORITIES.map(p => <option key={p.value} value={p.value}>{t(p.labelKey)}: {t(p.descKey)}</option>)}
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Message</label>
+                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spMessageLabel")}</label>
                     <textarea
                       className="s-input"
-                      placeholder="Describe what happened, what you expected, and any steps to reproduce..."
+                      placeholder={t("spMessagePlaceholder")}
                       value={form.message}
                       onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                       rows={5}
@@ -567,7 +571,7 @@ export default function SupportPage() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
                     <p style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)", margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
                       <Lock size={10} />
-                      Encrypted and stored securely.
+                      {t("spEncrypted")}
                     </p>
                     <button
                       type="submit"
@@ -583,9 +587,9 @@ export default function SupportPage() {
                       }}
                     >
                       {submitMutation.isPending ? (
-                        <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "rgba(255,255,255,0.6)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> Sending...</>
+                        <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "rgba(255,255,255,0.6)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> {t("spSending")}</>
                       ) : (
-                        <><Send size={12} /> Send Message</>
+                        <><Send size={12} /> {t("spSendMessage")}</>
                       )}
                     </button>
                   </div>
@@ -604,10 +608,10 @@ export default function SupportPage() {
                 color: "rgba(255,255,255,0.9)", margin: "0 0 6px",
                 letterSpacing: "-0.02em",
               }}>
-                My Tickets
+                {t("spMyTickets")}
               </h2>
               <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
-                Track the status of your support requests.
+                {t("spTrackRequests")}
               </p>
             </div>
 
@@ -620,7 +624,7 @@ export default function SupportPage() {
                   borderRadius: "50%", animation: "spin 0.6s linear infinite",
                   margin: "0 auto 12px",
                 }} />
-                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Loading tickets...</p>
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{t("spLoadingTickets")}</p>
               </div>
             )}
 
@@ -631,10 +635,10 @@ export default function SupportPage() {
               }}>
                 <MessageSquare size={28} style={{ color: "rgba(255,255,255,0.12)", marginBottom: 12 }} />
                 <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.45)", margin: "0 0 6px" }}>
-                  No tickets yet
+                  {t("spNoTickets")}
                 </p>
                 <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)", margin: "0 0 20px" }}>
-                  When you contact support, your tickets will appear here.
+                  {t("spNoTicketsBody")}
                 </p>
                 <button
                   onClick={() => setActiveTab("contact")}
@@ -645,7 +649,7 @@ export default function SupportPage() {
                     padding: "8px 18px", cursor: "pointer",
                   }}
                 >
-                  Contact Support
+                  {t("spContactSupport")}
                 </button>
               </div>
             ) : null}
@@ -674,15 +678,15 @@ export default function SupportPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <Circle size={5} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
             <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>
-              {allOperational ? "All Systems Operational" : "Partial Outage"}
+              {allOperational ? t("spAllOperational") : t("spPartialOutage")}
             </span>
           </div>
           <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.07)" }} />
           {SYSTEM_COMPONENTS.map(comp => (
-            <div key={comp.name} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div key={comp.nameKey} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <Circle size={4} fill={comp.status === "operational" ? "#4ade80" : "#fb923c"} color="transparent" />
               <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                {comp.name}
+                {t(comp.nameKey)}
               </span>
             </div>
           ))}
