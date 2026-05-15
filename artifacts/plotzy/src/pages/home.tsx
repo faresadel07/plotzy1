@@ -1394,7 +1394,7 @@ export default function Home() {
                 </video>
                 <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-sm text-white text-[11px] font-medium px-3.5 py-1.5 rounded-full ring-1 ring-white/10 flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>Made with Plotzy</span>
+                  <span>{t("madeWithPlotzy")}</span>
                 </div>
               </div>
 
@@ -1482,7 +1482,7 @@ export default function Home() {
                 color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1,
                 fontFamily: '-apple-system,"SF Pro Display",sans-serif',
               }}>
-                Everything a writer needs,<br />in a single place.
+                {t("csHeading1")}<br />{t("csHeading2")}
               </h2>
             </div>
 
@@ -1497,44 +1497,44 @@ export default function Home() {
               items={[
                 {
                   id: 1,
-                  tag: "Writing",
-                  title: "A distraction-free editor built for long-form writing",
-                  description: "Full-screen chapters, live word count, drag-to-reorder, and status labels. The page stays out of your way so the story stays in focus.",
+                  tag: t("cs1Tag"),
+                  title: t("cs1Title"),
+                  description: t("cs1Desc"),
                   accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 2,
-                  tag: "AI Assistant",
-                  title: "AI that sharpens your prose, not replaces it",
-                  description: "Improve, expand, continue, and translate your writing. Get show-don't-tell suggestions and stronger alternatives — all while keeping your voice.",
+                  tag: t("cs2Tag"),
+                  title: t("cs2Title"),
+                  description: t("cs2Desc"),
                   accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 3,
-                  tag: "Publishing",
-                  title: "Export your book as PDF, EPUB, or audiobook",
-                  description: "Professional formatting for print and ebook. Connect with 100+ publishers worldwide, generate AI query letters, and track your submissions.",
+                  tag: t("cs3Tag"),
+                  title: t("cs3Title"),
+                  description: t("cs3Desc"),
                   accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 4,
-                  tag: "Cover Design",
-                  title: "Design your book cover with AI or from scratch",
-                  description: "Full cover designer with front, back, and spine. Generate AI artwork or upload your own. Drag, resize, add text — export print-ready PNG.",
+                  tag: t("cs4Tag"),
+                  title: t("cs4Title"),
+                  description: t("cs4Desc"),
                   accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 5,
-                  tag: "Collaboration",
-                  title: "Invite editors and co-writers to your book",
-                  description: "Generate an invite code, share it with anyone. They join as an editor or viewer. You stay in control — remove collaborators anytime.",
+                  tag: t("cs5Tag"),
+                  title: t("cs5Title"),
+                  description: t("cs5Desc"),
                   accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
                 {
                   id: 6,
-                  tag: "Audiobook Studio",
-                  title: "Turn your manuscript into a professional audiobook",
-                  description: "Choose from 10 AI voices, preview each chapter, adjust speed. Export high-quality MP3 files ready for distribution on any platform.",
+                  tag: t("cs6Tag"),
+                  title: t("cs6Title"),
+                  description: t("cs6Desc"),
                   accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
                 },
               ]}
@@ -1582,7 +1582,7 @@ export default function Home() {
                   color: "rgba(255,255,255,0.4)",
                   marginBottom: 16,
                 }}>
-                  Writer Protection
+                  {t("wpEyebrow")}
                 </p>
                 <h2 style={{
                   fontSize: "clamp(1.7rem, 3.2vw, 2.6rem)",
@@ -1592,7 +1592,7 @@ export default function Home() {
                   letterSpacing: "-0.035em",
                   marginBottom: 16,
                 }}>
-                  Built for writers who care about their rights
+                  {t("wpHeading")}
                 </h2>
                 <p style={{
                   fontSize: 16,
@@ -1600,7 +1600,7 @@ export default function Home() {
                   lineHeight: 1.6,
                   marginBottom: 28,
                 }}>
-                  Your words, your story, your rights. We protect what matters most.
+                  {t("wpSubtitle")}
                 </p>
                 <Link href="/protection">
                   <a style={{
@@ -1626,7 +1626,7 @@ export default function Home() {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
                   }}
                   >
-                    See how we protect your work
+                    {t("wpCta")}
                     <ChevronRight className="w-4 h-4 opacity-70" />
                   </a>
                 </Link>
@@ -1640,10 +1640,10 @@ export default function Home() {
               gap: 16,
             }}>
               {[
-                { title: "You own everything", desc: "100% of your writing belongs to you. Always." },
-                { title: "AI never trains on you", desc: "Your text is never used to train any AI model." },
-                { title: "Private by default", desc: "Nothing leaves your account without your consent." },
-                { title: "Delete anytime", desc: "One click and every byte is gone. No questions asked." },
+                { title: t("wpP1T"), desc: t("wpP1D") },
+                { title: t("wpP2T"), desc: t("wpP2D") },
+                { title: t("wpP3T"), desc: t("wpP3D") },
+                { title: t("wpP4T"), desc: t("wpP4D") },
               ].map((item, i) => (
                 <div key={i} style={{
                   background: "rgba(255,255,255,0.025)",
@@ -1700,11 +1700,11 @@ export default function Home() {
               spread={3}
               className="text-[clamp(2rem,4.5vw,3.2rem)] font-bold mb-5 leading-[1.1] block text-white"
             >
-              Ready to Claim Your Legacy?
+              {t("lcTitle")}
             </TextShimmer>
 
             <p className="text-base font-light mb-10 leading-[1.8] max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.42)' }}>
-              The platform. The tools. The community.<br />Everything you need to transform your vision into reality.
+              {t("lcBody1")}<br />{t("lcBody2")}
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
@@ -1713,14 +1713,14 @@ export default function Home() {
                 className="group inline-flex items-center gap-2.5 px-8 py-3 rounded-full font-bold text-sm tracking-wide transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
                 style={{ background: '#EFEFEF', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', color: '#111111' }}
               >
-                Begin Your Journey
+                {t("lcBeginJourney")}
               </button>
               <button
                 onClick={scrollToFeatures}
                 className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm tracking-wide border transition-all duration-300 hover:border-white/30 hover:bg-white/[0.06] hover:scale-[1.03] active:scale-[0.97]"
                 style={{ color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.03)' }}
               >
-                View Full Features
+                {t("lcViewFeatures")}
                 <ChevronDown className="w-3.5 h-3.5 opacity-60" />
               </button>
             </div>
