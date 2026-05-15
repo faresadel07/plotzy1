@@ -15,40 +15,40 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const LS_RECENT = "plotzy_recently_read";
 
 const TOPICS = [
-  { label: "All", value: "" },
-  { label: "Fiction", value: "fiction" },
-  { label: "Mystery", value: "mystery" },
-  { label: "Adventure", value: "adventure" },
-  { label: "Romance", value: "romance" },
-  { label: "Sci-Fi", value: "science fiction" },
-  { label: "Horror", value: "horror" },
-  { label: "History", value: "history" },
-  { label: "Philosophy", value: "philosophy" },
-  { label: "Poetry", value: "poetry" },
-  { label: "Drama", value: "drama" },
-  { label: "Children", value: "juvenile fiction" },
-  { label: "Biography", value: "biography" },
-  { label: "Psychology", value: "psychology" },
-  { label: "Religion", value: "religion" },
-  { label: "Science", value: "natural history" },
+  { label: "All", labelAr: "الكل", value: "" },
+  { label: "Fiction", labelAr: "خيال", value: "fiction" },
+  { label: "Mystery", labelAr: "غموض", value: "mystery" },
+  { label: "Adventure", labelAr: "مغامرة", value: "adventure" },
+  { label: "Romance", labelAr: "رومانسي", value: "romance" },
+  { label: "Sci-Fi", labelAr: "خيال علمي", value: "science fiction" },
+  { label: "Horror", labelAr: "رعب", value: "horror" },
+  { label: "History", labelAr: "تاريخ", value: "history" },
+  { label: "Philosophy", labelAr: "فلسفة", value: "philosophy" },
+  { label: "Poetry", labelAr: "شعر", value: "poetry" },
+  { label: "Drama", labelAr: "دراما", value: "drama" },
+  { label: "Children", labelAr: "أطفال", value: "juvenile fiction" },
+  { label: "Biography", labelAr: "سيرة ذاتية", value: "biography" },
+  { label: "Psychology", labelAr: "علم النفس", value: "psychology" },
+  { label: "Religion", labelAr: "دين", value: "religion" },
+  { label: "Science", labelAr: "علوم", value: "natural history" },
 ];
 
 const LANGUAGES = [
-  { label: "All Languages", value: "" },
-  { label: "English", value: "en" },
-  { label: "French", value: "fr" },
-  { label: "German", value: "de" },
-  { label: "Spanish", value: "es" },
-  { label: "Italian", value: "it" },
-  { label: "Portuguese", value: "pt" },
-  { label: "Dutch", value: "nl" },
-  { label: "Chinese", value: "zh" },
-  { label: "Finnish", value: "fi" },
+  { label: "All Languages", labelAr: "كل اللغات", value: "" },
+  { label: "English", labelAr: "الإنجليزية", value: "en" },
+  { label: "French", labelAr: "الفرنسية", value: "fr" },
+  { label: "German", labelAr: "الألمانية", value: "de" },
+  { label: "Spanish", labelAr: "الإسبانية", value: "es" },
+  { label: "Italian", labelAr: "الإيطالية", value: "it" },
+  { label: "Portuguese", labelAr: "البرتغالية", value: "pt" },
+  { label: "Dutch", labelAr: "الهولندية", value: "nl" },
+  { label: "Chinese", labelAr: "الصينية", value: "zh" },
+  { label: "Finnish", labelAr: "الفنلندية", value: "fi" },
 ];
 
 const SORT_OPTIONS = [
-  { label: "Most Popular", value: "popular" },
-  { label: "Recently Added", value: "ascending" },
+  { label: "Most Popular", labelAr: "الأكثر شهرة", value: "popular" },
+  { label: "Recently Added", labelAr: "المضافة حديثاً", value: "ascending" },
 ];
 
 interface GutBook {
@@ -92,8 +92,10 @@ function loadRecent(): RecentBook[] {
 /* ── Book Card ──────────────────────────────────────────────────────────── */
 
 function BookCard({ book, size = "normal" }: { book: GutBook; size?: "normal" | "small" }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const [imgErr, setImgErr] = useState(false);
-  const author = book.authors[0] ? formatAuthor(book.authors[0]) : "Unknown";
+  const author = book.authors[0] ? formatAuthor(book.authors[0]) : (ar ? "غير معروف" : "Unknown");
   const hasImg = book.coverUrl && !imgErr;
   const sm = size === "small";
 
@@ -118,7 +120,7 @@ function BookCard({ book, size = "normal" }: { book: GutBook; size?: "normal" | 
             style={{ background: "rgba(0,0,0,0.6)" }}>
             <span className="text-xs font-semibold text-white px-3 py-1.5 rounded-xl"
               style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}>
-              Read Now
+              {ar ? "اقرأ الآن" : "Read Now"}
             </span>
           </div>
         </div>
@@ -135,6 +137,8 @@ function BookCard({ book, size = "normal" }: { book: GutBook; size?: "normal" | 
 /* ── Recently Read Card ──────────────────────────────────────────────────── */
 
 function RecentCard({ book }: { book: RecentBook }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const [imgErr, setImgErr] = useState(false);
   const hasImg = book.coverUrl && !imgErr;
   const pct = book.page > 0 ? Math.min(99, Math.round((book.page / Math.max(1, book.totalPages || book.page + 20)) * 100)) : 0;
@@ -160,7 +164,7 @@ function RecentCard({ book }: { book: RecentBook }) {
           {/* Resume overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
             style={{ background: "rgba(0,0,0,0.6)" }}>
-            <span className="text-xs font-medium text-white">Resume</span>
+            <span className="text-xs font-medium text-white">{ar ? "متابعة" : "Resume"}</span>
           </div>
         </div>
         <p className="text-xs leading-tight line-clamp-2 font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>{book.title}</p>
@@ -188,14 +192,19 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
 
 /* ── Dropdown ─────────────────────────────────────────────────────────────── */
 
-function Dropdown({ label, value, options, onChange }: {
+function Dropdown({ label, value, options, onChange, ar }: {
   label: string; value: string;
-  options: { label: string; value: string }[];
+  options: { label: string; labelAr?: string; value: string }[];
   onChange: (v: string) => void;
+  ar?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const current = options.find(o => o.value === value)?.label || label;
+  const optLabel = (o: { label: string; labelAr?: string }) => (ar && o.labelAr ? o.labelAr : o.label);
+  const current = (() => {
+    const o = options.find(o => o.value === value);
+    return o ? optLabel(o) : label;
+  })();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -224,7 +233,7 @@ function Dropdown({ label, value, options, onChange }: {
             <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
               className="block w-full text-left px-4 py-2 text-xs transition-all hover:opacity-70"
               style={{ color: o.value === value ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.65)" }}>
-              {o.label}
+              {optLabel(o)}
             </button>
           ))}
         </div>
@@ -294,10 +303,12 @@ export default function DiscoverPage() {
   return (
     <Layout darkNav isLanding>
       <SEO
-        title="Discover Public-Domain Books"
-        description="Search and read 60,000+ public-domain books from Project Gutenberg, with Plotzy's reading experience."
+        title={ar ? "اكتشف كتب الملك العام" : "Discover Public-Domain Books"}
+        description={ar
+          ? "ابحث واقرأ أكثر من 60,000 كتاب من الملك العام من مشروع جوتنبرج، بتجربة قراءة بلوتزي."
+          : "Search and read 60,000+ public-domain books from Project Gutenberg, with Plotzy's reading experience."}
       />
-      <JsonLd data={buildBreadcrumbSchema([{ name: "Discover", path: "/discover" }])} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: ar ? "اكتشف" : "Discover", path: "/discover" }])} />
       <div className="min-h-screen" style={{ background: "#080808" }}>
 
         {/* ══ HERO ══════════════════════════════════════════════════════════ */}
@@ -376,7 +387,7 @@ export default function DiscoverPage() {
               <div className="flex gap-2 flex-wrap flex-1">
                 {TOPICS.slice(0, 8).map(t => (
                   <Pill key={t.value} active={topic === t.value} onClick={() => setTopic(t.value === topic ? "" : t.value)}>
-                    {t.label}
+                    {ar ? t.labelAr : t.label}
                   </Pill>
                 ))}
               </div>
@@ -403,7 +414,7 @@ export default function DiscoverPage() {
                   </p>
                   {TOPICS.slice(8).map(t => (
                     <Pill key={t.value} active={topic === t.value} onClick={() => setTopic(t.value === topic ? "" : t.value)}>
-                      {t.label}
+                      {ar ? t.labelAr : t.label}
                     </Pill>
                   ))}
                 </div>
@@ -412,19 +423,21 @@ export default function DiscoverPage() {
                   <div className="flex items-center gap-2">
                     <Globe className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
                     <Dropdown
-                      label="Language"
+                      label={ar ? "اللغة" : "Language"}
                       value={language}
                       options={LANGUAGES}
                       onChange={setLanguage}
+                      ar={ar}
                     />
                   </div>
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
                     <Dropdown
-                      label="Sort by"
+                      label={ar ? "الترتيب" : "Sort by"}
                       value={sort}
                       options={SORT_OPTIONS}
                       onChange={setSort}
+                      ar={ar}
                     />
                   </div>
                   {hasActiveFilters && (
