@@ -5,6 +5,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { Send, MessageCircle, ArrowLeft, Check, CheckCheck, Image as ImageIcon, Paperclip, Search, FileText, Download, X } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
+
+type TFn = (k: TranslationKey) => string;
 
 /* ── Responsive ───────────────────────────────────────────── */
 function useIsMobile(bp = 768) {
@@ -29,19 +33,19 @@ const RECV_TEXT = "rgba(255,255,255,0.88)";
 
 /* ── Time helpers ─────────────────────────────────────────── */
 function formatTime(d: string) { return new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
-function formatDate(d: string) {
+function formatDate(d: string, t: TFn) {
   const dt = new Date(d), now = new Date();
-  if (dt.toDateString() === now.toDateString()) return "Today";
+  if (dt.toDateString() === now.toDateString()) return t("msToday");
   const y = new Date(now); y.setDate(y.getDate() - 1);
-  if (dt.toDateString() === y.toDateString()) return "Yesterday";
+  if (dt.toDateString() === y.toDateString()) return t("msYesterday");
   return dt.toLocaleDateString([], { month: "short", day: "numeric" });
 }
-function sidebarTime(d: string | null) {
+function sidebarTime(d: string | null, t: TFn) {
   if (!d) return "";
   const dt = new Date(d), now = new Date();
   if (dt.toDateString() === now.toDateString()) return formatTime(d);
   const y = new Date(now); y.setDate(y.getDate() - 1);
-  if (dt.toDateString() === y.toDateString()) return "Yesterday";
+  if (dt.toDateString() === y.toDateString()) return t("msYesterday");
   return dt.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
@@ -71,6 +75,7 @@ function Avatar({ url, name, size = 40 }: { url: string | null; name: string | n
 
 /* ── Message bubble content ───────────────────────────────── */
 function BubbleContent({ content, isMine }: { content: string; isMine: boolean }) {
+  const { t } = useLanguage();
   const parsed = parseContent(content);
   if (parsed.type === "image" && parsed.data) {
     // mime/name/data come from the message bubble's text payload, which a
@@ -116,7 +121,7 @@ function BubbleContent({ content, isMine }: { content: string; isMine: boolean }
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12.5, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{parsed.name}</div>
-          <div style={{ fontSize: 10.5, color: isMine ? "rgba(0,0,0,0.35)" : TD, marginTop: 1 }}>Tap to download</div>
+          <div style={{ fontSize: 10.5, color: isMine ? "rgba(0,0,0,0.35)" : TD, marginTop: 1 }}>{t("msTapDownload")}</div>
         </div>
         <Download style={{ width: 16, height: 16, color: isMine ? "rgba(0,0,0,0.3)" : TD, flexShrink: 0 }} />
       </button>
@@ -130,6 +135,7 @@ function BubbleContent({ content, isMine }: { content: string; isMine: boolean }
    ═══════════════════════════════════════════════════════════════ */
 export default function Messages() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [, params] = useRoute("/messages/:userId");
   const selectedUserId = params?.userId ? Number(params.userId) : null;
   const [, navigate] = useLocation();
@@ -192,7 +198,7 @@ export default function Messages() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { alert("File too large (max 10MB)"); return; }
+    if (file.size > 10 * 1024 * 1024) { alert(t("msFileTooLarge")); return; }
     const url = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
     setPreviewFile({ file, url });
     e.target.value = "";
@@ -212,24 +218,24 @@ export default function Messages() {
 
   // Sidebar last message display (strip file markers)
   const lastMsgPreview = (c: Conversation) => {
-    if (!c.content) return "Start a conversation";
-    if (c.content.startsWith("[IMG:")) return "📷 Photo";
-    if (c.content.startsWith("[FILE:")) return "📎 File";
+    if (!c.content) return t("msStartConvo");
+    if (c.content.startsWith("[IMG:")) return t("msPhoto");
+    if (c.content.startsWith("[FILE:")) return t("msFile");
     return c.content.length > 40 ? c.content.slice(0, 40) + "…" : c.content;
   };
 
   return (
     <Layout isFullDark darkNav noScroll>
-      <SEO title="Messages" noindex />
+      <SEO title={t("msSeo")} noindex />
       <div style={{ display: "flex", height: "calc(100vh - 44px)", fontFamily: SF, background: BG }}>
 
         {/* ═══ SIDEBAR ═══════════════════════════════════ */}
         <div style={{ width: isMobile ? "100%" : 340, borderRight: isMobile ? "none" : `1px solid ${B}`, display: isMobile && selectedUserId ? "none" : "flex", flexDirection: "column", background: SIDEBAR, flexShrink: 0 }}>
           <div style={{ padding: "20px 20px 16px" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: T, margin: "0 0 14px", letterSpacing: "-0.02em" }}>Messages</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: T, margin: "0 0 14px", letterSpacing: "-0.02em" }}>{t("msTitle")}</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 8, background: CARD, borderRadius: 10, padding: "8px 12px", border: `1px solid ${B}` }}>
               <Search style={{ width: 14, height: 14, color: TD, flexShrink: 0 }} />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search conversations..." style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: T, fontFamily: SF, fontSize: 13 }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("msSearchPlaceholder")} style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: T, fontFamily: SF, fontSize: 13 }} />
             </div>
           </div>
 
@@ -237,8 +243,8 @@ export default function Messages() {
             {filteredConvos.length === 0 ? (
               <div style={{ padding: "48px 24px", textAlign: "center" }}>
                 <MessageCircle style={{ width: 36, height: 36, color: TD, margin: "0 auto 14px", opacity: 0.5 }} />
-                <div style={{ fontSize: 14, color: TS, fontWeight: 500 }}>No conversations yet</div>
-                <div style={{ fontSize: 12, color: TD, marginTop: 6, lineHeight: 1.5 }}>Visit an author's profile to start a conversation</div>
+                <div style={{ fontSize: 14, color: TS, fontWeight: 500 }}>{t("msNoConvos")}</div>
+                <div style={{ fontSize: 12, color: TD, marginTop: 6, lineHeight: 1.5 }}>{t("msNoConvosBody")}</div>
               </div>
             ) : filteredConvos.map(convo => {
               const active = selectedUserId === convo.partnerId;
@@ -251,8 +257,8 @@ export default function Messages() {
                   <Avatar url={convo.partnerAvatarUrl} name={convo.partnerDisplayName} size={44} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 13.5, fontWeight: convo.unreadCount > 0 ? 600 : 400, color: T, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{convo.partnerDisplayName || "User"}</span>
-                      <span style={{ fontSize: 11, color: convo.unreadCount > 0 ? TS : TD, flexShrink: 0 }}>{sidebarTime(convo.createdAt)}</span>
+                      <span style={{ fontSize: 13.5, fontWeight: convo.unreadCount > 0 ? 600 : 400, color: T, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{convo.partnerDisplayName || t("msUser")}</span>
+                      <span style={{ fontSize: 11, color: convo.unreadCount > 0 ? TS : TD, flexShrink: 0 }}>{sidebarTime(convo.createdAt, t)}</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
                       <span style={{ fontSize: 12.5, color: convo.unreadCount > 0 ? TS : TD, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{lastMsgPreview(convo)}</span>
@@ -274,8 +280,8 @@ export default function Messages() {
               <div style={{ width: 80, height: 80, borderRadius: 20, background: "rgba(255,255,255,0.03)", border: `1px solid ${B}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <MessageCircle style={{ width: 36, height: 36, color: "rgba(255,255,255,0.15)" }} />
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em" }}>Welcome to Plotzy Messages</h3>
-              <p style={{ fontSize: 14, color: TD, margin: 0, textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>Connect with fellow writers, share ideas, and collaborate. Select a conversation to get started.</p>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em" }}>{t("msWelcome")}</h3>
+              <p style={{ fontSize: 14, color: TD, margin: 0, textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>{t("msWelcomeBody")}</p>
             </div>
           ) : (
             <>
@@ -288,7 +294,7 @@ export default function Messages() {
                 )}
                 <Avatar url={selectedConvo?.partnerAvatarUrl ?? null} name={selectedConvo?.partnerDisplayName ?? null} size={36} />
                 <Link href={`/authors/${selectedUserId}`} style={{ fontSize: 14, fontWeight: 600, color: T, textDecoration: "none" }}>
-                  {selectedConvo?.partnerDisplayName || "User"}
+                  {selectedConvo?.partnerDisplayName || t("msUser")}
                 </Link>
               </div>
 
@@ -296,15 +302,15 @@ export default function Messages() {
               <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
                 {messages.length === 0 ? (
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: "100%" }}>
-                    <div style={{ fontSize: 13, color: TS }}>No messages yet</div>
-                    <div style={{ fontSize: 12, color: TD }}>Say hello to start the conversation</div>
+                    <div style={{ fontSize: 13, color: TS }}>{t("msNoMessages")}</div>
+                    <div style={{ fontSize: 12, color: TD }}>{t("msSayHello")}</div>
                   </div>
                 ) : grouped.map((group, gi) => (
                   <div key={gi}>
                     {/* Date separator */}
                     <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0", padding: "0 20px" }}>
                       <div style={{ flex: 1, height: 1, background: B }} />
-                      <span style={{ fontSize: 11, color: TD, fontWeight: 500 }}>{formatDate(group.msgs[0].createdAt)}</span>
+                      <span style={{ fontSize: 11, color: TD, fontWeight: 500 }}>{formatDate(group.msgs[0].createdAt, t)}</span>
                       <div style={{ flex: 1, height: 1, background: B }} />
                     </div>
                     {group.msgs.map((msg, mi) => {
@@ -337,7 +343,7 @@ export default function Messages() {
               {previewFile && (
                 <div style={{ padding: "8px 20px", borderTop: `1px solid ${B}`, background: SIDEBAR, display: "flex", alignItems: "center", gap: 10 }}>
                   {previewFile.url ? (
-                    <img src={previewFile.url} alt="Selected attachment preview" style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }} />
+                    <img src={previewFile.url} alt={t("msAttachmentPreview")} style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: 48, height: 48, borderRadius: 8, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <FileText style={{ width: 22, height: 22, color: TS }} />
@@ -364,7 +370,7 @@ export default function Messages() {
                   <button onClick={() => imageInputRef.current?.click()} style={{ width: 36, height: 36, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TD, transition: "color 0.15s", flexShrink: 0 }} onMouseEnter={e => e.currentTarget.style.color = TS} onMouseLeave={e => e.currentTarget.style.color = TD}>
                     <ImageIcon style={{ width: 18, height: 18 }} />
                   </button>
-                  <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder={previewFile ? "Add a caption..." : "Type a message..."} rows={1}
+                  <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder={previewFile ? t("msAddCaption") : t("msTypeMessage")} rows={1}
                     style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: T, fontFamily: SF, fontSize: 14, resize: "none", lineHeight: 1.45, maxHeight: 100, padding: "6px 0", minHeight: 24 }}
                   />
                   <button onClick={handleSend} disabled={(!input.trim() && !previewFile) || sendMut.isPending || uploadMut.isPending}
