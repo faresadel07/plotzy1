@@ -272,7 +272,7 @@ export default function Pricing() {
   const [showFaq, setShowFaq] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [, navigate] = useLocation();
 
   const isYearly = billingCycle === "yearly";
@@ -723,7 +723,7 @@ export default function Pricing() {
                     marginTop: 16,
                   }}
                 >
-                  {(getPricingFaq()?.items ?? []).map((item) => (
+                  {(getPricingFaq(lang)?.items ?? []).map((item) => (
                     <div
                       key={item.id}
                       style={{

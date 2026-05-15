@@ -13,7 +13,7 @@ import {
   Sparkles, BookOpen, Cpu, CreditCard, Globe,
   Headphones, Shield, Settings, Mail,
 } from "lucide-react";
-import { FAQ_CATEGORIES, type FaqCategory } from "@/data/faq-data";
+import { localizeFaqCategories, type FaqCategory } from "@/data/faq-data";
 import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
@@ -43,7 +43,7 @@ const CATEGORY_ICONS: Record<string, IconCmp> = {
 };
 
 export default function FaqPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   // Scroll to the hash target on first mount (e.g. /faq#pricing). Run
   // after a tick so the lazy-loaded section has actually rendered.
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function FaqPage() {
     return () => clearTimeout(id);
   }, []);
 
-  const allCategories = useMemo(() => FAQ_CATEGORIES, []);
+  const allCategories = useMemo(() => localizeFaqCategories(lang), [lang]);
 
   return (
     <Layout darkNav>
