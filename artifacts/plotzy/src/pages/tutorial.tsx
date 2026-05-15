@@ -4,6 +4,8 @@ import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Play, X } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#000";
@@ -14,15 +16,15 @@ const T = "#fff";
 const TS = "rgba(255,255,255,0.55)";
 const TD = "rgba(255,255,255,0.25)";
 
-const CATEGORIES = [
-  { id: "all", label: "All" },
-  { id: "getting-started", label: "Getting Started" },
-  { id: "writing", label: "Writing" },
-  { id: "ai-tools", label: "AI Tools" },
-  { id: "publishing", label: "Publishing" },
-  { id: "cover-design", label: "Cover Design" },
-  { id: "community", label: "Community" },
-  { id: "advanced", label: "Advanced" },
+const CATEGORIES: { id: string; labelKey: TranslationKey }[] = [
+  { id: "all", labelKey: "tuCatAll" },
+  { id: "getting-started", labelKey: "tuCatGettingStarted" },
+  { id: "writing", labelKey: "tuCatWriting" },
+  { id: "ai-tools", labelKey: "tuCatAiTools" },
+  { id: "publishing", labelKey: "tuCatPublishing" },
+  { id: "cover-design", labelKey: "tuCatCoverDesign" },
+  { id: "community", labelKey: "tuCatCommunity" },
+  { id: "advanced", labelKey: "tuCatAdvanced" },
 ];
 
 interface Tutorial {
@@ -101,6 +103,7 @@ function ThumbnailPlaceholder({ duration }: { duration: string }) {
 
 /* ─── Tutorial Card ─── */
 function TutorialCard({ tutorial, onClick }: { tutorial: Tutorial; onClick: () => void }) {
+  const { t } = useLanguage();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -198,7 +201,7 @@ function TutorialCard({ tutorial, onClick }: { tutorial: Tutorial; onClick: () =
           color: TS,
           marginBottom: 8,
         }}>
-          {CATEGORIES.find(c => c.id === tutorial.category)?.label || tutorial.category}
+          {(() => { const c = CATEGORIES.find(c => c.id === tutorial.category); return c ? t(c.labelKey) : tutorial.category; })()}
         </span>
         {tutorial.description && (
           <div style={{
@@ -221,6 +224,7 @@ function TutorialCard({ tutorial, onClick }: { tutorial: Tutorial; onClick: () =
 
 /* ─── Cinema Mode Modal ─── */
 function CinemaModal({ tutorial, onClose }: { tutorial: Tutorial; onClose: () => void }) {
+  const { t } = useLanguage();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
@@ -315,7 +319,7 @@ function CinemaModal({ tutorial, onClose }: { tutorial: Tutorial; onClose: () =>
               fontFamily: SF,
               color: TS,
             }}>
-              {CATEGORIES.find(c => c.id === tutorial.category)?.label || tutorial.category}
+              {(() => { const c = CATEGORIES.find(c => c.id === tutorial.category); return c ? t(c.labelKey) : tutorial.category; })()}
             </span>
             <span style={{ fontSize: 12, fontFamily: SF, color: TD }}>
               {tutorial.duration}
@@ -341,6 +345,7 @@ function CinemaModal({ tutorial, onClose }: { tutorial: Tutorial; onClose: () =>
 
 /* ─── Main Page ─── */
 export default function TutorialPage() {
+  const { t } = useLanguage();
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -364,10 +369,10 @@ export default function TutorialPage() {
   return (
     <Layout isLanding darkNav>
       <SEO
-        title="Tutorial"
-        description="Learn Plotzy step by step — chapter editor, lore entries, AI assistant, and audiobook studio."
+        title={t("tuSeoTitle")}
+        description={t("tuSeoDesc")}
       />
-      <JsonLd data={buildBreadcrumbSchema([{ name: "Tutorial", path: "/tutorial" }])} />
+      <JsonLd data={buildBreadcrumbSchema([{ name: t("tuBreadcrumb"), path: "/tutorial" }])} />
       <div style={{ fontFamily: SF, background: BG, minHeight: "100vh" }}>
 
         {/* ─── Hero ─── */}
@@ -384,7 +389,7 @@ export default function TutorialPage() {
             lineHeight: 1.15,
             margin: "0 auto 14px",
           }}>
-            Learning Center
+            {t("tuLearningCenter")}
           </h1>
           <p style={{
             fontSize: 15,
@@ -393,7 +398,7 @@ export default function TutorialPage() {
             margin: "0 auto 28px",
             lineHeight: 1.7,
           }}>
-            Master every feature of Plotzy with step-by-step video guides
+            {t("tuHeroSub")}
           </p>
 
           {/* Category filter pills */}
@@ -424,7 +429,7 @@ export default function TutorialPage() {
                     transition: "all 0.15s",
                   }}
                 >
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </button>
               );
             })}
@@ -436,7 +441,7 @@ export default function TutorialPage() {
 
           {loading ? (
             <div style={{ textAlign: "center", padding: "80px 0", color: TD }}>
-              Loading tutorials...
+              {t("tuLoading")}
             </div>
           ) : filtered.length === 0 && tutorials.length === 0 ? (
             /* Empty state */
@@ -467,7 +472,7 @@ export default function TutorialPage() {
                 color: T,
                 marginBottom: 8,
               }}>
-                No tutorials yet
+                {t("tuNoTutorials")}
               </h3>
               <p style={{
                 fontFamily: SF,
@@ -477,7 +482,7 @@ export default function TutorialPage() {
                 maxWidth: 400,
                 margin: "0 auto",
               }}>
-                Check back soon — we're creating guides to help you master Plotzy
+                {t("tuNoTutorialsBody")}
               </p>
             </div>
           ) : filtered.length === 0 ? (
@@ -488,7 +493,7 @@ export default function TutorialPage() {
               color: TD,
               fontSize: 14,
             }}>
-              No tutorials in this category yet.
+              {t("tuNoCategory")}
             </div>
           ) : (
             /* Tutorial grid */
