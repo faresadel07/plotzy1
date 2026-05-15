@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
 import { AuthModal } from "@/components/auth-modal";
 import { SEO } from "@/components/SEO";
@@ -43,49 +44,47 @@ const TD = "rgba(255,255,255,0.25)";
  */
 type FeatureItem = string | { text: string; caption: string };
 
+// Arrays now hold i18n keys, not literal strings. featureRow / limitRow
+// resolve them via t() at render time so the lists localize. The "(coming
+// soon)" tag on the cover generator is intentional: the gpt-image-1
+// backend is paid and credits aren't provisioned pre-launch.
 const FEATURES_FREE: FeatureItem[] = [
-  // AI cover generator is intentionally tagged "(coming soon)" — the
-  // gpt-image-1 backend is paid and credits are not provisioned pre-
-  // launch. The Cover Designer's AI panel and other image-API entry
-  // points are gated to match. Drop the suffix once credits land.
-  { text: "AI book cover generator (front and back) (coming soon)", caption: "Available shortly after launch, image-generation credits arriving soon" },
-  "Basic cover designer",
-  "Community library: like, comment, follow, message",
-  "Author profile page",
-  "Notifications center",
-  "Ambient writing sounds",
-  "Voice dictation & transcription",
-  "PDF & EPUB export",
-  "Audiobook studio with 10 AI voices",
-  "AI analysis tools (plot holes, pacing, dialogue, voice)",
-  "Story Bible & Research board",
-  "Book collaboration (invite co-writers)",
-  "Auto-snapshots & version history",
-  "45+ book languages · 14 UI languages",
+  { text: "prFeatCover", caption: "prFeatCoverCap" },
+  "prFeatBasicCover",
+  "prFeatCommunity",
+  "prFeatAuthorPage",
+  "prFeatNotifications",
+  "prFeatAmbient",
+  "prFeatDictation",
+  "prFeatExport",
+  "prFeatAudiobook",
+  "prFeatAnalysis",
+  "prFeatStoryBible",
+  "prFeatCollab",
+  "prFeatSnapshots",
+  "prFeatLanguages",
 ];
 
 const FREE_LIMITS = [
-  "3 chapters total (across all books)",
-  "5,000 words per chapter",
-  "10 AI assists per day",
-  "1 published book in Community Library",
+  "prLimChapters",
+  "prLimWords",
+  "prLimAi",
+  "prLimPublish",
 ];
 
-const AI_DAILY_CAPTION = "Shared across all AI features (writing, audiobook, cover, etc.)";
-
 const FEATURES_PRO: FeatureItem[] = [
-  { text: "100 AI requests per day", caption: AI_DAILY_CAPTION },
-  "3 AI Marketplace analyses per month",
-  "No chapter limits",
-  "No word limits",
-  "No publishing limits on Community Library",
+  { text: "prProAi", caption: "prAiDailyCap" },
+  "prProMarket",
+  "prProNoChapter",
+  "prProNoWord",
+  "prProNoPub",
 ];
 
 const FEATURES_PREMIUM: FeatureItem[] = [
-  { text: "200 AI requests per day", caption: AI_DAILY_CAPTION },
-  "9 AI Marketplace analyses per month",
-  "No book, chapter, or word limits",
-  "No limits on Community Library publishing",
+  { text: "prPremAi", caption: "prAiDailyCap" },
+  "prPremMarket",
+  "prPremNoLimits",
+  "prPremNoPub",
 ];
 
 /* ── FAQ ── */
@@ -161,7 +160,21 @@ function PlanButton({
   navigate: (path: string) => void;
   onAuthRequired?: () => void;
 }) {
+  const { t } = useLanguage();
   const { kind, label, href, showCycleDisclosure } = state;
+  // getCardButtonState is module-level and can't call hooks, so it
+  // returns a stable English label as a fallback. Translate by kind
+  // here where the hook is available.
+  const KIND_KEY: Record<ButtonKind, string> = {
+    get_started: "btnGetStarted",
+    current: "btnCurrentPlan",
+    switch: "btnSwitch",
+    upgrade: "btnUpgrade",
+    reactivate: "btnReactivate",
+  };
+  const arrowKinds: ButtonKind[] = ["switch", "upgrade", "reactivate"];
+  const localizedLabel = t(KIND_KEY[kind] || "btnGetStarted") + (arrowKinds.includes(kind) ? " →" : "");
+  void label;
 
   const baseStyle: React.CSSProperties = {
     width: "100%",
@@ -237,7 +250,7 @@ function PlanButton({
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
       >
-        {label}
+        {localizedLabel}
       </button>
       {showCycleDisclosure && (
         <p style={{
@@ -247,7 +260,7 @@ function PlanButton({
           textAlign: "center",
           lineHeight: 1.4,
         }}>
-          Switching restarts the billing period.
+          {t("btnSwitchDisclosure")}
         </p>
       )}
     </>
@@ -259,6 +272,7 @@ export default function Pricing() {
   const [showFaq, setShowFaq] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [, navigate] = useLocation();
 
   const isYearly = billingCycle === "yearly";
@@ -266,13 +280,13 @@ export default function Pricing() {
   const proPrice = isYearly ? 50.99 : 4.99;
   const proOriginalPrice = isYearly ? 108.00 : 11.99;
   const proPriceSuffix = isYearly ? "/yr" : "/mo";
-  const proLabel = isYearly ? "Billed $50.99 per year" : "Billed $4.99 every month";
+  const proLabel = isYearly ? t("prProBilledY") : t("prProBilledM");
   const proPlan: PayPalPlan = isYearly ? "pro_yearly" : "pro_monthly";
 
   const premiumPrice = isYearly ? 91.99 : 8.99;
   const premiumOriginalPrice = isYearly ? 240.00 : 20.00;
   const premiumPriceSuffix = isYearly ? "/yr" : "/mo";
-  const premiumLabel = isYearly ? "Billed $91.99 per year" : "Billed $8.99 every month";
+  const premiumLabel = isYearly ? t("prPremBilledY") : t("prPremBilledM");
   const premiumPlan: PayPalPlan = isYearly ? "premium_yearly" : "premium_monthly";
 
   // Tier-aware CTAs: depend on the currently-selected billing cycle so the
@@ -311,8 +325,8 @@ export default function Pricing() {
   );
 
   const featureRow = (item: FeatureItem, highlight: boolean) => {
-    const text = typeof item === "string" ? item : item.text;
-    const caption = typeof item === "string" ? undefined : item.caption;
+    const text = t(typeof item === "string" ? item : item.text);
+    const caption = typeof item === "string" ? undefined : t(item.caption);
     return (
       <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <div style={{ marginTop: 1 }}>{checkIcon(highlight)}</div>
@@ -326,10 +340,10 @@ export default function Pricing() {
     );
   };
 
-  const limitRow = (text: string) => (
-    <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+  const limitRow = (key: string) => (
+    <div key={key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <span style={{ width: 4, height: 4, borderRadius: "50%", background: TD, flexShrink: 0 }} aria-hidden />
-      <span style={{ fontSize: 12, color: TD, lineHeight: 1.5 }}>{text}</span>
+      <span style={{ fontSize: 12, color: TD, lineHeight: 1.5 }}>{t(key)}</span>
     </div>
   );
 
@@ -351,10 +365,10 @@ export default function Pricing() {
             style={{ textAlign: "center", marginBottom: 28 }}
           >
             <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", fontWeight: 700, lineHeight: 1.1, marginBottom: 10, letterSpacing: "-0.02em" }}>
-              Simple, honest pricing
+              {t("prTitle")}
             </h1>
             <p style={{ color: TS, fontSize: 14, maxWidth: 380, margin: "0 auto" }}>
-              Start free. Upgrade when you're ready to write without limits.
+              {t("prSubtitle")}
             </p>
           </motion.div>
 
@@ -394,7 +408,7 @@ export default function Pricing() {
                     transition: "color 0.2s",
                   }}
                 >
-                  <span style={{ textTransform: "capitalize" }}>{cycle}</span>
+                  <span style={{ textTransform: "capitalize" }}>{cycle === "yearly" ? t("prYearly") : t("prMonthly")}</span>
                   {cycle === "yearly" && (
                     <span
                       style={{
@@ -406,7 +420,7 @@ export default function Pricing() {
                         color: billingCycle === "yearly" ? "#333" : TS,
                       }}
                     >
-                      Save 15%
+                      {t("prSave15")}
                     </span>
                   )}
                 </button>
@@ -434,10 +448,10 @@ export default function Pricing() {
             >
               <div style={{ padding: "24px 24px 20px" }}>
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: TD, textTransform: "uppercase", marginBottom: 14 }}>
-                  Free
+                  {t("prFree")}
                 </p>
                 <p className="price-big" style={{ fontSize: 48, fontWeight: 700, lineHeight: 1, marginBottom: 4, color: T }}>$0</p>
-                <p style={{ fontSize: 13, color: TD, marginBottom: 20 }}>No credit card needed</p>
+                <p style={{ fontSize: 13, color: TD, marginBottom: 20 }}>{t("prNoCard")}</p>
                 <button
                   onClick={() => navigate("/")}
                   style={{
@@ -456,7 +470,7 @@ export default function Pricing() {
                   onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
                   onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                 >
-                  Get Started
+                  {t("prGetStarted")}
                 </button>
               </div>
 
@@ -464,7 +478,7 @@ export default function Pricing() {
 
               <div style={{ padding: "20px 24px 24px" }}>
                 <p style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-                  Included
+                  {t("prIncluded")}
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {FEATURES_FREE.map(f => featureRow(f, false))}
@@ -472,7 +486,7 @@ export default function Pricing() {
 
                 {/* ── Free tier limits (constraints, dim styling) ── */}
                 <p style={{ fontSize: 11, fontWeight: 600, color: TD, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 22, marginBottom: 10 }}>
-                  Free tier limits
+                  {t("prFreeLimitsTitle")}
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {FREE_LIMITS.map(limitRow)}
@@ -514,12 +528,12 @@ export default function Pricing() {
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 12, padding: "4px 10px", borderRadius: 100, background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
                     <Sparkles style={{ width: 11, height: 11, color: "#f59e0b" }} />
                     <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#f59e0b", textTransform: "uppercase" }}>
-                      Founders Pricing
+                      {t("prFoundersPricing")}
                     </span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                     <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#60a5fa", textTransform: "uppercase" }}>
-                      Pro
+                      {t("prPro")}
                     </p>
                     <span
                       style={{
@@ -532,11 +546,11 @@ export default function Pricing() {
                         borderRadius: 100,
                       }}
                     >
-                      ✦ Most Popular
+                      ✦ {t("prMostPopular")}
                     </span>
                   </div>
-                  <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>For serious writers</p>
-                  <p style={{ fontSize: 11, color: "rgba(245, 158, 11, 0.7)", marginBottom: 14, lineHeight: 1.4 }}>Locked-in early-supporter rates. First 500 members only.</p>
+                  <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>{t("prForSerious")}</p>
+                  <p style={{ fontSize: 11, color: "rgba(245, 158, 11, 0.7)", marginBottom: 14, lineHeight: 1.4 }}>{t("prLockedRates")}</p>
 
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                     {proOriginalPrice && (
@@ -555,12 +569,12 @@ export default function Pricing() {
 
                   {proOriginalPrice && (
                     <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                      Save {Math.round((1 - proPrice / proOriginalPrice) * 100)}% (limited offer)
+                      {t("prSaveWord")} {Math.round((1 - proPrice / proOriginalPrice) * 100)}% {t("prLimitedOffer")}
                     </p>
                   )}
                   {isYearly && (
                     <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                      $4.25/mo, save 15%
+                      {t("prProYrMo")}
                     </p>
                   )}
 
@@ -575,7 +589,7 @@ export default function Pricing() {
 
                 <div style={{ padding: "20px 24px 24px", position: "relative" }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: TS, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-                    Everything in Free, plus
+                    {t("prEverythingFreePlus")}
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {FEATURES_PRO.map(f => featureRow(f, true))}
@@ -614,10 +628,10 @@ export default function Pricing() {
                   </span>
                 </div>
                 <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "#c084fc", textTransform: "uppercase", marginBottom: 6 }}>
-                  Premium
+                  {t("prPremium")}
                 </p>
-                <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>For full-time writers and authors</p>
-                <p style={{ fontSize: 11, color: "rgba(245, 158, 11, 0.7)", marginBottom: 14, lineHeight: 1.4 }}>Locked-in early-supporter rates. First 500 members only.</p>
+                <p style={{ fontSize: 13, color: TS, marginBottom: 4 }}>{t("prForFulltime")}</p>
+                <p style={{ fontSize: 11, color: "rgba(245, 158, 11, 0.7)", marginBottom: 14, lineHeight: 1.4 }}>{t("prLockedRates")}</p>
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
                   {premiumOriginalPrice && (
@@ -636,12 +650,12 @@ export default function Pricing() {
 
                 {premiumOriginalPrice && (
                   <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                    Save {Math.round((1 - premiumPrice / premiumOriginalPrice) * 100)}% (limited offer)
+                    {t("prSaveWord")} {Math.round((1 - premiumPrice / premiumOriginalPrice) * 100)}% {t("prLimitedOffer")}
                   </p>
                 )}
                 {isYearly && (
                   <p style={{ fontSize: 12, color: "rgba(130,255,130,0.7)", marginTop: 4, marginBottom: 4 }}>
-                    $7.67/mo, save 15%
+                    {t("prPremYrMo")}
                   </p>
                 )}
 
@@ -656,7 +670,7 @@ export default function Pricing() {
 
               <div style={{ padding: "20px 24px 24px", position: "relative" }}>
                 <p style={{ fontSize: 11, fontWeight: 600, color: TS, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
-                  Everything in Pro, plus
+                  {t("prEverythingProPlus")}
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {FEATURES_PREMIUM.map(f => featureRow(f, true))}
@@ -688,7 +702,7 @@ export default function Pricing() {
               <motion.div animate={{ rotate: showFaq ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown style={{ width: 13, height: 13 }} />
               </motion.div>
-              Common questions
+              {t("prCommonQuestions")}
             </button>
           </div>
 
