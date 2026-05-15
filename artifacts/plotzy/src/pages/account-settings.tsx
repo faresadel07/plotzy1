@@ -28,10 +28,11 @@ const TD = "rgba(255,255,255,0.25)";
 
 export default function AccountSettings() {
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
 
   return (
     <Layout darkNav>
-      <SEO title="Account Settings" noindex />
+      <SEO title={t("acctTitle")} noindex />
       <div style={{ background: BG, minHeight: "100vh", color: T, fontFamily: SF }}>
         <div className="max-w-4xl mx-auto px-6 py-12">
           <button
@@ -43,12 +44,12 @@ export default function AccountSettings() {
             onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
           >
             <ChevronLeft className="w-4 h-4" />
-            Back to home
+            {t("asBackHome")}
           </button>
 
-          <h1 className="text-3xl font-bold leading-tight mb-2">Account Settings</h1>
+          <h1 className="text-3xl font-bold leading-tight mb-2">{t("acctTitle")}</h1>
           <p className="text-sm mb-6" style={{ color: TS }}>
-            Manage your sign-in details, notifications, and account.
+            {t("acctBlurb")}
           </p>
 
           <AccountTabs current="settings" />

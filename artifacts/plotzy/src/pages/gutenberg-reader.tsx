@@ -646,7 +646,7 @@ export default function GutenbergReader() {
           disabled={clampedSpread === 0}
           className="absolute left-2 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
           style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.10)", color: fg }}
-          aria-label="Previous"
+          aria-label={ar ? "السابق" : "Previous"}
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -776,7 +776,7 @@ export default function GutenbergReader() {
           disabled={clampedSpread >= totalSpreads - 1}
           className="absolute right-2 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-0 hover:opacity-80"
           style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.10)", color: fg }}
-          aria-label="Next"
+          aria-label={ar ? "التالي" : "Next"}
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -856,7 +856,7 @@ export default function GutenbergReader() {
           {/* Define (only for single words) */}
           <button
             onClick={handleSearchSel}
-            title="Look up in dictionary"
+            title={ar ? "ابحث في القاموس" : "Look up in dictionary"}
             style={{
               display: "flex", alignItems: "center", gap: 5,
               padding: "5px 10px", borderRadius: 7,
