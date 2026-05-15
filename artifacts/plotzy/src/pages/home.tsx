@@ -377,8 +377,8 @@ export default function Home() {
     const v = renameValue.trim();
     if (v && v !== "") {
       updateBook.mutate({ id, title: v }, {
-        onSuccess: () => { toast({ title: "Renamed successfully" }); setRenamingId(null); },
-        onError: () => toast({ title: "Rename failed", variant: "destructive" }),
+        onSuccess: () => { toast({ title: t("hmRenamed") }); setRenamingId(null); },
+        onError: () => toast({ title: t("hmRenameFailed"), variant: "destructive" }),
       });
     } else {
       setRenamingId(null);
@@ -422,7 +422,7 @@ export default function Home() {
 
       setLocation(`/books/${newBook.id}`);
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to create book", description: err?.message || String(err) });
+      toast({ variant: "destructive", title: t("hmCreateFailed"), description: err?.message || String(err) });
       throw err;
     }
   };
@@ -438,7 +438,7 @@ export default function Home() {
       setAuthorName("");
       setBookLang(lang);
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Could not create book", description: err?.message || String(err) });
+      toast({ variant: "destructive", title: t("hmCreateFailed2"), description: err?.message || String(err) });
     }
   };
 
@@ -537,9 +537,9 @@ export default function Home() {
         isOpen={confirmTrashId !== null}
         onClose={() => setConfirmTrashId(null)}
         onConfirm={() => { if (confirmTrashId !== null) trashBook.mutate(confirmTrashId); }}
-        title="Move to Recycle Bin"
-        message="This project will be moved to the Recycle Bin. You can restore it at any time."
-        confirmLabel="Move to Trash"
+        title={t("hmTrashTitle")}
+        message={t("hmTrashMsg")}
+        confirmLabel={t("hmTrashConfirm")}
         variant="warning"
       />
 
@@ -754,10 +754,10 @@ export default function Home() {
                   className="mb-10"
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/30 mb-1">
-                    Welcome back
+                    {t("hmWelcomeBack")}
                   </p>
                   <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
-                    Hello, <span className="text-white">{firstName}!</span>
+                    {t("hmHello")} <span className="text-white">{firstName}!</span>
                   </h1>
                 </motion.div>
               )}
@@ -765,12 +765,12 @@ export default function Home() {
               {/* Library Header */}
               <div id="workspace" className="flex items-center justify-between gap-4 mb-10">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">Workspace</p>
-                  <h2 className="text-2xl font-bold text-white tracking-tight leading-none">Your Projects</h2>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">{t("hmWorkspace")}</p>
+                  <h2 className="text-2xl font-bold text-white tracking-tight leading-none">{t("hmYourProjects")}</h2>
                   {books && books.length > 3 && (
                     <div className="mt-2 flex items-center gap-2 rounded-lg px-3 py-1.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", maxWidth: 240 }}>
                       <Search className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.25)" }} />
-                      <input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder="Search your books..."
+                      <input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder={t("hmSearchBooks")}
                         className="bg-transparent border-none outline-none text-xs w-full" style={{ color: "#fff" }} />
                     </div>
                   )}
@@ -778,7 +778,7 @@ export default function Home() {
                 <div className="workspace-actions flex items-center gap-3">
                   {books && books.length > 0 && (
                     <span className="text-[11px] font-semibold text-white/20 uppercase tracking-widest hidden sm:block">
-                      {books.length} {books.length === 1 ? "Project" : "Projects"}
+                      {books.length} {books.length === 1 ? t("hmProject") : t("hmProjects")}
                     </span>
                   )}
                   <Link href="/trash">
@@ -787,7 +787,7 @@ export default function Home() {
                       style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      Trash
+                      {t("hmTrash")}
                     </button>
                   </Link>
                   {user && (
@@ -798,7 +798,7 @@ export default function Home() {
                         style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
                       >
                         <Users className="w-3.5 h-3.5" />
-                        Join a Book
+                        {t("hmJoinABook")}
                       </button>
                       <button
                         onClick={() => setIsOpen(true)}
@@ -806,7 +806,7 @@ export default function Home() {
                         style={{ background: '#ffffff', color: '#111111' }}
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        New Project
+                        {t("hmNewProject")}
                       </button>
                     </>
                   )}
@@ -868,7 +868,7 @@ export default function Home() {
                       <Plus className="w-4 h-4 text-white/40 group-hover:text-white/70 transition-colors duration-200" />
                     </motion.div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 group-hover:text-white/50 transition-colors duration-200">
-                      New Project
+                      {t("hmNewProject")}
                     </p>
                   </motion.div>
                 </motion.div>
@@ -884,7 +884,7 @@ export default function Home() {
                         className="flex items-center gap-1.5 text-[11px] font-medium text-white/25 hover:text-white/50 transition-colors duration-200"
                       >
                         <Trash2 className="w-3 h-3" />
-                        Trash
+                        {t("hmTrash")}
                       </button>
                     </Link>
                   </motion.div>
@@ -916,7 +916,7 @@ export default function Home() {
                     <div className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center group-hover:border-white/30 transition-colors">
                       <Plus className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
                     </div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/20 group-hover:text-white/40 transition-colors">New Project</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/20 group-hover:text-white/40 transition-colors">{t("hmNewProject")}</p>
                   </div>
                   <div className="mt-2.5 px-0.5 h-7" />
                 </motion.div>
@@ -1004,19 +1004,19 @@ export default function Home() {
                                 >
                                   {renamingId === book.id ? (
                                     <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
-                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
+                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>{t("hmRename")}</span>
                                       <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
                                       <div style={{ display: 'flex', gap: 6 }}>
-                                        <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : 'Save'}</button>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">Cancel</button>
+                                        <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : t("hmSave")}</button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">{t("hmCancel")}</button>
                                       </div>
                                     </form>
                                   ) : (
                                     <>
-                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/articles/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">Continue Writing</button>
-                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? "Duplicating…" : "Duplicate"}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">Rename</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">Delete</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/articles/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">{t("hmContinueWriting")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? t("hmDuplicating") : t("hmDuplicate")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">{t("hmRename")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">{t("hmDelete")}</button>
                                     </>
                                   )}
                                 </div>
@@ -1029,7 +1029,7 @@ export default function Home() {
                                 <div className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }} />
                                 <div className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}>
                                   <h3 className="text-white font-bold leading-tight line-clamp-2" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif", fontSize: titleFontSize, textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>{book.title}</h3>
-                                  <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ? book.genre : 'Book'}</div>
+                                  <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ? book.genre : t("hmBookGenre")}</div>
                                 </div>
                                 {langInfo && langInfo.code !== 'en' && (
                                   <div className="absolute top-2 left-2 z-30 text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10" style={{ background: 'rgba(0,0,0,0.75)' }}>{langInfo.nativeName.slice(0, 3)}</div>
@@ -1042,19 +1042,19 @@ export default function Home() {
                                 >
                                   {renamingId === book.id ? (
                                     <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
-                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Rename</span>
+                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>{t("hmRename")}</span>
                                       <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
                                       <div style={{ display: 'flex', gap: 6 }}>
-                                        <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : 'Save'}</button>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">Cancel</button>
+                                        <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : t("hmSave")}</button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">{t("hmCancel")}</button>
                                       </div>
                                     </form>
                                   ) : (
                                     <>
-                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/books/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">Continue Writing</button>
-                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? "Duplicating…" : "Duplicate"}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">Rename</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">Delete</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/books/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">{t("hmContinueWriting")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? t("hmDuplicating") : t("hmDuplicate")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">{t("hmRename")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">{t("hmDelete")}</button>
                                     </>
                                   )}
                                 </div>
@@ -1093,8 +1093,8 @@ export default function Home() {
                 <Users className="w-4 h-4" style={{ color: "#60a5fa" }} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Shared with you</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Books other writers invited you to collaborate on</p>
+                <h3 className="text-lg font-bold text-white">{t("hmSharedWithYou")}</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{t("hmSharedWithYouDesc")}</p>
               </div>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
@@ -1125,11 +1125,11 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{sb.title}</p>
                     <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      by {sb.ownerName || "Unknown"} · {sb.role === "editor" ? "Can edit" : "View only"}
+                      {t("hmBy")} {sb.ownerName || t("hmUnknown")} · {sb.role === "editor" ? t("hmCanEdit") : t("hmViewOnly")}
                     </p>
                   </div>
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: sb.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: sb.role === "editor" ? "#4ade80" : "#60a5fa" }}>
-                    {sb.role === "editor" ? "EDITOR" : "VIEWER"}
+                    {sb.role === "editor" ? t("hmEditor") : t("hmViewer")}
                   </span>
                 </button>
               ))}
@@ -1145,8 +1145,8 @@ export default function Home() {
                 <UserPlus className="w-4 h-4" style={{ color: "#ffffff" }} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">You shared</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Books you invited others to collaborate on</p>
+                <h3 className="text-lg font-bold text-white">{t("hmYouShared")}</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{t("hmYouSharedDesc")}</p>
               </div>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
@@ -1166,7 +1166,7 @@ export default function Home() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white truncate">{book.title}</p>
                       <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-                        {book.collaborators.length} {book.collaborators.length === 1 ? "collaborator" : "collaborators"}
+                        {book.collaborators.length} {book.collaborators.length === 1 ? t("hmCollaborator") : t("hmCollaborators")}
                       </p>
                     </div>
                   </div>
@@ -1182,14 +1182,14 @@ export default function Home() {
                             {(c.name || "?")[0]?.toUpperCase()}
                           </div>
                         )}
-                        <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>{c.name || "Unknown"}</span>
+                        <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>{c.name || t("hmUnknown")}</span>
                         <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.06)", color: c.role === "editor" ? "#a78bfa" : "rgba(255,255,255,0.55)", border: "1px solid", borderColor: c.role === "editor" ? "rgba(167,139,250,0.25)" : "rgba(255,255,255,0.10)" }}>
-                          {c.role === "editor" ? "EDITOR" : "VIEWER"}
+                          {c.role === "editor" ? t("hmEditor") : t("hmViewer")}
                         </span>
                       </div>
                     ))}
                     {book.collaborators.length > 3 && (
-                      <span className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.3)" }}>+ {book.collaborators.length - 3} more</span>
+                      <span className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.3)" }}>+ {book.collaborators.length - 3} {t("hmMore")}</span>
                     )}
                   </div>
                 </button>
@@ -1742,12 +1742,12 @@ export default function Home() {
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "#fff" }}>
-                <Users className="w-5 h-5" /> Join a Book
+                <Users className="w-5 h-5" /> {t("hmJoinABook")}
               </h3>
               <button onClick={() => setShowJoinModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>✕</button>
             </div>
             <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Enter the invite code you received from the book owner
+              {t("hmJoinDesc")}
             </p>
             <input
               autoFocus value={joinCode} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(""); }}
@@ -1764,13 +1764,13 @@ export default function Home() {
                   const res = await fetch("/api/books/join", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ code: joinCode.trim() }) });
                   const data = await res.json();
                   if (data.success) { setShowJoinModal(false); window.location.href = `/books/${data.bookId}`; }
-                  else setJoinError(data.message || "Invalid invite code");
-                } catch { setJoinError("Connection error. Try again."); }
+                  else setJoinError(data.message || t("hmInvalidCode"));
+                } catch { setJoinError(t("hmConnError")); }
                 finally { setJoinLoading(false); }
               }}
               className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
               style={{ background: joinCode.trim() ? "#fff" : "rgba(255,255,255,0.06)", color: joinCode.trim() ? "#000" : "rgba(255,255,255,0.3)", opacity: joinLoading ? 0.5 : 1 }}>
-              {joinLoading ? "Joining..." : "Join Book"}
+              {joinLoading ? t("hmJoining") : t("hmJoinBook")}
             </button>
           </div>
         </div>
