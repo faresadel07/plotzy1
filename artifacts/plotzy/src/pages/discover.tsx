@@ -353,8 +353,8 @@ export default function DiscoverPage() {
           </h1>
           <p className="text-sm mx-auto mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>
             {isHindawi
-              ? (ar ? "كتب عربية من المجال العام من مؤسسة هنداوي — اقرأها مجاناً داخل Plotzy"
-                : "Arabic public-domain books from the Hindawi Foundation — read free inside Plotzy")
+              ? (ar ? "كتب عربية من المجال العام من مؤسسة هنداوي، اقرأها مجاناً داخل Plotzy"
+                : "Arabic public-domain books from the Hindawi Foundation, read free inside Plotzy")
               : (ar ? "أكثر من 70,000 كتاب من المجال العام — اقرأها مجاناً داخل Plotzy"
                 : "Over 70,000 public-domain books — read them free, right inside Plotzy")}
           </p>
