@@ -594,7 +594,7 @@ export default function Home() {
             marginBottom: 12,
             letterSpacing: "0.01em",
           }}>
-            write your first book with
+            {t("heroTagline")}
           </p>
           <h1 style={{
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
@@ -616,7 +616,7 @@ export default function Home() {
             margin: "0 0 32px",
             lineHeight: 1.5,
           }}>
-            The complete platform for writers.
+            {t("heroSubtitle")}
           </p>
           <button
             onClick={openCreateBook}
@@ -634,7 +634,7 @@ export default function Home() {
               boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
             }}
           >
-            Start Writing
+            {t("heroStartWriting")}
           </button>
         </section>
 
@@ -657,7 +657,7 @@ export default function Home() {
                     textAlign: "center",
                   }}
                 >
-                  write your first book with
+                  {t("heroTagline")}
                 </motion.p>
                 <motion.h1
                   initial={{ opacity: 0, y: 32 }}
@@ -694,35 +694,35 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               style={{ textAlign: "center", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif', fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 400, letterSpacing: "-0.02em", color: "#ffffff", marginBottom: 56, lineHeight: 1.3 }}
             >
-              The world's first platform built to help you write your first book, even if you've never written a word before.
+              {t("fldIntro")}
             </motion.p>
             <div style={{ display: "flex", justifyContent: "center", gap: 0 }}>
               {[
                 {
-                  title: "Write & Refine",
-                  subtitle: "3 features · hover to explore",
+                  title: t("fldWriteTitle"),
+                  subtitle: t("fldFeaturesHint"),
                   cards: [
-                    { id: "w1", icon: "✦", headline: "The world's first platform of its kind", sub: "Plotzy is uniquely built for authors — a distraction-free editor that combines manuscript management, AI tools, and publishing all in one workspace." },
-                    { id: "w2", icon: "📖", headline: "A proven guide to start writing", sub: "Crafted with real authors, our step-by-step writing guide helps you outline, draft, and refine your story from first chapter to last." },
-                    { id: "w3", icon: "🤖", headline: "AI Writing Assistant that knows your story", sub: "Plotzy's AI reads your entire manuscript and suggests continuations, rewrites, and ideas that match your unique voice — not just the current paragraph." },
+                    { id: "w1", icon: "✦", headline: t("fldW1H"), sub: t("fldW1S") },
+                    { id: "w2", icon: "📖", headline: t("fldW2H"), sub: t("fldW2S") },
+                    { id: "w3", icon: "🤖", headline: t("fldW3H"), sub: t("fldW3S") },
                   ],
                 },
                 {
-                  title: "Publish & Distribute",
-                  subtitle: "3 features · hover to explore",
+                  title: t("fldPublishTitle"),
+                  subtitle: t("fldFeaturesHint"),
                   cards: [
-                    { id: "p1", icon: "🚀", headline: "An AI-powered marketplace that perfects your book", sub: "From developmental editing to cover design and blurb writing — 9 AI services available on demand, each completed in minutes with no waitlists." },
-                    { id: "p2", icon: "🌍", headline: "From your first word to your cover", sub: "Generate professional AI book covers, format your manuscript for every platform, and distribute to every major digital and print retailer with one click." },
-                    { id: "p3", icon: "📊", headline: "World Publish — distribute everywhere", sub: "Your manuscript reaches every major platform while Plotzy handles formatting, rights management, and royalty tracking automatically." },
+                    { id: "p1", icon: "🚀", headline: t("fldP1H"), sub: t("fldP1S") },
+                    { id: "p2", icon: "🌍", headline: t("fldP2H"), sub: t("fldP2S") },
+                    { id: "p3", icon: "📊", headline: t("fldP3H"), sub: t("fldP3S") },
                   ],
                 },
                 {
-                  title: "Listen & Discover",
-                  subtitle: "3 features · hover to explore",
+                  title: t("fldListenTitle"),
+                  subtitle: t("fldFeaturesHint"),
                   cards: [
-                    { id: "l1", icon: "🎙️", headline: "AI Audiobook Studio — 10 distinct voices", sub: "With one click, Plotzy's AI narrates your entire book in your chosen voice. Preview each chapter, adjust quality, and export HD audio instantly." },
-                    { id: "l2", icon: "🌐", headline: "A powerful community of readers", sub: "Connect with readers who rate, review, and elevate your book. Build a following before your book is even finished." },
-                    { id: "l3", icon: "📚", headline: "Access hundreds of thousands of free books", sub: "Browse a vast library of free books across every genre to spark your creativity, study the craft, and find your writing style." },
+                    { id: "l1", icon: "🎙️", headline: t("fldL1H"), sub: t("fldL1S") },
+                    { id: "l2", icon: "🌐", headline: t("fldL2H"), sub: t("fldL2S") },
+                    { id: "l3", icon: "📚", headline: t("fldL3H"), sub: t("fldL3S") },
                   ],
                 },
               ].map((folder, i) => (
