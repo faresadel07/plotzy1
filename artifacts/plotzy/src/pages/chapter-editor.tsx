@@ -1674,7 +1674,7 @@ export default function ChapterEditor() {
           </div>
 
           {/* ── Center: tool icons ── */}
-          <div className="flex items-center gap-0.5 flex-1 justify-center overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          <div className="flex items-center gap-0.5 flex-1 justify-start sm:justify-center overflow-x-auto" style={{ scrollbarWidth: "none" }}>
 
             {/* Undo / Redo */}
             <Button
@@ -1719,26 +1719,26 @@ export default function ChapterEditor() {
               </Button>
             )}
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"} aria-label={ar ? "استعراض الصفحات" : "Page Navigator"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"} aria-label={ar ? "استعراض الصفحات" : "Page Navigator"}>
               <LayoutGrid className="w-4 h-4" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowStoryBible(true)} title={ar ? "الكتاب المقدس للقصة" : "Story Bible"} aria-label={ar ? "الكتاب المقدس للقصة" : "Story Bible"}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => setShowStoryBible(true)} title={ar ? "الكتاب المقدس للقصة" : "Story Bible"} aria-label={ar ? "الكتاب المقدس للقصة" : "Story Bible"}>
               <BookOpen className="w-4 h-4" />
             </Button>
 
             <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden md:flex" onClick={() => fileInputRef.current?.click()} title={ar ? "إدراج صورة" : "Insert Image"} aria-label={ar ? "إدراج صورة" : "Insert Image"}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => fileInputRef.current?.click()} title={ar ? "إدراج صورة" : "Insert Image"} aria-label={ar ? "إدراج صورة" : "Insert Image"}>
               <ImageIcon className="w-4 h-4" />
             </Button>
 
 
-            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors hidden sm:flex" onClick={() => setShowCustomizer(true)} title={t("settings")} aria-label={t("settings")}>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => setShowCustomizer(true)} title={t("settings")} aria-label={t("settings")}>
               <Palette className="w-4 h-4" />
             </Button>
 
             {/* Page Style */}
-            <div className="relative hidden sm:block">
+            <div className="relative">
               <Button
                 variant="ghost" size="icon"
                 className={`w-8 h-8 rounded-lg transition-colors ${showPageStylePicker || (prefs.pageStyle && prefs.pageStyle !== "blank") ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`}
@@ -1758,11 +1758,11 @@ export default function ChapterEditor() {
               )}
             </div>
 
-            <div className="w-px h-5 bg-border/40 mx-1 hidden sm:block" />
+            <div className="w-px h-5 bg-border/40 mx-1" />
 
             <AmbientSoundscape />
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors hidden sm:flex ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"} aria-label={ar ? "عرض مرجعي" : "Reference Mode"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"} aria-label={ar ? "عرض مرجعي" : "Reference Mode"}>
               <PanelRight className="w-4 h-4" />
             </Button>
 
