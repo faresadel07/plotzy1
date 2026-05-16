@@ -25,6 +25,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useTheme } from "next-themes";
 import { type BookPreferences } from "@/shared/schema";
 import { PageStylePicker, PAGE_STYLES } from "@/components/page-style-picker";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { queryClient } from "@/lib/queryClient";
 import { saveDraft, loadDraft, clearDraft, type DraftEntry } from "@/lib/offline-drafts";
 import {
@@ -373,6 +374,7 @@ export default function ChapterEditor() {
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isPrintView, setIsPrintView] = useState(false);
+  const isPhone = useIsPhone();
   const [isTypewriterMode, setIsTypewriterMode] = useState(() =>
     localStorage.getItem("plotzy-typewriter-mode") === "true"
   );
@@ -2026,12 +2028,19 @@ export default function ChapterEditor() {
           </div>
         )}
 
-        {/* Zoom wrapper */}
+        {/* Zoom wrapper. On phones the scaled page must also shrink its layout
+            footprint (transform alone keeps the unscaled ~paper-width box,
+            which pushes the page off-centre and clips it on a narrow screen),
+            so we give it the scaled width + auto margins and scale from the
+            top-left. Desktop/iPad keep the original top-center transform. */}
         <div
           style={{
             transform: `scale(${clampedZoom})`,
-            transformOrigin: "top center",
+            transformOrigin: isPhone ? "top left" : "top center",
             transition: "transform 0.2s ease",
+            ...(isPhone
+              ? { width: dynPageW * clampedZoom, marginLeft: "auto", marginRight: "auto" }
+              : {}),
           }}
         >
 

@@ -262,7 +262,7 @@ export function RichWritingToolbar({
         onMouseLeave={e => { if (isFocusMode) (e.currentTarget as HTMLDivElement).style.opacity = "0.08"; }}
       >
         <div
-          className="h-10 px-2 flex items-center justify-center gap-0.5 overflow-x-auto"
+          className="h-10 px-2 flex items-center justify-start sm:justify-center gap-0.5 overflow-x-auto"
           style={{ scrollbarWidth: "none", color: fg }}
           dir="ltr"
         >
