@@ -66,7 +66,9 @@ router.post("/api/guide/pdf", requireAuth, async (req, res) => {
     }
     // If we already started streaming the PDF we can't send JSON; just end.
     if (res.headersSent) return res.end();
-    return res.status(500).json({ message: "Failed to generate the guide PDF" });
+    // Surface the real reason so we stop guessing in production.
+    const detail = (err as any)?.message ? String((err as any).message).slice(0, 300) : "unknown error";
+    return res.status(500).json({ message: `Failed to generate the guide PDF: ${detail}` });
   }
 });
 

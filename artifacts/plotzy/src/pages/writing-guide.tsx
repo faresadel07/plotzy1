@@ -740,7 +740,10 @@ export default function WritingGuide() {
         body: JSON.stringify(buildGuidePayload()),
       });
       if (res.status === 401) { setAuthOpen(true); return; }
-      if (!res.ok) throw new Error("failed");
+      if (!res.ok) {
+        const info = await res.json().catch(() => null);
+        throw new Error(info?.message || "failed");
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -750,8 +753,12 @@ export default function WritingGuide() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch {
-      toast({ title: ar ? "تعذّر إنشاء ملف الـ PDF" : "Couldn't generate the PDF", variant: "destructive" });
+    } catch (e: any) {
+      toast({
+        title: ar ? "تعذّر إنشاء ملف الـ PDF" : "Couldn't generate the PDF",
+        description: typeof e?.message === "string" && e.message !== "failed" ? e.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setDownloadingPdf(false);
     }
