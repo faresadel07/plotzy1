@@ -589,23 +589,22 @@ export default function ChapterEditor() {
   // Per-page editor refs for cursor management after auto-split
   const pageEditorRefs = useRef<(Editor | null)[]>([]);
 
-  // Apply the font currently chosen in the toolbar (the active page's font)
-  // to EVERY page of the chapter at once. Each page is its own TipTap
-  // instance, so a single selection can't span them — instead we select all
-  // in every page editor and set the same font family across all of them.
-  const applyFontToWholeChapter = useCallback(() => {
-    const active = activeToolbarEditor || tiptapEditorRef.current;
-    if (!active) return;
-    const font = active.getAttributes("textStyle")?.fontFamily as string | undefined;
+  // Set the font for the WHOLE chapter at once. Each page is its own TipTap
+  // instance and pages mount lazily, so iterating page editors only ever
+  // reaches the loaded ones. The robust lever is the global font pref: every
+  // page (mounted or not) takes its base font from `effectivePrefs.fontFamily`
+  // via the RichChapterEditor `fontFamily` prop, so changing it re-fonts the
+  // entire chapter and persists. We also strip inline per-selection font
+  // overrides on the currently-mounted pages so the new base shows uniformly.
+  const applyFontToWholeChapter = useCallback((fontId: string) => {
+    const np = { ...prefs, fontFamily: fontId } as BookPreferences;
+    setPrefs(np);
+    handleSavePrefs(np);
     pageEditorRefs.current.forEach((ed) => {
       if (!ed || ed.isDestroyed) return;
-      const chain = ed.chain().selectAll();
-      if (font) chain.setFontFamily(font);
-      else chain.unsetFontFamily();
-      chain.run();
+      ed.chain().selectAll().unsetFontFamily().run();
     });
-    requestAnimationFrame(() => { try { active.commands.focus(); } catch { /* noop */ } });
-  }, [activeToolbarEditor]);
+  }, [prefs]);
   // Which page index should receive focus once its editor mounts (after a split)
   const nextPageFocusRef = useRef<number>(-1);
   // Pages that were freshly created by a user split and need overflow check on mount

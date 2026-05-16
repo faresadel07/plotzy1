@@ -98,9 +98,9 @@ interface RichWritingToolbarProps {
   isDark?: boolean;
   paperSize?: string;
   onPaperSizeChange?: (id: string) => void;
-  /** When provided, shows a button that applies the current font to the
+  /** When provided, shows a button that sets the given font (by id) for the
    *  whole chapter (every page), not just the current page. */
-  onApplyFontToWholeChapter?: () => void;
+  onApplyFontToWholeChapter?: (fontId: string) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -128,6 +128,7 @@ export function RichWritingToolbar({
   const [styleDropOpen, setStyleDropOpen] = useState(false);
   const [styleDropRect, setStyleDropRect] = useState<{ top: number; left: number } | null>(null);
   const [fontDropOpen, setFontDropOpen] = useState(false);
+  const [lastFontId, setLastFontId] = useState<string | null>(null);
   const [fontDropRect, setFontDropRect] = useState<{ top: number; left: number } | null>(null);
   const [fontSearch, setFontSearch] = useState("");
   const [pageSizeDropOpen, setPageSizeDropOpen] = useState(false);
@@ -212,6 +213,7 @@ export function RichWritingToolbar({
   const applyFont = (font: typeof FONT_OPTIONS[number]) => {
     if (!editor) return;
     restoreSelection()!.setFontFamily(font.fontFamily).run();
+    setLastFontId(font.id);
     setFontDropOpen(false);
   };
 
@@ -295,7 +297,14 @@ export function RichWritingToolbar({
           </button>
 
           {onApplyFontToWholeChapter && (
-            <button onClick={() => onApplyFontToWholeChapter()} style={btn()} title="Apply the current font to the WHOLE chapter (all pages)"
+            <button
+              onClick={() => {
+                const css = editor?.getAttributes("textStyle")?.fontFamily as string | undefined;
+                const derived = css ? FONT_OPTIONS.find(f => f.fontFamily === css)?.id : undefined;
+                const id = lastFontId ?? derived;
+                if (id) onApplyFontToWholeChapter(id);
+              }}
+              style={btn()} title="Apply the current font to the WHOLE chapter (all pages)"
               onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
               <Book className="w-3.5 h-3.5" />
