@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
-import { requireAdmin, requireBookOwner } from "../middleware/auth";
+import { requireAdmin, requireBookOwner, requireAuth } from "../middleware/auth";
+import { buildGuidePdf } from "../lib/guide-pdf";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
@@ -15,6 +16,57 @@ import { logAdminAction } from "../lib/audit-log";
 import crypto from "crypto";
 
 const router = Router();
+
+// ─── Plotzy Writing Guide PDF (auth-gated) ──────────────────────────────────
+// requireAuth makes the gate server-enforced: a logged-out request can never
+// get the file, so the client-side "open the login modal" is just UX. The
+// frontend sends the already-localized guide content; we lay it out into a
+// branded, watermarked, copyright-stamped PDF.
+const guidePdfSchema = z.object({
+  lang: z.enum(["en", "ar"]).default("en"),
+  title: z.string().min(1).max(200),
+  subtitle: z.string().max(300).optional(),
+  sections: z
+    .array(
+      z.object({
+        heading: z.string().min(1).max(200),
+        blocks: z
+          .array(
+            z.object({
+              title: z.string().max(300).optional(),
+              body: z.string().max(8000).optional(),
+              bullets: z.array(z.string().max(1000)).max(60).optional(),
+            }),
+          )
+          .max(200),
+      }),
+    )
+    .min(1)
+    .max(40),
+});
+
+router.post("/api/guide/pdf", requireAuth, async (req, res) => {
+  try {
+    const parsed = guidePdfSchema.parse(req.body);
+    const { lang, ...payload } = parsed;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="Plotzy-Writing-Guide.pdf"',
+    );
+    res.setHeader("Cache-Control", "private, no-store");
+    await buildGuidePdf(res, payload, lang);
+    return;
+  } catch (err) {
+    logger.error({ err }, "Guide PDF generation failed");
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: err.errors[0]?.message || "Invalid payload" });
+    }
+    // If we already started streaming the PDF we can't send JSON; just end.
+    if (res.headersSent) return res.end();
+    return res.status(500).json({ message: "Failed to generate the guide PDF" });
+  }
+});
 
 // ── Book Series ─────────────────────────────────────────────────────────────
 

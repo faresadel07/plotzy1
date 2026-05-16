@@ -14,8 +14,13 @@ import {
   CheckCircle2, Flame, Compass, Target, Mic2,
   Scissors, Send, RefreshCw, Eye, Brain, Sparkles,
   TrendingUp, MessageSquare, Feather, Award,
-  Circle, Triangle, Square, Hexagon,
+  Circle, Triangle, Square, Hexagon, Download, Loader2,
 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { AuthModal } from "@/components/auth-modal";
+import { useToast } from "@/hooks/use-toast";
+
+const GUIDE_API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -661,6 +666,96 @@ export default function WritingGuide() {
     genres, structures, characterPillars, arcTypes, dialoguePrinciples,
     writingProcess, selfEditingChecklist, beginnerMistakes, sections,
   } = localizeGuide(lang);
+
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [authOpen, setAuthOpen] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const labelFor = (id: string) => sections.find((s: any) => s.id === id)?.label || id;
+
+  function buildGuidePayload() {
+    const sec: { heading: string; blocks: { title?: string; body?: string; bullets?: string[] }[] }[] = [];
+    sec.push({
+      heading: labelFor("genres"),
+      blocks: genres.map((g: any) => ({
+        title: g.name,
+        body: [
+          g.description,
+          g.subgenres?.length ? (ar ? `أنواع فرعية: ${g.subgenres.join("، ")}` : `Subgenres: ${g.subgenres.join(", ")}`) : "",
+          g.tip ? (ar ? `نصيحة: ${g.tip}` : `Tip: ${g.tip}`) : "",
+        ].filter(Boolean).join("\n\n"),
+        bullets: g.conventions || [],
+      })),
+    });
+    const structBlocks: { title?: string; body?: string; bullets?: string[] }[] = [];
+    structures.forEach((s: any) => {
+      structBlocks.push({ title: `${s.name} — ${s.tag}`, body: s.description });
+      (s.acts || []).forEach((a: any) => structBlocks.push({ title: a.label, bullets: a.points || [] }));
+    });
+    sec.push({ heading: labelFor("structure"), blocks: structBlocks });
+    const charBlocks: { title?: string; body?: string; bullets?: string[] }[] =
+      characterPillars.map((p: any) => ({ title: p.title, body: p.description, bullets: p.examples || [] }));
+    arcTypes.forEach((a: any) => charBlocks.push({
+      title: a.name,
+      body: [a.description, a.example ? (ar ? `مثال: ${a.example}` : `e.g. ${a.example}`) : ""].filter(Boolean).join("\n"),
+    }));
+    sec.push({ heading: labelFor("characters"), blocks: charBlocks });
+    sec.push({
+      heading: labelFor("dialogue"),
+      blocks: dialoguePrinciples.map((d: any) => ({
+        title: d.title,
+        body: d.description,
+        bullets: [ar ? `ضعيف: ${d.bad}` : `Weak: ${d.bad}`, ar ? `أفضل: ${d.good}` : `Better: ${d.good}`],
+      })),
+    });
+    sec.push({
+      heading: labelFor("process"),
+      blocks: writingProcess.map((w: any) => ({ title: w.title, body: w.description, bullets: w.actions || [] })),
+    });
+    sec.push({
+      heading: labelFor("editing"),
+      blocks: selfEditingChecklist.map((c: any) => ({ title: c.category, bullets: c.items || [] })),
+    });
+    sec.push({
+      heading: labelFor("mistakes"),
+      blocks: beginnerMistakes.map((m: any) => ({ title: m.mistake, body: m.fix })),
+    });
+    return {
+      lang: ar ? "ar" : "en",
+      title: ar ? "دليل الكتابة من Plotzy" : "The Plotzy Writing Guide",
+      subtitle: ar ? "من الصفحة البيضاء إلى كتاب مكتمل" : "From blank page to finished book",
+      sections: sec,
+    };
+  }
+
+  async function handleDownloadPdf() {
+    if (!user) { setAuthOpen(true); return; }
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(`${GUIDE_API_BASE}/api/guide/pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(buildGuidePayload()),
+      });
+      if (res.status === 401) { setAuthOpen(true); return; }
+      if (!res.ok) throw new Error("failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Plotzy-Writing-Guide.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: ar ? "تعذّر إنشاء ملف الـ PDF" : "Couldn't generate the PDF", variant: "destructive" });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
   const [activeSection, setActiveSection] = useState("genres");
   const [expandedGenre, setExpandedGenre] = useState<string | null>(null);
   const [activeStructure, setActiveStructure] = useState(0);
@@ -763,6 +858,27 @@ export default function WritingGuide() {
             <span>{ar ? "7 أقسام" : "7 sections"}</span>
             <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40" />
             <span>{ar ? "لكتّاب كل المستويات" : "For writers at every level"}</span>
+          </div>
+
+          <div className="mt-6">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
+              style={{ background: "#fff", color: "#0a0a0a" }}
+            >
+              {downloadingPdf
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <Download className="w-4 h-4" />}
+              {downloadingPdf
+                ? (ar ? "جارٍ التحضير…" : "Preparing…")
+                : (ar ? "تنزيل الدليل PDF" : "Download Guide PDF")}
+            </button>
+            <p className="mt-2 text-[10px] text-muted-foreground/60">
+              {ar
+                ? "بعلامة مائية وحقوق محفوظة لـ Plotzy · يتطلب تسجيل الدخول"
+                : "Watermarked, © Plotzy · sign-in required"}
+            </p>
           </div>
         </div>
       </motion.header>
@@ -1422,6 +1538,7 @@ export default function WritingGuide() {
       </div>{/* end centered column wrapper */}
 
       </div>
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </Layout>
   );
 }
