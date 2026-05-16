@@ -7,7 +7,7 @@ import {
   List, ListOrdered, Link as LinkIcon,
   Minus, Plus, Undo2, Redo2, ChevronDown,
   Highlighter, Indent, Outdent, Quote,
-  BookOpen, Book, Layers, FileText,
+  BookOpen, Book, Layers, FileText, TextSelect,
 } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -279,6 +279,15 @@ export function RichWritingToolbar({
             onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <Redo2 className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Select the whole chapter at once (one editor under the hood),
+              so a font / size / format change applies to all pages without
+              going page by page. */}
+          <button onClick={() => editor?.chain().focus().selectAll().run()} style={btn()} title="Select all (Ctrl+A)"
+            onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+            <TextSelect className="w-3.5 h-3.5" />
           </button>
 
           {/* Page size + manual zoom are desktop-only: on a phone the page
