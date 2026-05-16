@@ -28,6 +28,11 @@ const MOBILE_READY_PATTERNS: RegExp[] = [
   /^\/books\/[^/]+\/?$/,          // book details — the gateway (phase 2)
   /^\/books\/[^/]+\/chapters\//,  // chapter editor — the writing surface (phase 2)
   /^\/articles\//,                // article editor (phase 3)
+  /^\/books\/[^/]+\/audiobook($|\/)/,       // audiobook studio — already responsive (phase 4)
+  /^\/books\/[^/]+\/find-publishers($|\/)/, // publish flow — already responsive (phase 4)
+  // NOTE: /books/:id/cover-designer is intentionally NOT unblocked — it is a
+  // drag/canvas tool that is a poor experience on a phone (it already shows
+  // its own md:hidden fallback). It stays desktop-only by design.
 ];
 
 function isDesktopOnlyRoute(pathname: string): boolean {
