@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import {
   BookOpen, Bell, Mail, PenTool, Send, Library, Plus, Users,
   FileText, Loader2, Clock,
@@ -57,6 +58,7 @@ function formatNumber(n: number): string {
 export default function DashboardDemo() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const isPhone = useIsPhone();
 
   // Fetch user's books
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
@@ -142,7 +144,7 @@ export default function DashboardDemo() {
           {/* ── Welcome Header ──────────────────────────────── */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", margin: 0 }}>
+              <h1 style={{ fontSize: isPhone ? 22 : 28, fontWeight: 700, letterSpacing: "-0.03em", margin: 0 }}>
                 Welcome back, {user?.displayName || user?.email?.split("@")[0] || "Writer"}
               </h1>
               <span style={{
@@ -218,8 +220,8 @@ export default function DashboardDemo() {
             ) : (
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                gap: 14,
+                gridTemplateColumns: isPhone ? "repeat(2, 1fr)" : "repeat(auto-fill, minmax(180px, 1fr))",
+                gap: isPhone ? 10 : 14,
               }}>
                 {recentBooks.map(book => (
                   <BookCard key={book.id} book={book} />
@@ -236,7 +238,7 @@ export default function DashboardDemo() {
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    minHeight: 240,
+                    minHeight: isPhone ? 188 : 240,
                     cursor: "pointer",
                     transition: "border-color 0.2s, background 0.2s",
                   }}
@@ -279,7 +281,7 @@ export default function DashboardDemo() {
                   style={{
                     background: C1, border: `1px dashed ${B}`, borderRadius: 12, padding: 20,
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                    minHeight: 240, cursor: "pointer", transition: "border-color 0.2s, background 0.2s",
+                    minHeight: isPhone ? 188 : 240, cursor: "pointer", transition: "border-color 0.2s, background 0.2s",
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.background = C2; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = C1; }}
