@@ -944,6 +944,15 @@ export async function registerRoutes(
       // ~16k-char excerpt is plenty for these reports/blurbs and is reliable.
       const truncated = text.slice(0, 16000);
 
+      // Reply in the manuscript's own language: Arabic in -> Arabic report,
+      // English in -> English report. Decided by which script dominates the
+      // sample (Arabic block vs Latin letters).
+      const arCount = (truncated.match(/[؀-ۿ]/g) || []).length;
+      const enCount = (truncated.match(/[A-Za-z]/g) || []).length;
+      const langInstruction = arCount > enCount
+        ? " Respond ENTIRELY in Arabic (Modern Standard Arabic), including every section heading and label — the manuscript is Arabic, so the report must be Arabic."
+        : " Respond entirely in English.";
+
       type PromptDef = { system: string; user: string };
       const prompts: Record<string, PromptDef> = {
         "dev-editor": {
@@ -1003,7 +1012,7 @@ export async function registerRoutes(
       const response = await openai.chat.completions.create({
         model: AI_TEXT_MODEL,
         messages: [
-          { role: "system", content: prompt.system },
+          { role: "system", content: prompt.system + langInstruction },
           { role: "user", content: prompt.user },
         ],
         max_tokens: 2500,
