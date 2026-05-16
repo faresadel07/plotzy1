@@ -145,6 +145,16 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
   const srcAssets = path.resolve(artifactDir, "src/assets");
   const distAssets = path.resolve(distDir, "assets");
   await cp(srcAssets, distAssets, { recursive: true });
+
+  // pdfkit loads its 14 standard-font metric files from `<dirname>/data/*.afm`.
+  // After bundling, <dirname> is dist/, so without this copy every
+  // PDFDocument (guide PDF, data export, certificates) dies with
+  // "ENOENT ... dist/data/Helvetica.afm". Copy pdfkit's AFM data into
+  // dist/data/ at build time.
+  const pdfkitDir = path.dirname(globalThis.require.resolve("pdfkit/package.json"));
+  await cp(path.join(pdfkitDir, "js", "data"), path.resolve(distDir, "data"), {
+    recursive: true,
+  });
 }
 
 buildAll().catch((err) => {
