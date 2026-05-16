@@ -2,7 +2,6 @@ import { Router } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
 import { requireAdmin, requireBookOwner, requireAuth } from "../middleware/auth";
-import { buildGuidePdf } from "../lib/guide-pdf";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
@@ -55,6 +54,9 @@ router.post("/api/guide/pdf", requireAuth, async (req, res) => {
       'attachment; filename="Plotzy-Writing-Guide.pdf"',
     );
     res.setHeader("Cache-Control", "private, no-store");
+    // Lazy import: pdfkit pulls a heavy fontkit chain that must NOT load at
+    // server boot (it crashed the process). Same pattern as data-export-pdf.
+    const { buildGuidePdf } = await import("../lib/guide-pdf");
     await buildGuidePdf(res, payload, lang);
     return;
   } catch (err) {
