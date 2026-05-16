@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import type { Editor } from "@tiptap/react";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
@@ -134,6 +135,7 @@ export function RichWritingToolbar({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const currentPageSize = PAGE_SIZE_OPTIONS.find(p => p.id === paperSize) || PAGE_SIZE_OPTIONS[2];
+  const isPhone = useIsPhone();
   const sizeInputRef = useRef<HTMLInputElement>(null);
   const pageSizeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -279,6 +281,9 @@ export function RichWritingToolbar({
             <Redo2 className="w-3.5 h-3.5" />
           </button>
 
+          {/* Page size + manual zoom are desktop-only: on a phone the page
+              auto-fills the screen width, so these are pointless clutter. */}
+          {!isPhone && (<>
           <Sep />
 
           {/* ── Page Size ── */}
@@ -332,6 +337,7 @@ export function RichWritingToolbar({
               <Plus className="w-3 h-3" />
             </button>
           </div>
+          </>)}
 
           <Sep />
 
