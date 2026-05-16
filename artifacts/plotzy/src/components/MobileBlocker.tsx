@@ -24,7 +24,9 @@ const DESKTOP_ONLY_PATTERNS: RegExp[] = [
 // page's mobile layout is implemented and verified — keeping the rollout
 // safe and incremental. Empty = current behaviour is unchanged for everyone.
 const MOBILE_READY_PATTERNS: RegExp[] = [
-  /^\/dashboard($|\/)/, // My Library / dashboard — phone layout done (phase 1)
+  /^\/dashboard($|\/)/,            // My Library / dashboard (phase 1)
+  /^\/books\/[^/]+\/?$/,          // book details — the gateway (phase 2)
+  /^\/books\/[^/]+\/chapters\//,  // chapter editor — the writing surface (phase 2)
 ];
 
 function isDesktopOnlyRoute(pathname: string): boolean {

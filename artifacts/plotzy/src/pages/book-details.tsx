@@ -31,6 +31,7 @@ import type { BookPages } from "@/shared/schema";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
+import { useIsPhone } from "@/hooks/use-is-phone";
 
 const RTL_LANGS = ["ar", "he", "fa", "ur"];
 
@@ -127,6 +128,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const params = propParams || matchParams;
   const bookId = params?.id ? parseInt(params.id) : 0;
   const { t, lang, isRTL } = useLanguage();
+  const isPhone = useIsPhone();
 
   const { data: book, isLoading: isLoadingBook, error: bookError } = useBook(bookId);
   const { data: chapters, isLoading: isLoadingChapters, error: chaptersError } = useChapters(bookId);
@@ -362,12 +364,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       />
 
       <div
-        className={`grid grid-cols-1 lg:grid-cols-12 h-full overflow-hidden ${isRTL ? "direction-rtl" : ""}`}
+        className={`grid grid-cols-1 lg:grid-cols-12 h-full ${isPhone ? "overflow-y-auto" : "overflow-hidden"} ${isRTL ? "direction-rtl" : ""}`}
         dir={isRTL ? "rtl" : "ltr"}
       >
 
         {/* ── Left Column ── */}
-        <div className="lg:col-span-4 flex flex-col gap-4 h-full overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className={`lg:col-span-4 flex flex-col gap-4 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10`} style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
           {/* Cover Card */}
           <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
@@ -520,7 +522,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         </div>
 
         {/* Right Column */}
-        <div className="lg:col-span-8 h-full overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10 space-y-5">
+        <div className={`lg:col-span-8 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10 space-y-5`}>
 
           {/* ── Top bar: underline tabs + action buttons ── */}
           <div className="flex items-center justify-between gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>
