@@ -937,7 +937,12 @@ export async function registerRoutes(
         }
       }
 
-      const truncated = text.slice(0, 50000);
+      // Cap the manuscript sample well below the model's per-request token
+      // budget. 50k chars of (especially Arabic) text blows past the
+      // llama-3.3-70b request/rate limits, which threw and surfaced to every
+      // marketplace tool as a generic "Analysis failed". A representative
+      // ~16k-char excerpt is plenty for these reports/blurbs and is reliable.
+      const truncated = text.slice(0, 16000);
 
       type PromptDef = { system: string; user: string };
       const prompts: Record<string, PromptDef> = {
@@ -1006,9 +1011,14 @@ export async function registerRoutes(
 
       const report = response.choices[0]?.message?.content || "No analysis returned.";
       return finishAnalysis(report);
-    } catch (err) {
+    } catch (err: any) {
       logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Analysis failed" });
+      // Surface the upstream reason (rate limit, context length, etc.)
+      // instead of an opaque "Analysis failed" so it is actionable.
+      const detail = err?.error?.message || err?.message;
+      return res.status(500).json({
+        message: detail ? `Analysis failed: ${String(detail).slice(0, 200)}` : "Analysis failed",
+      });
     }
   });
 
