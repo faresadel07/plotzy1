@@ -18,7 +18,16 @@ const DESKTOP_ONLY_PATTERNS: RegExp[] = [
   /^\/trash($|\/)/,    // /trash recycle bin view
 ];
 
+// Routes that were desktop-only but have since been made fully phone-ready.
+// A match here overrides DESKTOP_ONLY_PATTERNS, so the blocker no longer
+// fires for it. We add patterns here one page at a time, only AFTER that
+// page's mobile layout is implemented and verified — keeping the rollout
+// safe and incremental. Empty = current behaviour is unchanged for everyone.
+const MOBILE_READY_PATTERNS: RegExp[] = [
+];
+
 function isDesktopOnlyRoute(pathname: string): boolean {
+  if (MOBILE_READY_PATTERNS.some((pattern) => pattern.test(pathname))) return false;
   return DESKTOP_ONLY_PATTERNS.some((pattern) => pattern.test(pathname));
 }
 
