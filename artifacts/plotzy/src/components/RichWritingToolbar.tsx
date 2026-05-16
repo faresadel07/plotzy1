@@ -98,6 +98,9 @@ interface RichWritingToolbarProps {
   isDark?: boolean;
   paperSize?: string;
   onPaperSizeChange?: (id: string) => void;
+  /** When provided, shows a button that applies the current font to the
+   *  whole chapter (every page), not just the current page. */
+  onApplyFontToWholeChapter?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -111,6 +114,7 @@ export function RichWritingToolbar({
   isDark = false,
   paperSize = "trade",
   onPaperSizeChange,
+  onApplyFontToWholeChapter,
 }: RichWritingToolbarProps) {
   // Force re-render on every editor transaction so active states update in real-time
   const [, forceUpdate] = useState(0);
@@ -284,11 +288,19 @@ export function RichWritingToolbar({
           {/* Select the whole chapter at once (one editor under the hood),
               so a font / size / format change applies to all pages without
               going page by page. */}
-          <button onClick={() => editor?.chain().focus().selectAll().run()} style={btn()} title="Select all (Ctrl+A)"
+          <button onClick={() => editor?.chain().focus().selectAll().run()} style={btn()} title="Select all on this page (Ctrl+A)"
             onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <TextSelect className="w-3.5 h-3.5" />
           </button>
+
+          {onApplyFontToWholeChapter && (
+            <button onClick={() => onApplyFontToWholeChapter()} style={btn()} title="Apply the current font to the WHOLE chapter (all pages)"
+              onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+              <Book className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Page size + manual zoom are desktop-only: on a phone the page
               auto-fills the screen width, so these are pointless clutter. */}
