@@ -632,6 +632,19 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         .tiptap-editor p {
           margin: 0 0 0.6em;
         }
+        /* Make every block compute its own base direction from its text
+           (Unicode bidi paragraph algorithm). Without this, pasted Arabic
+           paragraphs inherit an LTR base and render reversed — punctuation
+           and numbers jump to the wrong side. With plaintext, each block
+           auto-detects RTL/LTR from its first strong character. */
+        .tiptap-editor p,
+        .tiptap-editor h1,
+        .tiptap-editor h2,
+        .tiptap-editor h3,
+        .tiptap-editor li,
+        .tiptap-editor blockquote {
+          unicode-bidi: plaintext;
+        }
         .tiptap-editor h1 {
           font-size: 2em;
           font-weight: 700;
