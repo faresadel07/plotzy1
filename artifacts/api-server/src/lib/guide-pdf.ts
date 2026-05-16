@@ -21,12 +21,17 @@ const ASSETS_DIR = (() => {
 })();
 const CAIRO_PATH = resolve(ASSETS_DIR, "fonts", "Cairo.ttf");
 
-const COLOR_TITLE = "#0a0a0a";
-const COLOR_HEADER = "#111111";
-const COLOR_BODY = "#333333";
-const COLOR_LABEL = "#888888";
-const COLOR_DIVIDER = "#e5e5e5";
-const COLOR_ACCENT = "#7c6af7";
+// Dark theme — faithful to the site's `.dark` palette (index.css):
+// --background #0a0a0a · --foreground ~#efefef · --muted-foreground ~#8c8c8c
+// --border ~#242424 · Plotzy brand accent #7c6af7.
+const COLOR_BG = "#0a0a0a"; // full-bleed page background (site --background)
+const COLOR_TITLE = "#f5f5f6"; // headline off-white (site --foreground)
+const COLOR_HEADER = "#ededee"; // block titles
+const COLOR_BODY = "#c5c5cb"; // comfortable body grey on dark
+const COLOR_BULLET = "#b7b7be"; // bullet text
+const COLOR_LABEL = "#7e7e85"; // subtitle / meta / footer (site --muted-foreground)
+const COLOR_DIVIDER = "#212126"; // hairline rules (site --border)
+const COLOR_ACCENT = "#7c6af7"; // Plotzy brand purple
 const PAGE_MARGIN = 56;
 
 export interface GuidePdfBlock {
@@ -81,17 +86,22 @@ export async function buildGuidePdf(
   const pageH = doc.page.height;
   const contentW = pageW - PAGE_MARGIN * 2;
 
-  // Faint diagonal PLOTZY watermark — drawn on every page, never moves the
-  // text cursor (save/restore graphics + restore x/y explicitly).
-  const watermark = () => {
+  // Paint the full-bleed dark background + a faint diagonal PLOTZY watermark
+  // on every page. Drawn before any page content, and never moves the text
+  // cursor (save/restore graphics + restore x/y explicitly). Re-run on every
+  // auto-added page so overflowed text still lands on a dark canvas.
+  const decoratePage = () => {
     const sx = doc.x;
     const sy = doc.y;
+    doc.save();
+    doc.rect(0, 0, pageW, pageH).fill(COLOR_BG);
+    doc.restore();
     doc.save();
     doc.rotate(-32, { origin: [pageW / 2, pageH / 2] });
     doc
       .fontSize(78)
       .fillColor(COLOR_ACCENT)
-      .opacity(0.06)
+      .opacity(0.08)
       .text("PLOTZY", 0, pageH / 2 - 52, {
         width: pageW,
         align: "center",
@@ -102,8 +112,8 @@ export async function buildGuidePdf(
     doc.x = sx;
     doc.y = sy;
   };
-  watermark(); // first (auto-created) page
-  doc.on("pageAdded", watermark);
+  decoratePage(); // first (auto-created) page
+  doc.on("pageAdded", decoratePage);
 
   const drawDivider = () => {
     doc.moveDown(0.5);
@@ -173,7 +183,7 @@ export async function buildGuidePdf(
           ensureSpace(20);
           doc
             .fontSize(10)
-            .fillColor(COLOR_BODY)
+            .fillColor(COLOR_BULLET)
             .text(ar ? `${it} •` : `• ${it}`, { align, lineGap: 1.5 });
         }
         doc.moveDown(0.1);
@@ -202,10 +212,23 @@ export async function buildGuidePdf(
     );
 
   // ── Per-page footer + numbers ─────────────────────────────────────────
+  // Stamping text below the bottom margin makes pdfkit auto-add a fresh page
+  // for every page in the loop (it doubled the page count -> a run of blank
+  // numbered pages at the end). Zeroing the bottom margin before each stamp
+  // keeps the footer on its own page and stops the runaway pagination.
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
+    doc.page.margins.bottom = 0;
     const fy = pageH - PAGE_MARGIN + 16;
+    doc
+      .save()
+      .strokeColor(COLOR_DIVIDER)
+      .lineWidth(0.75)
+      .moveTo(PAGE_MARGIN, fy - 9)
+      .lineTo(pageW - PAGE_MARGIN, fy - 9)
+      .stroke()
+      .restore();
     doc.fontSize(8).fillColor(COLOR_LABEL);
     doc.text(`© ${year} Plotzy · plotzy.co`, PAGE_MARGIN, fy, { lineBreak: false });
     doc.text(`${i - range.start + 1} / ${range.count}`, PAGE_MARGIN, fy, {
