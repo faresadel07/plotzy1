@@ -369,17 +369,17 @@ export class DatabaseStorage implements IStorage {
 
   async reorderChapters(updates: { id: number; order: number }[]): Promise<void> {
     if (updates.length === 0) return;
-    const ids = updates.map(u => Number(u.id)).filter(Number.isFinite);
-    if (ids.length === 0) return;
-    const orderCases = sql.join(
-      updates.map(u => sql`WHEN ${Number(u.id)} THEN ${Number(u.order)}`),
-      sql` `,
-    );
-    await db.execute(sql`
-      UPDATE chapters
-      SET "order" = CASE id ${orderCases} END
-      WHERE id IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})
-    `);
+    // Per-row updates via the query builder. The previous single raw
+    // `UPDATE ... SET "order" = CASE id WHEN ... END` failed on the
+    // serverless driver (untyped CASE/IN parameters), which surfaced as a
+    // 500 and "Couldn't save the new chapter order". Chapter counts are
+    // small, so N sequential updates is perfectly fine and reliable.
+    for (const u of updates) {
+      const id = Number(u.id);
+      const order = Number(u.order);
+      if (!Number.isFinite(id) || !Number.isFinite(order)) continue;
+      await db.update(chapters).set({ order }).where(eq(chapters.id, id));
+    }
   }
 
   // ─── Chapters ──────────────────────────────────────────────────────────────
