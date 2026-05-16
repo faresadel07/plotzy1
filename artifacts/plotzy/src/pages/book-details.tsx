@@ -364,7 +364,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       />
 
       <div
-        className={`grid grid-cols-1 lg:grid-cols-12 h-full ${isPhone ? "overflow-y-auto" : "overflow-hidden"} ${isRTL ? "direction-rtl" : ""}`}
+        className={`grid grid-cols-1 lg:grid-cols-12 h-full ${isPhone ? "overflow-y-auto overflow-x-hidden" : "overflow-hidden"} ${isRTL ? "direction-rtl" : ""}`}
         dir={isRTL ? "rtl" : "ltr"}
       >
 
@@ -525,10 +525,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         <div className={`lg:col-span-8 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10 space-y-5`}>
 
           {/* ── Top bar: underline tabs + action buttons ── */}
-          <div className="flex items-center justify-between gap-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>
+          <div className={isPhone ? "flex flex-col items-stretch gap-2" : "flex items-center justify-between gap-4"} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>
 
             {/* Underline tabs */}
-            <div className="flex items-center gap-0 -mb-px">
+            <div className={`flex items-center gap-0 -mb-px ${isPhone ? "overflow-x-auto" : ""}`}>
               {(
                 [
                   { key: "chapters",  icon: BookOpen,   label: lang === "ar" ? "الفصول"       : "Chapters",  ownerOnly: false },
@@ -559,7 +559,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             </div>
 
             {/* Action buttons — owner only for most */}
-            <div className="flex items-center gap-2 flex-shrink-0 pb-2">
+            <div className={`flex items-center gap-2 pb-2 ${isPhone ? "flex-wrap" : "flex-shrink-0"}`}>
               {isOwner && <button onClick={() => setShowCollabModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                 style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
