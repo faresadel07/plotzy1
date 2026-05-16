@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsPhone } from "@/hooks/use-is-phone";
 
 export type PageStyleId =
   | "blank" | "lined" | "dotted" | "graph" | "manuscript"
@@ -243,11 +244,20 @@ export function PageStylePicker({ currentStyle, isDark, onSelect, onClose }: Pag
   }, [onClose]);
 
   const activeId = currentStyle || "blank";
+  const isPhone = useIsPhone();
 
   return (
     <div
       ref={panelRef}
-      className="absolute top-full right-0 mt-2 w-[380px] z-[200] rounded-2xl border border-border/60 shadow-2xl overflow-hidden flex flex-col"
+      className={cn(
+        "z-[200] border-border/60 shadow-2xl overflow-hidden flex flex-col",
+        isPhone
+          // Phone: a full-width bottom sheet. The trigger lives inside the
+          // editor's horizontally-scrollable top bar, so an absolutely
+          // positioned popover would be clipped/overflow off-screen.
+          ? "fixed inset-x-0 bottom-0 w-full rounded-t-2xl border-t"
+          : "absolute top-full right-0 mt-2 w-[380px] rounded-2xl border",
+      )}
       style={{
         background: isDark
           ? "rgba(10,10,12,0.97)"
