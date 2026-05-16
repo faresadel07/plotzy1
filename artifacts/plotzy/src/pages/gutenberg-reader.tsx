@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { useLanguage } from "@/contexts/language-context";
 import {
@@ -231,28 +231,45 @@ export default function GutenbergReader() {
     try { return localStorage.getItem("plotzy_reader_font") || "Georgia, serif"; } catch { return "Georgia, serif"; }
   });
 
-  // Layout measurements
-  const readingRef = useRef<HTMLDivElement>(null);
-  const [readingSize, setReadingSize] = useState({ w: 900, h: 600 });
-  const [twoPage, setTwoPage] = useState(true);
+  // Layout measurements. The reading container only mounts AFTER the loading
+  // screen disappears, so a mount-time effect would see a null ref and never
+  // attach the observer — leaving the layout stuck at the desktop defaults
+  // (a two-page spread clipped into a phone screen). A callback ref fires
+  // exactly when the node mounts, and we seed state from the real viewport
+  // so phones render single-page from the very first frame.
+  const [readingSize, setReadingSize] = useState(() => ({
+    w: typeof window !== "undefined" ? window.innerWidth : 900,
+    h: typeof window !== "undefined" ? window.innerHeight : 600,
+  }));
+  const [twoPage, setTwoPage] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 700 : true
+  );
+  const roRef = useRef<ResizeObserver | null>(null);
 
-  useLayoutEffect(() => {
-    const el = readingRef.current;
-    if (!el) return;
+  const setReadingNode = useCallback((node: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (!node) return;
+    const apply = (w: number, h: number) => {
+      if (w > 0) { setReadingSize({ w, h }); setTwoPage(w >= 700); }
+    };
+    const r = node.getBoundingClientRect();
+    apply(r.width, r.height);
     const obs = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setReadingSize({ w: width, h: height });
-      setTwoPage(width >= 700);
+      apply(width, height);
     });
-    obs.observe(el);
-    return () => obs.disconnect();
+    obs.observe(node);
+    roRef.current = obs;
   }, []);
 
   // ── Compute portrait page dimensions (like a real book) ──────────────────
   // A real book: width ≈ 2/3 of height (portrait)
   const PAGE_H = Math.max(380, readingSize.h - 20);
   const PAGE_W_IDEAL = Math.round(PAGE_H * (5 / 7.5)); // ~6×9 inch book ratio
-  const maxSpreadW = readingSize.w - 80; // leave room for nav arrows
+  // Two-page reserves room for the floating side arrows. Single page (phone)
+  // hides those arrows, so it only needs small reading margins.
+  const maxSpreadW = readingSize.w - (twoPage ? 80 : 32);
   const PAGE_W = twoPage
     ? Math.min(PAGE_W_IDEAL, Math.floor((maxSpreadW - 8) / 2)) // 8 = spine
     : Math.min(560, maxSpreadW);
@@ -664,7 +681,7 @@ export default function GutenbergReader() {
 
       {/* ══ READING AREA ═════════════════════════════════════════════════════ */}
       <div
-        ref={readingRef}
+        ref={setReadingNode}
         className="flex-1 overflow-hidden relative flex items-center justify-center"
       >
         {/* Left arrow */}
