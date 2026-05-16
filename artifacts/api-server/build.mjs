@@ -66,7 +66,13 @@ async function buildAll() {
       "@prisma/client",
       "@mikro-orm/*",
       "@grpc/*",
-      "@swc/*",
+      // Only @swc/core is native and must stay external. @swc/helpers is
+      // pure-JS runtime helpers that fontkit (via pdfkit) require()s by
+      // deep subpath; externalizing it left the bundled dist unable to
+      // resolve it under pnpm's strict layout (crashed PDF generation).
+      // Let esbuild bundle @swc/helpers so the subpath resolves at build.
+      "@swc/core",
+      "@swc/core/*",
       "@aws-sdk/*",
       "@azure/*",
       // NOTE: @opentelemetry/* removed from externals (was here as a
