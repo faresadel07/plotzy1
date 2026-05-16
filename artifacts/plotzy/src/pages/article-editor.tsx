@@ -4,6 +4,7 @@ import { useRoute, Link } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
@@ -405,6 +406,7 @@ export default function ArticleEditor() {
   const updateArticle = useUpdateBook();
   const { toast } = useToast();
   const { isRTL } = useLanguage();
+  const isPhone = useIsPhone();
 
   /* ── state ── */
   const [title, setTitle]         = useState("");
@@ -498,7 +500,33 @@ export default function ArticleEditor() {
   const [floatingImages, setFloatingImages] = useState<FloatingImage[]>([]);
   const floatingImagesRef = useRef<FloatingImage[]>([]);
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const [containerW, setContainerW] = useState(620);
+  // Desktop/iPad keep the historical fixed 620px column. Phones seed from
+  // the real viewport so the article fits the screen even before the
+  // observer attaches.
+  const [containerW, setContainerW] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth < 700
+      ? Math.max(280, Math.min(window.innerWidth - 24, 620))
+      : 620,
+  );
+  const editorRoRef = useRef<ResizeObserver | null>(null);
+  const setEditorContainerNode = useCallback((node: HTMLDivElement | null) => {
+    editorContainerRef.current = node;
+    editorRoRef.current?.disconnect();
+    editorRoRef.current = null;
+    if (!node) return;
+    // Preserve the existing (accidental but stable) desktop width of 620px;
+    // only phones adopt the measured width so the page actually fits.
+    const apply = (w: number) => {
+      if (w > 0) setContainerW(isPhone ? Math.max(280, Math.round(w)) : 620);
+    };
+    apply(node.getBoundingClientRect().width);
+    const obs = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) apply(w);
+    });
+    obs.observe(node);
+    editorRoRef.current = obs;
+  }, [isPhone]);
 
   /* ── AI image generation ── */
   const [showImgAI, setShowImgAI]     = useState(false);
@@ -709,17 +737,9 @@ export default function ArticleEditor() {
   /* ── keep floatingImagesRef in sync ── */
   useEffect(() => { floatingImagesRef.current = floatingImages; }, [floatingImages]);
 
-  /* ── track editor container width ── */
-  useEffect(() => {
-    const el = editorContainerRef.current;
-    if (!el) return;
-    const obs = new ResizeObserver(entries => {
-      const w = entries[0]?.contentRect.width;
-      if (w) setContainerW(Math.round(w));
-    });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+  /* editor container width is tracked via the setEditorContainerNode
+     callback ref (attaches the observer when the node actually mounts —
+     a mount effect missed it because the loading screen renders first). */
 
   /* ── image ── */
   const handleImageFile = (file: File) => {
@@ -1019,7 +1039,7 @@ export default function ArticleEditor() {
           background:"rgba(10,10,10,0.98)",backdropFilter:"blur(20px)",
           borderBottom:`1px solid ${B}`,
           padding:"0 16px",height:48,
-          display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+          display:"flex",alignItems:"center",justifyContent:isPhone?"flex-start":"center",gap:6,
           overflowX:"auto" as any,
           scrollbarWidth:"none" as any,
         }}>
@@ -1138,7 +1158,7 @@ export default function ArticleEditor() {
             background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
             padding:"0 14px",height:44,
-            display:"flex",alignItems:"center",justifyContent:"center",gap:2,
+            display:"flex",alignItems:"center",justifyContent:isPhone?"flex-start":"center",gap:2,
             overflowX:"auto",
           }}
           onMouseDown={e => e.preventDefault()}
@@ -1581,7 +1601,7 @@ export default function ArticleEditor() {
           )}
 
           {/* TipTap editor with floating image overlay */}
-          <div ref={editorContainerRef} style={{ position: "relative" }}>
+          <div ref={setEditorContainerNode} style={{ position: "relative" }}>
             <EditorContent editor={editor} className="article-editor-content" dir={isRTL?"rtl":"ltr"}/>
             <FloatingImageOverlay
               images={floatingImages}

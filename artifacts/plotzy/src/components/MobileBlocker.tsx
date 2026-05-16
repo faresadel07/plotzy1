@@ -27,6 +27,7 @@ const MOBILE_READY_PATTERNS: RegExp[] = [
   /^\/dashboard($|\/)/,            // My Library / dashboard (phase 1)
   /^\/books\/[^/]+\/?$/,          // book details — the gateway (phase 2)
   /^\/books\/[^/]+\/chapters\//,  // chapter editor — the writing surface (phase 2)
+  /^\/articles\//,                // article editor (phase 3)
 ];
 
 function isDesktopOnlyRoute(pathname: string): boolean {
