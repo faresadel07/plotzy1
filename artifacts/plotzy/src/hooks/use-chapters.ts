@@ -92,7 +92,25 @@ export function useReorderChapters() {
       if (!res.ok) throw new Error("Failed to reorder chapters");
       return res.json();
     },
-    onSuccess: (_, variables) => {
+    // Optimistically apply the new order to the cached list so the rows
+    // stay in place on drop instead of snapping back until the server
+    // round-trip + refetch finishes (which read as "it didn't save").
+    onMutate: async ({ bookId, updates }) => {
+      const key = [api.chapters.list.path, bookId];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData(key);
+      const orderById = new Map(updates.map(u => [u.id, u.order]));
+      queryClient.setQueryData(key, (old: any) =>
+        Array.isArray(old)
+          ? old.map((c: any) => (orderById.has(c.id) ? { ...c, order: orderById.get(c.id) } : c))
+          : old
+      );
+      return { key, previous };
+    },
+    onError: (_err, _vars, ctx: any) => {
+      if (ctx?.previous !== undefined) queryClient.setQueryData(ctx.key, ctx.previous);
+    },
+    onSettled: (_d, _e, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.chapters.list.path, variables.bookId] });
     },
   });

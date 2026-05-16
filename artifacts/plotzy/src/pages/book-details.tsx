@@ -280,7 +280,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
     const [moved] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, moved);
     const updates = reordered.map((ch, i) => ({ id: ch.id, order: i + 1 }));
-    reorderChapters.mutate({ bookId, updates });
+    reorderChapters.mutate({ bookId, updates }, {
+      onError: () => toast({
+        title: lang === "ar" ? "تعذّر حفظ ترتيب الفصول" : "Couldn't save the new chapter order",
+        variant: "destructive",
+      }),
+    });
   };
 
   const handleStartRename = (e: React.MouseEvent, chapterId: number, title: string) => {
