@@ -460,18 +460,48 @@ export default function ChapterEditor() {
     autoZoomApplied.current = false;
   }, [chapterId]);
 
-  // Sync zoom from prefs when book loads
+  // Sync zoom from prefs when book loads. Skipped on phones — a saved
+  // desktop zoom would make no sense on a narrow screen.
   useEffect(() => {
+    if (isPhone) return;
     if (prefs.zoom !== undefined) {
       setZoom(prefs.zoom);
       autoZoomApplied.current = true;
     }
-  }, [prefs.zoom]);
+  }, [prefs.zoom, isPhone]);
 
   // Auto-fit zoom: show the full page height on first load when no saved zoom.
   // Uses effectivePrefs.paperSize as dep (pageDims is derived from it, but declared later).
   const paperSizeForZoom = effectivePrefs.paperSize || "trade";
+
+  // ── Phone: fill the screen width ──────────────────────────────────────────
+  // On a phone we do NOT shrink the whole paper to fit (that produced a tiny
+  // strip floating in black). Instead the page fills the viewport width and
+  // the writer scrolls vertically — a real mobile writing surface. Re-fits on
+  // rotation / viewport change.
   useEffect(() => {
+    if (!isPhone) return;
+    const PAPER_W: Record<string, number> = { a5: 559, pocket: 416, trade: 576, a4: 794 };
+    const pageW = PAPER_W[paperSizeForZoom] ?? 576;
+    const fit = () => {
+      // Leave room for the px-4 page wrappers (32) plus a little breathing
+      // space so the page never triggers a horizontal scroll.
+      const availW = window.innerWidth - 44;
+      const pct = Math.max(20, Math.min(100, Math.round((availW / pageW) * 100)));
+      setZoom(pct);
+      autoZoomApplied.current = true; // prevents the desktop auto-fit firing
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    return () => {
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("orientationchange", fit);
+    };
+  }, [isPhone, paperSizeForZoom]);
+
+  useEffect(() => {
+    if (isPhone) return;
     if (autoZoomApplied.current) return;
     const frame = requestAnimationFrame(() => {
       if (!mainRef.current) return;
