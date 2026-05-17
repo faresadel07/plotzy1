@@ -750,6 +750,29 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
     .chapter-content h3 { font-size: 1.25em; font-weight: 600; margin: 0.7em 0 0.3em; }
     .chapter-content ul, .chapter-content ol { padding-left: 1.5em; margin: 0.5em 0; }
     .chapter-content li { margin: 0.2em 0; }
+    ${rtl ? `
+    /* RTL languages (Arabic, etc.): the editor stores paragraphs with
+       LTR-biased inline text-align/dir that beat the body's direction,
+       so the text drifted to the left. Force RTL + right alignment on
+       the content with !important to override those inline styles.
+       Centered front/back matter and the cover stay centered. */
+    .chapter-content, .chapter-content p,
+    .chapter-content h1, .chapter-content h2, .chapter-content h3,
+    .matter-text, .matter-page h2, .chapter h2 {
+      direction: rtl !important;
+      text-align: right !important;
+    }
+    .cover-page, .cover-page *, .matter-center, .matter-center * {
+      text-align: center !important;
+    }
+    .chapter-content ul, .chapter-content ol { padding-left: 0; padding-right: 1.5em; }
+    .epigraph {
+      border-left: none;
+      border-right: 3px solid ${theme.accentColor};
+      padding-left: 0; padding-right: 20px;
+      text-align: right;
+    }
+    ` : ""}
     @media print {
       @page { size: ${paperCm.w} ${paperCm.h}; margin: ${pxToCm(prefMT)} ${pxToCm(prefMR)} ${pxToCm(prefMB)} ${pxToCm(prefML)}; }
     }
