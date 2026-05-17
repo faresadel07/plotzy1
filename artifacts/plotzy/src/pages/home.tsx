@@ -120,27 +120,52 @@ const RIGHT_PARAGRAPHS = [
   "Collaboration Mode lets you invite editors and co-authors into your workspace. They can annotate, suggest, and comment without disturbing your flow, keeping every voice in the conversation without confusion.",
 ];
 
+const LEFT_PARAGRAPHS_AR = [
+  "كل كتاب عظيم لا يبدأ بحبكة ولا بشخصية، بل بقرار واحد: أن تجلس وتكتب. وُلد Plotzy حول تلك اللحظة بالذات، اللحظة الهشّة التي تسبق ظهور أول كلمة على الصفحة.",
+  "المحرّر مساحة تملأ الشاشة بأكملها وتُسكِت كل ما يشتّت. لا إشعارات، ولا لافتات، ولا قوائم تتنازع انتباهك. حين تفتح فصلًا في Plotzy لا يبقى شيء سوى الحكاية.",
+  "وتحت هذه البساطة يكمن نظام متكامل لإدارة المخطوطة. تُعاد الفصول ترتيبًا بسحبة واحدة. ويتحدّث عدد الكلمات مع كل ضغطة مفتاح. وتمنح حالات النص (مسودّة، مُراجَع، نهائي) الكاتب صورة واضحة عن موضع كتابه في أي لحظة.",
+  "ويقرأ المحرّر الذكي بالذكاء الاصطناعي ما تكتبه أولًا بأول. يقترح أفعالًا أقوى، وينبّه إلى الصياغات المبنية للمجهول، ويعرض صياغات بديلة، لا ليحلّ محلّ صوتك بل ليصقله. اعتبره مؤلفًا خفيًّا، حاضرًا دائمًا، دون أن يكون متطفّلًا.",
+  "ويحوّل استوديو فنّ الغلاف مزاج قصتك إلى غلاف احترافي في ثوانٍ. صِف النبرة والحقبة والإحساس الذي تريد إيقاظه، فيولّد Plotzy عملًا فنيًّا بجودة المعارض جاهزًا للرفّ.",
+];
+
+const RIGHT_PARAGRAPHS_AR = [
+  "ويحوّل النشر العالمي عالم التوزيع المعقّد إلى زرّ واحد. تصل مخطوطتك إلى كل منصّة كبرى، رقميًّا وورقيًّا، بينما يتولّى Plotzy التنسيق وإدارة الحقوق وتتبّع العوائد.",
+  "وتذهب لوحة التحليلات إلى أبعد من عدد التنزيلات بكثير. ترى بالضبط أين يتباطأ القرّاء، وأين يتسارعون، وأين يغلقون الكتاب بهدوء. وبهذه البيانات تصير المراجعة علمًا دقيقًا لا تخمينًا.",
+  "ودعم تعدّد اللغات يعني أن Plotzy يتكيّف معك لا العكس. سواء كتبت بالعربية أو الإنجليزية أو الفرنسية أو الإسبانية، يضبط المحرّر اتجاهه وتباعده وطباعته ليحترم الإيقاع الطبيعي للغتك.",
+  "ويحفظ سجلّ الإصدارات كل ضغطة مفتاح. لا شيء يُحذف فعليًّا أبدًا. يمكنك العودة إلى أي نقطة في عمر مخطوطتك، من مسودّة الأمس إلى أول جملة كتبتها في Plotzy.",
+  "ويتيح وضع التعاون دعوة المحرّرين والمؤلفين المشاركين إلى مساحتك. يمكنهم التعليق والاقتراح والتدوين دون أن يعكّروا انسيابك، فتبقى كل الأصوات في الحوار دون ارتباك.",
+];
+
 function BookPages() {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const leftParas  = ar ? LEFT_PARAGRAPHS_AR  : LEFT_PARAGRAPHS;
+  const rightParas = ar ? RIGHT_PARAGRAPHS_AR : RIGHT_PARAGRAPHS;
+
   const [paraIdx, setParaIdx] = useState(0);
   const [typed, setTyped]     = useState("");
   const [charIdx, setCharIdx] = useState(0);
   const SPEED = 14;
   const TYPED_OFFSET = 2;
-  const TYPED_COUNT  = RIGHT_PARAGRAPHS.length - TYPED_OFFSET;
+  const TYPED_COUNT  = rightParas.length - TYPED_OFFSET;
 
+  // Restart the typing animation when the language flips so we never slice
+  // into a paragraph that belongs to the other language's array.
+  useEffect(() => { setParaIdx(0); setTyped(""); setCharIdx(0); }, [ar]);
   useEffect(() => { setTyped(""); setCharIdx(0); }, [paraIdx]);
   useEffect(() => {
-    const para = RIGHT_PARAGRAPHS[TYPED_OFFSET + paraIdx];
+    const para = rightParas[TYPED_OFFSET + paraIdx];
     if (charIdx >= para.length) {
       const t = setTimeout(() => setParaIdx(i => (i + 1) % TYPED_COUNT), 2600);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => { setTyped(para.slice(0, charIdx + 1)); setCharIdx(c => c + 1); }, SPEED);
     return () => clearTimeout(t);
-  }, [charIdx, paraIdx]);
+  }, [charIdx, paraIdx, rightParas]);
 
   const page: React.CSSProperties = {
     flex: 1, height: "100%",
+    direction: ar ? "rtl" : "ltr",
     background: `linear-gradient(180deg, ${PAGE_BG} 0%, #EDE5CC 100%)`,
     position: "relative", overflow: "hidden",
     display: "flex", flexDirection: "column",
@@ -246,7 +271,7 @@ function BookPages() {
     marginBottom: "-0.05em",
   };
 
-  /* page number with em-dash decoration */
+  /* page number with center-dot decoration */
   const pageNumRow: React.CSSProperties = {
     position: "absolute", bottom: 9, left: 0, right: 0,
     display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
@@ -268,14 +293,14 @@ function BookPages() {
 
       {/* ── LEFT PAGE ── */}
       <div style={{ ...page, boxShadow: leftPageShadow }}>
-        <p style={runHeader}>Plotzy · The Writer's Platform</p>
+        <p style={runHeader}>{ar ? "Plotzy · منصة الكُتّاب" : "Plotzy · The Writer's Platform"}</p>
 
-        <p style={chapterNum}>Chapter 1</p>
-        <h2 style={chapterHeading}>An Introduction to Plotzy</h2>
+        <p style={chapterNum}>{ar ? "الفصل الأول" : "Chapter 1"}</p>
+        <h2 style={chapterHeading}>{ar ? "مدخل إلى Plotzy" : "An Introduction to Plotzy"}</h2>
 
         <div style={{ flex: 1, overflow: "hidden", marginTop: 18 }}>
-          {LEFT_PARAGRAPHS.map((p, i) => {
-            if (i === 0) {
+          {leftParas.map((p, i) => {
+            if (i === 0 && !ar) {
               const [first, ...rest] = p.split("");
               return (
                 <p key={i} style={{ ...para, textIndent: 0 }}>
@@ -290,19 +315,19 @@ function BookPages() {
 
         {/* Page number */}
         <div style={pageNumRow}>
-          <span style={pageNumDash}>—</span>
+          <span style={pageNumDash}>·</span>
           <span style={pageNumText}>5</span>
-          <span style={pageNumDash}>—</span>
+          <span style={pageNumDash}>·</span>
         </div>
       </div>
 
 
       {/* ── RIGHT PAGE ── */}
       <div style={{ ...page, boxShadow: rightPageShadow }}>
-        <p style={runHeader}>Plotzy · The Writer's Platform</p>
+        <p style={runHeader}>{ar ? "Plotzy · منصة الكُتّاب" : "Plotzy · The Writer's Platform"}</p>
 
         <div style={{ flex: 1, overflow: "hidden" }}>
-          {RIGHT_PARAGRAPHS.slice(0, TYPED_OFFSET).map((p, i) => (
+          {rightParas.slice(0, TYPED_OFFSET).map((p, i) => (
             <p key={i} style={para}>{p}</p>
           ))}
           <p style={para}>
@@ -310,16 +335,16 @@ function BookPages() {
             <motion.span
               animate={{ opacity: [1, 0] }}
               transition={{ duration: 0.55, repeat: Infinity }}
-              style={{ display: "inline-block", width: 1.5, height: "0.78em", background: PAGE_TEXT, marginLeft: 1, verticalAlign: "middle" }}
+              style={{ display: "inline-block", width: 1.5, height: "0.78em", background: PAGE_TEXT, marginInlineStart: 1, verticalAlign: "middle" }}
             />
           </p>
         </div>
 
         {/* Page number */}
         <div style={pageNumRow}>
-          <span style={pageNumDash}>—</span>
+          <span style={pageNumDash}>·</span>
           <span style={pageNumText}>6</span>
-          <span style={pageNumDash}>—</span>
+          <span style={pageNumDash}>·</span>
         </div>
       </div>
 
