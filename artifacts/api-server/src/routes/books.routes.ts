@@ -822,7 +822,28 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
   ${frontMatterSections.join("\n")}
   ${chaptersHtml}
   ${backMatterSections.join("\n")}
-  <script>window.onload = function() { window.print(); }</script>
+  <script>
+  (function () {
+    function go() { window.print(); }
+    window.addEventListener('load', function () {
+      // window.onload does NOT wait for @import'ed webfonts. Printing here
+      // rasterised the PDF before the Arabic font (Amiri/Cairo) had
+      // downloaded, so it fell back to a default font that never matched
+      // the editor. Wait for the Font Loading API, with a safety net.
+      if (!document.fonts || !document.fonts.ready) { setTimeout(go, 2500); return; }
+      try {
+        document.fonts.load("1em 'Amiri'");
+        document.fonts.load("700 1em 'Amiri'");
+        document.fonts.load("1em 'Cairo'");
+        document.fonts.load("1em 'Noto Naskh Arabic'");
+      } catch (e) {}
+      var fired = false;
+      function once() { if (fired) return; fired = true; go(); }
+      document.fonts.ready.then(once);
+      setTimeout(once, 6000); // never hang if a font never resolves
+    });
+  })();
+  </script>
 </body>
 </html>`;
 
