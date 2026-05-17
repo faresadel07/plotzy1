@@ -751,20 +751,20 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
     .chapter-content ul, .chapter-content ol { padding-left: 1.5em; margin: 0.5em 0; }
     .chapter-content li { margin: 0.2em 0; }
     ${rtl ? `
-    /* RTL languages (Arabic, etc.): the editor stores paragraphs with
-       LTR-biased inline text-align/dir that beat the body's direction,
-       so the text drifted to the left. Force RTL + right alignment on
-       the content with !important to override those inline styles.
-       Centered front/back matter and the cover stay centered. */
+    /* RTL languages (Arabic, etc.): the editor can store content with an
+       LTR direction/dir that beats the body, which pushed the text and
+       its punctuation to the wrong side. Forcing the reading direction
+       to RTL is the actual fix (it alone corrects line/period placement
+       and makes un-aligned text sit on the right). text-align is given a
+       right DEFAULT only (no !important) so intentionally centered or
+       justified editor content, e.g. a centered chapter title, is kept. */
     .chapter-content, .chapter-content p,
     .chapter-content h1, .chapter-content h2, .chapter-content h3,
+    .chapter-content li, .chapter-content div,
     .matter-text, .matter-page h2, .chapter h2 {
       direction: rtl !important;
-      text-align: right !important;
     }
-    .cover-page, .cover-page *, .matter-center, .matter-center * {
-      text-align: center !important;
-    }
+    .chapter-content, .chapter-content p, .chapter h2, .matter-text { text-align: right; }
     .chapter-content ul, .chapter-content ol { padding-left: 0; padding-right: 1.5em; }
     .epigraph {
       border-left: none;
