@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRoute, Link } from "wouter";
-import { useBook, useUpdateBook, useGenerateCover, useGenerateBlurb } from "@/hooks/use-books";
+import { useBook, useUpdateBook, useGenerateCover } from "@/hooks/use-books";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
@@ -118,7 +118,8 @@ type ResizeState = { id: string; handle: string; startMX: number; startMY: numbe
 export default function CoverDesigner() {
   const [, params] = useRoute("/books/:id/cover-designer");
   const bookId = params?.id ? parseInt(params.id) : 0;
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const ar = lang === "ar";
   const { toast } = useToast();
   const { data: book, isLoading } = useBook(bookId);
   const updateBook = useUpdateBook();
@@ -157,10 +158,9 @@ export default function CoverDesigner() {
   const [aiCoverPrompt, setAiCoverPrompt] = useState("");
   const [aiCoverSide, setAiCoverSide] = useState<"front" | "back">("front");
   const [aiCoverLoading, setAiCoverLoading] = useState(false);
-  const [aiBlurbLoading, setAiBlurbLoading] = useState(false);
+  const [backCoverText, setBackCoverText] = useState("");
 
   const generateCover = useGenerateCover();
-  const generateBlurb = useGenerateBlurb();
 
   const selected = elements.find((e) => e.id === selectedId) ?? null;
 
@@ -595,30 +595,27 @@ export default function CoverDesigner() {
   };
 
   /* ─── AI: Generate Blurb (back cover summary) ─── */
-  const handleAiGenerateBlurb = async () => {
-    setAiBlurbLoading(true);
-    try {
-      const result = await generateBlurb.mutateAsync({ id: bookId, language: book?.language || "en" });
-      const blurb = (result as any).blurb as string;
-      if (blurb) {
-        const el: CoverElement = {
-          id: nanoid(), type: "text", face: "back",
-          x: 20, y: 80, width: FACE_W.back - 40, height: 260,
-          zIndex: 10, visible: true, locked: false,
-          content: blurb, fontSize: 9, fontFamily: "Inter",
-          fontWeight: "normal", color: "#ffffff", textAlign: "center",
-          lineHeight: 1.6, letterSpacing: 0,
-        };
-        updateElements([...elements, el]);
-        setSelectedId(el.id);
-        setActiveFace("back");
-        toast({ title: t("cdBlurbGenerated") });
-      }
-    } catch {
-      toast({ title: t("cdSummaryFailed"), variant: "destructive" });
-    } finally {
-      setAiBlurbLoading(false);
-    }
+  // Place the manually written back-cover text as a text element on the
+  // back face. Mirrors the previous AI placement (position, size, style)
+  // so the result drops in exactly where the blurb used to, ready to
+  // reposition or restyle like any other text block.
+  const handlePlaceBackCoverText = () => {
+    const text = backCoverText.trim();
+    if (!text) return;
+    const el: CoverElement = {
+      id: nanoid(), type: "text", face: "back",
+      x: 20, y: 80, width: FACE_W.back - 40, height: 260,
+      zIndex: 10, visible: true, locked: false,
+      content: text, fontSize: 9, fontFamily: "Inter",
+      fontWeight: "normal", color: "#ffffff",
+      textAlign: ar ? "right" : "center",
+      lineHeight: 1.6, letterSpacing: 0,
+    };
+    updateElements([...elements, el]);
+    setSelectedId(el.id);
+    setActiveFace("back");
+    setBackCoverText("");
+    toast({ title: ar ? "تمت إضافة النص إلى الغلاف الخلفي" : "Text added to the back cover" });
   };
 
   if (isLoading) return (
@@ -636,6 +633,11 @@ export default function CoverDesigner() {
 
     const handleMouseDown = (e: React.MouseEvent) => {
       if (el.locked) return;
+      // While this text element is being edited, a mousedown is the user
+      // clicking inside the textarea (to place the caret or select text).
+      // Do NOT exit edit mode or start a drag — just keep the event from
+      // bubbling to the face/canvas handlers.
+      if (isEditing) { e.stopPropagation(); return; }
       e.stopPropagation();
       setSelectedId(el.id);
       setEditingId(null);
@@ -677,6 +679,7 @@ export default function CoverDesigner() {
               value={el.content}
               onChange={(e) => updateElement(el.id, { content: e.target.value })}
               onBlur={() => { setEditingId(null); commitUpdate(el.id, {}); }}
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
@@ -1015,30 +1018,36 @@ export default function CoverDesigner() {
           {/* Divider */}
           <div className="border-t border-white/8" />
 
-          {/* AI Back Cover Summary */}
+          {/* Back Cover Text — manual entry */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-emerald-400" />
-              <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">Back Cover Summary</p>
-            </div>
-            <p className="text-xs text-white/35 leading-relaxed">
-              AI reads your chapters and writes a compelling back-cover blurb, placed automatically on the back face.
-            </p>
-
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-              <p className="text-xs text-emerald-300/80 leading-relaxed">
-                📖 Will analyze <span className="font-semibold text-emerald-300">"{book?.title}"</span> and craft a reader-hook blurb without spoiling the ending.
+              <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">
+                {ar ? "نص الغلاف الخلفي" : "Back Cover Text"}
               </p>
             </div>
+            <p className="text-xs text-white/35 leading-relaxed">
+              {ar
+                ? "اكتب ملخّص الكتاب أو نصّ الغلاف الخلفي هنا، ثم أضِفه ليُوضع على الوجه الخلفي. تقدر تحرّكه وتنسّقه بعدها مثل أي نص."
+                : "Write your book summary or back-cover text here, then add it to place it on the back face. You can reposition and restyle it afterwards like any text block."}
+            </p>
+
+            <textarea
+              value={backCoverText}
+              onChange={(e) => setBackCoverText(e.target.value)}
+              dir={ar ? "rtl" : "ltr"}
+              rows={7}
+              placeholder={ar ? "اكتب نصّ الغلاف الخلفي هنا..." : "Type your back-cover text here..."}
+              className="w-full bg-white/5 border border-white/10 focus:border-emerald-500/50 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/25 outline-none resize-y leading-relaxed"
+            />
 
             <button
-              onClick={handleAiGenerateBlurb}
-              disabled={aiBlurbLoading}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
+              onClick={handlePlaceBackCoverText}
+              disabled={!backCoverText.trim()}
+              className="w-full flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
             >
-              {aiBlurbLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Writing blurb...</>
-                : <><Sparkles className="w-4 h-4" /> Generate Back Summary</>}
+              <FileText className="w-4 h-4" />
+              {ar ? "أضِف إلى الغلاف الخلفي" : "Add to back cover"}
             </button>
           </div>
         </div>
