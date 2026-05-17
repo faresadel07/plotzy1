@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
 
 interface DevicesShowcaseProps {
   /**
@@ -10,18 +11,24 @@ interface DevicesShowcaseProps {
   onCtaClick: () => void;
 }
 
-const TAGS = ["Cloud sync", "Real-time saving", "Cross-device"] as const;
-
 export function DevicesShowcase({ onCtaClick }: DevicesShowcaseProps) {
+  const { lang, isRTL } = useLanguage();
+  const ar = lang === "ar";
+
+  const tags = ar
+    ? ["مزامنة سحابية", "حفظ لحظي", "عبر كل الأجهزة"]
+    : ["Cloud sync", "Real-time saving", "Cross-device"];
+
   return (
     <section
       aria-labelledby="devices-showcase-heading"
+      dir={isRTL ? "rtl" : "ltr"}
       className="bg-gradient-to-b from-white to-[#fafafa] border-b border-[#f0f0f0] px-6 pt-12 sm:pt-16 pb-12 sm:pb-16"
     >
       <div className="max-w-6xl mx-auto text-center">
         {/* Eyebrow */}
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#888] mb-5">
-          Built for every screen
+          {ar ? "مصمّم لكل شاشة" : "Built for every screen"}
         </p>
 
         {/* Heading */}
@@ -29,23 +36,27 @@ export function DevicesShowcase({ onCtaClick }: DevicesShowcaseProps) {
           id="devices-showcase-heading"
           className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#111] tracking-[-0.03em] leading-[1.05] mb-6"
         >
-          Write anywhere.
+          {ar ? "اكتب من أي مكان." : "Write anywhere."}
           <br />
-          Your story comes with you.
+          {ar ? "قصتك ترافقك أينما كنت." : "Your story comes with you."}
         </h2>
 
         {/* Sub-heading */}
         <p className="text-base sm:text-lg text-[#555] leading-relaxed max-w-2xl mx-auto mb-14 sm:mb-16">
-          Whether you're at your desk or on your iPad in a coffee shop, Plotzy
-          follows you. With cloud sync, real-time saving, and a writing
-          experience tailored to each device.
+          {ar
+            ? "سواء كنت على مكتبك أو على جهاز iPad في أحد المقاهي، يرافقك Plotzy أينما ذهبت. مع المزامنة السحابية، والحفظ اللحظي، وتجربة كتابة مصمّمة لكل جهاز."
+            : "Whether you're at your desk or on your iPad in a coffee shop, Plotzy follows you. With cloud sync, real-time saving, and a writing experience tailored to each device."}
         </p>
 
         {/* Devices image — full bleed up to ~1100px wide, centered */}
         <div className="mb-12 sm:mb-14">
           <img
             src="/images/devices-showcase.png"
-            alt="Plotzy running on a MacBook Pro showing the chapter editor, alongside an iPad Pro showing the open-book reader"
+            alt={
+              ar
+                ? "Plotzy يعمل على MacBook Pro يعرض محرّر الفصول، بجانب iPad Pro يعرض قارئ الكتاب المفتوح"
+                : "Plotzy running on a MacBook Pro showing the chapter editor, alongside an iPad Pro showing the open-book reader"
+            }
             className="w-full max-w-[1100px] mx-auto h-auto select-none"
             loading="lazy"
             draggable={false}
@@ -54,7 +65,7 @@ export function DevicesShowcase({ onCtaClick }: DevicesShowcaseProps) {
 
         {/* Feature tags — single row on sm+, stacked on mobile */}
         <ul className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mb-12 sm:mb-14 list-none">
-          {TAGS.map((tag) => (
+          {tags.map((tag) => (
             <li
               key={tag}
               className="flex items-center gap-2 text-sm text-[#555]"
@@ -82,10 +93,10 @@ export function DevicesShowcase({ onCtaClick }: DevicesShowcaseProps) {
           className="group inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-[#111] hover:gap-3 transition-all duration-200"
         >
           <span className="border-b border-transparent group-hover:border-[#111] transition-colors duration-200">
-            Start writing today
+            {ar ? "ابدأ الكتابة اليوم" : "Start writing today"}
           </span>
           <ArrowRight
-            className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200"
+            className={`w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200 ${isRTL ? "rotate-180" : ""}`}
             aria-hidden="true"
           />
         </button>
