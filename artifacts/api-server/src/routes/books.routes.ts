@@ -178,6 +178,62 @@ router.delete(api.books.delete.path, requireBookOwner, async (req, res) => {
 
 // ─── Publish / Unpublish ────────────────────────────────────────────────────
 
+// Duplicate a book: deep copy of the book row + all of its chapters.
+// The frontend ("DUPLICATE" on the dashboard) POSTs here; the route did
+// not exist, so the request always failed and the button did nothing.
+// The copy is a private, unpublished draft owned by the requester.
+router.post("/api/books/:id/duplicate", requireBookOwner, async (req, res) => {
+  try {
+    const src = req.ownerBook;
+    if (!src) return res.status(404).json({ message: "Book not found" });
+    const userId = (req.user as any).id;
+
+    // Copy every column except identity/lifecycle ones, then reset the
+    // publish, sharing and series state so the copy starts clean.
+    const { id: _id, createdAt: _createdAt, ...rest } = src as any;
+    const ar = (src.language || "") === "ar";
+    const copySuffix = ar ? " (نسخة)" : " (Copy)";
+
+    const newBook = await storage.createBook({
+      ...rest,
+      userId,
+      title: `${src.title}${copySuffix}`.slice(0, 255),
+      isPublished: false,
+      publishedAt: null,
+      shareToken: null,
+      viewCount: 0,
+      isDeleted: false,
+      seriesId: null,
+      seriesOrder: null,
+    } as any);
+
+    const chapters = await storage.getChapters(src.id);
+    for (const ch of [...chapters].sort((a, b) => a.order - b.order)) {
+      await storage.createChapter({
+        bookId: newBook.id,
+        userId,
+        title: ch.title,
+        content: ch.content,
+        order: ch.order,
+        status: ch.status,
+      } as any);
+    }
+
+    await logAuditEvent({
+      actorId: userId,
+      action: "book_duplicated",
+      targetType: "book",
+      targetId: newBook.id,
+      req,
+    }).catch(() => {});
+
+    return res.status(201).json(newBook);
+  } catch (err) {
+    logger.error({ err }, "Book duplicate failed");
+    return res.status(500).json({ message: "Failed to duplicate book" });
+  }
+});
+
 router.post("/api/books/:id/publish", async (req, res) => {
   try {
     const bookId = Number(req.params.id);
