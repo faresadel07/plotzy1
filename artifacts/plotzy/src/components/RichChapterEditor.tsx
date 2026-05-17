@@ -449,7 +449,16 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   zoom = 100,
   checkOverflowOnMount = false,
 }, ref) => {
-  const resolvedFont = FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif";
+  // The Latin fonts have no Arabic glyphs. Append the same Arabic
+  // webfont the PDF export uses (Cairo for sans picks, Amiri for serif)
+  // so Arabic on screen matches the downloaded file exactly.
+  const SANS_FONT_KEYS = new Set([
+    "inter", "open-sans", "poppins", "montserrat", "roboto", "arabic-sans",
+  ]);
+  const arabicFallback = SANS_FONT_KEYS.has(fontFamily)
+    ? "'Cairo', 'Noto Naskh Arabic', sans-serif"
+    : "'Amiri', 'Noto Naskh Arabic', serif";
+  const resolvedFont = `${FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif"}, ${arabicFallback}`;
 
   // Use refs for callbacks to avoid stale closures in the RAF
   const onSplitNeededRef = useRef(onSplitNeeded);

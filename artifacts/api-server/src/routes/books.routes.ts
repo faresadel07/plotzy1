@@ -619,10 +619,35 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
           "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap",
       };
 
-      const bodyFont =
+      const baseBodyFont =
         FONT_CSS[prefFontKey] || "'EB Garamond', Georgia, serif";
       const fontImportUrl =
         FONT_IMPORT[prefFontKey] || FONT_IMPORT["eb-garamond"];
+
+      // The Latin display fonts (EB Garamond, Lora, ...) carry NO Arabic
+      // glyphs, so an RTL book fell back to whatever default the print
+      // engine happened to have, which never matched the editor. Render
+      // Arabic in a real, embedded Arabic webfont that matches the chosen
+      // style: Cairo for sans picks, Amiri for serif picks. The chosen
+      // Latin font stays as the fallback for any Latin runs.
+      const SANS_FONT_KEYS = new Set([
+        "inter", "roboto", "open-sans", "poppins", "montserrat",
+        "nunito", "oswald", "lexend", "raleway",
+      ]);
+      const ARABIC_FONT_KEYS = new Set([
+        "arabic-sans", "arabic-serif", "arabic-naskh",
+      ]);
+      const useArabicFont = rtl && !ARABIC_FONT_KEYS.has(prefFontKey);
+      const arabicIsSans = SANS_FONT_KEYS.has(prefFontKey);
+      const arabicStack = arabicIsSans
+        ? "'Cairo', 'Noto Naskh Arabic', sans-serif"
+        : "'Amiri', 'Noto Naskh Arabic', serif";
+      const arabicImportUrl = arabicIsSans
+        ? "https://fonts.googleapis.com/css2?family=Cairo:wght@200..900&family=Noto+Naskh+Arabic:wght@400..700&display=swap"
+        : "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Naskh+Arabic:wght@400..700&display=swap";
+      const bodyFont = useArabicFont
+        ? `${arabicStack}, ${baseBodyFont}`
+        : baseBodyFont;
 
       const TEMPLATES: Record<
         string,
@@ -645,6 +670,11 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
         },
       };
       const theme = TEMPLATES[template] || TEMPLATES.classic;
+      // Headings must use the Arabic font too in RTL books (the `modern`
+      // template otherwise pins headings to Latin-only Playfair).
+      if (useArabicFont) {
+        theme.headingFont = `${arabicStack}, ${theme.headingFont}`;
+      }
 
       // Front matter
       const frontMatterSections: string[] = [];
@@ -713,6 +743,7 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
   <title>${escapeHtml(book.title)}</title>
   <style>
     @import url('${fontImportUrl}');
+    ${useArabicFont ? `@import url('${arabicImportUrl}');` : ""}
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: ${bodyFont};
@@ -765,6 +796,14 @@ router.get("/api/books/:id/download", requireBookOwner, async (req, res) => {
       direction: rtl !important;
     }
     .chapter-content, .chapter-content p, .chapter h2, .matter-text { text-align: right; }
+    /* The editor's font picker can write an inline Latin-only font-family
+       on the content, which would re-break the Arabic. Force the Arabic
+       webfont stack so the PDF matches the editor regardless. */
+    .chapter-content, .chapter-content *,
+    .chapter h2, .matter-page h2, .matter-text,
+    .cover-page h1, .cover-text h1 {
+      font-family: ${bodyFont} !important;
+    }
     .chapter-content ul, .chapter-content ol { padding-left: 0; padding-right: 1.5em; }
     .epigraph {
       border-left: none;
