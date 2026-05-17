@@ -239,7 +239,7 @@ router.post("/api/auth/register", sensitiveAuthLimiter, async (req, res) => {
       // only the SHA-256 hash so a leak of the table can't be replayed.
       const verifyToken = crypto.randomBytes(32).toString("hex");
       await db.insert(emailVerificationTokens).values({ userId: user.id, token: hashToken(verifyToken), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) });
-      const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? `https://${process.env.APP_DOMAIN || "localhost"}` : "http://localhost:5173");
+      const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? `https://${process.env.APP_DOMAIN || "localhost"}` : "http://localhost:5173")).replace(/\/+$/, "");
       await sendEmail(
         email,
         "Verify your Plotzy account",
@@ -651,17 +651,29 @@ router.post("/api/auth/google/one-tap", async (req, res) => {
 // Google OAuth
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
+// Strip any trailing slash(es). Without this, a FRONTEND_URL / APP_DOMAIN
+// configured with a trailing "/" (a very common ops mistake) makes the
+// post-login redirect `https://host//?auth=success` — pathname "//", which
+// the wouter router has no route for, so the SPA renders its 404 page after
+// a *successful* Google sign-in. Normalising here makes the redirect robust
+// regardless of how the env var is formatted.
+const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
   ? `https://${process.env.APP_DOMAIN || process.env.REPLIT_DOMAINS?.split(",")[0] || "localhost"}`
-  : "http://localhost:5173");
+  : "http://localhost:5173")).replace(/\/+$/, "");
 
-router.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: `${frontendUrl}/?auth=error` }),
-  (req, res) => {
-    res.redirect(`${frontendUrl}/?auth=success`);
-  }
-);
+// Custom callback (instead of the `{ failureRedirect }` shorthand) so an
+// error *thrown* during the Google token exchange degrades to a friendly
+// `?auth=error` redirect instead of bubbling to the Express error handler
+// and returning a raw HTTP 500 to the user.
+router.get("/auth/google/callback", (req, res, next) => {
+  passport.authenticate("google", (err: unknown, user: Express.User | false) => {
+    if (err || !user) return res.redirect(`${frontendUrl}/?auth=error`);
+    req.logIn(user, (loginErr) => {
+      if (loginErr) return res.redirect(`${frontendUrl}/?auth=error`);
+      return res.redirect(`${frontendUrl}/?auth=success`);
+    });
+  })(req, res, next);
+});
 
 // Apple OAuth (callback is POST)
 router.get("/auth/apple", passport.authenticate("apple"));
@@ -864,9 +876,9 @@ router.post("/api/auth/forgot-password", sensitiveAuthLimiter, async (req, res) 
     await logAuditEvent({ actorId: user.id, action: "password_reset_requested", targetType: "user", targetId: user.id, req });
 
     // Send email
-    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
+    const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "production"
       ? `https://${process.env.APP_DOMAIN || "localhost"}`
-      : "http://localhost:5173");
+      : "http://localhost:5173")).replace(/\/+$/, "");
     const resetLink = `${frontendUrl}/reset-password/${token}`;
 
     try {
