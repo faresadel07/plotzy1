@@ -1,5 +1,38 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
+
+// Project Gutenberg references in the lessons (e.g.
+// https://www.gutenberg.org/ebooks/1342) are shown as a tidy, clickable
+// book cover instead of a raw URL. Clicking opens the book inside
+// Plotzy's own reader (/discover/<id>) so the reader never leaves.
+const GUTENBERG_RE = /gutenberg\.org\/(?:ebooks|cache\/epub)\/(\d+)/i;
+
+function GutenbergCover({ id, label }: { id: string; label: string }) {
+  const [failed, setFailed] = useState(false);
+  const cover = `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`;
+  if (failed) {
+    return (
+      <Link
+        href={`/discover/${id}`}
+        className="inline-flex items-center gap-1 align-middle mx-1 px-2 py-0.5 rounded-md border border-border bg-muted/50 text-xs no-underline hover:bg-muted transition-colors"
+        title={label}
+      >
+        Read this book
+      </Link>
+    );
+  }
+  return (
+    <Link href={`/discover/${id}`} className="inline-block align-middle mx-1.5 my-0.5" title={label}>
+      <img
+        src={cover}
+        alt={label}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="inline-block h-12 w-auto rounded-[3px] border border-border shadow-sm hover:opacity-80 transition-opacity"
+      />
+    </Link>
+  );
+}
 
 /**
  * Renders course-flavored markdown to JSX without any external
@@ -230,6 +263,12 @@ function renderInline(text: string): ReactNode {
 }
 
 function renderLink(label: string, href: string, key: number): ReactNode {
+  // A Project Gutenberg book reference becomes a clickable cover that
+  // opens the book in Plotzy's reader instead of an external URL.
+  const gut = href.match(GUTENBERG_RE) || label.match(GUTENBERG_RE);
+  if (gut) {
+    return <GutenbergCover key={key} id={gut[1]} label={label} />;
+  }
   // Internal links go through wouter's <Link> so navigation stays in the SPA.
   // External links open in a new tab with the standard hardening attrs.
   if (href.startsWith("/")) {

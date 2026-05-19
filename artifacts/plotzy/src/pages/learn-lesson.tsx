@@ -150,9 +150,13 @@ export default function LearnLessonPage() {
               )}
             </header>
 
-            {/* Lesson body */}
+            {/* Lesson body. Every lesson's markdown opens with its own
+                `# Title` heading which duplicated the page <h1> above.
+                Strip that single leading heading so the title shows once. */}
             <article>
-              <Markdown content={lessonQ.data.content} />
+              <Markdown
+                content={lessonQ.data.content.replace(/^﻿?\s*#{1,6}[^\n]*\r?\n+/, "")}
+              />
             </article>
 
             {/* Mark complete CTA — auth-gated */}
