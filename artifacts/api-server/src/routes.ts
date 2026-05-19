@@ -1211,7 +1211,16 @@ export async function registerRoutes(
 
       if (format === "pdf") {
         const langCode = book.language || "en";
-        const rtl = isRTL(langCode);
+        // Do NOT trust book.language alone — in practice users write fully
+        // Arabic books while the field stays "en" (it defaults to en and
+        // the UI rarely sets it). Detect Arabic from the actual content
+        // (title + chapter text) so RTL + the embedded Arabic font kick
+        // in for every Arabic book regardless of the language field.
+        const arabicCharRe =
+          /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+        const contentSample = (book.title || "") + " " +
+          chapters.slice(0, 3).map(c => (c.content || "").slice(0, 2000)).join(" ");
+        const rtl = isRTL(langCode) || arabicCharRe.test(contentSample);
         const dir = rtl ? "rtl" : "ltr";
         const template = (req.query.template as string) || "classic";
         const bookPages = (book as any).bookPages || {};
