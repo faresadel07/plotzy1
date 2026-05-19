@@ -114,7 +114,7 @@ export default function LearnPage() {
       <JsonLd data={buildCourseSchema()} />
       <JsonLd data={buildBreadcrumbSchema([{ name: "Course", path: "/learn" }])} />
 
-      <main className="container mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-10">
+      <main className="course-apple container mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-10">
         {/* Hero */}
         <section className="space-y-4 text-center sm:text-start">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-secondary text-xs text-muted-foreground">

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { CourseProgressBar } from "./ProgressBar";
 import { useLanguage } from "@/contexts/language-context";
+import { APPLE_FONT, moduleImage } from "@/lib/course-ui";
 
 /**
  * Card for a single module on the /learn module grid. Title, subtitle,
@@ -52,13 +53,23 @@ export function ModuleCard({ module, completedLessons, className = "" }: ModuleC
   return (
     <Link href={`/learn/module/${module.slug}`}>
       <Card
-        className={`hover:bg-accent/30 transition-colors cursor-pointer h-full ${className}`}
+        className={`group hover:bg-accent/30 transition-colors cursor-pointer h-full overflow-hidden flex flex-col ${className}`}
+        style={{ fontFamily: APPLE_FONT }}
       >
-        <CardHeader>
-          <div className="text-xs text-muted-foreground font-medium mb-1">
+        <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+          <img
+            src={moduleImage(module.order)}
+            alt={module.title}
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <span className="absolute left-4 bottom-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/85">
             {t("courseModuleNumber")} {module.order}
-          </div>
-          <CardTitle className="text-lg">{module.title}</CardTitle>
+          </span>
+        </div>
+        <CardHeader>
+          <CardTitle className="text-lg tracking-tight">{module.title}</CardTitle>
           {module.subtitle && <CardDescription>{module.subtitle}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-3">

@@ -11,6 +11,7 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { LessonCard } from "@/components/course/LessonCard";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
+import { APPLE_FONT, moduleImage } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
 
 interface ModuleResponse {
@@ -90,7 +91,10 @@ export default function LearnModulePage() {
         />
       )}
 
-      <main className="container mx-auto max-w-4xl px-4 py-8 sm:py-10 space-y-8">
+      <main
+        className="course-apple container mx-auto max-w-4xl px-4 py-8 sm:py-10 space-y-8"
+        style={{ fontFamily: APPLE_FONT }}
+      >
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },
@@ -103,11 +107,21 @@ export default function LearnModulePage() {
 
         {moduleQ.data && (
           <>
-            <header className="space-y-3">
-              <div className="text-xs text-muted-foreground font-medium tracking-wide">
-                {t("courseModuleNumber")} {moduleQ.data.order}
+            <div className="relative overflow-hidden rounded-2xl border bg-muted shadow-sm">
+              <div className="aspect-[21/9]">
+                <img
+                  src={moduleImage(moduleQ.data.order)}
+                  alt={moduleQ.data.title}
+                  className="h-full w-full object-cover"
+                />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-serif tracking-tight">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+              <span className="absolute left-5 bottom-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/85">
+                {t("courseModuleNumber")} {moduleQ.data.order}
+              </span>
+            </div>
+            <header className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
                 {moduleQ.data.title}
               </h1>
               {moduleQ.data.subtitle && (

@@ -793,3 +793,15 @@ html, body {
     max-width: 100% !important;
   }
 }
+
+/* ── Writing Course: Apple system typeface everywhere ──────────────────
+   The course is designed to read like a premium Apple-keynote
+   experience. Scope an !important font-family to the course subtree so
+   it beats Tailwind's font-serif headings and the markdown body alike,
+   without editing every component. Applied via the `course-apple` class
+   on each course page's top-level container. */
+.course-apple,
+.course-apple * {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif !important;
+}

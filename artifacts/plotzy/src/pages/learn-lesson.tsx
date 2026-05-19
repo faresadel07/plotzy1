@@ -14,6 +14,7 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/queryClient";
+import { APPLE_FONT } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
 
 interface LessonResponse {
@@ -104,7 +105,10 @@ export default function LearnLessonPage() {
         />
       )}
 
-      <main className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6">
+      <main
+        className="course-apple container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6"
+        style={{ fontFamily: APPLE_FONT }}
+      >
         {lessonQ.data && (
           <CourseBreadcrumb
             items={[
@@ -120,11 +124,22 @@ export default function LearnLessonPage() {
 
         {lessonQ.data && (
           <>
+            {lessonQ.data.heroImageUrl && (
+              <div className="relative -mt-2 overflow-hidden rounded-2xl border bg-muted shadow-sm">
+                <div className="aspect-[16/9]">
+                  <img
+                    src={lessonQ.data.heroImageUrl}
+                    alt={lessonQ.data.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
             <header className="space-y-2">
               <div className="text-xs text-muted-foreground font-medium">
                 {t("courseLessonNumber")} {lessonQ.data.orderInModule} · {lessonQ.data.estimatedMinutes} {t("courseMinLabel")}
               </div>
-              <h1 className="text-3xl sm:text-4xl font-serif tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
                 {lessonQ.data.title}
               </h1>
               {isCompleted && (

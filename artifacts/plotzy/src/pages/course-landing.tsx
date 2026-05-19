@@ -97,7 +97,7 @@ export default function CourseLandingPage() {
         ])}
       />
 
-      <main className="container mx-auto max-w-6xl px-4 py-8 sm:py-12 space-y-12">
+      <main className="course-apple container mx-auto max-w-6xl px-4 py-8 sm:py-12 space-y-12">
         <CourseLandingHero />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">

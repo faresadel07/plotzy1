@@ -124,7 +124,7 @@ export default function LearnFinalProjectPage() {
     <Layout>
       <SEO title="Final Project — Plotzy Writing Course" noindex />
 
-      <main className="container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-8">
+      <main className="course-apple container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-8">
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },
