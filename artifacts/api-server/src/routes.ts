@@ -413,6 +413,52 @@ export async function registerRoutes(
 
   // Publishing exposes content to the public — gate behind verified
   // email so throwaway accounts can't flood the library.
+  // Duplicate a book: deep copy of the book row + all of its chapters.
+  // The dashboard "DUPLICATE" button POSTs here. (The route only existed
+  // in an unmounted router file before, so it always 404'd.) The copy is
+  // a private, unpublished draft owned by the requester.
+  app.post("/api/books/:id/duplicate", requireBookOwner, async (req, res) => {
+    try {
+      const src = req.ownerBook;
+      if (!src) return res.status(404).json({ message: "Book not found" });
+      const userId = (req.user as any).id;
+
+      const { id: _id, createdAt: _createdAt, ...rest } = src as any;
+      const ar = (src.language || "") === "ar";
+      const copySuffix = ar ? " (نسخة)" : " (Copy)";
+
+      const newBook = await storage.createBook({
+        ...rest,
+        userId,
+        title: `${src.title}${copySuffix}`.slice(0, 255),
+        isPublished: false,
+        publishedAt: null,
+        shareToken: null,
+        viewCount: 0,
+        isDeleted: false,
+        seriesId: null,
+        seriesOrder: null,
+      } as any);
+
+      const srcChapters = await storage.getChapters(src.id);
+      for (const ch of [...srcChapters].sort((a, b) => a.order - b.order)) {
+        await storage.createChapter({
+          bookId: newBook.id,
+          userId,
+          title: ch.title,
+          content: ch.content,
+          order: ch.order,
+          status: ch.status,
+        } as any);
+      }
+
+      return res.status(201).json(newBook);
+    } catch (err) {
+      logger.error({ err }, "Book duplicate failed");
+      return res.status(500).json({ message: "Failed to duplicate book" });
+    }
+  });
+
   app.post("/api/books/:id/publish", requireEmailVerified, async (req, res) => {
     try {
       const bookId = Number(req.params.id);
@@ -1210,8 +1256,33 @@ export async function registerRoutes(
           "arabic-naskh":      "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&display=swap",
         };
 
-        const bodyFont    = FONT_CSS[prefFontKey]    || "'EB Garamond', Georgia, serif";
+        const baseBodyFont  = FONT_CSS[prefFontKey]    || "'EB Garamond', Georgia, serif";
         const fontImportUrl = FONT_IMPORT[prefFontKey] || FONT_IMPORT["eb-garamond"];
+
+        // The Latin display fonts (EB Garamond, Lora, ...) carry NO Arabic
+        // glyphs, so an RTL book fell back to whatever default font the
+        // PDF renderer had, which never matched the editor. Render Arabic
+        // in a real embedded Arabic webfont matched to the chosen style:
+        // Cairo for sans picks, Amiri for serif picks. Latin keeps the
+        // chosen font as the fallback.
+        const SANS_FONT_KEYS = new Set([
+          "inter", "roboto", "open-sans", "poppins", "montserrat",
+          "nunito", "oswald", "lexend", "raleway",
+        ]);
+        const ARABIC_FONT_KEYS = new Set([
+          "arabic-sans", "arabic-serif", "arabic-naskh",
+        ]);
+        const useArabicFont = rtl && !ARABIC_FONT_KEYS.has(prefFontKey);
+        const arabicIsSans  = SANS_FONT_KEYS.has(prefFontKey);
+        const arabicStack = arabicIsSans
+          ? "'Cairo', 'Noto Naskh Arabic', sans-serif"
+          : "'Amiri', 'Noto Naskh Arabic', serif";
+        const arabicImportUrl = arabicIsSans
+          ? "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap"
+          : "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap";
+        const bodyFont = useArabicFont
+          ? `${arabicStack}, ${baseBodyFont}`
+          : baseBodyFont;
 
         // ── Template themes (decorative only — accent colors + borders) ────
         const TEMPLATES: Record<string, { headingFont: string; accentColor: string; chapterBorder: string }> = {
@@ -1232,6 +1303,11 @@ export async function registerRoutes(
           },
         };
         const theme = TEMPLATES[template] || TEMPLATES.classic;
+        // Headings must use the Arabic font too in RTL books (the `modern`
+        // template otherwise pins headings to Latin-only Playfair).
+        if (useArabicFont) {
+          theme.headingFont = `${arabicStack}, ${theme.headingFont}`;
+        }
 
         // Build front/back matter HTML
         const frontMatterSections: string[] = [];
@@ -1287,6 +1363,7 @@ export async function registerRoutes(
   <title>${escapeHtml(book.title)}</title>
   <style>
     @import url('${fontImportUrl}');
+    ${useArabicFont ? `@import url('${arabicImportUrl}');` : ""}
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: ${bodyFont};
@@ -1344,6 +1421,34 @@ export async function registerRoutes(
     .chapter-content h3 { font-size: 1.25em; font-weight: 600; margin: 0.7em 0 0.3em; }
     .chapter-content ul, .chapter-content ol { padding-left: 1.5em; margin: 0.5em 0; }
     .chapter-content li { margin: 0.2em 0; }
+    ${rtl ? `
+    /* RTL languages (Arabic, etc.): the editor can store content with an
+       LTR direction/dir that beats the body, so the text and its sentence
+       punctuation landed on the wrong side. Force the reading direction
+       to RTL (the real fix), with a right DEFAULT alignment only (no
+       !important) so intentionally centered/justified editor content
+       (e.g. a centered chapter title) is preserved. Also force the Arabic
+       webfont so an inline Latin-only font-family can't re-break it. */
+    .chapter-content, .chapter-content p,
+    .chapter-content h1, .chapter-content h2, .chapter-content h3,
+    .chapter-content li, .chapter-content div,
+    .matter-text, .matter-page h2, .chapter h2 {
+      direction: rtl !important;
+    }
+    .chapter-content, .chapter-content p, .chapter h2, .matter-text { text-align: right; }
+    .chapter-content, .chapter-content *,
+    .chapter h2, .matter-page h2, .matter-text,
+    .cover-page h1 {
+      font-family: ${bodyFont} !important;
+    }
+    .chapter-content ul, .chapter-content ol { padding-left: 0; padding-right: 1.5em; }
+    .epigraph {
+      border-left: none;
+      border-right: 3px solid ${theme.accentColor};
+      padding-left: 0; padding-right: 20px;
+      text-align: right;
+    }
+    ` : ""}
     @media print {
       @page {
         size: ${paperCm.w} ${paperCm.h};
