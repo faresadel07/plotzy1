@@ -303,7 +303,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
     setEditingChapterId(null);
   };
 
-  const handleDownload = async (format: "pdf" | "epub" | "txt" | "docx") => {
+  const handleDownload = async (
+    format: "pdf" | "epub" | "txt" | "docx",
+    font?: "cairo" | "amiri",
+  ) => {
     setIsDownloading(true);
     try {
       // PDF now goes through server-side puppeteer which returns real
@@ -311,7 +314,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       // formats. The "classic" template is hard-wired for now (the
       // template picker modal was removed because it added a click
       // and most users were just clicking through with the default).
-      const params = format === "pdf" ? `?format=pdf&template=classic` : `?format=${format}`;
+      const params = format === "pdf"
+        ? `?format=pdf&template=classic${font ? `&font=${font}` : ""}`
+        : `?format=${format}`;
       const url = `/api/books/${bookId}/download${params}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Download failed");
@@ -449,8 +454,13 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-52 rounded-xl">
-                <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf")} data-testid="download-pdf">
-                  <FileDown className="w-4 h-4 mr-2 text-red-400" />PDF
+                <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf", "cairo")} data-testid="download-pdf-cairo">
+                  <FileDown className="w-4 h-4 mr-2 text-red-400" />
+                  {lang === "ar" ? "PDF · خط Cairo (عصري)" : "PDF · Cairo font (modern)"}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf", "amiri")} data-testid="download-pdf-amiri">
+                  <FileDown className="w-4 h-4 mr-2 text-red-400" />
+                  {lang === "ar" ? "PDF · خط Amiri (كلاسيكي)" : "PDF · Amiri font (classic)"}
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("docx")} data-testid="download-docx">
                   <FileText className="w-4 h-4 mr-2 text-blue-400" />Word (.docx)

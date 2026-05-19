@@ -1309,7 +1309,13 @@ export async function registerRoutes(
         // / Latin pick on Arabic content). Both files ship with the
         // server, so the PDF always matches what the editor shows.
         const useArabicFont = rtl;
-        const arabicFontFile = prefFontKey === "arabic-serif" ? "Amiri.ttf" : "Cairo.ttf";
+        // Font choice precedence: explicit ?font= picked at download time
+        // wins, then the book's saved Arabic preference, else Cairo.
+        const fontQuery = String(req.query.font || "").toLowerCase();
+        const arabicFontFile =
+          fontQuery === "amiri" ? "Amiri.ttf" :
+          fontQuery === "cairo" ? "Cairo.ttf" :
+          prefFontKey === "arabic-serif" ? "Amiri.ttf" : "Cairo.ttf";
         const embeddedArabicB64 = useArabicFont ? getEmbeddedArabicFontB64(arabicFontFile) : null;
         const arabicFontFace = embeddedArabicB64
           ? `@font-face{font-family:'PlotzyArabic';src:url(data:font/ttf;base64,${embeddedArabicB64}) format('truetype');font-weight:400 700;font-style:normal;font-display:block;}`
