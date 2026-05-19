@@ -449,13 +449,23 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   zoom = 100,
   checkOverflowOnMount = false,
 }, ref) => {
-  // The Latin fonts have no Arabic glyphs. The PDF export MUST embed its
-  // Arabic font so it renders on the server with no network, and the only
-  // bundled (embeddable) Arabic font is Cairo. So Arabic must be Cairo in
-  // BOTH places to be guaranteed identical — use Cairo as the Arabic
-  // fallback here so the editor matches the downloaded PDF exactly.
-  const arabicFallback = "'Cairo', 'Noto Naskh Arabic', sans-serif";
+  // The two Arabic fonts (Cairo, Amiri) are bundled on the server so the
+  // PDF embeds whichever the user picks and renders identically here.
+  // For a Latin pick on Arabic content, default the Arabic glyphs to
+  // Cairo (matches the PDF's default).
+  const arabicFallback = "'Cairo', 'Amiri', 'Noto Naskh Arabic', serif";
   const resolvedFont = `${FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif"}, ${arabicFallback}`;
+  // When the book's chosen font IS an Arabic font, the user expects the
+  // whole chapter to switch to it. Stored content can carry inline
+  // font-family marks (from the toolbar or earlier defaults) that beat
+  // the container font, which is why "pick a font, nothing changes".
+  // Force the chosen Arabic font on the content with !important so the
+  // selection always takes effect (only for Arabic picks, so Latin
+  // books keep any intentional per-word fonts).
+  const isArabicPick = fontFamily.startsWith("arabic-");
+  const forcedArabicFont = fontFamily === "arabic-serif"
+    ? "'Amiri', 'Noto Naskh Arabic', serif"
+    : "'Cairo', 'Noto Naskh Arabic', sans-serif";
 
   // Use refs for callbacks to avoid stale closures in the RAF
   const onSplitNeededRef = useRef(onSplitNeeded);
@@ -635,6 +645,14 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           caret-color: currentColor;
           box-sizing: border-box;
         }
+        ${isArabicPick ? `
+        /* The book uses an Arabic font: force it across all content so
+           the selection actually takes effect even over inline marks,
+           and so the editor matches the embedded PDF font exactly. */
+        .tiptap-editor .ProseMirror,
+        .tiptap-editor .ProseMirror * {
+          font-family: ${forcedArabicFont} !important;
+        }` : ""}
         .tiptap-editor p {
           margin: 0 0 0.6em;
         }

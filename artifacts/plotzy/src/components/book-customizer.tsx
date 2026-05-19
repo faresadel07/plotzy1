@@ -80,9 +80,11 @@ const FONTS: FontDef[] = [
   { id: "space-mono",    label: "Space Mono",    labelAr: "سبيس مونو",   desc: "Retro • Digital",      descAr: "رقمي كلاسيكي", category: "typewriter", fontFamily: "'Space Mono', monospace",    sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
 
   // ── Arabic ─────────────────────────────────────────────────────────────────
-  { id: "arabic-sans",  label: "Cairo",             labelAr: "القاهرة",   desc: "Modern Arabic",      descAr: "عربي عصري",     category: "arabic", fontFamily: "'Cairo', sans-serif",              sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "arabic-serif", label: "Amiri",             labelAr: "أميري",     desc: "Classic Arabic",     descAr: "عربي كلاسيكي",  category: "arabic", fontFamily: "'Amiri', serif",                   sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "arabic-naskh", label: "Noto Naskh Arabic", labelAr: "نوتو نسخ",  desc: "Traditional Naskh",  descAr: "نسخ تقليدي",    category: "arabic", fontFamily: "'Noto Naskh Arabic', serif",        sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
+  // Only Cairo + Amiri: both are bundled as TTFs on the server so they
+  // embed into the PDF and render identically to the editor. (Noto Naskh
+  // was removed — it is not embeddable, so it would not match the PDF.)
+  { id: "arabic-sans",  label: "Cairo", labelAr: "القاهرة", desc: "Modern Arabic",  descAr: "عربي عصري",    category: "arabic", fontFamily: "'Cairo', sans-serif", sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
+  { id: "arabic-serif", label: "Amiri", labelAr: "أميري",   desc: "Classic Arabic", descAr: "عربي كلاسيكي", category: "arabic", fontFamily: "'Amiri', serif",     sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
 ];
 
 // ── Controls ─────────────────────────────────────────────────────────────────

@@ -46,32 +46,32 @@ import {
 // webfont from Google Fonts via @import is unreliable on the server
 // (the container's egress to fonts.googleapis.com is blocked/slow), so
 // Arabic silently fell back to a wrong font no matter what the CSS said.
-// Embed the bundled Cairo.ttf (the same proven file the guide PDF uses)
+// Embed the bundled Arabic TTF (Cairo or Amiri, the user's choice)
 // straight into the HTML as a base64 @font-face — zero network needed.
-let _arabicFontB64: string | null | undefined;
-function getEmbeddedArabicFontB64(): string | null {
-  if (_arabicFontB64 !== undefined) return _arabicFontB64;
+// Both files are shipped in the api-server assets so they always match
+// what the editor shows.
+const _fontB64Cache: Record<string, string | null> = {};
+function getEmbeddedArabicFontB64(file: "Cairo.ttf" | "Amiri.ttf"): string | null {
+  if (file in _fontB64Cache) return _fontB64Cache[file];
   let dir = "";
   try { dir = path.dirname(fileURLToPath(import.meta.url)); } catch { /* bundled/other */ }
   const candidates = [
-    dir && path.resolve(dir, "assets/fonts/Cairo.ttf"),
-    dir && path.resolve(dir, "../assets/fonts/Cairo.ttf"),
-    path.resolve(process.cwd(), "dist/assets/fonts/Cairo.ttf"),
-    path.resolve(process.cwd(), "src/assets/fonts/Cairo.ttf"),
-    path.resolve(process.cwd(), "artifacts/api-server/dist/assets/fonts/Cairo.ttf"),
-    path.resolve(process.cwd(), "artifacts/api-server/src/assets/fonts/Cairo.ttf"),
+    dir && path.resolve(dir, `assets/fonts/${file}`),
+    dir && path.resolve(dir, `../assets/fonts/${file}`),
+    path.resolve(process.cwd(), `dist/assets/fonts/${file}`),
+    path.resolve(process.cwd(), `src/assets/fonts/${file}`),
+    path.resolve(process.cwd(), `artifacts/api-server/dist/assets/fonts/${file}`),
+    path.resolve(process.cwd(), `artifacts/api-server/src/assets/fonts/${file}`),
   ].filter(Boolean) as string[];
   for (const p of candidates) {
     try {
       if (fs.existsSync(p)) {
-        _arabicFontB64 = fs.readFileSync(p).toString("base64");
-        return _arabicFontB64;
+        return (_fontB64Cache[file] = fs.readFileSync(p).toString("base64"));
       }
     } catch { /* try next candidate */ }
   }
-  logger.error({ candidates }, "Embedded Arabic font (Cairo.ttf) not found for PDF export");
-  _arabicFontB64 = null;
-  return null;
+  logger.error({ file, candidates }, "Embedded Arabic font not found for PDF export");
+  return (_fontB64Cache[file] = null);
 }
 
 const isMockOpenAI = !process.env.AI_INTEGRATIONS_OPENAI_API_KEY && !process.env.OPENAI_API_KEY;
@@ -1301,28 +1301,22 @@ export async function registerRoutes(
         const baseBodyFont  = FONT_CSS[prefFontKey]    || "'EB Garamond', Georgia, serif";
         const fontImportUrl = FONT_IMPORT[prefFontKey] || FONT_IMPORT["eb-garamond"];
 
-        // The Latin display fonts (EB Garamond, Lora, ...) carry NO Arabic
-        // glyphs, so an RTL book fell back to whatever default font the
-        // PDF renderer had, which never matched the editor. Render Arabic
-        // in a real embedded Arabic webfont matched to the chosen style:
-        // Cairo for sans picks, Amiri for serif picks. Latin keeps the
-        // chosen font as the fallback.
-        const ARABIC_FONT_KEYS = new Set([
-          "arabic-sans", "arabic-serif", "arabic-naskh",
-        ]);
-        const useArabicFont = rtl && !ARABIC_FONT_KEYS.has(prefFontKey);
-        // Embed the bundled Cairo TTF directly so the Arabic font is
-        // GUARANTEED present in the headless-Chromium render — no reliance
-        // on the server reaching Google Fonts (which it can't). This is
-        // the definitive fix; the Google @import below is now only a
-        // best-effort extra, never the thing Arabic depends on.
-        const embeddedArabicB64 = useArabicFont ? getEmbeddedArabicFontB64() : null;
+        // Whenever the book is Arabic (RTL), embed the bundled Arabic TTF
+        // straight into the PDF so it is GUARANTEED present in the
+        // headless-Chromium render with zero network (the server cannot
+        // reach Google Fonts). The user's pick decides which: Amiri for
+        // the "Classic Arabic" choice, Cairo otherwise (modern / default
+        // / Latin pick on Arabic content). Both files ship with the
+        // server, so the PDF always matches what the editor shows.
+        const useArabicFont = rtl;
+        const arabicFontFile = prefFontKey === "arabic-serif" ? "Amiri.ttf" : "Cairo.ttf";
+        const embeddedArabicB64 = useArabicFont ? getEmbeddedArabicFontB64(arabicFontFile) : null;
         const arabicFontFace = embeddedArabicB64
           ? `@font-face{font-family:'PlotzyArabic';src:url(data:font/ttf;base64,${embeddedArabicB64}) format('truetype');font-weight:400 700;font-style:normal;font-display:block;}`
           : "";
         const arabicStack = embeddedArabicB64
-          ? "'PlotzyArabic', 'Cairo', 'Noto Naskh Arabic', sans-serif"
-          : "'Cairo', 'Noto Naskh Arabic', sans-serif";
+          ? "'PlotzyArabic', 'Cairo', 'Amiri', 'Noto Naskh Arabic', serif"
+          : "'Cairo', 'Amiri', 'Noto Naskh Arabic', serif";
         const bodyFont = useArabicFont
           ? `${arabicStack}, ${baseBodyFont}`
           : baseBodyFont;
