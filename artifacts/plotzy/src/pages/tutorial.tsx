@@ -353,17 +353,23 @@ export default function TutorialPage() {
 
   useEffect(() => {
     fetch("/api/tutorials")
-      .then(r => r.json())
-      .then((data: Tutorial[]) => {
-        setTutorials(data);
+      .then(r => (r.ok ? r.json() : []))
+      // The endpoint can return a non-array (e.g. a 500 error object when
+      // the DB is unavailable). Never feed that into state, or
+      // `filtered.map` throws and the error boundary takes the WHOLE app
+      // down. Always keep `tutorials` an array; a failed load just shows
+      // the normal empty state.
+      .then((data: unknown) => {
+        setTutorials(Array.isArray(data) ? (data as Tutorial[]) : []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setTutorials([]); setLoading(false); });
   }, []);
 
   const filtered = useMemo(() => {
-    if (activeCategory === "all") return tutorials;
-    return tutorials.filter(t => t.category === activeCategory);
+    const list = Array.isArray(tutorials) ? tutorials : [];
+    if (activeCategory === "all") return list;
+    return list.filter(t => t.category === activeCategory);
   }, [tutorials, activeCategory]);
 
   return (
