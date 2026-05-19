@@ -306,6 +306,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const handleDownload = async (
     format: "pdf" | "epub" | "txt" | "docx",
     font?: "cairo" | "amiri",
+    chapter?: { id: number; title: string },
   ) => {
     setIsDownloading(true);
     try {
@@ -314,14 +315,18 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       // formats. The "classic" template is hard-wired for now (the
       // template picker modal was removed because it added a click
       // and most users were just clicking through with the default).
+      // `chapter` (optional) downloads just that one chapter through the
+      // exact same pipeline (RTL + embedded Arabic font included).
+      const chapterParam = chapter ? `&chapter=${chapter.id}` : "";
       const params = format === "pdf"
-        ? `?format=pdf&template=classic${font ? `&font=${font}` : ""}`
-        : `?format=${format}`;
+        ? `?format=pdf&template=classic${font ? `&font=${font}` : ""}${chapterParam}`
+        : `?format=${format}${chapterParam}`;
       const url = `/api/books/${bookId}/download${params}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
-      const safeTitle = book.title.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
+      const nameSource = chapter ? `${book.title} - ${chapter.title}` : book.title;
+      const safeTitle = nameSource.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `${safeTitle}.${format}`;
@@ -861,6 +866,46 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                           <span>{lang === "ar" ? "كتابة" : "Write"}</span>
                                         </button>
                                       </Link>
+
+                                      {/* Per-chapter download — same formats as the
+                                          whole book (incl. the two PDF fonts), routed
+                                          through the same pipeline so RTL/Arabic-font
+                                          is respected per the chapter's own content. */}
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
+                                            style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 500 }}
+                                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'; }}
+                                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                                            title={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
+                                          >
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>{lang === "ar" ? "تنزيل" : "Download"}</span>
+                                          </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-60 rounded-xl" onClick={(e) => e.stopPropagation()}>
+                                          <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf", "cairo", { id: chapter.id, title: chapter.title })}>
+                                            <FileDown className="w-4 h-4 mr-2 text-red-400" />
+                                            {lang === "ar" ? "PDF · خط Cairo (عصري)" : "PDF · Cairo font (modern)"}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("pdf", "amiri", { id: chapter.id, title: chapter.title })}>
+                                            <FileDown className="w-4 h-4 mr-2 text-red-400" />
+                                            {lang === "ar" ? "PDF · خط Amiri (كلاسيكي)" : "PDF · Amiri font (classic)"}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("docx", undefined, { id: chapter.id, title: chapter.title })}>
+                                            <FileText className="w-4 h-4 mr-2 text-blue-400" />Word (.docx)
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("epub", undefined, { id: chapter.id, title: chapter.title })}>
+                                            <BookOpen className="w-4 h-4 mr-2" />EPUB
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="cursor-pointer rounded-lg" onClick={() => handleDownload("txt", undefined, { id: chapter.id, title: chapter.title })}>
+                                            <FileText className="w-4 h-4 mr-2" />TXT
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
 
                                       {/* Delete chapter — was previously inside the chapter
                                           editor's toolbar; lives here on the chapter row so

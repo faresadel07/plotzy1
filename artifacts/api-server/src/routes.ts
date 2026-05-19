@@ -1180,8 +1180,22 @@ export async function registerRoutes(
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
-      const chapters = await storage.getChapters(bookId);
-      const safeTitle = book.title.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
+      let chapters = await storage.getChapters(bookId);
+      // Optional single-chapter export: ?chapter=<id> filters to just that
+      // chapter and reuses the exact same txt/pdf/docx/epub + RTL +
+      // embedded-font pipeline, so a per-chapter download behaves and
+      // looks identical to the full book.
+      const chapterIdQ = Number(req.query.chapter);
+      let singleChapter: typeof chapters[number] | undefined;
+      if (chapterIdQ && !Number.isNaN(chapterIdQ)) {
+        singleChapter = chapters.find(c => c.id === chapterIdQ);
+        if (!singleChapter) return res.status(404).json({ message: "Chapter not found" });
+        chapters = [singleChapter];
+      }
+      const baseTitle = singleChapter
+        ? `${book.title} - ${singleChapter.title}`
+        : book.title;
+      const safeTitle = baseTitle.replace(/[^a-zA-Z0-9\s]/g, "").trim().replace(/\s+/g, "_") || "book";
 
       if (format === "txt") {
         const lines: string[] = [
