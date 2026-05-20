@@ -1411,10 +1411,26 @@ export async function registerRoutes(
         // first page with nothing on top — their cover already includes
         // the title/author typography they designed. Overlaying another
         // title on top just duplicates it and usually clashes visually.
+        //
+        // coverImage can be EITHER an inline data: URI (legacy storage)
+        // or a relative URL like /uploads/covers/27.png (post-migration
+        // storage). Puppeteer renders this HTML in an about:blank
+        // context, so relative paths do not resolve. Resolve a relative
+        // cover URL against the public site so Puppeteer can fetch it.
+        const publicSite = (process.env.FRONTEND_URL
+          || (process.env.NODE_ENV === "production"
+            ? `https://${process.env.APP_DOMAIN || "www.plotzy.co"}`
+            : "http://localhost:5173")
+        ).replace(/\/+$/, "");
+        const coverSrc = !book.coverImage
+          ? ""
+          : book.coverImage.startsWith("/")
+            ? `${publicSite}${book.coverImage}`
+            : book.coverImage;
         const coverPageContent = book.coverImage
           ? `
             <div class="cover-image-wrap">
-              <img src="${book.coverImage}" alt="Book Cover" class="cover-img" />
+              <img src="${coverSrc}" alt="Book Cover" class="cover-img" />
             </div>`
           : `
             <h1>${escapeHtml(book.title)}</h1>
@@ -1631,7 +1647,10 @@ export async function registerRoutes(
         // @ts-ignore
         const nodepub = await import("nodepub");
 
-        // If cover image is a data URI, save it to a temp file for nodepub
+        // Materialise the cover into a temp file nodepub can read.
+        // coverImage may be a legacy data: URI OR a relative URL like
+        // /uploads/covers/27.png (post-migration). For the URL case the
+        // image lives on the public site (Vercel), so fetch it over HTTP.
         let coverTmpPath = "";
         if (book.coverImage && book.coverImage.startsWith("data:image/")) {
           const match = book.coverImage.match(/^data:image\/(\w+);base64,(.+)$/);
@@ -1640,6 +1659,23 @@ export async function registerRoutes(
             const b64data = match[2];
             coverTmpPath = path.join(os.tmpdir(), `plotzy-cover-${bookId}-${Date.now()}.${ext}`);
             fs.writeFileSync(coverTmpPath, Buffer.from(b64data, "base64"));
+          }
+        } else if (book.coverImage && book.coverImage.startsWith("/")) {
+          try {
+            const publicSite = (process.env.FRONTEND_URL
+              || (process.env.NODE_ENV === "production"
+                ? `https://${process.env.APP_DOMAIN || "www.plotzy.co"}`
+                : "http://localhost:5173")
+            ).replace(/\/+$/, "");
+            const r = await fetch(`${publicSite}${book.coverImage}`);
+            if (r.ok) {
+              const ext = (book.coverImage.split(".").pop() || "png").toLowerCase();
+              const buf = Buffer.from(await r.arrayBuffer());
+              coverTmpPath = path.join(os.tmpdir(), `plotzy-cover-${bookId}-${Date.now()}.${ext}`);
+              fs.writeFileSync(coverTmpPath, buf);
+            }
+          } catch {
+            // Fall through to the placeholder cover below.
           }
         }
 
