@@ -15,6 +15,23 @@
  */
 import { Router } from "express";
 import { storage, type CertificateEligibility } from "../storage";
+import { memoize } from "../lib/memory-cache";
+
+// Cached wrappers so the writing course does not hammer the database on
+// every page view. Modules + lesson metadata barely ever change; full
+// lesson content rarely changes. Pulling them once into RAM and serving
+// repeat reads from there is what stops the 27-lesson markdown payload
+// from being re-transferred for every visitor.
+const cachedModules = () =>
+  memoize("course:modules", 300, () => storage.getCourseModules());
+const cachedLessonsLite = () =>
+  memoize("course:lessonsLite", 300, () => storage.getAllCourseLessonsLite());
+const cachedLessonBySlug = (slug: string) =>
+  memoize(`course:lesson:${slug}`, 600, () => storage.getCourseLessonBySlug(slug));
+type LessonSummaryInput = Pick<
+  CourseLesson,
+  "id" | "moduleId" | "slug" | "title" | "orderInModule" | "estimatedMinutes" | "heroImageUrl"
+>;
 import { requireAuth } from "../middleware/auth";
 import { aiLimiter, tierAiLimiter, publicReadLimiter, generalLimiter, writeLimiter } from "../middleware/rate-limit";
 import { requireOpenAI, getChapterText } from "./helpers";
@@ -60,7 +77,7 @@ function publicQuestion(q: {
   };
 }
 
-function summarizeLesson(l: CourseLesson) {
+function summarizeLesson(l: LessonSummaryInput) {
   return {
     id: l.id,
     slug: l.slug,
@@ -79,11 +96,11 @@ function summarizeLesson(l: CourseLesson) {
 router.get("/api/course/modules", publicReadLimiter, async (_req, res) => {
   try {
     const [modules, lessons] = await Promise.all([
-      storage.getCourseModules(),
-      storage.getAllCourseLessons(),
+      cachedModules(),
+      cachedLessonsLite(),
     ]);
 
-    const lessonsByModule = new Map<number, CourseLesson[]>();
+    const lessonsByModule = new Map<number, LessonSummaryInput[]>();
     for (const l of lessons) {
       const arr = lessonsByModule.get(l.moduleId);
       if (arr) arr.push(l);
@@ -151,12 +168,12 @@ router.get("/api/course/modules/:slug", requireAuth, generalLimiter, async (req,
 // the public marketing surface is /course (the landing page).
 router.get("/api/course/lessons/:slug", requireAuth, generalLimiter, async (req, res) => {
   try {
-    const lesson = await storage.getCourseLessonBySlug(String(req.params.slug));
+    const lesson = await cachedLessonBySlug(String(req.params.slug));
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
     const [modules, allLessons] = await Promise.all([
-      storage.getCourseModules(),
-      storage.getAllCourseLessons(),
+      cachedModules(),
+      cachedLessonsLite(),
     ]);
     const module = modules.find((m) => m.id === lesson.moduleId);
     if (!module) {
@@ -220,7 +237,7 @@ router.post("/api/course/lessons/:lessonId/complete", requireAuth, writeLimiter,
     // Validate lesson exists. The catalog is small (27 lessons), so
     // a full scan + .find is cheaper than catching the PG FK-violation
     // error from the UPSERT and translating it.
-    const allLessons = await storage.getAllCourseLessons();
+    const allLessons = await cachedLessonsLite();
     if (!allLessons.some((l) => l.id === lessonId)) {
       return res.status(404).json({ message: "Lesson not found" });
     }
@@ -263,8 +280,8 @@ router.get("/api/course/progress", requireAuth, generalLimiter, async (req, res)
     // 7× getQuizAttempts). The bulk methods are documented as the
     // dashboard-rollup variants of their per-row siblings.
     const [modules, allLessons, userProgress, finalProject, cert, allQuizzesRaw, allAttempts] = await Promise.all([
-      storage.getCourseModules(),
-      storage.getAllCourseLessons(),
+      cachedModules(),
+      cachedLessonsLite(),
       storage.getCourseProgressForUser(userId),
       storage.getFinalProjectForUser(userId),
       storage.getCertificateForUser(userId),

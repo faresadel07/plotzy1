@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { memoize, invalidate as invalidateMemoryCache } from "../lib/memory-cache";
 import { sendEmail, sendSuspensionEmail, sendRestorationEmail } from "../lib/email";
 import { isAdminUser } from "../lib/admin";
 import { sensitiveAuthLimiter } from "../middleware/rate-limit";
@@ -1391,12 +1392,16 @@ router.post("/api/marketplace/record", async (req, res) => {
 import { tutorials } from "../../../../lib/db/src/schema";
 import { asc } from "drizzle-orm";
 
-// GET /api/tutorials — public, list published tutorials
+// GET /api/tutorials — public, list published tutorials.
+// Cached in memory for 5 minutes so the public landing does not hit
+// the DB on every visit; admin writes call invalidateMemoryCache below.
 router.get("/api/tutorials", async (req, res) => {
   try {
-    const all = await db.select().from(tutorials)
-      .where(eq(tutorials.published, true))
-      .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt));
+    const all = await memoize("tutorials:published", 300, () =>
+      db.select().from(tutorials)
+        .where(eq(tutorials.published, true))
+        .orderBy(asc(tutorials.sortOrder), desc(tutorials.createdAt))
+    );
     return res.json(all);
   } catch (err) {
     logRouteError(req, err, "misc.routes");
@@ -1433,6 +1438,7 @@ router.post("/api/admin/tutorials", requireAdmin, async (req, res) => {
       sortOrder: sortOrder ?? 0,
       published: published !== false,
     }).returning();
+    invalidateMemoryCache("tutorials:");
     return res.status(201).json(tutorial);
   } catch (err) {
     logRouteError(req, err, "misc.routes");
@@ -1453,6 +1459,7 @@ router.patch("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
     updates.updatedAt = new Date();
     const [updated] = await db.update(tutorials).set(updates).where(eq(tutorials.id, id)).returning();
     if (!updated) return res.status(404).json({ message: "Tutorial not found" });
+    invalidateMemoryCache("tutorials:");
     return res.json(updated);
   } catch (err) {
     logRouteError(req, err, "misc.routes");
@@ -1466,6 +1473,7 @@ router.delete("/api/admin/tutorials/:id", requireAdmin, async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
     await db.delete(tutorials).where(eq(tutorials.id, id));
+    invalidateMemoryCache("tutorials:");
     return res.json({ success: true });
   } catch (err) {
     logRouteError(req, err, "misc.routes");

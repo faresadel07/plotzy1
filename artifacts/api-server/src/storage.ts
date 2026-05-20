@@ -171,6 +171,7 @@ export interface IStorage {
   getCourseLessons(moduleId: number): Promise<CourseLesson[]>;
   getCourseLessonBySlug(slug: string): Promise<CourseLesson | undefined>;
   getAllCourseLessons(): Promise<CourseLesson[]>;
+  getAllCourseLessonsLite(): Promise<Array<Omit<CourseLesson, "content" | "createdAt" | "updatedAt">>>;
   getCourseQuiz(quizId: number): Promise<CourseQuiz | undefined>;
   getCourseQuizQuestions(quizId: number): Promise<CourseQuizQuestion[]>;
   getModuleQuiz(moduleId: number): Promise<CourseQuiz | undefined>;
@@ -1197,6 +1198,25 @@ export class DatabaseStorage implements IStorage {
 
   async getAllCourseLessons(): Promise<CourseLesson[]> {
     return await db.select().from(courseLessons)
+      .orderBy(asc(courseLessons.moduleId), asc(courseLessons.orderInModule));
+  }
+
+  // Lightweight variant: skips the big `content` markdown column.
+  // The course modules list, progress, and prev/next navigation only
+  // need lesson metadata (id, title, slug, order, ...). Pulling the
+  // full content for every lesson on every page view was the single
+  // largest source of Neon egress, so this method is used everywhere
+  // except the lesson detail page itself.
+  async getAllCourseLessonsLite() {
+    return await db.select({
+      id: courseLessons.id,
+      moduleId: courseLessons.moduleId,
+      slug: courseLessons.slug,
+      title: courseLessons.title,
+      orderInModule: courseLessons.orderInModule,
+      estimatedMinutes: courseLessons.estimatedMinutes,
+      heroImageUrl: courseLessons.heroImageUrl,
+    }).from(courseLessons)
       .orderBy(asc(courseLessons.moduleId), asc(courseLessons.orderInModule));
   }
 
