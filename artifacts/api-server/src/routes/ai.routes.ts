@@ -7,6 +7,7 @@ import { Router } from "express";
 import { streamText } from "ai";
 import { google } from "@ai-sdk/google";
 import { aiLimiter } from "../middleware/rate-limit";
+import { requireAuth } from "../middleware/auth";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -27,12 +28,10 @@ Style:
 
 You are talking to a working writer. Treat them with respect; never be condescending.`;
 
-// Auth is intentionally OFF here: login currently requires the DB,
-// and the DB is over its monthly Neon transfer cap. We still protect
-// the endpoint with the same aiLimiter that gates the rest of the AI
-// surface so an anonymous abuser cannot drain the Gemini quota.
-// When auth is back online, swap aiLimiter for requireAuth.
-router.post("/api/ai/chat", aiLimiter, async (req, res) => {
+// Login must succeed before anyone reaches Gemini. aiLimiter is kept
+// in the chain so even an authenticated user cannot drain the daily
+// free-tier quota by spamming the endpoint.
+router.post("/api/ai/chat", requireAuth, aiLimiter, async (req, res) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
