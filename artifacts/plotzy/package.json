@@ -87,6 +87,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.187",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/lora": "^5.2.8",
     "@number-flow/react": "^0.6.0",
@@ -106,6 +107,7 @@
     "@tiptap/extension-underline": "^3.21.0",
     "@tiptap/react": "^3.21.0",
     "@tiptap/starter-kit": "^3.21.0",
+    "ai": "^6.0.185",
     "dompurify": "^3.4.1",
     "nanoid": "^5.1.7",
     "react-helmet-async": "^2.0.5"

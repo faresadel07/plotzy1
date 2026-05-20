@@ -7,6 +7,7 @@ import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { SEO } from "@/components/SEO";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
 import { AIAssistant } from "@/components/ai-assistant";
+import { AiChatPanel } from "@/components/AiChatPanel";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
@@ -329,6 +330,8 @@ export default function ChapterEditor() {
   const chapter = chapters?.find(c => c.id === chapterId);
 
   const [title, setTitle] = useState("");
+  // AI writing assistant side panel (stateless chat, in-memory only).
+  const [aiChatOpen, setAiChatOpen] = useState(false);
   const [pages, setPages] = useState<PageBlock[]>([""]);
   const [richHtml, setRichHtml] = useState<string>('<p></p>');
   const [richPages, setRichPages] = useState<string[]>(['<p></p>']);
@@ -3408,6 +3411,49 @@ export default function ChapterEditor() {
           renderPageContent={renderPageContent}
         />
       )}
+
+      {/* Floating "Talk with AI" button + the chat side panel.
+          A subtle, Apple-styled pill anchored to the bottom corner that
+          opens a stateless Gemini chat alongside the writer's work. */}
+      <button
+        type="button"
+        onClick={() => setAiChatOpen(true)}
+        aria-label={ar ? "تحدث مع الذكاء الاصطناعي" : "Talk with the AI"}
+        title={ar ? "تحدث مع الذكاء الاصطناعي" : "Talk with the AI"}
+        style={{
+          position: "fixed",
+          bottom: 22,
+          [ar ? "left" : "right"]: 22,
+          zIndex: 50,
+          display: aiChatOpen ? "none" : "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 16px 10px 14px",
+          borderRadius: 999,
+          background: "linear-gradient(135deg, #7c6af7 0%, #9b8dfb 100%)",
+          color: "#fff",
+          border: "1px solid rgba(255,255,255,0.16)",
+          boxShadow: "0 10px 30px rgba(124,106,247,0.40)",
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+          fontSize: 13,
+          fontWeight: 600,
+          letterSpacing: "-0.005em",
+          cursor: "pointer",
+          transition: "transform 140ms ease, box-shadow 140ms ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-1px)";
+          e.currentTarget.style.boxShadow = "0 14px 36px rgba(124,106,247,0.55)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 10px 30px rgba(124,106,247,0.40)";
+        }}
+      >
+        <Wand2 className="w-4 h-4" />
+        {ar ? "تحدث مع الذكاء" : "Talk with AI"}
+      </button>
+      <AiChatPanel open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
     </div>
   );
 }

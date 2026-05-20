@@ -2897,17 +2897,26 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── Seed ──────────────────────────────────────────────────────────────────
 
-  const existingBooks = await storage.getBooks();
-  if (existingBooks.length === 0) {
-    const defaultBook = await storage.createBook({
-      title: "My First Story",
-      summary: "A brief summary of my first AI-assisted story.",
-    });
-    await storage.createChapter({
-      bookId: defaultBook.id,
-      title: "Chapter 1: The Beginning",
-      content: "It was a dark and stormy night..."
-    });
+  // First-boot seed for an empty DB. A transient DB failure here
+  // (Neon over its monthly transfer cap, network blip) must NOT take
+  // the whole server down — every route depends on this function
+  // completing, and crashing on startup means the entire site is
+  // offline until the DB recovers. Log the issue and continue.
+  try {
+    const existingBooks = await storage.getBooks();
+    if (existingBooks.length === 0) {
+      const defaultBook = await storage.createBook({
+        title: "My First Story",
+        summary: "A brief summary of my first AI-assisted story.",
+      });
+      await storage.createChapter({
+        bookId: defaultBook.id,
+        title: "Chapter 1: The Beginning",
+        content: "It was a dark and stormy night..."
+      });
+    }
+  } catch (err) {
+    logger.warn({ err }, "Skipped first-boot seed (DB unavailable)");
   }
 
   // ── Gutenberg routes (extracted to ./routes/gutenberg.routes.ts) ─────────
@@ -2921,6 +2930,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ── Social routes (extracted to ./routes/social.routes.ts) ─────────
   app.use(socialRouter);
+
+  // ── AI assistant chat (Gemini) ─────────────────────────────────────
+  const aiRouter = (await import("./routes/ai.routes")).default;
+  app.use(aiRouter);
 
   // ── Writing course routes (extracted to ./routes/course.routes.ts) ──
   // Handles both /api/course/* (mostly authenticated) and the public
