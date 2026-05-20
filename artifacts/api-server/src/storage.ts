@@ -95,6 +95,7 @@ export interface IStorage {
   // Publishing
   publishBook(id: number, publish: boolean): Promise<Book>;
   getPublishedBooks(): Promise<PublishedBook[]>;
+  getPublishedBooksForList(): Promise<Array<Omit<Book, "articleContent" | "bookPages" | "bookPreferences" | "coverData" | "backCoverImage" | "titleFingerprint" | "openingFingerprint" | "lastLikeEmailSentAt" | "duplicateCheckBypassed"> & { authorDisplayName: string | null; authorAvatarUrl: string | null }>>;
   getPublishedBook(id: number): Promise<PublishedBook | undefined>;
   getPublishedBookChapters(bookId: number): Promise<Chapter[]>;
   incrementBookViewCount(id: number): Promise<void>;
@@ -506,6 +507,39 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(books.isPublished, true), eq(books.isDeleted, false)))
       .orderBy(desc(books.publishedAt));
     return rows as PublishedBook[];
+  }
+
+  // Lightweight variant used by the public Discover/Library list. Drops
+  // the columns that are never read on a book card and are individually
+  // huge: full article body, front/back matter, editor preferences, the
+  // cover designer state, the back-cover base64 image, and the internal
+  // duplicate-detection fingerprints + last-like-email anchor. This is
+  // the dominant Neon egress saver because Discover lists pull dozens
+  // of rows on every visit, and `articleContent` / `backCoverImage` /
+  // `bookPages` / `coverData` are routinely large per row.
+  async getPublishedBooksForList() {
+    const {
+      articleContent: _articleContent,
+      bookPages: _bookPages,
+      bookPreferences: _bookPreferences,
+      coverData: _coverData,
+      backCoverImage: _backCoverImage,
+      titleFingerprint: _titleFingerprint,
+      openingFingerprint: _openingFingerprint,
+      lastLikeEmailSentAt: _lastLikeEmailSentAt,
+      duplicateCheckBypassed: _duplicateCheckBypassed,
+      ...listCols
+    } = getTableColumns(books);
+    return await db
+      .select({
+        ...listCols,
+        authorDisplayName: users.displayName,
+        authorAvatarUrl: users.avatarUrl,
+      })
+      .from(books)
+      .leftJoin(users, eq(books.userId, users.id))
+      .where(and(eq(books.isPublished, true), eq(books.isDeleted, false)))
+      .orderBy(desc(books.publishedAt));
   }
 
   async getPublishedArticles(): Promise<PublishedBook[]> {

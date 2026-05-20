@@ -34,6 +34,7 @@ import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import courseRouter from "./routes/course.routes";
 import { logger } from "./lib/logger";
+import { memoize, invalidate as invalidateMemoryCache } from "./lib/memory-cache";
 import { fileURLToPath } from "url";
 import {
   analyzePlotHoles,
@@ -643,7 +644,14 @@ export async function registerRoutes(
 
   app.get("/api/public/books", async (_req, res) => {
     try {
-      const publishedBooks = await storage.getPublishedBooks();
+      // Lite columns + 60s memoize: skips the per-row article body,
+      // front/back matter JSON, editor preferences, cover-designer
+      // state and the back-cover base64. Discover/Library pulls dozens
+      // of rows on every visit; this collapses dozens of heavy reads
+      // per minute into a single light read.
+      const publishedBooks = await memoize("public:books:list", 60, () =>
+        storage.getPublishedBooksForList()
+      );
       return res.json(publishedBooks);
     } catch (err) {
       return res.status(500).json({ message: "Internal error" });
