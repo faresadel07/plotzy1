@@ -4,7 +4,7 @@
 // When the database is wired we will persist per-user-per-book history.
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Send, Sparkles, X, Copy, Check } from "lucide-react";
+import { Loader2, Send, X, Copy, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
 interface Message {
@@ -129,6 +129,15 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
 
   return (
     <>
+      {/* Local keyframes for the message entrance animation. Scoped to
+          this component so we are not relying on a global CSS edit. */}
+      <style>{`
+        @keyframes plotzyMsgIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Backdrop (subtle, dismiss on click) */}
       <div
         onClick={onClose}
@@ -154,53 +163,69 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
           top: 0,
           bottom: 0,
           [dockSide]: 0,
-          width: "min(100vw, 440px)",
-          background: "rgba(10,10,11,0.96)",
-          color: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          borderInlineStart: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 12px 48px rgba(0,0,0,0.5)",
+          width: "min(100vw, 420px)",
+          background:
+            "linear-gradient(180deg, rgba(18,18,22,0.78) 0%, rgba(10,10,13,0.86) 100%)",
+          color: "rgba(255,255,255,0.94)",
+          backdropFilter: "blur(28px) saturate(180%)",
+          WebkitBackdropFilter: "blur(28px) saturate(180%)",
+          borderInlineStart: "1px solid rgba(255,255,255,0.06)",
+          boxShadow:
+            "0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
           transform: open
             ? "translateX(0)"
             : isRTL ? "translateX(-100%)" : "translateX(100%)",
-          transition: "transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+          transition: "transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1)",
           display: "flex",
           flexDirection: "column",
           fontFamily: APPLE_FONT,
           zIndex: 61,
         }}
       >
-        {/* Header */}
+        {/* Header. Deliberately no logo, no avatar, no decorative chip.
+            Just title, a subtle live dot, and the close button. */}
         <header
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            padding: "16px 18px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            gap: 12,
+            padding: "18px 20px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
             flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 9,
-              background: "linear-gradient(135deg, #7c6af7 0%, #9b8dfb 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Sparkles size={15} color="#fff" />
-          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: 14, letterSpacing: "-0.01em" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontWeight: 600,
+                fontSize: 15,
+                letterSpacing: "-0.015em",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "#34d399",
+                  boxShadow: "0 0 8px rgba(52,211,153,0.7)",
+                  flexShrink: 0,
+                }}
+              />
               {ar ? "مساعد الكتابة" : "Writing Assistant"}
             </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: "rgba(255,255,255,0.42)",
+                marginTop: 2,
+                marginInlineStart: 14,
+              }}
+            >
               {ar ? "اسأله أي شيء عن قصتك" : "Ask anything about your story"}
             </div>
           </div>
@@ -212,11 +237,18 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
               border: "none",
               color: "rgba(255,255,255,0.55)",
               padding: 8,
-              borderRadius: 8,
+              borderRadius: 10,
               cursor: "pointer",
+              transition: "background 120ms ease, color 120ms ease",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+              e.currentTarget.style.color = "rgba(255,255,255,0.85)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+            }}
           >
             <X size={18} />
           </button>
@@ -228,25 +260,39 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "18px 18px 12px",
+            padding: "22px 20px 16px",
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 14,
             scrollBehavior: "smooth",
           }}
         >
           {messages.length === 0 && (
             <div
               style={{
-                color: "rgba(255,255,255,0.45)",
-                fontSize: 13,
-                lineHeight: 1.7,
-                padding: "24px 4px",
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 14,
+                lineHeight: 1.75,
+                padding: "28px 4px",
+                textAlign: "center",
               }}
             >
-              {ar
-                ? "ابدأ المحادثة. مثلًا: اقترح ثلاث طرق لتطوير شخصية البطل، أو راجع هذا المشهد، أو أعطني فكرة لافتتاح الفصل القادم."
-                : "Start the conversation. For example: suggest three ways to develop my protagonist, or review this scene, or give me an idea for the next chapter's opening."}
+              <div
+                style={{
+                  fontSize: 17,
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.85)",
+                  marginBottom: 10,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {ar ? "كيف أساعدك اليوم؟" : "How can I help today?"}
+              </div>
+              <div style={{ maxWidth: 320, margin: "0 auto" }}>
+                {ar
+                  ? "اقترح طرقاً لتطوير شخصية، أو راجع مشهداً، أو أعطني فكرة لافتتاح الفصل القادم."
+                  : "Suggest ways to develop a character, review a scene, or give me an opening for the next chapter."}
+              </div>
             </div>
           )}
 
@@ -260,24 +306,31 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
                   justifyContent: isUser ? "flex-end" : "flex-start",
                   alignItems: "flex-end",
                   gap: 6,
+                  animation: "plotzyMsgIn 220ms ease-out both",
                 }}
               >
                 <div
                   style={{
-                    maxWidth: "88%",
-                    background: isUser ? "rgba(124,106,247,0.18)" : "rgba(255,255,255,0.05)",
-                    border: isUser ? "1px solid rgba(124,106,247,0.30)" : "1px solid rgba(255,255,255,0.08)",
-                    color: "rgba(255,255,255,0.94)",
-                    padding: "10px 14px",
-                    borderRadius: 16,
-                    fontSize: 14,
+                    maxWidth: "86%",
+                    background: isUser
+                      ? "linear-gradient(135deg, rgba(124,106,247,0.85) 0%, rgba(139,121,251,0.85) 100%)"
+                      : "rgba(255,255,255,0.045)",
+                    color: isUser ? "#ffffff" : "rgba(255,255,255,0.94)",
+                    padding: "11px 15px",
+                    borderRadius: 18,
+                    borderEndStartRadius: isUser ? 18 : 6,
+                    borderEndEndRadius: isUser ? 6 : 18,
+                    fontSize: 14.5,
                     lineHeight: 1.65,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
+                    boxShadow: isUser
+                      ? "0 6px 20px rgba(124,106,247,0.25)"
+                      : "0 2px 12px rgba(0,0,0,0.18)",
                   }}
                 >
                   {m.content || (streaming && !isUser ? (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, opacity: 0.6 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, opacity: 0.7 }}>
                       <Loader2 size={13} className="animate-spin" />
                       {ar ? "يكتب..." : "Thinking..."}
                     </span>
@@ -291,7 +344,7 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
                     style={{
                       background: "transparent",
                       border: "none",
-                      color: copiedIndex === i ? "#7c6af7" : "rgba(255,255,255,0.35)",
+                      color: copiedIndex === i ? "#7c6af7" : "rgba(255,255,255,0.30)",
                       padding: 6,
                       borderRadius: 8,
                       cursor: "pointer",
@@ -299,7 +352,7 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
                       flexShrink: 0,
                     }}
                     onMouseEnter={(e) => copiedIndex !== i && (e.currentTarget.style.color = "rgba(255,255,255,0.75)")}
-                    onMouseLeave={(e) => copiedIndex !== i && (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                    onMouseLeave={(e) => copiedIndex !== i && (e.currentTarget.style.color = "rgba(255,255,255,0.30)")}
                   >
                     {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
                   </button>
@@ -312,11 +365,12 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
             <div
               style={{
                 color: "#fca5a5",
-                fontSize: 12,
-                padding: "6px 10px",
-                background: "rgba(239,68,68,0.08)",
-                border: "1px solid rgba(239,68,68,0.25)",
-                borderRadius: 10,
+                fontSize: 12.5,
+                padding: "8px 12px",
+                background: "rgba(239,68,68,0.06)",
+                border: "1px solid rgba(239,68,68,0.18)",
+                borderRadius: 12,
+                textAlign: "center",
               }}
             >
               {error}
@@ -327,12 +381,13 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
         {/* Composer */}
         <div
           style={{
-            padding: "12px 14px 16px",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
+            padding: "14px 16px 18px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
             display: "flex",
-            gap: 8,
+            gap: 10,
             alignItems: "flex-end",
             flexShrink: 0,
+            background: "rgba(255,255,255,0.015)",
           }}
         >
           <textarea
@@ -345,19 +400,28 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
             disabled={streaming}
             style={{
               flex: 1,
-              minHeight: 40,
+              minHeight: 42,
               maxHeight: 140,
-              resize: "vertical",
-              background: "rgba(255,255,255,0.04)",
-              color: "rgba(255,255,255,0.92)",
-              border: "1px solid rgba(255,255,255,0.10)",
-              borderRadius: 12,
-              padding: "10px 12px",
+              resize: "none",
+              background: "rgba(255,255,255,0.05)",
+              color: "rgba(255,255,255,0.94)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14,
+              padding: "11px 14px",
               outline: "none",
-              fontSize: 14,
+              fontSize: 14.5,
               lineHeight: 1.5,
               fontFamily: "inherit",
               direction: isRTL ? "rtl" : "ltr",
+              transition: "border-color 120ms ease, background 120ms ease",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "rgba(124,106,247,0.55)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
             }}
           />
           <button
@@ -365,19 +429,29 @@ export function AiChatPanel({ open, onClose, initialMessages }: Props) {
             disabled={!input.trim() || streaming}
             aria-label={ar ? "إرسال" : "Send"}
             style={{
-              background: !input.trim() || streaming ? "rgba(255,255,255,0.06)" : "#7c6af7",
-              color: !input.trim() || streaming ? "rgba(255,255,255,0.35)" : "#fff",
+              background: !input.trim() || streaming
+                ? "rgba(255,255,255,0.05)"
+                : "linear-gradient(135deg, #7c6af7 0%, #9b8dfb 100%)",
+              color: !input.trim() || streaming ? "rgba(255,255,255,0.30)" : "#fff",
               border: "none",
-              borderRadius: 12,
+              borderRadius: 14,
               padding: "0 14px",
-              height: 40,
+              height: 42,
               cursor: !input.trim() || streaming ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transition: "background 120ms ease",
+              transition: "background 120ms ease, transform 120ms ease",
               flexShrink: 0,
+              boxShadow: !input.trim() || streaming
+                ? "none"
+                : "0 6px 18px rgba(124,106,247,0.35)",
             }}
+            onMouseDown={(e) => {
+              if (input.trim() && !streaming) e.currentTarget.style.transform = "scale(0.96)";
+            }}
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             {streaming ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>

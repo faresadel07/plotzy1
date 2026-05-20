@@ -89,8 +89,8 @@ export default function AiChatPreview() {
           }}
         >
           {ar
-            ? "هذه الصفحة لمعاينة شكل المحادثة فقط. الرسائل أدناه نماذج ثابتة لا تتصل بالذكاء الاصطناعي. اللوحة على الجانب هي بالضبط ما سيظهر للكاتب داخل صفحة تحرير الفصل."
-            : "This page is only for previewing the look of the chat. The messages on the right are static samples — they do not talk to the live AI. The side panel is exactly what a writer sees inside the chapter editor."}
+            ? "هذه الصفحة لمعاينة شكل المحادثة فقط. الرسائل على الجانب نماذج ثابتة لا تتصل بالذكاء الاصطناعي. اللوحة هي بالضبط ما سيظهر للكاتب داخل صفحة تحرير الفصل."
+            : "This page is only for previewing the look of the chat. The messages on the side are static samples that do not talk to the live AI. The side panel is exactly what a writer sees inside the chapter editor."}
         </p>
       </div>
 
