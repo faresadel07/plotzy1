@@ -15,15 +15,18 @@ interface Message {
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Optional. Pre-seed the conversation. Only used by the design
+   *  preview page so the layout can be reviewed without a live API. */
+  initialMessages?: Message[];
 }
 
 const APPLE_FONT =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif';
 
-export function AiChatPanel({ open, onClose }: Props) {
+export function AiChatPanel({ open, onClose, initialMessages }: Props) {
   const { lang, isRTL } = useLanguage();
   const ar = lang === "ar";
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
