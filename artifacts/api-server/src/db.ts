@@ -11,18 +11,27 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Pool sized for Neon serverless. Defaults (max=10, infinite idle)
-// hold connections open longer than Neon keeps them alive — when the
-// proxy quietly drops idle slots, the next checkout gets ECONNRESET.
-// max=5 fits well within Neon's free-tier budget; idleTimeoutMillis
-// closes idle clients before the platform does; connectionTimeoutMillis
-// bounds how long we wait for an empty slot under load instead of
-// piling up forever.
+// Pool sized for serverless Postgres providers. Defaults (max=10,
+// infinite idle) hold connections open longer than the upstream keeps
+// them alive, so the next checkout gets ECONNRESET. max=5 fits well
+// inside free-tier budgets; idleTimeoutMillis closes idle clients
+// before the platform does; connectionTimeoutMillis bounds how long
+// we wait for an empty slot under load instead of piling up forever.
+//
+// Supabase's shared pooler presents a Supabase-issued certificate that
+// is not in Node's default CA bundle, so a plain `sslmode=require` URL
+// fails the TLS verify step and the connection just hangs forever (no
+// rows ever returned to the API server, every endpoint 500s). We keep
+// TLS on but skip CA verification when we detect a Supabase host. The
+// link is still encrypted in transit — we just trust the host.
+const url = process.env.DATABASE_URL!;
+const isSupabase = /\.supabase\.(com|co)/i.test(url);
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: url,
   max: 5,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
+  ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
 // Idle-client errors (Neon dropping a connection mid-idle, transient
