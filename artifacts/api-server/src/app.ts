@@ -187,7 +187,15 @@ app.use(
       ? new PgSession({
           pool,
           tableName: "user_sessions",
-          createTableIfMissing: true,
+          // createTableIfMissing breaks on the Railway build because
+          // connect-pg-simple's table.sql template ships inside its
+          // own package but the bundler/runtime resolves it relative
+          // to the built dist/ directory ('/app/artifacts/api-server/
+          // dist/table.sql') and throws ENOENT. Every login then
+          // crashed mid-session-save and the cookie never landed in
+          // the user_sessions row. The table is created up front by
+          // the migration script, so we don't need this flag at all.
+          createTableIfMissing: false,
         })
       : undefined,
     secret: sessionSecret || "plotzy-dev-secret-not-for-production",
