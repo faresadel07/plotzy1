@@ -18,20 +18,20 @@ if (!process.env.DATABASE_URL) {
 // before the platform does; connectionTimeoutMillis bounds how long
 // we wait for an empty slot under load instead of piling up forever.
 //
-// Supabase's shared pooler presents a Supabase-issued certificate that
-// is not in Node's default CA bundle, so a plain `sslmode=require` URL
-// fails the TLS verify step and the connection just hangs forever (no
-// rows ever returned to the API server, every endpoint 500s). We keep
-// TLS on but skip CA verification when we detect a Supabase host. The
-// link is still encrypted in transit — we just trust the host.
+// Managed Postgres providers (Supabase pooler, Neon, etc.) present
+// certificates signed by a CA that is not always in Node's default
+// trust store. With plain sslmode=require the TLS verify step fails
+// ("self-signed certificate in certificate chain") and the pool never
+// hands back a connection — every endpoint that touches the DB 500s.
+// Keep TLS on for confidentiality, but skip CA verification. This is
+// the same posture every Postgres-on-managed-cloud setup uses.
 const url = process.env.DATABASE_URL!;
-const isSupabase = /\.supabase\.(com|co)/i.test(url);
 export const pool = new Pool({
   connectionString: url,
   max: 5,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
-  ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
+  ssl: { rejectUnauthorized: false },
 });
 
 // Idle-client errors (Neon dropping a connection mid-idle, transient
