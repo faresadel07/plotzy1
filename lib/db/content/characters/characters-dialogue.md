@@ -2,7 +2,7 @@
 
 Real speech is messy.
 
-Transcribe two minutes of any conversation. The transcript is unreadable. *"Yeah no — I mean — well, the thing is — what I was — hold on, where did I —"*. Real speech is mostly throat-clearing.
+Transcribe two minutes of any conversation. The transcript is unreadable. *"Yeah no, I mean, well, the thing is, what I was, hold on, where did I, "*. Real speech is mostly throat-clearing.
 
 Fictional dialogue strips out the throat-clearing while keeping the *texture*. A character can pause, can interrupt themselves, can repeat, but every preserved imperfection is doing work. It is signalling state, not transcribing reality.
 

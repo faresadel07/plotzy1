@@ -2966,6 +2966,23 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     }
   });
 
+  // The writing course catalog lives in code (lib/db/src/course-content)
+  // and is rehydrated into the database on every boot. This is what
+  // makes course content survive a database migration: the bundled
+  // copy is the source of truth, the DB is just a synchronised cache.
+  // Runs in the background so a slow Supabase write never blocks
+  // startup. Wrapped so a stray DB error here cannot crash the API.
+  setImmediate(async () => {
+    try {
+      const { syncCourseContent } = await import("../../../lib/db/src/course-content/sync");
+      const { db } = await import("./db");
+      const counts = await syncCourseContent(db as any, (msg) => logger.warn(msg));
+      logger.info({ counts }, "Course content sync complete");
+    } catch (err) {
+      logger.error({ err }, "Course content sync failed");
+    }
+  });
+
   return httpServer;
 }
 
