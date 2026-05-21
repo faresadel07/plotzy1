@@ -172,11 +172,20 @@ const PgSession = ConnectPgSimple(session);
 // here. In development the fallback keeps local runs unblocked.
 const sessionSecret = process.env.SESSION_SECRET;
 
+// Reuse the main app's pool (which already strips sslmode and trusts
+// the managed-Postgres cert) instead of giving connect-pg-simple a
+// raw conString. With conString the session store builds its own pool
+// from the URL, hits the same "self-signed certificate in chain" TLS
+// error the API pool hit, and EVERY login fails to persist — Passport
+// reports success but the cookie never gets a session row, so the
+// next request is anonymous and Railway redirects to /?auth=error.
+// Sharing the pool fixes session writes and halves the connection
+// count Supabase has to track.
 app.use(
   session({
     store: process.env.DATABASE_URL
       ? new PgSession({
-          conString: process.env.DATABASE_URL,
+          pool,
           tableName: "user_sessions",
           createTableIfMissing: true,
         })
