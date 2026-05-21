@@ -23,9 +23,20 @@ if (!process.env.DATABASE_URL) {
 // trust store. With plain sslmode=require the TLS verify step fails
 // ("self-signed certificate in certificate chain") and the pool never
 // hands back a connection — every endpoint that touches the DB 500s.
-// Keep TLS on for confidentiality, but skip CA verification. This is
-// the same posture every Postgres-on-managed-cloud setup uses.
-const url = process.env.DATABASE_URL!;
+// Keep TLS on for confidentiality, but skip CA verification.
+//
+// IMPORTANT: pg-connection-string parses sslmode=require/verify-full
+// from the URL and builds an ssl object with rejectUnauthorized:true.
+// That parsed object overrides our explicit ssl option below, so the
+// connection still fails. Strip sslmode out of the URL first, then
+// our explicit { rejectUnauthorized:false } is the only ssl source
+// and pg actually uses it.
+const rawUrl = process.env.DATABASE_URL!;
+const parsed = new URL(rawUrl);
+parsed.searchParams.delete("sslmode");
+parsed.searchParams.delete("channel_binding");
+const url = parsed.toString();
+
 export const pool = new Pool({
   connectionString: url,
   max: 5,
