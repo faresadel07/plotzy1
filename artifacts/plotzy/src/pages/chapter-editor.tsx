@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
@@ -641,11 +641,75 @@ export default function ChapterEditor() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restoredPositionRef = useRef(false);
 
-  /* ── Print View derived state (must be before useEffects that reference maxSpread) ── */
-  const printPages = pages
-    .map(p => (typeof p === 'string' ? p : p.type === 'text' ? p.content : ''))
-    .filter(p => p.trim().length > 0);
+  /* ── Print View derived state (must be before useEffects that reference maxSpread) ──
+   *
+   * The editor's own `pages` array is shaped by what fits on screen as
+   * the writer types and does NOT match the printed-book trim. A single
+   * 9,680-word chapter would land in the preview as one giant blob with
+   * Next disabled. We re-paginate here for the preview only: chunk the
+   * full chapter HTML by paragraph boundaries and pack roughly
+   * PRINT_WORDS_PER_PAGE words per printed page (tuned for the Trade
+   * paper size at 14pt with 1.72 line height).
+   */
+  const PRINT_WORDS_PER_PAGE = 320;
+
+  const printPages = useMemo<string[]>(() => {
+    // Pull every text-page's HTML in order, then split on paragraph
+    // boundaries so a paragraph is never cut in half.
+    const allHtml = pages
+      .map((p) => (typeof p === "string" ? p : p.type === "text" ? p.content : ""))
+      .join("");
+    if (!allHtml.trim()) return [];
+
+    const blockTags = ["p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "li"];
+    const splitRe = new RegExp(`(?<=</(?:${blockTags.join("|")})>)`, "i");
+    const blocks = allHtml.split(splitRe).map((b) => b.trim()).filter(Boolean);
+
+    const countWordsInHtml = (html: string): number => {
+      const text = html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
+      return text.trim().split(/\s+/).filter(Boolean).length;
+    };
+
+    const result: string[] = [];
+    let buf = "";
+    let bufWords = 0;
+    for (const block of blocks) {
+      const w = countWordsInHtml(block);
+      // A single oversized block (e.g. a long paragraph longer than
+      // a page) still goes on its own page rather than being cut
+      // mid-sentence. The pagination is generous, not perfect — a
+      // future revision can DOM-measure for exact line wrapping.
+      if (bufWords + w > PRINT_WORDS_PER_PAGE && buf) {
+        result.push(buf);
+        buf = block;
+        bufWords = w;
+      } else {
+        buf += block;
+        bufWords += w;
+      }
+    }
+    if (buf.trim()) result.push(buf);
+    return result;
+  }, [pages]);
+
   const maxSpread = Math.max(0, Math.ceil(printPages.length / 2) - 1);
+
+  /* ── Content direction inferred from the chapter itself ──
+   *
+   * The two-page book preview opens right page first for Arabic, left
+   * page first for English. We do NOT read the UI language for this;
+   * an English-UI writer reviewing an Arabic chapter should still get
+   * the RTL book layout. Heuristic: count Arabic-block characters vs
+   * Latin letters in the rendered text and pick whichever dominates.
+   */
+  const ARABIC_CHAR_RE_PREVIEW = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/g;
+  const contentDir: "rtl" | "ltr" = useMemo(() => {
+    const sample = printPages.slice(0, 4).join(" ").replace(/<[^>]+>/g, " ");
+    const arCount = (sample.match(ARABIC_CHAR_RE_PREVIEW) || []).length;
+    const enCount = (sample.match(/[A-Za-z]/g) || []).length;
+    if (arCount === 0 && enCount === 0) return "ltr";
+    return arCount > enCount ? "rtl" : "ltr";
+  }, [printPages]);
 
   useEffect(() => {
     return () => {
@@ -728,21 +792,37 @@ export default function ChapterEditor() {
   // splitIntoPages call in the typing flow, so no re-pagination is needed
   // on load. If old data ever needs migration, do it server-side once.
 
-  /* ── Print View keyboard navigation ── */
+  /* ── Print View keyboard navigation ──
+   *
+   * Direction is content-aware so the arrow keys feel natural for the
+   * manuscript the writer is reviewing. In a left-to-right book, the
+   * right-arrow takes you to the next spread; in an Arabic book the
+   * left-arrow does because the reader's eye moves the other way.
+   * PageDown / PageUp work the same in both because they have no
+   * direction connotation.
+   */
   useEffect(() => {
     if (!isPrintView) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      const forward = contentDir === "rtl" ? "ArrowLeft" : "ArrowRight";
+      const backward = contentDir === "rtl" ? "ArrowRight" : "ArrowLeft";
+      if (e.key === forward || e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
         setCurrentSpread(s => Math.min(maxSpread, s + 1));
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      } else if (e.key === backward || e.key === "ArrowUp" || e.key === "PageUp") {
+        e.preventDefault();
         setCurrentSpread(s => Math.max(0, s - 1));
       } else if (e.key === "Escape") {
         setIsPrintView(false);
+      } else if (e.key === "Home") {
+        setCurrentSpread(0);
+      } else if (e.key === "End") {
+        setCurrentSpread(maxSpread);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isPrintView, maxSpread]);
+  }, [isPrintView, maxSpread, contentDir]);
 
   /* ── Ctrl+F search in editor ── */
   useEffect(() => {
@@ -3406,6 +3486,7 @@ export default function ChapterEditor() {
           title={title}
           bookTitle={book?.title || ''}
           authorName={book?.authorName || ''}
+          contentDir={contentDir}
           ar={ar}
           onClose={() => setIsPrintView(false)}
           renderPageContent={renderPageContent}
