@@ -186,9 +186,9 @@ export default function Pricing() {
               border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: 18,
               padding: "36px clamp(20px, 4vw, 44px) 32px",
-              background: "#0a0a0a",
-              boxShadow:
-                "0 1px 0 rgba(255,255,255,0.02), 0 24px 60px rgba(0,0,0,0.45)",
+              // Match the page background exactly so the card frame is
+              // the only visual seam between the card and the page.
+              background: "#000",
             }}
           >
             <h1
@@ -503,7 +503,9 @@ export default function Pricing() {
               marginTop: 56,
               maxWidth: 620,
               marginInline: "auto",
-              background: "#0d0d0d",
+              // Same flat black as everything else, the rim and the
+              // section's heading do the visual separation.
+              background: "#000",
               border: "1px solid rgba(255,255,255,0.10)",
               borderRadius: 14,
               padding: "26px 28px",
