@@ -539,14 +539,16 @@ export const bookLikes = pgTable("book_likes", {
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
-// Unique constraint on (book_id, user_id) is enforced in production
-// by `book_likes_book_id_user_id_key` (auto-generated from a previous
-// schema iteration). The duplicate `uq_book_likes_book_user` was
-// dropped 2026-05-07 as part of the M-1 cleanup; the schema-level
-// declaration is intentionally omitted to match the post-drop DB
-// state. Drizzle won't recreate the surviving index, but it also
-// won't drop it.
+}, (t) => [
+  // Required by `INSERT ... ON CONFLICT DO NOTHING` on bookLikes
+  // (storage.likeBook). Was omitted from the schema for "legacy
+  // parity" with Neon, but drizzle-kit push to a fresh database
+  // (Supabase migration 2026-05-22) created the table WITHOUT this
+  // constraint and every like attempt 500'd with "no unique or
+  // exclusion constraint matching the ON CONFLICT specification".
+  // Schema is now the source of truth.
+  uniqueIndex("uq_book_likes_book_user").on(t.bookId, t.userId),
+]);
 
 export type BookRating = typeof bookRatings.$inferSelect;
 export type BookComment = typeof bookComments.$inferSelect;
@@ -659,12 +661,15 @@ export const follows = pgTable("follows", {
   followerId: integer("follower_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   followeeId: integer("followee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
-// Unique constraint on (follower_id, followee_id) is enforced in
-// production by `idx_follows_unique` (the surviving index after the
-// 2026-05-07 M-1 cleanup; `uq_follows_follower_followee` was its
-// duplicate and got dropped). Schema-level declaration omitted to
-// match post-drop DB state.
+}, (t) => [
+  // Required by `INSERT ... ON CONFLICT DO NOTHING` on follows
+  // (storage.followUser). Was omitted from the schema for "legacy
+  // parity" with Neon, but drizzle-kit push to a fresh database
+  // (Supabase migration 2026-05-22) created the table WITHOUT this
+  // constraint and every follow attempt 500'd. Schema is now the
+  // source of truth.
+  uniqueIndex("uq_follows_follower_followee").on(t.followerId, t.followeeId),
+]);
 
 // ── Notifications ─────────────────────────────────────────────────────────
 
@@ -732,10 +737,14 @@ export const dailyAiUsage = pgTable("daily_ai_usage", {
   date: text("date").notNull(), // YYYY-MM-DD
   callCount: integer("call_count").notNull().default(0),
 }, (t) => [
-  // Unique constraint on (user_id, date) is enforced in production by
-  // `daily_ai_usage_user_id_date_key` (the auto-generated, more-used
-  // surviving index after the 2026-05-07 M-1 cleanup). The duplicate
-  // manual `uq_daily_ai_usage_user_date` was dropped.
+  // Required by incrementAiUsage's INSERT ... ON CONFLICT (user_id, date)
+  // upsert. Without this declared in Drizzle, drizzle-kit push to a fresh
+  // database (Supabase migration 2026-05-22) created the table WITHOUT
+  // the unique index, every AI call subsequently 500'd at the usage
+  // tracker, and every downstream feature (improve, marketplace,
+  // proposal, audiobook, voice) failed before the actual AI call could
+  // even start.
+  uniqueIndex("uq_daily_ai_usage_user_date").on(t.userId, t.date),
   // Admin analytics aggregates per day across all users — without this it
   // ends up scanning the whole table to bucket by date.
   index("idx_daily_ai_usage_date").on(t.date),
