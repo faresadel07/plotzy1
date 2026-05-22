@@ -25,6 +25,7 @@ import { requireAdmin, requireBookOwner, requireBookOwnerStrict, requireChapterO
 import { aiLimiter, imageGenLimiter, tierAiLimiter, publicReadLimiter } from "./middleware/rate-limit";
 import { getUserTier, checkMarketplaceLimit, recordMarketplaceUsage } from "./lib/tier-limits";
 import { isAdminUser } from "./lib/admin";
+import { handleAiError } from "./lib/ai-error";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
@@ -1107,14 +1108,8 @@ export async function registerRoutes(
 
       const report = response.choices[0]?.message?.content || "No analysis returned.";
       return finishAnalysis(report);
-    } catch (err: any) {
-      logger.error({ err }, "Route error");
-      // Surface the upstream reason (rate limit, context length, etc.)
-      // instead of an opaque "Analysis failed" so it is actionable.
-      const detail = err?.error?.message || err?.message;
-      return res.status(500).json({
-        message: detail ? `Analysis failed: ${String(detail).slice(0, 200)}` : "Analysis failed",
-      });
+    } catch (err) {
+      return handleAiError(res, err, { route: "/api/marketplace/analyze", user: req.user }, "Analysis failed");
     }
   });
 
@@ -1164,8 +1159,7 @@ export async function registerRoutes(
       await storage.updateBook(bookId, { summary: blurb });
       return res.json({ blurb });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to generate blurb" });
+      return handleAiError(res, err, { route: "/api/books/:id/blurb", user: req.user }, "Failed to generate blurb");
     }
   });
 
@@ -2084,8 +2078,7 @@ export async function registerRoutes(
       const chapter = await storage.createChapter({ bookId, title, content: chapterContent });
       return res.json(chapter);
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to process voice" });
+      return handleAiError(res, err, { route: "/api/books/:id/voice", user: req.user }, "Failed to process voice");
     }
   });
 
@@ -2243,8 +2236,7 @@ export async function registerRoutes(
 
       return res.json({ success: true, generatedCount: count });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to extract lore" });
+      return handleAiError(res, err, { route: "/api/books/:id/lore/extract", user: req.user }, "Failed to extract lore");
     }
   });
 
@@ -2411,8 +2403,7 @@ Return a strict JSON object with these two arrays.`;
 
       return res.json({ improvedText: response.choices[0]?.message?.content || text });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to improve text" });
+      return handleAiError(res, err, { route: "/api/improve-text", user: req.user }, "Failed to improve text");
     }
   });
 
@@ -2441,8 +2432,7 @@ Return a strict JSON object with these two arrays.`;
 
       return res.json({ expandedText: response.choices[0]?.message?.content || idea });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to expand idea" });
+      return handleAiError(res, err, { route: "/api/ai/expand", user: req.user }, "Failed to expand idea");
     }
   });
 
@@ -2471,8 +2461,7 @@ Return a strict JSON object with these two arrays.`;
 
       return res.json({ continuedText: response.choices[0]?.message?.content || "" });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to continue text" });
+      return handleAiError(res, err, { route: "/api/ai/continue", user: req.user }, "Failed to continue text");
     }
   });
 
@@ -2544,8 +2533,7 @@ Rules:
 
       return res.json({ translatedText: response.choices[0]?.message?.content || text });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to translate text" });
+      return handleAiError(res, err, { route: "/api/ai/translate", user: req.user }, "Failed to translate text");
     }
   });
 
@@ -2712,8 +2700,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
       return res.json({ proposal: response.choices[0]?.message?.content || "" });
     } catch (err) {
-      logger.error({ err }, "Route error");
-      return res.status(500).json({ message: "Failed to generate proposal" });
+      return handleAiError(res, err, { route: "/api/publish-book/proposal", user: req.user }, "Failed to generate proposal");
     }
   });
 
@@ -2799,8 +2786,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
       return res.json({ audio: mp3.toString("base64"), mimeType: "audio/mpeg", chapterId });
     } catch (err) {
-      logger.error({ err }, "Audiobook preview error");
-      return res.status(500).json({ message: "Failed to generate audio preview" });
+      return handleAiError(res, err, { route: "/api/books/:id/audiobook/preview", user: req.user }, "Failed to generate audio preview");
     }
   });
 
@@ -2885,8 +2871,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       res.setHeader("Content-Length", merged.length);
       return res.send(merged);
     } catch (err) {
-      logger.error({ err }, "Audiobook export error");
-      return res.status(500).json({ message: "Failed to export audiobook" });
+      return handleAiError(res, err, { route: "/api/books/:id/audiobook/export", user: req.user }, "Failed to export audiobook");
     }
   });
 
