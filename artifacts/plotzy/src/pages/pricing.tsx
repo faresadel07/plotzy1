@@ -148,6 +148,23 @@ export default function Pricing() {
     };
   }, []);
 
+  // The whole page is pure black. The body element underneath is
+  // styled to --background (#0a0a0a in dark mode) by the global
+  // stylesheet, which shows through as a slightly lighter band on
+  // any pixel not covered by this page's inner div. Override the
+  // body and html backgrounds for as long as this page is mounted,
+  // and restore them on unmount so other pages keep their look.
+  useEffect(() => {
+    const prevBodyBg = document.body.style.background;
+    const prevHtmlBg = document.documentElement.style.background;
+    document.body.style.background = "#000";
+    document.documentElement.style.background = "#000";
+    return () => {
+      document.body.style.background = prevBodyBg;
+      document.documentElement.style.background = prevHtmlBg;
+    };
+  }, []);
+
   // PayPal cancel flow used to redirect back to /pricing with
   // ?donation=cancelled. The SDK button flow stays on-page, but
   // older redirect-flow links may still hit us. Keep the toast.
