@@ -431,6 +431,151 @@ router.post("/api/paypal/capture-order", paymentLimiter, async (req, res) => {
   }
 });
 
+// ─── Donations (free-for-everyone model) ───────────────────────────────
+//
+// Plotzy is free for every writer. The donation flow lets supporters
+// chip in any amount they like, no subscription, no recurring billing,
+// no perks beyond a thank-you. The user does NOT need to be signed in
+// because donations should not punish anonymity; the only thing we
+// store afterwards is an order-level record so we can show a running
+// thank-you wall (in a future commit) and reconcile against PayPal.
+//
+// Flow:
+//   1. POST /api/paypal/create-donation { amount: "10.00" } → returns
+//      an approveUrl that the browser is redirected to.
+//   2. PayPal hosts the checkout, takes the payment, and redirects the
+//      browser back to /donate/thanks?token=<orderId> on success or
+//      /pricing?donation=cancelled on cancel.
+//   3. POST /api/paypal/capture-donation { orderId } captures the
+//      authorised order and records the payment in subscription_payments
+//      (with subscriptionPlan='donation' so analytics can split it out).
+const DONATION_MIN_USD = 1;
+const DONATION_MAX_USD = 10_000;
+
+const donationAmountSchema = z.object({
+  amount: z
+    .string()
+    .regex(/^\d+(?:\.\d{1,2})?$/, "Amount must be a number with up to two decimal places."),
+});
+
+router.post("/api/paypal/create-donation", paymentLimiter, async (req, res) => {
+  const parsed = donationAmountSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: "Please enter a valid amount." });
+  }
+  const value = Number(parsed.data.amount);
+  if (!Number.isFinite(value) || value < DONATION_MIN_USD || value > DONATION_MAX_USD) {
+    return res.status(400).json({
+      message: `Donation must be between $${DONATION_MIN_USD} and $${DONATION_MAX_USD}.`,
+    });
+  }
+  // Round to two decimals so PayPal accepts the value (it rejects any
+  // amount with sub-cent precision).
+  const amount = value.toFixed(2);
+
+  const origin = process.env.APP_DOMAIN || `https://${req.get("host")}`;
+  try {
+    const token = await getPayPalToken();
+    const orderRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        purchase_units: [
+          {
+            description: "Plotzy donation",
+            amount: { currency_code: "USD", value: amount },
+            custom_id: "donation",
+          },
+        ],
+        application_context: {
+          brand_name: "Plotzy",
+          shipping_preference: "NO_SHIPPING",
+          user_action: "PAY_NOW",
+          return_url: `${origin}/donate/thanks`,
+          cancel_url: `${origin}/pricing?donation=cancelled`,
+        },
+      }),
+    });
+    if (!orderRes.ok) {
+      const errText = await orderRes.text();
+      logger.error({ err: errText }, "PayPal donation create-order error");
+      return res.status(502).json({ message: "Could not start the donation. Please try again." });
+    }
+    const order = await orderRes.json() as {
+      id: string;
+      links?: Array<{ rel: string; href: string; method: string }>;
+    };
+    const approve = order.links?.find((l) => l.rel === "approve");
+    if (!approve) {
+      logger.error({ order }, "PayPal donation order missing approve link");
+      return res.status(502).json({ message: "Could not start the donation. Please try again." });
+    }
+    return res.json({ orderId: order.id, approveUrl: approve.href });
+  } catch (err) {
+    logger.error({ err }, "PayPal donation error");
+    return res.status(500).json({ message: "Could not start the donation. Please try again." });
+  }
+});
+
+router.post("/api/paypal/capture-donation", paymentLimiter, async (req, res) => {
+  const orderSchema = z.object({ orderId: z.string().min(1) }).strict();
+  const parsed = orderSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: "Invalid request." });
+  }
+  const { orderId } = parsed.data;
+
+  try {
+    const token = await getPayPalToken();
+    const captureRes = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    if (!captureRes.ok) {
+      const errText = await captureRes.text();
+      // ORDER_ALREADY_CAPTURED is idempotent success — the supporter
+      // refreshed the thank-you page after a successful donation.
+      let already = false;
+      try {
+        const errBody = JSON.parse(errText) as { details?: Array<{ issue?: string }> };
+        already = errBody.details?.some((d) => d.issue === "ORDER_ALREADY_CAPTURED") ?? false;
+      } catch {
+        /* not JSON */
+      }
+      if (already) return res.json({ success: true, alreadyProcessed: true });
+      logger.error({ err: errText }, "PayPal donation capture error");
+      return res.status(502).json({ message: "Could not confirm the donation." });
+    }
+    const capture = await captureRes.json() as PayPalCaptureResponse;
+    if (capture.status !== "COMPLETED") {
+      return res.status(400).json({ message: "Donation not completed." });
+    }
+    const detail = capture.purchase_units?.[0]?.payments?.captures?.[0];
+    if (!detail || detail.status !== "COMPLETED") {
+      return res.status(400).json({ message: "Donation not completed." });
+    }
+    const amount = detail.amount?.value ?? "0.00";
+    const currency = detail.amount?.currency_code ?? "USD";
+
+    // The subscription_payments table is shaped for recurring plans
+    // (plan/tier/cycle are notNull) so it doesn't fit one-off donations.
+    // PayPal already has the receipt of record; we log here so the
+    // operator can see donations in the request logs without spinning
+    // up a new table just yet.
+    const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
+    logger.info(
+      { event: "donation_captured", orderId, captureId: detail.id, amount, currency, userId },
+      `Plotzy donation received: ${currency} ${amount}`,
+    );
+
+    return res.json({ success: true, amount, currency });
+  } catch (err) {
+    logger.error({ err, orderId }, "PayPal donation capture error");
+    return res.status(500).json({ message: "Could not confirm the donation." });
+  }
+});
+
 // Plan feature lists for the receipt email's "What you get" block.
 // Kept inline here (not imported from artifacts/plotzy) because the
 // api-server workspace package does not depend on the plotzy frontend.

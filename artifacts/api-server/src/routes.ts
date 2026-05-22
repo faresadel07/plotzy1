@@ -2976,7 +2976,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     try {
       const { syncCourseContent } = await import("../../../lib/db/src/course-content/sync");
       const { db } = await import("./db");
-      const counts = await syncCourseContent(db as any, (msg) => logger.warn(msg));
+      const counts = await syncCourseContent(db as any, (msg: string) => logger.warn(msg));
       logger.info({ counts }, "Course content sync complete");
     } catch (err) {
       logger.error({ err }, "Course content sync failed");

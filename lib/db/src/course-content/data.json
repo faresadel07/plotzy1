@@ -389,6 +389,7 @@
     {
       "id": 1,
       "quiz_id": 1,
+      "order": 1,
       "question_text": "Which of the following best matches the definition of \"story\" given in Lesson 1?",
       "option_a": "A sequence of events presented in chronological order.",
       "option_b": "A patterned sequence in which someone wants something, hits an obstacle, and is changed by what happens.",
@@ -400,6 +401,7 @@
     {
       "id": 2,
       "quiz_id": 1,
+      "order": 2,
       "question_text": "Lesson 2 argued that fiction does something arguments and non-fiction can't. Which best captures that thing?",
       "option_a": "Fiction is more entertaining than non-fiction.",
       "option_b": "Fiction is easier to remember than non-fiction.",
@@ -411,6 +413,7 @@
     {
       "id": 3,
       "quiz_id": 1,
+      "order": 3,
       "question_text": "A student tells you their idea is \"a man builds a robot.\" What's the most useful next move?",
       "option_a": "Tell them the idea is too unoriginal to use.",
       "option_b": "Tell them to expand it into a premise that adds character, situation, and tension.",
@@ -422,6 +425,7 @@
     {
       "id": 4,
       "quiz_id": 1,
+      "order": 4,
       "question_text": "Which of these premises contains all three ingredients every story needs (a character to care about, a conflict, a change)?",
       "option_a": "A widow inherits her husband's beehives.",
       "option_b": "A widow inherits her husband's beehives, learns he kept them as a refuge from a marriage he was secretly leaving, and decides whether to forgive a dead man.",
@@ -433,6 +437,7 @@
     {
       "id": 5,
       "quiz_id": 1,
+      "order": 5,
       "question_text": "A novel ends with the protagonist solving the murder but being exactly the same person they were on page one. According to Lesson 4, what is most likely missing?",
       "option_a": "The character isn't likeable enough.",
       "option_b": "The conflict wasn't dramatic enough.",
@@ -444,6 +449,7 @@
     {
       "id": 6,
       "quiz_id": 2,
+      "order": 1,
       "question_text": "Which of the following is closest to why the 3-act structure recurs across cultures?",
       "option_a": "It was invented by Aristotle and adopted globally over 2,000 years.",
       "option_b": "It is enforced by modern publishers who reject manuscripts that don't follow it.",
@@ -455,6 +461,7 @@
     {
       "id": 7,
       "quiz_id": 2,
+      "order": 2,
       "question_text": "A writer's draft has a clear inciting incident, rising complications, a strong climax, and a resolution. Beta readers say the middle \"sags.\" Per Lesson 1, what is the most likely missing element?",
       "option_a": "The book is too long.",
       "option_b": "The midpoint reversal is missing or weak: there's nothing in the middle of the middle that re-frames the obstacle.",
@@ -466,6 +473,7 @@
     {
       "id": 8,
       "quiz_id": 2,
+      "order": 3,
       "question_text": "A novel about an orphan who leaves home, faces a series of trials, defeats a wrong, and returns to find that home no longer fits, but the protagonist on the last page is barely different from the one on the first. Which structure is the writer mostly using, and what's failing?",
       "option_a": "The hero's journey, and the change beat is the missing one: the protagonist completed the external journey without internal transformation.",
       "option_b": "A beat sheet, and the likability beat is missing.",
@@ -477,6 +485,7 @@
     {
       "id": 9,
       "quiz_id": 2,
+      "order": 4,
       "question_text": "A writer planning a quiet literary novel about an aging professor remembering his marriage chooses to apply a 15-beat commercial beat sheet to plot it. Three months in, the draft feels mechanical. What does Lesson 4 say is most likely happening?",
       "option_a": "The writer needs more beats: 15 isn't enough for a novel.",
       "option_b": "Beat sheets only work for screenwriting; the writer should use the hero's journey instead.",
@@ -488,6 +497,7 @@
     {
       "id": 10,
       "quiz_id": 2,
+      "order": 5,
       "question_text": "A premise: a young woman, raised in isolation, discovers her mother's letters and decides whether to leave home and find the family she was hidden from. Which structure is most likely the right starting lens, and why?",
       "option_a": "Beat sheets: the premise is about a clear external event (the discovery of letters), and beat sheets handle external events well.",
       "option_b": "The hero's journey: the engine is transformation (a young woman becoming someone capable of leaving), and the Call/Refusal/Tests/Return pattern matches the implied arc.",
@@ -499,6 +509,7 @@
     {
       "id": 11,
       "quiz_id": 3,
+      "order": 1,
       "question_text": "Which of the following best matches the wound/want/need framework from Lesson 1?",
       "option_a": "The wound is what the character feels generally; the want is their preference; the need is their goal.",
       "option_b": "The wound is a specific past event; the want is what the character can name in a sentence; the need is what they actually require for the story to resolve, which is rarely the same as the want.",
@@ -510,6 +521,7 @@
     {
       "id": 12,
       "quiz_id": 3,
+      "order": 2,
       "question_text": "A writer's draft opens with a five-page flashback to the protagonist's childhood, intended to give the reader context for the present-day chapter that follows. According to Lesson 2, what's most likely happening?",
       "option_a": "The opening is good, readers need context before they can care about a protagonist.",
       "option_b": "The opening is a backstory dump that moves the reader backward in time before they have a reason to care; the same context could likely land in single-sentence revelations across the first three chapters.",
@@ -521,6 +533,7 @@
     {
       "id": 13,
       "quiz_id": 3,
+      "order": 3,
       "question_text": "A writer drafts an antagonist whose only motivation is \"she wants to ruin Sarah's life because she's jealous.\" Per Lesson 3, what is the most useful next step?",
       "option_a": "Add more obstacles in the antagonist's way to make her seem stronger.",
       "option_b": "Make the antagonist evil instead of merely jealous, since evil is a stronger motive.",
@@ -532,6 +545,7 @@
     {
       "id": 14,
       "quiz_id": 3,
+      "order": 4,
       "question_text": "A draft has fourteen named supporting characters. Two of them, a quirky bookshop owner and a quirky archivist, both deliver historical research to the protagonist at separate points. Per Lesson 4, what is the most useful move?",
       "option_a": "Add more distinguishing traits to each so readers can tell them apart.",
       "option_b": "Cut both and have the protagonist do the research themselves.",
@@ -543,6 +557,7 @@
     {
       "id": 15,
       "quiz_id": 3,
+      "order": 5,
       "question_text": "A writer reads back a scene of dialogue between their protagonist and antagonist. Both characters' lines could be spoken by the other without changing meaning. Per Lesson 5, what is most likely happening, and what's the diagnostic move?",
       "option_a": "The scene is well-balanced; matching dialogue between rivals is a sign of equal stature.",
       "option_b": "Voice differentiation is failing because the two characters are not yet rooted in distinct wounds: voice rises from what each character protects, and undifferentiated voices usually mean undifferentiated interiors.",
@@ -554,6 +569,7 @@
     {
       "id": 16,
       "quiz_id": 4,
+      "order": 1,
       "question_text": "A draft has a chapter where the protagonist's three-month grief is rendered scene by scene across forty pages. The pacing is slow; readers are losing patience. Per Lesson 1, what is the most likely diagnosis?",
       "option_a": "The grief isn't intense enough; the writer should add more emotional language.",
       "option_b": "The chapter is over-showing, three months of fictional time is a candidate for telling; the chapter could be a single paragraph that summarises the grief, with one or two key shown moments embedded in the summary.",
@@ -565,6 +581,7 @@
     {
       "id": 17,
       "quiz_id": 4,
+      "order": 2,
       "question_text": "A scene has been written with rich visual detail across two pages. Beta readers say the scene \"feels flat\" but can't say why. According to Lesson 2, what is most likely missing?",
       "option_a": "The scene needs more dialogue.",
       "option_b": "The scene engages only one sense, usually vision, and the reader experiences it as flat because real attention is multi-sensory; adding even one phrase from another sense (a smell, a sound) usually doubles the scene's grip without adding noticeable length.",
@@ -576,6 +593,7 @@
     {
       "id": 18,
       "quiz_id": 4,
+      "order": 3,
       "question_text": "A novel's setting is described lavishly throughout, five sentences per room, weather noted at the start of every chapter. Per Lesson 3, what is most likely happening?",
       "option_a": "The setting is doing character work; the elevation is appropriate.",
       "option_b": "The world has become too detailed for the story to breathe inside it; the reader is reading a setting catalogue rather than a novel, and the cure is to identify which specific details are load-bearing and cut the rest.",
@@ -587,6 +605,7 @@
     {
       "id": 19,
       "quiz_id": 4,
+      "order": 4,
       "question_text": "A writer's chapter opens with: \"The fog was thick, the city alive and watching, the streets a being unto themselves.\" Per Lesson 3's discussion of pretentiousness, what's the diagnostic move?",
       "option_a": "Make the prose more poetic: the writer is on the right track.",
       "option_b": "Replace the abstract claims with a single concrete detail that shows the same thing, for instance, On the third day in the city, he noticed that the bus drivers all knew each other's first names, and none of them used his.",
@@ -598,6 +617,7 @@
     {
       "id": 20,
       "quiz_id": 4,
+      "order": 5,
       "question_text": "A first draft is 130,000 words. Beta readers say the prose is \"good but slow.\" The writer is unwilling to cut scenes. Per Module 4, what is the most efficient first cut?",
       "option_a": "Cut every scene by twenty percent uniformly.",
       "option_b": "Apply the load-bearing-detail test to all description: keep what tells the reader about the character, sets up later moments, or carries atmosphere; cut everything else, including descriptions the writer is fond of.",
@@ -609,6 +629,7 @@
     {
       "id": 21,
       "quiz_id": 5,
+      "order": 1,
       "question_text": "A writer sits at the same blank chapter for three days. Each session, they produce nothing. Per Lesson 1, what is most likely happening, and what's the diagnostic move?",
       "option_a": "The writer is blocked; they should take a long break.",
       "option_b": "The writer is probably not blocked in the fear/perfectionism sense, three days of producing nothing on the same scene usually means the scene doesn't have a clear function yet, and the cure is to leave the page and ask of the scene: what does the protagonist want here, what's in the way, what changes by the end?",
@@ -620,6 +641,7 @@
     {
       "id": 22,
       "quiz_id": 5,
+      "order": 2,
       "question_text": "A writer's first draft has been going well for six weeks, then stalls. They notice they've started re-reading yesterday's pages before adding new ones, fixing sentences as they go. Per Lesson 2, what is most likely happening?",
       "option_a": "The draft is failing; they should start over.",
       "option_b": "Editor-mode has begun running during writer-mode, slowing the writing past the rate at which the book gets finished: the cure is to stop re-reading yesterday's pages and to forbid in-draft editing until the first draft is complete.",
@@ -631,6 +653,7 @@
     {
       "id": 23,
       "quiz_id": 5,
+      "order": 3,
       "question_text": "A writer has finished a first draft and spends three months polishing the prose chapter by chapter. At the end of three months, they realise chapters 4-6 don't belong in the book and need to be cut. According to Lesson 3, what is the lesson?",
       "option_a": "Always start with a more detailed outline.",
       "option_b": "Revision should never include cuts at the structural level.",
@@ -642,6 +665,7 @@
     {
       "id": 24,
       "quiz_id": 5,
+      "order": 4,
       "question_text": "A writer's checklist has thirty items, including \"use vivid verbs,\" \"be original,\" and \"make the reader feel something.\" Per Lesson 4, what is wrong with this checklist?",
       "option_a": "Thirty items is too few; checklists should have at least fifty items.",
       "option_b": "The items are not actionable: they describe outcomes (vivid, original, feel something) rather than specific things the writer can check on the page; an actionable checklist asks yes/no questions tied to specific craft moves, with a one-sentence why per item.",
@@ -653,6 +677,7 @@
     {
       "id": 25,
       "quiz_id": 5,
+      "order": 5,
       "question_text": "A writer is on revision pass nine. They moved a comma in chapter five last Tuesday; this Tuesday they moved it back. Three beta readers have read the latest draft and none of them have structural notes. Per Lesson 5, what is most likely true, and what's the move?",
       "option_a": "The book isn't ready; the writer should keep revising until they don't move the comma back and forth.",
       "option_b": "The book is past the point of useful revision: the comma being moved back and forth is one of the three signs of done, the absence of structural beta-reader notes is another, and the cure for over-revising one book is to start the next.",
@@ -664,6 +689,7 @@
     {
       "id": 26,
       "quiz_id": 6,
+      "order": 1,
       "question_text": "A writer has just finished a literary debut novel. They have no series in mind for the next decade; they want feedback from professional editors; they are willing to wait two to three years for shelf presence. Per Lesson 1, which path most likely fits?",
       "option_a": "Self-publishing: the speed is essential.",
       "option_b": "Traditional publishing: the manuscript benefits from the editorial infrastructure, and the slow timeline doesn't conflict with the writer's situation.",
@@ -675,6 +701,7 @@
     {
       "id": 27,
       "quiz_id": 6,
+      "order": 2,
       "question_text": "A self-published thriller has a beautiful, atmospheric, hand-painted cover featuring a stormy moor. Sales are weak. Per Lesson 2, what is most likely happening, and what's the first move?",
       "option_a": "The book needs more advertising.",
       "option_b": "The cover is signalling the wrong genre, atmospheric moors signal literary or gothic fiction, not thriller; a reader scanning thriller bestsellers won't recognise the book as their genre and won't stop on it. The first move is a new cover that uses thriller conventions.",
@@ -686,6 +713,7 @@
     {
       "id": 28,
       "quiz_id": 6,
+      "order": 3,
       "question_text": "A writer has 30,000 followers on a social platform but no email newsletter. Their first book launches next month. Per Lesson 3, what's the realistic audience for the launch?",
       "option_a": "About 30,000: that's the follower count.",
       "option_b": "Almost zero: followers are not an audience the writer can reach reliably; the launch is happening to strangers, and the cure for next time is to start a newsletter today and move whatever fraction of those followers convert.",
@@ -697,6 +725,7 @@
     {
       "id": 29,
       "quiz_id": 6,
+      "order": 4,
       "question_text": "A first-time author plans these launch tactics: (1) cold social media posts, (2) paid ads with no retargeting infrastructure, (3) a blog tour across small writing blogs, (4) asking ten beta readers for honest reviews. Per Lesson 4, which is the only honest tactic in the list?",
       "option_a": "Cold social media posts: they reach the most people.",
       "option_b": "Paid ads: they're scalable.",
@@ -708,6 +737,7 @@
     {
       "id": 30,
       "quiz_id": 6,
+      "order": 5,
       "question_text": "A writer's first book launched eight weeks ago. Sales have slowed dramatically. They check sales daily, refresh reviews hourly, and have written nothing of book 2 in the last month. Per Lesson 5, what is happening, and what's the diagnostic move?",
       "option_a": "The book is failing; the writer should pull it from sale.",
       "option_b": "The post-launch slump is normal and predictable; the writer is in the slump and has not started book 2, so the daily-checking has become the symptom: the cure is the same daily-wordcount habit from M5 (now applied to book 2), because most writers who don't finish book 2 stopped at exactly this stage.",
@@ -719,6 +749,7 @@
     {
       "id": 31,
       "quiz_id": 7,
+      "order": 1,
       "question_text": "An aspiring novelist writes: \"Maya's grandfather died when she was twelve. After his funeral she moved in with her aunt. Years later she became a chef.\" She asks why this opening, despite covering significant events, feels lifeless to early readers. What single diagnostic move best identifies what's wrong?",
       "option_a": "Mark every sentence with the dominant verb tense; the lifelessness is a tense-mixing problem.",
       "option_b": "Underline each event and ask \"what does the next event CAUSE in Maya?\", if no event causes the next, you have a chronicle, not a story.",
@@ -730,6 +761,7 @@
     {
       "id": 32,
       "quiz_id": 7,
+      "order": 2,
       "question_text": "A writer pitches a memoir-novel about her grandmother's emigration. She has thirty pages of family research, photos, letters, and a clear chronological arc. After six months she still cannot start. She says: \"I have everything I need. I just don't know what it's about.\" What does the lesson on finding the idea suggest she's missing?",
       "option_a": "A working title; without one, novelists drift through scenes without an organizing label.",
       "option_b": "A daily writing routine; the block is procedural, not conceptual.",
@@ -741,6 +773,7 @@
     {
       "id": 33,
       "quiz_id": 7,
+      "order": 3,
       "question_text": "A workshop reader gives this feedback on a draft chapter: \"It's beautifully written. The character is vivid. The setting is rich. But I can't tell you what the chapter is FOR.\" What does the three-ingredients framework suggest is absent?",
       "option_a": "A protagonist with a clear external goal in the chapter, writing without a goal in scene reads as decorative.",
       "option_b": "A turning point, even rich, vivid writing without a moment of change reads as a sketch, not a chapter.",
@@ -752,6 +785,7 @@
     {
       "id": 34,
       "quiz_id": 7,
+      "order": 4,
       "question_text": "Module 1 distinguishes between plot, story, and anecdote. Which of the following best captures the difference?",
       "option_a": "Plot is the sequence of events; story is the causal-emotional structure under that sequence; an anecdote is a small story that contains the parts (want, obstacle, change) at paragraph scale.",
       "option_b": "Plot is what happens; story is what the writer intended; an anecdote is a true story.",
@@ -763,6 +797,7 @@
     {
       "id": 35,
       "quiz_id": 7,
+      "order": 5,
       "question_text": "The lesson on why people read distinguishes two pleasures readers seek from fiction: the pleasure of being moved (something the reader's life cannot easily provide) and the pleasure of recognition (seeing one's inner life named accurately by someone else). Which statement most accurately reflects how the lesson positions these two pleasures relative to one another?",
       "option_a": "Recognition is the lower pleasure; being moved is the higher one, readers grow into the higher one as they mature.",
       "option_b": "The two pleasures are roughly equal in weight, and most enduring books reach for both: neither is sufficient alone.",
@@ -774,6 +809,7 @@
     {
       "id": 36,
       "quiz_id": 7,
+      "order": 6,
       "question_text": "A first-time novelist sends you the opening of her book. Three pages in: a woman wakes up in a city she has never been to, with no memory of how she arrived. The prose is competent. The premise is intriguing. But you find yourself reading on out of duty rather than pull. By page eight you put it down. When you ask yourself why, the answer surprises you: nothing has been promised. The mystery of how she arrived doesn't function as a hook because the writer has not yet given you any reason to want to find out. Which single revision move best addresses what the opening is missing?",
       "option_a": "Move the woman's backstory to chapter one so the reader knows what is at stake before the disorientation begins.",
       "option_b": "Establish, within the first three pages, what the protagonist WANTS that the disorientation is now blocking, even if the want is small or partial.",
@@ -785,6 +821,7 @@
     {
       "id": 37,
       "quiz_id": 7,
+      "order": 7,
       "question_text": "A writer's draft has a clear inciting incident, lock-in, and climax, but readers report the third act feels \"rushed.\" Reviewing the manuscript, the writer notices Act 2 has rising complications but no moment where the protagonist's understanding of the problem shifts. According to Module 2, what is most likely missing?",
       "option_a": "The book is too long, cut Act 1.",
       "option_b": "The midpoint reversal is missing, without a re-framing moment in the middle of Act 2, complications stack linearly and the climax has no curve to land on.",
@@ -796,6 +833,7 @@
     {
       "id": 38,
       "quiz_id": 7,
+      "order": 8,
       "question_text": "A writer is plotting a quiet, character-driven novel about a librarian who decides, in middle age, to leave the city she has lived in for thirty years. She tells you she has been told her novel \"needs more structure\" but the suggestion to use a three-act framework feels wrong for the kind of book she wants to write. Which structural framework is most likely to fit the book's quiet shape?",
       "option_a": "A four-quadrant beat sheet, since beat sheets are explicitly designed for novels with low external stakes.",
       "option_b": "The Hero's Journey, since the protagonist's departure from a known world maps cleanly to the Call to Adventure.",
@@ -807,6 +845,7 @@
     {
       "id": 39,
       "quiz_id": 7,
+      "order": 9,
       "question_text": "A writer using the Hero's Journey framework reports that the structure feels \"too heroic\" for her domestic-realist novel. The protagonist is a teacher dealing with her ageing mother. She has resisted converting to three-act because she likes the journey's emotional milestones (the threshold-crossing, the ordeal, the return). What's the most useful revision-level move?",
       "option_a": "Drop the Hero's Journey entirely; it was designed for myth and does not fit domestic realism.",
       "option_b": "Keep the journey's emotional milestones but treat them as internal beats: the threshold is not leaving home: it's accepting that the relationship has already changed.",
@@ -818,6 +857,7 @@
     {
       "id": 40,
       "quiz_id": 7,
+      "order": 10,
       "question_text": "The lesson on beat sheets describes them as a \"granular plotting tool\", finer than three-act, coarser than scene-by-scene. Which statement most accurately captures the FUNCTION the lesson assigns to beat sheets within a writer's process?",
       "option_a": "A beat sheet is a substitute for outlining; writers who use one do not need to outline separately.",
       "option_b": "A beat sheet is a rhythm map; it specifies the emotional turn each beat should make, leaving the scene-level execution to the writer.",
@@ -829,6 +869,7 @@
     {
       "id": 41,
       "quiz_id": 7,
+      "order": 11,
       "question_text": "A \"structural choice\" decision in a novel is, per the choosing-structure lesson, primarily a decision about WHAT?",
       "option_a": "Genre, different genres demand different structural frameworks; getting genre right gives you structure for free.",
       "option_b": "Where the camera is in time: structure is the writer's decision about how the order of telling differs from the order of happening.",
@@ -840,6 +881,7 @@
     {
       "id": 42,
       "quiz_id": 7,
+      "order": 12,
       "question_text": "A writer has a 70,000-word draft of a novel that follows a young woman across three timelines: her childhood, her young adulthood abroad, and her present-day return to the country she was born in. In the draft, the timelines are interleaved scene-by-scene. Beta readers report that the prose is strong, the characters are vivid, but they \"lose track of which timeline they are in\" by the middle. The writer is committed to the three-timeline architecture but asks how she should reconsider its execution. Which is the most useful structural move?",
       "option_a": "Convert to chronological order: the three-timeline conceit is what is actually breaking the reader; the architecture is the problem.",
       "option_b": "Reorganise so each act of the three-act structure dominantly inhabits ONE timeline (act one = childhood, act two = young adulthood, act three = present), with the other two woven in as deliberate echoes: the architecture stays, but the camera-in-time is now act-anchored.",
@@ -851,6 +893,7 @@
     {
       "id": 43,
       "quiz_id": 7,
+      "order": 13,
       "question_text": "A writer's antagonist is described as \"she's just evil\" by beta readers: they can't articulate why beyond that. The protagonist's wound/want/need are richly layered. According to Module 3, what is the most useful next move?",
       "option_a": "Cut the antagonist; the protagonist can carry the book alone.",
       "option_b": "Mirror the protagonist's framework onto the antagonist, write a paragraph from the antagonist's POV in their own voice, sympathetic to themselves, explaining why they are right. If the writer cannot, the antagonist is a function, not a person.",
@@ -862,6 +905,7 @@
     {
       "id": 44,
       "quiz_id": 7,
+      "order": 14,
       "question_text": "A writer's antagonist has a clear wound (mother died young), a clear want (recognition), and a sympathetic POV paragraph. Beta readers still find the antagonist flat. By contrast, the protagonist's wound is rendered through a specific 30-page event in chapter 4. What is most likely happening?",
       "option_a": "The antagonist needs more screen time.",
       "option_b": "The antagonist's wound exists as concept (\"mother died young\") but is not rendered as a specific event the way the protagonist's is. M3 L1's wounds-are-events test catches this: the cure is to render the antagonist's wound as a specific moment, even if that moment never appears on the page.",
@@ -873,6 +917,7 @@
     {
       "id": 45,
       "quiz_id": 7,
+      "order": 15,
       "question_text": "A writer has a 60,000-word draft. The protagonist is sharply rendered and the antagonist is doing exactly what she should be. But the supporting cast, the protagonist's sister, her mentor, her three colleagues, read flat to beta readers. The writer has given each one a name, an occupation, and a small physical detail. She asks what's missing.",
       "option_a": "Each supporting character needs a SECOND, unrelated trait, name + occupation + a detail in service of that occupation still adds up to one trait (the function trait); a single trait is cardboard, two unrelated traits are a person.",
       "option_b": "Each supporting character needs more screen time; flatness is almost always under-development.",
@@ -884,6 +929,7 @@
     {
       "id": 46,
       "quiz_id": 7,
+      "order": 16,
       "question_text": "A writer's dialogue passes a flat-tongue test: every line could be said by any character. She has read the lesson on dialogue voice and understands she needs to differentiate. But when she tries to differentiate by giving each character a \"verbal tic\" (one says \"yeah\" a lot, one stutters, one uses formal vocabulary), her test readers report the dialogue now feels mannered and gimmicky. What's the most useful next move?",
       "option_a": "Strip the tics, voice differentiation is downstream of the WOUND. What each character protects, avoids, or reaches for verbally tracks to the thing the wound made them defensive about, and that level of differentiation doesn't read as mannered the way a tic does.",
       "option_b": "Remove all dialogue tags except \"said\": most flat-dialogue diagnoses are actually tag-clutter problems in disguise.",
@@ -895,6 +941,7 @@
     {
       "id": 47,
       "quiz_id": 7,
+      "order": 17,
       "question_text": "The supporting-cast lesson offers a \"cut question\" for evaluating each secondary character. What is the question, and what is the principle behind asking it?",
       "option_a": "\"Does this character have a name and a clear physical description?\", characters who lack either tend to feel flat; the cut question targets under-development.",
       "option_b": "\"What would the story lose if I removed this character?\", if the answer is *nothing*, cut; if the answer is *another character would have to do their job*, consider merging instead.",
@@ -906,6 +953,7 @@
     {
       "id": 48,
       "quiz_id": 7,
+      "order": 18,
       "question_text": "The backstory lesson distinguishes between a backstory DUMP and a backstory REVELATION. What is the difference?",
       "option_a": "A dump is summarised in narration; a revelation is dramatised in scene: the difference is mode of delivery.",
       "option_b": "A dump moves the reader BACKWARD in time (paragraphs of historical context interrupting present-tense story); a revelation pulls the past FORWARD into the present moment, where it changes the meaning of what was already on the page.",
@@ -917,6 +965,7 @@
     {
       "id": 49,
       "quiz_id": 7,
+      "order": 19,
       "question_text": "A writer's protagonist is a forty-year-old translator who, after her father's death, returns to her childhood home to clear it out. The opening fifty pages establish: her grief, her professional precision, her difficult relationship with her sister Yara, and her father's last days. Beta readers say the protagonist is \"vivid but oddly closed off\": they can describe her but they don't feel WITH her. The writer suspects the protagonist's interiority is the problem, but when she adds more interior monologue, the closed-off feeling gets WORSE. Which combined move is most likely to open the protagonist?",
       "option_a": "Strengthen the antagonist (Yara) so the protagonist has to react more sharply, surfacing interiority through external pressure.",
       "option_b": "Move the dialogue with Yara earlier and harder, interior monologue cannot do what an honest scene with the right opponent can; combined with cutting some of the new monologue, the protagonist's closure starts to read as protection rather than authorial reticence.",
@@ -928,6 +977,7 @@
     {
       "id": 50,
       "quiz_id": 7,
+      "order": 20,
       "question_text": "A writer is revising her opening chapter. The chapter contains the line: \"She felt deeply uncertain about the move.\" A workshop reader has flagged this as \"telling, not showing.\" The writer has tried three times to convert the line and each conversion either bloats the page or feels false. What's the most useful next move?",
       "option_a": "Replace the abstract noun \"uncertain\" with a more concrete one (e.g. \"a low dread about the move\") and accept that some interior states are best telled rather than shown.",
       "option_b": "Cut the line entirely and trust the surrounding scene to carry the uncertainty, returning to it only if a beta reader reports the feeling missing.",
@@ -939,6 +989,7 @@
     {
       "id": 51,
       "quiz_id": 7,
+      "order": 21,
       "question_text": "A writer is drafting a hospital scene. She wants the reader to feel the character's exhaustion. Her current draft includes: fluorescent lights, beeping monitors, the smell of antiseptic, the green pyjamas of an orderly walking past, the cold of the chair, the bitter coffee from the vending machine. She asks why the scene reads as \"competent generic hospital\" rather than the specific exhaustion she intended.",
       "option_a": "She needs to choose senses that rise from THIS character's body: what a character notices is downstream of what they protect; a translator's tired ear hears the beeps differently from a surgeon's hands feeling the cold of the chair. Six senses listed without character-anchoring read as inventory; well-chosen senses, even fewer, render the place this character is in.",
       "option_b": "She needs to add a seventh sense, the character's interior monologue about her exhaustion, to break the over-reliance on the five external senses.",
@@ -950,6 +1001,7 @@
     {
       "id": 52,
       "quiz_id": 7,
+      "order": 22,
       "question_text": "A writer's setting (a small town in central Anatolia) is described carefully and accurately, with attention to the architecture, the climate, the food. Beta readers report that the setting \"doesn't do anything\": they can picture the town but it doesn't seem to PRESS on the protagonist. What would convert her described setting into a setting that functions as a character?",
       "option_a": "Add a personification beat in the opening, describe the town as \"watching\" or \"waiting\" so the reader registers it as agentive.",
       "option_b": "Show the protagonist responding DIFFERENTLY to the town than she would in another place: the town becomes a character when its presence changes what she does or says, not when it is described well.",
@@ -961,6 +1013,7 @@
     {
       "id": 53,
       "quiz_id": 7,
+      "order": 23,
       "question_text": "A writer's first draft has dense, careful description of every room, street, and meal. A revision pass has cut almost all of it. Now the manuscript reads \"weightless\", beta readers say the world \"feels thin.\" What principle should guide her on the third pass?",
       "option_a": "Restore one sentence of description to every scene, even one anchoring sentence prevents the weightless feeling.",
       "option_b": "Restore description ONLY where the next dramatic beat depends on it, descriptive weight should follow dramatic weight, not be evenly distributed.",
@@ -972,6 +1025,7 @@
     {
       "id": 54,
       "quiz_id": 7,
+      "order": 24,
       "question_text": "The \"two-sense rule\" from M4 L2 states that every important scene should engage at least two senses. Does the rule apply to scenes that are told (summarised) rather than shown (rendered)?",
       "option_a": "Yes: the rule applies to all scenes regardless of mode.",
       "option_b": "No: the rule applies only to shown scenes. Told scenes are summarising past time, not rendering a moment, so the multi-sensory rule doesn't apply.",
@@ -983,6 +1037,7 @@
     {
       "id": 55,
       "quiz_id": 7,
+      "order": 25,
       "question_text": "A writer has been working on a quiet domestic novel for two years. The setting (a coastal town) is rendered with care across all 80,000 words. The protagonist (a widow in her sixties) is fully realised. But beta readers consistently report that the town and the widow feel like \"two adjacent novels\": the description does not seem to do anything to the protagonist, and the protagonist's inner life does not seem to register the place. The writer suspects the problem is in the SCENES rather than the prose. What pair of moves is most likely to fuse them?",
       "option_a": "Cut all standalone description and require every detail of the town to either generate a sensory beat in the protagonist's body OR change a small decision she makes in the next paragraph.",
       "option_b": "Move the protagonist out of the town for the middle act; absence makes the place register on her return.",
@@ -994,6 +1049,7 @@
     {
       "id": 56,
       "quiz_id": 7,
+      "order": 26,
       "question_text": "A writer has been opening her laptop every morning for three weeks and has written nothing. She knows the next scene she needs to write, a difficult conversation between two estranged sisters, and she has notes for it. She is not blocked on the IDEA. She is blocked on the act of beginning. What's the most useful move?",
       "option_a": "Skip this scene, write the scene AFTER it for a week, then return to the difficult one with the destination already known.",
       "option_b": "Set a kitchen timer for fifteen minutes and write anything (descriptions, the room, what one sister is wearing) without permitting yourself to start the conversation; the conversation usually begins in minute thirteen on its own.",
@@ -1005,6 +1061,7 @@
     {
       "id": 57,
       "quiz_id": 7,
+      "order": 27,
       "question_text": "A writer is two months into her first draft. She has 30,000 words. She has begun to read what she's written and finds large stretches she wants to fix immediately: a chapter that drags, a character who is inconsistent, a scene that should be cut. She asks whether she should fix these now or push through to the end of the draft.",
       "option_a": "Fix them now, letting bad pages accumulate makes the draft demoralising and makes finishing harder.",
       "option_b": "Push through to the end, first-draft revising compounds; the cleanest path is to mark the issues and keep moving forward, since many will resolve themselves once the destination is known.",
@@ -1016,6 +1073,7 @@
     {
       "id": 58,
       "quiz_id": 7,
+      "order": 28,
       "question_text": "A writer in revision flags her own draft with: \"Chapter 7 is beautifully written but adds nothing to the plot or to character X's arc. I love it. I cannot bring myself to cut it.\" How to decide?",
       "option_a": "Cut it: the rule is absolute; any chapter that fails BOTH plot and arc tests is dead weight regardless of prose quality.",
       "option_b": "Move it to the appendix or the website as bonus material so the prose is preserved without disrupting the manuscript.",
@@ -1027,6 +1085,7 @@
     {
       "id": 59,
       "quiz_id": 7,
+      "order": 29,
       "question_text": "A writer at the line-editing stage has a paragraph she has rewritten seven times. Each version is different. She no longer knows which is best. She asks for a stopping rule.",
       "option_a": "Read all seven versions aloud back-to-back; the one that survives the comparison is the strongest.",
       "option_b": "Choose the third version, around the third pass: instinct has informed the writing without yet being eroded by overthinking.",
@@ -1038,6 +1097,7 @@
     {
       "id": 60,
       "quiz_id": 7,
+      "order": 30,
       "question_text": "A writer has done structural, scene, and line passes on her manuscript. Her agent has accepted it. She asks for the LAST stopping rule before she sends it.",
       "option_a": "Re-read the opening twenty pages; the rest of the manuscript is locked, but the opening's ear can shift in subtle ways during the revision arc and deserves one final pass.",
       "option_b": "Read the entire manuscript aloud to the empty room one more time, anything that snags the ear is the final fix.",
@@ -1049,6 +1109,7 @@
     {
       "id": 61,
       "quiz_id": 7,
+      "order": 31,
       "question_text": "Module 5 prescribes three sequential revision passes. What is the order, and the principle behind the order?",
       "option_a": "Line → Scene → Structural; the prose must be polished before structural questions can be answered.",
       "option_b": "Scene → Structural → Line; the middle level is the highest-leverage starting point.",
@@ -1060,6 +1121,7 @@
     {
       "id": 62,
       "quiz_id": 7,
+      "order": 32,
       "question_text": "The \"when to stop\" lesson distinguishes between FINISHED and RELEASED. What is the lesson's working position on the relation between them?",
       "option_a": "Finished and released are the same: a book is finished when the writer releases it; \"finished\" is a release decision, not a craft state.",
       "option_b": "A book is finished when the writer can no longer improve it without breaking it; release happens after, when the writer accepts that diminishing returns have been reached.",
@@ -1071,6 +1133,7 @@
     {
       "id": 63,
       "quiz_id": 7,
+      "order": 33,
       "question_text": "A writer of a quiet literary novel has two paths in front of her: a small literary press willing to publish in 18 months with modest distribution and a $1,000 advance, or self-publishing through a major retailer in 4 months with full royalties and full creative control. How should she choose?",
       "option_a": "Choose the press, literary fiction depends on the cultural authority that traditional publishing confers; self-publishing literary work almost always underperforms regardless of quality.",
       "option_b": "Choose self-publishing: the 18-month delay and the $1,000 advance reveal that the press is offering little she cannot offer herself, and creative control is the higher value for a literary novel.",
@@ -1082,6 +1145,7 @@
     {
       "id": 64,
       "quiz_id": 7,
+      "order": 34,
       "question_text": "A writer has 30 seconds with a stranger at a wedding to describe her novel. She has prepared a careful three-sentence summary. The stranger's eyes glaze over. What's wrong?",
       "option_a": "The summary is too plot-heavy, strangers respond to character and theme more than to plot.",
       "option_b": "Three sentences is too long; one sharp sentence outperforms three careful ones in spoken contexts.",
@@ -1093,6 +1157,7 @@
     {
       "id": 65,
       "quiz_id": 7,
+      "order": 35,
       "question_text": "A writer launches her debut novel with a mailing list of 200 readers, all of whom are people she has corresponded with personally over five years (writers she has supported, members of her old workshop, friends-of-friends from a podcast appearance). She is anxious that 200 is too small. Her launch sells 180 copies in week one. What does the audience lesson suggest she's actually achieved?",
       "option_a": "Below threshold: 200 is too small to count as an audience; she should have built to at least 1,000 before launch.",
       "option_b": "The threshold of viable launch: a list of 200 readers, when each one is engaged enough to buy in week one, is what a writer needs to start; the next 200 will come from these 200's recommendations.",
@@ -1104,6 +1169,7 @@
     {
       "id": 66,
       "quiz_id": 7,
+      "order": 36,
       "question_text": "The cover-and-blurb lesson invokes a \"1.5-second rule.\" What does this rule describe?",
       "option_a": "The maximum time a reader will give a cover before deciding whether to pick up the book or move on; the cover must communicate genre, register, and a hint of plot in that window.",
       "option_b": "The minimum time a reader needs to read a back-cover blurb; blurbs shorter than a 1.5-second read tend to underperform.",
@@ -1115,6 +1181,7 @@
     {
       "id": 67,
       "quiz_id": 7,
+      "order": 37,
       "question_text": "The after-launch lesson distinguishes the FIRST WEEK from the FIRST YEAR of a book's life. Which is the lesson's working position on which window matters more?",
       "option_a": "The first week: most books that succeed signal their success in week-one sales; books that miss week one rarely recover.",
       "option_b": "The first year: most books that endure show their durability over twelve months of slow word-of-mouth, reviews, and reader-to-reader recommendation; week-one performance is a noisy signal.",
@@ -1126,6 +1193,7 @@
     {
       "id": 68,
       "quiz_id": 7,
+      "order": 38,
       "question_text": "A writer's beta readers find the protagonist \"hard to root for\" despite richly written childhood backstory and a clear want (winning a dance competition). What combination of issues from Modules 1 and 3 best diagnoses the cause?",
       "option_a": "The story lacks all three ingredients; add a stronger antagonist.",
       "option_b": "The wound is rendered as concept (\"she had a difficult childhood\") rather than as a specific event; the want may also be a sentence-level pursuit on the surface (a competition) but rooted in a wound the reader can't feel. The cure is to name the moment the wound happened and verify the want connects to it.",
@@ -1137,6 +1205,7 @@
     {
       "id": 69,
       "quiz_id": 7,
+      "order": 39,
       "question_text": "A writer's third draft has clear structural beats, vivid sensory detail throughout, and polished line-level prose. After three revision passes, beta readers say \"the prose is beautiful but slow.\" The writer has begun moving commas back and forth and has not started book 2. According to course frameworks, what is the most likely diagnosis?",
       "option_a": "The book needs more events; add scenes.",
       "option_b": "The load-bearing-detail test (M4 L4) hasn't been fully applied, beautiful description that doesn't earn its place is the cumulative cause of \"slow.\" The writer is also showing two M5 L5 signs of done (commas back and forth, no book 2). Both interventions are needed: a final description cull, then ship and start book 2.",
@@ -1148,6 +1217,7 @@
     {
       "id": 70,
       "quiz_id": 7,
+      "order": 40,
       "question_text": "A writer has finished a 90,000-word draft of a literary thriller. She is now in revision. The structural pass has revealed a problem she did not see while drafting: act two's midpoint, around chapter 14, doesn't deliver a true reversal, the protagonist learns new information but does not change course. Beta readers report act two \"loses pull around chapter 14.\" She has two paths: PATH X, rewrite chapter 14 to manufacture the missing reversal (one new chapter, no shuffling). PATH Y, restructure act two so that what is currently the chapter-19 reveal becomes the new midpoint, shifting roughly six chapters earlier (reworking five subsequent chapters' continuity but no new writing). Which is the more disciplined revision move?",
       "option_a": "Path X: the diagnosis is local to chapter 14; a local diagnosis warrants a local fix, and writing a new chapter is faster than reworking five.",
       "option_b": "Path Y: the diagnosis is structural (the wrong beat is at the wrong place), and structural problems demand structural moves; manufacturing a reversal where the story does not have one is almost always the worse outcome.",

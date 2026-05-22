@@ -44,6 +44,7 @@ export interface CourseQuiz {
 
 export interface CourseQuizQuestion {
   quizKey: string;
+  order: number;
   questionText: string;
   optionA: string;
   optionB: string;
@@ -57,7 +58,7 @@ interface RawShape {
   modules: Array<{ id: number; slug: string; title: string; subtitle: string | null; description: string | null; order: number; estimated_minutes: number | null }>;
   lessons: Array<{ id: number; module_id: number; slug: string; title: string; order_in_module: number; estimated_minutes: number | null; content: string; hero_image_url: string | null }>;
   quizzes: Array<{ id: number; module_id: number | null; type: string; question_count: number; passing_percentage: number; time_limit_minutes: number | null }>;
-  questions: Array<{ id: number; quiz_id: number; question_text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_option: string; explanation: string }>;
+  questions: Array<{ id: number; quiz_id: number; order: number; question_text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_option: string; explanation: string }>;
 }
 
 const raw = data as RawShape;
@@ -113,6 +114,7 @@ export const QUESTIONS: CourseQuizQuestion[] = raw.questions.map((qq) => {
   if (!quiz) throw new Error(`Question ${qq.id} references unknown quiz_id ${qq.quiz_id}`);
   return {
     quizKey: quizKey(quiz),
+    order: qq.order,
     questionText: qq.question_text,
     optionA: qq.option_a,
     optionB: qq.option_b,

@@ -204,9 +204,16 @@ export async function syncCourseContent(
       continue;
     }
     await db.delete(courseQuizQuestions).where(eq(courseQuizQuestions.quizId, quizId));
+    // Re-insert in a deterministic order so the unique (quiz_id, order)
+    // index stays consistent across reseeds. If the bundled question
+    // already has an order, honour it; otherwise fall back to its
+    // position in the list.
+    let i = 0;
     for (const qq of list) {
+      i++;
       await db.insert(courseQuizQuestions).values({
         quizId,
+        order: qq.order ?? i,
         questionText: qq.questionText,
         optionA: qq.optionA,
         optionB: qq.optionB,
