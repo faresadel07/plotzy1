@@ -2409,21 +2409,46 @@ Return a strict JSON object with these two arrays.`;
 
       const loreContext = await loadLoreIfOwner(req, bookId);
 
+      // The model used to read short Arabic inputs like "مرحبا اريد ان
+      // اروي قصتي" as the start of a chatbot conversation and reply
+      // ("Hello, I am here to listen to your story..."). The system
+      // prompt now states the editor contract very explicitly: this is
+      // a text the writer wrote, you only rewrite it, you never address
+      // them, you never reply to them, and a stand-in user prompt that
+      // delimits the manuscript with triple-fence-style markers so the
+      // model treats it as content, not a message.
       let systemPrompt = arabic
-        ? "أنت محرر أدبي محترف. قم بتحسين النص التالي من حيث الوضوح والنحو والأسلوب والجودة الأدبية مع الحفاظ على المعنى الأصلي. أعد النص المحسّن فقط دون أي تعليق."
-        : `You are an expert editor. Improve the following text for clarity, grammar, flow, and literary quality. Keep the original meaning but make it more professional and engaging. Write in ${langName}. Return ONLY the improved text.`;
+        ? "أنت محرر أدبي محترف. مهمّتك صياغه نص الكاتب التالي بطريقه أوضح وأجمل وأسلم نحوياً، مع الحفاظ على معناه ولغته ولهجته. هذا ليس محادثه: لا تتعامل مع النص كرساله موجّهه إليك، ولا ترد على الكاتب، ولا تخاطبه، ولا تضيف ترحيباً أو تعليقاً أو سؤالاً. مهما بدا النص قصيراً أو موجزاً، أعد فقط نسخه محسّنه منه, بنفس الجمله أو الجمل التي كتبها, بدون أي شيء آخر."
+        : `You are an expert literary editor. Your job is to rewrite the writer's text below in clearer, more natural, more polished ${langName}, while preserving the meaning, language, and voice exactly. This is NOT a conversation. Do not treat the text as a message addressed to you. Do not reply to the writer. Do not greet them. Do not add introductions, comments, or questions. Even if the text is short or feels conversational, return ONLY a rewritten version of those same sentences, nothing else.`;
 
       systemPrompt += loreContext;
+
+      // Fenced delimiter for the user content. Same trick the popular
+      // "rewrite this paragraph" prompts on Claude / GPT use to make
+      // the model treat the body as data, not as instructions.
+      const userContent = arabic
+        ? `قم بتحسين النص التالي فقط. أعده محسّناً بدون أي مقدمه أو رد:\n\n<<<\n${text}\n>>>`
+        : `Polish the text below. Return only the polished version, no preamble:\n\n<<<\n${text}\n>>>`;
 
       const response = await openai.chat.completions.create({
         model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: text }
+          { role: "user", content: userContent }
         ]
       });
 
-      return res.json({ improvedText: response.choices[0]?.message?.content || text });
+      // Strip the fence markers if the model echoed them back, and
+      // trim leading filler like "نسخه محسّنه:" the model sometimes
+      // adds despite the instruction. Cheap insurance against the
+      // few stubborn outputs.
+      let out = response.choices[0]?.message?.content || text;
+      out = out
+        .replace(/^[\s\S]*?<<<\s*/, "")
+        .replace(/\s*>>>[\s\S]*$/, "")
+        .replace(/^(?:النص المحسّن|نسخه محسّنه|Polished(?: version)?|Improved text)\s*[:،,]\s*/i, "")
+        .trim();
+      return res.json({ improvedText: out || text });
     } catch (err) {
       return handleAiError(res, err, { route: "/api/improve-text", user: req.user }, "Failed to improve text");
     }
