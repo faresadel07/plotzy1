@@ -141,6 +141,22 @@ function isRTL(code: string): boolean {
   return ["ar", "he", "fa", "ur"].includes(code);
 }
 
+// Decide what language to reply in for an AI request when the caller did
+// not pass a language code, or passed a wrong one. The frontend often
+// sends nothing (or "en" as a default) even though the user just typed
+// in Arabic; without this guard the model answered every Polish request
+// in English regardless of what the writer wrote. Heuristic: if the
+// sample has any Arabic-script character at all, treat the request as
+// Arabic. The Arabic block alone covers the dialects we serve. Hebrew /
+// Persian / Urdu share scripts and are caught by the same range, which
+// is fine because we have no "force English" callers — every AI request
+// in the app intends to mirror the writer's language.
+const ARABIC_CHAR_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+function detectLangFromSample(sample: string | null | undefined, fallback: string): string {
+  if (sample && ARABIC_CHAR_RE.test(sample)) return "ar";
+  return fallback || "en";
+}
+
 // Per-(IP, target) sliding-window cap for public comment endpoints. The
 // global writeLimiter (30/min/IP) is too loose to stop an attacker from
 // pasting hundreds of comments onto a single book in an hour. The bucket
@@ -1122,15 +1138,18 @@ export async function registerRoutes(
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
-      const langCode = language || book.language || "en";
-      const langName = getLangName(langCode);
-      const arabic = langCode === "ar";
-
       const chapters = await storage.getChapters(bookId);
+      // Build the sample that decides the reply language. We look at
+      // the book title, the existing summary, and the first chapters'
+      // raw text. If anything in there is Arabic, the blurb is Arabic.
       const chapterSummary = chapters
         .slice(0, 5)
         .map((c, i) => `Chapter ${i + 1} - ${c.title}: ${getChapterText(c.content).slice(0, 300)}`)
         .join("\n");
+      const sample = `${book.title || ""}\n${book.summary || ""}\n${chapterSummary}`;
+      const langCode = detectLangFromSample(sample, language || book.language || "en");
+      const langName = getLangName(langCode);
+      const arabic = langCode === "ar";
 
       const systemPrompt = arabic
         ? "أنت كاتب محترف متخصص في كتابة الأوصاف الجذابة للكتب. اكتب وصفاً قصيراً ومثيراً للاهتمام للغلاف الخلفي للكتاب (2-3 فقرات). يجب أن يكون الوصف جذاباً ويشجع القراء على قراءة الكتاب دون الكشف عن النهاية. أعد الوصف فقط."
@@ -2381,7 +2400,10 @@ Return a strict JSON object with these two arrays.`;
   app.post(api.ai.improve.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.improve.input.parse(req.body);
-      const langCode = language || "en";
+      // Reply in the writer's actual language. The frontend often
+      // sends nothing or stale "en", so we always check the text and
+      // override to "ar" when the sample is Arabic.
+      const langCode = detectLangFromSample(text, language || "en");
       const langName = getLangName(langCode);
       const arabic = langCode === "ar";
 
@@ -2410,7 +2432,7 @@ Return a strict JSON object with these two arrays.`;
   app.post(api.ai.expand.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { idea, language, bookId } = api.ai.expand.input.parse(req.body);
-      const langCode = language || "en";
+      const langCode = detectLangFromSample(idea, language || "en");
       const langName = getLangName(langCode);
       const arabic = langCode === "ar";
 
@@ -2439,7 +2461,7 @@ Return a strict JSON object with these two arrays.`;
   app.post(api.ai.continueText.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language, bookId } = api.ai.continueText.input.parse(req.body);
-      const langCode = language || "en";
+      const langCode = detectLangFromSample(text, language || "en");
       const langName = getLangName(langCode);
       const arabic = langCode === "ar";
 
@@ -2468,7 +2490,7 @@ Return a strict JSON object with these two arrays.`;
   app.post(api.ai.showDontTell.path, largeBodyParser, requireOpenAI, aiLimiter, tierAiLimiter, async (req, res) => {
     try {
       const { text, language } = api.ai.showDontTell.input.parse(req.body);
-      const langCode = language || "en";
+      const langCode = detectLangFromSample(text, language || "en");
       const arabic = langCode === "ar";
 
       const systemPrompt = arabic
