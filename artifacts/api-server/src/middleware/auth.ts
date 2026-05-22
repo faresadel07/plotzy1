@@ -135,6 +135,13 @@ export async function requireBookOwnerStrict(req: Request, res: Response, next: 
       const claimed = await tryLateClaim(book, req);
       if (claimed) book = claimed;
     }
+    // Admins bypass ownership so the site operator can rescue or edit
+    // any book end-to-end without owning every test account. Same rule
+    // we already apply in requireAdmin / requireEmailVerified.
+    if (isAdminUser(req.user)) {
+      req.ownerBook = book;
+      return next();
+    }
     if (book.userId !== (req.user as any).id) return res.status(403).json({ message: "Only the book owner can do this" });
     req.ownerBook = book;
     return next();
@@ -157,9 +164,16 @@ export async function requireBookOwner(req: Request, res: Response, next: NextFu
     let [book] = await db.select().from(books).where(eq(books.id, bookId));
     if (!book) return res.status(404).json({ message: "Book not found" });
 
-    // Authenticated user owns this book OR is a collaborator
+    // Authenticated user owns this book OR is a collaborator OR admin
     if (req.isAuthenticated() && req.user) {
       const userId = (req.user as any).id;
+      // Admins bypass ownership entirely so the site operator can edit
+      // or rescue any book end-to-end. Same rule we already apply in
+      // requireAdmin / requireEmailVerified / tierAiLimiter.
+      if (isAdminUser(req.user)) {
+        req.ownerBook = book;
+        return next();
+      }
       // Late-claim path. If the book is still ownerless and the user
       // vouches for it via session or X-Guest-Books header, take it
       // over before the owner check below. Without this, a draft
