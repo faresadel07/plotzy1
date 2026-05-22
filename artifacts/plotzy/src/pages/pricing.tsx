@@ -607,7 +607,7 @@ function DonationButtons({
         clientId,
         currency: "USD",
         intent: "capture",
-        components: "buttons,applepay",
+        components: "buttons",
       }}
     >
       <div
@@ -618,7 +618,7 @@ function DonationButtons({
           gap: 10,
         }}
       >
-        {/* PayPal button (gold, the most recognisable) */}
+        {/* PayPal button (gold, the most recognisable funding source) */}
         <PayPalButtons
           fundingSource="paypal"
           style={{
@@ -638,7 +638,8 @@ function DonationButtons({
           onError={(err) => onError(extractMessage(err))}
         />
 
-        {/* Card button (white on black, sits beneath the PayPal one) */}
+        {/* Card button (white on black). Accepts Visa / Mastercard /
+            Amex without requiring a PayPal account. */}
         <PayPalButtons
           fundingSource="card"
           style={{
@@ -658,26 +659,10 @@ function DonationButtons({
           onError={(err) => onError(extractMessage(err))}
         />
 
-        {/* Apple Pay button (the SDK chooses to render only when the
-            visitor is on an Apple device with a provisioned card). */}
-        <PayPalButtons
-          fundingSource="applepay"
-          style={{
-            layout: "vertical",
-            shape: "rect",
-            color: "black",
-            label: "checkout",
-            height: 48,
-          }}
-          createOrder={() =>
-            createDonationOrder({ amount, onError, onInvalid })
-          }
-          onApprove={(data) =>
-            captureDonationOrder({ orderID: data.orderID, onError })
-          }
-          onCancel={onCancel}
-          onError={(err) => onError(extractMessage(err))}
-        />
+        {/* Apple Pay was removed: PayPal does not currently offer
+            Apple Pay through the JS SDK for merchants in our account
+            region. The same supporters who would have used Apple Pay
+            can use the card button with their saved card. */}
       </div>
       <p
         style={{
@@ -689,8 +674,8 @@ function DonationButtons({
         }}
       >
         {ar
-          ? "Apple Pay يظهر تلقائياً على أجهزه Apple فقط."
-          : "Apple Pay appears only on Apple devices."}
+          ? "الدفع آمن ويتم عبر PayPal. لا حاجه لحساب PayPal للدفع بكرت."
+          : "Secure checkout via PayPal. No PayPal account is needed to pay by card."}
       </p>
     </PayPalScriptProvider>
   );
