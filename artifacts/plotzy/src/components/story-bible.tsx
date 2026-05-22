@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoreEntry {
     id: number;
@@ -27,6 +28,8 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
     const [isAdding, setIsAdding] = useState(false);
     const [editForm, setEditForm] = useState({ name: "", content: "" });
     const queryClient = useQueryClient();
+    const { toast } = useToast();
+    const isAr = lang === "ar";
 
     // Backend lore routes are nested under the book — see lib/shared/src/routes.ts.
     // Three of these previously called the wrong path (`/api/lore`, `/api/lore/generate`)
@@ -93,13 +96,46 @@ export function StoryBible({ bookId, isOpen, onClose, lang = "en" }: StoryBibleP
             const res = await fetch(`/api/books/${bookId}/lore/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({}),
             });
-            if (!res.ok) throw new Error("Failed to generate");
-            return res.json();
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data?.message || (isAr ? "تعذّر استخراج المعرفه" : "Could not extract lore"));
+            }
+            return data as { success: boolean; generatedCount?: number; message?: string };
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["/api/books", bookId, "lore"] });
+            // Surface the outcome explicitly. Without this, a 0-entries
+            // result (the model genuinely found nothing) looks identical
+            // to a silent failure and the writer thinks the feature is
+            // broken when it actually just had nothing to record.
+            const count = data?.generatedCount ?? 0;
+            if (count > 0) {
+                toast({
+                    title: isAr ? "تم الاستخراج" : "Extraction complete",
+                    description: isAr
+                        ? `أُضيف ${count} كيان جديد إلى مكتبتك.`
+                        : `Added ${count} new ${count === 1 ? "entity" : "entities"} to your bible.`,
+                });
+            } else {
+                toast({
+                    title: isAr ? "لم نجد ما نضيفه" : "Nothing new to add",
+                    description:
+                        data?.message ||
+                        (isAr
+                            ? "لم يكتشف الذكاء كيانات جديده هذه المرّه. أضف فصولاً أكثر تفصيلاً ثم حاول مجدّداً."
+                            : "The AI did not find new entities this time. Try again after adding more detail."),
+                });
+            }
+        },
+        onError: (err: Error) => {
+            toast({
+                title: isAr ? "تعذّر استخراج المعرفه" : "Auto-extract failed",
+                description: err?.message || (isAr ? "حاول مجدّداً." : "Please try again."),
+                variant: "destructive",
+            });
         },
     });
 

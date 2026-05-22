@@ -2175,67 +2175,128 @@ export async function registerRoutes(
     return res.status(204).send();
   });
 
-  app.post(api.lore.generate.path, aiLimiter, requireBookOwner, async (req, res) => {
+  app.post(api.lore.generate.path, requireOpenAI, aiLimiter, requireBookOwner, async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
       const chapters = await storage.getChapters(bookId);
-      if (chapters.length === 0) return res.json({ success: true, generatedCount: 0 });
-
-      // Take standard sample of text to avoid huge token limit hit
-      const fullText = chapters.map(c => c.content).join("\n\n").slice(-40000);
-
-      const systemPrompt = `You are a professional Story Bible and Lore Extractor. Analyze the provided book chapters and extract key entities. Categorize each strictly as "character", "location", "item", or "magic" (use "other" only if absolutely necessary). Return a JSON array of objects with the following keys: "name", "category", "content" (a detailed paragraph describing the entity based *only* on the text).`;
-
-      if (isMockOpenAI) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const dummyLore = await storage.createLoreEntry({
-          bookId,
-          name: "The First Artifact (Mock)",
-          category: "item",
-          content: "A beautifully glowing mock artifact generated safely because your OpenAI API key is missing. Add your real key to extract genuine lore from your chapters!"
+      if (chapters.length === 0) {
+        return res.status(400).json({
+          message: "This book has no chapters yet. Add at least one chapter before extracting lore.",
         });
-        return res.json({ success: true, generatedCount: 1, entries: [dummyLore] });
       }
+
+      // Build a clean plain-text sample. We strip HTML so we are not
+      // feeding the model paragraph tags / inline styles and wasting
+      // its context window on markup. Take up to ~40k characters from
+      // the END of the manuscript so the most recent chapters (which
+      // are typically the ones the writer is asking about) dominate.
+      const fullText = chapters
+        .map((c) => (c.content || "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " "))
+        .join("\n\n")
+        .replace(/\s+/g, " ")
+        .slice(-40000);
+
+      if (fullText.trim().length < 50) {
+        return res.status(400).json({
+          message: "Chapters are empty. Write some content first, then try again.",
+        });
+      }
+
+      // Reply language matches the manuscript so the extracted entries
+      // are written in the language the writer wrote.
+      const langCode = detectLangFromSample(fullText, book.language || "en");
+      const arabic = langCode === "ar";
+
+      const systemPrompt = arabic
+        ? `أنت محرّر متخصّص في توثيق الأعمال الأدبيه. اقرأ نص الفصول التاليه واستخرج الكيانات المهمّه فيها (الشخصيات، الأماكن، العناصر، السحر). أعد JSON بالشكل الآتي بالضبط ولا شيء غيره:
+{"entities":[{"name":"الاسم","category":"character|location|item|magic","content":"وصف وافٍ من النص نفسه"}]}
+قواعد:
+- استند إلى نص الكاتب فقط، لا تخترع شيئاً.
+- ضع كل كيان مرّه واحده فقط.
+- إذا لم تجد كيانات، أعد: {"entities":[]}.
+- اكتب الأسماء والوصف بالعربيه.`
+        : `You are an editor who maintains story bibles. Read the chapters below and extract the important entities (characters, locations, items, magic). Return ONLY this JSON shape, nothing else:
+{"entities":[{"name":"the name","category":"character|location|item|magic","content":"a careful description grounded in the chapters"}]}
+Rules:
+- Use only what the writer wrote. Do not invent.
+- Each entity appears once.
+- If nothing qualifies, return {"entities":[]}.
+- Write names and descriptions in English.`;
 
       const response = await openai.chat.completions.create({
         model: AI_TEXT_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: fullText }
+          { role: "user", content: fullText },
         ],
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
       });
 
       const resultStr = response.choices[0]?.message?.content || "{}";
-      const resultObj = JSON.parse(resultStr);
-      let newEntries = resultObj.entities || resultObj.lore || resultObj.data || [];
-      if (!Array.isArray(newEntries)) {
-        // Fallback attempts
+
+      // Parse defensively. A Groq/llama JSON object response is usually
+      // valid, but a malformed reply must NOT 500 — return zero entries
+      // with a clear message so the writer can retry.
+      let resultObj: Record<string, unknown> = {};
+      try {
+        resultObj = JSON.parse(resultStr);
+      } catch {
+        return res.json({
+          success: true,
+          generatedCount: 0,
+          message: arabic
+            ? "تعذّر تحليل ردّ الذكاء. حاول مجدّداً."
+            : "Could not parse the AI response. Try again.",
+        });
+      }
+
+      let newEntries: any[] =
+        (Array.isArray(resultObj.entities) && resultObj.entities) ||
+        (Array.isArray((resultObj as any).lore) && (resultObj as any).lore) ||
+        (Array.isArray((resultObj as any).data) && (resultObj as any).data) ||
+        [];
+      if (newEntries.length === 0) {
+        // The model sometimes nests the array under an unexpected key.
         for (const key of Object.keys(resultObj)) {
-          if (Array.isArray(resultObj[key])) { newEntries = resultObj[key]; break; }
+          const v = (resultObj as any)[key];
+          if (Array.isArray(v)) {
+            newEntries = v;
+            break;
+          }
         }
       }
 
       const existingLore = await storage.getLoreEntries(bookId);
-      const existingNames = new Set(existingLore.map(l => l.name.toLowerCase()));
+      const existingNames = new Set(existingLore.map((l) => l.name.toLowerCase()));
 
       let count = 0;
       for (const entry of newEntries) {
+        if (!entry || typeof entry !== "object") continue;
         if (!entry.name || !entry.category || !entry.content) continue;
-        if (existingNames.has(entry.name.toLowerCase())) continue; // Skip duplicates
+        if (existingNames.has(String(entry.name).toLowerCase())) continue;
+        const cat = String(entry.category).toLowerCase();
         await storage.createLoreEntry({
           bookId,
-          name: entry.name,
-          category: ["character", "location", "item", "magic"].includes(entry.category) ? entry.category : "other",
-          content: entry.content
+          name: String(entry.name),
+          category: ["character", "location", "item", "magic"].includes(cat) ? cat : "other",
+          content: String(entry.content),
         });
         count++;
       }
 
-      return res.json({ success: true, generatedCount: count });
+      return res.json({
+        success: true,
+        generatedCount: count,
+        message:
+          count === 0
+            ? arabic
+              ? "لم يكتشف الذكاء كيانات جديده هذه المرّه. أضف فصولاً أكثر تفصيلاً ثم حاول مجدّداً."
+              : "The AI did not find any new entities this time. Add more detail in the chapters and try again."
+            : undefined,
+      });
     } catch (err) {
       return handleAiError(res, err, { route: "/api/books/:id/lore/extract", user: req.user }, "Failed to extract lore");
     }
