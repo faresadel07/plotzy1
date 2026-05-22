@@ -11,7 +11,7 @@
 // for paginating the raw chapter content into roughly-equal page-sized
 // chunks before handing them here.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Printer, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
@@ -22,6 +22,10 @@ const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: numb
 };
 
 interface PrintPreviewProps {
+  /** Coarse fallback list (used until the on-screen measuring pass
+   *  produces a more accurate pagination). The component will
+   *  re-paginate by measuring the rendered content against the
+   *  printed-page height so the last line is never clipped. */
   printPages: string[];
   currentSpread: number;
   setCurrentSpread: React.Dispatch<React.SetStateAction<number>>;
@@ -47,7 +51,7 @@ export function PrintPreview({
   printPages,
   currentSpread,
   setCurrentSpread,
-  maxSpread,
+  maxSpread: maxSpreadFallback,
   fontStyle,
   prefs,
   resolvedBgColor,
@@ -62,9 +66,6 @@ export function PrintPreview({
   const printScrollRef = useRef<HTMLDivElement>(null);
   const isRTL = contentDir === "rtl";
 
-  const totalWords = printPages.join(" ").split(/\s+/).filter(Boolean).length;
-  const readMins = Math.max(1, Math.round(totalWords / 200));
-  const progressPct = maxSpread > 0 ? (currentSpread / maxSpread) * 100 : 100;
   const pageFont = fontStyle.fontFamily || "Georgia, 'Times New Roman', serif";
   const pageColor = prefs.textColor || "#111111";
   const pageBg = resolvedBgColor || "#FFFEF8";
@@ -81,6 +82,109 @@ export function PrintPreview({
   const pvFontSz = Math.round(14 * pvScale);
   const pvLineh = "1.72";
 
+  // ── Block list: split the chapter HTML into individual block-level
+  //    elements so we can pack them into pages by measured height.
+  const blockList = useMemo<string[]>(() => {
+    const allHtml = printPages.join("");
+    if (!allHtml.trim()) return [];
+    const blockTags = ["p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "li"];
+    const splitRe = new RegExp(`(?<=</(?:${blockTags.join("|")})>)`, "i");
+    return allHtml
+      .split(splitRe)
+      .map((b) => b.trim())
+      .filter(Boolean);
+  }, [printPages]);
+
+  // ── Measured pages: DOM-measure each block into a hidden box that
+  //    matches the real page's width / font / line-height / padding.
+  //    A block is added if it fits; otherwise the buffer is flushed
+  //    and the block starts a new page. A single block bigger than a
+  //    page is allowed to occupy its own page (it overflows visually
+  //    but the next page still starts on a clean break).
+  const [pages, setPages] = useState<string[]>(printPages);
+  const measureRef = useRef<HTMLDivElement | null>(null);
+
+  // Available body height inside a page = page height minus the
+  // header band, the footer band, and the top/bottom paddings. The
+  // header/footer rough proportions match renderBookPage below so
+  // this matches what each rendered page actually has for content.
+  const headerBand = Math.round(pvPageH * 0.055) + Math.round(5 * pvScale) + 16;
+  const footerBand = Math.round(pvPageH * 0.025) + Math.round(5 * pvScale) + 16;
+  const padTopY    = Math.round(pvPageH * 0.075);
+  const padBotY    = Math.round(pvPageH * 0.07);
+  const bodyAvailH = Math.max(80, pvPageH - headerBand - footerBand - padTopY - padBotY);
+  const bodyAvailW = Math.max(80, pvPageW - Math.round(pvPageW * 0.09) - Math.round(pvPageW * 0.10));
+
+  useLayoutEffect(() => {
+    if (blockList.length === 0) {
+      setPages([]);
+      return;
+    }
+    const host = measureRef.current;
+    if (!host) return;
+
+    // Make sure the hidden host matches the rendered page body exactly.
+    host.style.width = `${bodyAvailW}px`;
+    host.style.fontFamily = pageFont;
+    host.style.fontSize = `${pvFontSz}px`;
+    host.style.color = pageColor;
+    host.style.lineHeight = pvLineh;
+
+    const built: string[] = [];
+    let bufferHtml = "";
+
+    const flush = () => {
+      if (bufferHtml.trim()) built.push(bufferHtml);
+      bufferHtml = "";
+    };
+
+    for (const block of blockList) {
+      const next = bufferHtml + block;
+      host.innerHTML = next;
+      // scrollHeight is the rendered height of the entire content,
+      // regardless of overflow. If it exceeds the page body, we
+      // flush the buffer and start a new page with this block alone.
+      if (host.scrollHeight > bodyAvailH && bufferHtml) {
+        flush();
+        bufferHtml = block;
+      } else {
+        bufferHtml = next;
+      }
+    }
+    flush();
+
+    // Defensive: if measurement somehow produced zero pages but we
+    // have blocks, fall back to one page so the writer at least
+    // sees their text.
+    if (built.length === 0 && blockList.length > 0) {
+      built.push(blockList.join(""));
+    }
+    setPages(built);
+    // We measure on the same animation frame so the reader does not
+    // see a flash of the unbroken first guess.
+  }, [
+    blockList,
+    bodyAvailH,
+    bodyAvailW,
+    pageFont,
+    pvFontSz,
+    pageColor,
+    pvLineh,
+  ]);
+
+  // Reset to spread 0 whenever a fresh pagination changes the count.
+  useEffect(() => {
+    if (currentSpread * 2 >= pages.length) {
+      setCurrentSpread(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages.length]);
+
+  const maxSpread = Math.max(0, Math.ceil(pages.length / 2) - 1);
+  const totalWords = pages.join(" ").replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+  const readMins = Math.max(1, Math.round(totalWords / 200));
+  const progressPct = maxSpread > 0 ? (currentSpread / maxSpread) * 100 : 100;
+
   // Resolve which manuscript page index lives on the visual left vs
   // visual right side of the spread. For LTR the natural order is
   // [left=even, right=odd]; for RTL the page that reads first is the
@@ -91,8 +195,8 @@ export function PrintPreview({
   const leftIdx  = isRTL ? startIdx + 1 : startIdx;
   const rightIdx = isRTL ? startIdx     : startIdx + 1;
 
-  const leftHtml  = leftIdx  >= 0 ? printPages[leftIdx]  : undefined;
-  const rightHtml = rightIdx >= 0 ? printPages[rightIdx] : undefined;
+  const leftHtml  = leftIdx  >= 0 ? pages[leftIdx]  : undefined;
+  const rightHtml = rightIdx >= 0 ? pages[rightIdx] : undefined;
   const leftPageNum  = leftIdx  + 1;
   const rightPageNum = rightIdx + 1;
 
@@ -107,8 +211,31 @@ export function PrintPreview({
     // No-op; kept for future hook into a CSS variable if needed.
   }, [currentSpread]);
 
+  // Reference the fallback once so the linter does not flag the prop.
+  // The measured `pages` array always supersedes the parent's
+  // pre-pagination once the layout effect runs.
+  void maxSpreadFallback;
+
   return (
     <div className="fixed inset-0 z-[200] flex flex-col select-none" style={{ background: "#0d0d0f" }}>
+      {/* Hidden measurement host. Lives in the DOM at all times so the
+          layout effect can re-measure on font / paper / chapter change
+          without remounting. visibility:hidden keeps it from painting,
+          position:absolute keeps it out of layout flow. */}
+      <div
+        ref={measureRef}
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: -99999,
+          top: -99999,
+          visibility: "hidden",
+          pointerEvents: "none",
+          whiteSpace: "normal",
+          boxSizing: "border-box",
+        }}
+      />
+
       <style>{`
         /* Paragraph layout. We deliberately do NOT style a drop cap —
            the first letter renders at the same size as the rest of the
@@ -186,7 +313,7 @@ export function PrintPreview({
 
       {/* Book Area */}
       <div ref={printScrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "1.5rem 1.5rem" }}>
-        {printPages.length === 0 ? (
+        {pages.length === 0 ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", color: "rgba(255,255,255,0.20)", fontFamily: pageFont, fontStyle: "italic" }}>
             <BookOpen style={{ width: "40px", height: "40px", opacity: 0.2 }} />
             <p style={{ fontSize: "16px" }}>{ar ? "لا يوجد محتوى بعد. ابدأ الكتابة!" : "No content yet. Start writing!"}</p>
