@@ -1788,20 +1788,10 @@ export async function registerRoutes(
       const input = api.chapters.create.input.parse(req.body);
       const userId = req.isAuthenticated() && req.user ? req.user.id : null;
 
-      // Enforce free trial chapter limit
-      if (userId) {
-        const dbUser = await storage.getUserById(userId);
-        if (dbUser && !isSubscriptionActive(dbUser as any)) {
-          const chapterCount = await storage.getUserChapterCount(userId);
-          if (chapterCount >= FREE_TRIAL_MAX_CHAPTERS) {
-            return res.status(403).json({
-              message: "Free trial limit reached",
-              code: "CHAPTER_LIMIT",
-              limit: FREE_TRIAL_MAX_CHAPTERS,
-            });
-          }
-        }
-      }
+      // Plotzy is free for every writer. The old free-trial chapter
+      // cap (3 chapters per book until subscription) does not match
+      // the product any more, so the gate is removed. Unlimited
+      // chapters for everyone.
 
       const chapter = await storage.createChapter({
         ...input,
@@ -1830,21 +1820,13 @@ export async function registerRoutes(
       const input = api.chapters.update.input.parse(req.body);
       const userId = req.isAuthenticated() && req.user ? req.user.id : null;
 
-      // Enforce free trial word count limit
-      if (userId && input.content) {
-        const dbUser = await storage.getUserById(userId);
-        if (dbUser && !isSubscriptionActive(dbUser as any)) {
-          const wordCount = countWords(input.content);
-          if (wordCount > FREE_TRIAL_MAX_WORDS) {
-            return res.status(403).json({
-              message: "Free trial word limit reached",
-              code: "WORD_LIMIT",
-              wordCount,
-              limit: FREE_TRIAL_MAX_WORDS,
-            });
-          }
-        }
-      }
+      // Plotzy is free for every writer (see /pricing rewrite May 2026).
+      // The old FREE_TRIAL_MAX_WORDS guard previously refused the save
+      // whenever a non-subscribing user passed 5,000 words in a single
+      // chapter, which 403'd the very first long chapter every writer
+      // would ever try to commit. The limit no longer matches the
+      // product, so the guard is removed entirely. The user's input is
+      // still bounded by chapterBodyParser's body-size limit above.
 
       const chapter = await storage.updateChapter(Number(req.params.id), input);
 
