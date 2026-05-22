@@ -28,6 +28,22 @@ export default function DonateThanks() {
     // PayPal passes the orderId back as either `token` or `orderId`
     // depending on which flow returned it; check both.
     const orderId = params.get("token") || params.get("orderId");
+
+    // The SDK button flow passes the captured amount in the URL so we
+    // can skip the (already-completed) capture call here. Without
+    // this, calling capture again returns alreadyProcessed=true with
+    // no amount and the success screen renders blank.
+    const presetAmount = params.get("amount");
+    const presetCurrency = params.get("currency");
+    if (orderId && presetAmount) {
+      setState({
+        kind: "success",
+        amount: presetAmount,
+        currency: presetCurrency || "USD",
+      });
+      return;
+    }
+
     if (!orderId) {
       setState({
         kind: "error",
