@@ -108,11 +108,22 @@ export function PrintPreview({
   // header band, the footer band, and the top/bottom paddings. The
   // header/footer rough proportions match renderBookPage below so
   // this matches what each rendered page actually has for content.
-  const headerBand = Math.round(pvPageH * 0.055) + Math.round(5 * pvScale) + 16;
-  const footerBand = Math.round(pvPageH * 0.025) + Math.round(5 * pvScale) + 16;
+  // BODY_SAFETY_PAD is a deliberate cushion: paragraph rendering
+  // sometimes carries an extra fractional line worth of leading
+  // (mostly when an Arabic glyph with deeper descenders appears on
+  // the last line), and a measurement that is exactly at the limit
+  // can render one pixel taller than the page body. Subtracting a
+  // safety pad makes the last line breathing room visible at the
+  // bottom of every page instead of clipped.
+  const BODY_SAFETY_PAD = Math.max(28, Math.round(pvFontSz * 1.8));
+  const headerBand = Math.round(pvPageH * 0.055) + Math.round(5 * pvScale) + Math.round(7 * pvScale) + 2;
+  const footerBand = Math.round(pvPageH * 0.025) + Math.round(5 * pvScale) + Math.round(9 * pvScale) + 2;
   const padTopY    = Math.round(pvPageH * 0.075);
   const padBotY    = Math.round(pvPageH * 0.07);
-  const bodyAvailH = Math.max(80, pvPageH - headerBand - footerBand - padTopY - padBotY);
+  const bodyAvailH = Math.max(
+    80,
+    pvPageH - headerBand - footerBand - padTopY - padBotY - BODY_SAFETY_PAD,
+  );
   const bodyAvailW = Math.max(80, pvPageW - Math.round(pvPageW * 0.09) - Math.round(pvPageW * 0.10));
 
   useLayoutEffect(() => {
@@ -221,10 +232,15 @@ export function PrintPreview({
       {/* Hidden measurement host. Lives in the DOM at all times so the
           layout effect can re-measure on font / paper / chapter change
           without remounting. visibility:hidden keeps it from painting,
-          position:absolute keeps it out of layout flow. */}
+          position:absolute keeps it out of layout flow.
+          Gets the same pv-page class as the rendered pages so paragraph
+          spacing, indent, and heading sizes match exactly — otherwise
+          our measurement undercounts and the bottom line clips. */}
       <div
         ref={measureRef}
         aria-hidden
+        className="pv-page"
+        dir={isRTL ? "rtl" : "ltr"}
         style={{
           position: "absolute",
           left: -99999,
