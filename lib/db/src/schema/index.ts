@@ -300,6 +300,44 @@ export const subscriptionPayments = pgTable("subscription_payments", {
   uniqueIndex("uq_subpayments_paypal_order_id").on(t.paypalOrderId),
 ]);
 
+// Donations — one row per successful PayPal capture-donation. Plotzy is
+// free for every writer; this table records one-off supporter payments
+// so the admin can see who chipped in and how much. Distinct from
+// subscription_payments because:
+//   - donations do not require a signed-in user (userId is nullable),
+//   - they have no plan / tier / cycle (subscription_payments columns
+//     are all notNull and would not fit a one-off donation).
+// Donor email + name are captured from PayPal's payer block when present
+// so anonymous donors still show up with the contact info PayPal returns.
+export const donations = pgTable("donations", {
+  id: serial("id").primaryKey(),
+  // Nullable: anonymous donations are allowed (the donation endpoint does
+  // not require auth). When a logged-in user donates, we record their
+  // userId so the admin can join back to the user row for a nicer label.
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  // Donor identity as reported by PayPal. Email is the most useful for
+  // sending a thank-you; name is "Given Surname" formatted.
+  donorEmail: text("donor_email"),
+  donorName: text("donor_name"),
+  // PayPal identifiers — capture id is the actual money-moved id; order
+  // id is the parent. Both stored for cross-referencing with PayPal's
+  // dashboard if a refund / dispute ever lands.
+  paypalOrderId: text("paypal_order_id").notNull(),
+  paypalCaptureId: text("paypal_capture_id").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  status: text("status").notNull().default("completed"), // completed | refunded
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  // Admin list view orders by createdAt DESC; userId filter is occasional.
+  index("idx_donations_created_at").on(t.createdAt),
+  index("idx_donations_user_id").on(t.userId),
+  // Idempotency — the capture endpoint may legitimately retry with the
+  // same orderId (e.g. user refreshes the thanks page). ON CONFLICT DO
+  // NOTHING against this index prevents duplicate rows.
+  uniqueIndex("uq_donations_paypal_order_id").on(t.paypalOrderId),
+]);
+
 export const loreEntries = pgTable("lore_entries", {
   id: serial("id").primaryKey(),
   bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),

@@ -1581,7 +1581,118 @@ function RevenueTab() {
           </div>
         )}
       </ChartCard>
+
+      {/* Donations — Plotzy is free for everyone, so donations live in
+          their own table. Headline cards + a recent-donations list. */}
+      <DonationsPanel />
     </div>
+  );
+}
+
+// ─── 2c. DONATIONS PANEL (inside Revenue tab) ────────────────────────────────
+
+interface AdminDonation {
+  id: number;
+  userId: number | null;
+  donorEmail: string | null;
+  donorName: string | null;
+  amountCents: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+}
+
+interface DonationsData {
+  totalCents: number;
+  totalDollars: string;
+  monthCents: number;
+  monthDollars: string;
+  donationCount: number;
+  uniqueDonors: number;
+  donations: AdminDonation[];
+}
+
+function DonationsPanel() {
+  const { data, isLoading } = useQuery<DonationsData>({
+    queryKey: ["/api/admin/donations"],
+    queryFn: () =>
+      fetch("/api/admin/donations?limit=100", { credentials: "include" }).then((r) => r.json()),
+  });
+
+  if (isLoading || !data) {
+    return (
+      <ChartCard title="Donations">
+        <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+          Loading donations…
+        </div>
+      </ChartCard>
+    );
+  }
+
+  return (
+    <>
+      {/* Headline cards — total raised, this month, count, unique donors. */}
+      <div style={{ display: "flex", gap: 12, marginTop: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: 10, padding: "16px 20px", flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Donations (Lifetime)</div>
+          <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px" }}>
+            ${data.totalDollars}
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
+            {data.donationCount} {data.donationCount === 1 ? "donation" : "donations"}
+          </div>
+        </div>
+        <MiniStat label="Donations This Month" value={`$${data.monthDollars}`} sub="Calendar month to date" />
+        <MiniStat label="Unique Donors" value={data.uniqueDonors} sub="By email or order" />
+      </div>
+
+      <ChartCard title="Recent Donations">
+        {data.donations.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+            No donations yet. Once supporters chip in, they will appear here.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Date</th>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Donor</th>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</th>
+                  <th style={{ textAlign: "right", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Amount</th>
+                  <th style={{ textAlign: "left", padding: "10px 12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}>Account</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.donations.map((d) => (
+                  <tr key={d.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                      {new Date(d.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.85)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {d.donorName || <span style={{ color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Anonymous</span>}
+                    </td>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.6)", maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12 }}>
+                      {d.donorEmail || <span style={{ color: "rgba(255,255,255,0.3)" }}>—</span>}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "right", color: "#a855f7", fontWeight: 600, whiteSpace: "nowrap" }}>
+                      ${(d.amountCents / 100).toFixed(2)} {d.currency}
+                    </td>
+                    <td style={{ padding: "12px", color: "rgba(255,255,255,0.5)", fontSize: 12, whiteSpace: "nowrap" }}>
+                      {d.userId !== null ? (
+                        <span style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80", padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600 }}>Registered</span>
+                      ) : (
+                        <span style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600 }}>Guest</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </ChartCard>
+    </>
   );
 }
 

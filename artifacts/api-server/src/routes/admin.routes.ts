@@ -312,6 +312,79 @@ router.get("/api/admin/analytics/revenue/monthly", async (req, res) => {
   }
 });
 
+// ─── 2b. DONATIONS ──────────────────────────────────────────────────────────
+//
+// Plotzy is free for every writer, so donations live in their own table
+// (not subscription_payments). The admin Donations panel reads this
+// endpoint to display:
+//   - total raised (lifetime + this calendar month),
+//   - donor count (rows + unique donors),
+//   - a recent-donations list with donor name, email, amount, date.
+//
+// Anonymous donations (no signed-in user) still show with the donor_email
+// and donor_name PayPal reports. The `displayName` falls back to PayPal's
+// donor_name when no internal user row is linked.
+
+router.get("/api/admin/donations", async (req, res) => {
+  try {
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 100));
+
+    // Summary aggregates — single round-trip so the headline cards and
+    // the list query don't compete for a connection.
+    const summaryResult = await db.execute(sql`
+      SELECT
+        COALESCE(SUM(amount_cents), 0)::bigint AS total_cents,
+        COALESCE(SUM(amount_cents) FILTER (WHERE created_at >= date_trunc('month', NOW())), 0)::bigint AS month_cents,
+        COUNT(*)::int AS donation_count,
+        COUNT(DISTINCT COALESCE(donor_email, paypal_order_id))::int AS unique_donors
+      FROM donations
+      WHERE status = 'completed'
+    `);
+    const sRow = summaryResult.rows?.[0] as any;
+    const totalCents = Number(sRow?.total_cents || 0);
+    const monthCents = Number(sRow?.month_cents || 0);
+    const donationCount = Number(sRow?.donation_count || 0);
+    const uniqueDonors = Number(sRow?.unique_donors || 0);
+
+    // Recent donations — LEFT JOIN users so anonymous donors (user_id NULL)
+    // still surface. Coalesce display: prefer the signed-in user's display
+    // name, fall back to the PayPal-reported donor_name, finally "Anonymous".
+    const listResult = await db.execute(sql`
+      SELECT
+        d.id, d.user_id, d.donor_email, d.donor_name,
+        d.amount_cents, d.currency, d.status, d.created_at,
+        u.email AS user_email, u.display_name AS user_display_name
+      FROM donations d
+      LEFT JOIN users u ON u.id = d.user_id
+      WHERE d.status = 'completed'
+      ORDER BY d.created_at DESC
+      LIMIT ${limit}
+    `);
+
+    return res.json({
+      totalCents,
+      totalDollars: (totalCents / 100).toFixed(2),
+      monthCents,
+      monthDollars: (monthCents / 100).toFixed(2),
+      donationCount,
+      uniqueDonors,
+      donations: listResult.rows.map((r: any) => ({
+        id: Number(r.id),
+        userId: r.user_id !== null ? Number(r.user_id) : null,
+        donorEmail: r.donor_email ?? r.user_email ?? null,
+        donorName: r.user_display_name || r.donor_name || null,
+        amountCents: Number(r.amount_cents || 0),
+        currency: String(r.currency || "USD"),
+        status: String(r.status || "completed"),
+        createdAt: r.created_at,
+      })),
+    });
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch donations");
+    return res.status(500).json({ message: "Failed to fetch donations" });
+  }
+});
+
 // ─── 3. CONTENT MODERATION ──────────────────────────────────────────────────
 
 // Flag a book

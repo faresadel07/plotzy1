@@ -7,6 +7,7 @@ import {
   FREE_TRIAL_MAX_CHAPTERS,
   FREE_TRIAL_MAX_WORDS,
   subscriptionPayments,
+  donations,
 } from "../../../../lib/db/src/schema";
 import { isSubscriptionActive } from "./helpers";
 import { sendEmail, sendPaymentReceiptEmail } from "../lib/email";
@@ -181,6 +182,18 @@ router.post("/api/paypal/create-order", paymentLimiter, async (req, res) => {
 interface PayPalCaptureResponse {
   id: string;
   status: string;                            // order-level status
+  // Payer block — present on all successful captures. We only read this
+  // for donations (to record donor identity in the admin panel); the
+  // subscription capture path ignores it because the signed-in userId
+  // is the source of truth there.
+  payer?: {
+    email_address?: string;
+    payer_id?: string;
+    name?: {
+      given_name?: string;
+      surname?: string;
+    };
+  };
   purchase_units?: Array<{
     payments?: {
       captures?: Array<{
@@ -557,15 +570,50 @@ router.post("/api/paypal/capture-donation", paymentLimiter, async (req, res) => 
     }
     const amount = detail.amount?.value ?? "0.00";
     const currency = detail.amount?.currency_code ?? "USD";
+    const amountCents = Math.round(parseFloat(amount) * 100);
 
-    // The subscription_payments table is shaped for recurring plans
-    // (plan/tier/cycle are notNull) so it doesn't fit one-off donations.
-    // PayPal already has the receipt of record; we log here so the
-    // operator can see donations in the request logs without spinning
-    // up a new table just yet.
+    // Pull donor identity from PayPal's payer block. Always present on a
+    // COMPLETED capture, but every field is defensive-optional so a
+    // PayPal response shape change cannot crash the recording path.
+    const donorEmail = capture.payer?.email_address ?? null;
+    const givenName = capture.payer?.name?.given_name ?? "";
+    const surname = capture.payer?.name?.surname ?? "";
+    const donorName =
+      `${givenName} ${surname}`.trim().length > 0
+        ? `${givenName} ${surname}`.trim()
+        : null;
     const userId = req.isAuthenticated() && req.user ? (req.user as any).id : null;
+
+    // Record the donation. Wrapped in try/catch so a DB failure here
+    // never makes the supporter think their payment didn't go through —
+    // PayPal already moved the money, and we'd rather lose an audit
+    // row than tell the user the donation failed.
+    try {
+      await db
+        .insert(donations)
+        .values({
+          userId,
+          donorEmail,
+          donorName,
+          paypalOrderId: orderId,
+          paypalCaptureId: detail.id,
+          amountCents,
+          currency,
+          status: "completed",
+        })
+        // Idempotent on uq_donations_paypal_order_id — refreshing the
+        // thanks page or any retry with the same orderId becomes a
+        // no-op rather than a duplicate row.
+        .onConflictDoNothing();
+    } catch (err) {
+      logger.error(
+        { err, orderId, captureId: detail.id, amount, currency, userId },
+        "Failed to record donation row",
+      );
+    }
+
     logger.info(
-      { event: "donation_captured", orderId, captureId: detail.id, amount, currency, userId },
+      { event: "donation_captured", orderId, captureId: detail.id, amount, currency, userId, donorEmail },
       `Plotzy donation received: ${currency} ${amount}`,
     );
 
