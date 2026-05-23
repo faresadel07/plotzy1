@@ -193,7 +193,7 @@ export default function Pricing() {
           background: "#000",
           color: "#fff",
           fontFamily: SF,
-          padding: "72px 24px 120px",
+          padding: "28px 24px 120px",
         }}
       >
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
