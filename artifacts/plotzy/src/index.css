@@ -805,3 +805,22 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif !important;
 }
+
+/* ── Pricing page: pure black, no #0a0a0a band ──────────────────────────
+   The Layout component renders a wrapper with class `bg-background`,
+   which resolves to #0a0a0a in dark mode. The pricing page paints its
+   own #000 inside, but any pixel outside the inner wrapper (the gutter
+   on wide viewports, the area below the page) shows the lighter
+   #0a0a0a. Pricing.tsx adds `plotzy-page-pure-black` to <body> while
+   mounted; this rule forces every layer under it (html, body, Layout's
+   bg-background class, and the bg-background CSS variable token) to
+   pure #000 so the page reads as a single flat black. The class is
+   removed on unmount so the rest of the site keeps its near-black
+   palette. */
+body.plotzy-page-pure-black,
+body.plotzy-page-pure-black html,
+html:has(body.plotzy-page-pure-black),
+body.plotzy-page-pure-black .bg-background {
+  background: #000 !important;
+  background-color: #000 !important;
+}

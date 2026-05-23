@@ -148,20 +148,17 @@ export default function Pricing() {
     };
   }, []);
 
-  // The whole page is pure black. The body element underneath is
-  // styled to --background (#0a0a0a in dark mode) by the global
-  // stylesheet, which shows through as a slightly lighter band on
-  // any pixel not covered by this page's inner div. Override the
-  // body and html backgrounds for as long as this page is mounted,
-  // and restore them on unmount so other pages keep their look.
+  // Force every layer under this page to pure black for as long as
+  // the page is mounted. The page itself paints #000 inside its
+  // wrapper, but the Layout component renders `bg-background` (which
+  // resolves to #0a0a0a in dark mode) above the body, and that
+  // shows through as a slightly lighter band wherever this page's
+  // wrapper does not paint. Adding a body class lets us reach the
+  // Layout chain via a CSS override scoped to this page only.
   useEffect(() => {
-    const prevBodyBg = document.body.style.background;
-    const prevHtmlBg = document.documentElement.style.background;
-    document.body.style.background = "#000";
-    document.documentElement.style.background = "#000";
+    document.body.classList.add("plotzy-page-pure-black");
     return () => {
-      document.body.style.background = prevBodyBg;
-      document.documentElement.style.background = prevHtmlBg;
+      document.body.classList.remove("plotzy-page-pure-black");
     };
   }, []);
 
