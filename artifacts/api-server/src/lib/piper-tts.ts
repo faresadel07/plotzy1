@@ -127,12 +127,28 @@ async function runPiper(text: string, voice: PiperVoice, speed: number): Promise
   const lengthScale = 1.0 / safeSpeed;
 
   const modelPath = path.join(VOICES_DIR, `${voice.modelFile}.onnx`);
+  const configPath = `${modelPath}.json`;
+
+  // Fail fast with an actionable error if the voice files are missing.
+  // Piper otherwise dies with `exited with code null` (signal) and no
+  // stderr because onnxruntime / piper-tts segfaults inside __init__
+  // before getting a chance to print, which is exactly what happened
+  // on the audiobook preview crash we hit on 2026-05-23.
+  const fs = await import("fs/promises");
+  const fsSync = await import("fs");
+  for (const p of [modelPath, configPath]) {
+    if (!fsSync.existsSync(p)) {
+      throw new Error(
+        `piper voice file missing at ${p} (voice id "${voice.id}", model "${voice.modelFile}"). ` +
+        `Check the Dockerfile voice download step.`,
+      );
+    }
+  }
 
   // Piper CLI does not accept text from stdin and "-f -" stdout-streaming
   // crashes the Python wrapper. The only reliable mode is temp files for
   // both input and output, so that's what we do. Files are unique per
   // call (random hex) and removed in finally{}.
-  const fs = await import("fs/promises");
   const os = await import("os");
   const crypto = await import("crypto");
   const tmpId = crypto.randomBytes(8).toString("hex");
@@ -158,10 +174,25 @@ async function runPiper(text: string, voice: PiperVoice, speed: number): Promise
       const stderrChunks: Buffer[] = [];
       proc.stderr.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
       proc.on("error", (err) => reject(new Error(`Failed to spawn ${PYTHON_CMD} -m piper: ${err.message}`)));
-      proc.on("close", (code) => {
+      // Both `code` and `signal` come from Node's child_process callback.
+      // When the OS kills the process (SIGKILL from the cgroup OOM-killer
+      // is the textbook case on Railway), `code` is null and `signal` is
+      // the signal name; without capturing it the error message degrades
+      // to "piper exited with code null" and the operator has nothing to
+      // act on. Capture both so the next time this fails the cause is
+      // obvious from the response toast.
+      proc.on("close", (code, signal) => {
         if (code !== 0) {
-          const stderr = Buffer.concat(stderrChunks).toString("utf-8");
-          reject(new Error(`piper exited with code ${code}: ${stderr.slice(0, 500)}`));
+          const stderr = Buffer.concat(stderrChunks).toString("utf-8").trim();
+          const cause = signal
+            ? `killed by signal ${signal}`
+            : `exited with code ${code}`;
+          const hint =
+            signal === "SIGKILL"
+              ? " (likely OOM — Piper's onnxruntime needs ~250MB; raise the Railway memory plan or use a smaller voice model)"
+              : "";
+          const detail = stderr ? `: ${stderr.slice(0, 500)}` : "";
+          reject(new Error(`piper ${cause}${hint}${detail}`));
           return;
         }
         resolve();
