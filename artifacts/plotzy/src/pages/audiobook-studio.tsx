@@ -417,13 +417,35 @@ export default function AudiobookStudio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chapterId, voice: selectedVoice }),
       });
-      if (!res.ok) throw new Error("Preview failed");
+      if (!res.ok) {
+        // For admins, the server includes a `debug.error` field with the
+        // actual Piper / ffmpeg stderr. Surface it in the toast so we can
+        // see what's wrong without ssh-ing into Railway logs.
+        let detail = "";
+        try {
+          const body = await res.json() as {
+            message?: string;
+            debug?: { error?: string };
+          };
+          detail = body?.debug?.error || body?.message || "";
+        } catch {
+          /* response not JSON; leave detail blank */
+        }
+        throw new Error(detail || "Preview failed");
+      }
       const data = await res.json() as { audio: string; mimeType: string; isMock?: boolean };
       const chapterText = chapterList.find(c => c.id === chapterId)?.text;
       setPreviews(p => ({ ...p, [chapterId]: { ...data, text: chapterText, voice: selectedVoice } }));
       setExpandedChapters(prev => new Set([...prev, chapterId]));
-    } catch {
-      toast({ title: ar ? "فشل المعاينة" : "Preview failed", description: ar ? "حدث خطأ أثناء توليد الصوت" : "Could not generate audio preview", variant: "destructive" });
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "";
+      toast({
+        title: ar ? "فشل المعاينة" : "Preview failed",
+        description: detail && detail !== "Preview failed"
+          ? detail
+          : (ar ? "حدث خطأ أثناء توليد الصوت" : "Could not generate audio preview"),
+        variant: "destructive",
+      });
     } finally {
       setPreviewLoading(p => ({ ...p, [chapterId]: false }));
     }

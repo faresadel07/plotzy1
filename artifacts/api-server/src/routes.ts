@@ -2804,12 +2804,37 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // Filters to text-only blocks; image/drawing block content is base64
   // image data or SVG markup, not narratable text, so it must be dropped
   // here. This was Phase A Fix 1 of the audiobook bug audit.
+  //
+  // The text block content itself can be HTML (TipTap output) or plain
+  // text depending on how the editor saved it. Piper TTS would otherwise
+  // try to vocalize the angle brackets and tag names, so we strip HTML
+  // tags + decode the common entities + collapse whitespace after the
+  // block walk. This makes the preview robust to any chapter shape:
+  // pure JSON blocks, raw HTML, or plain text.
+  function stripHtmlForTts(s: string): string {
+    if (!s) return "";
+    return s
+      // Drop tags entirely; their textual content stays.
+      .replace(/<[^>]+>/g, " ")
+      // Common entities Piper would otherwise read out by name.
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Collapse whitespace so Piper does not bake long pauses into
+      // the synthesized audio.
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   function extractChapterPlainText(content: string): string {
     if (!content) return "";
     try {
       const blocks = JSON.parse(content);
       if (Array.isArray(blocks)) {
-        return blocks
+        const joined = blocks
           .map((b: unknown) => {
             if (typeof b === "string") return b;
             if (
@@ -2825,9 +2850,10 @@ Write the query letter specifically tailored to this publisher, mentioning why t
           })
           .join("\n\n")
           .trim();
+        return stripHtmlForTts(joined);
       }
     } catch { /* fall through to plain-text branch */ }
-    return content.trim();
+    return stripHtmlForTts(content);
   }
 
   // Sync export size guard. We synthesize on the request thread (B.1
@@ -2876,7 +2902,34 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
       return res.json({ audio: mp3.toString("base64"), mimeType: "audio/mpeg", chapterId });
     } catch (err) {
-      return handleAiError(res, err, { route: "/api/books/:id/audiobook/preview", user: req.user }, "Failed to generate audio preview");
+      // The handleAiError helper is shaped for OpenAI-style errors and
+      // hides the underlying piper stderr behind a "providerMessage" key
+      // only admins can see. For this route, the most common failures
+      // are NOT provider-side (Piper runs on our own hardware): missing
+      // voice model file, espeak-ng phoneme failure, ffmpeg crash, or
+      // an empty input after extraction. Log the raw error AND echo a
+      // diagnostic field back to admins so we can read the actual
+      // stderr from the Piper child process without grepping Railway.
+      const { logger } = await import("./lib/logger");
+      const { isAdminUser } = await import("./lib/admin");
+      const msg = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      logger.error(
+        {
+          route: "/api/books/:id/audiobook/preview",
+          userId: req.user ? (req.user as any).id : null,
+          err: msg,
+          stack,
+        },
+        "Audiobook preview failed",
+      );
+      const body: { message: string; debug?: { error: string; stack?: string } } = {
+        message: "Failed to generate audio preview",
+      };
+      if (req.user && isAdminUser(req.user)) {
+        body.debug = { error: msg, stack };
+      }
+      return res.status(500).json(body);
     }
   });
 
