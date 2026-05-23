@@ -43,6 +43,33 @@ export default defineConfig({
       workbox: {
         // Cache the app shell (JS, CSS, HTML) for offline access
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+
+        // The SPA's NavigationRoute serves the cached index.html for any
+        // top-level navigation that workbox does not have a more specific
+        // rule for. Without an explicit denylist, that included routes
+        // owned by the API server (/auth/google, /auth/google/callback,
+        // /auth/apple/*, /auth/linkedin/*, all of /api/*). On iPad's
+        // Safari the SW raced ahead of the network and served the
+        // SPA shell for the OAuth callback URL; the SPA had no matching
+        // wouter route for /auth/google/callback so it rendered the
+        // NotFound page even though the actual sign-in had succeeded
+        // (the Google One Tap toast still appeared because that flow
+        // talks to /api/auth/google/one-tap from the SPA via fetch,
+        // which is XHR and not a navigation, so the SW left it alone).
+        //
+        // navigateFallbackDenylist tells workbox: do NOT serve
+        // index.html for these paths, fall through to the network. The
+        // OAuth redirect then reaches Vercel, Vercel rewrites to
+        // Railway, Railway sets the session cookie and bounces the
+        // browser to /?auth=success, and the SPA's home route renders
+        // cleanly with the toast.
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/auth\//,
+          /^\/sitemap/,
+          /^\/robots\.txt/,
+          /^\/\.well-known\//,
+        ],
         runtimeCaching: [
           {
             // Cache Google Fonts stylesheets
