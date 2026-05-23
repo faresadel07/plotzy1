@@ -21,22 +21,31 @@ export function CourseLandingHero() {
 
   return (
     <header
-      className="relative isolate overflow-hidden rounded-2xl"
+      className="course-hero-frame relative isolate overflow-hidden rounded-2xl"
       style={{
         background: "linear-gradient(135deg, #1A294F 0%, #0F1A33 100%)",
-        // Match the source image's natural aspect so nothing is cropped.
+        // Match the source image's natural aspect so nothing is cropped
+        // on iPad / laptop. On phones the panoramic 2.6:1 frame is too
+        // thin to read the title comfortably, so the responsive CSS
+        // below switches to a portrait-ish 4:3 frame and recenters the
+        // illustration on its focal subject.
         aspectRatio: "2021 / 778",
-        // On very narrow viewports the aspect ratio alone makes the
-        // hero too short to comfortably fit the title — bump the floor.
-        minHeight: "clamp(180px, 42vw, 360px)",
+        minHeight: "clamp(220px, 42vw, 360px)",
       }}
     >
-      {/* Hide the heavy 1.4MB hero illustration on phones — it loads
-          slowly on cellular and feels cramped at <700px. iPad and
-          laptop still get the full image. */}
+      {/* The hero illustration is shown on every device. On phones we
+          switch the aspect ratio to 4:3 (taller, more readable) and
+          shift object-position so the writer / book on the right of
+          the original panorama stays visible after the crop. */}
       <style>{`
         @media (max-width: 699px) {
-          .course-hero-image { display: none !important; }
+          .course-hero-frame {
+            aspect-ratio: 4 / 3 !important;
+            min-height: 280px !important;
+          }
+          .course-hero-image {
+            object-position: 70% center !important;
+          }
         }
       `}</style>
       <img

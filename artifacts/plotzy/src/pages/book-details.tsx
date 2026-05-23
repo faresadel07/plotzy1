@@ -839,22 +839,28 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                     )}
                                   </div>
 
-                                  {/* Actions */}
+                                  {/* Actions. On phones the four-button row used to
+                                      overflow horizontally: instead, the secondary
+                                      actions collapse to icon-only and the primary
+                                      Write button keeps its label. Tailwind's
+                                      sm: prefix (640px) is the breakpoint.  */}
                                   {editingChapterId !== chapter.id && (
-                                    <div className="flex items-center gap-2 pr-4 flex-shrink-0">
-                                      {/* Rename */}
+                                    <div className="flex items-center gap-1.5 sm:gap-2 pr-2 sm:pr-4 flex-shrink-0">
+                                      {/* Rename — icon-only on phone, text on >=sm */}
                                       <button
-                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
+                                        className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg transition-all"
                                         style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 500 }}
                                         onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
                                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
                                         title={lang === "ar" ? "إعادة التسمية" : "Rename"}
+                                        aria-label={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                       >
-                                        <span>{lang === "ar" ? "تسمية" : "Rename"}</span>
+                                        <PenLine className="w-3.5 h-3.5" />
+                                        <span className="hidden sm:inline">{lang === "ar" ? "تسمية" : "Rename"}</span>
                                       </button>
 
-                                      {/* Write / Open Editor */}
+                                      {/* Write / Open Editor — primary action, keeps its label on every size */}
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`}>
                                         <button
                                           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
@@ -870,20 +876,22 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                       {/* Per-chapter download — same formats as the
                                           whole book (incl. the two PDF fonts), routed
                                           through the same pipeline so RTL/Arabic-font
-                                          is respected per the chapter's own content. */}
+                                          is respected per the chapter's own content.
+                                          Icon-only on phone, text + icon on >=sm. */}
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                           <button
                                             type="button"
                                             onClick={(e) => e.stopPropagation()}
-                                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
+                                            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg transition-all"
                                             style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 500 }}
                                             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'; }}
                                             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
                                             title={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
+                                            aria-label={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
                                           >
                                             <Download className="w-3.5 h-3.5" />
-                                            <span>{lang === "ar" ? "تنزيل" : "Download"}</span>
+                                            <span className="hidden sm:inline">{lang === "ar" ? "تنزيل" : "Download"}</span>
                                           </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent className="w-60 rounded-xl" onClick={(e) => e.stopPropagation()}>

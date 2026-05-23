@@ -1932,14 +1932,21 @@ export default function ChapterEditor() {
             >
               <Search className="w-3.5 h-3.5" />
             </button>
+            {/* AI Assistant pill. Visible on every viewport now — was
+                hidden on phones (hidden sm:flex), which left the writer
+                without their primary AI surface there. On phones the
+                label collapses to just the wand so the pill still fits
+                next to Save / Search on a narrow header. */}
             <button
-              className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 hidden sm:flex items-center transition-all hover:opacity-90 hover:-translate-y-px active:translate-y-0"
+              className="h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 flex items-center transition-all hover:opacity-90 hover:-translate-y-px active:translate-y-0"
               style={{ background: "linear-gradient(135deg, #d4a017 0%, #f5c518 50%, #e8a020 100%)", color: "#5a3a00", boxShadow: "0 2px 8px rgba(212,160,23,0.45)" }}
               onClick={() => setShowAI(true)}
+              aria-label={t("aiAssistant")}
+              title={t("aiAssistant")}
               data-testid="button-ai-assistant"
             >
               <Wand2 className="w-3.5 h-3.5" />
-              {t("aiAssistant")}
+              <span className="hidden sm:inline">{t("aiAssistant")}</span>
             </button>
 
             {autoSaving && (
@@ -3495,7 +3502,11 @@ export default function ChapterEditor() {
 
       {/* Floating "Talk with AI" button + the chat side panel.
           A subtle, Apple-styled pill anchored to the bottom corner that
-          opens a stateless Gemini chat alongside the writer's work. */}
+          opens a stateless Gemini chat alongside the writer's work.
+          Positioned with calc(env(safe-area-inset-bottom)) so it lifts
+          above the iPhone home indicator and the soft keyboard area on
+          Safari iOS; on Android / desktop the env() value resolves to
+          0 so the math falls back to the original 22px offset. */}
       <button
         type="button"
         onClick={() => setAiChatOpen(true)}
@@ -3503,8 +3514,8 @@ export default function ChapterEditor() {
         title={ar ? "تحدث مع الذكاء الاصطناعي" : "Talk with the AI"}
         style={{
           position: "fixed",
-          bottom: 22,
-          [ar ? "left" : "right"]: 22,
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 22px)",
+          [ar ? "left" : "right"]: "calc(env(safe-area-inset-right, 0px) + 22px)",
           zIndex: 50,
           display: aiChatOpen ? "none" : "inline-flex",
           alignItems: "center",

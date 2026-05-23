@@ -7,7 +7,6 @@ import { CourseLandingHero } from "@/components/course/CourseLandingHero";
 import { CourseSidebarCard } from "@/components/course/CourseSidebarCard";
 import { CourseLearningPoints } from "@/components/course/CourseLearningPoints";
 import { CourseModulesPreview } from "@/components/course/CourseModulesPreview";
-import { CourseLandingFooterCta } from "@/components/course/CourseLandingFooterCta";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -124,7 +123,11 @@ export default function CourseLandingPage() {
           </aside>
         </div>
 
-        <CourseLandingFooterCta state={sidebarState} />
+        {/* The footer CTA used to render a second copy of the sidebar
+            card here so phones (which collapse the sidebar to a single
+            column) saw the same box twice in a row. The sidebar above
+            is the single source of truth for the conversion action on
+            every viewport. */}
       </main>
     </Layout>
   );
