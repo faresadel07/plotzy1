@@ -697,7 +697,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'AI Marketplace', href: '/marketplace' },
               { label: 'Cover Designer', href: '/' },
-              { label: 'Pricing & Plans', href: '/pricing' },
+              { label: 'Donate', href: '/pricing' },
             ]} />
 
             {/* Read & Explore */}

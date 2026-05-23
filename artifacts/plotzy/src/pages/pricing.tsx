@@ -22,10 +22,12 @@ const SF =
 
 const TEXT = {
   en: {
-    pageTitle: "Pricing, Plotzy",
+    pageTitle: "Donate, Plotzy",
     pageDescription:
       "Plotzy is free for every writer. Support the project if you would like to.",
     title: "Support Plotzy",
+    titleSub:
+      "Plotzy is free for everyone and is still under active development. Donate if you would like to help the project grow.",
     presets: ["5", "10", "25", "50", "100", "250"],
     currency: "USD",
     amountAria: "Enter a custom amount in US dollars",
@@ -69,9 +71,11 @@ const TEXT = {
     toastSuccessBody: "Your donation was received.",
   },
   ar: {
-    pageTitle: "الأسعار, بلوتزي",
+    pageTitle: "تبرّع, بلوتزي",
     pageDescription: "بلوتزي مجاني لكل كاتب. ادعم المشروع إذا أردت.",
     title: "ادعم بلوتزي",
+    titleSub:
+      "بلوتزي مجّاني للجميع ولا يزال قيد التطوير. تبرّع إن أردت أن تساعد المشروع على أن يكبر.",
     presets: ["5", "10", "25", "50", "100", "250"],
     currency: "USD",
     amountAria: "اكتب مبلغاً مخصّصاً بالدولار الأمريكي",
@@ -213,12 +217,27 @@ export default function Pricing() {
                 letterSpacing: "-0.02em",
                 lineHeight: 1.15,
                 margin: 0,
-                marginBottom: 24,
+                marginBottom: 10,
                 color: "#fff",
               }}
             >
               {t.title}
             </h1>
+            {/* Short subtitle under the heading: keeps the donation card
+                honest about Plotzy's current state without weighing the
+                hero down with a paragraph. Small font on purpose. */}
+            <p
+              style={{
+                margin: 0,
+                marginBottom: 22,
+                fontSize: 13.5,
+                lineHeight: 1.6,
+                color: "rgba(255,255,255,0.62)",
+                maxWidth: 540,
+              }}
+            >
+              {t.titleSub}
+            </p>
 
             <div
               role="group"
