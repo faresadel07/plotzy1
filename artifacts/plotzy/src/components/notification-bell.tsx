@@ -109,6 +109,27 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
     },
   });
 
+  // Mark all messages as read — same shape as the notifications mutation
+  // above. Clears the red badge in the Messages tab without forcing the
+  // user to open every conversation. Optimistically zeros the cached
+  // unread count on success so the badge disappears immediately.
+  const markAllMessagesMut = useMutation({
+    mutationFn: () =>
+      fetch("/api/messages/read-all", { method: "POST", credentials: "include" })
+        .then(r => { if (!r.ok) throw new Error("Mark-all-messages-read failed"); }),
+    onSuccess: () => {
+      qc.setQueryData(["/api/messages/unread-count"], { count: 0 });
+      qc.invalidateQueries({ queryKey: ["/api/messages/unread-count"] });
+      qc.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't mark messages as read",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Click outside to close
   useEffect(() => {
     if (!open) return;
@@ -392,42 +413,81 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
               </>
             ) : (
               /* Messages tab */
-              <div style={{
-                padding: "32px 20px",
-                textAlign: "center",
-                fontFamily: SF,
-              }}>
-                <Mail style={{ width: 28, height: 28, color: TD, margin: "0 auto 12px" }} />
-                {(msgCount?.count || 0) > 0 ? (
-                  <div style={{ fontSize: 13, color: T, marginBottom: 4 }}>
-                    You have <span style={{ fontWeight: 700, color: "#fff" }}>{msgCount!.count}</span> unread message{msgCount!.count !== 1 ? "s" : ""}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 13, color: TS, marginBottom: 4 }}>
-                    No unread messages
+              <>
+                {/* Mark all read header — mirrors the Notifications tab.
+                    Only shown when there is at least one unread message so
+                    the row doesn't add noise on a clean inbox. */}
+                {(msgCount?.count || 0) > 0 && (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    padding: "8px 12px 4px",
+                  }}>
+                    <button
+                      onClick={() => markAllMessagesMut.mutate()}
+                      disabled={markAllMessagesMut.isPending}
+                      style={{
+                        fontFamily: SF,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: TS,
+                        background: "transparent",
+                        border: "none",
+                        cursor: markAllMessagesMut.isPending ? "default" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                        transition: "background 0.15s",
+                        opacity: markAllMessagesMut.isPending ? 0.5 : 1,
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(124,106,247,0.1)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <Check style={{ width: 12, height: 12 }} />
+                      Mark all read
+                    </button>
                   </div>
                 )}
-                <button
-                  onClick={() => { navigate("/messages"); setOpen(false); }}
-                  style={{
-                    marginTop: 12,
-                    padding: "8px 20px",
-                    borderRadius: 8,
-                    background: "#fff",
-                    color: "#000",
-                    fontFamily: SF,
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "opacity 0.15s",
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                >
-                  View Messages
-                </button>
-              </div>
+                <div style={{
+                  padding: "32px 20px",
+                  textAlign: "center",
+                  fontFamily: SF,
+                }}>
+                  <Mail style={{ width: 28, height: 28, color: TD, margin: "0 auto 12px" }} />
+                  {(msgCount?.count || 0) > 0 ? (
+                    <div style={{ fontSize: 13, color: T, marginBottom: 4 }}>
+                      You have <span style={{ fontWeight: 700, color: "#fff" }}>{msgCount!.count}</span> unread message{msgCount!.count !== 1 ? "s" : ""}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 13, color: TS, marginBottom: 4 }}>
+                      No unread messages
+                    </div>
+                  )}
+                  <button
+                    onClick={() => { navigate("/messages"); setOpen(false); }}
+                    style={{
+                      marginTop: 12,
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      background: "#fff",
+                      color: "#000",
+                      fontFamily: SF,
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                    onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                  >
+                    View Messages
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

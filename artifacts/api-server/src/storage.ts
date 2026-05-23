@@ -156,6 +156,7 @@ export interface IStorage {
   getMessages(userId: number, otherUserId: number, limit?: number): Promise<DirectMessage[]>;
   sendMessage(senderId: number, receiverId: number, content: string): Promise<DirectMessage>;
   markMessagesRead(receiverId: number, senderId: number): Promise<void>;
+  markAllMessagesRead(receiverId: number): Promise<void>;
   getUnreadMessageCount(userId: number): Promise<number>;
 
   // Book Likes
@@ -1076,6 +1077,21 @@ export class DatabaseStorage implements IStorage {
           eq(directMessages.senderId, senderId),
           eq(directMessages.receiverId, receiverId),
           eq(directMessages.read, false)
+        )
+      );
+  }
+
+  // Mark every unread message addressed to `receiverId` as read, across
+  // all senders. Powers the "Mark all read" button in the notification
+  // bell's Messages tab so users can clear the red badge without having
+  // to open each conversation individually.
+  async markAllMessagesRead(receiverId: number): Promise<void> {
+    await db.update(directMessages)
+      .set({ read: true })
+      .where(
+        and(
+          eq(directMessages.receiverId, receiverId),
+          eq(directMessages.read, false),
         )
       );
   }

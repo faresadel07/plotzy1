@@ -479,6 +479,22 @@ router.get("/api/messages/unread-count", async (req, res) => {
   }
 });
 
+// POST /api/messages/read-all — clear the red badge without opening each
+// conversation. Mirrors POST /api/notifications/read-all. Must be declared
+// before /api/messages/:userId so the literal path wins over the param.
+router.post("/api/messages/read-all", async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    await storage.markAllMessagesRead(req.user.id);
+    return res.json({ success: true });
+  } catch (err) {
+    logRouteError(req, err, "social.routes");
+    return res.status(500).json({ message: "Internal error" });
+  }
+});
+
 // GET /api/messages/conversations
 router.get("/api/messages/conversations", async (req, res) => {
   try {
