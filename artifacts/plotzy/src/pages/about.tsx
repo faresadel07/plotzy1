@@ -1,7 +1,7 @@
 // About Plotzy. Rewritten for the free-for-everyone era: short,
-// straightforward, no em-dashes, no emojis. The visual language
-// mirrors the new pricing page: white background, black text, soft
-// rules between sections.
+// straightforward, no em-dashes, no emojis. Dark theme to match the
+// rest of the site (Terms, Privacy, Pricing) — black background,
+// white text, soft white-tinted rules between sections.
 
 import { useMemo } from "react";
 import { Link } from "wouter";
@@ -115,8 +115,8 @@ export default function About() {
         dir={isRTL ? "rtl" : "ltr"}
         style={{
           minHeight: "100vh",
-          background: "#fff",
-          color: "#0a0a0a",
+          background: "var(--background)",
+          color: "#fff",
           fontFamily: SF,
           padding: "80px 24px 120px",
         }}
@@ -128,7 +128,7 @@ export default function About() {
               fontSize: 12.5,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "rgba(0,0,0,0.50)",
+              color: "rgba(255,255,255,0.50)",
               fontWeight: 600,
               marginBottom: 18,
             }}
@@ -144,7 +144,7 @@ export default function About() {
               letterSpacing: "-0.025em",
               lineHeight: 1.08,
               margin: 0,
-              color: "#0a0a0a",
+              color: "#fff",
             }}
           >
             {t.title}
@@ -160,7 +160,7 @@ export default function About() {
                   marginTop: i === 0 ? 0 : 16,
                   fontSize: 17,
                   lineHeight: 1.7,
-                  color: "rgba(0,0,0,0.72)",
+                  color: "rgba(255,255,255,0.72)",
                 }}
               >
                 {p}
@@ -175,7 +175,7 @@ export default function About() {
                 fontSize: 13,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "rgba(0,0,0,0.55)",
+                color: "rgba(255,255,255,0.55)",
                 fontWeight: 600,
                 margin: 0,
                 marginBottom: 24,
@@ -189,7 +189,7 @@ export default function About() {
                   key={s.title}
                   style={{
                     padding: "22px 0",
-                    borderTop: "1px solid rgba(0,0,0,0.08)",
+                    borderTop: "1px solid rgba(255,255,255,0.10)",
                   }}
                 >
                   <h3
@@ -199,7 +199,7 @@ export default function About() {
                       letterSpacing: "-0.015em",
                       margin: 0,
                       marginBottom: 8,
-                      color: "#0a0a0a",
+                      color: "#fff",
                     }}
                   >
                     {s.title}
@@ -209,14 +209,14 @@ export default function About() {
                       margin: 0,
                       fontSize: 15.5,
                       lineHeight: 1.7,
-                      color: "rgba(0,0,0,0.68)",
+                      color: "rgba(255,255,255,0.68)",
                     }}
                   >
                     {s.body}
                   </p>
                 </li>
               ))}
-              <li style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }} />
+              <li style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }} />
             </ul>
           </div>
 
@@ -229,6 +229,7 @@ export default function About() {
                 letterSpacing: "-0.02em",
                 margin: 0,
                 marginBottom: 12,
+                color: "#fff",
               }}
             >
               {t.closing.heading}
@@ -238,7 +239,7 @@ export default function About() {
                 margin: 0,
                 fontSize: 15.5,
                 lineHeight: 1.7,
-                color: "rgba(0,0,0,0.65)",
+                color: "rgba(255,255,255,0.65)",
                 maxWidth: 520,
                 marginInline: "auto",
               }}
@@ -252,8 +253,8 @@ export default function About() {
                 marginTop: 26,
                 padding: "13px 24px",
                 borderRadius: 12,
-                background: "#0a0a0a",
-                color: "#fff",
+                background: "#fff",
+                color: "#0a0a0a",
                 fontFamily: "inherit",
                 fontSize: 14.5,
                 fontWeight: 600,
