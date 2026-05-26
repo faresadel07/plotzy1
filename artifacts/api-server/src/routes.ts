@@ -1043,10 +1043,13 @@ export async function registerRoutes(
 
       // Cap the manuscript sample well below the model's per-request token
       // budget. 50k chars of (especially Arabic) text blows past the
-      // llama-3.3-70b request/rate limits, which threw and surfaced to every
-      // marketplace tool as a generic "Analysis failed". A representative
-      // ~16k-char excerpt is plenty for these reports/blurbs and is reliable.
-      const truncated = text.slice(0, 16000);
+      // llama-3.3-70b request/rate limits. We previously sat at 16k chars
+      // but the marketplace was still surfacing a generic "Analysis failed"
+      // for Arabic manuscripts where 16k chars can exceed 8k tokens and
+      // hit Groq's per-minute token budget. 8000 chars is a representative
+      // excerpt (~2500 tokens for English, ~3000 for Arabic) that fits
+      // every current free-tier provider with headroom for the response.
+      const truncated = text.slice(0, 8000);
 
       // Reply in the manuscript's own language: Arabic in -> Arabic report,
       // English in -> English report. Decided by which script dominates the
@@ -1113,14 +1116,44 @@ export async function registerRoutes(
         return finishAnalysis(demoReport);
       }
 
-      const response = await openai.chat.completions.create({
-        model: AI_TEXT_MODEL,
-        messages: [
-          { role: "system", content: prompt.system + langInstruction },
-          { role: "user", content: prompt.user },
-        ],
-        max_tokens: 2500,
-      });
+      // Two-attempt strategy. The first try shoots for a fuller report
+      // (1500 max tokens). If the provider rejects on token-budget or
+      // request-too-large grounds, the second attempt drops max_tokens
+      // and shrinks the manuscript window so the request fits into the
+      // smallest free-tier window we still target. Without this, a
+      // single transient token spike on Groq surfaces as a generic
+      // "Analysis failed" with no actionable signal.
+      const tryAnalyze = async (manuscript: string, maxOut: number) => {
+        return await openai.chat.completions.create({
+          model: AI_TEXT_MODEL,
+          messages: [
+            { role: "system", content: prompt.system + langInstruction },
+            { role: "user", content: prompt.user.replace(truncated, manuscript) },
+          ],
+          max_tokens: maxOut,
+          temperature: 0.7,
+        });
+      };
+
+      let response;
+      try {
+        response = await tryAnalyze(truncated, 1500);
+      } catch (err1) {
+        // Retry with half the input + half the output if the first call
+        // tripped any limit. Capture the original error so we can surface
+        // it cleanly when the fallback also fails.
+        logger.warn(
+          { err: err1, route: "/api/marketplace/analyze", retry: true },
+          "Marketplace primary attempt failed, retrying with reduced budget",
+        );
+        try {
+          response = await tryAnalyze(truncated.slice(0, 4000), 800);
+        } catch {
+          // Surface the ORIGINAL error so the admin debug card shows
+          // the real provider message, not "rate-limited the retry too".
+          throw err1;
+        }
+      }
 
       const report = response.choices[0]?.message?.content || "No analysis returned.";
       return finishAnalysis(report);
