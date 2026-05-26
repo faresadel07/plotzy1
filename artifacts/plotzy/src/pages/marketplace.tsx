@@ -488,8 +488,21 @@ function LaunchModal({
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: t("mkErrAnalysisFailed") }));
-        throw new Error(err.message || t("mkErrAnalysisFailed"));
+        // For admins, the server includes a `debug.providerMessage` (or
+        // `debug.error`) field with the actual underlying provider /
+        // process error — surface it so we can diagnose without
+        // tailing Railway logs. Non-admins get the friendly message.
+        const body = await res.json().catch(() => null as null | {
+          message?: string;
+          debug?: { providerMessage?: string; error?: string; message?: string };
+        });
+        const detail =
+          body?.debug?.providerMessage ||
+          body?.debug?.error ||
+          body?.debug?.message ||
+          body?.message ||
+          t("mkErrAnalysisFailed");
+        throw new Error(detail);
       }
 
       const { report } = await res.json();
