@@ -114,12 +114,13 @@ export const FEATURED_VIDEO: {
 // ─── Guides ──────────────────────────────────────────────────────────
 // Ordered to match the natural journey of a first-time visitor:
 //   1. Home page (where you land)
-//   2. Writing guide (how to write)
-//   3. Course (structured craft education)
-//   4. Community library (read other writers, find your audience)
-//   5. AI marketplace (professional analysis of your manuscript)
-//   6. Donation page (how the project sustains itself, optional)
-//   7. Support and FAQ (where to go when something is wrong)
+//   2. Your book page (what opens when you tap a book on the shelf)
+//   3. Writing guide (how to write)
+//   4. Course (structured craft education)
+//   5. Community library (read other writers, find your audience)
+//   6. AI marketplace (professional analysis of your manuscript)
+//   7. Donation page (how the project sustains itself, optional)
+//   8. Support and FAQ (where to go when something is wrong)
 
 export const TUTORIAL_GUIDES: TutorialGuide[] = [
 
@@ -184,7 +185,82 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
     ],
   },
 
-  // ── 2. Writing guide ───────────────────────────────────────────────
+  // ── 2. Your book page ──────────────────────────────────────────────
+  {
+    id: "your-book",
+    title: {
+      en: "Your book page",
+      ar: "صفحة كتابك",
+    },
+    description: {
+      en: "The dashboard that opens when you tap any book on your shelf. From here you write chapters, rearrange them, design the cover, publish to the community, narrate an audiobook, and pitch to publishers, all in one place.",
+      ar: "اللوحة التي تفتح حين تضغط على أي كتاب في رفّك. من هنا تكتب الفصول وتعيد ترتيبها، تصمّم الغلاف، تنشر للمجتمع، تنتج كتاباً صوتياً، وتقترح كتابك على دور النشر، كل ذلك في مكان واحد.",
+    },
+    category: "writing",
+    video: {
+      src: "/tutorials/your-book/your-book.mp4",
+    },
+    features: [
+      {
+        title: { en: "Five tabs, five jobs", ar: "خمسة تبويبات لخمسة أعمال" },
+        body: {
+          en: "Switch between writing the chapters, editing front and back matter, building your research board, tracking reading analytics, and using the publishing tools, without leaving the book.",
+          ar: "تنقّل بين كتابة الفصول، تحرير مقدّمة الكتاب وخاتمته، بناء لوحة البحث، متابعة إحصاءات القراءة، واستخدام أدوات النشر، بدون مغادرة الكتاب.",
+        },
+      },
+      {
+        title: { en: "Open a chapter to write", ar: "افتح فصلاً للكتابة" },
+        body: {
+          en: "Press Write on any chapter row to open the editor exactly at that chapter. Plotzy remembers your cursor position the next time you come back.",
+          ar: "اضغط «اكتب» على صفّ أي فصل ليُفتح المحرّر عند هذا الفصل بالذات. يحفظ بلوتزي موقع المؤشّر ليعيدك إليه في المرّة القادمة.",
+        },
+      },
+      {
+        title: { en: "Manage chapters inline", ar: "أدِر فصولك في المكان" },
+        body: {
+          en: "Drag the handle on any chapter to reorder it. Rename a title in place. Delete asks you to type the title to confirm so you never delete a chapter by accident.",
+          ar: "اسحب المقبض على أي فصل لإعادة ترتيبه. أعِد تسمية العنوان مكانه. الحذف يطلب منك كتابة العنوان للتأكيد حتى لا تحذف فصلاً بالخطأ.",
+        },
+      },
+      {
+        title: { en: "Design the cover", ar: "صمّم الغلاف" },
+        body: {
+          en: "Tap Cover to open the cover designer, where Plotzy can generate a cover for you or you can compose one from scratch with stock art and your title.",
+          ar: "اضغط «الغلاف» لفتح مصمّم الأغلفة، حيث يستطيع بلوتزي توليد غلاف لك، أو تستطيع تركيب غلاف من الصفر باستخدام الصور الجاهزة وعنوان كتابك.",
+        },
+      },
+      {
+        title: { en: "Download in five formats", ar: "نزّل بخمس صيغ" },
+        body: {
+          en: "Export the whole book as PDF with the Cairo font, PDF with the Amiri font, Word docx, EPUB, or plain TXT. Per-chapter download sits on every chapter row too.",
+          ar: "صدّر الكتاب كاملاً بصيغة PDF بخط القاهرة، PDF بخط الأميري، Word docx، EPUB، أو نص TXT بسيط. زرّ التنزيل لكل فصل موجود على صفّ كل فصل أيضاً.",
+        },
+      },
+      {
+        title: { en: "Generate the audiobook", ar: "ولّد الكتاب الصوتي" },
+        body: {
+          en: "Open Audiobook Studio to turn your finished chapters into an MP3 narrated by one of five voices, with English and Arabic both included.",
+          ar: "افتح «استوديو الكتاب الصوتي» لتحويل فصولك المنتهية إلى ملفّ MP3 يرويه أحد خمسة أصوات، بالعربيّة والإنجليزيّة معاً.",
+        },
+      },
+      {
+        title: { en: "Pitch to publishers", ar: "اقترِح كتابك على دور النشر" },
+        body: {
+          en: "Find a Publisher uses your manuscript to draft a tailored submission proposal you can send to any publisher or literary agent.",
+          ar: "«ابحث عن ناشر» يستخدم مخطوطتك لصياغة عرض تقديمي مخصّص يمكنك إرساله إلى أي دار نشر أو وكيل أدبي.",
+        },
+      },
+      {
+        title: { en: "Publish to the community", ar: "انشر للمجتمع" },
+        body: {
+          en: "When you are ready, the Publish button puts your book on the Plotzy library so every other writer can read it, like it, and follow you.",
+          ar: "حين تكون جاهزاً، يضع زرّ «انشر» كتابك في مكتبة بلوتزي ليتمكّن كل كاتب آخر من قراءته، الإعجاب به، ومتابعتك.",
+        },
+      },
+    ],
+  },
+
+  // ── 3. The writing guide ───────────────────────────────────────────
   {
     id: "guide",
     title: {
@@ -252,7 +328,7 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
     ],
   },
 
-  // ── 3. The writing course ──────────────────────────────────────────
+  // ── 4. The writing course ──────────────────────────────────────────
   {
     id: "course",
     title: {
@@ -313,7 +389,7 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
     ],
   },
 
-  // ── 4. Community library ───────────────────────────────────────────
+  // ── 5. Community library ───────────────────────────────────────────
   {
     id: "community",
     title: {
@@ -381,7 +457,7 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
     ],
   },
 
-  // ── 5. AI marketplace ──────────────────────────────────────────────
+  // ── 6. AI marketplace ──────────────────────────────────────────────
   {
     id: "marketplace",
     title: {
@@ -449,7 +525,7 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
     ],
   },
 
-  // ── 6. Donation page ───────────────────────────────────────────────
+  // ── 7. Donation page ───────────────────────────────────────────────
   {
     id: "donate",
     title: {
@@ -503,7 +579,7 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
     ],
   },
 
-  // ── 7. Support and FAQ ─────────────────────────────────────────────
+  // ── 8. Support and FAQ ─────────────────────────────────────────────
   {
     id: "support",
     title: {
