@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
-import { Play, X, Image as ImageIcon } from "lucide-react";
+import { Play, X, Image as ImageIcon, Film, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import type { TranslationKey } from "@/lib/i18n";
 import {
@@ -154,11 +154,21 @@ function FeaturedVideoCard({ onOpen }: { onOpen: () => void }) {
   );
 }
 
-/* ─── Photo Guide card ─── */
+/* ─── Photo / Video Guide card ─── */
 function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => void }) {
   const { t, lang } = useLanguage();
   const [hovered, setHovered] = useState(false);
-  const cover = guide.images[0];
+  // A guide can carry a video, a list of images, or both. Prefer the
+  // video as the card thumbnail when present — autoplaying-muted-loop
+  // it gives the strongest hint of what the section actually does.
+  // Fall back to the first screenshot, then to an icon placeholder.
+  const cover = guide.images?.[0];
+  const imageCount = guide.images?.length ?? 0;
+  const stepBadge = guide.video
+    ? t("tuVideo")
+    : imageCount === 1
+      ? t("tuOneImage")
+      : t("tuNImages").replace("{n}", String(imageCount));
 
   return (
     <div
@@ -175,7 +185,7 @@ function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => vo
         transform: hovered ? "translateY(-2px)" : "none",
       }}
     >
-      {/* Cover image — first step of the guide */}
+      {/* Cover — video loop when available, otherwise the first screenshot. */}
       <div style={{
         position: "relative",
         width: "100%",
@@ -184,7 +194,18 @@ function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => vo
         overflow: "hidden",
         borderRadius: "12px 12px 0 0",
       }}>
-        {cover ? (
+        {guide.video ? (
+          <video
+            src={guide.video.src}
+            poster={guide.video.poster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        ) : cover ? (
           <img
             src={cover.src}
             alt={pickLang(cover.alt, lang)}
@@ -200,7 +221,7 @@ function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => vo
           </div>
         )}
 
-        {/* Step count badge */}
+        {/* Step count / video badge */}
         <span style={{
           position: "absolute",
           top: 10,
@@ -214,10 +235,12 @@ function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => vo
           fontFamily: SF,
           color: T,
           letterSpacing: "0.02em",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 4,
         }}>
-          {guide.images.length === 1
-            ? t("tuOneImage")
-            : t("tuNImages").replace("{n}", String(guide.images.length))}
+          {guide.video && <Film size={11} />}
+          {stepBadge}
         </span>
       </div>
 
@@ -460,60 +483,175 @@ function GuideModal({ guide, onClose }: { guide: TutorialGuide; onClose: () => v
           </p>
         </div>
 
-        {/* Steps — one image per row with optional caption below. */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-          {guide.images.map((img, idx) => (
-            <figure
-              key={img.src}
-              style={{ margin: 0 }}
-            >
-              {/* Step number pill, omitted when the guide is a single image. */}
-              {guide.images.length > 1 && (
+        {/* Video + features layout. Side-by-side on desktop, stacked
+            on mobile. The video uses autoplay-muted-loop so a silent
+            screen recording reads like an animated illustration. */}
+        {(guide.video || (guide.features && guide.features.length > 0)) && (
+          <>
+            <style>{`
+              .plotzy-guide-split {
+                display: grid;
+                grid-template-columns: ${guide.video && guide.features?.length ? "1.15fr 1fr" : "1fr"};
+                gap: 28px;
+                align-items: start;
+                margin-bottom: ${guide.images?.length ? "40px" : "0"};
+              }
+              @media (max-width: 820px) {
+                .plotzy-guide-split { grid-template-columns: 1fr !important; }
+              }
+            `}</style>
+            <div className="plotzy-guide-split">
+              {guide.video && (
                 <div style={{
-                  fontFamily: SF,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: TS,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  marginBottom: 8,
+                  background: C2,
+                  border: `1px solid ${B}`,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  // Keep the video readable on huge monitors so a tall
+                  // screen recording does not push the feature column
+                  // way off the fold.
+                  maxHeight: "min(70vh, 640px)",
                 }}>
-                  {t("tuStepN").replace("{n}", String(idx + 1))}
+                  <video
+                    src={guide.video.src}
+                    poster={guide.video.poster}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      maxHeight: "min(70vh, 640px)",
+                      display: "block",
+                      objectFit: "contain",
+                      background: "#000",
+                    }}
+                  />
                 </div>
               )}
 
-              <div style={{
-                background: C2,
-                border: `1px solid ${B}`,
-                borderRadius: 14,
-                overflow: "hidden",
-              }}>
-                <img
-                  src={img.src}
-                  alt={pickLang(img.alt, lang)}
-                  loading="lazy"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                  }}
-                />
-              </div>
-
-              {img.caption && (
-                <figcaption style={{
-                  fontFamily: SF,
-                  fontSize: 14,
-                  color: TS,
-                  lineHeight: 1.65,
-                  marginTop: 10,
-                }}>
-                  {pickLang(img.caption, lang)}
-                </figcaption>
+              {guide.features && guide.features.length > 0 && (
+                <div>
+                  <div style={{
+                    fontFamily: SF,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: TS,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 14,
+                  }}>
+                    {t("tuWhatYouCanDo")}
+                  </div>
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+                    {guide.features.map((f) => (
+                      <li
+                        key={pickLang(f.title, lang)}
+                        style={{ display: "flex", gap: 12, alignItems: "flex-start" }}
+                      >
+                        <div style={{
+                          flexShrink: 0,
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          background: "rgba(124,106,247,0.16)",
+                          border: "1px solid rgba(124,106,247,0.32)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginTop: 2,
+                        }}>
+                          <Check size={12} color="#a78bfa" strokeWidth={3} />
+                        </div>
+                        <div>
+                          <div style={{
+                            fontFamily: SF,
+                            fontSize: 14.5,
+                            fontWeight: 600,
+                            color: T,
+                            marginBottom: 3,
+                            lineHeight: 1.35,
+                          }}>
+                            {pickLang(f.title, lang)}
+                          </div>
+                          <div style={{
+                            fontFamily: SF,
+                            fontSize: 13,
+                            color: TS,
+                            lineHeight: 1.6,
+                          }}>
+                            {pickLang(f.body, lang)}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-            </figure>
-          ))}
-        </div>
+            </div>
+          </>
+        )}
+
+        {/* Optional step screenshots — rendered after the video block
+            so a guide can mix a walkthrough video with additional
+            still-image steps when extra detail helps. */}
+        {guide.images && guide.images.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {guide.images.map((img, idx) => (
+              <figure
+                key={img.src}
+                style={{ margin: 0 }}
+              >
+                {/* Step number pill, omitted when the guide is a single image. */}
+                {guide.images && guide.images.length > 1 && (
+                  <div style={{
+                    fontFamily: SF,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: TS,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 8,
+                  }}>
+                    {t("tuStepN").replace("{n}", String(idx + 1))}
+                  </div>
+                )}
+
+                <div style={{
+                  background: C2,
+                  border: `1px solid ${B}`,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                }}>
+                  <img
+                    src={img.src}
+                    alt={pickLang(img.alt, lang)}
+                    loading="lazy"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                    }}
+                  />
+                </div>
+
+                {img.caption && (
+                  <figcaption style={{
+                    fontFamily: SF,
+                    fontSize: 14,
+                    color: TS,
+                    lineHeight: 1.65,
+                    marginTop: 10,
+                  }}>
+                    {pickLang(img.caption, lang)}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

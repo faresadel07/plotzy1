@@ -1,26 +1,40 @@
-// Tutorial guides — bundled in source so we never round-trip images
-// through the database or the API server. Images live as static files
-// in /artifacts/plotzy/public/tutorials/<guide-id>/<filename> and are
-// referenced by their public-facing URL (e.g. "/tutorials/getting-
-// started/step-1.png"). The Vercel CDN serves them; Plotzy's Express
-// API never touches them. Storage cost is zero on Neon/Supabase.
+// Tutorial guides — bundled in source so we never round-trip media
+// through the database or the API server. Videos and images live as
+// static files in /artifacts/plotzy/public/tutorials/<guide-id>/
+// and are referenced by their public-facing URL (e.g. "/tutorials/
+// community/community.mp4"). Vercel's CDN serves them; Plotzy's
+// Express API never touches them. Storage cost on the DB is zero.
+//
+// Two media flavours are supported per guide:
+//
+//   1. video — a single silent screen recording that plays as an
+//      autoplay-muted-loop in the modal. The clearest format for
+//      walking a writer through what a section of Plotzy does.
+//   2. images — an ordered series of screenshots, each with a
+//      bilingual caption. Useful for a step-by-step that doesn't
+//      need motion.
+//
+// A guide can have a video, a list of images, or both. It must have
+// at least one of the two.
+//
+// On top of the media each guide carries a `features` array — short
+// bilingual bullets that describe exactly what a writer can do in
+// the section the video is showing. The modal lays them out beside
+// the video on desktop, stacked under it on mobile.
 //
 // How to add a new guide (the workflow Fares uses):
-//   1. Drop the image files into
+//   1. Drop the media file(s) into
 //      artifacts/plotzy/public/tutorials/<guide-id>/
-//      using clear filenames like step-1.png, step-2.png, ...
+//      using clear filenames. For a single walkthrough video, name
+//      it after the guide id (e.g. community/community.mp4).
 //   2. Append a new entry to TUTORIAL_GUIDES below. Pick a category
 //      from CATEGORIES in pages/tutorial.tsx; the existing IDs are
 //      getting-started, writing, ai-tools, publishing, cover-design,
 //      community, advanced. Use the same id values, not the labels.
-//   3. Fill in EN + AR titles + descriptions, then one image entry per
-//      step. Captions are optional — leave them as `undefined` when
-//      the screenshot speaks for itself.
+//   3. Fill in EN + AR title + description + features (3-7 bullets
+//      is the sweet spot). Add the video block when a recording
+//      exists; add the images array when screenshots make sense.
 //   4. Save, typecheck, commit, push, Promote on Vercel.
-//
-// Featured video: one and only one. Set FEATURED_VIDEO.url to a
-// YouTube / Vimeo URL when ready; until then, leave url as null and
-// the hero block hides the video card automatically.
 
 export interface TutorialImage {
   /** Public-relative URL. Must start with "/tutorials/". */
@@ -28,6 +42,23 @@ export interface TutorialImage {
   alt: { en: string; ar: string };
   /** Optional caption shown beneath the image in the modal. */
   caption?: { en: string; ar: string };
+}
+
+export interface TutorialVideo {
+  /** Public-relative URL of the .mp4 file. Must start with "/tutorials/". */
+  src: string;
+  /**
+   * Optional poster image. Shown before the video starts (browsers
+   * that block autoplay will sit on the poster until the user taps).
+   */
+  poster?: string;
+}
+
+export interface TutorialFeature {
+  /** Short feature heading, e.g. "Like a book". */
+  title: { en: string; ar: string };
+  /** One-line explanation of how / why a writer would use it. */
+  body: { en: string; ar: string };
 }
 
 export interface TutorialGuide {
@@ -44,8 +75,23 @@ export interface TutorialGuide {
     | "cover-design"
     | "community"
     | "advanced";
-  /** Ordered list of screenshots. The first image doubles as the card thumbnail. */
-  images: TutorialImage[];
+  /**
+   * Optional silent walkthrough. Plays as autoplay-muted-loop in the
+   * modal, so the user reads it like an animated illustration.
+   */
+  video?: TutorialVideo;
+  /**
+   * "What you can do here" bullets. Rendered beside the video on
+   * desktop, stacked underneath it on mobile.
+   */
+  features?: TutorialFeature[];
+  /**
+   * Optional step-by-step screenshots. Rendered at the bottom of the
+   * modal in a vertical stack with their captions. Either video OR
+   * images (or both) must be present — a guide with neither is
+   * filtered out at render time.
+   */
+  images?: TutorialImage[];
 }
 
 // ─── Featured video ──────────────────────────────────────────────────
@@ -72,48 +118,44 @@ export const FEATURED_VIDEO: {
   duration: "5:00",
 };
 
-// ─── Photo guides ────────────────────────────────────────────────────
-// Each entry becomes one card on the Tutorial page. Cards open a modal
-// with the guide's images stacked vertically (carousel-free so users
-// can scroll naturally through all steps). Add new guides at the END
-// of the array; ordering matches their appearance on the page.
+// ─── Photo / video guides ────────────────────────────────────────────
+// Each entry becomes one card on the Tutorial page. Cards open a
+// modal with the video at the top (when present), the feature
+// bullets, then any step screenshots. Add new guides at the END of
+// the array; ordering matches their appearance on the page.
 
 export const TUTORIAL_GUIDES: TutorialGuide[] = [
   // Example shape — delete or replace once the first real guide lands.
   // {
-  //   id: "create-your-first-book",
+  //   id: "community",
   //   title: {
-  //     en: "Create your first book",
-  //     ar: "أنشئ كتابك الأول",
+  //     en: "Community",
+  //     ar: "المجتمع",
   //   },
   //   description: {
-  //     en: "Start a new book from your library in two clicks.",
-  //     ar: "ابدأ كتاباً جديداً من مكتبتك بنقرتين.",
+  //     en: "Read, follow, and chat with other Plotzy writers.",
+  //     ar: "اقرأ، تابع، وحدّث الكتّاب الآخرين على بلوتزي.",
   //   },
-  //   category: "getting-started",
-  //   images: [
+  //   category: "community",
+  //   video: {
+  //     src: "/tutorials/community/community.mp4",
+  //   },
+  //   features: [
   //     {
-  //       src: "/tutorials/create-your-first-book/step-1.png",
-  //       alt: {
-  //         en: "Library page with the New Book button highlighted",
-  //         ar: "صفحة المكتبة مع تظليل زر «كتاب جديد»",
-  //       },
-  //       caption: {
-  //         en: "Open My Library and click the New Book button in the top right.",
-  //         ar: "افتح «مكتبتي» واضغط على زر «كتاب جديد» أعلى اليمين.",
+  //       title: { en: "Like a book", ar: "أعجبني الكتاب" },
+  //       body: {
+  //         en: "Tap the heart on any book to save it for later and tell the author you enjoyed it.",
+  //         ar: "اضغط القلب على أي كتاب لحفظه ولإبلاغ الكاتب أنّك أعجبت به.",
   //       },
   //     },
   //     {
-  //       src: "/tutorials/create-your-first-book/step-2.png",
-  //       alt: {
-  //         en: "New Book modal with title and genre fields",
-  //         ar: "نافذة كتاب جديد مع حقلَي العنوان والنوع الأدبي",
-  //       },
-  //       caption: {
-  //         en: "Fill in the title and genre, then press Create.",
-  //         ar: "املأ العنوان والنوع الأدبي، ثم اضغط «إنشاء».",
+  //       title: { en: "Follow a writer", ar: "تابع كاتباً" },
+  //       body: {
+  //         en: "Open a writer's profile and follow them to see new chapters in your feed.",
+  //         ar: "افتح ملف الكاتب وتابعه لترى فصوله الجديدة في خلاصتك.",
   //       },
   //     },
+  //     // ...3-7 bullets total
   //   ],
   // },
 ];
