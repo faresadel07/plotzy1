@@ -669,6 +669,14 @@ export default function TutorialPage() {
     return TUTORIAL_GUIDES.filter(g => g.category === activeCategory);
   }, [activeCategory]);
 
+  // Hide category pills that would land on an empty page. Keeps the
+  // filter bar honest: a writer never clicks a pill and gets the
+  // "No tutorials in this category" placeholder. "All" always shows.
+  const populatedCategories = useMemo(() => {
+    const populated = new Set(TUTORIAL_GUIDES.map(g => g.category as string));
+    return CATEGORIES.filter(c => c.id === "all" || populated.has(c.id));
+  }, []);
+
   return (
     <Layout isLanding darkNav>
       <SEO
@@ -713,7 +721,7 @@ export default function TutorialPage() {
             maxWidth: 700,
             margin: "0 auto",
           }}>
-            {CATEGORIES.map(cat => {
+            {populatedCategories.map(cat => {
               const isActive = activeCategory === cat.id;
               return (
                 <button
