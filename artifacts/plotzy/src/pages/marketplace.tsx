@@ -747,7 +747,10 @@ function LaunchModal({
                   </div>
                 )}
 
-                {/* Tier: limit reached */}
+                {/* Limit reached. No upgrade path anymore — Plotzy is
+                    free for everyone — so this just communicates the
+                    monthly reset honestly without a misleading
+                    "Upgrade" link to the donation page. */}
                 {!blocked && limitReached && usage && (
                   <div style={{
                     padding: "32px 24px",
@@ -771,19 +774,6 @@ function LaunchModal({
                         {usage.used}/{usage.limit} {t("mkLimitReachedBody")}
                       </p>
                     </div>
-                    <Link
-                      href="/pricing"
-                      style={{
-                        display: "inline-flex", alignItems: "center", gap: 6,
-                        padding: "11px 24px", borderRadius: 10,
-                        background: T, color: BG,
-                        fontSize: 13, fontWeight: 700,
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Zap style={{ width: 14, height: 14 }} />
-                      {t("mkUpgradeForMore")}
-                    </Link>
                   </div>
                 )}
 

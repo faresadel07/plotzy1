@@ -30,6 +30,15 @@ interface TierLimits {
 }
 
 const LIMITS: Record<Tier, TierLimits> = {
+  // Plotzy has no paid tiers anymore — every writer signs in to the
+  // full product. We keep the tier shape (free / pro / premium) so
+  // legacy code that still checks user.subscriptionTier doesn't have
+  // to be ripped out everywhere, but free now grants the same
+  // capabilities as premium. The only numbers still capped here are
+  // ones tied to real third-party API spend (per-day AI and image,
+  // monthly marketplace and audiobook exports); writers see no
+  // paywall in the UI for any of these, just the same daily / monthly
+  // quotas an admin could raise.
   free: {
     maxBooks: FREE_MAX_BOOKS,
     maxChaptersPerBook: FREE_MAX_CHAPTERS_PER_BOOK,
@@ -38,14 +47,14 @@ const LIMITS: Record<Tier, TierLimits> = {
     maxPublishedBooks: FREE_MAX_PUBLISHED_BOOKS,
     maxImagesPerDay: FREE_MAX_IMAGES_PER_DAY,
     maxAudiobookExportsPerMonth: FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH,
-    canExportPdf: false,
-    canExportEpub: false,
-    canUseAudiobook: false,
+    canExportPdf: true,
+    canExportEpub: true,
+    canUseAudiobook: true,
     canUseCoverDesigner: true,
-    canUseAdvancedAI: false,
-    maxMarketplacePerMonth: 0,
-    canUseMarketplace: false,
-    canUseVersionHistory: false,
+    canUseAdvancedAI: true,
+    maxMarketplacePerMonth: 9,
+    canUseMarketplace: true,
+    canUseVersionHistory: true,
     canUseAmbientSounds: true,
     prioritySupport: false,
   },

@@ -1273,13 +1273,21 @@ export type DirectMessage = typeof directMessages.$inferSelect;
 // ~$3-5/user/month at moderate AI usage.
 
 // ── Free Tier Limits ──
-export const FREE_MAX_BOOKS = 2;
-export const FREE_MAX_CHAPTERS_PER_BOOK = 3;
-export const FREE_MAX_WORDS = 5000;
-export const FREE_MAX_AI_CALLS_PER_DAY = 10;
-export const FREE_MAX_PUBLISHED_BOOKS = 1;
-export const FREE_MAX_IMAGES_PER_DAY = 2;
-export const FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 0;
+//
+// Plotzy is free for every writer, so the free tier IS the full plan.
+// These numbers mirror what used to be the Premium tier so signing up
+// gives every writer the same access without a paywall — no books or
+// words ceiling, the marketplace open, audiobook exports on. The
+// per-day AI and image numbers stay capped to bound third-party API
+// spend (OpenAI / image gen are real cash); the user-facing copy on
+// the donation page describes this honestly.
+export const FREE_MAX_BOOKS = 9999;
+export const FREE_MAX_CHAPTERS_PER_BOOK = 9999;
+export const FREE_MAX_WORDS = 99999999;
+export const FREE_MAX_AI_CALLS_PER_DAY = 200;
+export const FREE_MAX_PUBLISHED_BOOKS = 9999;
+export const FREE_MAX_IMAGES_PER_DAY = 25;
+export const FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 10;
 
 // ── Pro Tier Limits ──
 export const PRO_MAX_BOOKS = 50;
