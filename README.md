@@ -237,7 +237,7 @@ Full deployment notes (Vercel + Railway + Supabase) are in
 
 ## About the builder
 
-**Fares Q.** Final year Computer Science student at the Hashemite
+**Fares Hamdan.** Final year Computer Science student at the Hashemite
 University, Jordan. Built Plotzy alone as the graduation project, from
 the database schema up to the production deployment.
 
@@ -258,9 +258,8 @@ Skill set proven by this repo:
 Available for remote full stack roles, contract work, or AI integration
 projects.
 
-- **LinkedIn:** [your link]
-- **Email:** [your email]
-- **GitHub:** [your github profile]
+- **LinkedIn:** [fares-hamdan](https://www.linkedin.com/in/fares-hamdan-428882305)
+- **Email:** faresadelqd@gmail.com
 
 ---
 
