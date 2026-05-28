@@ -326,7 +326,9 @@ item listed here is a concrete piece of the codebase, not a buzzword.
 ### Frontend engineering
 
 - **React 18** with **TypeScript** in strict mode end-to-end
-- **Tailwind CSS** with a hand-built design system (no UI library)
+- **Tailwind CSS** with **Radix UI** primitives (accordion, dialog, popover, dropdown, tooltip, select, etc.)
+- **Framer Motion** and **GSAP** for animation
+- **Three.js** for the 3D book viewer on the landing page
 - **Vite** build pipeline with hot module replacement under 200ms
 - **TipTap** (ProseMirror) as the rich text editor
 - **Wouter** for client-side routing (43 routes)
@@ -727,8 +729,8 @@ Full deployment notes (Vercel + Railway + Supabase) are in
 
 ## About the builder
 
-**Fares Hamdan.** Final year Computer Science student at the Hashemite
-University, Jordan. Built Plotzy alone as the graduation project, from
+**Fares Hamdan.** Final year Business Information Technology student
+at the Hashemite University, Jordan. Built Plotzy alone as the graduation project, from
 the database schema up to the production deployment, the AI prompts,
 the course content, and the documentation you are reading.
 
