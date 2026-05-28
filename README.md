@@ -7,7 +7,7 @@
 Chapter editor, AI assistant, audiobook narration, cover designer, marketplace,
 public library, and a six module writing course, all in one place, no paywall.
 
-[Live demo](https://plotzy.com) · [Case study](./CASE_STUDY.md) · [Tech stack](#technical-overview) · [Hire me](#about-the-builder)
+[Live demo](https://plotzy-sable.vercel.app) · [Case study](./CASE_STUDY.md) · [Tech stack](#technical-overview) · [Hire me](#about-the-builder)
 
 ![Plotzy home page](./docs/screenshots/home.png)
 
