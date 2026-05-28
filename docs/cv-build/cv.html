@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Faris Hamdan CV</title>
+<style>
+  @page {
+    size: A4;
+    margin: 14mm 14mm 12mm 14mm;
+  }
+
+  :root {
+    --ink:        #111;
+    --ink-soft:   #2a2a2a;
+    --ink-mute:   #555;
+    --accent:     #0a4dc4;
+    --rule:       #ddd;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    font-size: 9.5pt;
+    line-height: 1.42;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ───────────────────────────────────────────── */
+  header h1 {
+    margin: 0;
+    font-size: 22pt;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+  }
+  header .role {
+    margin: 2px 0 6px 0;
+    font-size: 11pt;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  header .contact {
+    font-size: 9pt;
+    color: var(--ink-mute);
+  }
+  header .contact a {
+    color: var(--ink-mute);
+    text-decoration: none;
+  }
+  header .dot { padding: 0 6px; color: #999; }
+
+  /* ── SECTIONS ────────────────────────────────────────── */
+  h2.section {
+    margin: 12px 0 6px 0;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+  h3.role-title {
+    margin: 7px 0 0 0;
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .meta {
+    font-size: 9pt;
+    color: var(--ink-mute);
+    margin: 0 0 3px 0;
+    font-style: italic;
+  }
+  .right { float: right; font-style: normal; }
+  ul { margin: 3px 0 0 0; padding-left: 16px; }
+  ul li { margin: 2px 0; }
+
+  /* ── FEATURED PROJECT ─────────────────────────────────── */
+  .project-title {
+    font-size: 11pt;
+    font-weight: 700;
+    margin: 3px 0 0 0;
+  }
+  .project-title a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 9.5pt;
+  }
+  .project-sub {
+    font-size: 9pt;
+    color: var(--ink-mute);
+    font-style: italic;
+    margin: 1px 0 4px 0;
+  }
+  .project-overview {
+    margin: 0 0 4px 0;
+  }
+  .subhead {
+    margin: 6px 0 1px 0;
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .stack-block {
+    margin: 4px 0 0 0;
+    font-size: 8.8pt;
+    line-height: 1.4;
+  }
+  .stack-block b { color: var(--ink); }
+
+  /* ── CORE SKILLS GRID ─────────────────────────────────── */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+    row-gap: 2px;
+    margin-top: 4px;
+  }
+  .skills-grid p { margin: 0; }
+  .skills-grid b { color: var(--ink); }
+
+  /* ── CERTIFICATIONS ───────────────────────────────────── */
+  .cert-block {
+    margin-top: 4px;
+  }
+  .cert-block .cat {
+    font-weight: 700;
+    color: var(--ink);
+    margin: 4px 0 1px 0;
+  }
+  .cert-block ul {
+    columns: 2;
+    column-gap: 14px;
+    margin-top: 0;
+    font-size: 8.8pt;
+  }
+  .cert-block ul li {
+    break-inside: avoid;
+    margin: 1px 0;
+  }
+  .langs { font-size: 9.5pt; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FARIS HAMDAN</h1>
+  <div class="role">Full Stack Developer &amp; AI Solutions Specialist</div>
+  <div class="contact">
+    Zarqa, Jordan <span class="dot">•</span>
+    <a href="mailto:faresadelqd@gmail.com">faresadelqd@gmail.com</a> <span class="dot">•</span>
+    <a href="https://plotzy.co">plotzy.co</a> <span class="dot">•</span>
+    <a href="https://linkedin.com/in/fares-hamdan-428882305">linkedin.com/in/fares-hamdan-428882305</a> <span class="dot">•</span>
+    Open to Remote &amp; International Opportunities
+  </div>
+</header>
+
+<h2 class="section">Professional Summary</h2>
+<p>
+Full stack developer and digital entrepreneur with proven experience designing, building, and shipping production grade web platforms end to end. Founder and sole engineer behind <b>Plotzy.co</b>, a bilingual SaaS publishing platform serving Arabic and English writers worldwide, with 100,000+ lines of TypeScript, 257 REST endpoints, 30+ database tables, and a full AI stack covering writing assistance, audiobook narration, manuscript analysis, and cover generation. Holds advanced certifications from Anthropic, Google, IBM, Cisco, Apple, Stanford Online, University of Cambridge, and Huawei. Currently pursuing a Bachelor's in Business Information Technology at The Hashemite University. Recognized for delivering complex projects independently, combining technical depth with strong product and business acumen.
+</p>
+
+<h2 class="section">Featured Project</h2>
+<div class="project-title">Plotzy — Full Stack Book Writing and Publishing Platform</div>
+<div class="project-sub">Founder &amp; Sole Full Stack Developer · <a href="https://plotzy.co">plotzy.co</a> · <a href="https://github.com/faresadel07/plotzy1">github.com/faresadel07/plotzy1</a></div>
+<p class="project-overview">
+Production SaaS platform that takes writers from a blank page to a published book, featuring a distraction free writing studio, AI assisted drafting, self hosted audiobook studio, AI cover designer, community library, publishing marketplace, story bible, public domain reader, writing course with verifiable certificates, and a full admin panel. Designed, built, and deployed end to end as the sole developer.
+</p>
+
+<div class="subhead">Architecture &amp; Delivery</div>
+<ul>
+  <li>Architected and shipped a production web platform end to end: React + TypeScript SPA frontend, Node.js + Express + TypeScript REST API, and PostgreSQL database, deployed on Vercel (frontend), Railway via Docker (backend), and Supabase (managed Postgres, migrated mid project from Neon).</li>
+  <li>Delivered 43 distinct pages, 150+ reusable components, and 257 REST API endpoints covering writing editor, chapter manager, story bible, AI assistant, audiobook studio, cover designer, publishing marketplace, find a publisher, community library, public domain library, social graph, donation flow, support system, and admin dashboard.</li>
+  <li>Modeled a relational schema of 30+ Postgres tables with foreign keys, cascade deletes, composite indexes for hot queries, and unique indexes for idempotency on payment captures and AI usage records.</li>
+</ul>
+
+<div class="subhead">Frontend Engineering</div>
+<ul>
+  <li>Built a responsive, accessible UI with React 18, TypeScript, Tailwind CSS, and Radix UI primitives (accordion, alert dialog, dropdown, popover, select, tooltip, dialog, avatar, checkbox, and more), with motion design via Framer Motion and GSAP, plus 3D scenes via Three.js (interactive book viewer on the landing page).</li>
+  <li>Implemented full internationalization with first class Arabic (right to left) and English coverage across the entire application, including the editor, the PDF export typography (Cairo and Amiri fonts), the AI prompts, every legal and FAQ page, and the educational course content. Supports 8 UI languages total.</li>
+  <li>Engineered the client data layer with TanStack React Query for caching, mutations, and optimistic updates, paired with React Hook Form and Zod for typesafe form handling and validation.</li>
+  <li>Developed a rich text writing experience on TipTap (ProseMirror) with autosave, drag to reorder chapters, story bible auto extraction, version history, and a built from scratch DOM measurement based pagination engine for the print preview.</li>
+  <li>Shipped as an installable PWA with Workbox service worker, offline fallback, and dynamic SEO meta tags, JSON LD structured data, Open Graph, robots.txt, and sitemap.xml. Integrated Sentry for production error monitoring.</li>
+</ul>
+
+<div class="subhead">Backend &amp; Data</div>
+<ul>
+  <li>Designed a typed Express + TypeScript API with session based authentication (Postgres backed via connect-pg-simple) and runtime environment validation (Zod) that fails fast on misconfiguration.</li>
+  <li>Modeled and queried PostgreSQL with Drizzle ORM, including schema migrations, manual SQL migration scripts for managed Postgres TTY constraints, and ON CONFLICT DO NOTHING idempotency on every revenue and AI usage table.</li>
+  <li>Implemented multi provider authentication via Passport.js: email and password with bcrypt hashing and email verification, plus Google OAuth and Apple Sign In, with secure password reset and email change flows.</li>
+  <li>Built three layer rate limiting (general API, AI specific, payment specific) with express-rate-limit, plus a custom tierAiLimiter middleware that enforces per user daily AI quotas.</li>
+</ul>
+
+<div class="subhead">AI Integration &amp; Audio Engineering</div>
+<ul>
+  <li>Integrated 10+ distinct AI features (writing polish, expand, continue, translate, story plotting helper, story bible auto extract, blurb writer, cover prompt expansion, marketplace analyses, find a publisher proposal generator) via the OpenAI SDK pointed at Groq running Llama 3.3 70B for fast and cheap inference.</li>
+  <li>Self hosted Piper TTS in the Docker container with five voice models (Ryan, Sophie, Jenny, James in English, Kareem in Arabic) downloaded at image build time, achieving unlimited audiobook narration with zero per minute cost.</li>
+  <li>Engineered the audiobook pipeline: long text chunker splitting at sentence boundaries near 6,000 chars, parallel Piper WAV synthesis per chunk, ffmpeg WAV to MP3 encoding, and ffmpeg concat demuxer for multi chapter assembly. Built signal aware error reporting that distinguishes SIGKILL (cgroup OOM kill) from SIGSEGV (native crash).</li>
+</ul>
+
+<div class="subhead">Payments, Email &amp; Security</div>
+<ul>
+  <li>Integrated PayPal Smart Buttons with the Radio Fields pattern for the donation flow, with create-order and capture-order against the PayPal Orders API, idempotent captures, amount and currency post capture verification, and Sentry forensic logging on tampering attempts.</li>
+  <li>Built a complete transactional email system with Resend covering welcome, payment receipts, security alerts, engagement notifications, subscription cancellation, and expiry reminders, with HTML escaping, email header injection protection, and bilingual templates.</li>
+  <li>Applied security best practices: input sanitization, authentication gating on every owner only endpoint, SQL injection protection via Drizzle parameterized queries, session cookies with HttpOnly / Secure / SameSite flags, and OAuth state verification.</li>
+  <li>Generated server side PDFs via Puppeteer with Chromium for book exports (Cairo and Amiri Arabic fonts), Word docx exports via the docx library, EPUB exports via epub-gen, plus a verifiable course certificate PDF with unique verification codes.</li>
+</ul>
+
+<div class="subhead">Product &amp; Content</div>
+<ul>
+  <li>Built a structured learning academy with 6 modules, 27 lessons, 6 quizzes, a final project, and verifiable PDF certificates, with course content bundled in source code so it survives database migrations.</li>
+  <li>Built a writing guide covering 15 genres, 3 story structure frameworks (Hero's Journey, Save the Cat, Three Act), the six character pillars, dialogue principles with worked Arabic and English examples, and a self editing checklist.</li>
+  <li>Integrated Project Gutenberg (70,000+ English classics) and the Hindawi Foundation (tens of thousands of Arabic classics) as a built in public domain reader, with PDF.js for in browser reading and resume-from-page progress tracking.</li>
+  <li>Built a full admin panel with Recharts powered analytics (revenue, donations, conversion rate, churn, MRR), user management, support inbox, content moderation, activity feed, and AI usage tracking.</li>
+</ul>
+
+<div class="stack-block">
+  <b>Tech Stack:</b> React 18, TypeScript, Vite, Tailwind CSS, Radix UI, TanStack React Query, React Hook Form, Zod, Framer Motion, GSAP, Three.js, TipTap, Wouter, PDF.js, Workbox PWA, Recharts, Node.js, Express, PostgreSQL, Drizzle ORM, Supabase, Passport.js, bcryptjs, connect-pg-simple, Multer, OpenAI SDK (Groq), Piper TTS, ffmpeg, Puppeteer + Chromium, docx, epub-gen, PayPal Smart Buttons SDK, Resend, Sentry, Docker, Vercel, Railway, pnpm workspaces, OAuth (Google, Apple), i18next, Arabic RTL.
+</div>
+
+<h2 class="section">Professional Experience</h2>
+
+<h3 class="role-title">Broadway Auto Parts — Operations Specialist (QA, Dispatch, Sales)</h3>
+<p class="meta">Full Time · United States <span class="right">Jan 2026 – Present</span></p>
+<ul>
+  <li>Monitor and review vehicle quality standards prior to purchase and dispatch; conduct systematic inspection and testing to identify defects before customer delivery.</li>
+  <li>Coordinate vehicle collection and delivery schedules between Chicago based clients and internal operational teams; manage dispatch operations, route planning, and optimization to maximize on time performance.</li>
+  <li>Negotiate high ticket vehicle purchases with clients based in Chicago, assessing specifications and condition reports to secure favorable terms while balancing client expectations with company margins.</li>
+</ul>
+
+<h3 class="role-title">Detroit Axle — Customer Service Representative</h3>
+<p class="meta">Full Time · Jordan <span class="right">Aug 2025 – Oct 2025</span></p>
+<ul>
+  <li>Assisted customers in identifying and purchasing the correct automotive parts based on detailed vehicle specifications.</li>
+  <li>Resolved compatibility issues and provided expert guidance on parts identification across diverse vehicle models.</li>
+</ul>
+
+<h3 class="role-title">Uncle Osaka — Operations Assistant</h3>
+<p class="meta">Full Time · Jordan <span class="right">Jun 2025 – Aug 2025</span></p>
+<ul>
+  <li>Managed order taking, packaging, and customer service in a high paced dessert shop.</li>
+  <li>Prepared a variety of desserts and served as barista for hot beverages while handling cash transactions and staff coordination.</li>
+</ul>
+
+<h3 class="role-title">Self Employed — Cryptocurrency Markets Specialist</h3>
+<p class="meta">Freelance <span class="right">Mar 2022 – Sep 2025</span></p>
+<ul>
+  <li>Managed digital asset portfolios for private clients with disciplined risk assessment and strategic recommendations based on shifting market conditions.</li>
+  <li>Executed peer to peer cryptocurrency exchanges as a trusted intermediary, building reputation through clear client communication and secure transaction handling.</li>
+  <li>Applied technical analysis and price action methodologies to identify high probability trading opportunities; participated in early stage crypto project evaluations.</li>
+</ul>
+
+<h2 class="section">Education</h2>
+<h3 class="role-title">Bachelor of Business Information Technology</h3>
+<p class="meta">The Hashemite University, Jordan <span class="right">2022 – 2026</span></p>
+<p style="margin-top: 2px;">Curriculum combining computing and business principles to develop technology driven solutions. Includes 1.5 years of relevant background in Mathematics prior to major transfer.</p>
+
+<h2 class="section">Core Skills &amp; Expertise</h2>
+<div class="skills-grid">
+  <p><b>Full Stack Development:</b> React 18, TypeScript, Node.js, Express, PostgreSQL, REST API design, monorepo architecture, end to end typesafety</p>
+  <p><b>Cryptocurrency &amp; Trading:</b> Technical analysis, portfolio management, peer to peer trading, risk assessment</p>
+  <p><b>AI &amp; Machine Learning:</b> OpenAI SDK, Groq integration, prompt engineering for bilingual systems, self hosted TTS with Piper, AI observability</p>
+  <p><b>Business &amp; Sales:</b> Negotiation, lead generation, consultative selling, high ticket deal closing, CRM, cross cultural operations</p>
+  <p><b>Frontend:</b> Tailwind CSS, Radix UI, Framer Motion, GSAP, Three.js, TipTap, TanStack Query, React Hook Form, Workbox PWA, PDF.js, Recharts</p>
+  <p><b>Analytical:</b> Logical reasoning, risk assessment, decision analysis</p>
+  <p><b>Backend &amp; DevOps:</b> Docker, Vercel, Railway, Supabase, Drizzle ORM, schema migrations, Puppeteer for PDF, ffmpeg pipelines</p>
+  <p><b>Languages &amp; i18n:</b> Bilingual Arabic (RTL) and English implementation across the stack, 8 UI languages total</p>
+  <p><b>Payments &amp; Auth:</b> PayPal Smart Buttons SDK, OAuth (Google, Apple), Passport.js, bcrypt, idempotent captures, payment verification</p>
+  <p><b>Soft Skills:</b> Multitasking, attention to detail, cross cultural communications, solo execution, technical writing</p>
+  <p><b>Security:</b> Input sanitization, rate limiting (general, AI, payments), session auth with secure cookies, SQL injection protection, OAuth state verification</p>
+  <p><b>Email &amp; Files:</b> Resend, bilingual HTML templates, Puppeteer Arabic PDF (Cairo + Amiri fonts), docx, EPUB generation</p>
+</div>
+
+<h2 class="section">Key Certifications</h2>
+
+<div class="cert-block">
+  <div class="cat">Artificial Intelligence</div>
+  <ul>
+    <li>Anthropic AI Fluency: Framework &amp; Foundations</li>
+    <li>Claude Code in Action — Anthropic</li>
+    <li>Claude with the Anthropic API — Anthropic</li>
+    <li>Claude with Google Vertex AI — Anthropic</li>
+    <li>Claude with Amazon Bedrock — Anthropic</li>
+    <li>Model Context Protocol: Advanced — Anthropic</li>
+    <li>Introduction to Agent Skills — Anthropic</li>
+    <li>Introduction to Subagents — Anthropic</li>
+    <li>Claude 101 &amp; Cowork — Anthropic</li>
+    <li>AI Fluency for Educators &amp; Students — Anthropic</li>
+    <li>AI Capabilities &amp; Limitations — Anthropic</li>
+    <li>Teaching the AI Fluency Framework — Anthropic</li>
+    <li>AI Fundamentals — Cisco</li>
+    <li>Artificial Intelligence Fundamentals — IBM</li>
+    <li>HCCDA AI Course — Huawei</li>
+    <li>Gemini Certified Educator &amp; Faculty — Google</li>
+    <li>Gemini Certified University Student — Google</li>
+    <li>Google Certified Educator Level 2 — Google</li>
+    <li>AI and Career Empowerment — Univ. of Maryland</li>
+    <li>ChatGPT for Everyone — OpenAI</li>
+    <li>Advanced Prompt Hacking — Learn Prompting</li>
+    <li>AI PR Toolkit Crash — Semrush</li>
+  </ul>
+</div>
+
+<div class="cert-block">
+  <div class="cat">Software Development &amp; Marketing</div>
+  <ul>
+    <li>JavaScript Essentials 2 — Cisco Networking Academy</li>
+    <li>Programming Fundamentals &amp; AI — Crown Prince Foundation</li>
+    <li>Apple Certified (Apple Ads) — Apple</li>
+    <li>Social Media Marketing — HP</li>
+  </ul>
+</div>
+
+<div class="cert-block">
+  <div class="cat">Business, Real Estate &amp; Academic</div>
+  <ul>
+    <li>Keller Williams Real Estate Agent</li>
+    <li>Manage a Real Estate Business — Keller Williams VIP</li>
+    <li>Clients for Life with Buyers &amp; Sellers — Keller Williams</li>
+    <li>Sales Fundamentals — Keller Williams</li>
+    <li>The Principles of Real Estate — Keller Williams Realty</li>
+    <li>Introduction to Logic — Stanford Online</li>
+    <li>Forensic Science: DNA Analysis — University of Cambridge</li>
+  </ul>
+</div>
+
+<h2 class="section">Languages</h2>
+<p class="langs"><b>Arabic</b> Native &nbsp;|&nbsp; <b>English</b> Professional Working Proficiency</p>
+
+</body>
+</html>
