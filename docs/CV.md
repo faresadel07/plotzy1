@@ -14,7 +14,7 @@ Full stack developer and digital entrepreneur with proven experience designing, 
 
 ## FEATURED PROJECT
 
-### Plotzy — Full Stack Book Writing and Publishing Platform
+### Plotzy | Full Stack Book Writing and Publishing Platform
 
 **Founder and Sole Full Stack Developer** · plotzy.co · github.com/faresadel07/plotzy1
 
@@ -71,26 +71,26 @@ React 18, TypeScript, Vite, Tailwind CSS, Radix UI, TanStack React Query, React 
 
 ## PROFESSIONAL EXPERIENCE
 
-### Broadway Auto Parts — Operations Specialist (QA, Dispatch, Sales)
+### Broadway Auto Parts | Operations Specialist (QA, Dispatch, Sales)
 **Full Time** · United States · Jan 2026 to Present
 
 - Monitor and review vehicle quality standards prior to purchase and dispatch, ensuring full compliance with internal benchmarks; conduct systematic inspection and testing to identify defects before customer delivery.
 - Coordinate vehicle collection and delivery schedules between Chicago based clients and internal operational teams; manage dispatch operations, route planning, and optimization to maximize on time performance.
 - Negotiate high ticket vehicle purchases with clients based in Chicago, assessing specifications and condition reports to secure favorable terms while balancing client expectations with company margins and inventory strategy.
 
-### Detroit Axle — Customer Service Representative
+### Detroit Axle | Customer Service Representative
 **Full Time** · Jordan · Aug 2025 to Oct 2025
 
 - Assisted customers in identifying and purchasing the correct automotive parts based on detailed vehicle specifications.
 - Resolved compatibility issues and provided expert guidance on parts identification across diverse vehicle models.
 
-### Uncle Osaka — Operations Assistant
+### Uncle Osaka | Operations Assistant
 **Full Time** · Jordan · Jun 2025 to Aug 2025
 
 - Managed order taking, packaging, and customer service in a high paced dessert shop, ensuring professionalism and operational efficiency.
 - Prepared a variety of desserts and served as barista for high quality hot beverages while handling cash transactions and staff coordination.
 
-### Self Employed — Cryptocurrency Markets Specialist
+### Self Employed | Cryptocurrency Markets Specialist
 **Freelance** · Mar 2022 to Sep 2025
 
 - Managed digital asset portfolios for private clients with disciplined risk assessment and strategic recommendations based on shifting market conditions.
@@ -141,36 +141,36 @@ Curriculum combining computing and business principles to develop technology dri
 **Artificial Intelligence**
 
 - Anthropic AI Fluency (11 certifications: Framework and Foundations, Claude Code in Action, Claude with the Anthropic API, Claude with Google Vertex AI, Claude with Amazon Bedrock, Model Context Protocol Advanced, Introduction to Agent Skills, Introduction to Subagents, Claude 101 and Cowork, AI Fluency for Educators and Students, AI Capabilities and Limitations, Teaching the AI Fluency Framework)
-- AI Fundamentals — Cisco
-- Artificial Intelligence Fundamentals — IBM
-- HCCDA AI Course — Huawei
-- Gemini Certified Educator and Faculty — Google
-- Gemini Certified University Student — Google
-- Google Certified Educator Level 2 — Google
-- AI and Career Empowerment — University of Maryland
-- ChatGPT for Everyone — OpenAI
-- Advanced Prompt Hacking — Learn Prompting
-- AI PR Toolkit Crash — Semrush
+- AI Fundamentals | Cisco
+- Artificial Intelligence Fundamentals | IBM
+- HCCDA AI Course | Huawei
+- Gemini Certified Educator and Faculty | Google
+- Gemini Certified University Student | Google
+- Google Certified Educator Level 2 | Google
+- AI and Career Empowerment | University of Maryland
+- ChatGPT for Everyone | OpenAI
+- Advanced Prompt Hacking | Learn Prompting
+- AI PR Toolkit Crash | Semrush
 
 **Software Development and Marketing**
 
-- JavaScript Essentials 2 — Cisco Networking Academy
-- Programming Fundamentals and AI — Crown Prince Foundation
-- Apple Certified (Apple Ads) — Apple
-- Social Media Marketing — HP
+- JavaScript Essentials 2 | Cisco Networking Academy
+- Programming Fundamentals and AI | Crown Prince Foundation
+- Apple Certified (Apple Ads) | Apple
+- Social Media Marketing | HP
 
 **Business, Real Estate, and Finance**
 
-- Keller Williams Real Estate Agent — Keller Williams Realty
-- Manage a Real Estate Business — Keller Williams VIP
-- Clients for Life with Buyers and Sellers — Keller Williams
-- Sales Fundamentals — Keller Williams
-- The Principles of Real Estate — Keller Williams Realty
+- Keller Williams Real Estate Agent | Keller Williams Realty
+- Manage a Real Estate Business | Keller Williams VIP
+- Clients for Life with Buyers and Sellers | Keller Williams
+- Sales Fundamentals | Keller Williams
+- The Principles of Real Estate | Keller Williams Realty
 
 **Academic and Specialized**
 
-- Introduction to Logic — Stanford Online
-- Forensic Science: DNA Analysis — University of Cambridge
+- Introduction to Logic | Stanford Online
+- Forensic Science: DNA Analysis | University of Cambridge
 
 ---
 
