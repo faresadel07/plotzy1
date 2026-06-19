@@ -34,6 +34,7 @@ import hindawiRouter, { syncHindawiCatalog, precacheHindawiTopBooks } from "./ro
 import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import courseRouter from "./routes/course.routes";
+import studioRouter from "./routes/studio.routes";
 import { logger } from "./lib/logger";
 import { memoize, invalidate as invalidateMemoryCache } from "./lib/memory-cache";
 import { fileURLToPath } from "url";
@@ -3101,6 +3102,13 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // /api/certificates/:uuid verification endpoint. No prefix collisions
   // with existing routes — neither namespace was in use before this batch.
   app.use(courseRouter);
+
+  // ── The Studio routes (./routes/studio.routes.ts) ──────────────────
+  // Multi-model AI companion under /api/studio/*. Streams chat
+  // completions via SSE from Claude, GPT, Gemini, or Llama (Groq),
+  // and persists conversations + per-day quota usage. Replaces the
+  // older /api/ai/chat single-model panel.
+  app.use(studioRouter);
 
   // Trigger catalog sync, then pre-cache the top classics so the discover
   // page is reliable even when gutenberg.org is slow or unreachable. Both

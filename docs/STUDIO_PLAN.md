@@ -583,14 +583,176 @@ brand. Distinctive.
 
 ---
 
-## Next Step
+---
 
-Read this plan top to bottom. Reply with answers to the five
-open questions in Part 8. Once we agree on those, I will start
-Phase 1 immediately. The first commit (provider abstraction and
-the new SDKs) will land within a day. Writers will see the new
-Studio live in 10 days.
+## Part 9, Decisions (Confirmed by Faris)
 
-If parts of the vision do not match what you want, push back
-hard. This is a design that should make you proud, not
-a design I picked for you.
+Confirmed on 2026-06-19:
+
+1. **Launch models:** Claude, GPT, Gemini, Llama. Grok added in
+   Phase 2.
+
+2. **Tiered limits, reasonable not punishing:** Daily caps per
+   provider, calibrated to support a real writing session per
+   day on premium models. Llama stays unlimited as the always-on
+   fallback.
+
+   - Llama 70B: unlimited
+   - Gemini 2.5 Pro: 25 messages/day
+   - Claude 4.5: 20 messages/day
+   - GPT-5: 15 messages/day
+
+   These resets at midnight UTC. The Studio shows a small ring
+   per model indicating remaining quota at a glance.
+
+3. **Conversation persistence model:**
+   - **Multiple conversations per writer per chapter.**
+   - Writer clicks "+ New conversation" any time to start fresh.
+   - All conversations persist forever (until manually deleted).
+   - Conversations can be pinned, archived, renamed.
+   - Switching between conversations is instant from the
+     sidebar.
+   - The Studio loads the writer's most recently active
+     conversation on open.
+
+4. **Button:** keep the floating "Talk with AI" button, rename
+   to "The Studio".
+
+5. **Name:** **The Studio**.
+
+---
+
+## Part 10, Extra Creative Differentiators (added by request)
+
+Beyond the original plan, these features push The Studio from
+"the best AI writing assistant" to "the only one that feels
+like it was designed by a writer".
+
+### 10.1 Conversation branching (Git for chats)
+
+Every assistant message has a `↳ Branch from here` button.
+Clicking it creates a new conversation pre-loaded with the
+context up to that point. The writer can explore "what if
+Claude went a different direction" without losing the
+original thread.
+
+Branched conversations show a 🌿 icon and a link back to
+their parent so the writer can navigate the tree.
+
+### 10.2 Smart conversation auto-titles
+
+After the third message in a new conversation, a low-cost
+Llama call generates a five-word title (e.g., "Sarah meets the
+stranger", "Plot twist for chapter 3"). The writer can rename
+it at any time. No more "Untitled chat".
+
+### 10.3 Direct AI actions on selected text
+
+When the writer highlights a paragraph and right-clicks
+inside the editor, the context menu adds a new section:
+
+```
+─────────────────────────
+✦ Polish with The Studio
+✦ Rewrite from {character}'s POV
+✦ Critique this paragraph
+✦ Continue from here
+✦ Show me 3 alternatives
+─────────────────────────
+```
+
+One click sends the selection to the current model with the
+right prompt. No need to open the panel and copy-paste.
+
+### 10.4 Visual conversation insights
+
+In the conversations sidebar, each conversation shows a
+small color bar at the bottom indicating which models were
+used in it:
+
+```
+Sarah's intro                    [████░░░░] Claude-heavy
+Plot brainstorm                  [░░██░░██] Mixed
+Quick polish session             [████████] Llama-only
+```
+
+At a glance the writer sees the "personality" of each
+conversation without opening it.
+
+### 10.5 Story Pulse
+
+A small breathing dot (the Studio brand mark) sits in the
+panel header. When the writer is actively writing, the dot
+pulses warm purple, indicating The Studio is alive in the
+current context. When idle, it dims. Subtle, ambient
+feedback that the AI is aware of the work in progress.
+
+### 10.6 Conversation export
+
+Every conversation has an "Export to chapter notes" button.
+The conversation gets saved as a markdown block in the
+chapter's Research tab so the writer can refer back to it
+without re-opening The Studio.
+
+### 10.7 Multi-conversation tabs (Phase 2)
+
+At the top of the chat area, the three most recently used
+conversations appear as browser-style tabs. Switching is one
+click, no sidebar navigation needed.
+
+### 10.8 Smart resume
+
+When the writer opens a chapter after a few days, The Studio
+greets them with a single-line summary of where the last
+conversation left off: "Last session: Claude helped polish
+the opening dialogue between Tariq and Layla". Click to
+resume that conversation, or start a new one.
+
+---
+
+## Implementation order (starts now)
+
+Phase 1A — Schema (today)
+  - studio_conversations table with multi-conversation support
+  - studio_messages table with provider attribution + cost
+    tracking
+  - daily_provider_usage table for the per-model quotas
+
+Phase 1B — Backend abstraction (today + tomorrow)
+  - AiProvider interface
+  - Four providers: Claude, GPT, Gemini, Llama
+  - System prompt builder (story context preamble)
+  - SSE streaming
+
+Phase 1C — Backend endpoints (day 3)
+  - /api/studio/chat (POST, streaming)
+  - /api/studio/conversations (GET list, POST create)
+  - /api/studio/conversations/:id (PATCH rename/pin/archive,
+    DELETE)
+  - /api/studio/conversations/:id/messages (GET history)
+  - /api/studio/quotas (GET remaining per model)
+
+Phase 1D — Frontend Studio shell (days 4 to 6)
+  - Studio.tsx panel with glass design
+  - ModelSelector with per-model colors + quota rings
+  - ConversationSidebar with pinning, archive, search
+  - ChatStream with streaming and markdown rendering
+  - Composer with quick actions
+  - Insert at cursor TipTap integration
+
+Phase 1E — Story-awareness + polish (days 7 to 8)
+  - Context header showing chapter title, characters in scene
+  - System prompt injection of lore entries
+  - Animations: model switch crossfade, glass blur, aurora glow
+  - Empty states and error states
+
+Phase 1F — Removal of old assistant + tests (day 9 to 10)
+  - Delete AiChatPanel.tsx, ai-assistant.tsx
+  - Migrate any preserved chat history (best effort)
+  - Final QA on Arabic RTL paths
+
+Then Phase 2 starts: Compare Mode, branching, auto-titles,
+right-click actions, visual insights, Story Pulse, export,
+tabs.
+
+Building starts now. Next commit is the schema migration.

@@ -349,6 +349,117 @@ export const loreEntries = pgTable("lore_entries", {
   index("idx_lore_entries_book_id").on(t.bookId),
 ]);
 
+// ─── The Studio: Multi-model AI writing companion ─────────────────────
+//
+// Three tables back the Studio feature. They live together because
+// every Studio operation reads or writes across them:
+//
+//   - studio_conversations: one row per (user, book, chapter, thread).
+//     A writer can have many simultaneous conversations on the same
+//     chapter (e.g. one for character development, one for plot, one
+//     for a brainstorm) and switch between them from the Studio sidebar.
+//
+//   - studio_messages: one row per message in a conversation, with the
+//     provider that produced it (claude | gpt | gemini | llama) and the
+//     token/cost it consumed. Used both for replay on conversation
+//     resume and for the admin's cost-per-model dashboard.
+//
+//   - studio_daily_provider_usage: per-user per-provider per-day
+//     counter that enforces the daily quota (Claude 20/day, GPT 15/day,
+//     Gemini 25/day, Llama unlimited). One row per (userId, providerId,
+//     date) UTC. ON CONFLICT DO UPDATE on the unique index keeps the
+//     increment idempotent under retry.
+//
+// Branching: `studio_conversations.parent_conversation_id` is nullable
+// and self-references. When a writer clicks "Branch from here" on a
+// message, the new conversation is created with the parent set to the
+// original. The Studio sidebar shows a small tree icon next to branches
+// and lets the writer navigate back to the parent.
+
+export const studioConversations = pgTable("studio_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  // Nullable: a writer can also have book-level conversations that are
+  // not tied to a specific chapter (e.g. world-building brainstorms).
+  chapterId: integer("chapter_id").references(() => chapters.id, { onDelete: "set null" }),
+  // Auto-generated after the third message in the conversation by a
+  // cheap Llama call, then editable by the writer. Until then, the UI
+  // shows the first user message's first 40 chars as a placeholder.
+  title: text("title"),
+  // Sidebar UI flags. Pinned conversations rise to the top of the
+  // sidebar list; archived ones are hidden behind a collapse toggle.
+  pinned: boolean("pinned").default(false).notNull(),
+  archived: boolean("archived").default(false).notNull(),
+  // Branching support. When a writer clicks "Branch from here" on a
+  // message of an existing conversation, we copy the messages up to
+  // that point into a new conversation with this set to the original.
+  // SET NULL on parent delete so an orphaned branch stays usable
+  // rather than disappearing with its history.
+  parentConversationId: integer("parent_conversation_id"),
+  // The provider id of the model the writer was last using in this
+  // conversation, so reopening it restores their last choice without
+  // forcing them to re-pick. Free text (provider ids are string
+  // constants in the backend), defaults to 'llama' which is always
+  // available.
+  lastProviderId: text("last_provider_id").default("llama").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  // Sidebar list query: WHERE user=? AND chapter=? ORDER BY pinned
+  // DESC, updatedAt DESC. The composite index covers the filter; the
+  // sort is on indexed columns so no sort step in the planner.
+  index("idx_studio_conv_user_chapter").on(t.userId, t.chapterId),
+  index("idx_studio_conv_book_id").on(t.bookId),
+  index("idx_studio_conv_parent").on(t.parentConversationId),
+]);
+
+export const studioMessages = pgTable("studio_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => studioConversations.id, { onDelete: "cascade" }),
+  // 'user' = writer's prompt, 'assistant' = AI response, 'system' is
+  // never persisted (the system prompt is rebuilt fresh per request
+  // from the current story state).
+  role: text("role").notNull(),
+  // 'claude' | 'gpt' | 'gemini' | 'llama' for assistant messages.
+  // Null for user messages. Stored even on user rows so analytics can
+  // show "which model was selected when this prompt was sent" without
+  // an extra join.
+  providerId: text("provider_id"),
+  content: text("content").notNull(),
+  // Token + cost telemetry, populated on assistant messages from the
+  // provider's response. Used by the admin cost dashboard and by the
+  // writer's daily-quota indicator. Null when the provider does not
+  // return usage info (rare).
+  tokenCount: integer("token_count"),
+  costCents: integer("cost_cents"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  // Conversation replay reads: WHERE conversation=? ORDER BY id ASC.
+  index("idx_studio_msg_conversation").on(t.conversationId, t.id),
+]);
+
+export const studioDailyProviderUsage = pgTable("studio_daily_provider_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // 'claude' | 'gpt' | 'gemini' | 'llama'. Free text for the same
+  // reason as studio_messages.providerId (provider ids are backend
+  // string constants).
+  providerId: text("provider_id").notNull(),
+  // YYYY-MM-DD in UTC. Stored as text because date math in Drizzle
+  // against a typed date column is awkward in edge cases (DST does
+  // not apply to UTC but we have had migration bugs before with the
+  // typed Date columns; text is forgiving).
+  date: text("date").notNull(),
+  count: integer("count").default(0).notNull(),
+}, (t) => [
+  // Per-user per-provider per-day counter. The increment endpoint uses
+  // ON CONFLICT DO UPDATE against this unique index, so a writer
+  // sending two messages in the same second cannot race past the
+  // daily limit.
+  uniqueIndex("uq_studio_usage_user_provider_date").on(t.userId, t.providerId, t.date),
+]);
+
 export type BookPreferences = {
   fontFamily?: string;
   fontSize?: string;
