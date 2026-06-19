@@ -8,6 +8,7 @@ import { SEO } from "@/components/SEO";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
 import { AIAssistant } from "@/components/ai-assistant";
 import { Studio } from "@/components/studio/Studio";
+import { StudioIcon } from "@/components/studio/icons";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
@@ -3500,51 +3501,51 @@ export default function ChapterEditor() {
         />
       )}
 
-      {/* Floating "The Studio" button + the multi-model panel.
-          A subtle, Apple-styled pill anchored to the bottom corner that
-          opens The Studio, the multi-model AI companion (Claude, GPT,
-          Gemini, Llama). Positioned with calc(env(safe-area-inset-
-          bottom)) so it lifts above the iPhone home indicator and the
-          soft keyboard area on Safari iOS; on Android / desktop the
-          env() value resolves to 0 so the math falls back to the
-          original 22px offset. */}
+      {/* Floating Studio button (the 54px round mark).
+          Pure-black FAB with a white Plotzy Studio mark inside, on
+          brand with the rest of the site (no purple). Positioned with
+          calc(env(safe-area-inset-bottom)) so it lifts above the
+          iPhone home indicator and the soft keyboard area on Safari
+          iOS; on Android / desktop the env() value resolves to 0. */}
       <button
         type="button"
         onClick={() => setAiChatOpen(true)}
         aria-label={ar ? "افتح الاستوديو" : "Open The Studio"}
-        title={ar ? "افتح الاستوديو" : "Open The Studio"}
+        title={ar ? "الاستوديو" : "The Studio"}
         style={{
           position: "fixed",
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 22px)",
-          [ar ? "left" : "right"]: "calc(env(safe-area-inset-right, 0px) + 22px)",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
+          [ar ? "left" : "right"]: "calc(env(safe-area-inset-right, 0px) + 24px)",
           zIndex: 50,
           display: aiChatOpen ? "none" : "inline-flex",
           alignItems: "center",
-          gap: 8,
-          padding: "10px 16px 10px 14px",
-          borderRadius: 999,
-          background: "linear-gradient(135deg, #7c6af7 0%, #9b8dfb 100%)",
+          justifyContent: "center",
+          width: 54,
+          height: 54,
+          padding: 0,
+          borderRadius: "50%",
+          background: "#000",
           color: "#fff",
-          border: "1px solid rgba(255,255,255,0.16)",
-          boxShadow: "0 10px 30px rgba(124,106,247,0.40)",
-          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
-          fontSize: 13,
-          fontWeight: 600,
-          letterSpacing: "-0.005em",
+          border: "1px solid rgba(255,255,255,0.14)",
+          boxShadow:
+            "0 12px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02) inset",
           cursor: "pointer",
-          transition: "transform 140ms ease, box-shadow 140ms ease",
+          transition: "transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-1px)";
-          e.currentTarget.style.boxShadow = "0 14px 36px rgba(124,106,247,0.55)";
+          e.currentTarget.style.transform = "translateY(-2px) scale(1.04)";
+          e.currentTarget.style.boxShadow =
+            "0 18px 44px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03) inset";
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.28)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 10px 30px rgba(124,106,247,0.40)";
+          e.currentTarget.style.transform = "translateY(0) scale(1)";
+          e.currentTarget.style.boxShadow =
+            "0 12px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02) inset";
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
         }}
       >
-        <Wand2 className="w-4 h-4" />
-        {ar ? "الاستوديو" : "The Studio"}
+        <StudioIcon size={22} color="#fff" />
       </button>
       <Studio
         open={aiChatOpen}
