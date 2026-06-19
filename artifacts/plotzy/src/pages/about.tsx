@@ -1,271 +1,407 @@
-// About Plotzy. Rewritten for the free-for-everyone era: short,
-// straightforward, no em-dashes, no emojis. Dark theme to match the
-// rest of the site (Terms, Privacy, Pricing) — black background,
-// white text, soft white-tinted rules between sections.
-
-import { useMemo } from "react";
 import { Link } from "wouter";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/language-context";
+import type { TranslationKey } from "@/lib/i18n";
 
-const SF =
-  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif';
+const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-const TEXT = {
-  en: {
-    seoTitle: "About Plotzy",
-    seoDesc: "Plotzy is a free writing platform for serious writers.",
-    eyebrow: "About",
-    title: "A writing tool, not a business.",
-    leadParagraphs: [
-      "Plotzy is a platform for serious writers. It was built so a person sitting down to write a book has every tool they need in one place, in their own language, without a paywall in the way.",
-      "We chose a different model on purpose. Plotzy is free for every writer, forever. There is no trial, no paid plan, no feature we are saving for a paid tier later. The whole product is available to everyone the moment they sign in.",
-    ],
-    sectionsHeading: "What we believe",
-    sections: [
-      {
-        title: "A tool for writers, not a sales funnel.",
-        body:
-          "Paywalls turn a writer's tool into a sales funnel, and that changes how the tool gets designed. The free model keeps the work honest. The thing in front of the writer is the actual product, not the trailer.",
-      },
-      {
-        title: "Bilingual from the first line of code.",
-        body:
-          "Plotzy is built for Arabic and English equally. The editor knows where to break a line, the PDF export knows which font to use, the AI assistant answers in the language the writer is writing in. Arabic is not an afterthought; it is the default for a lot of our work.",
-      },
-      {
-        title: "Free now, free later.",
-        body:
-          "The features here are the features. We do not introduce a feature and then move it behind a paywall. The only way the product changes is to get better for everyone at the same time.",
-      },
-      {
-        title: "Honest about the AI.",
-        body:
-          "The writing assistant, the audiobook narration, and the cover generator sit on top of paid third-party services. We pay those bills ourselves. On most days they work for everyone. If a service hits its daily limit or the cost grows past what we can cover, the AI features can pause for a while. The editor and the rest of the tool never stop.",
-      },
-      {
-        title: "Supported by people who can.",
-        body:
-          "The servers and the AI cost real money. The people who can spare a little to support the project make it possible for the people who cannot to keep writing. Support is voluntary, and it does not unlock anything; the same Plotzy stays free for everyone.",
-      },
-    ],
-    closing: {
-      heading: "If you write, this is for you.",
-      body:
-        "Plotzy is small, opinionated, and still growing. If something does not work for you, write to us. We read everything.",
-      cta: "Start writing",
-    },
-  },
-  ar: {
-    seoTitle: "حول بلوتزي",
-    seoDesc: "بلوتزي منصّه كتابه مجّانيه للكتّاب الجادّين.",
-    eyebrow: "حول بلوتزي",
-    title: "أداه كتابه، لا شركه.",
-    leadParagraphs: [
-      "بلوتزي منصّه للكتّاب الجادّين. صُمّمت كي يجد الكاتب أمامه, لحظه يجلس ليكتب كتاباً, كل ما يحتاجه في مكان واحد, بلغته, وبدون أي جدار مدفوع يقف في الطريق.",
-      "اخترنا نموذجاً مختلفاً عن قصد. بلوتزي مجّاني لكل كاتب, إلى الأبد. لا توجد فتره تجريبيه ولا خطه مدفوعه ولا ميزه نحتفظ بها لخطه قادمه. المنتج كاملاً متاح للجميع منذ أول تسجيل دخول.",
-    ],
-    sectionsHeading: "ما نؤمن به",
-    sections: [
-      {
-        title: "أداه للكتّاب، لا قمع مبيعات.",
-        body:
-          "الجدران المدفوعه تحوّل أداه الكاتب إلى قمع مبيعات, وهذا يغيّر كيفيه تصميم الأداه. النموذج المجّاني يبقي العمل أميناً, فما يراه الكاتب أمامه هو المنتج فعلاً, لا إعلان عنه.",
-      },
-      {
-        title: "ثنائي اللغه منذ السطر الأول.",
-        body:
-          "بُني بلوتزي للعربيه والإنجليزيه بالتساوي. المحرّر يعرف أين يكسر السطر, والـ PDF يعرف أي خط يستخدم, والمساعد الذكي يجيب باللغه التي يكتب بها الكاتب. العربيه ليست إضافه لاحقه, بل لغه أساسيه في الكثير من عملنا.",
-      },
-      {
-        title: "مجّاني الآن، مجّاني لاحقاً.",
-        body:
-          "ما ترونه هنا هو ما يبقى. لا نُطلق ميزه ثم ننقلها خلف جدار مدفوع. السبيل الوحيد لتطوّر المنتج هو أن يصبح أفضل للجميع في الوقت ذاته.",
-      },
-      {
-        title: "صادقون في موضوع الذكاء الاصطناعي.",
-        body:
-          "مساعد الكتابه وتحويل الفصول إلى صوت ومولّد الغلاف, جميعها تستند إلى خدمات ذكاء اصطناعي مدفوعه من طرف ثالث. نحن نتكفّل بفواتيرها. في معظم الأيام تعمل للجميع. إذا بلغت إحداها حصّتها اليوميه أو لو تخطّت التكلفه ما نقدر على تحمّله, فقد تتوقّف ميزات الذكاء الاصطناعي لفتره. أمّا المحرّر وبقيه الأداه فلا تتوقّف.",
-      },
-      {
-        title: "مدعوم ممّن يستطيع.",
-        body:
-          "للسيرفر ولفواتير الذكاء الاصطناعي تكلفه فعليه. من يستطيعون المساهمه يجعلون من لا يستطيعون قادرين على متابعه الكتابه. الدعم تطوّعي ولا يفتح أي ميزه إضافيه, فبلوتزي نفسه يبقى مجّانياً للجميع.",
-      },
-    ],
-    closing: {
-      heading: "إذا كنت تكتب، فهذا لك.",
-      body:
-        "بلوتزي صغير, له رأيه, وما يزال يكبر. لو لم يعمل شيءٌ معك كما يجب, راسلنا. نقرأ كل ما يصلنا.",
-      cta: "ابدأ الكتابه",
-    },
-  },
-};
+const PILLAR_KEYS: { title: TranslationKey; desc: TranslationKey }[] = [
+  { title: "abP1T", desc: "abP1D" },
+  { title: "abP2T", desc: "abP2D" },
+  { title: "abP3T", desc: "abP3D" },
+  { title: "abP4T", desc: "abP4D" },
+  { title: "abP5T", desc: "abP5D" },
+  { title: "abP6T", desc: "abP6D" },
+  { title: "abP7T", desc: "abP7D" },
+  { title: "abP8T", desc: "abP8D" },
+];
 
 export default function About() {
-  const { lang, isRTL } = useLanguage();
-  const t = useMemo(() => TEXT[lang === "ar" ? "ar" : "en"], [lang]);
-
+  const { t } = useLanguage();
   return (
     <Layout>
-      <SEO title={t.seoTitle} description={t.seoDesc} />
+      <SEO
+        title={t("abSeoTitle")}
+        description={t("abSeoDesc")}
+      />
 
-      <div
-        dir={isRTL ? "rtl" : "ltr"}
-        style={{
-          minHeight: "100vh",
-          background: "var(--background)",
-          color: "#fff",
-          fontFamily: SF,
-          padding: "80px 24px 120px",
-        }}
-      >
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          {/* eyebrow */}
-          <div
-            style={{
-              fontSize: 12.5,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.50)",
-              fontWeight: 600,
-              marginBottom: 18,
-            }}
-          >
-            {t.eyebrow}
-          </div>
+      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#fff", fontFamily: SF }}>
 
-          {/* title */}
-          <h1
-            style={{
-              fontSize: "clamp(36px, 5.5vw, 56px)",
-              fontWeight: 700,
-              letterSpacing: "-0.025em",
-              lineHeight: 1.08,
-              margin: 0,
-              color: "#fff",
-            }}
-          >
-            {t.title}
+        {/* ===== BACK BUTTON (fixed, top-left) ===== */}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = "/";
+          }}
+          aria-label={t("abGoBack")}
+          style={{
+            position: "fixed",
+            top: 76,
+            left: 20,
+            zIndex: 50,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 16px",
+            borderRadius: 999,
+            background: "rgba(20,20,20,0.85)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.85)",
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            fontFamily: SF,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(35,35,35,0.95)";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(20,20,20,0.85)";
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+          }}
+        >
+          <ArrowLeft style={{ width: 14, height: 14 }} />
+          {t("abBack")}
+        </button>
+
+        {/* ===== HERO ===== */}
+        <section style={{ padding: "80px 24px 40px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
+          <p style={{
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.45)",
+            marginBottom: 20,
+          }}>
+            {t("abEyebrow")}
+          </p>
+          <h1 style={{
+            fontSize: "clamp(2.4rem, 5.5vw, 4rem)",
+            fontWeight: 800,
+            lineHeight: 1.05,
+            letterSpacing: "-0.04em",
+            color: "#fff",
+            marginBottom: 24,
+          }}>
+            {t("abHeroTitle")}
           </h1>
+          <p style={{
+            fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
+            fontWeight: 400,
+            lineHeight: 1.6,
+            color: "rgba(255,255,255,0.55)",
+            maxWidth: 640,
+            margin: "0 auto",
+          }}>
+            {t("abHeroSub")}
+          </p>
+        </section>
 
-          {/* lead */}
-          <div style={{ marginTop: 32 }}>
-            {t.leadParagraphs.map((p, i) => (
-              <p
-                key={i}
-                style={{
-                  margin: 0,
-                  marginTop: i === 0 ? 0 : 16,
-                  fontSize: 17,
-                  lineHeight: 1.7,
-                  color: "rgba(255,255,255,0.72)",
-                }}
-              >
-                {p}
-              </p>
-            ))}
-          </div>
-
-          {/* sections */}
-          <div style={{ marginTop: 64 }}>
-            <h2
-              style={{
-                fontSize: 13,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.55)",
-                fontWeight: 600,
-                margin: 0,
-                marginBottom: 24,
-              }}
-            >
-              {t.sectionsHeading}
-            </h2>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-              {t.sections.map((s) => (
-                <li
-                  key={s.title}
-                  style={{
-                    padding: "22px 0",
-                    borderTop: "1px solid rgba(255,255,255,0.10)",
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      letterSpacing: "-0.015em",
-                      margin: 0,
-                      marginBottom: 8,
-                      color: "#fff",
-                    }}
-                  >
-                    {s.title}
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 15.5,
-                      lineHeight: 1.7,
-                      color: "rgba(255,255,255,0.68)",
-                    }}
-                  >
-                    {s.body}
-                  </p>
-                </li>
-              ))}
-              <li style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }} />
-            </ul>
-          </div>
-
-          {/* closing */}
-          <div style={{ marginTop: 56, textAlign: "center" }}>
-            <h2
-              style={{
-                fontSize: "clamp(24px, 3vw, 30px)",
-                fontWeight: 700,
-                letterSpacing: "-0.02em",
-                margin: 0,
-                marginBottom: 12,
-                color: "#fff",
-              }}
-            >
-              {t.closing.heading}
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 15.5,
-                lineHeight: 1.7,
-                color: "rgba(255,255,255,0.65)",
-                maxWidth: 520,
-                marginInline: "auto",
-              }}
-            >
-              {t.closing.body}
+        {/* ===== THE STORY ===== */}
+        <section style={{ padding: "32px 24px 60px", maxWidth: 760, margin: "0 auto" }}>
+          <p style={{
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.4)",
+            marginBottom: 16,
+            textAlign: "center",
+          }}>
+            {t("abStoryEyebrow")}
+          </p>
+          <h2 style={{
+            fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
+            fontWeight: 800,
+            color: "#fff",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.15,
+            marginBottom: 28,
+            textAlign: "center",
+          }}>
+            {t("abStoryTitle")}
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abStory1")}
             </p>
-            <Link
-              href="/"
-              style={{
-                display: "inline-block",
-                marginTop: 26,
-                padding: "13px 24px",
-                borderRadius: 12,
-                background: "#fff",
-                color: "#0a0a0a",
-                fontFamily: "inherit",
-                fontSize: 14.5,
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abStory2")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abStory3")}
+            </p>
+          </div>
+        </section>
+
+        {/* ===== WHAT MAKES PLOTZY DIFFERENT ===== */}
+        <section style={{ padding: "60px 24px", background: "#0A0A0A" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <p style={{
+                fontSize: 12,
                 fontWeight: 600,
-                textDecoration: "none",
-                letterSpacing: "-0.005em",
-              }}
-            >
-              {t.closing.cta}
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.4)",
+                marginBottom: 16,
+              }}>
+                {t("abDiffEyebrow")}
+              </p>
+              <h2 style={{
+                fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
+                fontWeight: 800,
+                color: "#fff",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.15,
+                marginBottom: 16,
+              }}>
+                {t("abDiffTitle")}
+              </h2>
+              <p style={{
+                fontSize: 16,
+                color: "rgba(255,255,255,0.5)",
+                lineHeight: 1.6,
+                maxWidth: 560,
+                margin: "0 auto",
+              }}>
+                {t("abDiffSub")}
+              </p>
+            </div>
+
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 20,
+            }}>
+              {PILLAR_KEYS.map((pillar, i) => (
+                <div key={i} style={{
+                  flex: "1 1 280px",
+                  maxWidth: 360,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 20,
+                  padding: "28px 24px",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+                >
+                  <h3 style={{
+                    fontSize: 17,
+                    fontWeight: 700,
+                    color: "#fff",
+                    marginBottom: 10,
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1.3,
+                  }}>
+                    {t(pillar.title)}
+                  </h3>
+                  <p style={{
+                    fontSize: 14,
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.55)",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}>
+                    {t(pillar.desc)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== THE VISION ===== */}
+        <section style={{ padding: "60px 24px", maxWidth: 760, margin: "0 auto" }}>
+          <p style={{
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(140,180,255,0.6)",
+            marginBottom: 16,
+            textAlign: "center",
+          }}>
+            {t("abVisionEyebrow")}
+          </p>
+          <h2 style={{
+            fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
+            fontWeight: 800,
+            color: "#fff",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.15,
+            marginBottom: 28,
+            textAlign: "center",
+          }}>
+            {t("abVisionTitle")}
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abVision1")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abVision2")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abVision3")}
+            </p>
+          </div>
+        </section>
+
+        {/* ===== THE FOUNDER ===== */}
+        <section style={{ padding: "60px 24px", background: "#0A0A0A" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto" }}>
+            <p style={{
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.4)",
+              marginBottom: 16,
+              textAlign: "center",
+            }}>
+              {t("abFounderEyebrow")}
+            </p>
+            <h2 style={{
+              fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
+              fontWeight: 800,
+              color: "#fff",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+              marginBottom: 28,
+              textAlign: "center",
+            }}>
+              {t("abFounderName")}
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+                {t("abFounder1")}
+              </p>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+                {t("abFounder2a")} {" "}
+                <a href="mailto:hello@plotzy.co" style={{ color: "#fff", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.3)", textUnderlineOffset: 4 }}>
+                  hello@plotzy.co
+                </a>
+                {t("abFounder2b")}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== THE LOGO ===== */}
+        <section style={{ padding: "60px 24px", maxWidth: 760, margin: "0 auto" }}>
+          <p style={{
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.4)",
+            marginBottom: 16,
+            textAlign: "center",
+          }}>
+            {t("abLogoEyebrow")}
+          </p>
+          <h2 style={{
+            fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
+            fontWeight: 800,
+            color: "#fff",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.15,
+            marginBottom: 28,
+            textAlign: "center",
+          }}>
+            {t("abLogoTitle")}
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abLogo1")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abLogo2")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abLogo3")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+              {t("abLogo4")}
+            </p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.7)", margin: 0, fontStyle: "italic" }}>
+              {t("abLogo5")}
+            </p>
+          </div>
+        </section>
+
+        {/* ===== CTA FOOTER ===== */}
+        <section style={{ padding: "60px 24px 80px", textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
+          <h2 style={{
+            fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
+            fontWeight: 800,
+            color: "#fff",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.15,
+            marginBottom: 16,
+          }}>
+            {t("abCtaTitle")}
+          </h2>
+          <p style={{
+            fontSize: 16,
+            color: "rgba(255,255,255,0.55)",
+            lineHeight: 1.65,
+            marginBottom: 28,
+          }}>
+            {t("abCtaSub")}
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "14px 28px",
+              borderRadius: 999,
+              background: "#fff",
+              color: "#000",
+              fontWeight: 700,
+              fontSize: 14,
+              textDecoration: "none",
+            }}>
+              {t("abStartWriting")} <ArrowRight style={{ width: 16, height: 16 }} />
+            </Link>
+            <Link href="/protection" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "14px 28px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.85)",
+              fontWeight: 600,
+              fontSize: 14,
+              textDecoration: "none",
+            }}>
+              {t("abReadProtection")}
             </Link>
           </div>
-        </div>
+        </section>
+
       </div>
     </Layout>
   );
