@@ -7,7 +7,7 @@ import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { SEO } from "@/components/SEO";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
 import { AIAssistant } from "@/components/ai-assistant";
-import { AiChatPanel } from "@/components/AiChatPanel";
+import { Studio } from "@/components/studio/Studio";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
@@ -3500,18 +3500,19 @@ export default function ChapterEditor() {
         />
       )}
 
-      {/* Floating "Talk with AI" button + the chat side panel.
+      {/* Floating "The Studio" button + the multi-model panel.
           A subtle, Apple-styled pill anchored to the bottom corner that
-          opens a stateless Gemini chat alongside the writer's work.
-          Positioned with calc(env(safe-area-inset-bottom)) so it lifts
-          above the iPhone home indicator and the soft keyboard area on
-          Safari iOS; on Android / desktop the env() value resolves to
-          0 so the math falls back to the original 22px offset. */}
+          opens The Studio, the multi-model AI companion (Claude, GPT,
+          Gemini, Llama). Positioned with calc(env(safe-area-inset-
+          bottom)) so it lifts above the iPhone home indicator and the
+          soft keyboard area on Safari iOS; on Android / desktop the
+          env() value resolves to 0 so the math falls back to the
+          original 22px offset. */}
       <button
         type="button"
         onClick={() => setAiChatOpen(true)}
-        aria-label={ar ? "تحدث مع الذكاء الاصطناعي" : "Talk with the AI"}
-        title={ar ? "تحدث مع الذكاء الاصطناعي" : "Talk with the AI"}
+        aria-label={ar ? "افتح الاستوديو" : "Open The Studio"}
+        title={ar ? "افتح الاستوديو" : "Open The Studio"}
         style={{
           position: "fixed",
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 22px)",
@@ -3543,9 +3544,15 @@ export default function ChapterEditor() {
         }}
       >
         <Wand2 className="w-4 h-4" />
-        {ar ? "تحدث مع الذكاء" : "Talk with AI"}
+        {ar ? "الاستوديو" : "The Studio"}
       </button>
-      <AiChatPanel open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
+      <Studio
+        open={aiChatOpen}
+        onClose={() => setAiChatOpen(false)}
+        bookId={bookId}
+        chapterId={chapterId}
+        editorRef={tiptapEditorRef}
+      />
     </div>
   );
 }
