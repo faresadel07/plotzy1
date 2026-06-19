@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Faris Hamdan, Job Search Kit</title>
+<style>
+@page {
+  size: A4;
+  margin: 18mm 16mm;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: #1a1a1a;
+}
+
+h1 {
+  font-size: 18pt;
+  border-bottom: 2px solid #1a1a1a;
+  padding-bottom: 6px;
+  margin: 28px 0 12px 0;
+  page-break-before: always;
+}
+
+h1.cover-title {
+  font-size: 32pt;
+  border-bottom: none;
+  margin: 0;
+  page-break-before: avoid;
+}
+
+h2 {
+  font-size: 13pt;
+  margin: 20px 0 8px 0;
+  color: #1a1a1a;
+}
+
+h3 {
+  font-size: 11.5pt;
+  margin: 16px 0 6px 0;
+  color: #1a1a1a;
+}
+
+h4 {
+  font-size: 10.5pt;
+  margin: 12px 0 4px 0;
+  font-weight: 700;
+  color: #2a2a2a;
+}
+
+p { margin: 6px 0; }
+
+ul, ol { margin: 6px 0 6px 22px; padding: 0; }
+li { margin: 3px 0; }
+
+a {
+  color: #0a4dc4;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+code {
+  font-family: "Consolas", "Courier New", monospace;
+  background: #f3f3f3;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9.5pt;
+}
+
+pre {
+  background: #f6f6f6;
+  border-left: 3px solid #0a4dc4;
+  padding: 10px 12px;
+  border-radius: 4px;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 9pt;
+  line-height: 1.45;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 9pt;
+}
+
+blockquote {
+  border-left: 3px solid #ccc;
+  padding-left: 14px;
+  color: #444;
+  margin: 8px 0;
+  font-style: italic;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  page-break-inside: avoid;
+  font-size: 9.5pt;
+}
+
+th, td {
+  border: 1px solid #d0d0d0;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #ececec;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+tr:nth-child(even) td { background: #fafafa; }
+
+hr {
+  border: none;
+  border-top: 1px solid #d0d0d0;
+  margin: 18px 0;
+}
+
+/* Cover page */
+.cover {
+  page-break-after: always;
+  text-align: center;
+  padding-top: 80px;
+}
+.cover .subtitle {
+  font-size: 14pt;
+  color: #555;
+  margin-top: 14px;
+  font-weight: 400;
+}
+.cover .author {
+  margin-top: 60px;
+  font-size: 14pt;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.cover .meta {
+  margin-top: 6px;
+  font-size: 10pt;
+  color: #777;
+}
+
+/* Table of contents */
+.toc { page-break-after: always; }
+.toc h1 { page-break-before: avoid; margin-top: 0; }
+.toc ol { font-size: 11pt; line-height: 2; }
+
+/* Section title page-break helpers */
+.section-anchor { display: block; height: 0; visibility: hidden; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1 class="cover-title">Job Search Kit</h1>
+  <div class="subtitle">Cover letters, target companies, tracker, daily playbook,<br/>and 25 live jobs ready to apply to.</div>
+  <div class="author">Faris Hamdan</div>
+  <div class="meta">Built 2026-05-27 to support the launch of the Plotzy.co job search.</div>
+</div>
+
+<div class="toc">
+  <h1>Contents</h1>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chapter-1-cover-letters">Chapter 1, Cover Letters</a></li>
+    <li><a href="#chapter-2-target-companies">Chapter 2, Target Companies</a></li>
+    <li><a href="#chapter-3-application-tracker">Chapter 3, Application Tracker</a></li>
+    <li><a href="#chapter-4-daily-playbook">Chapter 4, Daily Playbook</a></li>
+    <li><a href="#chapter-5-batch-01-(25-live-jobs)">Chapter 5, Batch 01 (25 Live Jobs)</a></li>
+  </ol>
+</div>
+
+<section id="overview"><h1>Overview</h1><h1>Job Search Kit — Faris Hamdan</h1>
+<p>Everything you need to land a remote full-stack engineering job in
+2 to 3 months. Four files. Read them in order.</p>
+<h2>The files</h2>
+<ol>
+<li>
+<p><a href="./01_COVER_LETTERS.md"><code>01_COVER_LETTERS.md</code></a> — three cover letter
+   variants (AI, SaaS startup, established company) plus a follow-up
+   template and a hook bank.</p>
+</li>
+<li>
+<p><a href="./02_TARGET_COMPANIES.md"><code>02_TARGET_COMPANIES.md</code></a> — 60+
+   companies and 13 job boards sorted by realistic chance of a reply,
+   with the cover letter variant to use for each.</p>
+</li>
+<li>
+<p><a href="./03_TRACKER.md"><code>03_TRACKER.md</code></a> — application tracker template
+   plus the rules for follow-ups and weekly review.</p>
+</li>
+<li>
+<p><a href="./04_DAILY_PLAYBOOK.md"><code>04_DAILY_PLAYBOOK.md</code></a> — the exact
+   routine: week one setup, week two onwards steady state, how to
+   apply in 90 seconds, how to prep for the first call, realistic
+   timeline.</p>
+</li>
+</ol>
+<h2>The CV</h2>
+<p>The PDF to attach to every application:</p>
+<p><a href="../Faris_Hamdan_CV.pdf"><code>docs/Faris_Hamdan_CV.pdf</code></a></p>
+<p>Download URL anywhere:</p>
+<pre><code>https://github.com/faresadel07/plotzy1/raw/master/docs/Faris_Hamdan_CV.pdf
+</code></pre>
+<h2>Today's first step</h2>
+<p>Open <code>04_DAILY_PLAYBOOK.md</code> and start at "Day 1 (today)".</p>
+<p>90 minutes. Four accounts. Five applications. Done.</p>
+<h2>Realistic expectations</h2>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Applications</th>
+<th>Offers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>End of week 1</td>
+<td>40 to 60</td>
+<td>0</td>
+</tr>
+<tr>
+<td>End of week 4</td>
+<td>160 to 200</td>
+<td>0 to 1</td>
+</tr>
+<tr>
+<td>End of week 8</td>
+<td>350 to 400</td>
+<td>2 to 5</td>
+</tr>
+</tbody>
+</table>
+<h2>The single rule</h2>
+<p><strong>25 applications per week. Every week. Without exception.</strong></p>
+<p>Five days, five applications a day. Or two big days a week of
+twelve and thirteen. Whichever fits your energy. The number is the
+number.</p></section>
+
+<section id="chapter-1-cover-letters"><h1>Chapter 1, Cover Letters</h1><h1>Cover Letters Kit — Faris Hamdan</h1>
+<p>Three battle-tested cover letter variants for different job types. Each is
+short (under 220 words), highlights Plotzy as proof of capability, and
+ends with a clear ask. Pick the variant by company type, change three or
+four words to match the role, paste, send.</p>
+<p>The three variants:</p>
+<ol>
+<li><strong>AI Variant</strong> — for jobs that mention LLMs, AI integration, GPT,
+   Claude, OpenAI, RAG, agents, or "AI engineer".</li>
+<li><strong>SaaS Startup Variant</strong> — for jobs at startups under 200 people that
+   want a generalist full-stack developer.</li>
+<li><strong>Established Company Variant</strong> — for jobs at companies of 200+ that
+   list specific stack requirements and structured processes.</li>
+</ol>
+<p>Personal data baked in:</p>
+<ul>
+<li>Name: Faris Hamdan</li>
+<li>Location: Zarqa, Jordan (open to remote and relocation)</li>
+<li>Tech: React + TypeScript + Node.js + PostgreSQL + AI integration</li>
+<li>Live demo: https://plotzy.co</li>
+<li>Repo: https://github.com/faresadel07/plotzy1</li>
+<li>LinkedIn: https://www.linkedin.com/in/fares-hamdan-428882305</li>
+<li>Email: faresadelqd@gmail.com</li>
+</ul>
+<p>How to use each variant:</p>
+<ol>
+<li>Open the file.</li>
+<li>Copy the entire variant.</li>
+<li>Replace <code>{COMPANY}</code> with the company name.</li>
+<li>Replace <code>{ROLE}</code> with the exact role title in the job posting.</li>
+<li>Replace <code>{HOOK}</code> with one sentence about why this specific company.</li>
+<li>Send.</li>
+</ol>
+<hr>
+<h2>Variant A — AI Variant</h2>
+<p>Use when the job mentions: AI, LLM, GPT, Claude, OpenAI, AI engineer,
+agents, RAG, prompt engineering, AI integration, ML, machine learning.</p>
+<pre><code>Subject: Full-Stack Engineer with shipped AI product. Plotzy.co.
+
+Hi {COMPANY} team,
+
+I am applying for the {ROLE} position. I am a full-stack developer
+who shipped a production AI product solo: Plotzy.co, a bilingual
+Arabic and English writing platform that integrates ten distinct AI
+features (writing assistant, audiobook narration, marketplace
+analyses, cover prompts, manuscript proposal generator, and more)
+on top of an OpenAI-compatible SDK pointed at Groq's Llama 3.3 70B
+for cost.
+
+What I built and why it is relevant to {COMPANY}: a centralised
+handleAiError helper that unpacks provider error shapes (status,
+code, type, message) and surfaces real reasons to admin users so
+production debugging does not require log access. A two-attempt
+fallback strategy for rate-limited prompts. Self-hosted Piper TTS
+inside the Docker container so audiobook narration runs at zero
+per-minute cost. Prompt engineering tuned for Arabic and English in
+parallel.
+
+The full repo is open source: https://github.com/faresadel07/plotzy1
+(100K+ lines of TypeScript, 257 REST endpoints, 43 pages, 30+
+tables). Live demo: https://plotzy.co.
+
+{HOOK}
+
+Available to start immediately. Open to remote work and relocation.
+
+Faris Hamdan
+faresadelqd@gmail.com
+https://www.linkedin.com/in/fares-hamdan-428882305
+</code></pre>
+<hr>
+<h2>Variant B — SaaS Startup Variant</h2>
+<p>Use when the job is at a startup under 200 people and lists a generalist
+full-stack role (React + Node + Postgres or similar).</p>
+<pre><code>Subject: Full-Stack Engineer who shipped a full SaaS solo. Plotzy.co.
+
+Hi {COMPANY} team,
+
+I am applying for the {ROLE} position. I built and shipped Plotzy.co
+solo as my graduation project: a production SaaS writing platform
+with chapter editor, AI assistant, audiobook studio, AI marketplace,
+publishing flow, community library, admin panel, and a six-module
+writing course with verifiable certificates. End to end. Schema,
+backend, frontend, AI prompts, design, DevOps, docs.
+
+What I think will matter to {COMPANY}: I made every technical
+decision myself, including the ones I had to revisit later. I
+migrated the database from Neon to Supabase mid-project to escape
+a free-tier ceiling, swapped OpenAI direct for Groq to cut spend by
+90%, replaced Edge TTS with self-hosted Piper, and pivoted the
+entire pricing model from tiered SaaS to donation-funded without
+rewriting the schema. I ship under real constraints.
+
+Stack: React 18 + TypeScript + Tailwind + Radix UI on the frontend,
+Express + Drizzle + PostgreSQL on the backend, Docker on Railway,
+Vercel on the edge.
+
+Live demo: https://plotzy.co
+Open source: https://github.com/faresadel07/plotzy1
+
+{HOOK}
+
+Available immediately. Open to remote work and relocation.
+
+Faris Hamdan
+faresadelqd@gmail.com
+https://www.linkedin.com/in/fares-hamdan-428882305
+</code></pre>
+<hr>
+<h2>Variant C — Established Company Variant</h2>
+<p>Use when the job is at a company of 200+ people with structured processes
+and explicit stack requirements.</p>
+<pre><code>Subject: Full-Stack Application — {ROLE}.
+
+Dear {COMPANY} Hiring Team,
+
+I am writing to apply for the {ROLE} position. I am a final-year
+Business Information Technology student at the Hashemite University
+in Jordan, and the founder and sole engineer behind Plotzy.co, a
+production bilingual writing SaaS now serving Arabic and English
+writers globally.
+
+The Plotzy build covers every layer of a modern web application and
+maps directly to the responsibilities in your job posting:
+
+- Frontend: React 18, TypeScript, Tailwind, Radix UI, TanStack
+  React Query, React Hook Form, Zod, TipTap, Framer Motion, GSAP,
+  Three.js, PWA via Workbox.
+- Backend: Express + TypeScript, Drizzle ORM, PostgreSQL on
+  Supabase, Passport.js (Google + Apple OAuth + email), bcrypt,
+  connect-pg-simple sessions, three-layer rate limiting.
+- AI and Audio: OpenAI SDK targeting Groq, ten distinct AI features,
+  Piper TTS self-hosted in Docker for unlimited audiobook narration.
+- Payments and Email: PayPal Smart Buttons with the Orders API and
+  idempotent captures, Resend transactional email with bilingual
+  templates.
+- DevOps: Vercel for the frontend, Railway with a custom multi-
+  stage Dockerfile for the backend, Supabase Postgres, pnpm
+  workspaces monorepo.
+
+Live demo: https://plotzy.co
+Open source: https://github.com/faresadel07/plotzy1
+
+{HOOK}
+
+I am available to start immediately, open to working in your time
+zone, and willing to relocate.
+
+Thank you for considering my application.
+
+Faris Hamdan
+faresadelqd@gmail.com
+https://www.linkedin.com/in/fares-hamdan-428882305
+</code></pre>
+<hr>
+<h2>The {HOOK} bank — one-liners to slot in</h2>
+<p>For the {HOOK} placeholder, pick one of these one-liners that fits the
+company, OR write a fresh one. The goal is to prove you actually read
+their site or job post, not to flatter them.</p>
+<p>Generic hooks (safe defaults when you do not know the company):</p>
+<ul>
+<li>I am drawn to teams that ship fast and trust their engineers to own
+  decisions end to end, and the role description suggests {COMPANY} is
+  one of them.</li>
+<li>The {ROLE} responsibilities map closely to what I have already shipped
+  alone on Plotzy, and I would like to do that kind of work as part of a
+  team that already moves at speed.</li>
+</ul>
+<p>Company-specific hook templates (replace the bracketed parts):</p>
+<ul>
+<li>I have been [using / following / reading the changelog of] {COMPANY}
+  for [time period] and I appreciate that you [specific decision you
+  noticed: shipped X, open-sourced Y, wrote about Z].</li>
+<li>I noticed {COMPANY} uses [specific tech they mentioned] in your stack;
+  I have shipped that on Plotzy and would enjoy working on it inside a
+  larger codebase.</li>
+<li>Your post mentions [specific responsibility]; I implemented exactly
+  that on Plotzy in [specific subsystem]. Happy to walk through the
+  decision tree on a call.</li>
+</ul>
+<p>For AI companies specifically:</p>
+<ul>
+<li>I have read your [docs / blog post about X] and the way {COMPANY}
+  thinks about [specific concept] mirrors how I built [related
+  subsystem in Plotzy]. I would like to learn more by joining you.</li>
+</ul>
+<p>For dev tool companies (Vercel, Supabase, Resend, etc.):</p>
+<ul>
+<li>I am already a user of {COMPANY} in production on Plotzy. Joining
+  the team that ships the product I rely on every day would be the
+  obvious next step.</li>
+</ul>
+<hr>
+<h2>The follow-up message</h2>
+<p>If you do not hear back in 5 business days, send this short follow-up.
+Keep it to four sentences max.</p>
+<pre><code>Hi {COMPANY} team,
+
+Following up on my application for the {ROLE} role last week. I
+remain interested and available immediately. If a different role
+on the team might be a better fit, I am happy to pivot.
+
+Live demo: https://plotzy.co
+Open source: https://github.com/faresadel07/plotzy1
+
+Faris Hamdan
+</code></pre>
+<hr>
+<h2>Three rules for the email itself</h2>
+<ol>
+<li>
+<p><strong>Subject line.</strong> The exact subject I wrote in each variant is
+   already tuned. Do not change it unless the job posting requires a
+   specific reference number, in which case prepend it: <code>Ref ABC-1234 |
+   Full-Stack Engineer...</code>.</p>
+</li>
+<li>
+<p><strong>Attachments.</strong> Always attach the PDF at
+   <code>docs/Faris_Hamdan_CV.pdf</code>. Never paste the CV into the body.</p>
+</li>
+<li>
+<p><strong>One link in the body.</strong> If the platform allows only one URL in
+   the body, use https://plotzy.co. The GitHub link is in the CV
+   anyway.</p>
+</li>
+</ol>
+<hr>
+<h2>House style for every cover letter you send from here on</h2>
+<ul>
+<li>No em-dashes, no en-dashes, no emojis.</li>
+<li>Short paragraphs (no more than four lines each).</li>
+<li>Direct subject lines.</li>
+<li>Always close with availability and openness to relocation.</li>
+<li>Always mention Plotzy.co and the GitHub repo within the first three
+  sentences.</li>
+</ul></section>
+
+<section id="chapter-2-target-companies"><h1>Chapter 2, Target Companies</h1><h1>Target Companies and Job Boards — Faris Hamdan</h1>
+<p>A prioritised list of where to apply, ordered by realistic chance of a
+reply + good pay. Every company here is known to hire engineers
+internationally, including from MENA, without requiring relocation.</p>
+<p>Apply in order. Tier 1 first (the gold), Tier 2 next, Tier 3 in
+parallel as fillers. Track every application in
+<a href="./03_TRACKER.md"><code>03_TRACKER.md</code></a>.</p>
+<hr>
+<h2>TIER 1 — Direct applications to remote-first companies</h2>
+<p>These companies are famous for global remote hiring, transparent
+salaries, and engineering-led cultures. Apply through their careers
+pages, not LinkedIn (their careers pages give better signal).</p>
+<h3>Pure remote, global, top tier</h3>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Careers URL</th>
+<th>Why apply</th>
+<th>Variant to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GitLab</strong></td>
+<td>about.gitlab.com/jobs</td>
+<td>100% remote since day one, hires globally, transparent salary</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Automattic</strong></td>
+<td>automattic.com/work-with-us</td>
+<td>WordPress.com, fully distributed, hires from MENA</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Doist</strong></td>
+<td>doist.com/careers</td>
+<td>Maker of Todoist, async-first, hires globally</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Toggl</strong></td>
+<td>toggl.com/jobs</td>
+<td>Async-first, hires from MENA, ships fast</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Buffer</strong></td>
+<td>buffer.com/journey/careers</td>
+<td>Pay transparency, remote since 2015</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Zapier</strong></td>
+<td>zapier.com/jobs</td>
+<td>One of the largest remote-first SaaS companies</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>DuckDuckGo</strong></td>
+<td>duckduckgo.com/hiring</td>
+<td>Remote-first, mission-driven</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Canonical (Ubuntu)</strong></td>
+<td>canonical.com/careers</td>
+<td>Global remote, hires juniors with strong projects</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Mozilla</strong></td>
+<td>mozilla.org/careers</td>
+<td>Remote-friendly, mission-aligned with bilingual Plotzy</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>HashiCorp</strong></td>
+<td>hashicorp.com/jobs</td>
+<td>Remote-friendly, AI infra adjacent</td>
+<td>C</td>
+</tr>
+</tbody>
+</table>
+<h3>Dev tools and developer-platform companies</h3>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Careers URL</th>
+<th>Why apply</th>
+<th>Variant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>supabase.com/careers</td>
+<td>You already use them on Plotzy. Direct fit.</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Vercel</strong></td>
+<td>vercel.com/careers</td>
+<td>You already deploy on them. Mention this.</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Resend</strong></td>
+<td>resend.com/careers</td>
+<td>You use them for transactional email.</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Stripe</strong></td>
+<td>stripe.com/jobs</td>
+<td>Selective but hires globally. Highlight payments on Plotzy.</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>PostHog</strong></td>
+<td>posthog.com/careers</td>
+<td>Open source, transparent, hires globally</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Cloudflare</strong></td>
+<td>cloudflare.com/careers</td>
+<td>Remote-friendly, strong eng culture</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Linear</strong></td>
+<td>linear.app/careers</td>
+<td>Strong product, remote-friendly, small team</td>
+<td>B</td>
+</tr>
+<tr>
+<td><strong>Postman</strong></td>
+<td>postman.com/careers</td>
+<td>API tooling, hires globally</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Plaid</strong></td>
+<td>plaid.com/careers</td>
+<td>Fintech, US but hires some remote</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Hugging Face</strong></td>
+<td>huggingface.co/jobs</td>
+<td>AI focus, remote-friendly</td>
+<td>A</td>
+</tr>
+</tbody>
+</table>
+<h3>AI-focused companies (use Variant A)</h3>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Careers URL</th>
+<th>Why apply</th>
+<th>Variant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Anthropic</strong></td>
+<td>anthropic.com/careers</td>
+<td>Hard to get into, worth one shot</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>Replit</strong></td>
+<td>replit.com/careers</td>
+<td>Online IDE + AI, dev-friendly</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>Vapi</strong></td>
+<td>vapi.ai/careers</td>
+<td>Voice AI startup, remote-friendly</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>Cursor</strong></td>
+<td>cursor.com/careers</td>
+<td>AI code editor, hires globally</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>LangChain</strong></td>
+<td>langchain.com/careers</td>
+<td>LLM framework, AI-first</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>Continue</strong></td>
+<td>continue.dev/careers</td>
+<td>AI dev tool, small team, hires globally</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>Perplexity</strong></td>
+<td>perplexity.ai/hub/careers</td>
+<td>AI search, hires juniors</td>
+<td>A</td>
+</tr>
+<tr>
+<td><strong>Mistral AI</strong></td>
+<td>mistral.ai/careers</td>
+<td>European AI, hires across EU</td>
+<td>A</td>
+</tr>
+</tbody>
+</table>
+<h3>Established global companies that hire remote</h3>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Careers URL</th>
+<th>Why apply</th>
+<th>Variant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Shopify</strong></td>
+<td>shopify.com/careers</td>
+<td>Hires globally, "Digital by Design" remote</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Spotify</strong></td>
+<td>lifeatspotify.com/jobs</td>
+<td>Remote roles for full-stack</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Atlassian</strong></td>
+<td>atlassian.com/company/careers</td>
+<td>Distributed, hires globally</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>Twilio</strong></td>
+<td>twilio.com/company/jobs</td>
+<td>Remote-friendly, communications stack</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>SendGrid</strong></td>
+<td>sendgrid.com/careers</td>
+<td>Email infrastructure, remote roles</td>
+<td>C</td>
+</tr>
+<tr>
+<td><strong>MongoDB</strong></td>
+<td>mongodb.com/careers</td>
+<td>Remote-friendly, hires juniors</td>
+<td>C</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>TIER 1B — Y Combinator startups (use workatastartup.com)</h2>
+<p>Y Combinator's job board is the highest signal-to-noise ratio for AI and
+SaaS startups hiring globally. Most YC startups are tiny (5 to 50 people)
+and hire fast.</p>
+<p><strong>Single best move</strong>: create one account at workatastartup.com, set your
+preferences, and let the algorithm match you. You will get 5 to 15 fresh
+matches per week.</p>
+<p>Direct URL: https://www.workatastartup.com</p>
+<p>Filter by:
+- Role: Full-Stack Engineer, Software Engineer
+- Remote: Yes
+- Experience: All (do not exclude entry-level, many startups want
+  juniors with portfolios)
+- Visa sponsorship: Yes (also include "Open to relocate")</p>
+<p>When you find a match, apply directly through the YC interface. The
+founder sees your application within hours, not weeks.</p>
+<hr>
+<h2>TIER 2 — MENA-friendly remote agencies</h2>
+<p>These are middleman platforms that place MENA developers at US and EU
+companies. They handle invoicing, contracts, and time tracking. You get
+$25 to $80 per hour.</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>URL</th>
+<th>What to do</th>
+<th>Pay range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Toptal</strong></td>
+<td>toptal.com</td>
+<td>Apply, take the screening test (LeetCode + interview)</td>
+<td>$50 to $200/hr</td>
+</tr>
+<tr>
+<td><strong>Turing</strong></td>
+<td>turing.com</td>
+<td>Apply, take the test (less brutal than Toptal)</td>
+<td>$30 to $80/hr</td>
+</tr>
+<tr>
+<td><strong>Arc.dev</strong></td>
+<td>arc.dev</td>
+<td>Apply, build profile, get matched</td>
+<td>$40 to $120/hr</td>
+</tr>
+<tr>
+<td><strong>Lemon.io</strong></td>
+<td>lemon.io</td>
+<td>MENA-friendly, smaller pool</td>
+<td>$30 to $70/hr</td>
+</tr>
+<tr>
+<td><strong>Proxify</strong></td>
+<td>proxify.io</td>
+<td>EU-focused, hires MENA</td>
+<td>$35 to $80/hr</td>
+</tr>
+<tr>
+<td><strong>Gun.io</strong></td>
+<td>gun.io</td>
+<td>US-focused, vetted</td>
+<td>$50 to $150/hr</td>
+</tr>
+<tr>
+<td><strong>Crossover</strong></td>
+<td>crossover.com</td>
+<td>Full-time remote, lots of openings</td>
+<td>$30 to $100/hr</td>
+</tr>
+<tr>
+<td><strong>Andela</strong></td>
+<td>andela.com</td>
+<td>African and global, well-funded</td>
+<td>$25 to $80/hr</td>
+</tr>
+</tbody>
+</table>
+<p>Apply to all eight. They each take 1 to 6 weeks to onboard you, so
+start the clock now.</p>
+<hr>
+<h2>TIER 2B — MENA-region remote employers (also apply)</h2>
+<p>These are real MENA companies that hire remote across the region.
+Often pay in USD, sometimes in local currency.</p>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Careers URL</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tabby</strong></td>
+<td>tabby.ai/careers</td>
+<td>BNPL fintech, Saudi + UAE, hires across MENA</td>
+</tr>
+<tr>
+<td><strong>Tamara</strong></td>
+<td>tamara.co/careers</td>
+<td>BNPL fintech, Saudi, well-funded</td>
+</tr>
+<tr>
+<td><strong>Careem</strong></td>
+<td>careem.com/careers</td>
+<td>Uber MENA, hires for remote roles</td>
+</tr>
+<tr>
+<td><strong>Foodics</strong></td>
+<td>foodics.com/careers</td>
+<td>Saudi restaurant tech, large eng team</td>
+</tr>
+<tr>
+<td><strong>Talabat</strong></td>
+<td>talabat.com/careers</td>
+<td>Food delivery MENA, remote options</td>
+</tr>
+<tr>
+<td><strong>Mrsool</strong></td>
+<td>mrsool.co</td>
+<td>Delivery, hires across MENA</td>
+</tr>
+<tr>
+<td><strong>Mawdoo3</strong></td>
+<td>mawdoo3.com/careers</td>
+<td>Arabic content tech, Jordan based</td>
+</tr>
+<tr>
+<td><strong>Wuzzuf</strong></td>
+<td>wuzzuf.net/careers</td>
+<td>Job tech, Egypt, occasional remote</td>
+</tr>
+<tr>
+<td><strong>Bayzat</strong></td>
+<td>bayzat.com/careers</td>
+<td>HR tech UAE</td>
+</tr>
+<tr>
+<td><strong>Sary</strong></td>
+<td>sary.com/careers</td>
+<td>B2B marketplace, Saudi</td>
+</tr>
+<tr>
+<td><strong>Lean</strong></td>
+<td>lean-technologies.com/careers</td>
+<td>Fintech infra MENA</td>
+</tr>
+<tr>
+<td><strong>Hyperpay</strong></td>
+<td>hyperpay.com</td>
+<td>Payments MENA</td>
+</tr>
+<tr>
+<td><strong>Yallah Sport</strong></td>
+<td>yallah.movement.pro</td>
+<td>Sports tech MENA</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>TIER 3 — Job boards (browse daily, apply to anything that fits)</h2>
+<p>These are aggregators. The bar for individual jobs is lower so volume
+matters. Goal: 5 to 10 applications per day from these.</p>
+<table>
+<thead>
+<tr>
+<th>Board</th>
+<th>URL</th>
+<th>Account needed</th>
+<th>Filter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Wellfound</strong></td>
+<td>wellfound.com</td>
+<td>Yes (15 min setup)</td>
+<td>Full-Stack + Remote + Jr to Mid</td>
+</tr>
+<tr>
+<td><strong>Remote OK</strong></td>
+<td>remoteok.com</td>
+<td>No</td>
+<td>dev, full-stack, junior</td>
+</tr>
+<tr>
+<td><strong>We Work Remotely</strong></td>
+<td>weworkremotely.com</td>
+<td>No</td>
+<td>Programming category</td>
+</tr>
+<tr>
+<td><strong>Remotive</strong></td>
+<td>remotive.com</td>
+<td>No (paid version optional)</td>
+<td>Software Dev category</td>
+</tr>
+<tr>
+<td><strong>Working Nomads</strong></td>
+<td>workingnomads.com</td>
+<td>Free email subscription</td>
+<td>Development</td>
+</tr>
+<tr>
+<td><strong>JustRemote</strong></td>
+<td>justremote.co</td>
+<td>No</td>
+<td>Dev tag</td>
+</tr>
+<tr>
+<td><strong>HiringCafe</strong></td>
+<td>hiring.cafe</td>
+<td>No</td>
+<td>New, less competition</td>
+</tr>
+<tr>
+<td><strong>Y Combinator Work at a Startup</strong></td>
+<td>workatastartup.com</td>
+<td>Yes (free, 10 min)</td>
+<td>Full-Stack + Remote</td>
+</tr>
+<tr>
+<td><strong>Hacker News "Who is Hiring"</strong></td>
+<td>hn.algolia.com/?query=who+is+hiring</td>
+<td>No</td>
+<td>Monthly thread, very high quality</td>
+</tr>
+<tr>
+<td><strong>AI Jobs</strong></td>
+<td>aijobs.net</td>
+<td>No</td>
+<td>Full-Stack + AI</td>
+</tr>
+<tr>
+<td><strong>Stack Overflow Jobs</strong></td>
+<td>stackoverflow.com/jobs</td>
+<td>No</td>
+<td>Filter Remote</td>
+</tr>
+<tr>
+<td><strong>Indeed</strong></td>
+<td>indeed.com</td>
+<td>Yes (free)</td>
+<td>Filter Remote + Full-Stack</td>
+</tr>
+<tr>
+<td><strong>Glassdoor</strong></td>
+<td>glassdoor.com</td>
+<td>Yes (free)</td>
+<td>Filter Remote</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>TIER 4 — Cold outreach (for after week 2)</h2>
+<p>When you have applied to 100+ jobs through the boards above, start
+reaching out cold via LinkedIn or email to specific engineering
+managers at smaller companies.</p>
+<p>Template message for cold outreach (LinkedIn DM, 280 chars max):</p>
+<pre><code>Hi {NAME}, I built a full-stack bilingual SaaS solo this year
+(plotzy.co, 100K lines of TypeScript, AI + audiobook). Saw {COMPANY}
+is shipping {SOMETHING}. Are you taking applications for full-stack
+engineers? Happy to share the repo. Faris
+</code></pre>
+<p>Find targets:
+- Open LinkedIn -&gt; Search "Engineering Manager" + "{Tech you know}".
+- Filter by company size 11 to 200.
+- Filter by location (any).
+- Send 20 DMs per day for 5 days. Expect 1 to 3 conversations.</p>
+<hr>
+<h2>What to NOT apply to (waste of time)</h2>
+<ul>
+<li>Roles asking for "5 to 7 years of experience". Below 3 years is fine
+  to stretch. 5+ is not.</li>
+<li>Roles requiring an EU or US work permit upfront. If they say "must
+  have right to work in the EU/US", skip. Apply only if they say
+  "open to sponsor" or "remote anywhere".</li>
+<li>Roles at consulting agencies (Accenture, Tata, Cognizant). Low pay,
+  long hours, hard to leave once you join.</li>
+<li>Roles that require a degree in Computer Science specifically. Your
+  degree is BIT and that is fine for 95% of dev roles, but explicit CS
+  requirements are usually rigid HR filters that the recruiter cannot
+  override.</li>
+</ul>
+<hr>
+<h2>Action checklist for week one</h2>
+<ul>
+<li>[ ] Create accounts on the four required platforms:</li>
+<li>[ ] Wellfound (15 min)</li>
+<li>[ ] Y Combinator Work at a Startup (10 min)</li>
+<li>[ ] Indeed (5 min)</li>
+<li>[ ] Toptal application (the test will come later, just submit)</li>
+<li>[ ] Apply to 5 Tier 1 companies directly (use Variant C, customise
+      one sentence per company).</li>
+<li>[ ] Apply to 5 YC startups via Work at a Startup (use Variant B).</li>
+<li>[ ] Apply to 10 Tier 3 board jobs (use Variant B for startups, C for
+      established).</li>
+</ul>
+<p>By end of week one, you should have <strong>20 to 30 active applications</strong>.
+The funnel from there: ~10% reply, ~3% interview, ~1% offer. Twenty
+applications -&gt; two replies, one interview. Two hundred applications
+-&gt; twenty replies, six interviews, two offers.</p></section>
+
+<section id="chapter-3-application-tracker"><h1>Chapter 3, Application Tracker</h1><h1>Application Tracker — Faris Hamdan</h1>
+<p>One row per application. Update every time you apply, every time you
+hear back, every interview. Treat this as the single source of truth
+for the job search.</p>
+<p>Status legend:</p>
+<ul>
+<li><code>🟢 applied</code> — submitted, waiting for response</li>
+<li><code>🟡 contacted</code> — recruiter or hiring manager replied</li>
+<li><code>🔵 screening</code> — assessment, take-home, or first call scheduled</li>
+<li><code>🟣 interview</code> — onsite (remote) panel scheduled</li>
+<li><code>🟠 offer</code> — offer on the table</li>
+<li><code>🔴 rejected</code> — declined, archived</li>
+<li><code>⚪ ghosted</code> — 14+ days no reply, treat as rejected</li>
+</ul>
+<p>(The emojis here are tracker-only, never in user-facing copy.)</p>
+<hr>
+<h2>Weekly summary</h2>
+<p>Update at the end of each week to spot patterns.</p>
+<table>
+<thead>
+<tr>
+<th>Week</th>
+<th>Applied</th>
+<th>Contacted</th>
+<th>Interviews</th>
+<th>Offers</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-W22</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>2026-W23</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2026-W24</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2026-W25</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Target: 25 applications per week. 100 per month.</p>
+<hr>
+<h2>Active applications</h2>
+<p>Add to top, oldest at bottom. When a row gets to <code>🔴 rejected</code> or
+<code>⚪ ghosted</code>, move it to the Archive section.</p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Company</th>
+<th>Role</th>
+<th>Source</th>
+<th>Salary</th>
+<th>CL Variant</th>
+<th>Status</th>
+<th>Next step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YYYY-MM-DD</td>
+<td>Example Co</td>
+<td>Full-Stack Eng</td>
+<td>Wellfound</td>
+<td>$4K/mo</td>
+<td>B</td>
+<td>🟢 applied</td>
+<td>Follow up 2026-06-05</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>Archive (rejected or ghosted)</h2>
+<p>Keep these around. Useful for spotting which companies are not worth
+revisiting and which signals correlate with rejection.</p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Company</th>
+<th>Role</th>
+<th>Source</th>
+<th>Status</th>
+<th>Reason / Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>Companies under research (planned, not yet applied)</h2>
+<table>
+<thead>
+<tr>
+<th>Company</th>
+<th>Role of interest</th>
+<th>URL</th>
+<th>Why</th>
+<th>Apply by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>How to fill in each column</h2>
+<ul>
+<li><strong>Date</strong>: <code>YYYY-MM-DD</code> so it sorts.</li>
+<li><strong>Company</strong>: official name (not the careers page URL).</li>
+<li><strong>Role</strong>: exactly as the posting calls it (<code>Software Engineer II</code>,
+  not <code>Software Engineer</code>).</li>
+<li><strong>Source</strong>: where you found the job (Wellfound, Remote OK, YC,
+  direct, referral, cold DM).</li>
+<li><strong>Salary</strong>: if posted, write <code>$4K/mo</code> or <code>$50K/yr</code>. If not, write
+  <code>not posted</code>.</li>
+<li><strong>CL Variant</strong>: which cover letter variant you sent (A, B, or C from
+  <code>01_COVER_LETTERS.md</code>).</li>
+<li><strong>Status</strong>: the emoji + word.</li>
+<li><strong>Next step</strong>: concrete action with a date. If "wait for reply",
+  write <code>Follow up YYYY-MM-DD</code> for 5 business days out.</li>
+</ul>
+<hr>
+<h2>Tips</h2>
+<ul>
+<li><strong>Apply within 24 hours of posting</strong>. Jobs older than 14 days are
+  often already filled with a frontrunner.</li>
+<li><strong>Personalise one sentence per company</strong>. Recruiters smell mass
+  copy-paste in under 3 seconds.</li>
+<li><strong>Track LinkedIn message threads</strong> here too, with <code>Source: LinkedIn</code>.</li>
+<li><strong>Update status every Friday</strong> so the weekly summary stays honest.</li>
+</ul>
+<hr>
+<h2>When to fire-and-forget vs really invest</h2>
+<ul>
+<li><strong>Tier 3 board jobs</strong>: fire-and-forget. Three minutes max per app.</li>
+<li><strong>Tier 1 direct applications</strong>: invest 15 to 20 minutes per app to
+  read the company blog and write one specific paragraph.</li>
+<li><strong>YC startups</strong>: invest 10 minutes per app, read the company page
+  on YC and mention what you noticed.</li>
+<li><strong>Tier 2 agencies (Toptal, Turing, Arc)</strong>: 30 to 60 minutes for the
+  initial application + screening prep.</li>
+</ul>
+<hr>
+<h2>When to follow up</h2>
+<table>
+<thead>
+<tr>
+<th>Days since application</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5 business days</td>
+<td>Send a short follow-up (template in <code>01_COVER_LETTERS.md</code>)</td>
+</tr>
+<tr>
+<td>10 business days</td>
+<td>One more follow-up if the role is still posted</td>
+</tr>
+<tr>
+<td>14 business days, no reply</td>
+<td>Mark as <code>⚪ ghosted</code>, move to Archive</td>
+</tr>
+</tbody>
+</table>
+<p>Do not chase further. Energy goes to the next 25 applications.</p></section>
+
+<section id="chapter-4-daily-playbook"><h1>Chapter 4, Daily Playbook</h1><h1>Daily Playbook — Faris Hamdan</h1>
+<p>The exact routine. Two hours per day, 25 applications per week,
+realistic offer in 2 to 3 months.</p>
+<p>This is not a wish list. This is the procedure. Follow it.</p>
+<hr>
+<h2>Week One (this week) — setup + first 30 applications</h2>
+<h3>Day 1 (today)</h3>
+<p><strong>Time required: 90 minutes.</strong></p>
+<ol>
+<li>
+<p>Create accounts (45 min):
+   - [ ] Wellfound at wellfound.com
+   - [ ] Y Combinator Work at a Startup at workatastartup.com
+   - [ ] Indeed at indeed.com (filter Remote)
+   - [ ] Toptal application form (the test comes later)</p>
+</li>
+<li>
+<p>Wellfound profile setup (15 min):
+   - Headline: <code>Full-Stack Developer | Built Plotzy.co | React + TS + AI</code>
+   - Bio: paste the Professional Summary from <code>Faris_Hamdan_CV.pdf</code>
+   - Skills: React, TypeScript, Node.js, PostgreSQL, AI Integration
+   - Upload CV
+   - Set "Looking for: Full-time, Remote, $40K to $120K"
+   - Mark "Available immediately"</p>
+</li>
+<li>
+<p>Y Combinator profile setup (15 min):
+   - Same headline and bio as Wellfound
+   - Upload CV
+   - Set preferences: Remote, Open to relocation, Anywhere</p>
+</li>
+<li>
+<p>First five applications via Tier 1 direct (15 min):
+   - Pick five companies from <code>02_TARGET_COMPANIES.md</code> Tier 1
+   - Use Variant C from <code>01_COVER_LETTERS.md</code>
+   - Customise the {HOOK} for each
+   - Apply through their careers page (not via LinkedIn)
+   - Log each in <code>03_TRACKER.md</code></p>
+</li>
+</ol>
+<h3>Day 2</h3>
+<p><strong>Time required: 2 hours.</strong></p>
+<ol>
+<li>Five more Tier 1 direct applications (45 min) — Variant C.</li>
+<li>Ten Wellfound applications (45 min) — Variant B for startups under
+   200, Variant C for larger.</li>
+<li>Y Combinator: open work at a startup, apply to all matches with the
+   "Open to remote" filter set (30 min).</li>
+</ol>
+<p>End of Day 2: ~25 applications total, all logged.</p>
+<h3>Day 3</h3>
+<p><strong>Time required: 90 minutes.</strong></p>
+<ol>
+<li>Start Toptal screening (45 min) — review LeetCode easy/medium.</li>
+<li>Apply to ten Remote OK and We Work Remotely listings (30 min) — fast,
+   Variant B.</li>
+<li>Apply to five YC startups (15 min) — Variant A or B.</li>
+</ol>
+<p>End of Day 3: ~40 applications total.</p>
+<h3>Day 4</h3>
+<p><strong>Time required: 90 minutes.</strong></p>
+<ol>
+<li>Apply to ten new listings from boards (45 min).</li>
+<li>Send five cold LinkedIn DMs (30 min) using the template in
+   <code>02_TARGET_COMPANIES.md</code> Tier 4.</li>
+<li>Review the tracker, follow up on any Day 1 application that has not
+   responded (15 min).</li>
+</ol>
+<h3>Day 5</h3>
+<p><strong>Time required: 2 hours.</strong></p>
+<ol>
+<li>Apply to Tier 2 agencies (Turing, Arc, Lemon.io, Proxify, Crossover)
+   — full applications + initial tests if any (90 min).</li>
+<li>Apply to ten new board listings (30 min).</li>
+</ol>
+<h3>Weekend (Day 6 and 7)</h3>
+<p><strong>Time required: 1 hour total.</strong></p>
+<ol>
+<li>Saturday: rest. Do not look at job postings. Decompress.</li>
+<li>Sunday morning, 1 hour:
+   - Review the tracker, update statuses.
+   - Reply to any recruiter messages from the week.
+   - Plan the next week's targets.</li>
+</ol>
+<p>End of Week One: <strong>40 to 60 applications</strong>, 4 Tier 2 agencies in
+progress, 5 cold DMs sent. Expect first replies in Week Two.</p>
+<hr>
+<h2>Week Two onwards — steady state</h2>
+<h3>Monday</h3>
+<p><strong>2 hours. The big push day.</strong></p>
+<ul>
+<li>20 to 30 applications from the boards (Tier 3).</li>
+<li>3 to 5 Tier 1 direct applications with personalised hooks.</li>
+<li>5 cold LinkedIn DMs.</li>
+</ul>
+<h3>Tuesday, Wednesday, Thursday</h3>
+<p><strong>1 hour each.</strong></p>
+<ul>
+<li>10 applications per day.</li>
+<li>Respond to recruiter messages from the day before.</li>
+<li>Schedule and prep any interviews on the calendar.</li>
+</ul>
+<h3>Friday</h3>
+<p><strong>90 minutes.</strong></p>
+<ul>
+<li>10 applications.</li>
+<li>Follow up on every application sent 5 business days ago.</li>
+<li>Update the tracker for the week.</li>
+<li>Fill in the weekly summary row in <code>03_TRACKER.md</code>.</li>
+</ul>
+<h3>Saturday</h3>
+<p><strong>0 minutes. Day off.</strong></p>
+<h3>Sunday</h3>
+<p><strong>45 minutes.</strong></p>
+<ul>
+<li>Review the tracker.</li>
+<li>Read tomorrow's plan.</li>
+</ul>
+<hr>
+<h2>How to apply fast (90 seconds per Tier 3 application)</h2>
+<p>The board applications should be quick. Here is the muscle memory:</p>
+<ol>
+<li>Open the job posting in a new tab. Scan it for 15 seconds. Decide
+   yes or no.</li>
+<li>If yes, open <code>01_COVER_LETTERS.md</code>. Copy the right variant (A for AI,
+   B for startup, C for established).</li>
+<li>Open the company website (about page or blog) for 30 seconds. Find
+   one specific thing to reference in {HOOK}.</li>
+<li>Paste the variant into the application form. Replace {COMPANY},
+   {ROLE}, and {HOOK}. Total 20 seconds.</li>
+<li>Attach <code>docs/Faris_Hamdan_CV.pdf</code> and submit. 10 seconds.</li>
+<li>Log in <code>03_TRACKER.md</code>. 15 seconds.</li>
+</ol>
+<p>Total: 90 seconds.</p>
+<p>10 applications per day at 90 seconds each = 15 minutes per day.</p>
+<hr>
+<h2>How to handle the first reply</h2>
+<p>When a recruiter or hiring manager messages you, the reply window is
+4 to 12 hours. Do not let it go past 24 hours.</p>
+<p>Template reply (positive, available, asking for time):</p>
+<pre><code>Hi {NAME},
+
+Thank you for reaching out about the {ROLE} at {COMPANY}. I am
+available to discuss this week. Tuesday and Thursday afternoon
+(Amman time, UTC+3) work well for me. What time slots fit your
+schedule?
+
+You can find my CV here: https://github.com/faresadel07/plotzy1/raw/master/docs/Faris_Hamdan_CV.pdf
+The live demo of Plotzy is at https://plotzy.co
+The open source repo is at https://github.com/faresadel07/plotzy1
+
+Looking forward to the conversation.
+
+Faris Hamdan
+</code></pre>
+<p>If they ask for a coding challenge or take-home, accept and ask for
+the deadline. Always finish a take-home within 48 hours, even if they
+give you a week. Recruiters track turnaround time.</p>
+<hr>
+<h2>How to prep for the first call (30 minutes)</h2>
+<p>When you have an interview scheduled, do this prep:</p>
+<ol>
+<li>
+<p><strong>10 minutes</strong> — Read the company's homepage, blog, and "About" page.
+   Note: the founders, the funding round if any, the current team
+   size, the main product, and the most recent blog post.</p>
+</li>
+<li>
+<p><strong>10 minutes</strong> — Read the job posting again. Write down:
+   - Three things the role needs that you have done on Plotzy.
+   - One thing the role needs that you have not done. Plan how to
+     frame it: "I have not done X specifically, but I built Y which
+     is the same shape; I can ramp in a week."</p>
+</li>
+<li>
+<p><strong>10 minutes</strong> — Plan your answers to the two questions every
+   first call asks:
+   - "Tell me about yourself." (60-second answer, mention Plotzy by
+     sentence 2.)
+   - "Why us?" (30-second answer, name one specific thing about the
+     company you read in step 1.)</p>
+</li>
+</ol>
+<p>That is it. Do not over-prepare. The first call is 30 to 45 minutes
+of mutual sniff-testing. Confidence + Plotzy + the right energy wins
+it.</p>
+<hr>
+<h2>Realistic timeline expectations</h2>
+<p>Based on real numbers from 2024 to 2026 remote-first hiring:</p>
+<table>
+<thead>
+<tr>
+<th>Week</th>
+<th>Applications cumulative</th>
+<th>Expected replies</th>
+<th>Expected interviews</th>
+<th>Expected offers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>40 to 60</td>
+<td>0 to 2</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>80 to 110</td>
+<td>2 to 8</td>
+<td>0 to 2</td>
+<td>0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>120 to 160</td>
+<td>5 to 15</td>
+<td>1 to 4</td>
+<td>0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>160 to 200</td>
+<td>10 to 25</td>
+<td>2 to 6</td>
+<td>0 to 1</td>
+</tr>
+<tr>
+<td>6</td>
+<td>250 to 300</td>
+<td>20 to 40</td>
+<td>5 to 10</td>
+<td>1 to 3</td>
+</tr>
+<tr>
+<td>8</td>
+<td>350 to 400</td>
+<td>30 to 60</td>
+<td>8 to 15</td>
+<td>2 to 5</td>
+</tr>
+</tbody>
+</table>
+<p><strong>By week 6 to 8, you have at least one offer in hand.</strong> Sometimes
+sooner if luck breaks right. Sometimes later if you get unlucky.
+Either way, the procedure works.</p>
+<hr>
+<h2>Common reasons people quit before the offer comes</h2>
+<p>Read these once, then read them again whenever you want to give up.</p>
+<ol>
+<li><strong>The silence is louder than the rejections.</strong> 80% of applications
+   are ghosted. This is normal, not a signal about you.</li>
+<li><strong>Two months of work is the baseline, not the exception.</strong> Anyone
+   who got hired in week 2 won the lottery. Plan for week 6.</li>
+<li><strong>The board jobs feel demoralising because they are.</strong> That is why
+   Tier 1 direct applications and YC are higher signal. Spend more
+   time there if you are losing energy.</li>
+<li><strong>One offer breaks the entire dam.</strong> The moment you get one
+   credible offer, the recruiters who ghosted you suddenly reply.
+   Stay the course.</li>
+</ol>
+<hr>
+<h2>End of every Friday: the weekly review</h2>
+<p>Open <code>03_TRACKER.md</code>. Fill in the weekly summary row. Then ask
+yourself three questions:</p>
+<ol>
+<li><strong>Did I send 25 applications this week?</strong> If no, what got in the way?</li>
+<li><strong>What was the reply rate?</strong> If under 5%, the cover letter or the
+   CV needs work. Tell Claude, we will revise.</li>
+<li><strong>What was the most interesting role I saw?</strong> Apply to two more
+   like it next week.</li>
+</ol>
+<p>That is the loop. Run it. The offers come.</p></section>
+
+<section id="chapter-5-batch-01-(25-live-jobs)"><h1>Chapter 5, Batch 01 (25 Live Jobs)</h1><h1>Batch 1 — 25 Live Job Openings (Found 2026-05-27)</h1>
+<p>Twenty-five real, currently open positions filtered for Faris's
+profile. Sources: Hacker News "Who is Hiring" May 2026 thread plus
+We Work Remotely's Full-Stack category, both pulled on
+2026-05-27.</p>
+<p>Each entry includes:
+- Country / region
+- Salary
+- Tech stack
+- Cover letter Variant to use (from <code>01_COVER_LETTERS.md</code>)
+- A custom <code>{HOOK}</code> sentence already written for that specific company
+- The exact apply URL</p>
+<p>Goal: apply to all 25 within the next 5 days. Use Variant from each
+row, paste the hook as-is, attach <code>Faris_Hamdan_CV.pdf</code>, send.</p>
+<hr>
+<h2>TIER 1 — Best Matches (apply today, in this order)</h2>
+<h3>1. Form AI | Full-Stack AI Engineer (Contract)</h3>
+<ul>
+<li><strong>Country:</strong> USA (Austin, fully remote)</li>
+<li><strong>Salary:</strong> $75 to $150 / hour</li>
+<li><strong>Stack:</strong> TypeScript, Python, React, Next.js, Claude API, LLMs</li>
+<li><strong>Variant:</strong> A (AI variant)</li>
+<li><strong>Why this is your #1:</strong> They explicitly want Claude API + Next.js +
+  TypeScript. Plotzy uses exactly this combination (you have 11 Anthropic
+  certifications too).</li>
+<li><strong>Custom hook:</strong> <em>"I have shipped 10+ AI features against an
+  OpenAI-compatible SDK in production on Plotzy.co, with Claude API
+  experience certified through Anthropic's full AI Fluency track
+  (12 certificates). The Form AI stack maps one-to-one to what I have
+  already built."</em></li>
+<li><strong>Apply:</strong> Email <strong>jobs@formai.build</strong> with CV attached.</li>
+</ul>
+<h3>2. Deep Core Technology | Founding Engineer</h3>
+<ul>
+<li><strong>Country:</strong> Canada (Remote)</li>
+<li><strong>Salary:</strong> CAD $105k to $125k (about $77k to $92k USD)</li>
+<li><strong>Stack:</strong> TypeScript, Python, Next.js, Supabase</li>
+<li><strong>Variant:</strong> B (SaaS startup)</li>
+<li><strong>Why this is great:</strong> Founding engineer at an early Canadian
+  startup. You match every line of the stack (Supabase included).
+  Founding engineer = breadth, which is your strongest sell.</li>
+<li><strong>Custom hook:</strong> <em>"I have spent the last year as the founding (and
+  sole) engineer on Plotzy.co, end-to-end on TypeScript + Next-style
+  routing + Supabase. The founding engineer scope is exactly what I
+  have already been doing solo, and I would like to do it inside a
+  funded team."</em></li>
+<li><strong>Apply:</strong> Email <strong>jeff@deepcoretech.com</strong> with CV attached.</li>
+</ul>
+<h3>3. PostHog | Product Engineer</h3>
+<ul>
+<li><strong>Country:</strong> UK / Remote Worldwide</li>
+<li><strong>Salary:</strong> Posted publicly on careers page (six-figure USD ranges)</li>
+<li><strong>Stack:</strong> TypeScript, React, full-stack</li>
+<li><strong>Variant:</strong> B (SaaS startup, open source)</li>
+<li><strong>Why this is great:</strong> PostHog hires globally with no location
+  restriction. Open source friendly. They love builders.</li>
+<li><strong>Custom hook:</strong> <em>"I open-sourced the full Plotzy codebase
+  (github.com/faresadel07/plotzy1) for the same reason PostHog ships
+  in the open: the code is the resume. I would like to bring the same
+  builder mindset to PostHog Product."</em></li>
+<li><strong>Apply:</strong> https://posthog.com/careers</li>
+</ul>
+<h3>4. PostHog | Backend Engineer</h3>
+<ul>
+<li><strong>Country:</strong> UK / Remote Worldwide</li>
+<li><strong>Salary:</strong> Posted publicly on careers page</li>
+<li><strong>Stack:</strong> TypeScript, ClickHouse</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"My backend work on Plotzy spans Drizzle ORM,
+  PostgreSQL schema with 30+ tables, ON CONFLICT idempotency on revenue
+  paths, and an audit log architecture. ClickHouse would be a logical
+  next step on the analytics side."</em></li>
+<li><strong>Apply:</strong> https://posthog.com/careers</li>
+</ul>
+<h3>5. Railway | Senior Infra Engineer (Storage or Observability)</h3>
+<ul>
+<li><strong>Country:</strong> Remote Worldwide</li>
+<li><strong>Salary:</strong> Six-figure USD</li>
+<li><strong>Stack:</strong> Go, Kubernetes, Distributed Systems</li>
+<li><strong>Variant:</strong> C (established)</li>
+<li><strong>Why apply (even as Senior listed):</strong> Railway hires for energy and
+  proof of work over years of experience. You ALREADY deploy on
+  Railway. They notice that signal.</li>
+<li><strong>Custom hook:</strong> <em>"Plotzy is deployed on Railway in production with
+  a multi-stage Dockerfile that ships Express, Python (Piper TTS), and
+  ffmpeg in one container. I have hit edge cases with cgroup OOM kills
+  on the Piper child process and resolved them. Going from user to
+  builder feels like the natural next step."</em></li>
+<li><strong>Apply:</strong> https://railway.com/careers</li>
+</ul>
+<h3>6. WALTER | Senior Fullstack Engineer (Ruby + React)</h3>
+<ul>
+<li><strong>Country:</strong> Worldwide (Remote)</li>
+<li><strong>Salary:</strong> Not posted (mid-senior range)</li>
+<li><strong>Stack:</strong> Ruby on Rails, React</li>
+<li><strong>Variant:</strong> B (SaaS startup)</li>
+<li><strong>Why apply (Ruby is fine, you can pick it up):</strong> They want
+  end-to-end ownership and global remote. Your Plotzy experience is the
+  proof. Ruby is learnable in two weeks.</li>
+<li><strong>Custom hook:</strong> <em>"I have not shipped Ruby in production yet but I
+  have shipped a 100K-line TypeScript SaaS solo. Ruby on Rails is on
+  my next-to-learn list because the philosophy matches how I already
+  build (convention over configuration, clear ORM, opinionated
+  defaults). I would like to ramp into it on a real team."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/walter-senior-fullstack-engineer-ruby-react</li>
+</ul>
+<h3>7. Appetiser | Junior Full-Stack Developer (Laravel + VueJS)</h3>
+<ul>
+<li><strong>Country:</strong> Sri Lanka / Worldwide (Remote)</li>
+<li><strong>Salary:</strong> Not posted (junior range)</li>
+<li><strong>Stack:</strong> Laravel (PHP), VueJS</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Why this is great:</strong> Explicitly junior. Worldwide hiring. They
+  expect to train.</li>
+<li><strong>Custom hook:</strong> <em>"I built Plotzy.co solo on React + TypeScript +
+  Node + Postgres. I am happy to ramp into Laravel and VueJS, the
+  fundamentals (MVC, ORM, component model, reactivity) transfer
+  directly from what I have already shipped."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/appetiser-junior-full-stack-developer-laravel-and-vuejs</li>
+</ul>
+<hr>
+<h2>TIER 2 — Strong Matches (apply day 2 and 3)</h2>
+<h3>8. IPinfo.io | Retool Developer</h3>
+<ul>
+<li><strong>Country:</strong> Remote Worldwide</li>
+<li><strong>Salary:</strong> Six-figure USD</li>
+<li><strong>Stack:</strong> TypeScript, Retool, internal tools</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"I built the full Plotzy admin panel from scratch
+  with React + Recharts (analytics dashboard, user management,
+  donations, support inbox). Translating that work onto Retool would
+  take a fraction of the time."</em></li>
+<li><strong>Apply:</strong> https://ipinfo.applytojob.com</li>
+</ul>
+<h3>9. IPinfo.io | Infrastructure Engineer</h3>
+<ul>
+<li><strong>Country:</strong> Remote Worldwide</li>
+<li><strong>Salary:</strong> Six-figure USD</li>
+<li><strong>Stack:</strong> Go, Cloud Systems</li>
+<li><strong>Variant:</strong> C</li>
+<li><strong>Custom hook:</strong> <em>"My DevOps work on Plotzy spans Docker, Railway,
+  Vercel, and Supabase, with the production pipeline running an
+  Express + Python + ffmpeg image. I would like to take that
+  experience into a dedicated infrastructure role."</em></li>
+<li><strong>Apply:</strong> https://ipinfo.applytojob.com</li>
+</ul>
+<h3>10. Solace Health | Senior Full Stack Engineer</h3>
+<ul>
+<li><strong>Country:</strong> USA (Remote)</li>
+<li><strong>Salary:</strong> $150k to $200k USD</li>
+<li><strong>Stack:</strong> TypeScript, React, Node.js, PostgreSQL, GCP</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"Solace's TypeScript + React + Node + Postgres
+  stack is exactly what I have shipped in production on Plotzy.co.
+  Healthcare is a domain I find motivating because the stakes are
+  real and the work needs to be rock solid."</em></li>
+<li><strong>Apply:</strong> https://jobs.ashbyhq.com/Solace</li>
+</ul>
+<h3>11. River | Senior Engineer (React / Full-Stack)</h3>
+<ul>
+<li><strong>Country:</strong> USA / Europe / South America (Remote)</li>
+<li><strong>Salary:</strong> $150k to $220k USD</li>
+<li><strong>Stack:</strong> React, Elixir, TypeScript</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"My React + TypeScript work on Plotzy includes a
+  built-from-scratch DOM measurement pagination engine, a TipTap-based
+  editor with autosave, and a TanStack-Query-backed data layer. Elixir
+  is new to me and I would treat it as the language I learn while
+  shipping."</em></li>
+<li><strong>Apply:</strong> https://jobs.ashbyhq.com/river</li>
+</ul>
+<h3>12. Visualis | Senior Full Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> Egypt (Worldwide remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Why apply:</strong> Egypt is MENA, easier visa-wise and same time zone.</li>
+<li><strong>Custom hook:</strong> <em>"My Arabic-first full-stack experience on Plotzy
+  (RTL editor, Cairo and Amiri PDF fonts, Hindawi library integration)
+  may be specifically relevant to Visualis's audience."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/visualis-senior-full-stack-developer</li>
+</ul>
+<h3>13. Lemon.io | Senior Full-stack Angular &amp; PHP Developer</h3>
+<ul>
+<li><strong>Country:</strong> USA (clients), Worldwide (devs)</li>
+<li><strong>Salary:</strong> $30 to $70 / hour</li>
+<li><strong>Stack:</strong> Angular, PHP, Symfony</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Why apply:</strong> Lemon.io places MENA developers at US clients.
+  Angular is learnable.</li>
+<li><strong>Custom hook:</strong> *"I have shipped a production SaaS solo on React</li>
+<li>TypeScript + Node. Angular and PHP are within reach because the
+  component model and request-response shape are the same as what I
+  have already built."*</li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/lemon-io-senior-full-stack-angular-php-developer</li>
+</ul>
+<h3>14. Lemon.io | Senior Vue Developer</h3>
+<ul>
+<li><strong>Country:</strong> USA (clients), Worldwide (devs)</li>
+<li><strong>Salary:</strong> $50k to $160k USD</li>
+<li><strong>Stack:</strong> Vue.js, Nuxt.js, TypeScript</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"My TypeScript work on Plotzy spans a full SaaS
+  with 73K lines of frontend code. Vue's reactivity model is sibling
+  to React's, and I have used Vue patterns through Radix UI in
+  production already."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/lemon-io-senior-vue-developer</li>
+</ul>
+<h3>15. Lemon.io | Senior Full-stack Symfony Developer</h3>
+<ul>
+<li><strong>Country:</strong> USA (clients), Worldwide (devs)</li>
+<li><strong>Salary:</strong> $30 to $70 / hour</li>
+<li><strong>Stack:</strong> Symfony (PHP), JavaScript</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"Symfony is on my next-to-learn list. The pattern
+  set (DI, services, doctrine ORM) is what I have already built
+  with Drizzle and TypeScript on Plotzy."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/lemon-io-senior-full-stack-symfony-developer</li>
+</ul>
+<hr>
+<h2>TIER 3 — Solid Fillers (apply day 3 to 5)</h2>
+<h3>16. Spacelift | Senior Backend Engineer</h3>
+<ul>
+<li><strong>Country:</strong> Europe (Remote)</li>
+<li><strong>Salary:</strong> £80k to £110k+ GBP</li>
+<li><strong>Stack:</strong> Go, AWS, Terraform / IaC</li>
+<li><strong>Variant:</strong> C</li>
+<li><strong>Custom hook:</strong> <em>"My production backend work on Plotzy includes
+  Drizzle ORM with 30+ tables, three-layer rate limiting, and
+  idempotent payment captures. Go and Terraform are new but the
+  shape of the work is familiar."</em></li>
+<li><strong>Apply:</strong> https://careers.spacelift.io</li>
+</ul>
+<h3>17. Enveritas | Backend Software Engineer</h3>
+<ul>
+<li><strong>Country:</strong> Remote Global</li>
+<li><strong>Salary:</strong> $135k to $155k USD</li>
+<li><strong>Stack:</strong> Python, PostgreSQL, PostGIS, AWS</li>
+<li><strong>Variant:</strong> C</li>
+<li><strong>Custom hook:</strong> <em>"I have shipped Postgres in production with 30+
+  tables on Supabase, used Python for the Piper TTS pipeline on
+  Plotzy, and would enjoy a mission-driven backend role."</em></li>
+<li><strong>Apply:</strong> https://enveritas.org/jobs</li>
+</ul>
+<h3>18. Holywater | Full-Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> Ukraine / Worldwide (Remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"Holywater builds content products and Plotzy is
+  a content platform. The patterns I have built (chapter editor, PDF
+  export, audiobook studio, cover designer) translate directly."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/holywater-full-stack-developer</li>
+</ul>
+<h3>19. M3usa | Senior Full Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> USA (Worldwide remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> C</li>
+<li><strong>Custom hook:</strong> <em>"My production SaaS on Plotzy covers the full
+  request lifecycle from React client to PostgreSQL. I would like to
+  contribute that breadth to a larger product."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/m3usa-senior-full-stack-developer</li>
+</ul>
+<h3>20. Wing Assistant | Full-Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> Philippines / Worldwide (Remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"My solo production work on Plotzy shows I can
+  ship complete features alone, in any time zone the team prefers."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/wing-assistant-full-stack-developer</li>
+</ul>
+<h3>21. Melotech | Full-Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> Germany / Worldwide (Remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"I would like to bring my Plotzy build experience
+  to a German remote-first team. My time zone (UTC+3) is one hour
+  ahead of Berlin, which works well for sync time."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/melotech-full-stack-developer</li>
+</ul>
+<h3>22. Mactores | Full Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> India / Worldwide (Remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> B</li>
+<li><strong>Custom hook:</strong> <em>"I shipped Plotzy solo on a stack that includes
+  React, TypeScript, Node, and Postgres. My time zone overlap with
+  India is full, which keeps async friction low."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/mactores-full-stack-developer</li>
+</ul>
+<h3>23. Intec Select Limited | Full Stack Developer</h3>
+<ul>
+<li><strong>Country:</strong> UK (Remote)</li>
+<li><strong>Salary:</strong> Not posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> C</li>
+<li><strong>Custom hook:</strong> <em>"I am open to working UK hours from Jordan
+  (UTC+3) and would like to contribute my full-stack experience from
+  the Plotzy build."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/intec-select-limited-full-stack-developer</li>
+</ul>
+<h3>24. comparis.ch | Full Stack Software Developer (80-100%)</h3>
+<ul>
+<li><strong>Country:</strong> Switzerland (Zurich, Remote)</li>
+<li><strong>Salary:</strong> $50k to $75k USD range posted</li>
+<li><strong>Stack:</strong> Full-stack web</li>
+<li><strong>Variant:</strong> C</li>
+<li><strong>Custom hook:</strong> <em>"Plotzy is built on TypeScript end to end and
+  ships in two languages. I would like to contribute that level of
+  end-to-end ownership to a Swiss product."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/comparis-ch-full-stack-software-developer-80-100-f-m-x</li>
+</ul>
+<h3>25. Chief Rebel | Full Stack Engineer (AI-Forward)</h3>
+<ul>
+<li><strong>Country:</strong> USA (Austin)</li>
+<li><strong>Salary:</strong> $50k to $75k USD</li>
+<li><strong>Stack:</strong> TypeScript, React, AI tools</li>
+<li><strong>Variant:</strong> A</li>
+<li><strong>Custom hook:</strong> <em>"I have built ten distinct AI features on Plotzy
+  (writing polish, expand, continue, translate, story bible
+  auto-extract, blurb writer, cover prompts, marketplace analyses,
+  audiobook chunker) and would like to do this work as part of an
+  AI-forward team."</em></li>
+<li><strong>Apply:</strong> https://weworkremotely.com/remote-jobs/chief-rebel-full-stack-engineer-ai-forward</li>
+</ul>
+<hr>
+<h2>Summary table (sorted by country)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Country</th>
+<th>Company</th>
+<th>Role</th>
+<th>Salary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>Egypt</td>
+<td>Visualis</td>
+<td>Senior Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Ukraine</td>
+<td>Holywater</td>
+<td>Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>22</td>
+<td>India</td>
+<td>Mactores</td>
+<td>Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Sri Lanka</td>
+<td>Appetiser</td>
+<td>Junior Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Philippines</td>
+<td>Wing Assistant</td>
+<td>Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>24</td>
+<td>Switzerland</td>
+<td>comparis.ch</td>
+<td>Full-Stack</td>
+<td>$50-75k</td>
+</tr>
+<tr>
+<td>21</td>
+<td>Germany</td>
+<td>Melotech</td>
+<td>Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Europe (any)</td>
+<td>Spacelift</td>
+<td>Senior Backend</td>
+<td>£80-110k</td>
+</tr>
+<tr>
+<td>23</td>
+<td>UK</td>
+<td>Intec Select</td>
+<td>Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>3,4</td>
+<td>UK / Worldwide</td>
+<td>PostHog</td>
+<td>Product/Backend</td>
+<td>6-figure</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Canada</td>
+<td>Deep Core Tech</td>
+<td>Founding Engineer</td>
+<td>CAD $105-125k</td>
+</tr>
+<tr>
+<td>25</td>
+<td>USA</td>
+<td>Chief Rebel</td>
+<td>Full-Stack AI</td>
+<td>$50-75k</td>
+</tr>
+<tr>
+<td>1</td>
+<td>USA</td>
+<td>Form AI</td>
+<td>Full-Stack AI</td>
+<td>$75-150/hr</td>
+</tr>
+<tr>
+<td>10</td>
+<td>USA</td>
+<td>Solace Health</td>
+<td>Senior Full-Stack</td>
+<td>$150-200k</td>
+</tr>
+<tr>
+<td>19</td>
+<td>USA</td>
+<td>M3usa</td>
+<td>Senior Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>11</td>
+<td>USA/EU/SA</td>
+<td>River</td>
+<td>Senior Full-Stack</td>
+<td>$150-220k</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Worldwide</td>
+<td>Railway</td>
+<td>Senior Infra</td>
+<td>6-figure</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Worldwide</td>
+<td>WALTER</td>
+<td>Senior Full-Stack</td>
+<td>Not posted</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Worldwide</td>
+<td>IPinfo.io</td>
+<td>Retool Dev</td>
+<td>6-figure</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Worldwide</td>
+<td>IPinfo.io</td>
+<td>Infra Engineer</td>
+<td>6-figure</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Worldwide</td>
+<td>Lemon.io</td>
+<td>Senior Angular/PHP</td>
+<td>$30-70/hr</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Worldwide</td>
+<td>Lemon.io</td>
+<td>Senior Vue</td>
+<td>$50-160k</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Worldwide</td>
+<td>Lemon.io</td>
+<td>Senior Symfony</td>
+<td>$30-70/hr</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Worldwide</td>
+<td>Enveritas</td>
+<td>Backend</td>
+<td>$135-155k</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>What "Variant" means for the cover letter</h2>
+<p>Open <code>01_COVER_LETTERS.md</code>. Find the variant letter (A, B, or C)
+listed for each job. That is the cover letter template to use. The
+custom hook above goes in the {HOOK} placeholder of that variant.</p>
+<p>So for job #1 Form AI (Variant A), open Variant A in
+<code>01_COVER_LETTERS.md</code>, copy the whole thing, replace {COMPANY} with
+"Form AI", {ROLE} with "Full-Stack AI Engineer", and {HOOK} with the
+sentence I wrote for it above.</p>
+<p>Total time per application: 3 to 5 minutes.</p>
+<hr>
+<h2>Recommended apply order</h2>
+<p><strong>Today (within 4 hours):</strong> #1, #2, #3, #5, #7 (the five with the
+strongest profile match)</p>
+<p><strong>Tomorrow:</strong> #4, #6, #8, #9, #10</p>
+<p><strong>Day 3:</strong> #11 to #18</p>
+<p><strong>Day 4 to 5:</strong> #19 to #25</p>
+<p>Once these 25 are submitted, ask me for Batch 2. I will pull another
+25 fresh openings and write hooks for each one.</p></section>
+
+</body>
+</html>

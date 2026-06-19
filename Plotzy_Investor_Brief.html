@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plotzy — Investor Brief</title>
+<style>
+  /* ─────────────────────────────────────────────
+     Plotzy Investor Brief
+     Print-optimized A4 portrait. Open in Chrome,
+     File → Print → Save as PDF, A4, default margins.
+     ───────────────────────────────────────────── */
+
+  @page {
+    size: A4 portrait;
+    margin: 20mm 18mm 22mm 18mm;
+    @top-left {
+      content: "Plotzy — Investor Brief";
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8pt;
+      color: #9ca3af;
+      letter-spacing: 0.04em;
+    }
+    @top-right {
+      content: "Confidential";
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8pt;
+      color: #9ca3af;
+      letter-spacing: 0.04em;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8pt;
+      color: #9ca3af;
+    }
+    @bottom-left {
+      content: "April 2026";
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8pt;
+      color: #9ca3af;
+    }
+  }
+  @page :first {
+    margin: 0;
+    @top-left { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-right { content: ""; }
+  }
+
+  :root {
+    --pro: #3B82F6;
+    --premium: #A855F7;
+    --ink: #0f172a;
+    --ink-soft: #334155;
+    --mute: #64748b;
+    --line: #e2e8f0;
+    --line-soft: #f1f5f9;
+    --bg-soft: #f8fafc;
+    --accent-soft: #eff6ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    color: var(--ink);
+    font-family: 'Inter', 'Helvetica Neue', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  p {
+    margin: 0 0 0.7em 0;
+    text-align: justify;
+    hyphens: auto;
+    color: var(--ink-soft);
+  }
+  p.lead {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 1em;
+  }
+  p + p { margin-top: 0.4em; }
+
+  h1, h2, h3, h4 {
+    color: var(--ink);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  h1.section-title {
+    font-size: 28pt;
+    line-height: 1.1;
+    margin-bottom: 6mm;
+    letter-spacing: -0.02em;
+  }
+  h2.subsection {
+    font-size: 14pt;
+    margin: 10mm 0 3mm 0;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.5pt;
+    margin: 6mm 0 1.5mm 0;
+    page-break-after: avoid;
+  }
+
+  .section-eyebrow {
+    font-size: 9pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mute);
+    font-weight: 600;
+    margin-bottom: 3mm;
+  }
+
+  section.page {
+    page-break-before: always;
+    page-break-after: auto;
+  }
+  section.continues { page-break-before: auto; }
+
+  /* ───── COVER ───── */
+  .cover {
+    height: 297mm;
+    width: 210mm;
+    page-break-after: always;
+    position: relative;
+    background: white;
+    color: var(--ink);
+    padding: 32mm 22mm 26mm 22mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .cover-mark {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 110mm;
+    height: 110mm;
+    transform: translate(35%, -35%);
+    background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.12), transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(168,85,247,0.10), transparent 60%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .cover-mark-2 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 90mm;
+    height: 90mm;
+    transform: translate(-30%, 30%);
+    background: radial-gradient(circle, rgba(168,85,247,0.06), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .cover-top {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    z-index: 2;
+  }
+  .cover-logo-mark {
+    width: 12mm;
+    height: 12mm;
+  }
+  .cover-logo-text {
+    font-size: 16pt;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .cover-center {
+    z-index: 2;
+  }
+  .cover-eyebrow {
+    font-size: 10pt;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--pro);
+    font-weight: 600;
+    margin-bottom: 6mm;
+  }
+  .cover-headline {
+    font-size: 44pt;
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 6mm;
+  }
+  .cover-tagline {
+    font-size: 15pt;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 130mm;
+    font-weight: 400;
+  }
+  .cover-meta {
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid var(--line);
+    padding-top: 6mm;
+    font-size: 9.5pt;
+    color: var(--mute);
+  }
+  .cover-meta strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 1mm;
+    font-size: 10pt;
+  }
+
+  /* ───── COMPONENTS ───── */
+  .stat-row {
+    display: flex;
+    gap: 6mm;
+    margin: 5mm 0 8mm 0;
+    page-break-inside: avoid;
+  }
+  .stat-row .stat {
+    flex: 1;
+    border: 1px solid var(--line);
+    border-radius: 3mm;
+    padding: 5mm;
+    background: white;
+  }
+  .stat .num {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .stat .num.pro { color: var(--pro); }
+  .stat .num.premium { color: var(--premium); }
+  .stat .label {
+    font-size: 8.5pt;
+    color: var(--mute);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 2mm;
+    font-weight: 600;
+  }
+
+  figure {
+    margin: 6mm 0;
+    page-break-inside: avoid;
+  }
+  figcaption {
+    font-size: 9pt;
+    color: var(--mute);
+    margin-top: 2mm;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4mm;
+    margin: 6mm 0;
+    page-break-inside: avoid;
+  }
+  .plan-card {
+    border: 1px solid var(--line);
+    border-radius: 4mm;
+    padding: 6mm;
+    background: white;
+  }
+  .plan-card.pro { border-color: var(--pro); border-width: 1.5px; }
+  .plan-card.premium { border-color: var(--premium); border-width: 1.5px; }
+  .plan-tier-label {
+    font-size: 8.5pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--mute);
+  }
+  .plan-card.pro .plan-tier-label { color: var(--pro); }
+  .plan-card.premium .plan-tier-label { color: var(--premium); }
+  .plan-name {
+    font-size: 14pt;
+    font-weight: 700;
+    margin: 2mm 0 4mm 0;
+    color: var(--ink);
+  }
+  .plan-price {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .plan-price-cycle {
+    font-size: 9pt;
+    color: var(--mute);
+    margin-bottom: 4mm;
+  }
+  .plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 4mm 0 0 0;
+  }
+  .plan-features li {
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    padding: 1.2mm 0 1.2mm 5mm;
+    position: relative;
+  }
+  .plan-features li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 2.6mm;
+    width: 3mm;
+    height: 3mm;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8l3 3 7-7' stroke='%2310b981' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+  }
+
+  .feature-block {
+    margin: 8mm 0;
+    page-break-inside: avoid;
+  }
+  .feature-block-header {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    margin-bottom: 3mm;
+  }
+  .feature-icon {
+    width: 14mm;
+    height: 14mm;
+    border-radius: 3mm;
+    background: var(--accent-soft);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .feature-block h3 {
+    margin: 0;
+    font-size: 13pt;
+  }
+  .feature-block .feature-tag {
+    font-size: 8.5pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mute);
+    font-weight: 600;
+    margin-bottom: 1mm;
+  }
+
+  table.compare {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 5mm 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  table.compare th, table.compare td {
+    border-bottom: 1px solid var(--line);
+    padding: 3mm 2.5mm;
+    text-align: center;
+    vertical-align: middle;
+  }
+  table.compare th {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 9.5pt;
+    background: var(--bg-soft);
+    text-align: center;
+  }
+  table.compare th:first-child, table.compare td:first-child {
+    text-align: left;
+    font-weight: 500;
+  }
+  table.compare td.yes { color: #10b981; font-weight: 700; }
+  table.compare td.no { color: #cbd5e1; }
+  table.compare tr.highlight td {
+    background: linear-gradient(90deg, rgba(59,130,246,0.05), rgba(168,85,247,0.05));
+  }
+  table.compare tr.highlight td:first-child { color: var(--ink); font-weight: 700; }
+
+  .arch-diagram {
+    width: 100%;
+    height: auto;
+    margin: 5mm 0;
+  }
+
+  .pull-quote {
+    border-left: 2px solid var(--pro);
+    padding: 2mm 0 2mm 6mm;
+    margin: 5mm 0;
+    font-size: 12pt;
+    line-height: 1.45;
+    color: var(--ink);
+    font-weight: 500;
+    page-break-inside: avoid;
+  }
+  .pull-quote.premium { border-left-color: var(--premium); }
+
+  .meta-bar {
+    display: flex;
+    gap: 4mm;
+    flex-wrap: wrap;
+    margin: 4mm 0 6mm 0;
+  }
+  .pill {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 1.5mm 4mm;
+    font-size: 8.5pt;
+    color: var(--ink-soft);
+    background: var(--bg-soft);
+    font-weight: 500;
+  }
+  .pill.pro { color: var(--pro); border-color: rgba(59,130,246,0.25); background: var(--accent-soft); }
+  .pill.premium { color: var(--premium); border-color: rgba(168,85,247,0.25); background: #faf5ff; }
+
+  .divider {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 6mm 0;
+  }
+
+  ul.simple {
+    margin: 0 0 1em 0;
+    padding-left: 5mm;
+  }
+  ul.simple li {
+    margin: 1mm 0;
+    color: var(--ink-soft);
+  }
+
+  .toc {
+    columns: 2;
+    column-gap: 8mm;
+    list-style: none;
+    padding: 0;
+    margin: 6mm 0 0 0;
+    font-size: 10pt;
+  }
+  .toc li {
+    margin: 2mm 0;
+    color: var(--ink-soft);
+    break-inside: avoid;
+  }
+  .toc li .num {
+    color: var(--mute);
+    margin-right: 3mm;
+    font-variant-numeric: tabular-nums;
+  }
+  .toc li .name {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* Make sure nothing oversteps the page */
+  svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+
+  /* Avoid widows/orphans */
+  p, h2, h3 { orphans: 3; widows: 3; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     COVER PAGE
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="cover">
+  <div class="cover-mark"></div>
+  <div class="cover-mark-2"></div>
+
+  <div class="cover-top">
+    <svg class="cover-logo-mark" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#3B82F6"/>
+          <stop offset="100%" stop-color="#A855F7"/>
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="44" height="44" rx="11" fill="url(#logoGrad)"/>
+      <path d="M16 14 L16 34 M16 14 L25 14 Q31 14 31 20 Q31 26 25 26 L16 26" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="cover-logo-text">Plotzy</span>
+  </div>
+
+  <div class="cover-center">
+    <div class="cover-eyebrow">Investor Brief · April 2026</div>
+    <div class="cover-headline">The all-in-one<br/>platform built<br/>for modern writers.</div>
+    <div class="cover-tagline">
+      Plotzy unifies writing, AI assistance, cover design, audiobook production, and community publishing into a single integrated workflow. Replacing five disconnected tools with one platform built end to end for the way books actually get made today.
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    <div>
+      <strong>Faris Hamdan</strong>
+      Founder &amp; Sole Engineer
+    </div>
+    <div style="text-align: right;">
+      <strong>faresadel@gmail.com</strong>
+      Confidential — Investor Distribution
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">Contents</div>
+  <h1 class="section-title">What's inside.</h1>
+  <p class="lead" style="max-width: 150mm;">A fact-anchored walkthrough of what Plotzy is today, what makes the all-in-one approach defensible, and why the global writer market is ready for a platform that respects the entire workflow rather than carving it into fragments.</p>
+
+  <ol class="toc">
+    <li><span class="num">01</span><span class="name">Executive Summary</span></li>
+    <li><span class="num">02</span><span class="name">The Problem</span></li>
+    <li><span class="num">03</span><span class="name">The Solution</span></li>
+    <li><span class="num">04</span><span class="name">Product Tour</span></li>
+    <li><span class="num">05</span><span class="name">Subscription Model</span></li>
+    <li><span class="num">06</span><span class="name">User Journey</span></li>
+    <li><span class="num">07</span><span class="name">Technical Foundation</span></li>
+    <li><span class="num">08</span><span class="name">Internationalization</span></li>
+    <li><span class="num">09</span><span class="name">Competitive Landscape</span></li>
+    <li><span class="num">10</span><span class="name">Market Opportunity</span></li>
+    <li><span class="num">11</span><span class="name">Roadmap</span></li>
+    <li><span class="num">12</span><span class="name">The Founder</span></li>
+    <li><span class="num">13</span><span class="name">Contact &amp; Next Steps</span></li>
+  </ol>
+
+  <hr class="divider"/>
+  <p style="font-size: 9.5pt; color: var(--mute); margin-top: 8mm;">
+    This document describes Plotzy as it exists in the codebase as of April 2026. Every product claim in this brief corresponds to working code in production-ready feature branches. Where the document references future direction, we say so explicitly.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 1 — EXECUTIVE SUMMARY
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">01 · Executive Summary</div>
+  <h1 class="section-title">A single platform for the entire writer's workflow.</h1>
+
+  <p class="lead">
+    Plotzy is an end-to-end platform that takes a writer from a blank page to a published, illustrated, narrated book without ever leaving the application. Where the current generation of writing tools have specialized into narrow strengths, Plotzy is built on the conviction that the workflow itself is the product.
+  </p>
+
+  <p>
+    A working novelist today juggles, on average, five paid services. A word processor or specialized writing app for the manuscript itself. A separate AI tool for help with prose, ideas, or rewrites. A graphic editor or design service for covers and back matter. A text-to-speech studio for audiobook production. And a community platform for distribution and reader feedback. Each of these introduces a context switch, a new subscription, a new password, and a new export-import boundary. The result is that the act of writing competes for attention with the act of operating the toolchain.
+  </p>
+
+  <p>
+    Plotzy collapses that toolchain into one platform. The same place where a writer drafts a chapter is where they ask the AI to continue, expand, or polish a passage. The book they are writing is the same book whose cover they design on a real canvas editor with text, image, and shape primitives. When the manuscript is ready, the integrated audiobook studio narrates it through a choice of ten production-quality AI voices and exports a finished MP3. Publishing to the community library is a single action away. Every step shares the same data, the same auth, and the same coherent design language.
+  </p>
+
+  <p>
+    The product is feature-complete in development today, built from concept to working code by a single founder over the course of a year. It has paying-tier subscription billing through PayPal with server-side amount verification, audited payment history, OAuth via Google and Apple and LinkedIn, internationalization across fourteen UI languages and forty-five book languages, and a production-grade administrative analytics layer over real revenue data. The platform is structured to launch globally rather than to be retrofitted for it later.
+  </p>
+
+  <p>
+    What follows is a tour of what exists, why the integrated approach is defensible against the unbundlers, and what we're raising to do next.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 2 — THE PROBLEM
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">02 · The Problem</div>
+  <h1 class="section-title">Writing has become a tour of subscriptions.</h1>
+
+  <p class="lead">
+    The modern writer's stack has fragmented into specialists. Each is excellent at its one thing, and collectively they create an exhausting operational burden that has nothing to do with the act of writing.
+  </p>
+
+  <p>
+    Consider what it takes to ship an illustrated, narrated book today. The drafting happens in one of a handful of writing-focused applications, or in a general word processor for those willing to retrofit one. The ideas come from another tool entirely, an AI service that lives in a different browser tab and works on copy-pasted snippets rather than the manuscript itself. The cover requires a graphics application, perhaps a templating service, perhaps the time of a freelance designer found through yet another marketplace. The audiobook needs a text-to-speech studio with its own account, its own credits system, and its own export limits. Once the book is ready, the writer needs a place to share it, build an audience, and gather feedback, which is a fifth product with a fifth user profile.
+  </p>
+
+  <p>
+    Every one of those products charges a recurring fee, demands its own learning curve, and exposes its own export and import boundary. Every export is a chance for a formatting bug to strip italics or scramble chapter order. Every import is a chance to overwrite the wrong file. The writer's actual creative work is sandwiched between context switches that have nothing to do with their craft.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram showing five disconnected tools that writers currently juggle">
+      <defs>
+        <style>
+          .frag-tool { fill: white; stroke: #cbd5e1; stroke-width: 1.5; }
+          .frag-label { font-family: 'Inter', sans-serif; font-size: 11px; fill: #334155; font-weight: 600; }
+          .frag-sublabel { font-family: 'Inter', sans-serif; font-size: 9px; fill: #94a3b8; }
+          .frag-line { stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+          .frag-writer { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; }
+        </style>
+      </defs>
+
+      <!-- Writer in center -->
+      <circle cx="300" cy="150" r="36" class="frag-writer"/>
+      <text x="300" y="148" class="frag-label" text-anchor="middle">Writer</text>
+      <text x="300" y="161" class="frag-sublabel" text-anchor="middle">5 logins</text>
+
+      <!-- Tool 1 — top left -->
+      <g transform="translate(60, 50)">
+        <rect width="100" height="58" rx="8" class="frag-tool"/>
+        <text x="50" y="22" class="frag-label" text-anchor="middle">Writing app</text>
+        <text x="50" y="38" class="frag-sublabel" text-anchor="middle">$10–$20 / mo</text>
+        <text x="50" y="50" class="frag-sublabel" text-anchor="middle">Manuscript only</text>
+      </g>
+      <path d="M170 90 Q230 110 268 142" class="frag-line"/>
+
+      <!-- Tool 2 — top right -->
+      <g transform="translate(440, 50)">
+        <rect width="100" height="58" rx="8" class="frag-tool"/>
+        <text x="50" y="22" class="frag-label" text-anchor="middle">AI assistant</text>
+        <text x="50" y="38" class="frag-sublabel" text-anchor="middle">$10–$30 / mo</text>
+        <text x="50" y="50" class="frag-sublabel" text-anchor="middle">Copy &amp; paste</text>
+      </g>
+      <path d="M440 90 Q380 110 332 142" class="frag-line"/>
+
+      <!-- Tool 3 — left -->
+      <g transform="translate(20, 240)">
+        <rect width="100" height="58" rx="8" class="frag-tool"/>
+        <text x="50" y="22" class="frag-label" text-anchor="middle">Cover design</text>
+        <text x="50" y="38" class="frag-sublabel" text-anchor="middle">$15+ / mo</text>
+        <text x="50" y="50" class="frag-sublabel" text-anchor="middle">Image export</text>
+      </g>
+      <path d="M120 245 Q200 215 268 168" class="frag-line"/>
+
+      <!-- Tool 4 — bottom right -->
+      <g transform="translate(380, 240)">
+        <rect width="100" height="58" rx="8" class="frag-tool"/>
+        <text x="50" y="22" class="frag-label" text-anchor="middle">Audiobook TTS</text>
+        <text x="50" y="38" class="frag-sublabel" text-anchor="middle">$15–$50 / mo</text>
+        <text x="50" y="50" class="frag-sublabel" text-anchor="middle">Per-minute caps</text>
+      </g>
+      <path d="M380 245 Q330 215 332 168" class="frag-line"/>
+
+      <!-- Tool 5 — far right -->
+      <g transform="translate(520, 145)">
+        <rect width="70" height="58" rx="8" class="frag-tool"/>
+        <text x="35" y="22" class="frag-label" text-anchor="middle">Community</text>
+        <text x="35" y="38" class="frag-sublabel" text-anchor="middle">Free or $</text>
+        <text x="35" y="50" class="frag-sublabel" text-anchor="middle">Yet another</text>
+      </g>
+      <path d="M520 175 Q450 165 336 158" class="frag-line"/>
+    </svg>
+    <figcaption>The fragmented writer stack. Five products, five accounts, five export-import boundaries between the writer and a finished book.</figcaption>
+  </figure>
+
+  <p>
+    The cost of fragmentation is not only money. It is creative momentum. Every time a writer loses ten minutes copying a draft from one tool into another to ask for a rewrite, the thread of the scene goes with it. The output suffers in ways that are invisible because the alternative does not exist.
+  </p>
+
+  <p>
+    The acute version of this problem is at the global edges. Writers working in Arabic, Persian, Hebrew, or any of the dozens of languages that the dominant Western tools treat as an afterthought face a stack that is often broken at the level of right-to-left text direction, font rendering, and translation quality. The unbundled toolchain becomes not just expensive but actively hostile.
+  </p>
+
+  <p>
+    The opportunity is to build the platform that respects the entire workflow as a single product, treats the global writer as a first-class user from day one, and removes the operational tax that makes writing feel like running a small business with no employees.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 3 — THE SOLUTION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">03 · The Solution</div>
+  <h1 class="section-title">One application. One workflow. One book.</h1>
+
+  <p class="lead">
+    Plotzy is opinionated about the integration. The same surface where you write is the surface where you generate, design, narrate, and publish. Nothing is bolted on. Everything operates on the same canonical book object.
+  </p>
+
+  <p>
+    The integration is the product. A writer drafting a chapter can highlight a paragraph and ask the AI to continue, expand, improve, or translate it without leaving the editor or invoking a separate service. The result is inserted in place. There is no copy-paste round trip. The book the writer is editing is the same book whose cover they will design on the canvas editor, the same book whose narrated audiobook they will export, the same book they will publish to the community library. Authentication is once. Billing is once. The data model is shared. There are no formatting boundaries to cross because there are no boundaries.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram of Plotzy as a single platform with features radiating from a central core">
+      <defs>
+        <linearGradient id="coreGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#3B82F6"/>
+          <stop offset="100%" stop-color="#A855F7"/>
+        </linearGradient>
+        <style>
+          .sol-tool { fill: white; stroke: #cbd5e1; stroke-width: 1.5; }
+          .sol-label { font-family: 'Inter', sans-serif; font-size: 11px; fill: #0f172a; font-weight: 600; }
+          .sol-sublabel { font-family: 'Inter', sans-serif; font-size: 9px; fill: #64748b; }
+          .sol-line { stroke: url(#coreGrad); stroke-width: 1.5; fill: none; }
+          .sol-core-text { font-family: 'Inter', sans-serif; font-size: 14px; fill: white; font-weight: 700; }
+          .sol-core-sub { font-family: 'Inter', sans-serif; font-size: 10px; fill: rgba(255,255,255,0.85); }
+        </style>
+      </defs>
+
+      <!-- Spokes -->
+      <line x1="300" y1="180" x2="120" y2="80"  class="sol-line"/>
+      <line x1="300" y1="180" x2="480" y2="80"  class="sol-line"/>
+      <line x1="300" y1="180" x2="80"  y2="180" class="sol-line"/>
+      <line x1="300" y1="180" x2="520" y2="180" class="sol-line"/>
+      <line x1="300" y1="180" x2="120" y2="280" class="sol-line"/>
+      <line x1="300" y1="180" x2="480" y2="280" class="sol-line"/>
+
+      <!-- Core -->
+      <circle cx="300" cy="180" r="55" fill="url(#coreGrad)"/>
+      <text x="300" y="178" class="sol-core-text" text-anchor="middle">Plotzy</text>
+      <text x="300" y="194" class="sol-core-sub" text-anchor="middle">one platform</text>
+
+      <!-- Petal: Writing -->
+      <g transform="translate(60, 50)">
+        <rect width="120" height="56" rx="8" class="sol-tool"/>
+        <text x="60" y="24" class="sol-label" text-anchor="middle">Writing editor</text>
+        <text x="60" y="40" class="sol-sublabel" text-anchor="middle">TipTap rich text</text>
+      </g>
+
+      <!-- Petal: AI -->
+      <g transform="translate(420, 50)">
+        <rect width="120" height="56" rx="8" class="sol-tool"/>
+        <text x="60" y="24" class="sol-label" text-anchor="middle">AI assistance</text>
+        <text x="60" y="40" class="sol-sublabel" text-anchor="middle">improve · expand · continue</text>
+      </g>
+
+      <!-- Petal: Cover -->
+      <g transform="translate(0, 150)">
+        <rect width="120" height="56" rx="8" class="sol-tool"/>
+        <text x="60" y="24" class="sol-label" text-anchor="middle">Cover designer</text>
+        <text x="60" y="40" class="sol-sublabel" text-anchor="middle">canvas + AI generation</text>
+      </g>
+
+      <!-- Petal: Audiobook -->
+      <g transform="translate(480, 150)">
+        <rect width="120" height="56" rx="8" class="sol-tool"/>
+        <text x="60" y="24" class="sol-label" text-anchor="middle">Audiobook studio</text>
+        <text x="60" y="40" class="sol-sublabel" text-anchor="middle">10 voices · MP3 export</text>
+      </g>
+
+      <!-- Petal: Community -->
+      <g transform="translate(60, 250)">
+        <rect width="120" height="56" rx="8" class="sol-tool"/>
+        <text x="60" y="24" class="sol-label" text-anchor="middle">Community library</text>
+        <text x="60" y="40" class="sol-sublabel" text-anchor="middle">discover · follow · review</text>
+      </g>
+
+      <!-- Petal: Marketplace -->
+      <g transform="translate(420, 250)">
+        <rect width="120" height="56" rx="8" class="sol-tool"/>
+        <text x="60" y="24" class="sol-label" text-anchor="middle">AI Marketplace</text>
+        <text x="60" y="40" class="sol-sublabel" text-anchor="middle">developmental analyses</text>
+      </g>
+    </svg>
+    <figcaption>One book object, six integrated surfaces. The data does not need to leave the platform to move between them.</figcaption>
+  </figure>
+
+  <p>
+    The opinionated part is what we have chosen not to build. Plotzy is not a generic graphics editor that happens to do book covers. It is a cover designer that knows what a front, back, and spine are, applies the right aspect ratios automatically, and generates AI imagery prompted by the book's title and theme. It is not a generic text-to-speech service. It is a book narrator that handles chapter boundaries, generates per-chapter previews, and produces a single MP3 with embedded metadata. Each surface trades generality for fitness for purpose.
+  </p>
+
+  <div class="pull-quote">
+    The integration is what writers cannot replicate by stitching together best-of-breed tools, no matter how good each individual tool becomes. The friction lives in the seams.
+  </div>
+
+  <p>
+    The other consequence of building integrated is that the platform can offer a coherent experience to writers in any of the forty-five book languages it currently supports. Right-to-left scripts, non-Latin typography, and translation between any pair of languages are first-class citizens of the platform rather than features bolted onto a Western default. We talk about that in detail in Section 8.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 4 — PRODUCT TOUR
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">04 · Product Tour</div>
+  <h1 class="section-title">What is actually built.</h1>
+
+  <p class="lead">
+    Plotzy today is a feature-complete product running against a production-grade backend. The following is a walkthrough of every major surface that a user touches, in roughly the order they encounter them after signing up.
+  </p>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18"/><path d="M9 9v12"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 1</div>
+        <h3>The Library</h3>
+      </div>
+    </div>
+    <p>
+      The first surface a returning writer sees is their personal library. It is a grid of every book they have created, restored from the trash, or currently working on. Each card surfaces the title, cover image, and current word count. The library is the gravitational center of the application. From here the writer creates a new book, opens an existing one in the editor, designs its cover, narrates its audiobook, or publishes it to the community. Every other surface is reachable in one click.
+    </p>
+    <p>
+      The companion surface is the public Community Library, a separate browse experience where readers and other writers discover published work. It supports filtering by fifteen genres, full-text search across titles and authors, and sort modes for newest and most popular. Featured books are curated through an admin tool and surface in a hero position above the grid. View counts, like counts, and star-rating averages render on each card so social proof is visible at a glance.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 2</div>
+        <h3>The Writing Editor</h3>
+      </div>
+    </div>
+    <p>
+      Plotzy's editor is built on TipTap, a modern rich-text framework that produces clean, structured documents under the hood. The chapter is the atomic unit of writing. Within a book, a writer creates as many chapters as their tier allows, reorders them by drag, and tracks word counts and writing streaks automatically through a daily-progress system. Voice dictation is built in, recording a spoken story and using OpenAI's Whisper transcription model to convert it into a polished chapter draft via a follow-up language-model pass. Manuscripts can be imported from existing PDF and DOCX files, with the platform extracting the raw text into editable chapters and analyzing the imported content to populate character lists and story-beat suggestions.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 3</div>
+        <h3>AI Writing Assistant</h3>
+      </div>
+    </div>
+    <p>
+      The AI assistant lives inside the editor rather than alongside it. A writer selects any passage and triggers one of four named actions. Improve rewrites the selection for clarity and flow without changing meaning. Expand develops the selected idea into a fuller passage. Continue picks up where the prose left off and writes forward. Translate converts the passage into any of forty-five book languages. Each call is a server-side request to the language model, gated by a per-user rate limit, and returns the result inline.
+    </p>
+    <p>
+      The assistant extends beyond prose. A book-level Generate Blurb action analyzes the book's chapters and produces a back-cover description tuned to the genre and language. A Generate Cover action prompts an image model to render a publication-quality cover from a textual prompt and the book's title. The same AI infrastructure powers voice-to-chapter dictation. Across all of these surfaces, the platform respects per-tier daily AI quotas: the free tier offers a limited allotment, Pro receives one hundred AI assists per day, and Premium two hundred.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="#3B82F6"/><circle cx="17.5" cy="10.5" r=".5" fill="#3B82F6"/><circle cx="8.5" cy="7.5" r=".5" fill="#3B82F6"/><circle cx="6.5" cy="12.5" r=".5" fill="#3B82F6"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 4</div>
+        <h3>Cover Designer</h3>
+      </div>
+    </div>
+    <p>
+      The cover designer is a real canvas editor, not a templating service. It models the book as three faces, front, back, and spine, and provides a layered editing experience over each. Writers compose covers from text elements, image elements, and shape primitives including rectangles, circles, triangles, stars, and lines. Every element supports independent positioning, sizing, opacity, alignment, font selection, color, and Z-order. Layers can be locked, hidden, duplicated, or rotated. The export pipeline uses html2canvas to flatten the layered composition into a clean image suitable for publication or printing.
+    </p>
+    <p>
+      The integration with the AI cover generator means a writer who lacks design instincts can describe what they want in natural language, generate a base image, and then layer text and trim onto it inside the same canvas. The integration with the AI blurb generator means the back cover writes itself from the chapters that already exist.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 5</div>
+        <h3>Audiobook Studio</h3>
+      </div>
+    </div>
+    <p>
+      The audiobook studio reads the book and writes the audio. A writer chooses from ten named AI voices, each with documented gender, accent, and tonal characteristics: Nova, Alloy, Shimmer, Onyx, Echo, Fable, Coral, Ash, Ballad, and Sage. Quality toggles between Standard and HD synthesis models. Reading speed adjusts continuously from one quarter speed to four times normal. Each chapter renders into a previewable audio clip with a live waveform animation, and the full book exports to a single MP3 file with embedded metadata, chapter-aware structure, and an estimated runtime computed from the manuscript word count.
+    </p>
+    <p>
+      For users without an OpenAI key configured, the studio gracefully falls back to the browser's built-in speech synthesis with a clear disclaimer. The cap on monthly audiobook exports differs by tier: Pro is limited to a generous monthly allotment, Premium to ten exports per month. This is one of the surfaces where the difference between a generic TTS service and a book-aware studio is most visible.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 6</div>
+        <h3>Discover &amp; Reading Experience</h3>
+      </div>
+    </div>
+    <p>
+      Reading is a first-class experience inside Plotzy, not an afterthought. The reader opens a book and moves through chapters with prev-next navigation. The renderer handles three storage formats, including modern TipTap-JSON content, paginated HTML with floating images, and legacy formats from earlier imports, all sanitized through HTML purification before display. Inline comments thread on individual paragraphs. A standalone Discover surface pulls additionally from Project Gutenberg's catalog of public-domain classics, filterable by sixteen literary genres and ten languages, so a reader who has finished their library has a curated path to read further.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 7</div>
+        <h3>Author Profiles &amp; Social Layer</h3>
+      </div>
+    </div>
+    <p>
+      Every writer on Plotzy has a public author page, addressable by handle, displaying their bio, banner and avatar imagery, social handles, and the books they have published. Visitors see follower and following counts and total likes received across all books. Books on the profile are sortable by newest, most-liked, or most-viewed. The follow graph is the basis of a social layer that includes book likes, threaded comments at both the chapter and inline-paragraph level, direct messages between users with file and image attachments rate-limited to twenty messages per minute per direction, and a notifications inbox that surfaces follows, comments, and platform events.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20v18H2z"/><path d="M2 9h20"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 8</div>
+        <h3>AI Marketplace</h3>
+      </div>
+    </div>
+    <p>
+      The Marketplace surface is a menu of AI-powered analyses applied to a writer's manuscript. The current categories include developmental editing, copy editing, beta-reader feedback, cover generation, and blurb writing. Each is structured as a service the writer commissions on a specific book or chapter, with the analysis returned as structured feedback rather than a chat transcript. This surface is also the metering point for the Premium tier's nine monthly AI Marketplace analyses, separate from the daily AI assist quota that lives in the editor.
+    </p>
+  </div>
+
+  <div class="feature-block">
+    <div class="feature-block-header">
+      <div class="feature-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M3.6 9h16.8M3.6 15h16.8M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18"/></svg>
+      </div>
+      <div>
+        <div class="feature-tag">Surface 9</div>
+        <h3>Account, Billing, and Administrative Layer</h3>
+      </div>
+    </div>
+    <p>
+      Account management lives in a clean subscription-and-billing surface that shows the writer their current plan, full payment history pulled from a dedicated subscription_payments audit table, plan upgrade and downgrade options, and a one-click cancellation flow with confirmation modal and automated email receipt. Behind this user-facing layer sits a production-grade administrative dashboard with fourteen tabs covering analytics, devices, revenue, engagement, system health, user management with bulk operations and CSV export, content moderation, support inbox, banner and tutorial management, social-link configuration, and a complete admin audit log of every privileged action. The revenue tab pulls real cash from the same subscription_payments table that powers the user-facing billing page, computes month-over-month deltas, conversion rates against email-verified signups, and churn rates over the trailing thirty-day window.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 5 — SUBSCRIPTION MODEL
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">05 · Subscription Model</div>
+  <h1 class="section-title">A simple three-tier model with real boundaries.</h1>
+
+  <p class="lead">
+    Plotzy monetizes through a tiered subscription with annual and monthly cycles. The boundaries between tiers are real product limits, not artificial nags. The free tier is a complete writing experience with caps; the paid tiers unlock the production capabilities that turn a manuscript into a finished, illustrated, narrated, distributable book.
+  </p>
+
+  <div class="plan-grid">
+    <div class="plan-card">
+      <div class="plan-tier-label">Free</div>
+      <div class="plan-name">Get started</div>
+      <div class="plan-price">$0</div>
+      <div class="plan-price-cycle">forever</div>
+      <ul class="plan-features">
+        <li>Up to 3 chapters per book</li>
+        <li>5,000 words per chapter cap</li>
+        <li>Limited daily AI assists</li>
+        <li>Browser-based audiobook preview</li>
+        <li>Publish to Community Library</li>
+        <li>Discover Project Gutenberg catalog</li>
+      </ul>
+    </div>
+
+    <div class="plan-card pro">
+      <div class="plan-tier-label">Pro</div>
+      <div class="plan-name">Plotzy Pro</div>
+      <div class="plan-price">$8.99</div>
+      <div class="plan-price-cycle">per month, or $79.99 per year</div>
+      <ul class="plan-features">
+        <li>50 books, 100 chapters per book</li>
+        <li>500,000 words total capacity</li>
+        <li>100 AI assists per day</li>
+        <li>PDF &amp; EPUB professional export</li>
+        <li>Audiobook studio with 10 AI voices</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+
+    <div class="plan-card premium">
+      <div class="plan-tier-label">Premium</div>
+      <div class="plan-name">Plotzy Premium</div>
+      <div class="plan-price">$16.99</div>
+      <div class="plan-price-cycle">per month, or $159.99 per year</div>
+      <ul class="plan-features">
+        <li>Unlimited books, chapters &amp; words</li>
+        <li>200 AI assists per day</li>
+        <li>10 audiobook exports per month</li>
+        <li>9 AI Marketplace analyses per month</li>
+        <li>Priority support (&lt;2 hour response)</li>
+        <li>Early access to new features</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>
+    Pricing is shown to the user at the moment of upgrade through a dedicated checkout surface that recently went through a security-focused redesign. Payment is handled through PayPal, with the option of either a PayPal account flow or a credit-card flow that does not require a PayPal account, both of which run inside the same checkout. Apple Pay support is on the roadmap for the production launch. The design language of the checkout matches the marketing site and is deliberately calm: the only color emphasis is on the plan card the user has chosen.
+  </p>
+
+  <p>
+    The integrity of the payment pipeline is engineered to a higher standard than is typical for an early-stage product. When a user authorizes a payment in the PayPal flow, the server independently re-derives the expected amount from the plan they selected, validates that PayPal returns a capture matching that amount, and refuses to record the subscription unless the two agree. This blocks the entire class of attacks where a malicious user manipulates the client to create an order at a smaller amount and obtains the larger plan. Every successful capture is recorded as an audit row in a dedicated subscription_payments table with idempotency keyed on the PayPal order identifier, so retries never produce duplicate billing records and the audit history is the canonical truth for revenue analytics.
+  </p>
+
+  <p>
+    Cancellation is a single button. The user confirms once and the subscription transitions to a canceled state with full grace through the end of the billing period. They keep their content, they keep their tier benefits until the period elapses, and they receive an email confirmation summarizing exactly what was canceled and when access ends. Resubscription is one click. We have built the cancellation flow because the trust dividend from making it easy to leave outweighs the short-term retention from making it hard.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 6 — USER JOURNEY
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">06 · User Journey</div>
+  <h1 class="section-title">From signup to published audiobook in one session.</h1>
+
+  <p class="lead">
+    The integration thesis is most concrete when followed end-to-end. Below is the path of a typical user from first arrival to a fully-produced book.
+  </p>
+
+  <p>
+    Layla arrives at Plotzy from a friend's recommendation. She signs up in roughly twenty seconds with her Google account, accepting the One Tap suggestion. Behind the scenes the platform creates her user record, links the Google identity, and immediately fires a welcome email through the integrated email pipeline confirming that her account is ready. The email arrives within seconds and contains a clear next-action prompt to start writing. She is dropped into her library, which is empty, and offered a guided three-step onboarding wizard that asks for the title of her first book, her author name and chosen genre, and a brief premise of her protagonist. By the end of the wizard, a book object has been created and she is in the editor with a blank first chapter.
+  </p>
+
+  <p>
+    She types for an hour. Her words tally automatically in the corner of the editor. When she gets stuck mid-scene, she selects the last paragraph she wrote and clicks Continue. The AI extends her prose by another paragraph in her voice, working from the full manuscript context rather than just the snippet. She accepts the suggestion, edits one sentence, and keeps writing. Halfway through the chapter she realizes a passage is too verbose; she selects it and clicks Improve. The rewrite tightens the prose without flattening the voice. None of this requires copying text out of the editor or pasting it back.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="User journey timeline showing six steps">
+      <defs>
+        <linearGradient id="journeyGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#3B82F6"/>
+          <stop offset="100%" stop-color="#A855F7"/>
+        </linearGradient>
+      </defs>
+      <line x1="40" y1="70" x2="560" y2="70" stroke="url(#journeyGrad)" stroke-width="2"/>
+      <g font-family="Inter, sans-serif">
+        <g><circle cx="60" cy="70" r="9" fill="#3B82F6"/><text x="60" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="#0f172a">Signup</text><text x="60" y="100" text-anchor="middle" font-size="9" fill="#64748b">Google · 20s</text></g>
+        <g><circle cx="160" cy="70" r="9" fill="#3B82F6"/><text x="160" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="#0f172a">Onboard</text><text x="160" y="100" text-anchor="middle" font-size="9" fill="#64748b">3-step wizard</text></g>
+        <g><circle cx="260" cy="70" r="9" fill="#6366f1"/><text x="260" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="#0f172a">Draft</text><text x="260" y="100" text-anchor="middle" font-size="9" fill="#64748b">editor + AI assist</text></g>
+        <g><circle cx="360" cy="70" r="9" fill="#8b5cf6"/><text x="360" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="#0f172a">Cover</text><text x="360" y="100" text-anchor="middle" font-size="9" fill="#64748b">canvas + AI gen</text></g>
+        <g><circle cx="460" cy="70" r="9" fill="#A855F7"/><text x="460" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="#0f172a">Narrate</text><text x="460" y="100" text-anchor="middle" font-size="9" fill="#64748b">audiobook MP3</text></g>
+        <g><circle cx="560" cy="70" r="9" fill="#A855F7"/><text x="560" y="40" text-anchor="middle" font-size="10" font-weight="600" fill="#0f172a">Publish</text><text x="560" y="100" text-anchor="middle" font-size="9" fill="#64748b">Community Library</text></g>
+      </g>
+    </svg>
+    <figcaption>One session, one platform, six surfaces, one finished book.</figcaption>
+  </figure>
+
+  <p>
+    A week later Layla has eight chapters and decides she wants a cover. She opens the cover designer on her book and types a description of the mood she wants. The AI image model returns a publication-quality painted scene at the right aspect ratio in a few seconds. She drags a text element onto the canvas, sets her title in a serif font, repositions it, and adds a thin rectangular trim along the spine. She clicks Generate Blurb on the back cover and the platform reads her first eight chapters and writes her a back-cover paragraph she can adjust. She exports the cover.
+  </p>
+
+  <p>
+    Two weeks later the book is done. Layla opens the audiobook studio, picks a voice that fits her protagonist, sets the speed to her preference, previews chapter two to confirm the pronunciation of a fictional place name, and exports the full audiobook to MP3. Five minutes after export, she publishes the book to the Community Library with one click. It appears in the public catalog the same minute under her author profile, which now shows one published book, an avatar she uploaded during onboarding, her bio, and her social handles. Readers find her through genre filters and the trending sort. Comments, follows, and likes flow in over the following days, surfacing in the notifications inbox at the top of the application.
+  </p>
+
+  <p>
+    Layla never opened a second tab. Every action she took referenced the same book object, the same chapter ordering, the same character index. The platform did not just save her time. It made the workflow possible at a quality bar that her previous toolchain could not reach.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 7 — TECHNICAL FOUNDATION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">07 · Technical Foundation</div>
+  <h1 class="section-title">Engineered to scale, hardened where it counts.</h1>
+
+  <p class="lead">
+    Plotzy's architecture is the kind one expects from a Series A engineering team rather than a solo build. The choices reflect a bias toward boring, type-safe, well-trodden technology that will not surprise the team five years from now.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram showing frontend, backend, database, and external services" class="arch-diagram">
+      <defs>
+        <linearGradient id="archCore" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#3B82F6"/>
+          <stop offset="100%" stop-color="#A855F7"/>
+        </linearGradient>
+        <style>
+          .arch-box { fill: white; stroke: #cbd5e1; stroke-width: 1.5; }
+          .arch-box-em { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; }
+          .arch-title { font-family: 'Inter', sans-serif; font-size: 12px; fill: #0f172a; font-weight: 700; }
+          .arch-tech { font-family: 'Inter', sans-serif; font-size: 9.5px; fill: #475569; }
+          .arch-arrow { stroke: #94a3b8; stroke-width: 1.4; fill: none; marker-end: url(#archArrow); }
+        </style>
+        <marker id="archArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <!-- Frontend -->
+      <g transform="translate(20, 30)">
+        <rect width="160" height="100" rx="8" class="arch-box-em"/>
+        <text x="14" y="24" class="arch-title">Frontend (PWA)</text>
+        <text x="14" y="44" class="arch-tech">React 18 · Vite · TypeScript</text>
+        <text x="14" y="58" class="arch-tech">TipTap rich-text editor</text>
+        <text x="14" y="72" class="arch-tech">framer-motion · React Query</text>
+        <text x="14" y="86" class="arch-tech">Service worker · offline-aware</text>
+      </g>
+
+      <!-- Backend -->
+      <g transform="translate(220, 30)">
+        <rect width="160" height="100" rx="8" class="arch-box-em"/>
+        <text x="14" y="24" class="arch-title">API Server</text>
+        <text x="14" y="44" class="arch-tech">Node 22 · Express · TypeScript</text>
+        <text x="14" y="58" class="arch-tech">Drizzle ORM · Zod contracts</text>
+        <text x="14" y="72" class="arch-tech">Pino structured logging</text>
+        <text x="14" y="86" class="arch-tech">Rate limiting · session auth</text>
+      </g>
+
+      <!-- Database -->
+      <g transform="translate(420, 30)">
+        <rect width="160" height="100" rx="8" class="arch-box-em"/>
+        <text x="14" y="24" class="arch-title">Database</text>
+        <text x="14" y="44" class="arch-tech">PostgreSQL (Neon serverless)</text>
+        <text x="14" y="58" class="arch-tech">Drizzle migrations</text>
+        <text x="14" y="72" class="arch-tech">Foreign-key integrity</text>
+        <text x="14" y="86" class="arch-tech">Composite indices on hot paths</text>
+      </g>
+
+      <!-- arrows top row -->
+      <line x1="180" y1="80" x2="220" y2="80" class="arch-arrow"/>
+      <line x1="380" y1="80" x2="420" y2="80" class="arch-arrow"/>
+
+      <!-- External services -->
+      <g transform="translate(20, 180)">
+        <rect width="120" height="80" rx="8" class="arch-box"/>
+        <text x="12" y="22" class="arch-title">PayPal</text>
+        <text x="12" y="42" class="arch-tech">Account &amp; card flows</text>
+        <text x="12" y="56" class="arch-tech">Server-side amount verify</text>
+        <text x="12" y="70" class="arch-tech">Idempotent capture audit</text>
+      </g>
+
+      <g transform="translate(160, 180)">
+        <rect width="120" height="80" rx="8" class="arch-box"/>
+        <text x="12" y="22" class="arch-title">OpenAI</text>
+        <text x="12" y="42" class="arch-tech">Text generation</text>
+        <text x="12" y="56" class="arch-tech">Image generation</text>
+        <text x="12" y="70" class="arch-tech">Whisper · TTS · 10 voices</text>
+      </g>
+
+      <g transform="translate(300, 180)">
+        <rect width="120" height="80" rx="8" class="arch-box"/>
+        <text x="12" y="22" class="arch-title">Resend</text>
+        <text x="12" y="42" class="arch-tech">Verification emails</text>
+        <text x="12" y="56" class="arch-tech">Welcome &amp; receipts</text>
+        <text x="12" y="70" class="arch-tech">Notification digests</text>
+      </g>
+
+      <g transform="translate(440, 180)">
+        <rect width="140" height="80" rx="8" class="arch-box"/>
+        <text x="12" y="22" class="arch-title">OAuth Providers</text>
+        <text x="12" y="42" class="arch-tech">Google · One Tap</text>
+        <text x="12" y="56" class="arch-tech">Apple Sign-In</text>
+        <text x="12" y="70" class="arch-tech">LinkedIn</text>
+      </g>
+
+      <!-- arrows from backend to externals -->
+      <line x1="270" y1="130" x2="80" y2="180" class="arch-arrow"/>
+      <line x1="290" y1="130" x2="220" y2="180" class="arch-arrow"/>
+      <line x1="310" y1="130" x2="360" y2="180" class="arch-arrow"/>
+      <line x1="330" y1="130" x2="510" y2="180" class="arch-arrow"/>
+
+      <!-- Container box -->
+      <rect x="10" y="278" width="580" height="32" rx="6" fill="#eff6ff" stroke="#3B82F6" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="20" y="298" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#1e40af">Production: Docker (multi-stage Node 22-slim) · health checks · environment validation at boot · pnpm workspaces monorepo</text>
+    </svg>
+    <figcaption>End-to-end stack. Type safety from the database schema through to the React components, with security and observability built in from the first commit.</figcaption>
+  </figure>
+
+  <p>
+    The frontend is a Progressive Web Application built on React 18 with Vite and TypeScript. The rich-text editor is TipTap, the animation system is framer-motion, the data layer is React Query, and the application caches assets through a service worker for offline-tolerant behavior. The backend is Node 22 with Express, also fully TypeScript, with Drizzle as the ORM, Zod as the runtime contract validator at every API boundary, and Pino as the structured logger. The database is PostgreSQL hosted on Neon's serverless infrastructure. Authentication is session-based, hardened against brute-force attempts with per-IP-and-email lockouts after five failed logins, and supports email-and-password as well as Google, Apple, and LinkedIn OAuth flows.
+  </p>
+
+  <p>
+    Several details in this stack point to engineering maturity well beyond what one would expect from a single founder. The shared workspace at lib/shared exposes the full API contract as Zod schemas that are imported on both the frontend client and the backend server, eliminating an entire class of type-drift bugs at the network boundary. A dedicated invisible-character scanner runs at the start of every type-check to block U+2028 and U+2029 line separators along with Trojan-Source bidirectional control characters, defending the codebase against a known supply-chain attack vector. The Docker image is multi-stage, runs as a non-root user, and exposes both a deep health probe at /healthz and a lightweight liveness probe at /livez. Environment validation happens at boot through a centralized lib/env.ts that prints a precise list of missing or misshapen variables, replacing the production failure mode of "the application started and then mysteriously did not work."
+  </p>
+
+  <h2 class="subsection">Security where it counts</h2>
+
+  <p>
+    The security posture is more meaningful than checklist work. Payment captures verify the amount on the server before the subscription is recorded, which closes the most common indie-tier billing exploit. Subscription history lives in its own audit table with idempotency keys keyed on the PayPal order ID, making double-billing impossible even under retry storms. OAuth account linking refuses to link a Google or Apple identity to a pre-existing local account whose email has not been verified, defending against a class of account-takeover attacks that have hit larger platforms. Email headers are stripped of carriage-return and line-feed characters before they reach the SMTP layer, blocking header-injection attempts on every notification email the platform sends. Every administrative action writes a row into a dedicated audit-log table with the acting admin's identity, the action, the target, and a structured details payload.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 8 — INTERNATIONALIZATION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">08 · Internationalization</div>
+  <h1 class="section-title">Built global, not retrofitted.</h1>
+
+  <p class="lead">
+    Plotzy ships with first-class support for fourteen user-interface languages and forty-five book languages out of the gate. Right-to-left scripts including Arabic, Hebrew, Persian, and Urdu render natively. Translation between any pair of these languages is one of the AI assistant's named actions, integrated directly in the editor.
+  </p>
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="num pro">14</div>
+      <div class="label">UI languages</div>
+    </div>
+    <div class="stat">
+      <div class="num premium">45</div>
+      <div class="label">Book languages</div>
+    </div>
+    <div class="stat">
+      <div class="num">4</div>
+      <div class="label">RTL scripts</div>
+    </div>
+  </div>
+
+  <p>
+    The interface itself can be presented to a user in English, Arabic, French, Spanish, German, Portuguese, Russian, Chinese, Japanese, Korean, Hindi, Turkish, Hebrew, or Persian. The book content layer extends further to forty-five languages spanning Latin, Cyrillic, CJK, Arabic, Devanagari, Greek, and other scripts. The right-to-left set of Arabic, Hebrew, Persian, and Urdu is recognized at the layout level, with the application flipping its directional flow rather than mirroring text inside a left-to-right shell.
+  </p>
+
+  <p>
+    The strategic point here is the Middle East and North Africa. The dominant Western writing tools have weak Arabic support, frequently broken right-to-left rendering, and no AI assistance tuned for Arabic prose. The Arabic-speaking writer market is large, fast-growing, and significantly underserved. Plotzy's AI assistant has dedicated Arabic system prompts that ask the model to write in Modern Standard Arabic with the literary cadence appropriate for fiction, rather than the awkward calque that English-default tools produce. The same approach extends to the other RTL languages and to translation between language pairs that Western tools handle poorly.
+  </p>
+
+  <p>
+    Internationalization is not free. Building it from the start adds engineering cost across every surface, from text rendering to date and number formatting to direction-aware layouts. Plotzy paid that cost during initial development. Competitors that did not pay it will pay an even higher cost later, when the product surface has grown and the retrofit touches every screen.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 9 — COMPETITIVE LANDSCAPE
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">09 · Competitive Landscape</div>
+  <h1 class="section-title">Where Plotzy fits, and where it does not.</h1>
+
+  <p class="lead">
+    Several platforms address fragments of the writer's workflow with excellence. Plotzy does not claim to displace any of them on their home turf. It claims to be the only platform that brings the full set of capabilities together into a single integrated workflow.
+  </p>
+
+  <p>
+    Wattpad has built a deeply engaged community for serialized storytelling, particularly in romance and young adult fiction. Substack dominates newsletter publishing for non-fiction writers building a paying readership. Sudowrite has built a strong AI writing assistant with thoughtful affordances for fiction. Reedsy connects authors with vetted human editors and designers as a marketplace. Scribe Media offers premium ghostwriting and publishing services at a much higher price point. Each is excellent at what it does. Each is a single tile of a larger picture.
+  </p>
+
+  <p>
+    What no platform does today is bring writing, AI assistance, cover design, audiobook production, community publishing, and an integrated marketplace into one application that a writer logs into once. The closest analog is the bundle a sophisticated writer assembles by hand from these specialists, which is the workflow Plotzy is built to replace.
+  </p>
+
+  <table class="compare">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Writing</th>
+        <th>AI Assist</th>
+        <th>Cover Design</th>
+        <th>Audiobook</th>
+        <th>Community</th>
+        <th>RTL / i18n</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Wattpad</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+      </tr>
+      <tr>
+        <td>Substack</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+      </tr>
+      <tr>
+        <td>Sudowrite</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+      </tr>
+      <tr>
+        <td>Reedsy</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+      </tr>
+      <tr>
+        <td>Generic TTS / Audible</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+        <td class="yes">✓</td>
+        <td class="no">·</td>
+        <td class="no">·</td>
+      </tr>
+      <tr class="highlight">
+        <td>Plotzy</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+        <td class="yes">✓</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The defensibility argument against the unbundlers is straightforward. The friction lives in the seams. Wattpad could add a cover designer, but it would be a feature on top of a community-first product, not the integrated experience of a writing-first product. Sudowrite could add an audiobook studio, but the writer would still need to leave the AI tool to publish. Each specialist faces the cost of building competence in a domain that is not its core, against a competitor whose entire product surface is shaped by the integration. Plotzy starts from the integrated position and builds out specialist depth from there. This is the same pattern that allowed Notion to take ground from Confluence, Evernote, and Google Docs simultaneously despite each of them being more capable in their narrow niche.
+  </p>
+
+  <p>
+    The other defensibility argument is the global edge. Wattpad's Arabic experience is poor. Sudowrite's translation between language pairs is uneven. Substack does not localize. The Western incumbents are not strategically positioned to serve the half of the global writer market that does not write primarily in English, and they cannot retrofit it cheaply. Plotzy serves it from day one.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 10 — MARKET OPPORTUNITY
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">10 · Market Opportunity</div>
+  <h1 class="section-title">A market larger than the visible part of it.</h1>
+
+  <p class="lead">
+    The global self-publishing market is large, growing, and structurally underserved at the integrated workflow level. The visible part is the high-volume self-publishing platforms. The invisible part is everyone who would have written a book if the toolchain were less hostile.
+  </p>
+
+  <p>
+    The global self-publishing industry generates revenues in the billions of dollars annually. Independent author counts are measured in the millions globally, with Amazon's Kindle Direct Publishing alone hosting more than a million active titles each year. The audiobook segment is the fastest-growing within publishing, compounding at high double digits annually as listening surfaces multiply across smart speakers, vehicle infotainment systems, and earbuds. AI-assisted writing is not yet a mature market category, but the venture funding flowing into the specialists in this space, including Sudowrite, Lex, Jasper, and others, signals that the addressable market is real and growing.
+  </p>
+
+  <p>
+    The market that Plotzy targets specifically is the indie writer who would otherwise assemble five subscriptions, rather than the casual hobbyist or the traditionally-published author with a publisher's tooling. We estimate that this addressable market is in the range of several million globally, growing as more writers move toward self-distribution. Plotzy's average revenue per paying user, based on the announced pricing, is roughly nine to seventeen dollars per month depending on tier. A modestly successful capture of this market produces a business that is profitable on its own without requiring extraordinary penetration.
+  </p>
+
+  <p>
+    The geographic angle compounds the opportunity. The MENA region represents roughly four hundred million Arabic speakers, with a young and increasingly digital-first writing culture, and a per-capita underservedness from the Western tooling stack that is among the largest of any region in the world. The opportunity is not just to be a global product. It is to be the regional anchor for Arabic-language writers from the start, and to use that regional position as both a defensible beachhead and a source of differentiated AI training data for the language pairs that no Western competitor will prioritize.
+  </p>
+
+  <div class="pull-quote premium">
+    The right way to read the market is not "how much of self-publishing can we capture?" but "how many additional books get written when the toolchain stops being a tax on the work?"
+  </div>
+
+  <p>
+    The category is large enough to support a venture-scale outcome on its own merits. The combination of an integrated product approach, a global-from-day-one engineering posture, and a specific defensible position in the underserved MENA market is the thesis we are asking investors to underwrite.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 11 — ROADMAP
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">11 · Roadmap</div>
+  <h1 class="section-title">Where we are, and where the capital goes.</h1>
+
+  <p class="lead">
+    Plotzy today is feature-complete in development. The remaining work to reach a public production launch is bounded, defined, and primarily infrastructural. The path beyond launch is where the capital does its work.
+  </p>
+
+  <h2 class="subsection">Pre-launch (weeks, not quarters)</h2>
+
+  <p>
+    The product is built. What remains is the production hardening: verifying a custom email-sending domain so transactional emails reach all users rather than only the test address, swapping PayPal sandbox credentials for live merchant credentials, configuring the production custom domain and SSL, and provisioning the production Postgres database on Neon. None of these involves writing new product code; they are the standard operational steps any platform takes between feature-completion and public availability. Internal tracking estimates this work at four to six weeks of focused effort.
+  </p>
+
+  <h2 class="subsection">First six months post-launch</h2>
+
+  <p>
+    The first phase of capital deployment funds the launch itself, the initial growth engine, and the engineering capacity to move faster. The marketing focus is on the underserved Arabic-speaking writer community, where the differentiated language support gives Plotzy a structural advantage that no Western competitor can match in the same time horizon. We expect to grow the engineering team to a small group capable of operating multiple parallel workstreams, lifting velocity well beyond what a solo founder can sustain alone. In parallel, the product roadmap focuses on three areas: deeper monetization features for power users, including direct sales of finished books on the marketplace; expanded audiobook capabilities, including multi-voice character narration and chapter-aware advertising splits; and richer community features, including author newsletters, paid subscriptions to individual authors, and referral mechanics that turn satisfied writers into a growth channel.
+  </p>
+
+  <h2 class="subsection">Twelve to twenty-four months</h2>
+
+  <p>
+    The second phase extends Plotzy beyond its initial geography. We expect to translate the user-facing language coverage from fourteen UI languages to a meaningfully larger set through a combination of native-quality translations and AI-assisted localization with human review. The platform will deepen its investment in regional payment methods, with particular attention to the MENA region's mobile-money rails and to Asian markets where credit-card penetration is structurally lower. The expanded marketplace becomes a meaningful third revenue stream alongside subscriptions. By the end of this phase, Plotzy is positioned as the global default for writers who care about an integrated workflow, with measurable share against Wattpad in community engagement, against Sudowrite in AI assistance, and as the regional category leader in MENA.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 12 — THE FOUNDER
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">12 · The Founder</div>
+  <h1 class="section-title">Built by one engineer, demonstrating the kind of discipline a team can multiply.</h1>
+
+  <p class="lead">
+    Plotzy is the work of Faris Hamdan, sole founder, designer, product manager, and engineer. The depth of what has been built by one person is itself the most credible signal of execution capacity.
+  </p>
+
+  <p>
+    Plotzy is not a prototype. It is a fully operational platform with payment processing, audited revenue analytics, integrated AI across multiple modalities, end-to-end internationalization, security hardening at the level of amount-verification and OAuth-linking integrity, and an administrative layer with content moderation, user management, support tooling, and audit logging. It is built on a modern type-safe stack with Zod contracts shared between frontend and backend, structured logging through Pino, environment validation at boot, a multi-stage Docker production image, and tracked discoveries documented in a security-issues file that is reviewed before each deployment.
+  </p>
+
+  <p>
+    A team of five engineers could conceivably ship this much in a year. One engineer did. The implication for the investment is straightforward. The bottleneck on Plotzy's growth is not the founder's individual capacity to ship code, which has been demonstrated. The bottleneck is the team that the capital allows the founder to build around what has already been validated.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 13 — CONTACT
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="page">
+  <div class="section-eyebrow">13 · Contact &amp; Next Steps</div>
+  <h1 class="section-title">Let's talk.</h1>
+
+  <p class="lead">
+    We are actively raising capital to fund the production launch and the first phase of growth. Interested investors are invited to reach out for a deeper technical demonstration, financial materials, and a conversation about how Plotzy fits into your portfolio.
+  </p>
+
+  <div style="margin: 12mm 0; padding: 8mm; border: 1px solid var(--line); border-radius: 4mm; background: var(--bg-soft);">
+    <div style="font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); font-weight: 600; margin-bottom: 3mm;">Direct Contact</div>
+    <div style="font-size: 18pt; font-weight: 700; color: var(--ink); margin-bottom: 2mm; letter-spacing: -0.01em;">Faris Hamdan</div>
+    <div style="font-size: 11pt; color: var(--ink-soft); margin-bottom: 1.5mm;">Founder &amp; Sole Engineer, Plotzy</div>
+    <div style="font-size: 12pt; color: var(--pro); font-weight: 600;">faresadel@gmail.com</div>
+  </div>
+
+  <h2 class="subsection">What a productive next step looks like</h2>
+
+  <p>
+    The most informative way to evaluate Plotzy is to use it. We are happy to provide a demonstration account for any investor who wishes to explore the product end-to-end, from signup through a full audiobook export. A live walkthrough is available on request, scheduled at your convenience, and runs roughly thirty minutes. We can additionally provide deeper financial materials including unit economics, projected cohort behavior, and detailed runway scenarios under several capital scenarios.
+  </p>
+
+  <p>
+    The most important question we want to answer in any first conversation is whether the all-in-one thesis is one you find compelling on its merits. The product, the market, and the founder's execution capacity are observable. The thesis is the bet.
+  </p>
+
+  <hr class="divider" style="margin-top: 14mm;"/>
+  <p style="font-size: 9pt; color: var(--mute); text-align: center; margin-top: 6mm;">
+    This document is confidential. Plotzy April 2026. Prepared for investor distribution.
+  </p>
+</section>
+
+</body>
+</html>

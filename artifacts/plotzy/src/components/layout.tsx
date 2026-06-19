@@ -35,7 +35,6 @@ const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/tutorial",      key: "navTutorial" },
   { href: "/writing-guide", key: "navGuide" },
   { href: "/course",        key: "navCourse" },
-  { href: "/voices",        key: "navVoices" },
   { href: "/marketplace",   key: "navMarketplace" },
   { href: "/library",       key: "navCommunity" },
   { href: "/pricing",       key: "navPro" },
