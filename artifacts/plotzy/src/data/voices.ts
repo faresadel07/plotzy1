@@ -116,7 +116,65 @@ export interface VoiceProfile {
 // the prose in batches of four (Mahfouz, Darwish, Hemingway, Woolf
 // first; then the rest).
 
-export const VOICES: VoiceProfile[] = [];
+export const VOICES: VoiceProfile[] = [
+  // ─────────────────────────────────────────────────────────────────
+  // Naguib Mahfouz, 1911 to 2006, Egyptian
+  // Photo: public domain (Egyptian copyright expired, Article 160 of
+  // Law 82 of 2002). Source AUCpress via Wikimedia Commons. No video
+  // in v1; pending verification of a YouTube embed from an official
+  // channel (Nobel Prize, Al Jazeera Documentary, BBC).
+  {
+    slug: "naguib-mahfouz",
+    name: { en: "Naguib Mahfouz", ar: "نجيب محفوظ" },
+    bornYear: 1911,
+    diedYear: 2006,
+    nationality: { en: "Egyptian", ar: "مصري" },
+    language: "ar",
+    awards: ["Nobel Prize in Literature, 1988"],
+    tagline: {
+      en: "The novelist who made Cairo a literary city.",
+      ar: "الروائي الذي جعل القاهرة مدينةً أدبيّة.",
+    },
+    body: {
+      en: [
+        "Naguib Mahfouz is the writer who made Cairo a city of literature the way Dickens made London and Joyce made Dublin. Born in 1911 in the al-Gamaliya quarter of old Cairo, he sat down at a civil servant's desk for forty years and wrote, in his spare hours, more than thirty novels and a hundred short stories. In 1988 the Swedish Academy gave him the Nobel Prize, the first Arabic-language writer to receive it. He was seventy-six, a careful man with a careful smile, and he never travelled to Stockholm to collect the award. His two daughters went instead.",
+        "The Egypt of his early novels is the Egypt of monarchy, of British occupation, of an old urban order pulling apart at the seams. Mahfouz grew up in a religious lower-middle-class family in a quarter where the call to prayer mixed with the noise of donkey carts, watched the 1919 revolution as a child of eight, came of age in the 1930s as nationalist politics took the country, and wrote his first realist novels in the years after the 1952 Free Officers revolution. He had read his European modernists carefully — Proust, Mann, Galsworthy — and he absorbed their methods, then turned them on the alleys, the cafes, the small apartments of a Cairo the Egyptian novel had not yet tried to describe in full.",
+        "His subject across the decades was the family as a stage for history. The Cairo Trilogy, three novels published in 1956 and 1957, follows the al-Sayyid Ahmad Abd al-Jawad household from the First World War to the eve of the Free Officers, and remains the most ambitious portrait of a single family in modern Arabic literature: the patriarch's double life, his wife's silent endurance, his children's drift toward communism and the Muslim Brotherhood and bourgeois ambition. In Children of the Alley, published in 1959, he wrote an allegorical novel about prophets and the violence done in their names; the religious establishment fought to suppress it for the rest of his life. Other novels — Midaq Alley, The Thief and the Dogs, Miramar, Adrift on the Nile — are tighter and darker, experiments in interior monologue and political fable.",
+        "Every Arab novelist who came after him stands in his shadow, whether they read him or refused him. He was the first to prove that an Arabic novel could be both deeply local and serious world literature, that a Cairo apartment building was as legitimate a setting as a French village or a Russian estate. The Saudi novelist Abdulrahman Munif, the Lebanese novelist Elias Khoury, the Sudanese novelist Tayeb Salih, all worked in conversation with his example, sometimes against it. Translators carried him into thirty-five languages. In 1994 a young man stabbed him on a Cairo street; the attacker had not read him but had been told he was a heretic. Mahfouz survived, partly paralysed in his writing hand, and kept working by dictation until shortly before his death in 2006.",
+        "There is a famous photograph of him in a Cairo café in the 1960s, a glass of tea in front of him, his small figure leaning forward to listen to whoever was sitting at the next chair. That posture — patient, listening, dressed in a neutral suit, neither arguing nor performing — is the figure most of his readers carry of him. He believed the writer's job was to listen until the city had finished telling its own story, and then to write it down without ornament.",
+      ].join("\n\n"),
+      ar: [
+        "نجيب محفوظ هو الكاتب الذي صنع من القاهرة مدينةً أدبيّة، كما صنع ديكنز من لندن وجويس من دبلن. وُلد سنة 1911 في حيّ الجماليّة بقاهرة المعزّ، وقضى أربعين عاماً موظّفاً بسيطاً، يكتب في ساعاته الفارغة ما يزيد على ثلاثين رواية ومئة قصّة قصيرة. في سنة 1988 منحته الأكاديميّة السويديّة جائزة نوبل في الآداب، فكان أوّل كاتب باللغة العربيّة يُمنح إيّاها. كان في السادسة والسبعين، رجلاً هادئاً بابتسامة هادئة، ولم يسافر إلى استوكهولم ليستلم الجائزة بنفسه؛ ذهبت ابنتاه نيابةً عنه.",
+        "كانت مصر التي كتب عنها في رواياته الأولى مصر الملكيّة، والاحتلال البريطاني، والنظام الحضري القديم وهو ينهار من داخله. وُلد لأسرة متديّنة من الطبقة الوسطى الدنيا في حيّ تختلط فيه دعوة المؤذّن بأصوات عربات الكارو، شهد ثورة 1919 طفلاً في الثامنة من عمره، تشكّل وعيه في الثلاثينيّات وسط مدّ الحركة الوطنيّة، وكتب رواياته الواقعيّة الأولى في السنوات التي تلت ثورة يوليو. كان قد قرأ روّاد الحداثة الأوروبيّين بتأمّل — بروست، توماس مان، جالسوورذي — استوعب أدواتهم، ثمّ وجّهها نحو حواري القاهرة، ومقاهيها، وشققها الصغيرة، وهي عوالم لم تكن الرواية العربيّة قد جرّبت وصفها بهذا الحجم من قبل.",
+        "كان موضوعه الأوّل، على مدى عقود، الأسرة بوصفها مسرحاً للتاريخ. الثلاثيّة القاهريّة، نُشرت بين سنتَي 1956 و1957، تتبع عائلة السيّد أحمد عبد الجواد من الحرب العالميّة الأولى إلى عشيّة ثورة الضبّاط الأحرار، وتُعدّ أعمق رسم لعائلة واحدة في الأدب العربي الحديث: الأب وحياته المزدوجة، الأمّ وصبرها الصامت، الأبناء وانحدارهم بين الشيوعيّة والإخوان والطموح البرجوازي. في «أولاد حارتنا» سنة 1959 كتب رواية رمزيّة عن الأنبياء والعنف المُرتكب باسمهم، وحاربتها المؤسّسة الدينيّة طوال حياته. روايات أخرى — زقاق المدق، اللصّ والكلاب، ميرامار، ثرثرة فوق النيل — أكثر إحكاماً وقتامة، تجارب في المونولوج الداخلي وفي المَثل السياسي.",
+        "كلّ روائي عربي جاء بعده يقف في ظلّه، سواء قرأه أم رفضه. كان الأوّل الذي أثبت أنّ الرواية العربيّة يمكن أن تكون محليّة بعمق، وأدباً عالميّاً جادّاً في الوقت نفسه، وأنّ شقّة في عمارة قاهريّة فضاءٌ مشروع للرواية كقرية فرنسيّة أو ضيعة روسيّة. عبد الرحمن منيف، إلياس خوري، الطيّب صالح، كلّهم اشتغلوا في حوار مع نموذجه، أحياناً ضدّه. حُمل إلى خمس وثلاثين لغة. سنة 1994 طعنه في شارع قاهري شابٌّ لم يكن قد قرأه، لكنّه قيل له إنّه مهرطق؛ نجا محفوظ بشلل جزئي في يده اليمنى، وواصل الكتابة بالإملاء حتى قبيل وفاته سنة 2006.",
+        "تبقى صورته الأشهر صورة في مقهى قاهري في الستينيّات، كوب الشاي أمامه، قامته الصغيرة تنحني للأمام لتُنصت إلى من يجلس على الكرسي المجاور. ذلك الجلوس — صبور، مُنصت، ببدلة محايدة بسيطة، لا يجادل ولا يتباهى — هو الصورة التي يحملها له قرّاؤه. كان يؤمن أنّ مهمّة الكاتب أن يُنصت حتى تنتهي المدينة من حكاية نفسها، ثمّ يكتبها بلا زخرف.",
+      ].join("\n\n"),
+    },
+    works: [
+      { title: "زقاق المدق", translatedTitle: "Midaq Alley", year: 1947 },
+      { title: "بين القصرين", translatedTitle: "Palace Walk", year: 1956 },
+      { title: "قصر الشوق", translatedTitle: "Palace of Desire", year: 1957 },
+      { title: "السكّريّة", translatedTitle: "Sugar Street", year: 1957 },
+      { title: "أولاد حارتنا", translatedTitle: "Children of the Alley", year: 1959 },
+      { title: "اللصّ والكلاب", translatedTitle: "The Thief and the Dogs", year: 1961 },
+      { title: "ثرثرة فوق النيل", translatedTitle: "Adrift on the Nile", year: 1966 },
+      { title: "ميرامار", translatedTitle: "Miramar", year: 1967 },
+    ],
+    photo: {
+      src: "/voices/naguib-mahfouz/portrait.jpg",
+      alt: {
+        en: "Portrait of Naguib Mahfouz, 1960s",
+        ar: "صورة نجيب محفوظ في الستينيّات",
+      },
+      credit: "AUCpress, via Wikimedia Commons",
+      license: "Public Domain (Egyptian copyright expired)",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Naguib_Mahfouz_in_1960s.jpg",
+    },
+    relatedSlugs: [],
+  },
+];
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
