@@ -12,8 +12,10 @@ interface IconProps {
   style?: CSSProperties;
 }
 
-/** Anthropic Claude. A 4-armed starburst with smaller diagonal rays,
- *  the same vocabulary as the published Anthropic mark. */
+/** Claude (Anthropic). Inspired by Anthropic's visual vocabulary:
+ *  a stylised 4-petal mark with curved blades meeting at the centre.
+ *  Drawn from scratch as a recognisable family-resemblance mark, not
+ *  a pixel copy of the trademarked logo. */
 export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
   return (
     <svg
@@ -24,14 +26,12 @@ export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
       style={style}
       aria-hidden
     >
+      {/* Four curved petals/blades meeting at center, the
+          characteristic Anthropic vocabulary. Each blade is a single
+          smooth path with concave inner curves. */}
       <path
-        d="M12 1.5C12.6 6.4 13.1 7.6 15.1 8.9C17.1 10.2 18.4 10.7 22.5 11.4C18.4 12.1 17.1 12.7 15.1 14C13.1 15.3 12.6 16.5 12 22.5C11.4 16.5 10.9 15.3 8.9 14C6.9 12.7 5.6 12.1 1.5 11.4C5.6 10.7 6.9 10.2 8.9 8.9C10.9 7.6 11.4 6.4 12 1.5Z"
+        d="M12 2.5C12.4 8 13 9.2 14.6 10.4C16.2 11.6 17.6 12 21.5 12.5C17.6 13 16.2 13.4 14.6 14.6C13 15.8 12.4 17 12 22.5C11.6 17 11 15.8 9.4 14.6C7.8 13.4 6.4 13 2.5 12.5C6.4 12 7.8 11.6 9.4 10.4C11 9.2 11.6 8 12 2.5Z"
         fill={color}
-      />
-      <path
-        d="M19.5 3.5C19.8 5.2 20 5.7 20.7 6.4C21.4 7.1 21.9 7.3 23.5 7.6C21.9 7.9 21.4 8.1 20.7 8.8C20 9.5 19.8 10 19.5 11.7C19.2 10 19 9.5 18.3 8.8C17.6 8.1 17.1 7.9 15.5 7.6C17.1 7.3 17.6 7.1 18.3 6.4C19 5.7 19.2 5.2 19.5 3.5Z"
-        fill={color}
-        opacity={0.7}
       />
     </svg>
   );
@@ -57,9 +57,14 @@ export function GPTIcon({ size = 16, color = "#10A37F", style }: IconProps) {
   );
 }
 
-/** Google Gemini. The 4-pointed diamond gem with the signature blue
- *  and violet split. Two overlapping diamonds for the gradient feel. */
+/** Gemini (Google). Inspired by the Gemini visual vocabulary: a
+ *  4-pointed star/spark with sharper, more elegant tapered points
+ *  and the signature blue-to-violet-to-pink gradient. Distinct from
+ *  Claude's softer 4-petal mark. */
 export function GeminiIcon({ size = 16, color, style }: IconProps) {
+  // Generate a unique gradient id per instance so multiple Gemini
+  // icons on the page don't collide with one another.
+  const gradId = React.useId();
   return (
     <svg
       width={size}
@@ -70,15 +75,17 @@ export function GeminiIcon({ size = 16, color, style }: IconProps) {
       aria-hidden
     >
       <defs>
-        <linearGradient id="gemini-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#4285F4" />
-          <stop offset="50%" stopColor="#9B72CB" />
-          <stop offset="100%" stopColor="#D96570" />
+        <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#4796E3" />
+          <stop offset="45%" stopColor="#7C5BC9" />
+          <stop offset="100%" stopColor="#E1547D" />
         </linearGradient>
       </defs>
+      {/* Sharp 4-pointed spark with tapered points, the Gemini
+          vocabulary. Pointier than the Claude mark by design. */}
       <path
-        d="M12 1.5C12.5 6 13.5 7.5 16 9C18.5 10.5 20 11 22.5 11.5C20 12 18.5 12.5 16 14C13.5 15.5 12.5 17 12 22.5C11.5 17 10.5 15.5 8 14C5.5 12.5 4 12 1.5 11.5C4 11 5.5 10.5 8 9C10.5 7.5 11.5 6 12 1.5Z"
-        fill={color ?? "url(#gemini-grad)"}
+        d="M12 1L13.4 9.2C13.6 10.2 14.4 11 15.4 11.2L23 12L15.4 12.8C14.4 13 13.6 13.8 13.4 14.8L12 23L10.6 14.8C10.4 13.8 9.6 13 8.6 12.8L1 12L8.6 11.2C9.6 11 10.4 10.2 10.6 9.2L12 1Z"
+        fill={color ?? `url(#${gradId})`}
       />
     </svg>
   );

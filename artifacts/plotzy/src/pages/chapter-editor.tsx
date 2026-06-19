@@ -1933,6 +1933,31 @@ export default function ChapterEditor() {
             >
               <Search className="w-3.5 h-3.5" />
             </button>
+            {/* The Studio pill, on-brand black with the Plotzy Studio
+                mark in white. Opens the multi-model side panel. Lives
+                next to the AI Assistant button so the writer has the
+                same surface from the top toolbar as from the floating
+                button. On phones the label collapses so the icon still
+                fits next to Save / Search. */}
+            <button
+              className="h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
+              style={{
+                background: aiChatOpen ? "rgba(255,255,255,0.10)" : "#000",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.16)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
+              }}
+              onClick={() => setAiChatOpen(true)}
+              aria-label={ar ? "الاستوديو" : "The Studio"}
+              title={ar ? "الاستوديو" : "The Studio"}
+              data-testid="button-studio-topbar"
+            >
+              <StudioIcon size={14} color="#fff" />
+              <span className="hidden sm:inline">
+                {ar ? "الاستوديو" : "Studio"}
+              </span>
+            </button>
+
             {/* AI Assistant pill. Visible on every viewport now — was
                 hidden on phones (hidden sm:flex), which left the writer
                 without their primary AI surface there. On phones the
@@ -3520,15 +3545,15 @@ export default function ChapterEditor() {
           display: aiChatOpen ? "none" : "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          width: 54,
-          height: 54,
+          width: 62,
+          height: 62,
           padding: 0,
           borderRadius: "50%",
           background: "#000",
           color: "#fff",
-          border: "1px solid rgba(255,255,255,0.14)",
+          border: "1px solid rgba(255,255,255,0.16)",
           boxShadow:
-            "0 12px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02) inset",
+            "0 14px 38px rgba(0,0,0,0.60), 0 0 0 1px rgba(255,255,255,0.03) inset",
           cursor: "pointer",
           transition: "transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
         }}
@@ -3545,7 +3570,7 @@ export default function ChapterEditor() {
           e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
         }}
       >
-        <StudioIcon size={22} color="#fff" />
+        <StudioIcon size={26} color="#fff" />
       </button>
       <Studio
         open={aiChatOpen}
