@@ -83,6 +83,7 @@ const PROVIDER_COLORS: Record<ProviderId, string> = {
   claude: "#D97757",
   gpt: "#10A37F",
   gemini: "#4285F4",
+  cerebras: "#F87171",
   llama: "#7C3AED",
 };
 
@@ -93,7 +94,8 @@ const PROVIDER_STRENGTHS: Record<ProviderId, string> = {
   claude: "Dialogue, character depth, prose polish",
   gpt: "Plot, structure, bold ideas",
   gemini: "Research, grounding, facts",
-  llama: "Free fast fallback",
+  cerebras: "Free, unlimited, fastest tokens",
+  llama: "Free fallback",
 };
 
 // ─── GET /api/studio/providers ─────────────────────────────────────
@@ -142,6 +144,7 @@ router.get("/api/studio/quotas", async (req, res) => {
       claude: 0,
       gpt: 0,
       gemini: 0,
+      cerebras: 0,
       llama: 0,
     };
     for (const r of rows) {
@@ -258,7 +261,7 @@ router.post("/api/studio/conversations", async (req, res) => {
       chapterId: z.number().int().positive().optional(),
       title: z.string().max(200).optional(),
       parentConversationId: z.number().int().positive().optional(),
-      providerId: z.enum(["claude", "gpt", "gemini", "llama"]).default("llama"),
+      providerId: z.enum(["claude", "gpt", "gemini", "cerebras", "llama"]).default("llama"),
     });
     const parsed = bodySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -547,7 +550,7 @@ router.post("/api/studio/chat", async (req, res): Promise<void> => {
   const userId = (req.user as any).id as number;
   const bodySchema = z.object({
     conversationId: z.number().int().positive(),
-    providerId: z.enum(["claude", "gpt", "gemini", "llama"]),
+    providerId: z.enum(["claude", "gpt", "gemini", "cerebras", "llama"]),
     content: z.string().min(1).max(20_000),
   });
   const parsed = bodySchema.safeParse(req.body);
@@ -712,6 +715,151 @@ router.post("/api/studio/chat", async (req, res): Promise<void> => {
       writeSse(res, "error", {
         message:
           err instanceof Error ? err.message : "Provider error",
+      });
+      closeSse(res);
+    } catch { /* connection already closed */ }
+  }
+});
+
+// ─── POST /api/studio/quick-action (SSE stream, stateless) ─────────
+//
+// One-shot AI editing actions for the bubble menu in the chapter
+// editor: highlight a paragraph, click "Polish", get a streamed
+// rewrite popover. Distinct from /chat because:
+//   - Stateless: no conversation row, no message persistence.
+//   - Faster: defaults to Cerebras for sub-second response.
+//   - Inline: the result is meant to replace the original text in
+//     the editor, not start a back-and-forth thread.
+// Quota: counted under the chosen provider's daily quota, same as a
+// normal chat message. A spam-clicker still gets rate-limited.
+
+const QUICK_ACTION_PROMPTS: Record<string, { system: string; userTemplate: string }> = {
+  polish: {
+    system:
+      "You are a careful prose editor. Rewrite the given text so it reads more cleanly. Keep the same meaning, same point of view, same tense. Improve only flow, rhythm, word choice, and sentence variety. Do not add new ideas. Do not add commentary. Return only the rewritten text, nothing else.",
+    userTemplate: "Rewrite this:\n\n{text}",
+  },
+  describe: {
+    system:
+      "You are a sensory-detail writer. Given a short phrase or noun, produce a vivid description that uses concrete sensory detail (sight, sound, smell, touch, taste) and avoids cliche. Match the tone of the surrounding manuscript when known. Return only the description, no commentary.",
+    userTemplate: "Describe this in 2 to 4 sentences:\n\n{text}",
+  },
+  show: {
+    system:
+      "You are a craft editor focused on showing rather than telling. Given a passage that summarises emotion or explanation, rewrite it so the same meaning comes across through action, dialogue, body language, or specific sensory detail. Same point of view, same tense. Return only the rewritten text.",
+    userTemplate: "Rewrite this so it shows rather than tells:\n\n{text}",
+  },
+  continue: {
+    system:
+      "You are a continuation writer who matches the voice, tense, and rhythm of the source. Given a passage, write the next 2 to 3 sentences that flow directly from it. Same point of view, same tone. Do not summarise what came before. Return only the continuation.",
+    userTemplate: "Continue from this passage:\n\n{text}",
+  },
+  shorten: {
+    system:
+      "You are a careful prose editor. Rewrite the given text so it conveys the same meaning in fewer words. Preserve the voice, point of view, and tone. Do not strip vivid detail; cut filler instead. Return only the rewritten text.",
+    userTemplate: "Rewrite this more concisely:\n\n{text}",
+  },
+};
+
+router.post("/api/studio/quick-action", async (req, res): Promise<void> => {
+  const userId = (req.user as any).id as number;
+  const bodySchema = z.object({
+    action: z.enum(["polish", "describe", "show", "continue", "shorten"]),
+    text: z.string().min(1).max(10_000),
+    bookId: z.number().int().positive().optional(),
+    chapterId: z.number().int().positive().optional(),
+    providerId: z
+      .enum(["claude", "gpt", "gemini", "cerebras", "llama"])
+      .default("cerebras"),
+  });
+  const parsed = bodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: "Invalid body" });
+    return;
+  }
+  const { action, text, bookId, chapterId, providerId } = parsed.data;
+
+  const provider = getProvider(providerId);
+  if (!provider.enabled) {
+    res.status(503).json({
+      message: `${provider.displayName} is not configured on this server.`,
+    });
+    return;
+  }
+
+  // Per-provider daily quota enforcement, same logic as /chat.
+  try {
+    await incrementAndCheckQuota(userId, providerId);
+  } catch (e) {
+    const err = e as Error & { code?: string };
+    if (err.code === "STUDIO_QUOTA_EXCEEDED") {
+      res.status(429).json({
+        message: err.message,
+        code: "STUDIO_QUOTA_EXCEEDED",
+      });
+      return;
+    }
+    throw err;
+  }
+
+  // Build a tightened system prompt that includes the action template
+  // PLUS the story context preamble (book, chapter, lore) so the
+  // rewrite stays consistent with the manuscript's voice.
+  const template = QUICK_ACTION_PROMPTS[action];
+  const userLanguage =
+    ((req.user as any).languagePreference as string | undefined) ?? null;
+  const storyContext = bookId
+    ? await buildSystemPrompt({
+        bookId,
+        chapterId: chapterId ?? null,
+        userLanguage,
+      })
+    : "";
+
+  const systemPrompt = storyContext
+    ? `${template.system}\n\n── STORY CONTEXT (use for voice consistency, do not summarise) ──\n${storyContext}`
+    : template.system;
+
+  const messages: AiMessage[] = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: template.userTemplate.replace("{text}", text) },
+  ];
+
+  openSse(res);
+  writeSse(res, "start", { providerId, action });
+
+  let assembled = "";
+  const abortController = new AbortController();
+  req.on("close", () => {
+    if (!res.writableEnded) abortController.abort();
+  });
+
+  try {
+    const usage = await provider.streamChat(
+      messages,
+      (chunk) => {
+        assembled += chunk;
+        writeSse(res, "chunk", { text: chunk });
+      },
+      { signal: abortController.signal, maxOutputTokens: 800 },
+    );
+    writeSse(res, "done", { providerId, usage, length: assembled.length });
+    closeSse(res);
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      try {
+        writeSse(res, "cancelled", {});
+        closeSse(res);
+      } catch { /* connection already closed */ }
+      return;
+    }
+    logger.error(
+      { err, providerId, action, userId },
+      "Studio quick-action stream failed",
+    );
+    try {
+      writeSse(res, "error", {
+        message: err instanceof Error ? err.message : "Provider error",
       });
       closeSse(res);
     } catch { /* connection already closed */ }

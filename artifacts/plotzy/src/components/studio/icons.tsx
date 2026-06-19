@@ -91,6 +91,32 @@ export function GeminiIcon({ size = 16, color, style }: IconProps) {
   );
 }
 
+/** Cerebras. Inspired by Cerebras's chip-design vocabulary: a
+ *  concentric hexagonal mark that hints at a wafer-scale processor.
+ *  Drawn from scratch, not a copy of the trademarked logo. */
+export function CerebrasIcon({ size = 16, color = "#F87171", style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      style={style}
+      aria-hidden
+    >
+      {/* Outer hexagon outline */}
+      <path
+        d="M12 2L20.5 7V17L12 22L3.5 17V7L12 2Z"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      {/* Inner core dot */}
+      <circle cx="12" cy="12" r="3" fill={color} />
+    </svg>
+  );
+}
+
 /** Meta Llama. The Meta infinity ribbon, stylised as a single
  *  continuous curve. */
 export function LlamaIcon({ size = 16, color = "#1877F2", style }: IconProps) {
@@ -148,6 +174,7 @@ const ICON_MAP: Record<ProviderId, (props: IconProps) => React.JSX.Element> = {
   claude: ClaudeIcon,
   gpt: GPTIcon,
   gemini: GeminiIcon,
+  cerebras: CerebrasIcon,
   llama: LlamaIcon,
 };
 

@@ -1,11 +1,12 @@
 // Shared types for The Studio.
 
-export type ProviderId = "claude" | "gpt" | "gemini" | "llama";
+export type ProviderId = "claude" | "gpt" | "gemini" | "cerebras" | "llama";
 
 export const PROVIDER_IDS: readonly ProviderId[] = [
   "claude",
   "gpt",
   "gemini",
+  "cerebras",
   "llama",
 ] as const;
 

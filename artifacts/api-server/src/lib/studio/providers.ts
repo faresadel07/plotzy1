@@ -17,13 +17,16 @@ import type { Response } from "express";
 // ─── Public types ──────────────────────────────────────────────────
 
 /** Discriminator for which model is being talked to. */
-export type ProviderId = "claude" | "gpt" | "gemini" | "llama";
+export type ProviderId = "claude" | "gpt" | "gemini" | "cerebras" | "llama";
 
-/** The four shipping providers in launch order. */
+/** The five shipping providers in display order. Cerebras sits next
+ *  to Llama because both are free-tier inference; the paid frontier
+ *  models (Claude, GPT, Gemini) lead the row. */
 export const PROVIDER_IDS: readonly ProviderId[] = [
   "claude",
   "gpt",
   "gemini",
+  "cerebras",
   "llama",
 ] as const;
 
@@ -265,7 +268,66 @@ const geminiProvider: AiProvider = {
   },
 };
 
-// ─── 4. Llama (Groq, free tier) ────────────────────────────────────
+// ─── 4. Cerebras (free, 1M tokens/day) ─────────────────────────────
+//
+// Cerebras's inference API is OpenAI-compatible so we reuse the
+// openai SDK with a different baseURL, exactly like Groq. Cerebras
+// serves Llama 3.3 70B at 2000+ tokens/sec and gives a 1M tokens/day
+// free quota with no credit card. We position it as the default
+// Studio model for free Plotzy writers: faster than Groq's Llama and
+// with the same end-quality from the same underlying weights.
+
+const cerebrasProvider: AiProvider = {
+  id: "cerebras",
+  displayName: "Cerebras 70B",
+  get enabled() {
+    return !!process.env.CEREBRAS_API_KEY;
+  },
+  async streamChat(messages, onChunk, opts) {
+    const OpenAI = (await import("openai")).default;
+    const client = new OpenAI({
+      apiKey: process.env.CEREBRAS_API_KEY!,
+      baseURL: process.env.CEREBRAS_BASE_URL || "https://api.cerebras.ai/v1",
+    });
+
+    let inputTokens = 0;
+    let outputTokens = 0;
+
+    const stream = await client.chat.completions.create(
+      {
+        model: "llama-3.3-70b",
+        messages: messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        max_tokens: opts?.maxOutputTokens ?? 1500,
+        temperature: opts?.temperature ?? 0.7,
+        stream: true,
+        stream_options: { include_usage: true },
+      },
+      { signal: opts?.signal },
+    );
+
+    for await (const chunk of stream) {
+      const text = chunk.choices?.[0]?.delta?.content;
+      if (text) await onChunk(text);
+      if (chunk.usage) {
+        inputTokens = chunk.usage.prompt_tokens ?? 0;
+        outputTokens = chunk.usage.completion_tokens ?? 0;
+      }
+    }
+
+    return {
+      inputTokens,
+      outputTokens,
+      // Cerebras free tier costs the writer nothing. Tracked tokens
+      // for analytics; reported cost is zero.
+      costCents: 0,
+    };
+  },
+};
+
+// ─── 5. Llama (Groq, free tier) ────────────────────────────────────
 
 const llamaProvider: AiProvider = {
   id: "llama",
@@ -328,6 +390,7 @@ const PROVIDER_REGISTRY: Record<ProviderId, AiProvider> = {
   claude: claudeProvider,
   gpt: gptProvider,
   gemini: geminiProvider,
+  cerebras: cerebrasProvider,
   llama: llamaProvider,
 };
 
@@ -345,12 +408,14 @@ export function listProviders(): AiProvider[] {
   return PROVIDER_IDS.map((id) => PROVIDER_REGISTRY[id]);
 }
 
-/** Daily quota per provider for non-admin users. Llama is unlimited
- *  (Number.POSITIVE_INFINITY) so the UI hides the quota ring for it. */
+/** Daily quota per provider for non-admin users. The two free-tier
+ *  providers (Cerebras and Llama on Groq) are unlimited from
+ *  Plotzy's side so the UI hides the quota ring for them. */
 export const DAILY_QUOTAS: Record<ProviderId, number> = {
   claude: 20,
   gpt: 15,
   gemini: 25,
+  cerebras: Number.POSITIVE_INFINITY,
   llama: Number.POSITIVE_INFINITY,
 };
 

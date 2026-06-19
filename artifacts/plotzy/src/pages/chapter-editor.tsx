@@ -9,6 +9,8 @@ import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion
 import { AIAssistant } from "@/components/ai-assistant";
 import { Studio } from "@/components/studio/Studio";
 import { StudioIcon } from "@/components/studio/icons";
+import { DictionaryPopover } from "@/components/editor-tools/DictionaryPopover";
+import { QuickAIBubble } from "@/components/editor-tools/QuickAIBubble";
 import { BookCustomizer } from "@/components/book-customizer";
 import { StoryBible } from "@/components/story-bible";
 import { WritingToolbar, PAGE_THEMES } from "@/components/writing-toolbar";
@@ -333,6 +335,62 @@ export default function ChapterEditor() {
   const [title, setTitle] = useState("");
   // AI writing assistant side panel (stateless chat, in-memory only).
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  // Dictionary popover state: word + anchor rect. Opened via Cmd/Ctrl+D
+  // on a selected word, dismissed by the popover itself (Escape /
+  // outside click).
+  const [dictPopover, setDictPopover] = useState<{
+    word: string;
+    rect: { top: number; left: number; width: number; height: number };
+  } | null>(null);
+
+  // Cmd/Ctrl+D opens the dictionary popover on whatever the TipTap
+  // editor has selected. If nothing is selected, expand the current
+  // word at the caret and look that up instead, the way macOS does
+  // when you press Cmd+D on a word in any native text field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "d") return;
+      const editor = tiptapEditorRef.current;
+      if (!editor || !editor.isFocused) return;
+      e.preventDefault();
+      const sel = editor.state.selection;
+      let { from, to } = sel;
+      let text = editor.state.doc.textBetween(from, to, " ").trim();
+      // Empty selection: expand around the caret to grab the word it
+      // sits in (split-on-whitespace + punctuation).
+      if (sel.empty || !text) {
+        const $pos = editor.state.doc.resolve(from);
+        const node = $pos.parent;
+        const offset = $pos.parentOffset;
+        const para = node.textContent ?? "";
+        if (!para) return;
+        // Walk left and right from offset to find a word boundary.
+        let start = offset;
+        while (start > 0 && /[\p{L}\p{N}'-]/u.test(para[start - 1])) start--;
+        let end = offset;
+        while (end < para.length && /[\p{L}\p{N}'-]/u.test(para[end])) end++;
+        const word = para.slice(start, end);
+        if (!word) return;
+        from = $pos.start() + start;
+        to = $pos.start() + end;
+        text = word;
+        editor.commands.setTextSelection({ from, to });
+      }
+      // Compute the selection rectangle from the editor's DOM. Used to
+      // anchor the popover next to the highlighted word.
+      const view = editor.view;
+      const startCoords = view.coordsAtPos(from);
+      const endCoords = view.coordsAtPos(to);
+      const top = startCoords.top;
+      const left = Math.min(startCoords.left, endCoords.left);
+      const width =
+        Math.max(endCoords.right, startCoords.right) - left;
+      const height = endCoords.bottom - startCoords.top;
+      setDictPopover({ word: text, rect: { top, left, width, height } });
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   const [pages, setPages] = useState<PageBlock[]>([""]);
   const [richHtml, setRichHtml] = useState<string>('<p></p>');
   const [richPages, setRichPages] = useState<string[]>(['<p></p>']);
@@ -3572,6 +3630,27 @@ export default function ChapterEditor() {
       >
         <StudioIcon size={26} color="#fff" />
       </button>
+      {/* Quick AI actions bubble. Appears whenever 2+ words are
+          selected in the TipTap editor. Hidden while the Studio panel
+          is open so the two surfaces never stack. */}
+      <QuickAIBubble
+        editor={tiptapEditorRef.current}
+        bookId={bookId}
+        chapterId={chapterId}
+        suppressed={aiChatOpen}
+      />
+
+      {/* Inline dictionary popover. Triggered by Cmd/Ctrl+D on a
+          selected word, or on the word at the caret. */}
+      {dictPopover && (
+        <DictionaryPopover
+          word={dictPopover.word}
+          anchorRect={dictPopover.rect}
+          onClose={() => setDictPopover(null)}
+          isRTL={ar}
+        />
+      )}
+
       <Studio
         open={aiChatOpen}
         onClose={() => setAiChatOpen(false)}
