@@ -345,6 +345,231 @@ export const VOICES: VoiceProfile[] = [
     },
     relatedSlugs: ["ernest-hemingway"],
   },
+
+  // ─────────────────────────────────────────────────────────────────
+  // Taha Hussein, 1889 to 1973, Egyptian
+  // Photo: Public Domain in Egypt (IP Law 82 of 2002). Photographer
+  // Van Leo, circa 1955. Via Wikimedia Commons.
+  {
+    slug: "taha-hussein",
+    name: { en: "Taha Hussein", ar: "طه حسين" },
+    bornYear: 1889,
+    diedYear: 1973,
+    nationality: { en: "Egyptian", ar: "مصري" },
+    language: "ar",
+    awards: ["Egyptian Order of the Nile, 1965"],
+    tagline: {
+      en: "The blind scholar who broke open the Arab religious establishment from inside.",
+      ar: "العالِم الضرير الذي فتح المؤسّسة الدينيّة العربيّة على نفسها من الداخل.",
+    },
+    body: {
+      en: [
+        "Taha Hussein is the writer who broke the Egyptian intellectual class open from inside by refusing to be silent. Born in 1889 in a village in upper Egypt to a struggling lower-middle-class family, blinded at three by ophthalmia that no one had the money to treat correctly, he was sent at thirteen to al-Azhar in Cairo to memorize the Qur'an and become a sheikh. He hated it, and at twenty-one he transferred to the newly founded Egyptian University, where in 1914 he became the first person ever to receive a doctorate there. Four years later he received a second doctorate at the Sorbonne in Paris, on Ibn Khaldun, written from a Braille notebook.",
+        "The Egypt he came back to had a closed clerical establishment that decided which thoughts could be said in public, and Hussein refused to accept the decision. In 1926 he published On Pre-Islamic Poetry, a book that applied the methods of European philological criticism to the corpus of pre-Islamic Arabic verse and argued that much of it had been written later than tradition claimed. The book was withdrawn, his teaching license at the university was suspended for a year, and the religious establishment never forgave him. He revised the book and republished it, then went on writing, twenty-five books in a career that lasted another fifty years.",
+        "His central work is The Days, the three-volume autobiography that begins with a blind country boy listening to the sounds of the courtyard and ends with the formed scholar walking the streets of Paris with a French wife. It is the first modern autobiography in Arabic, and one of the great works of self-portraiture in any language. He wrote in the third person — the boy, the child — and that distance is the book's signature, the way the writer protects what he is describing by refusing to claim it as his own. The first volume in 1929 changed what an Arab reader could ask of a memoir.",
+        "He also wrote criticism, history, fiction, and a still influential program for the country. The Future of Culture in Egypt (1938) is his argument that Egypt is by geography and history a Mediterranean civilization and belongs in conversation with Greece and Rome as much as with Damascus and Baghdad. The proposal made him enemies on every side at once. When the Wafd government appointed him Minister of Education in 1950, he used the two years he had to issue one decree above all others: free primary education for every Egyptian child. He never reversed it. After 1952 he kept publishing, kept the same enemies, kept his classical Arabic prose elegant enough that he was eventually called the Dean of Arabic Literature.",
+        "The photograph here is by Van Leo, the great Armenian-Egyptian portraitist of mid-century Cairo: white suit, dark glasses, the deliberate stillness of a man who knew the camera would not catch any expression he had not chosen. He died in 1973, and the Egyptian state buried him with full honors. He had been nominated for the Nobel Prize at least once. What he left behind was the example of an Arab intellectual who fought the religious establishment on its own ground, in better classical Arabic than most of them, and who would not stop fighting whether the audience clapped or threw stones.",
+      ].join("\n\n"),
+      ar: [
+        "طه حسين هو الكاتب الذي فتح الطبقة المثقّفة المصريّة على نفسها من الداخل برفضه الصمت. وُلد سنة 1889 في قرية بصعيد مصر لعائلة من الطبقة الوسطى الدنيا، فقد بصره في الثالثة جرّاء التهاب بالعينين لم يكن لأحد المال لعلاجه، وأُرسل في الثالثة عشرة إلى الأزهر في القاهرة ليحفظ القرآن ويصير شيخاً. كرِه ذلك، وفي الحادية والعشرين انتقل إلى الجامعة المصريّة حديثة التأسيس، حيث صار سنة 1914 أوّل شخص ينال درجة الدكتوراه منها. بعد أربع سنوات نال دكتوراه ثانية من السوربون في باريس عن ابن خلدون، كُتبت من دفتر بطريقة برايل.",
+        "مصر التي عاد إليها كانت تحوي مؤسّسة دينيّة مغلقة تقرّر ما يمكن قوله في الفضاء العامّ، ورفض طه حسين قبول القرار. سنة 1926 نشر «في الشعر الجاهلي»، كتاباً طبّق فيه مناهج النقد الفيلولوجي الأوروبي على دواوين الشعر العربي قبل الإسلام، وزعم أنّ كثيراً منه كُتب لاحقاً ممّا قالت به التقاليد. سُحب الكتاب من السوق، وعُلّقت إجازته التدريسيّة بالجامعة سنةً، ولم تنسَ المؤسّسة الدينيّة له هذا أبداً. أعاد كتابة الكتاب ونشره من جديد، ثم واصل عمله، خمسة وعشرون كتاباً في مسيرة استمرّت خمسين سنة بعد ذلك.",
+        "عمله المركزي هو «الأيام»، السيرة الذاتيّة من ثلاثة أجزاء التي تبدأ بصبيّ ريفي ضرير يُنصت إلى أصوات الفناء وتنتهي بالعالِم المتشكّل وهو يمشي في شوارع باريس مع زوجة فرنسيّة. هي أوّل سيرة ذاتيّة حديثة بالعربيّة، ومن أعظم أعمال البورتريه الذاتي في أيّ لغة. كتبها بضمير الغائب — «الصبيّ»، «الفتى» — وتلك المسافة هي توقيع الكتاب، طريقة الكاتب في حماية ما يصفه برفضه ادّعاءه ملكيّةً له. الجزء الأوّل سنة 1929 غيّر ما يمكن للقارئ العربي أن يطلبه من المذكّرات.",
+        "كتب أيضاً نقداً وتأريخاً ورواية وبرنامجاً للبلاد ما زال مؤثّراً. «مستقبل الثقافة في مصر» (1938) حجّته في أنّ مصر بحكم الجغرافيا والتاريخ حضارة متوسّطيّة تنتمي إلى الحوار مع أثينا وروما لا أقلّ من انتمائها إلى دمشق وبغداد. صنع له الاقتراح أعداء من كلّ الجهات في وقت واحد. حين عيّنته حكومة الوفد وزيراً للمعارف سنة 1950، استعمل السنتين اللتين أُتيحتا له ليصدر مرسوماً واحداً قبل سواه: التعليم الابتدائي المجاني لكلّ طفل مصري. لم يتراجع عنه أبداً. بعد 1952 ظلّ ينشر، وظلّ يحمل الأعداء أنفسهم، وحافظ على نثره العربي الفصيح أنيقاً بما يكفي لأن يُلقّب في النهاية «عميد الأدب العربي».",
+        "الصورة هنا بعدسة فان ليو، البورتريهي الأرمنيّ المصريّ العظيم لقاهرة منتصف القرن: بدلة بيضاء، نظّارة سوداء، السكون المتعمَّد لرجل يعرف أنّ الكاميرا لن تلتقط تعبيراً لم يختره. توفّي سنة 1973، ودفنته الدولة المصريّة بمراسم رسميّة كاملة. كان قد رُشّح لجائزة نوبل مرّة على الأقلّ. ما تركه وراءه كان نموذج المثقّف العربي الذي حارب المؤسّسة الدينيّة على أرضها، بعربيّة كلاسيكيّة أنقى من كثيرين منهم، ولم يتوقّف عن الكفاح سواء صفّق له الجمهور أم رماه بالحجارة.",
+      ].join("\n\n"),
+    },
+    works: [
+      { title: "في الشعر الجاهلي", translatedTitle: "On Pre-Islamic Poetry", year: 1926 },
+      { title: "الأيام (الجزء الأول)", translatedTitle: "The Days, vol. 1", year: 1929 },
+      { title: "حديث الأربعاء", translatedTitle: "Wednesday Talks", year: 1937 },
+      { title: "مستقبل الثقافة في مصر", translatedTitle: "The Future of Culture in Egypt", year: 1938 },
+      { title: "الأيام (الجزء الثاني)", translatedTitle: "The Days, vol. 2", year: 1939 },
+      { title: "المعذّبون في الأرض", translatedTitle: "The Sufferers", year: 1949 },
+      { title: "الشيخان", translatedTitle: "The Two Sheikhs", year: 1960 },
+      { title: "الأيام (الجزء الثالث)", translatedTitle: "The Days, vol. 3", year: 1973 },
+    ],
+    photo: {
+      src: "/voices/taha-hussein/portrait.jpg",
+      alt: {
+        en: "Portrait of Taha Hussein, circa 1955",
+        ar: "صورة طه حسين، نحو 1955",
+      },
+      credit: "Van Leo, via Wikimedia Commons",
+      license: "Public Domain (Egyptian copyright expired)",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Taha_Hussein.jpg",
+    },
+    relatedSlugs: ["naguib-mahfouz", "khalil-gibran"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // Kahlil Gibran, 1883 to 1931, Lebanese-American
+  // Photo: Public Domain in the US (pre-1931 publication). Unknown
+  // photographer, April 1913. Via Wikimedia Commons.
+  {
+    slug: "khalil-gibran",
+    name: { en: "Kahlil Gibran", ar: "جبران خليل جبران" },
+    bornYear: 1883,
+    diedYear: 1931,
+    nationality: { en: "Lebanese-American", ar: "لبناني أمريكي" },
+    language: "ar",
+    awards: [],
+    tagline: {
+      en: "The mahjar writer who carried Mount Lebanon to America and wrote one of the most-read books of the century.",
+      ar: "كاتب المهجر الذي حمل جبل لبنان إلى أمريكا وكتب أحد أكثر كتب القرن قراءةً.",
+    },
+    body: {
+      en: [
+        "Kahlil Gibran is the writer who carried Mount Lebanon to America and wrote a small book there that has been read in every country on earth. Born in 1883 in Bsharri, a village in the Maronite Christian heartland of Mount Lebanon, he watched his mother walk out on his father at twelve and lead her four children across the ocean to a tenement in Boston's South End in 1895. He never finished a Western school. He had begun drawing in the village and went on drawing in Boston, then in Paris in 1908 where the circle around Auguste Rodin admitted him as a student, then in New York from 1912 until his death.",
+        "He wrote in two languages: Arabic for the first two decades of his career, English for the second. The early Arabic books are romantic, anti-clerical, and full of a young man's anger at the order of village marriages and the village church; Broken Wings (1912) is the most accomplished of them, and its denunciation of arranged marriage and ecclesiastical hypocrisy still reads as direct and serious. The Arabic press in New York, where the Pen League gathered around him in the 1920s, took him as the central figure of an entire generation of mahjar writers who reshaped modern Arabic literature from the diaspora.",
+        "The English work that made him world-famous belongs to a different register and a different audience. The Prophet (1923) is twenty-eight short prose meditations spoken by a wise stranger to a crowd that has gathered to ask him questions before he sails home. The form is biblical, the diction is steady, the cadences carry. The book sold modestly at first and then never stopped selling: it has now sold more than a hundred million copies, in dozens of languages, and is one of the best-selling books of poetry in history. Critics have been divided about it for a hundred years. Readers have not.",
+        "He was also a serious painter. There are about seven hundred surviving visual works — symbolist drawings and watercolours in a style he developed in Paris and refined alone in his New York studio. He drew almost everyone he met. He drew himself, repeatedly, with the steady gaze of someone who knew his face was a public document. Late in his life he turned the studio into a kind of pilgrimage stop for younger Arab writers passing through New York, and the conversations he had there — recorded in the memoirs of others — shaped the next generation of mahjar prose.",
+        "He died in 1931 of liver disease at the age of forty-eight. His will arranged for his body to be returned to Bsharri, where he was buried in the monastery that has since become the Gibran Museum, and for the royalties of his English books to be sent to his village in perpetuity, to fund schools and clinics. The photograph here is from 1913, when he was thirty: short, slight, dark-eyed, watching the camera with the steady face of someone who had already decided what he was going to be. He kept the decision.",
+      ].join("\n\n"),
+      ar: [
+        "جبران خليل جبران هو الكاتب الذي حمل جبل لبنان إلى أمريكا وكتب هناك كتاباً صغيراً قُرئ في كلّ بلد على وجه الأرض. وُلد سنة 1883 في بشرّي، قرية في قلب جبل لبنان الماروني، شاهد أمّه تترك أباه وهو في الثانية عشرة، وتقود أطفالها الأربعة عبر المحيط إلى مسكن متواضع في الحيّ الجنوبي لبوسطن سنة 1895. لم يُكمل أيّ مدرسة غربيّة. كان قد بدأ يرسم في القرية، فواصل الرسم في بوسطن، ثم في باريس سنة 1908 حيث قبلته حلقة أوغست رودان طالباً، ثم في نيويورك من 1912 حتى وفاته.",
+        "كتب بلغتين: العربيّة في العقدين الأوّلين من مسيرته، والإنجليزيّة في العقدين التاليين. الكتب العربيّة المبكّرة رومانسيّة، معادية للإكليروس، وممتلئة بغضب شابّ على نظام الزواج القروي والكنيسة القرويّة؛ «الأجنحة المتكسرة» (1912) أنضجها، وما زال شجبها للزواج المرتّب وللنفاق الكنسي يُقرأ مباشراً وجادّاً. الصحافة العربيّة في نيويورك، حيث تجمّعت حوله «الرابطة القلميّة» في العشرينيّات، اتّخذته شخصيّةً مركزيّةً لجيل كامل من كتّاب المهجر أعادوا صياغة الأدب العربي الحديث من الشتات.",
+        "العمل الإنجليزي الذي صنع شهرته العالميّة ينتمي إلى نبرة أخرى ولجمهور آخر. «النبيّ» (1923) ثماني وعشرون تأمّلاً نثريّاً قصيراً يلقيها غريبٌ حكيم على جمع تجمّع ليسأله أسئلة قبل أن يبحر عائداً. الشكل توراتيّ، الصياغة ثابتة، الإيقاع يحمل. باع الكتاب في البداية باعتدال، ثمّ لم يتوقّف عن البيع: تجاوزت مبيعاته اليوم مئة مليون نسخة، بعشرات اللغات، وهو من أكثر كتب الشعر مبيعاً في التاريخ. النقّاد منقسمون عنه منذ مئة عام. القرّاء غير منقسمين.",
+        "كان رسّاماً جادّاً أيضاً. بقي منه نحو سبعمئة عمل بصريّ — رسومات وألوان مائيّة في أسلوب رمزيّ طوّره في باريس وصقله وحده في مرسمه النيويوركي. رسم تقريباً كلّ من قابله. رسم نفسه مراراً بعينين ثابتتين كمن يعرف أنّ وجهه وثيقة عامّة. في أواخر حياته تحوّل المرسم إلى محطّة حجّ صغيرة لكتّاب عرب أحدث منه عمراً، وقد مرّوا بنيويورك وحاورهم، وما دار في تلك الجلسات — في مذكّرات الآخرين — شكّل الجيل التالي من النثر المهجري.",
+        "توفّي سنة 1931 إثر مرض كبدي في الثامنة والأربعين. أوصى بأن يُعاد جثمانه إلى بشرّي، فدُفن في الدير الذي صار «متحف جبران»، وبأن تُرسل عائدات كتبه الإنجليزيّة إلى قريته بشكل دائم لتموّل المدارس والعيادات. الصورة هنا من سنة 1913، حين كان في الثلاثين: قصير، نحيل، عيناه داكنتان، يرقب الكاميرا بوجه ثابت كمن قرّر سلفاً ما سيكون. حافظ على القرار.",
+      ].join("\n\n"),
+    },
+    works: [
+      { title: "الأجنحة المتكسرة", translatedTitle: "Broken Wings", year: 1912 },
+      { title: "دمعة وابتسامة", translatedTitle: "A Tear and a Smile", year: 1914 },
+      { title: "The Madman", year: 1918 },
+      { title: "المواكب", translatedTitle: "The Processions", year: 1919 },
+      { title: "The Forerunner", year: 1920 },
+      { title: "The Prophet", year: 1923 },
+      { title: "Sand and Foam", year: 1926 },
+      { title: "Jesus, the Son of Man", year: 1928 },
+    ],
+    photo: {
+      src: "/voices/khalil-gibran/portrait.jpg",
+      alt: {
+        en: "Portrait of Kahlil Gibran, April 1913",
+        ar: "صورة جبران خليل جبران، نيسان 1913",
+      },
+      credit: "Unknown photographer, via Wikimedia Commons",
+      license: "Public Domain (US, pre-1931 publication)",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Kahlil_Gibran_1913.jpg",
+    },
+    relatedSlugs: ["mahmoud-darwish", "taha-hussein"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // Leo Tolstoy, 1828 to 1910, Russian
+  // Photo: Public Domain. Photographer Sergey Prokudin-Gorsky, May
+  // 23 1908. Via Wikimedia Commons.
+  {
+    slug: "leo-tolstoy",
+    name: { en: "Leo Tolstoy", ar: "ليو تولستوي" },
+    bornYear: 1828,
+    diedYear: 1910,
+    nationality: { en: "Russian", ar: "روسي" },
+    language: "en",
+    awards: [],
+    tagline: {
+      en: "The novelist who proved a single book could hold an entire civilization.",
+      ar: "الروائي الذي برهن أنّ كتاباً واحداً يمكنه أن يحمل حضارة كاملة.",
+    },
+    body: {
+      en: [
+        "Leo Tolstoy is the writer who proved that a novel could hold an entire civilization without breaking. Born in 1828 on a country estate called Yasnaya Polyana, a hundred miles south of Moscow, into one of the oldest aristocratic families in Russia, he lost his mother at two and his father at eight, and the orphan landowner-to-be was raised by relatives in a household where French was spoken at the table and serfs worked in the fields. He drifted through Kazan University without taking a degree, fought briefly in the Crimean War, and was drinking and gambling away inheritances in his early twenties when the first stories he had been writing in secret began to appear in the Moscow journals.",
+        "The two long novels that the world reads him for came in his thirties and forties, when he had married Sofia Behrs and settled at Yasnaya Polyana to run the estate. War and Peace, serialised from 1865 to 1869, takes Russian society from 1805 to 1812 and threads four families through the Napoleonic invasion; the book is more than half a million words, and yet what people remember about it first is its small intimacies — a girl at a window, a dying old prince, a soldier discovering himself among horses. Anna Karenina, serialised from 1875 to 1877, is shorter, denser, more catastrophic: a woman of his own class refuses to be reformed and is broken by the social machine that she had stepped out of. Both books were written, edited, and partly recopied by Sofia from his all but illegible drafts.",
+        "In his fifties he had a religious crisis that never ended. He renounced his earlier work as worldly, gave away the rights to most of it, dressed in peasant clothes, learned to plough his own fields, and developed a religion built around the Sermon on the Mount with no priests, no sacraments, and no state. Confession (1882) describes the crisis from inside. The Death of Ivan Ilyich (1886), a short novel about a high judge dying of a long disease, is the first great work of the new manner: stripped to the spiritual question and the bodily one. The Russian Orthodox Church excommunicated him in 1901. He did not return.",
+        "The late writing kept getting harder and more political. What Is Art? (1897) argues that all art whose audience is not the peasantry is corruption; the argument is half wrong but is made with such force that no later treatise on art has ignored it. Resurrection (1899) is his last full-length novel, a furious indictment of the Russian legal and prison system. He gave the royalties of Resurrection to a religious sect being persecuted by the state. By his seventies he was the most famous private citizen on earth: pilgrims came to Yasnaya Polyana from every continent, including a young Indian lawyer named Mohandas Gandhi who had been reading him for twenty years and would build a movement on his ideas.",
+        "The photograph here was taken in 1908 by the early colour pioneer Sergey Prokudin-Gorsky, two years before Tolstoy's death. He had fled the estate in November 1910 to escape what he saw as the contradiction of his own wealth, fell ill on the train, and died of pneumonia at a railway station called Astapovo. He was eighty-two. The reporters of every nation telegraphed the news at once. He left behind two literatures: the great novels of his middle age, which most readers will still call the highest of the European century; and the radical religious essays of his old age, which the next century's pacifists and nonviolent revolutionaries would carry into history.",
+      ].join("\n\n"),
+      ar: [
+        "ليو تولستوي هو الكاتب الذي برهن أنّ الرواية تستطيع أن تحمل حضارة كاملة دون أن تتكسّر. وُلد سنة 1828 في ضيعة ريفيّة اسمها ياسنايا بوليانا، على بعد مئة ميل جنوب موسكو، من إحدى أعرق العائلات الأرستقراطيّة الروسيّة، فقد أمّه في الثانية وأباه في الثامنة، وتربّى المالك اليتيم على يد أقاربه في بيت تُتحدَّث فيه الفرنسيّة على المائدة ويعمل فيه الأقنان في الحقول. تنقّل في جامعة قازان دون أن ينال شهادة، حارب لفترة قصيرة في حرب القرم، وكان يصرف الميراث على الشراب والقمار في مطلع العشرينيّات حين بدأت قصصه الأولى — التي ظلّ يكتبها سرّاً — تظهر في مجلّات موسكو.",
+        "الروايتان الطويلتان اللتان يقرأه العالم بسببهما جاءتا في الثلاثينيّات والأربعينيّات من عمره، بعد زواجه من صوفيا بِرس واستقراره في ياسنايا بوليانا لإدارة الضيعة. «الحرب والسلم»، صدرت في حلقات بين 1865 و1869، تأخذ المجتمع الروسي من 1805 إلى 1812 وتضفِر أربع عائلات عبر الغزو النابليوني؛ الكتاب يتجاوز نصف مليون كلمة، ومع ذلك ما يتذكّره القرّاء أوّلاً منه هو حميميّاته الصغيرة — فتاة عند نافذة، أمير عجوز يحتضر، جندي يكتشف نفسه بين الخيول. «أنّا كارينينا»، صدرت في حلقات بين 1875 و1877، أقصر، أكثف، أشدّ كارثيّة: امرأة من طبقته ترفض أن تُصلَح فتسحقها الآلة الاجتماعيّة التي خرجت منها. كلا الكتابين كتبت صوفيا أجزاء كبيرة منهما ونسختهما من مسوّداته شبه المقروءة.",
+        "في الخمسينيّات من عمره مرّ بأزمة دينيّة لم تنته أبداً. أنكر أعماله السابقة بوصفها دنيويّة، وتنازل عن حقوق معظمها، لبس ثياب الفلّاحين، تعلّم أن يحرث حقوله بنفسه، وطوّر ديانة مبنيّة على «العظة على الجبل» دون كهنة، ولا أسرار، ولا دولة. «الاعتراف» (1882) يصف الأزمة من الداخل. «موت إيفان إيليتش» (1886)، رواية قصيرة عن قاضٍ كبير يموت بمرض طويل، أوّل العمل الكبير في الأسلوب الجديد: مجرّد إلى السؤال الروحي والجسدي. كنيسة روسيا الأرثوذكسيّة طردته سنة 1901. لم يعد إليها.",
+        "استمرّت كتابته المتأخّرة في الازدياد صلابةً وسياسةً. «ما هو الفنّ؟» (1897) يحاجج بأنّ كلّ فنّ ليس جمهوره الفلّاحون هو فساد؛ الحجّة نصفها خاطئ، لكنّها صيغت بقوّة تجعل أيّ بحث لاحق في الفنّ لا يستطيع تجاهلها. «البعث» (1899) آخر رواياته الطويلة، إدانة غاضبة للنظام القانوني والسجني الروسي. تنازل عن عائدات «البعث» لطائفة دينيّة كانت الدولة تضطهدها. في سبعينيّاته كان أشهر مواطن خاصّ على الأرض: كان الحجّاج يقصدون ياسنايا بوليانا من كلّ القارّات، ومن بينهم محامٍ هندي شابّ اسمه موهانداس غاندي كان يقرأه منذ عشرين سنة وسيبني عليه حركةً.",
+        "الصورة هنا التُقطت سنة 1908 بعدسة الرائد الأوّل للتصوير الملوّن سيرغي بروكودين-غورسكي، قبل سنتين من وفاة تولستوي. هرب من الضيعة في تشرين الثاني 1910 ليفرّ ممّا اعتبره تناقض ثروته الخاصّة، مرض في القطار، ومات بالتهاب رئوي في محطّة قطار تُدعى أستابوفو. كان في الثانية والثمانين. أبرقت صحف كلّ أمّة الخبر فوراً. ترك وراءه أدبَين: الروايات العظمى لمنتصف عمره، التي ما زال أكثر القرّاء يعتبرونها أعلى ما أنتجه القرن الأوروبي؛ والمقالات الدينيّة الراديكاليّة لكهولته، التي حملها مناصرو السلام والثوّار اللاعنفيّون في القرن التالي إلى التاريخ.",
+      ].join("\n\n"),
+    },
+    works: [
+      { title: "Childhood", year: 1852 },
+      { title: "Sevastopol Sketches", year: 1855 },
+      { title: "War and Peace", year: 1869 },
+      { title: "Anna Karenina", year: 1877 },
+      { title: "A Confession", year: 1882 },
+      { title: "The Death of Ivan Ilyich", year: 1886 },
+      { title: "What Is Art?", year: 1897 },
+      { title: "Resurrection", year: 1899 },
+    ],
+    photo: {
+      src: "/voices/leo-tolstoy/portrait.jpg",
+      alt: {
+        en: "Color portrait of Leo Tolstoy at Yasnaya Polyana, 1908",
+        ar: "صورة ملوّنة لليو تولستوي في ياسنايا بوليانا، 1908",
+      },
+      credit: "Sergey Prokudin-Gorsky, via Wikimedia Commons",
+      license: "Public Domain",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:L.N.Tolstoy_Prokudin-Gorsky.jpg",
+    },
+    relatedSlugs: ["franz-kafka"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // Franz Kafka, 1883 to 1924, Czech-German Jewish
+  // Photo: Public Domain in the US (PD-1996, pre-1989 first
+  // publication outside US, PD in source country on URAA date).
+  // Unknown photographer, 1923. Via Wikimedia Commons.
+  {
+    slug: "franz-kafka",
+    name: { en: "Franz Kafka", ar: "فرانز كافكا" },
+    bornYear: 1883,
+    diedYear: 1924,
+    nationality: { en: "Czech-German Jewish", ar: "تشيكي ألماني يهودي" },
+    language: "en",
+    awards: [],
+    tagline: {
+      en: "The clerk who turned the office hallway into a place where the soul could lose itself.",
+      ar: "الموظّف الذي حوّل ممرّ المكتب إلى مكان يمكن للروح أن تضيع فيه.",
+    },
+    body: {
+      en: [
+        "Franz Kafka is the writer who turned the office hallway into a place where the soul could lose itself. Born in 1883 in Prague, then a German-speaking enclave inside the Czech provinces of the Austro-Hungarian Empire, he grew up the eldest son of a striving Jewish merchant father whose physical and moral bulk crushed his children for forty years. He took a law degree from the German University of Prague to please his father, then went straight into an insurance company that handled workmen's compensation claims, where he was very good at his job and very steadily promoted. He wrote in the hours after work and on weekends, sometimes through the night, and almost everything he wrote he doubted.",
+        "The early stories — The Judgement, The Metamorphosis, In the Penal Colony — appeared between 1912 and 1918, when he was in his early thirties. They are the foundational texts of what readers later learned to call Kafkaesque: ordinary people inside ordinary rooms who discover that the rules they thought they knew do not apply, and that the institutions around them speak a logic no human can refute. The Metamorphosis begins one morning when a travelling salesman wakes to find himself transformed into a giant insect; the genius of the story is that the salesman's first thought is not horror but missing his train. The disaster has the same texture as the routine. That is the move that no writer before him had quite made.",
+        "He wrote three novels, all unfinished, and none of them was published in his lifetime. The Trial follows a bank clerk arrested by an unspecified court on an unspecified charge, processed through corridors and waiting rooms over a year. The Castle follows a land surveyor who arrives at a village dominated by a castle whose officials he can never reach. Amerika follows a young European washed up in a comic, distorted New World. He wrote them in fragments, asked his friend Max Brod to burn them after his death, and Brod ignored the request and prepared them for publication anyway. Without that betrayal, the twentieth-century novel as we know it might not exist.",
+        "What he changed in fiction was the position of the reader. In a novel by Dickens or Tolstoy, the world makes sense and the difficulty is figuring out where the character belongs in it. In a novel by Kafka the world has already stopped making sense and the question becomes whether the character even has a self to attach to that world. The bureaucratic, the religious, the legal, and the absurd become the same shape; the reader stops looking for the symbol and starts living the dream. Every later modernist working in any language — Borges, Beckett, Murakami, Saramago, Coetzee — owes him something specific that they cannot name without naming him.",
+        "The photograph here was taken in Berlin in 1923, less than a year before his death, when he was in the worst stretch of the tuberculosis that finally killed him. He had broken three engagements, written most of what he is now read for, and was living briefly with Dora Diamant in a near-poverty he found liberating. He died in a sanatorium near Vienna in June 1924, at forty. Forty more years passed before the world fully realised what he had been. He had quietly remade the form, alone, while keeping a job.",
+      ].join("\n\n"),
+      ar: [
+        "فرانز كافكا هو الكاتب الذي حوّل ممرّ المكتب إلى مكان يمكن للروح أن تضيع فيه. وُلد سنة 1883 في براغ، التي كانت آنذاك جيباً ناطقاً بالألمانيّة داخل المقاطعات التشيكيّة للإمبراطوريّة النمساويّة المجريّة، نشأ ابناً أكبر لأبٍ يهودي تاجر طموح هرس وزنه الجسدي والمعنوي أبناءه لأربعين سنة. حصل على شهادة الحقوق من الجامعة الألمانيّة في براغ ليُرضي أباه، ثم انضمّ مباشرة إلى شركة تأمين تعالج مطالبات تعويضات حوادث العمل، وكان جيّداً جدّاً في وظيفته وارتقى بانتظام. كان يكتب في الساعات التي تلي العمل وفي عطلات الأسبوع، أحياناً عبر الليل، وكلّ ما كتبه تقريباً كان يشكّ فيه.",
+        "القصص الأولى — «الحكم»، «المسخ»، «في مستعمرة العقاب» — صدرت بين 1912 و1918 حين كان في مطلع الثلاثين. هي النصوص المؤسِّسة لما تعلّم القرّاء لاحقاً تسميته «الكافكاويّة»: أناس عاديّون داخل غرف عاديّة يكتشفون أنّ القواعد التي ظنّوا أنّهم يعرفونها لا تنطبق، وأنّ المؤسّسات المحيطة بهم تتكلّم منطقاً لا يستطيع إنسان دحضه. «المسخ» تبدأ صباحاً حين يستيقظ ممثّل تجاري متجوّل ليجد نفسه قد تحوّل إلى حشرة عملاقة؛ عبقريّة القصّة أنّ فكرة الممثّل الأولى ليست الرعب بل فوات قطاره. للكارثة الملمس نفسه للروتين. هذه هي النقلة التي لم يقم بها أيّ كاتب قبله بهذه الدقّة.",
+        "كتب ثلاث روايات، كلّها غير منتهية، ولم تُنشر أيّ منها في حياته. «المحاكمة» تتبع موظّف بنك تعتقله محكمة غير محدّدة بتهمة غير محدّدة، يُمرَّر عبر ممرّات وقاعات انتظار طوال عام. «القصر» تتبع مساحاً يصل إلى قرية يحكمها قصر لا يستطيع الوصول إلى مسؤوليه أبداً. «أمريكا» تتبع شابّاً أوروبيّاً تقذفه الأمواج في عالم جديد كوميديّ مشوّه. كتبها في شذرات، وطلب من صديقه ماكس برود أن يحرقها بعد موته، فتجاهل برود الطلب وأعدّها للنشر بدلاً من ذلك. لولا تلك الخيانة لربّما لم تكن رواية القرن العشرين كما نعرفها اليوم.",
+        "ما غيّره في الرواية كان موقع القارئ. في رواية لديكنز أو تولستوي يكون العالم منطقيّاً والصعوبة في معرفة موضع الشخصيّة منه. في رواية لكافكا يكون العالم قد توقّف عن أن يكون منطقيّاً، ويصير السؤال هل لدى الشخصيّة ذاتٌ أصلاً لتربطها بذلك العالم. تأخذ البيروقراطيّة والدينيّ والقانونيّ والعبثيّ الشكل نفسه؛ يتوقّف القارئ عن البحث عن الرمز ويبدأ بعيش الحلم. كلّ حداثي لاحق في أيّ لغة — بورخيس، بيكيت، موراكامي، ساراماغو، كويتزي — مدينٌ له بشيء محدّد لا يمكنه تسميته دون أن يسمّيه.",
+        "الصورة هنا التُقطت في برلين سنة 1923، قبل أقلّ من عام على وفاته، حين كان في أسوأ مرحلة من السلّ الذي قتله أخيراً. كان قد فسخ ثلاث خطوبات، وكتب معظم ما يُقرأ به اليوم، وكان يعيش لفترة قصيرة مع دورا ديامانت في فقر شبه تامّ وجد فيه الحرّيّة. توفّي في مصحّة قرب فيينّا في حزيران 1924، في الأربعين. مرّت أربعون سنة أخرى قبل أن يدرك العالم تماماً ما كانه. كان قد أعاد صياغة الشكل بهدوء، وحيداً، وهو يحتفظ بوظيفته.",
+      ].join("\n\n"),
+    },
+    works: [
+      { title: "The Judgement", year: 1913 },
+      { title: "The Metamorphosis", year: 1915 },
+      { title: "In the Penal Colony", year: 1919 },
+      { title: "A Country Doctor", year: 1919 },
+      { title: "A Hunger Artist", year: 1924 },
+      { title: "The Trial", year: 1925 },
+      { title: "The Castle", year: 1926 },
+      { title: "Amerika", year: 1927 },
+    ],
+    photo: {
+      src: "/voices/franz-kafka/portrait.jpg",
+      alt: {
+        en: "Portrait of Franz Kafka, Berlin, 1923",
+        ar: "صورة فرانز كافكا، برلين، 1923",
+      },
+      credit: "Unknown photographer, via Wikimedia Commons",
+      license: "Public Domain",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Franz_Kafka,_1923.jpg",
+    },
+    relatedSlugs: ["leo-tolstoy", "virginia-woolf"],
+  },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────
