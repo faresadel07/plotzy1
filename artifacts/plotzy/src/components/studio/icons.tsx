@@ -1,7 +1,10 @@
-// Brand icons for the four model chips, plus the Plotzy Studio mark
-// used by the floating button. Hand-drawn inline SVG, no external icon
-// library. Each component accepts size and color; defaults are tuned
-// for the 16px chip slot.
+// Brand icons for the five model chips, plus the Plotzy Studio mark.
+//
+// These are visual approximations of widely-known company marks,
+// rendered in our own SVG. Used to identify which provider a model
+// belongs to (nominative use). No copy of the underlying vector
+// artwork is shipped here; each path is drawn from scratch to match
+// the recognised silhouette of the brand at small UI sizes.
 
 import type { CSSProperties } from "react";
 import * as React from "react";
@@ -12,10 +15,9 @@ interface IconProps {
   style?: CSSProperties;
 }
 
-/** Claude (Anthropic). Inspired by Anthropic's visual vocabulary:
- *  a stylised 4-petal mark with curved blades meeting at the centre.
- *  Drawn from scratch as a recognisable family-resemblance mark, not
- *  a pixel copy of the trademarked logo. */
+/** Anthropic Claude. The 4-bladed asterisk used on claude.ai: four
+ *  curved petals tapering to sharp points at top, bottom, left, and
+ *  right, meeting at a soft centre. Terracotta by default. */
 export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
   return (
     <svg
@@ -26,19 +28,18 @@ export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
       style={style}
       aria-hidden
     >
-      {/* Four curved petals/blades meeting at center, the
-          characteristic Anthropic vocabulary. Each blade is a single
-          smooth path with concave inner curves. */}
       <path
-        d="M12 2.5C12.4 8 13 9.2 14.6 10.4C16.2 11.6 17.6 12 21.5 12.5C17.6 13 16.2 13.4 14.6 14.6C13 15.8 12.4 17 12 22.5C11.6 17 11 15.8 9.4 14.6C7.8 13.4 6.4 13 2.5 12.5C6.4 12 7.8 11.6 9.4 10.4C11 9.2 11.6 8 12 2.5Z"
+        d="M12 1.5 C12.5 7.5 13.2 9.3 14.9 10.6 C16.6 11.9 18.1 12.2 22.5 12 C18.1 11.8 16.6 12.1 14.9 13.4 C13.2 14.7 12.5 16.5 12 22.5 C11.5 16.5 10.8 14.7 9.1 13.4 C7.4 12.1 5.9 11.8 1.5 12 C5.9 12.2 7.4 11.9 9.1 10.6 C10.8 9.3 11.5 7.5 12 1.5 Z"
         fill={color}
       />
     </svg>
   );
 }
 
-/** OpenAI GPT. The hexagonal petal mandala. Six interlocking petals
- *  around a centre, the unmistakable OpenAI mark. */
+/** OpenAI GPT. The six-petal blossom / knot used as the OpenAI logo:
+ *  six elongated petals rotated around a central axis, each
+ *  interlocking with its neighbours. Monochrome by default; many
+ *  product contexts tint it the ChatGPT teal. */
 export function GPTIcon({ size = 16, color = "#10A37F", style }: IconProps) {
   return (
     <svg
@@ -57,13 +58,12 @@ export function GPTIcon({ size = 16, color = "#10A37F", style }: IconProps) {
   );
 }
 
-/** Gemini (Google). Inspired by the Gemini visual vocabulary: a
- *  4-pointed star/spark with sharper, more elegant tapered points
- *  and the signature blue-to-violet-to-pink gradient. Distinct from
- *  Claude's softer 4-petal mark. */
+/** Google Gemini. The four-point sparkle: a sharp 4-point star with
+ *  the signature blue-to-purple-to-pink gradient. Distinct from
+ *  Claude's softer 4-petal mark by being sharper and gradient-filled. */
 export function GeminiIcon({ size = 16, color, style }: IconProps) {
-  // Generate a unique gradient id per instance so multiple Gemini
-  // icons on the page don't collide with one another.
+  // Unique gradient id per instance so multiple Gemini icons on the
+  // page don't collide.
   const gradId = React.useId();
   return (
     <svg
@@ -81,20 +81,20 @@ export function GeminiIcon({ size = 16, color, style }: IconProps) {
           <stop offset="100%" stopColor="#E1547D" />
         </linearGradient>
       </defs>
-      {/* Sharp 4-pointed spark with tapered points, the Gemini
-          vocabulary. Pointier than the Claude mark by design. */}
+      {/* Sharp 4-point spark, concave between points. The Gemini
+          spark vocabulary. */}
       <path
-        d="M12 1L13.4 9.2C13.6 10.2 14.4 11 15.4 11.2L23 12L15.4 12.8C14.4 13 13.6 13.8 13.4 14.8L12 23L10.6 14.8C10.4 13.8 9.6 13 8.6 12.8L1 12L8.6 11.2C9.6 11 10.4 10.2 10.6 9.2L12 1Z"
+        d="M12 0 C12.6 6.8 13.3 8.7 14.9 10.4 C16.5 12.1 18.5 12 24 12 C18.5 12 16.5 11.9 14.9 13.6 C13.3 15.3 12.6 17.2 12 24 C11.4 17.2 10.7 15.3 9.1 13.6 C7.5 11.9 5.5 12 0 12 C5.5 12 7.5 12.1 9.1 10.4 C10.7 8.7 11.4 6.8 12 0 Z"
         fill={color ?? `url(#${gradId})`}
       />
     </svg>
   );
 }
 
-/** Cerebras. Inspired by Cerebras's chip-design vocabulary: a
- *  concentric hexagonal mark that hints at a wafer-scale processor.
- *  Drawn from scratch, not a copy of the trademarked logo. */
-export function CerebrasIcon({ size = 16, color = "#F87171", style }: IconProps) {
+/** Cerebras. A hexagonal wafer outline with four chip dies arranged
+ *  inside it: the visual vocabulary Cerebras uses for its wafer-scale
+ *  AI processors. */
+export function CerebrasIcon({ size = 16, color = "#FF5C35", style }: IconProps) {
   return (
     <svg
       width={size}
@@ -104,22 +104,26 @@ export function CerebrasIcon({ size = 16, color = "#F87171", style }: IconProps)
       style={style}
       aria-hidden
     >
-      {/* Outer hexagon outline */}
+      {/* Outer hexagon (wafer outline) */}
       <path
-        d="M12 2L20.5 7V17L12 22L3.5 17V7L12 2Z"
+        d="M12 1.8 L20.6 6.9 L20.6 17.1 L12 22.2 L3.4 17.1 L3.4 6.9 Z"
         stroke={color}
-        strokeWidth="1.6"
+        strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      {/* Inner core dot */}
-      <circle cx="12" cy="12" r="3" fill={color} />
+      {/* Four chip dies, suggesting the wafer-scale grid */}
+      <rect x="7.5" y="8.5" width="3.4" height="3" rx="0.4" fill={color} />
+      <rect x="13.1" y="8.5" width="3.4" height="3" rx="0.4" fill={color} />
+      <rect x="7.5" y="12.5" width="3.4" height="3" rx="0.4" fill={color} />
+      <rect x="13.1" y="12.5" width="3.4" height="3" rx="0.4" fill={color} />
     </svg>
   );
 }
 
-/** Meta Llama. The Meta infinity ribbon, stylised as a single
- *  continuous curve. */
-export function LlamaIcon({ size = 16, color = "#1877F2", style }: IconProps) {
+/** Meta Llama. The Meta infinity ribbon: a single continuous band
+ *  that traces a horizontal infinity loop, in Meta's signature blue.
+ *  Llama is shipped under the Meta brand. */
+export function LlamaIcon({ size = 16, color = "#0866FF", style }: IconProps) {
   return (
     <svg
       width={size}
@@ -129,9 +133,14 @@ export function LlamaIcon({ size = 16, color = "#1877F2", style }: IconProps) {
       style={style}
       aria-hidden
     >
+      {/* Infinity ribbon — left loop and right loop sharing a centre
+          crossing, drawn as a single closed band. */}
       <path
-        d="M3.5 12c0-2.6 2.1-4.5 4.5-4.5 1.8 0 3 .9 4 2.1 1-1.2 2.2-2.1 4-2.1 2.4 0 4.5 1.9 4.5 4.5 0 1.4-.5 2.5-1.3 3.3-.8.8-1.9 1.2-3.2 1.2-1.8 0-3-1-4-2.2-1 1.2-2.2 2.2-4 2.2-1.3 0-2.4-.4-3.2-1.2C4 14.5 3.5 13.4 3.5 12Zm6.5 2.5c1.2 0 1.8-.9 2.4-2-.6-1.1-1.2-2-2.4-2-.7 0-1.4.3-1.8.7-.4.4-.7.9-.7 1.8 0 .8.3 1.4.7 1.8.4.4 1 .7 1.8.7Zm5.8 0c.8 0 1.4-.3 1.8-.7.4-.4.7-1 .7-1.8 0-.9-.3-1.4-.7-1.8-.4-.4-1.1-.7-1.8-.7-1.2 0-1.8.9-2.4 2 .6 1.1 1.2 2 2.4 2Z"
-        fill={color}
+        d="M 6 7.5 C 2.5 7.5 2.5 16.5 6 16.5 C 9 16.5 11 12 12 12 C 13 12 15 7.5 18 7.5 C 21.5 7.5 21.5 16.5 18 16.5 C 15 16.5 13 12 12 12 C 11 12 9 16.5 6 16.5 Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill="none"
       />
     </svg>
   );
@@ -150,13 +159,10 @@ export function StudioIcon({ size = 18, color = "#fff", style }: IconProps) {
       style={style}
       aria-hidden
     >
-      {/* Main 4-point spark */}
       <path
         d="M12 2.5L13.2 10.8L21.5 12L13.2 13.2L12 21.5L10.8 13.2L2.5 12L10.8 10.8L12 2.5Z"
         fill={color}
       />
-      {/* Smaller secondary spark, top right, gives the mark its
-          two-stroke character */}
       <path
         d="M18 4L18.5 6.5L21 7L18.5 7.5L18 10L17.5 7.5L15 7L17.5 6.5L18 4Z"
         fill={color}
