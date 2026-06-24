@@ -1,10 +1,12 @@
-// Brand icons for the five model chips, plus the Plotzy Studio mark.
+// Official brand marks for the five model providers, plus the Plotzy
+// Studio mark used by the floating button.
 //
-// These are visual approximations of widely-known company marks,
-// rendered in our own SVG. Used to identify which provider a model
-// belongs to (nominative use). No copy of the underlying vector
-// artwork is shipped here; each path is drawn from scratch to match
-// the recognised silhouette of the brand at small UI sizes.
+// These are the actual logos as distributed by each company in their
+// public brand kits and as catalogued by Simple Icons (simpleicons.org,
+// CC0 / MIT for the SVG data). They are used here under nominative
+// fair use to identify which underlying model the user is selecting,
+// which is the standard practice across every model aggregator
+// (Vercel AI SDK, OpenRouter, Cursor, LangChain, etc.).
 
 import type { CSSProperties } from "react";
 import * as React from "react";
@@ -15,9 +17,9 @@ interface IconProps {
   style?: CSSProperties;
 }
 
-/** Anthropic Claude. The 4-bladed asterisk used on claude.ai: four
- *  curved petals tapering to sharp points at top, bottom, left, and
- *  right, meeting at a soft centre. Terracotta by default. */
+/** Anthropic / Claude. The geometric "A" wordmark used as
+ *  Anthropic's primary brand identity, in their signature
+ *  terracotta. Simple Icons "Anthropic". */
 export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
   return (
     <svg
@@ -29,17 +31,15 @@ export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
       aria-hidden
     >
       <path
-        d="M12 1.5 C12.5 7.5 13.2 9.3 14.9 10.6 C16.6 11.9 18.1 12.2 22.5 12 C18.1 11.8 16.6 12.1 14.9 13.4 C13.2 14.7 12.5 16.5 12 22.5 C11.5 16.5 10.8 14.7 9.1 13.4 C7.4 12.1 5.9 11.8 1.5 12 C5.9 12.2 7.4 11.9 9.1 10.6 C10.8 9.3 11.5 7.5 12 1.5 Z"
+        d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5527h3.7442L10.5363 3.541Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"
         fill={color}
       />
     </svg>
   );
 }
 
-/** OpenAI GPT. The six-petal blossom / knot used as the OpenAI logo:
- *  six elongated petals rotated around a central axis, each
- *  interlocking with its neighbours. Monochrome by default; many
- *  product contexts tint it the ChatGPT teal. */
+/** OpenAI. The six-petal blossom mark used as the OpenAI brand
+ *  identity, in the ChatGPT teal. Simple Icons "OpenAI". */
 export function GPTIcon({ size = 16, color = "#10A37F", style }: IconProps) {
   return (
     <svg
@@ -51,16 +51,16 @@ export function GPTIcon({ size = 16, color = "#10A37F", style }: IconProps) {
       aria-hidden
     >
       <path
-        d="M22.3 9.86c.54-1.61.36-3.37-.5-4.85a5.31 5.31 0 0 0-5.71-2.55A5.32 5.32 0 0 0 7.3 4.78a5.31 5.31 0 0 0-3.55 2.57 5.32 5.32 0 0 0 .65 6.24 5.31 5.31 0 0 0 .5 4.85 5.32 5.32 0 0 0 5.71 2.55 5.31 5.31 0 0 0 8.79-1.32 5.31 5.31 0 0 0 3.55-2.57 5.32 5.32 0 0 0-.65-6.24Zm-7.92 11.07a3.94 3.94 0 0 1-2.53-.92l.13-.07 4.2-2.42a.68.68 0 0 0 .35-.6v-5.92l1.78 1.03a.06.06 0 0 1 .03.05v4.9a3.96 3.96 0 0 1-3.96 3.95Zm-8.5-3.63a3.93 3.93 0 0 1-.47-2.65l.13.08 4.2 2.42a.68.68 0 0 0 .69 0l5.13-2.96v2.05a.06.06 0 0 1-.03.05L11.31 18.7a3.96 3.96 0 0 1-5.43-1.4ZM4.77 8.51a3.95 3.95 0 0 1 2.06-1.73v4.99a.68.68 0 0 0 .34.6l5.1 2.95-1.77 1.02a.06.06 0 0 1-.06 0L6.2 13.9a3.96 3.96 0 0 1-1.44-5.39Zm14.62 3.4-5.13-2.97 1.77-1.02a.06.06 0 0 1 .06 0l4.24 2.45a3.95 3.95 0 0 1-.6 7.13v-4.99a.69.69 0 0 0-.35-.6Zm1.77-2.66-.13-.08-4.2-2.42a.68.68 0 0 0-.69 0L11.01 9.7V7.66a.06.06 0 0 1 .03-.05L15.27 5.16a3.96 3.96 0 0 1 5.89 4.09Zm-11.14 3.65L8.24 11.87a.06.06 0 0 1-.03-.05V6.93a3.96 3.96 0 0 1 6.49-3.04l-.13.07-4.2 2.42a.68.68 0 0 0-.35.6Zm.97-2.09 2.28-1.32 2.29 1.32v2.64L13.27 14.5l-2.29-1.32Z"
+        d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"
         fill={color}
       />
     </svg>
   );
 }
 
-/** Google Gemini. The four-point sparkle: a sharp 4-point star with
- *  the signature blue-to-purple-to-pink gradient. Distinct from
- *  Claude's softer 4-petal mark by being sharper and gradient-filled. */
+/** Google Gemini. The four-arc sparkle used as the Gemini brand
+ *  mark, with the signature blue-to-purple-to-pink gradient.
+ *  Simple Icons "Google Gemini". */
 export function GeminiIcon({ size = 16, color, style }: IconProps) {
   // Unique gradient id per instance so multiple Gemini icons on the
   // page don't collide.
@@ -77,23 +77,24 @@ export function GeminiIcon({ size = 16, color, style }: IconProps) {
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#4796E3" />
-          <stop offset="45%" stopColor="#7C5BC9" />
+          <stop offset="50%" stopColor="#7C5BC9" />
           <stop offset="100%" stopColor="#E1547D" />
         </linearGradient>
       </defs>
-      {/* Sharp 4-point spark, concave between points. The Gemini
-          spark vocabulary. */}
+      {/* The Gemini spark — four quarter-circle arcs meeting at the
+          centre to form a 4-point sparkle with concave sides. */}
       <path
-        d="M12 0 C12.6 6.8 13.3 8.7 14.9 10.4 C16.5 12.1 18.5 12 24 12 C18.5 12 16.5 11.9 14.9 13.6 C13.3 15.3 12.6 17.2 12 24 C11.4 17.2 10.7 15.3 9.1 13.6 C7.5 11.9 5.5 12 0 12 C5.5 12 7.5 12.1 9.1 10.4 C10.7 8.7 11.4 6.8 12 0 Z"
+        d="M12 24A14.304 14.304 0 0 0 0 12 14.304 14.304 0 0 0 12 0a14.305 14.305 0 0 0 12 12 14.305 14.305 0 0 0-12 12"
         fill={color ?? `url(#${gradId})`}
       />
     </svg>
   );
 }
 
-/** Cerebras. A hexagonal wafer outline with four chip dies arranged
- *  inside it: the visual vocabulary Cerebras uses for its wafer-scale
- *  AI processors. */
+/** Cerebras. A hexagonal wafer with a 2x2 grid of chip dies
+ *  arranged inside — the wafer-scale visual vocabulary Cerebras
+ *  uses for its AI processors. Approximation: Cerebras's
+ *  wordmark-based brand does not provide an icon-only SVG. */
 export function CerebrasIcon({ size = 16, color = "#FF5C35", style }: IconProps) {
   return (
     <svg
@@ -104,14 +105,12 @@ export function CerebrasIcon({ size = 16, color = "#FF5C35", style }: IconProps)
       style={style}
       aria-hidden
     >
-      {/* Outer hexagon (wafer outline) */}
       <path
         d="M12 1.8 L20.6 6.9 L20.6 17.1 L12 22.2 L3.4 17.1 L3.4 6.9 Z"
         stroke={color}
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      {/* Four chip dies, suggesting the wafer-scale grid */}
       <rect x="7.5" y="8.5" width="3.4" height="3" rx="0.4" fill={color} />
       <rect x="13.1" y="8.5" width="3.4" height="3" rx="0.4" fill={color} />
       <rect x="7.5" y="12.5" width="3.4" height="3" rx="0.4" fill={color} />
@@ -120,9 +119,9 @@ export function CerebrasIcon({ size = 16, color = "#FF5C35", style }: IconProps)
   );
 }
 
-/** Meta Llama. The Meta infinity ribbon: a single continuous band
- *  that traces a horizontal infinity loop, in Meta's signature blue.
- *  Llama is shipped under the Meta brand. */
+/** Meta (Llama). The Meta infinity ribbon. Simple Icons "Meta".
+ *  Llama is shipped under the Meta brand, so the Meta mark is the
+ *  appropriate identifier. */
 export function LlamaIcon({ size = 16, color = "#0866FF", style }: IconProps) {
   return (
     <svg
@@ -133,22 +132,16 @@ export function LlamaIcon({ size = 16, color = "#0866FF", style }: IconProps) {
       style={style}
       aria-hidden
     >
-      {/* Infinity ribbon — left loop and right loop sharing a centre
-          crossing, drawn as a single closed band. */}
       <path
-        d="M 6 7.5 C 2.5 7.5 2.5 16.5 6 16.5 C 9 16.5 11 12 12 12 C 13 12 15 7.5 18 7.5 C 21.5 7.5 21.5 16.5 18 16.5 C 15 16.5 13 12 12 12 C 11 12 9 16.5 6 16.5 Z"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinejoin="round"
-        fill="none"
+        d="M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a6.624 6.624 0 0 0 .265.86 5.297 5.297 0 0 0 .371.761c.696 1.159 1.818 1.927 3.593 1.927 1.497 0 2.633-.671 3.965-2.444.76-1.012 1.144-1.626 2.663-4.32l.756-1.339.186-.325c.061.1.121.196.183.3l2.152 3.595c.724 1.21 1.665 2.556 2.47 3.314 1.046.987 1.992 1.22 3.06 1.22 1.075 0 1.876-.355 2.455-.843a3.743 3.743 0 0 0 .81-.973c.542-.939.861-2.127.861-3.745 0-2.72-.681-5.357-2.084-7.45-1.282-1.912-2.957-2.93-4.716-2.93-1.047 0-2.088.467-3.053 1.308-.652.57-1.257 1.29-1.82 2.05-.69-.875-1.335-1.547-1.958-2.056-1.182-.966-2.315-1.303-3.454-1.303zm10.16 2.053c1.147 0 2.188.758 2.992 1.999 1.132 1.748 1.647 4.195 1.647 6.4 0 1.548-.368 2.9-1.839 2.9-.58 0-1.027-.23-1.664-1.004-.496-.601-1.343-1.878-2.832-4.358l-.617-1.028a44.908 44.908 0 0 0-1.255-1.98c.07-.109.141-.224.211-.327 1.12-1.667 2.118-2.602 3.358-2.602zm-10.201.553c1.265 0 2.058.791 2.675 1.446.307.327.737.871 1.234 1.579l-1.02 1.566c-.757 1.163-1.882 3.017-2.837 4.338-1.191 1.649-1.81 1.817-2.486 1.817-.524 0-1.038-.237-1.383-.794-.263-.426-.464-1.13-.464-2.046 0-2.221.63-4.535 1.66-6.088.454-.687.964-1.226 1.533-1.533a2.264 2.264 0 0 1 1.088-.285z"
+        fill={color}
       />
     </svg>
   );
 }
 
-/** The Plotzy Studio mark. Used in the floating action button and as
- *  the empty-state hero. A simple two-stroke spark, hand-drawn so the
- *  brand stays distinct from any single AI provider's mark. */
+/** The Plotzy Studio mark. Two-stroke spark for the floating button
+ *  and the empty-state hero. Kept distinct from any provider mark. */
 export function StudioIcon({ size = 18, color = "#fff", style }: IconProps) {
   return (
     <svg
