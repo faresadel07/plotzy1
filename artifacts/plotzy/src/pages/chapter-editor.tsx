@@ -751,10 +751,11 @@ export default function ChapterEditor() {
       return touchedStored > 0 ? next : prev;
     });
 
-    // 3. Visual feedback — flash every mounted page card with a brief
-    //    accent border + glow so the writer SEES which pages were
-    //    affected. The toast alone was too easy to miss in the bottom
-    //    corner. Animation runs for 750ms and removes itself.
+    // 3. Visual feedback — every mounted page card briefly tints
+    //    iOS-selection blue so the writer SEES which pages were
+    //    affected. Toast alone was too easy to miss; an accent border
+    //    ring was too subtle against the existing page shadow. A solid
+    //    semi-transparent overlay is unmistakable.
     pageElsRef.current.forEach((el) => {
       if (!el) return;
       el.classList.remove("font-flash");
@@ -764,7 +765,7 @@ export default function ChapterEditor() {
       el.classList.add("font-flash");
       window.setTimeout(() => {
         el.classList.remove("font-flash");
-      }, 800);
+      }, 1100);
     });
 
     // 4. Feedback toast as well — belt and braces, and gives the writer
@@ -2220,18 +2221,31 @@ export default function ChapterEditor() {
       <style>{`::highlight(editor-search) { background: rgba(250, 204, 21, 0.4); color: inherit; }`}</style>
 
       {/* Flash animation fired when the user applies a font to the whole
-          chapter — every page card briefly pulses an accent ring so the
-          writer can SEE which pages were just re-fonted without us
-          having to select all the text (which is the jarring behaviour
-          the old version had). */}
+          chapter — every page card briefly tints in iOS selection blue
+          so the writer can SEE which pages were just re-fonted. We use
+          an ::after overlay (not a box-shadow ring) because the page
+          cards already carry their own shadow and rings get lost in it.
+          The overlay paints over the entire page content area, holds at
+          full opacity for the middle of the animation, then fades out
+          so the page is fully readable again. */}
       <style>{`
         @keyframes plotzy-font-flash {
-          0%   { box-shadow: 0 0 0 0 rgba(124, 108, 247, 0); }
-          25%  { box-shadow: 0 0 0 4px rgba(124, 108, 247, 0.55), 0 0 24px 6px rgba(124, 108, 247, 0.30); }
-          100% { box-shadow: 0 0 0 0 rgba(124, 108, 247, 0); }
+          0%   { opacity: 0; }
+          12%  { opacity: 1; }
+          70%  { opacity: 1; }
+          100% { opacity: 0; }
         }
         .font-flash > div:first-child {
-          animation: plotzy-font-flash 0.75s ease-out;
+          position: relative;
+        }
+        .font-flash > div:first-child::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: rgba(56, 132, 255, 0.32);
+          pointer-events: none;
+          z-index: 100;
+          animation: plotzy-font-flash 1.05s ease-out forwards;
         }
       `}</style>
 
