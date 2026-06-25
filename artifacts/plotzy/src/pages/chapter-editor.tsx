@@ -658,15 +658,118 @@ export default function ChapterEditor() {
   // via the RichChapterEditor `fontFamily` prop, so changing it re-fonts the
   // entire chapter and persists. We also strip inline per-selection font
   // overrides on the currently-mounted pages so the new base shows uniformly.
+  // Apply a single font to every page in the chapter, including pages
+  // that are not currently mounted in the DOM.
+  //
+  // What this used to do, and why it looked broken:
+  //   The previous version ran `ed.chain().selectAll().unsetFontFamily()`
+  //   on each mounted page editor. That visually selected every page in
+  //   the chapter (because selectAll changes the editor selection), and
+  //   if the text had no inline font-family mark there was nothing to
+  //   "unset" — so the user saw a flash of highlight and no font change.
+  //   Unmounted pages were also never touched, so any inline marks in
+  //   their stored HTML would stick around the next time those pages
+  //   rendered.
+  //
+  // What this does now:
+  //   1. Write the chosen font into prefs so the base CSS font-family on
+  //      every mounted and future-mounted editor switches immediately.
+  //   2. On every mounted editor, dispatch a ProseMirror transaction
+  //      that removes the font-family attribute from textStyle marks
+  //      across the whole document, WITHOUT changing the selection or
+  //      stealing focus. Other textStyle attributes (font size, etc.)
+  //      survive because we re-apply the mark with fontFamily nulled.
+  //   3. For pages not currently mounted, regex-strip the font-family
+  //      CSS property from inline style attributes in the stored HTML
+  //      so the new base font takes effect the moment those pages
+  //      mount.
+  //   4. Save prefs and confirm with a toast so the click is never
+  //      silent.
   const applyFontToWholeChapter = useCallback((fontId: string) => {
     const np = { ...prefs, fontFamily: fontId } as BookPreferences;
     setPrefs(np);
     handleSavePrefs(np);
+
+    // 1. Mounted editors: silent strip of font-family marks via PM tr.
+    let touchedMounted = 0;
     pageEditorRefs.current.forEach((ed) => {
       if (!ed || ed.isDestroyed) return;
-      ed.chain().selectAll().unsetFontFamily().run();
+      const view = ed.view;
+      const { state } = view;
+      const textStyleMark = state.schema.marks.textStyle;
+      if (!textStyleMark) return;
+      const tr = state.tr;
+      let changed = false;
+      state.doc.descendants((node, pos) => {
+        if (!node.isInline) return;
+        const mark = node.marks.find((m) => m.type === textStyleMark);
+        if (!mark) return;
+        if (mark.attrs.fontFamily == null) return;
+        const otherAttrs = Object.fromEntries(
+          Object.entries(mark.attrs).filter(([k]) => k !== "fontFamily"),
+        );
+        const hasOtherAttrs = Object.values(otherAttrs).some((v) => v != null);
+        tr.removeMark(pos, pos + node.nodeSize, textStyleMark);
+        if (hasOtherAttrs) {
+          tr.addMark(
+            pos,
+            pos + node.nodeSize,
+            textStyleMark.create({ ...otherAttrs, fontFamily: null }),
+          );
+        }
+        changed = true;
+      });
+      if (changed) {
+        // setMeta('addToHistory', false) keeps the silent font swap out of
+        // undo history so undo still gets the user back to their last
+        // real edit, not to a half-applied font.
+        tr.setMeta("addToHistory", false);
+        view.dispatch(tr);
+        touchedMounted += 1;
+      }
     });
-  }, [prefs]);
+
+    // 2. Unmounted pages: regex-strip font-family from inline style
+    //    attributes inside the stored HTML so they take the new base
+    //    font the moment they mount.
+    setRichPages((prev) => {
+      let touchedStored = 0;
+      const next = prev.map((html) => {
+        if (!html || !/style\s*=/.test(html)) return html;
+        const cleaned = html.replace(/style="([^"]*)"/gi, (_match, styles: string) => {
+          const parts = styles
+            .split(/;\s*/)
+            .filter((s) => s && !/^font-family\s*:/i.test(s));
+          const joined = parts.join("; ").trim();
+          return joined ? `style="${joined}"` : "";
+        });
+        if (cleaned !== html) touchedStored += 1;
+        return cleaned;
+      });
+      // Only commit a new array if at least one page actually changed —
+      // otherwise we'd nudge React into a no-op rerender on every click.
+      return touchedStored > 0 ? next : prev;
+    });
+
+    // 3. Feedback — the click is no longer silent even when there were
+    //    zero inline marks to clear. Build a friendly label from the
+    //    font id ("eb-garamond" -> "EB Garamond") and fall back to the
+    //    raw id for anything not in the kebab-case convention.
+    const label =
+      fontId
+        .split("-")
+        .map((w) => (w.length <= 2 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
+        .join(" ");
+    toast({
+      title: ar ? "تم تطبيق الخط" : "Font applied",
+      description: ar
+        ? `«${label}» على كل الفصل.`
+        : `${label} across the whole chapter.`,
+      duration: 2500,
+    });
+    void touchedMounted;
+    setIsDirty(true);
+  }, [prefs, ar, toast]);
   // Which page index should receive focus once its editor mounts (after a split)
   const nextPageFocusRef = useRef<number>(-1);
   // Pages that were freshly created by a user split and need overflow check on mount

@@ -299,10 +299,16 @@ export function RichWritingToolbar({
           {onApplyFontToWholeChapter && (
             <button
               onClick={() => {
-                const css = editor?.getAttributes("textStyle")?.fontFamily as string | undefined;
+                // Resolve the active font in priority order so the click is
+                // never silent: last font picked from the dropdown beats an
+                // inline mark, an inline mark beats the toolbar's current
+                // displayed font (currentFontObj), and the toolbar always
+                // resolves to FONT_OPTIONS[0] when nothing else is set, so
+                // `id` is guaranteed defined.
+                const css = (editor?.getAttributes("textStyle")?.fontFamily as string | undefined) ?? "";
                 const derived = css ? FONT_OPTIONS.find(f => f.fontFamily === css)?.id : undefined;
-                const id = lastFontId ?? derived;
-                if (id) onApplyFontToWholeChapter(id);
+                const id = lastFontId ?? derived ?? currentFontObj.id;
+                onApplyFontToWholeChapter(id);
               }}
               style={btn()} title="Apply the current font to the WHOLE chapter (all pages)"
               onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
