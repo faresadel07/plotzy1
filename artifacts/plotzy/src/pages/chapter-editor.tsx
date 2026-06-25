@@ -751,22 +751,35 @@ export default function ChapterEditor() {
       return touchedStored > 0 ? next : prev;
     });
 
-    // 3. Visual feedback — every mounted page card briefly tints
-    //    iOS-selection blue so the writer SEES which pages were
-    //    affected. Toast alone was too easy to miss; an accent border
-    //    ring was too subtle against the existing page shadow. A solid
-    //    semi-transparent overlay is unmistakable.
+    // 3. Visual feedback — every mounted page card stays tinted
+    //    iOS-selection blue until the writer interacts with the
+    //    document. Auto-fading after a second left the writer asking
+    //    "why did it disappear?"; persisting until they touch
+    //    anything turns the overlay into an explicit confirmation
+    //    they dismiss when they're ready to keep writing.
     pageElsRef.current.forEach((el) => {
       if (!el) return;
       el.classList.remove("font-flash");
-      // Force reflow so re-adding the class restarts the animation
-      // on a second click without a fresh React render in between.
+      // Force reflow so re-adding the class restarts the fade-in on
+      // a second click without a fresh React render in between.
       void (el as HTMLElement).offsetWidth;
       el.classList.add("font-flash");
-      window.setTimeout(() => {
-        el.classList.remove("font-flash");
-      }, 1100);
     });
+    // Dismiss the overlay on the next user interaction. We capture in
+    // the bubble phase on mousedown/keydown/wheel so any meaningful
+    // intent (clicking a page, starting to type, scrolling) clears it,
+    // but the click that triggered THIS handler doesn't auto-clear it.
+    const dismissFlash = () => {
+      pageElsRef.current.forEach((el) => el?.classList.remove("font-flash"));
+      window.removeEventListener("mousedown", dismissFlash);
+      window.removeEventListener("keydown", dismissFlash);
+      window.removeEventListener("wheel", dismissFlash);
+    };
+    window.setTimeout(() => {
+      window.addEventListener("mousedown", dismissFlash);
+      window.addEventListener("keydown", dismissFlash);
+      window.addEventListener("wheel", dismissFlash, { passive: true });
+    }, 50);
 
     // 4. Feedback toast as well — belt and braces, and gives the writer
     //    the exact font name in case they had a stale dropdown state.
@@ -2220,20 +2233,18 @@ export default function ChapterEditor() {
       {/* CSS for search highlights */}
       <style>{`::highlight(editor-search) { background: rgba(250, 204, 21, 0.4); color: inherit; }`}</style>
 
-      {/* Flash animation fired when the user applies a font to the whole
-          chapter — every page card briefly tints in iOS selection blue
-          so the writer can SEE which pages were just re-fonted. We use
-          an ::after overlay (not a box-shadow ring) because the page
-          cards already carry their own shadow and rings get lost in it.
-          The overlay paints over the entire page content area, holds at
-          full opacity for the middle of the animation, then fades out
-          so the page is fully readable again. */}
+      {/* "Font applied" overlay: every affected page card stays tinted
+          iOS-selection blue until the writer interacts (clicks,
+          presses a key, or scrolls). The previous version auto-faded
+          after ~1s, which the writer experienced as the highlight
+          "disappearing for no reason". Now it stays until dismissed,
+          so the writer can confirm the action visually for as long as
+          they want. The 250ms fade-IN keeps the appearance smooth
+          without an abrupt flash. */}
       <style>{`
-        @keyframes plotzy-font-flash {
-          0%   { opacity: 0; }
-          12%  { opacity: 1; }
-          70%  { opacity: 1; }
-          100% { opacity: 0; }
+        @keyframes plotzy-font-flash-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         .font-flash > div:first-child {
           position: relative;
@@ -2242,10 +2253,10 @@ export default function ChapterEditor() {
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(56, 132, 255, 0.32);
+          background: rgba(56, 132, 255, 0.30);
           pointer-events: none;
           z-index: 100;
-          animation: plotzy-font-flash 1.05s ease-out forwards;
+          animation: plotzy-font-flash-in 0.25s ease-out;
         }
       `}</style>
 
