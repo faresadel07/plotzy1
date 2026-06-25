@@ -547,7 +547,19 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           const split = splitAtOverflow(proseMirror, available);
           if (split) {
             onSplitNeededRef.current?.(split.fitsHtml, split.overflowHtml);
+            // After dispatching the split, the parent will hand back
+            // shorter content. Reset the editor's internal scroll
+            // position right away so this page does not render with its
+            // top lines clipped — ProseMirror scrolls itself up to keep
+            // the caret visible while content is in mid-overflow, and
+            // that scroll persists across the setContent that follows.
+            proseMirror.scrollTop = 0;
           }
+        } else if (proseMirror.scrollTop !== 0) {
+          // Content already fits but a previous scroll position is
+          // still pinning the view below the top of the page. Snap
+          // back to the top so the first line is always visible.
+          proseMirror.scrollTop = 0;
         }
       });
     },
@@ -568,6 +580,22 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
     if (editor && onEditorReady) onEditorReady(editor);
   }, [editor]);
 
+  // ── Pin the editor's internal scroll to the top ──────────────────────────
+  // Every page renders with overflow:hidden, but ProseMirror still scrolls
+  // its own DOM up to keep the caret visible when content briefly exceeds
+  // the page during typing or pasting. That scroll position persists across
+  // the pagination split that follows, leaving the page rendered with its
+  // first lines hidden behind the clip. Resetting scrollTop on every scroll
+  // event keeps the page anchored at the top regardless of what triggered
+  // the scroll.
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    const pmDom = editor.view.dom as HTMLElement;
+    const reset = () => { if (pmDom.scrollTop !== 0) pmDom.scrollTop = 0; };
+    pmDom.addEventListener("scroll", reset, { passive: true });
+    return () => pmDom.removeEventListener("scroll", reset);
+  }, [editor]);
+
   // ── Initial overflow check on mount ──────────────────────────────────────
   // Only fires for pages freshly created by a user split (checkOverflowOnMount=true).
   // Pages loaded from saved content are already correctly sized by splitHtmlIntoPages
@@ -584,6 +612,10 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         const fh = fixedHeightRef.current;
         if (!fh) return;
         const proseMirror = editor.view.dom as HTMLElement;
+        // Always pin the freshly mounted page at the top so its first
+        // line is visible; whatever scroll position the editor was
+        // born with is irrelevant.
+        proseMirror.scrollTop = 0;
         const contentH = proseMirror.scrollHeight;
         if (contentH <= fh + 2) return;
         const cs = window.getComputedStyle(proseMirror);
@@ -594,6 +626,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
           onSplitNeededRef.current?.(split.fitsHtml, split.overflowHtml);
         }
       });
+      void raf2;
     });
     return () => cancelAnimationFrame(raf1);
   }, [editor]);
@@ -609,6 +642,11 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
         suppressOverflowRef.current = true;
         lastSyncedRef.current = initialContent;
         editor.commands.setContent(initialContent, { emitUpdate: false });
+        // Reset internal scroll. Without this, a page whose content was
+        // just shrunk by a split keeps its old (non-zero) scrollTop and
+        // renders with the first line(s) hidden behind overflow:hidden.
+        const pmDom = editor.view.dom as HTMLElement;
+        pmDom.scrollTop = 0;
         // Re-enable after the next frame
         requestAnimationFrame(() => { suppressOverflowRef.current = false; });
       } else {
