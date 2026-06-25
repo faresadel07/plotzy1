@@ -605,8 +605,12 @@ export default function Home() {
           className="plotzy-mobile-hero"
           style={{
             position: "relative",
-            minHeight: "calc(100vh - 60px)",
-            background: "#080808",
+            // 100dvh keeps the section the EXACT height of the visible
+            // viewport, even when the browser's address bar expands
+            // or collapses mid-scroll. Supported in every browser
+            // released since 2022.
+            minHeight: "100dvh",
+            background: "#000000",
             overflow: "hidden",
           }}
         >
@@ -655,12 +659,12 @@ export default function Home() {
             style={{
               position: "relative",
               zIndex: 2,
-              minHeight: "calc(100vh - 60px)",
+              minHeight: "100dvh",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "flex-end",
-              padding: "40px 24px 52px",
+              padding: "40px 24px 64px",
               textAlign: "center",
             }}
           >
