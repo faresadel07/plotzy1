@@ -609,10 +609,33 @@ export default function Home() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: "40px 24px",
+            padding: "32px 24px 40px",
             textAlign: "center",
           }}
         >
+          {/* Hero illustration — gold pen pouring sparkling pages into an
+              open book. Only rendered on the mobile hero (phones); the
+              desktop hero uses a totally different layered scroll effect
+              so this image deliberately does not appear there. The black
+              background of the image is the same #080808 as the section,
+              so contain-fit leaves no visible borders. */}
+          <img
+            src={`${import.meta.env.BASE_URL}hero-mobile.jpg`}
+            alt={t("heroTagline")}
+            decoding="async"
+            fetchPriority="high"
+            draggable={false}
+            style={{
+              width: "auto",
+              height: "min(46vh, 420px)",
+              maxWidth: "92%",
+              objectFit: "contain",
+              marginBottom: 24,
+              userSelect: "none",
+              pointerEvents: "none",
+              filter: "drop-shadow(0 18px 42px rgba(218, 178, 106, 0.10))",
+            }}
+          />
           <p style={{
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
             fontSize: 18,
