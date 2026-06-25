@@ -19,7 +19,7 @@ import { RichChapterEditor } from "@/components/RichChapterEditor";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash } from "lucide-react";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { PrintPreview } from "@/components/chapter-editor/PrintPreview";
 import { PageSetupModal } from "@/components/chapter-editor/PageSetupModal";
@@ -1947,6 +1947,20 @@ export default function ChapterEditor() {
               )}
             </div>
 
+            {/* Page Number — opens the Page Setup modal where the
+                writer can change the format (— 1 —, · 1 ·, [ 1 ],
+                Page 1, 1 / N, plain), font, colour, size, position,
+                opacity, weight, italic, and small-caps. */}
+            <Button
+              variant="ghost" size="icon"
+              className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+              onClick={() => setShowPageSetup(true)}
+              title={ar ? "رقم الصفحة" : "Page Number"}
+              aria-label={ar ? "رقم الصفحة" : "Page Number"}
+            >
+              <Hash className="w-4 h-4" />
+            </Button>
+
             <div className="w-px h-5 bg-border/40 mx-1" />
 
             <AmbientSoundscape />
@@ -2528,15 +2542,71 @@ export default function ChapterEditor() {
                     checkOverflowOnMount={newSplitPagesRef.current.has(index)}
                   />
 
-                  {/* Page footer */}
+                  {/* Page footer — rule + customisable page number.
+                      Reads every pageNum* style off effectivePrefs so the
+                      Page Setup modal controls font, colour, size, format,
+                      position, opacity, weight, italic, and small-caps. */}
                   <div style={{ marginLeft: dynMarginL, marginRight: dynMarginR, height: 1, opacity: 0.1, background: resolvedTextColor || effectivePrefs.textColor || "currentColor", marginTop: 8 }} />
-                  <div className="flex items-center justify-center select-none" style={{ paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}>
-                    {(effectivePrefs.showPageNumbers !== false) && (
-                      <span className="text-[10px] opacity-30" style={{ color: resolvedTextColor || effectivePrefs.textColor || undefined }}>
-                        {`— ${index + 1} —`}
-                      </span>
-                    )}
-                  </div>
+                  {(() => {
+                    const pgPos = effectivePrefs.pageNumPosition || "center";
+                    const isOuter = pgPos === "outer";
+                    // Outer position: odd page numbers (1,3,5…) on the
+                    // leading edge, even on the trailing edge, like a
+                    // printed book.
+                    const resolvedPos = isOuter ? ((index % 2 === 0) ? "left" : "right") : pgPos;
+                    const justifyClass = resolvedPos === "left" ? "justify-start" : resolvedPos === "right" ? "justify-end" : "justify-center";
+                    const pgFmt = effectivePrefs.pageNumFormat || "dashes";
+                    const pgN = index + 1;
+                    const pgLabel =
+                      pgFmt === "plain"    ? `${pgN}` :
+                      pgFmt === "dots"     ? `· ${pgN} ·` :
+                      pgFmt === "brackets" ? `[ ${pgN} ]` :
+                      pgFmt === "word"     ? `Page ${pgN}` :
+                      pgFmt === "slash"    ? `${pgN} / ${richPages.length}` :
+                      `— ${pgN} —`;
+                    const pgOpacity = effectivePrefs.pageNumOpacity ?? (effectivePrefs.pageNumColor ? 0.75 : 0.3);
+                    return (
+                      <div
+                        className={`relative flex items-center ${justifyClass} select-none`}
+                        style={{ paddingLeft: dynMarginL, paddingRight: dynMarginR, paddingTop: 10, paddingBottom: Math.max(16, dynMarginB * 0.45) }}
+                      >
+                        {(effectivePrefs.showPageNumbers !== false) && (
+                          <span className="group/pgnum relative inline-flex items-center gap-1">
+                            <span
+                              style={{
+                                fontSize: effectivePrefs.pageNumSize ? `${effectivePrefs.pageNumSize}px` : "11px",
+                                fontFamily: effectivePrefs.pageNumFont || "inherit",
+                                color: effectivePrefs.pageNumColor || resolvedTextColor || effectivePrefs.textColor || undefined,
+                                letterSpacing: "0.2em",
+                                fontWeight: effectivePrefs.pageNumBold ? 700 : 400,
+                                fontStyle: effectivePrefs.pageNumItalic ? "italic" : "normal",
+                                fontVariant: effectivePrefs.pageNumSmallCaps ? "small-caps" : "normal",
+                                opacity: pgOpacity,
+                              }}
+                            >
+                              {pgLabel}
+                            </span>
+                            {/* Hover edit pencil — direct way to open the
+                                Page Setup modal from the page number itself. */}
+                            <button
+                              onClick={e => { e.stopPropagation(); setShowPageSetup(true); }}
+                              title={ar ? "تخصيص رقم الصفحة" : "Customize page number"}
+                              className="opacity-0 group-hover/pgnum:opacity-100 transition-opacity"
+                              style={{
+                                width: 16, height: 16, borderRadius: 4,
+                                background: "hsl(var(--primary))",
+                                border: "none", cursor: "pointer",
+                                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, marginLeft: 2,
+                              }}
+                            >
+                              <Pencil style={{ width: 8, height: 8, color: "#fff" }} />
+                            </button>
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Floating image overlay — absolutely positioned over the whole page */}
                   <FloatingImageOverlay
