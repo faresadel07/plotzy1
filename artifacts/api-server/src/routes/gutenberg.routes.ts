@@ -179,6 +179,24 @@ function stripGutenbergMarkers(rawText: string): string {
   return content;
 }
 
+/** Headers Gutenberg's CDN expects on every plain-text download.
+ *
+ *  Without an explicit User-Agent the Cloudflare layer in front of
+ *  gutenberg.org returns 403 / 503 for the request, which the older
+ *  code path swallowed as "this book has no plain-text version" and
+ *  silently deleted the textUrl in the DB. End result: every
+ *  not-yet-cached book in /discover landed on "Text not available".
+ *
+ *  The UA identifies Plotzy as the caller (so Gutenberg can rate-
+ *  limit us cleanly) and Accept biases their content negotiation
+ *  toward the .txt variant rather than the HTML reader page. */
+const GUTENBERG_FETCH_HEADERS: Record<string, string> = {
+  "User-Agent": "PlotzyReader/1.0 (+https://plotzy.co; library@plotzy.co)",
+  Accept: "text/plain, text/*;q=0.9, */*;q=0.5",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Accept-Encoding": "gzip, deflate, br",
+};
+
 /** Try every known URL pattern Gutenberg uses for plain-text books and return
  *  the first one that works, plus the cleaned content. Returns null when no
  *  variant is reachable — caller treats that as "this book has no plain-text
@@ -189,14 +207,34 @@ async function fetchAndCleanGutenbergText(
 ): Promise<{ content: string; textUrl: string } | null> {
   const candidates = gutenbergTextUrls(gutId);
   if (preferredUrl && !candidates.includes(preferredUrl)) candidates.unshift(preferredUrl);
+  const failures: Array<{ url: string; reason: string }> = [];
   for (const url of candidates) {
     try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
-      if (!r.ok) continue;
+      const r = await fetch(url, {
+        signal: AbortSignal.timeout(30_000),
+        headers: GUTENBERG_FETCH_HEADERS,
+        redirect: "follow",
+      });
+      if (!r.ok) {
+        failures.push({ url, reason: `HTTP ${r.status}` });
+        continue;
+      }
       const rawText = await r.text();
+      // Guard against partial or empty responses being treated as a
+      // successful download. Anything under ~500 chars from Gutenberg
+      // is almost certainly an error page or a stub, not a book.
+      if (!rawText || rawText.length < 500) {
+        failures.push({ url, reason: `body too small (${rawText?.length ?? 0} bytes)` });
+        continue;
+      }
       return { content: stripGutenbergMarkers(rawText), textUrl: url };
-    } catch { /* try next candidate */ }
+    } catch (err: any) {
+      failures.push({ url, reason: err?.message || "fetch error" });
+    }
   }
+  // Surface the cascade in logs so the next "Text not available" report
+  // can be diagnosed from production logs alone.
+  logger.warn({ gutId, failures }, "Gutenberg text fetch: every candidate URL failed");
   return null;
 }
 
@@ -213,10 +251,39 @@ async function fetchAndCleanGutenbergText(
  *  Idempotent — re-runs are no-ops once the target is met. Polite to
  *  gutenberg.org via a 2-second delay between fetches.
  */
+/** One-shot restoration for rows whose textUrl was wiped by the earlier
+ *  "mark broken on first fetch failure" behaviour. The pattern is
+ *  deterministic from the gutenbergId, so we can rebuild the canonical
+ *  URL with a single UPDATE. Without this every book that suffered even
+ *  one transient gutenberg.org outage stays hidden from /discover and
+ *  returns 404 from the reader forever. */
+export async function restoreNullTextUrls(): Promise<number> {
+  try {
+    const result = await db.execute(sql`
+      UPDATE gutenberg_books
+      SET text_url = 'https://www.gutenberg.org/cache/epub/' || gutenberg_id || '/pg' || gutenberg_id || '.txt'
+      WHERE text_url IS NULL
+    `);
+    const restored = (result as { rowCount?: number }).rowCount ?? 0;
+    if (restored > 0) {
+      logger.info({ restored }, "Restored Gutenberg textUrls that were wiped by the old fail-fast behaviour");
+    }
+    return restored;
+  } catch (err) {
+    logger.error({ err }, "Gutenberg textUrl restoration failed");
+    return 0;
+  }
+}
+
 export async function precacheTopBooks(target = PRECACHE_TARGET): Promise<void> {
   if (precacheRunning) return;
   precacheRunning = true;
   try {
+    // Heal first, cache second: if any rows were wiped by the old
+    // null-out behaviour, bring them back before we count what's
+    // cached or pick fresh candidates.
+    await restoreNullTextUrls();
+
     const [{ alreadyCached }] = await db
       .select({ alreadyCached: sql<number>`count(*)::int` })
       .from(gutenbergBooks)
@@ -252,10 +319,11 @@ export async function precacheTopBooks(target = PRECACHE_TARGET): Promise<void> 
             .where(eq(gutenbergBooks.gutenbergId, book.gutenbergId));
           succeeded++;
         } else {
-          // No plain-text version — mark broken so it disappears from discover.
-          await db.update(gutenbergBooks)
-            .set({ textUrl: null })
-            .where(eq(gutenbergBooks.gutenbergId, book.gutenbergId));
+          // Don't null the textUrl on the precache pass either. A single
+          // transient gutenberg.org blip would otherwise wipe out the
+          // entire shelf, with the book ever-after returning 404 to the
+          // reader because the row no longer has a textUrl to retry.
+          // Leave the URL in place; the next precache cycle will retry.
           failed++;
         }
       } catch (err) {
@@ -446,13 +514,13 @@ router.get("/api/gutenberg/books/:id/content", async (req: any, res: any) => {
 
     const result = await fetchAndCleanGutenbergText(gutId, row?.textUrl);
     if (!result) {
-      // No working URL — mark the row broken so the discover query hides it.
-      if (row) {
-        await db.update(gutenbergBooks)
-          .set({ textUrl: null })
-          .where(eq(gutenbergBooks.gutenbergId, gutId))
-          .catch((err) => logger.error({ err }, "Gutenberg DB update failed"));
-      }
+      // Do NOT null-out textUrl here. The previous version did, which
+      // caused a single transient gutenberg.org outage to mark every
+      // not-yet-cached book as permanently broken — the discover query
+      // then hid them and the reader returned 404 forever afterwards.
+      // Leave textUrl alone so the next request (and the precache
+      // sweeper) gets another chance. The /discover query continues to
+      // surface this book because textUrl is still present.
       return res.status(404).json({ error: "No plain-text version available for this book" });
     }
 
