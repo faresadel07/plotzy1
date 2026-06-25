@@ -602,23 +602,20 @@ export default function Home() {
           }
         `}</style>
         <section
-          className="plotzy-mobile-hero bg-[#080808]"
+          className="plotzy-mobile-hero"
           style={{
+            position: "relative",
             minHeight: "calc(100vh - 60px)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "32px 24px 40px",
-            textAlign: "center",
+            background: "#080808",
+            overflow: "hidden",
           }}
         >
-          {/* Hero illustration — gold pen pouring sparkling pages into an
-              open book. Only rendered on the mobile hero (phones); the
-              desktop hero uses a totally different layered scroll effect
-              so this image deliberately does not appear there. The black
-              background of the image is the same #080808 as the section,
-              so contain-fit leaves no visible borders. */}
+          {/* Hero illustration as a full-bleed backdrop. The image's
+              black background is the same #080808 as the page so the
+              edges blend without a visible card boundary. object-fit:
+              cover scales it to fill the section; object-position
+              biases the crop toward the top half so the pen and the
+              first cascade of pages stay in view on every viewport. */}
           <img
             src={`${import.meta.env.BASE_URL}hero-mobile.jpg`}
             alt={t("heroTagline")}
@@ -626,66 +623,101 @@ export default function Home() {
             fetchPriority="high"
             draggable={false}
             style={{
-              width: "auto",
-              height: "min(46vh, 420px)",
-              maxWidth: "92%",
-              objectFit: "contain",
-              marginBottom: 24,
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center top",
               userSelect: "none",
               pointerEvents: "none",
-              filter: "drop-shadow(0 18px 42px rgba(218, 178, 106, 0.10))",
+              zIndex: 0,
             }}
           />
-          <p style={{
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
-            fontSize: 18,
-            fontWeight: 400,
-            color: "rgba(255,255,255,0.72)",
-            marginBottom: 12,
-            letterSpacing: "0.01em",
-          }}>
-            {t("heroTagline")}
-          </p>
-          <h1 style={{
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
-            fontSize: "clamp(3.5rem, 18vw, 5rem)",
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: "-0.05em",
-            color: "#EFEFEF",
-            margin: "0 0 24px",
-            userSelect: "none",
-          }}>
-            PLOTZY
-          </h1>
-          <p style={{
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
-            fontSize: 15,
-            color: "rgba(255,255,255,0.5)",
-            maxWidth: 320,
-            margin: "0 0 32px",
-            lineHeight: 1.5,
-          }}>
-            {t("heroSubtitle")}
-          </p>
-          <button
-            onClick={openCreateBook}
+          {/* Gradient veil from transparent at the top of the image to
+              solid page black at the bottom so the wordmark, the
+              subtitle, and the CTA sit on a clean dark canvas. No hard
+              edge anywhere — the image bleeds into the page. */}
+          <div
+            aria-hidden
             style={{
-              padding: "14px 36px",
-              borderRadius: 999,
-              background: "#EFEFEF",
-              color: "#111",
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: "0.01em",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(to bottom, rgba(8,8,8,0) 0%, rgba(8,8,8,0) 38%, rgba(8,8,8,0.55) 60%, rgba(8,8,8,0.92) 82%, #080808 100%)",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          />
+          {/* Foreground content — the wordmark cluster floats over the
+              illustration. justify-content: flex-end pins it to the
+              bottom third where the gradient is darkest. */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              minHeight: "calc(100vh - 60px)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              padding: "40px 24px 52px",
+              textAlign: "center",
             }}
           >
-            {t("heroStartWriting")}
-          </button>
+            <p style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+              fontSize: 18,
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.78)",
+              marginBottom: 10,
+              letterSpacing: "0.01em",
+              textShadow: "0 2px 18px rgba(0,0,0,0.85)",
+            }}>
+              {t("heroTagline")}
+            </p>
+            <h1 style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+              fontSize: "clamp(3.5rem, 18vw, 5rem)",
+              fontWeight: 800,
+              lineHeight: 1,
+              letterSpacing: "-0.05em",
+              color: "#F3F3F3",
+              margin: "0 0 20px",
+              userSelect: "none",
+              textShadow: "0 4px 28px rgba(0,0,0,0.75)",
+            }}>
+              PLOTZY
+            </h1>
+            <p style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+              fontSize: 15,
+              color: "rgba(255,255,255,0.58)",
+              maxWidth: 320,
+              margin: "0 0 28px",
+              lineHeight: 1.5,
+              textShadow: "0 2px 14px rgba(0,0,0,0.85)",
+            }}>
+              {t("heroSubtitle")}
+            </p>
+            <button
+              onClick={openCreateBook}
+              style={{
+                padding: "14px 36px",
+                borderRadius: 999,
+                background: "#EFEFEF",
+                color: "#111",
+                fontWeight: 700,
+                fontSize: 14,
+                letterSpacing: "0.01em",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.65)",
+              }}
+            >
+              {t("heroStartWriting")}
+            </button>
+          </div>
         </section>
 
         {/* ===== HERO SECTION — ContainerScroll 3D (>= 700px only) ===== */}
