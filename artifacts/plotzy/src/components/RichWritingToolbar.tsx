@@ -98,9 +98,19 @@ interface RichWritingToolbarProps {
   isDark?: boolean;
   paperSize?: string;
   onPaperSizeChange?: (id: string) => void;
-  /** When provided, shows a button that sets the given font (by id) for the
-   *  whole chapter (every page), not just the current page. */
+  /** When provided, the book icon enters chapter-wide edit mode and
+   *  applies the current font to every page on entry. */
   onApplyFontToWholeChapter?: (fontId: string) => void;
+  /** When true, every formatting command from this toolbar fans out
+   *  across every editor in `bulkEditors` instead of running only on
+   *  the focused page. Toggled by the book icon and exited by Escape
+   *  or by clicking the book icon again. */
+  chapterWideMode?: boolean;
+  /** The editor handles for every mounted page. Used as the fan-out
+   *  target when `chapterWideMode` is true. */
+  bulkEditors?: (Editor | null)[];
+  /** Called when the writer asks to leave chapter-wide mode. */
+  onExitChapterWideMode?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -115,7 +125,43 @@ export function RichWritingToolbar({
   paperSize = "trade",
   onPaperSizeChange,
   onApplyFontToWholeChapter,
+  chapterWideMode = false,
+  bulkEditors,
+  onExitChapterWideMode,
 }: RichWritingToolbarProps) {
+  // ── Bulk-edit fan-out helper ─────────────────────────────────────
+  //
+  // In chapter-wide mode every formatting command runs across every
+  // mounted page editor: each editor selects its full document, runs
+  // the command, then clears the selection so the writer isn't left
+  // with a sticky highlight on a random page.
+  //
+  // In normal mode the helper falls back to the previous behaviour:
+  // run the command on the currently focused editor, scoped to its
+  // current selection.
+  //
+  // Boolean return mirrors a chain().run() so call-sites read the same
+  // whether they're in bulk mode or not.
+  // Loose Chain type so call sites can use custom commands (setFontSizePx,
+  // setColor, setHighlight, etc.) without TS choking on the extension shape.
+  type Chain = any;
+  const runBulk = (build: (chain: Chain) => Chain): boolean => {
+    if (chapterWideMode && bulkEditors && bulkEditors.length > 0) {
+      let any = false;
+      bulkEditors.forEach((ed) => {
+        if (!ed || ed.isDestroyed) return;
+        // selectAll → command → setTextSelection back to start so the
+        // editor doesn't end up with every page sticky-selected.
+        const c = ed.chain().selectAll() as Chain;
+        const built = build(c);
+        const ok = built.setTextSelection(0).run();
+        if (ok) any = true;
+      });
+      return any;
+    }
+    if (!editor) return false;
+    return build(editor.chain().focus() as Chain).run();
+  };
   // Force re-render on every editor transaction so active states update in real-time
   const [, forceUpdate] = useState(0);
   useEffect(() => {
@@ -198,12 +244,22 @@ export function RichWritingToolbar({
   };
 
   const applyTextStyle = (value: string) => {
-    if (!editor) return;
+    if (!editor && !chapterWideMode) return;
     setStyleDropOpen(false);
+    if (chapterWideMode) {
+      // Bulk: apply the heading/quote/paragraph choice to every page.
+      if (value === "paragraph") runBulk((c) => c.setParagraph());
+      else if (value === "title") runBulk((c) => c.setParagraph().setMark("textStyle", { fontSize: 28 }).toggleBold());
+      else if (value === "h1") runBulk((c) => c.toggleHeading({ level: 1 }));
+      else if (value === "h2") runBulk((c) => c.toggleHeading({ level: 2 }));
+      else if (value === "h3") runBulk((c) => c.toggleHeading({ level: 3 }));
+      else if (value === "blockquote") runBulk((c) => c.toggleBlockquote());
+      return;
+    }
     const chain = restoreSelection()!;
     if (value === "paragraph" || value === "title") {
       chain.setParagraph().run();
-      if (value === "title") editor.chain().focus().setMark("textStyle", { fontSize: 28 }).toggleBold().run();
+      if (value === "title") editor!.chain().focus().setMark("textStyle", { fontSize: 28 }).toggleBold().run();
     } else if (value === "h1") chain.toggleHeading({ level: 1 }).run();
     else if (value === "h2") chain.toggleHeading({ level: 2 }).run();
     else if (value === "h3") chain.toggleHeading({ level: 3 }).run();
@@ -211,15 +267,18 @@ export function RichWritingToolbar({
   };
 
   const applyFont = (font: typeof FONT_OPTIONS[number]) => {
-    if (!editor) return;
-    restoreSelection()!.setFontFamily(font.fontFamily).run();
+    if (chapterWideMode) {
+      runBulk((c) => c.setFontFamily(font.fontFamily));
+    } else if (editor) {
+      restoreSelection()!.setFontFamily(font.fontFamily).run();
+    }
     setLastFontId(font.id);
     setFontDropOpen(false);
   };
 
   const setSize = (size: number) => {
     const clamped = Math.max(8, Math.min(96, size));
-    editor?.chain().focus().setFontSizePx(clamped).run();
+    runBulk((c) => c.setFontSizePx(clamped));
   };
 
   const changeSize = (delta: number) => {
@@ -257,6 +316,35 @@ export function RichWritingToolbar({
 
   return (
     <>
+      {/* Chapter-wide editing banner — slides in when the mode is on so
+          the writer always knows their next toolbar action will apply to
+          every page of the chapter, not just the one they're on. */}
+      {chapterWideMode && (
+        <div
+          className="sticky top-12 z-40 flex items-center justify-center gap-3 px-4 py-2 text-xs font-medium flex-shrink-0"
+          style={{
+            background: "rgba(56, 132, 255, 0.16)",
+            color: "#3884ff",
+            borderBottom: "1px solid rgba(56, 132, 255, 0.32)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <Book className="w-3.5 h-3.5" />
+          <span>Chapter-wide editing — every toolbar change applies to all pages.</span>
+          <button
+            onClick={() => onExitChapterWideMode?.()}
+            className="ml-2 px-2 py-0.5 rounded text-[11px] font-semibold"
+            style={{
+              background: "rgba(56, 132, 255, 0.20)",
+              color: "#3884ff",
+              border: "1px solid rgba(56, 132, 255, 0.40)",
+              cursor: "pointer",
+            }}
+          >
+            Exit (Esc)
+          </button>
+        </div>
+      )}
       <div
         className="sticky top-12 z-40 border-b flex-shrink-0 transition-all duration-500"
         style={{
@@ -264,6 +352,7 @@ export function RichWritingToolbar({
           borderColor: dividerColor,
           backdropFilter: "blur(12px)",
           opacity: isFocusMode ? 0.08 : 1,
+          top: chapterWideMode ? 80 : 48,
         }}
         onMouseDown={e => e.preventDefault()}
         onMouseEnter={e => { if (isFocusMode) (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
@@ -299,20 +388,32 @@ export function RichWritingToolbar({
           {onApplyFontToWholeChapter && (
             <button
               onClick={() => {
-                // Resolve the active font in priority order so the click is
-                // never silent: last font picked from the dropdown beats an
-                // inline mark, an inline mark beats the toolbar's current
-                // displayed font (currentFontObj), and the toolbar always
-                // resolves to FONT_OPTIONS[0] when nothing else is set, so
-                // `id` is guaranteed defined.
+                // If we're already in chapter-wide mode, the same icon
+                // exits it. Otherwise enter the mode and apply the
+                // currently-resolved font to every page on the way in,
+                // so the writer gets immediate font application for
+                // free even if all they wanted was a one-shot change.
+                if (chapterWideMode) {
+                  onExitChapterWideMode?.();
+                  return;
+                }
                 const css = (editor?.getAttributes("textStyle")?.fontFamily as string | undefined) ?? "";
                 const derived = css ? FONT_OPTIONS.find(f => f.fontFamily === css)?.id : undefined;
                 const id = lastFontId ?? derived ?? currentFontObj.id;
                 onApplyFontToWholeChapter(id);
               }}
-              style={btn()} title="Apply the current font to the WHOLE chapter (all pages)"
-              onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+              style={{
+                ...btn(),
+                background: chapterWideMode ? "rgba(56, 132, 255, 0.20)" : "transparent",
+                color: chapterWideMode ? "#3884ff" : undefined,
+              }}
+              title={
+                chapterWideMode
+                  ? "Exit chapter-wide editing (Esc)"
+                  : "Apply the current font to the WHOLE chapter (all pages)"
+              }
+              onMouseEnter={e => (e.currentTarget.style.background = chapterWideMode ? "rgba(56, 132, 255, 0.30)" : hoverBg)}
+              onMouseLeave={e => (e.currentTarget.style.background = chapterWideMode ? "rgba(56, 132, 255, 0.20)" : "transparent")}>
               <Book className="w-3.5 h-3.5" />
             </button>
           )}
@@ -473,25 +574,25 @@ export function RichWritingToolbar({
           <Sep />
 
           {/* ── Bold / Italic / Underline / Strike ── */}
-          <button onClick={() => editor?.chain().focus().toggleBold().run()}
+          <button onClick={() => runBulk((c) => c.toggleBold())}
             style={btn(editor?.isActive("bold"))} title="Bold (Ctrl+B)"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("bold") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("bold") ? activeBg : "transparent")}>
             <Bold className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => editor?.chain().focus().toggleItalic().run()}
+          <button onClick={() => runBulk((c) => c.toggleItalic())}
             style={btn(editor?.isActive("italic"))} title="Italic (Ctrl+I)"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("italic") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("italic") ? activeBg : "transparent")}>
             <Italic className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => editor?.chain().focus().toggleUnderline().run()}
+          <button onClick={() => runBulk((c) => c.toggleUnderline())}
             style={btn(editor?.isActive("underline"))} title="Underline (Ctrl+U)"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("underline") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("underline") ? activeBg : "transparent")}>
             <UnderlineIcon className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => editor?.chain().focus().toggleStrike().run()}
+          <button onClick={() => runBulk((c) => c.toggleStrike())}
             style={btn(editor?.isActive("strike"))} title="Strikethrough"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("strike") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("strike") ? activeBg : "transparent")}>
@@ -512,7 +613,7 @@ export function RichWritingToolbar({
             </button>
             <input id="rich-text-color" type="color"
               defaultValue="#111111"
-              onChange={e => editor?.chain().focus().setColor(e.target.value).run()}
+              onChange={e => { const v = e.target.value; runBulk((c) => c.setColor(v)); }}
               style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }}
             />
           </div>
@@ -529,7 +630,7 @@ export function RichWritingToolbar({
             </button>
             <input id="rich-highlight-color" type="color"
               defaultValue="#fef08a"
-              onChange={e => editor?.chain().focus().setHighlight({ color: e.target.value }).run()}
+              onChange={e => { const v = e.target.value; runBulk((c) => c.setHighlight({ color: v })); }}
               style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }}
             />
           </div>
@@ -556,7 +657,7 @@ export function RichWritingToolbar({
             const Icon = a === "left" ? AlignLeft : a === "center" ? AlignCenter : a === "right" ? AlignRight : AlignJustify;
             const labels = { left: "Left", center: "Center", right: "Right", justify: "Justify" };
             return (
-              <button key={a} onClick={() => editor?.chain().focus().setTextAlign(a).run()}
+              <button key={a} onClick={() => runBulk((c) => c.setTextAlign(a))}
                 style={btn(editor?.isActive({ textAlign: a }))} title={labels[a]}
                 onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive({ textAlign: a }) ? activeBg : hoverBg)}
                 onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive({ textAlign: a }) ? activeBg : "transparent")}>
@@ -568,13 +669,13 @@ export function RichWritingToolbar({
           <Sep />
 
           {/* ── Lists ── */}
-          <button onClick={() => editor?.chain().focus().toggleBulletList().run()}
+          <button onClick={() => runBulk((c) => c.toggleBulletList())}
             style={btn(editor?.isActive("bulletList"))} title="Bulleted list"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("bulletList") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("bulletList") ? activeBg : "transparent")}>
             <List className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+          <button onClick={() => runBulk((c) => c.toggleOrderedList())}
             style={btn(editor?.isActive("orderedList"))} title="Numbered list"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("orderedList") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("orderedList") ? activeBg : "transparent")}>
@@ -584,7 +685,7 @@ export function RichWritingToolbar({
           <Sep />
 
           {/* ── Blockquote ── */}
-          <button onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+          <button onClick={() => runBulk((c) => c.toggleBlockquote())}
             style={btn(editor?.isActive("blockquote"))} title="Blockquote"
             onMouseEnter={e => (e.currentTarget.style.background = editor?.isActive("blockquote") ? activeBg : hoverBg)}
             onMouseLeave={e => (e.currentTarget.style.background = editor?.isActive("blockquote") ? activeBg : "transparent")}>
@@ -599,7 +700,7 @@ export function RichWritingToolbar({
               less surprising than the previous version where the
               optional-chain silently swallowed every click. */}
           <button
-            onClick={() => editor?.chain().focus().sinkListItem("listItem").run()}
+            onClick={() => runBulk((c) => c.sinkListItem("listItem"))}
             style={btn()}
             disabled={!editor?.can().sinkListItem("listItem")}
             title="Indent list item (Tab)"
@@ -609,7 +710,7 @@ export function RichWritingToolbar({
             <Indent className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => editor?.chain().focus().liftListItem("listItem").run()}
+            onClick={() => runBulk((c) => c.liftListItem("listItem"))}
             style={btn()}
             disabled={!editor?.can().liftListItem("listItem")}
             title="Outdent list item (Shift+Tab)"

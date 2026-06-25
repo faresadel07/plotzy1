@@ -517,6 +517,15 @@ export default function ChapterEditor() {
   const mainRef = useRef<HTMLElement>(null);
   const autoZoomApplied = useRef(false);
 
+  // ── Chapter-wide edit mode ──────────────────────────────────────────────
+  // When ON, every toolbar action (font, size, bold, italic, colour,
+  // alignment, lists, headings, etc.) fans out across every mounted page
+  // editor instead of just the focused one. Entered by clicking the
+  // "Apply font to whole chapter" book icon in the toolbar; exited by
+  // clicking the same icon again, pressing Escape, or clicking outside
+  // the editor area.
+  const [chapterWideMode, setChapterWideMode] = useState(false);
+
   // Reset auto-zoom when chapter changes
   useEffect(() => {
     autoZoomApplied.current = false;
@@ -751,35 +760,19 @@ export default function ChapterEditor() {
       return touchedStored > 0 ? next : prev;
     });
 
-    // 3. Visual feedback — every mounted page card stays tinted
-    //    iOS-selection blue until the writer interacts with the
-    //    document. Auto-fading after a second left the writer asking
-    //    "why did it disappear?"; persisting until they touch
-    //    anything turns the overlay into an explicit confirmation
-    //    they dismiss when they're ready to keep writing.
+    // 3. Enter chapter-wide edit mode. Every page card stays tinted
+    //    iOS-selection blue until the writer exits. While the mode is
+    //    on, the toolbar fans every action out across every mounted
+    //    page editor, so changing the font, toggling bold, switching
+    //    alignment, or applying any other formatting from the toolbar
+    //    applies to the whole chapter at once.
     pageElsRef.current.forEach((el) => {
       if (!el) return;
       el.classList.remove("font-flash");
-      // Force reflow so re-adding the class restarts the fade-in on
-      // a second click without a fresh React render in between.
       void (el as HTMLElement).offsetWidth;
       el.classList.add("font-flash");
     });
-    // Dismiss the overlay on the next user interaction. We capture in
-    // the bubble phase on mousedown/keydown/wheel so any meaningful
-    // intent (clicking a page, starting to type, scrolling) clears it,
-    // but the click that triggered THIS handler doesn't auto-clear it.
-    const dismissFlash = () => {
-      pageElsRef.current.forEach((el) => el?.classList.remove("font-flash"));
-      window.removeEventListener("mousedown", dismissFlash);
-      window.removeEventListener("keydown", dismissFlash);
-      window.removeEventListener("wheel", dismissFlash);
-    };
-    window.setTimeout(() => {
-      window.addEventListener("mousedown", dismissFlash);
-      window.addEventListener("keydown", dismissFlash);
-      window.addEventListener("wheel", dismissFlash, { passive: true });
-    }, 50);
+    setChapterWideMode(true);
 
     // 4. Feedback toast as well — belt and braces, and gives the writer
     //    the exact font name in case they had a stale dropdown state.
@@ -798,6 +791,28 @@ export default function ChapterEditor() {
     void touchedMounted;
     setIsDirty(true);
   }, [prefs, ar, toast]);
+
+  // Exit chapter-wide edit mode: clear the blue overlay on every page
+  // card and flip the state flag back to false so the toolbar resumes
+  // its single-editor behaviour.
+  const exitChapterWideMode = useCallback(() => {
+    pageElsRef.current.forEach((el) => el?.classList.remove("font-flash"));
+    setChapterWideMode(false);
+  }, []);
+
+  // Escape exits chapter-wide mode. Active only while the mode is on so
+  // we don't intercept Esc for any other purpose during normal editing.
+  useEffect(() => {
+    if (!chapterWideMode) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      exitChapterWideMode();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [chapterWideMode, exitChapterWideMode]);
+
   // Which page index should receive focus once its editor mounts (after a split)
   const nextPageFocusRef = useRef<number>(-1);
   // Pages that were freshly created by a user split and need overflow check on mount
@@ -2216,6 +2231,9 @@ export default function ChapterEditor() {
         <RichWritingToolbar
           editor={activeToolbarEditor || (tiptapReady ? tiptapEditorRef.current : null)}
           onApplyFontToWholeChapter={applyFontToWholeChapter}
+          chapterWideMode={chapterWideMode}
+          bulkEditors={pageEditorRefs.current}
+          onExitChapterWideMode={exitChapterWideMode}
           zoom={zoom}
           onZoomChange={handleZoomChange}
           onPrint={() => setIsPrintView(true)}
