@@ -675,7 +675,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
         {/* Main content */}
         <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 48px', position: 'relative' }}>
-          <div className="site-footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '32px 40px', alignItems: 'start' }}>
+          <div className="site-footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1fr 1fr 1fr', gap: '32px 36px', alignItems: 'start' }}>
 
             {/* Brand */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -683,7 +683,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                 <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 7, filter: 'invert(1)' }} />
                 <span style={{ fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
               </a>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: 'rgba(255,255,255,0.32)', maxWidth: 240, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,0.34)', maxWidth: 240, margin: 0 }}>
                 The modern platform for writers. Write, publish, and share your stories with the world.
               </p>
               <p style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)', margin: 0, paddingTop: 2, borderLeft: '2px solid rgba(255,255,255,0.08)', paddingLeft: 10 }}>
@@ -692,37 +692,51 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               <FooterSocialIcons />
             </div>
 
-            {/* Write */}
+            {/* Write — the creation tools the writer uses every day */}
             <FooterCol title="Write" links={[
-              { label: 'Dashboard', href: '/dashboard' },
-              { label: 'AI Marketplace', href: '/marketplace' },
-              { label: 'Cover Designer', href: '/' },
-              { label: 'Donate', href: '/pricing' },
+              { label: 'Dashboard',         href: '/dashboard' },
+              { label: 'My Library',        href: '/' },
+              { label: 'AI Marketplace',    href: '/marketplace' },
+              { label: 'Cover Designer',    href: '/dashboard' },
+              { label: 'Audiobook Studio',  href: '/dashboard' },
+              { label: 'Find Publishers',   href: '/dashboard' },
+              { label: 'Trash',             href: '/trash' },
             ]} />
 
-            {/* Read & Explore */}
+            {/* Read & Explore — discovery surfaces */}
             <FooterCol title="Read & Explore" links={[
-              { label: 'Community Library', href: '/library' },
-              { label: 'Public Domain Books', href: '/discover' },
-              { label: 'Messages', href: '/messages' },
-              { label: 'About Plotzy', href: '/about' },
+              { label: 'Community Library',  href: '/library' },
+              { label: 'Public Domain Books',href: '/discover' },
+              { label: 'Authors',            href: '/library' },
+              { label: 'Blog',               href: '/blog' },
+              { label: 'Messages',           href: '/messages' },
             ]} />
 
-            {/* Learn */}
+            {/* Learn — every educational surface in one place */}
             <FooterCol title="Learn" links={[
               { label: 'Free Writing Course', href: '/course' },
-              { label: 'FAQ', href: '/faq' },
-              { label: 'Writing Guide', href: '/writing-guide' },
-              { label: 'Tutorial Videos', href: '/tutorial' },
-              { label: 'Support Center', href: '/support' },
+              { label: 'Plotzy Academy',      href: '/learn' },
+              { label: 'Writing Guide',       href: '/writing-guide' },
+              { label: 'Tutorial Videos',     href: '/tutorial' },
+              { label: 'FAQ',                 href: '/faq' },
+              { label: 'Support Center',      href: '/support' },
             ]} />
 
-            {/* Legal */}
+            {/* Company — who we are, how to reach us, how to help us */}
+            <FooterCol title="Company" links={[
+              { label: 'About Plotzy',  href: '/about' },
+              { label: 'Pricing',       href: '/pricing' },
+              { label: 'Donate',        href: '/pricing' },
+              { label: 'Contact',       href: '/support' },
+              { label: 'Status',        href: '/support' },
+            ]} />
+
+            {/* Legal — the boring-but-load-bearing stuff */}
             <FooterCol title="Legal" links={[
               { label: 'Writer Protection', href: '/protection' },
-              { label: 'Privacy Policy', href: '/privacy' },
-              { label: 'Terms of Service', href: '/terms' },
-              { label: 'Cookie Settings', onClick: () => { import('@/components/CookieBanner').then(m => m.openCookieSettings()); } },
+              { label: 'Privacy Policy',    href: '/privacy' },
+              { label: 'Terms of Service',  href: '/terms' },
+              { label: 'Cookie Settings',   onClick: () => { import('@/components/CookieBanner').then(m => m.openCookieSettings()); } },
             ]} />
 
           </div>
@@ -734,8 +748,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
               &copy; {new Date().getFullYear()} Plotzy, Inc. All rights reserved.
             </p>
-            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.15)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-              Made with <span style={{ color: '#cc2244', fontSize: 12 }}>♥</span> for writers worldwide
+            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.15)', margin: 0 }}>
+              Made for writers worldwide.
             </p>
           </div>
         </div>
@@ -762,11 +776,22 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
       {/* ── Responsive styles ── */}
       <style>{`
+        @media (max-width: 1100px) {
+          /* Tablet: 6-column footer wraps to 2 rows of 3 to keep cards readable. */
+          .site-footer-grid {
+            grid-template-columns: 1fr 1fr 1fr !important;
+            gap: 32px 32px !important;
+          }
+          .site-footer-grid > :first-child {
+            grid-column: 1 / -1;
+          }
+        }
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-menu-btn { display: flex !important; }
           .admin-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .site-footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .site-footer-grid > :first-child { grid-column: auto !important; }
         }
         @media (min-width: 769px) {
           .mobile-menu-btn { display: none !important; }
