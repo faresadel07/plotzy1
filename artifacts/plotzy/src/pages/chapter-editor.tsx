@@ -751,10 +751,24 @@ export default function ChapterEditor() {
       return touchedStored > 0 ? next : prev;
     });
 
-    // 3. Feedback — the click is no longer silent even when there were
-    //    zero inline marks to clear. Build a friendly label from the
-    //    font id ("eb-garamond" -> "EB Garamond") and fall back to the
-    //    raw id for anything not in the kebab-case convention.
+    // 3. Visual feedback — flash every mounted page card with a brief
+    //    accent border + glow so the writer SEES which pages were
+    //    affected. The toast alone was too easy to miss in the bottom
+    //    corner. Animation runs for 750ms and removes itself.
+    pageElsRef.current.forEach((el) => {
+      if (!el) return;
+      el.classList.remove("font-flash");
+      // Force reflow so re-adding the class restarts the animation
+      // on a second click without a fresh React render in between.
+      void (el as HTMLElement).offsetWidth;
+      el.classList.add("font-flash");
+      window.setTimeout(() => {
+        el.classList.remove("font-flash");
+      }, 800);
+    });
+
+    // 4. Feedback toast as well — belt and braces, and gives the writer
+    //    the exact font name in case they had a stale dropdown state.
     const label =
       fontId
         .split("-")
@@ -2204,6 +2218,22 @@ export default function ChapterEditor() {
 
       {/* CSS for search highlights */}
       <style>{`::highlight(editor-search) { background: rgba(250, 204, 21, 0.4); color: inherit; }`}</style>
+
+      {/* Flash animation fired when the user applies a font to the whole
+          chapter — every page card briefly pulses an accent ring so the
+          writer can SEE which pages were just re-fonted without us
+          having to select all the text (which is the jarring behaviour
+          the old version had). */}
+      <style>{`
+        @keyframes plotzy-font-flash {
+          0%   { box-shadow: 0 0 0 0 rgba(124, 108, 247, 0); }
+          25%  { box-shadow: 0 0 0 4px rgba(124, 108, 247, 0.55), 0 0 24px 6px rgba(124, 108, 247, 0.30); }
+          100% { box-shadow: 0 0 0 0 rgba(124, 108, 247, 0); }
+        }
+        .font-flash > div:first-child {
+          animation: plotzy-font-flash 0.75s ease-out;
+        }
+      `}</style>
 
       {/* ── Editor Search Bar ── */}
       {showEditorSearch && (
