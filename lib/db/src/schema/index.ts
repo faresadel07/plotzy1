@@ -1371,6 +1371,96 @@ export type Follow = typeof follows.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type DirectMessage = typeof directMessages.$inferSelect;
 
+// ─────────────────────────────────────────────────────────────────────
+// PUBLISHER SUBMISSION TRACKER
+// ─────────────────────────────────────────────────────────────────────
+//
+// Per-user log of every query / submission a writer has sent out into
+// the world. Turns the Find Publishers page from a static directory
+// into a working CRM: the writer can see what's pending, what's been
+// rejected, what's been accepted, average response times, follow-up
+// reminders, and the materials they sent each time.
+//
+// The recipient is identified by a free-text key that points either at
+// a publisher in shared/publishers.ts (id like "sourcebooks") or at a
+// literary agent in shared/agents.ts (id like "agent-XXX"). We don't
+// foreign-key it to a DB table because both directories live in static
+// shared files that ship with the bundle, not in the database.
+export const publisherSubmissions = pgTable("publisher_submissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: integer("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  // Recipient: "pub:sourcebooks" for a publisher from shared/publishers.ts,
+  // "agent:janet-reid" for a literary agent from shared/agents.ts.
+  // Prefix lets the UI route clicks back to the right detail panel.
+  recipientKey: text("recipient_key").notNull(),
+  // Snapshot of the recipient name at the moment of submission so the
+  // tracker keeps reading correctly even if the directory file is
+  // reorganised later.
+  recipientName: text("recipient_name").notNull(),
+  // Submission status, normalised to one of:
+  //   "draft"        — saved but not yet submitted
+  //   "submitted"    — sent, waiting for a response
+  //   "rejected"     — declined (form letter or personalised)
+  //   "accepted"     — offered representation or a contract
+  //   "withdrawn"    — pulled by the writer
+  //   "no_response"  — closed by the writer after the publisher's stated
+  //                    response window passed with silence
+  status: text("status").notNull().default("draft"),
+  // When the writer actually sent the query. Nullable for drafts.
+  submittedAt: timestamp("submitted_at"),
+  // When the recipient replied (or when the writer marked it
+  // no_response).
+  respondedAt: timestamp("responded_at"),
+  // Date the writer wants a reminder if no response has arrived. The
+  // tracker UI surfaces these in the dashboard.
+  followUpAt: timestamp("follow_up_at"),
+  // Free-text notes — pasted rejection text, personalised comments
+  // from the editor, agent's request for full manuscript, etc.
+  notes: text("notes"),
+  // Snapshot of the materials sent (query letter, synopsis, sample
+  // pages). Stored as JSONB so the UI can recover exactly what the
+  // writer sent, even after they edit the templates later.
+  materials: jsonb("materials").$type<{
+    queryLetter?: string;
+    synopsis?: string;
+    samplePages?: string;
+    bio?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  // Dashboard list query: WHERE userId=? ORDER BY updatedAt DESC.
+  index("idx_pub_subs_user").on(t.userId),
+  // Per-book tracker: WHERE userId=? AND bookId=?.
+  index("idx_pub_subs_user_book").on(t.userId, t.bookId),
+  // Follow-up sweeper: WHERE userId=? AND followUpAt <= NOW().
+  index("idx_pub_subs_followup").on(t.userId, t.followUpAt),
+]);
+
+export type PublisherSubmission = typeof publisherSubmissions.$inferSelect;
+export type InsertPublisherSubmission = typeof publisherSubmissions.$inferInsert;
+
+// Saved (favourited) publishers — a per-user bookmark layer over the
+// static publisher directory. Lets the writer build a shortlist before
+// they're ready to submit anywhere.
+export const savedPublishers = pgTable("saved_publishers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // Same recipientKey scheme as publisherSubmissions so a saved entry
+  // can point at a publisher OR an agent.
+  recipientKey: text("recipient_key").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("idx_saved_pub_user").on(t.userId),
+  // No two saved rows per user for the same recipient.
+  uniqueIndex("uniq_saved_pub_user_recipient").on(t.userId, t.recipientKey),
+]);
+
+export type SavedPublisher = typeof savedPublishers.$inferSelect;
+export type InsertSavedPublisher = typeof savedPublishers.$inferInsert;
+
 // ── Subscription Tiers ───────────────────────────────────────────────────
 //
 // FREE tier:  Limited access to test the platform

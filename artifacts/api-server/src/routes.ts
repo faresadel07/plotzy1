@@ -35,6 +35,7 @@ import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import courseRouter from "./routes/course.routes";
 import studioRouter from "./routes/studio.routes";
+import publisherTrackerRouter from "./routes/publisher-tracker.routes";
 import { logger } from "./lib/logger";
 import { memoize, invalidate as invalidateMemoryCache } from "./lib/memory-cache";
 import { fileURLToPath } from "url";
@@ -3086,6 +3087,9 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ── Hindawi Arabic public-domain routes (./routes/hindawi.routes.ts) ─────
   app.use(hindawiRouter);
+
+  // ── Publisher submission tracker (./routes/publisher-tracker.routes.ts) ──
+  app.use(publisherTrackerRouter);
 
   // ── Series, Admin CRUD, Banner, Support (extracted to ./routes/misc.routes.ts) ──
   app.use(miscRouter);
