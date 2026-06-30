@@ -21,7 +21,8 @@ import { useLanguage } from "@/contexts/language-context";
 import {
   ArrowLeft, ArrowRight, Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Moon, ChevronUp, ChevronDown, BookAudio,
-  Loader2, ExternalLink, Gauge,
+  Loader2, ExternalLink, Gauge, Bookmark, BookmarkPlus, Trash2,
+  Sparkles, BookOpen, X,
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -63,6 +64,18 @@ interface Progress {
   playbackRate: number;
 }
 
+interface BookmarkRow {
+  id: number;
+  chapterIndex: number;
+  positionSeconds: number;
+  label: string | null;
+  createdAt: string;
+}
+
+interface TextMatch {
+  match: { gutenbergId: number; title: string } | null;
+}
+
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2];
 const SLEEP_OPTIONS = [5, 15, 30, 45, 60];
 
@@ -95,6 +108,10 @@ export default function AudiolibraryPlayerPage() {
   const [showSleepMenu, setShowSleepMenu] = useState(false);
   const [sleepUntil, setSleepUntil] = useState<number | null>(null); // epoch ms
   const [loadedProgress, setLoadedProgress] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showText, setShowText] = useState(false);
+  const [bookmarkLabelDraft, setBookmarkLabelDraft] = useState("");
+  const [showAddBookmark, setShowAddBookmark] = useState(false);
 
   // ── Data ──
   const { data: book, isLoading } = useQuery<AudioBookDetail>({
@@ -143,6 +160,60 @@ export default function AudiolibraryPlayerPage() {
         body: JSON.stringify(input),
       });
     },
+  });
+
+  // ── Bookmarks ──
+  const bookmarksQuery = useQuery<{ bookmarks: BookmarkRow[] }>({
+    queryKey: [`/api/audiolibrary/bookmarks/${bookId}`],
+    queryFn: async () => {
+      const r = await fetch(`/api/audiolibrary/bookmarks/${bookId}`, { credentials: "include" });
+      if (!r.ok) return { bookmarks: [] };
+      return r.json();
+    },
+    enabled: bookId > 0,
+  });
+  const createBookmark = useMutation({
+    mutationFn: async (input: { chapterIndex: number; positionSeconds: number; label: string | null }) => {
+      const r = await fetch(`/api/audiolibrary/bookmarks`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, ...input }),
+      });
+      if (!r.ok) throw new Error(`Failed (${r.status})`);
+      return r.json();
+    },
+    onSuccess: () => bookmarksQuery.refetch(),
+  });
+  const deleteBookmark = useMutation({
+    mutationFn: async (id: number) => {
+      const r = await fetch(`/api/audiolibrary/bookmarks/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!r.ok && r.status !== 204) throw new Error(`Failed (${r.status})`);
+    },
+    onSuccess: () => bookmarksQuery.refetch(),
+  });
+
+  // ── Read + Listen: find a matching Gutenberg text ──
+  const textMatchQuery = useQuery<TextMatch>({
+    queryKey: [`/api/audiolibrary/${bookId}/text-match`],
+    queryFn: async () => {
+      const r = await fetch(`/api/audiolibrary/${bookId}/text-match`, { credentials: "include" });
+      if (!r.ok) return { match: null };
+      return r.json();
+    },
+    enabled: bookId > 0,
+  });
+  const textBodyQuery = useQuery<{ content: string }>({
+    queryKey: [`/api/gutenberg/books/${textMatchQuery.data?.match?.gutenbergId ?? 0}/content`],
+    queryFn: async () => {
+      const r = await fetch(`/api/gutenberg/books/${textMatchQuery.data!.match!.gutenbergId}/content`, { credentials: "include" });
+      if (!r.ok) throw new Error("Failed to load text");
+      return r.json();
+    },
+    enabled: !!textMatchQuery.data?.match?.gutenbergId && showText,
   });
 
   // Persist progress every 10 seconds while playing. Cheap to do
@@ -515,6 +586,253 @@ export default function AudiolibraryPlayerPage() {
             </div>
           </div>
 
+          {/* ── Action chips: Bookmark / Read along / Ask AI ── */}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+              marginBottom: 30,
+            }}
+          >
+            <ActionChip
+              icon={<BookmarkPlus size={14} />}
+              label={ar ? "أضف علامة" : "Bookmark this moment"}
+              onClick={() => setShowAddBookmark(true)}
+            />
+            {(bookmarksQuery.data?.bookmarks?.length ?? 0) > 0 && (
+              <ActionChip
+                icon={<Bookmark size={14} />}
+                label={ar
+                  ? `العلامات (${bookmarksQuery.data!.bookmarks.length})`
+                  : `Bookmarks (${bookmarksQuery.data!.bookmarks.length})`}
+                onClick={() => setShowBookmarks((v) => !v)}
+                active={showBookmarks}
+              />
+            )}
+            {textMatchQuery.data?.match && (
+              <ActionChip
+                icon={<BookOpen size={14} />}
+                label={ar ? "اقرأ مع الاستماع" : "Read along"}
+                onClick={() => setShowText((v) => !v)}
+                active={showText}
+              />
+            )}
+            <ActionChip
+              icon={<Sparkles size={14} />}
+              label={ar ? "ناقش مع الذكاء" : "Discuss with AI"}
+              onClick={() => {
+                // Stash audiobook context so the Studio (when next
+                // opened from a chapter editor) can read it. For the
+                // public audiolibrary page there's no chapter editor
+                // open, so the simplest path is to copy a prompt to
+                // the clipboard the writer can paste into the Studio
+                // they already have open in another tab.
+                const ctx = ar
+                  ? `أنا أستمع إلى كتاب "${book.title}" بقلم ${book.author ?? "مؤلّف مجهول"}. أنا حالياً في الفصل ${chapterIndex + 1} (${chapter?.title ?? ""}). `
+                  : `I'm listening to "${book.title}" by ${book.author ?? "Unknown"}. Currently on chapter ${chapterIndex + 1} (${chapter?.title ?? ""}). `;
+                navigator.clipboard?.writeText(ctx).catch(() => {});
+                window.open("/dashboard", "_blank");
+              }}
+            />
+          </div>
+
+          {/* Bookmark add inline dialog */}
+          {showAddBookmark && (
+            <div
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER_STRONG}`,
+                borderRadius: 14,
+                padding: "14px 16px",
+                marginBottom: 22,
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <Bookmark size={14} color={ACCENT} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
+                {ar ? "الفصل" : "Chapter"} {chapterIndex + 1}, {fmtTime(currentTime)}
+              </span>
+              <input
+                type="text"
+                value={bookmarkLabelDraft}
+                onChange={(e) => setBookmarkLabelDraft(e.target.value)}
+                placeholder={ar ? "تسمية اختياريّة" : "Optional label"}
+                style={{
+                  fontFamily: SF,
+                  flex: 1,
+                  minWidth: 180,
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.05)",
+                  border: `1px solid ${BORDER}`,
+                  color: TEXT,
+                  fontSize: 13,
+                  outline: "none",
+                }}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    createBookmark.mutate({ chapterIndex, positionSeconds: Math.floor(currentTime), label: bookmarkLabelDraft.trim() || null });
+                    setBookmarkLabelDraft("");
+                    setShowAddBookmark(false);
+                  } else if (e.key === "Escape") {
+                    setBookmarkLabelDraft("");
+                    setShowAddBookmark(false);
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  createBookmark.mutate({ chapterIndex, positionSeconds: Math.floor(currentTime), label: bookmarkLabelDraft.trim() || null });
+                  setBookmarkLabelDraft("");
+                  setShowAddBookmark(false);
+                }}
+                style={{
+                  fontFamily: SF, padding: "8px 18px", borderRadius: 10,
+                  background: TEXT, color: "#000", border: "none",
+                  fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                {ar ? "احفظ" : "Save"}
+              </button>
+              <button
+                onClick={() => { setShowAddBookmark(false); setBookmarkLabelDraft(""); }}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: "transparent", border: "none",
+                  color: MUTED, cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                }}
+                aria-label="Cancel"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Bookmarks list */}
+          {showBookmarks && bookmarksQuery.data && bookmarksQuery.data.bookmarks.length > 0 && (
+            <section
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 14,
+                padding: 0,
+                marginBottom: 26,
+                overflow: "hidden",
+              }}
+            >
+              {bookmarksQuery.data.bookmarks.map((bm) => (
+                <div
+                  key={bm.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "12px 16px",
+                    borderBottom: `1px solid ${BORDER}`,
+                  }}
+                >
+                  <Bookmark size={14} color={ACCENT} style={{ flexShrink: 0 }} />
+                  <button
+                    onClick={() => {
+                      goToChapter(bm.chapterIndex);
+                      requestAnimationFrame(() => {
+                        const a = audioRef.current;
+                        if (a) a.currentTime = bm.positionSeconds;
+                        a?.play().catch(() => {});
+                      });
+                    }}
+                    style={{
+                      flex: 1,
+                      textAlign: isRTL ? "right" : "left",
+                      background: "transparent",
+                      border: "none",
+                      color: TEXT,
+                      cursor: "pointer",
+                      fontFamily: SF,
+                      minWidth: 0,
+                    }}
+                  >
+                    <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>
+                      {bm.label || (ar ? "علامة" : "Bookmark")}
+                    </div>
+                    <div style={{ fontSize: 11, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
+                      {ar ? "الفصل" : "Chapter"} {bm.chapterIndex + 1} · {fmtTime(bm.positionSeconds)}
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => deleteBookmark.mutate(bm.id)}
+                    aria-label="Delete"
+                    style={{
+                      width: 30, height: 30, borderRadius: 8,
+                      background: "transparent", border: "none",
+                      color: MUTED2, cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#fca5a5")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = MUTED2)}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {/* Read+Listen split — text panel below transport */}
+          {showText && textMatchQuery.data?.match && (
+            <section
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 14,
+                padding: "20px 24px",
+                marginBottom: 26,
+                maxHeight: 460,
+                overflowY: "auto",
+              }}
+            >
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED2, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                {ar ? "النصّ من Project Gutenberg" : "Text from Project Gutenberg"}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 12 }}>
+                {textMatchQuery.data.match.title}
+              </div>
+              {textBodyQuery.isFetching ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, color: MUTED }}>
+                  <Loader2 size={14} className="animate-spin" />
+                  {ar ? "جارٍ تحميل النصّ..." : "Loading the text..."}
+                </div>
+              ) : textBodyQuery.data ? (
+                <pre
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.85,
+                    color: TEXT,
+                    opacity: 0.92,
+                    whiteSpace: "pre-wrap",
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    margin: 0,
+                  }}
+                >
+                  {textBodyQuery.data.content?.slice(0, 12_000)}
+                  {textBodyQuery.data.content && textBodyQuery.data.content.length > 12_000 && (
+                    <>{"\n\n…"}</>
+                  )}
+                </pre>
+              ) : (
+                <div style={{ fontSize: 13, color: MUTED }}>
+                  {ar ? "تعذّر تحميل النصّ." : "Couldn't load the text."}
+                </div>
+              )}
+            </section>
+          )}
+
           {/* ── Description ── */}
           {book.description && (
             <section style={{ marginBottom: 30 }}>
@@ -759,6 +1077,53 @@ function Bar({ delay = 0 }: { delay?: number }) {
         animation: `audiobar 0.9s ease-in-out ${delay}s infinite`,
       }}
     />
+  );
+}
+
+// Reusable action chip used by the row above the Description section
+// (Bookmark / Read along / Discuss with AI).
+function ActionChip({
+  icon, label, onClick, active,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "9px 14px",
+        borderRadius: 999,
+        background: active ? "rgba(124,108,247,0.12)" : CARD,
+        border: `1px solid ${active ? "rgba(124,108,247,0.40)" : BORDER}`,
+        color: active ? ACCENT : TEXT,
+        fontFamily: SF,
+        fontSize: 12.5,
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "all 140ms",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = CARD_HOVER;
+          e.currentTarget.style.borderColor = BORDER_STRONG;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = CARD;
+          e.currentTarget.style.borderColor = BORDER;
+        }
+      }}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

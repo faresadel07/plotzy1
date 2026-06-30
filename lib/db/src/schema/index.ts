@@ -1539,6 +1539,26 @@ export const audiolibraryProgress = pgTable("audiolibrary_progress", {
 export type AudiolibraryProgress = typeof audiolibraryProgress.$inferSelect;
 export type InsertAudiolibraryProgress = typeof audiolibraryProgress.$inferInsert;
 
+// Per-user bookmarks inside an audiobook. Each row pins a specific
+// (chapter, position) with an optional human label so the writer can
+// jump back to a passage they want to revisit or quote.
+export const audiolibraryBookmarks = pgTable("audiolibrary_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: integer("book_id").notNull().references(() => audiolibraryBooks.id, { onDelete: "cascade" }),
+  chapterIndex: integer("chapter_index").default(0).notNull(),
+  positionSeconds: integer("position_seconds").default(0).notNull(),
+  // Optional one-line description ("the bit about the lighthouse").
+  // Defaults to "Bookmark at h:mm:ss" on the front-end if blank.
+  label: text("label"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("idx_audio_bookmarks_user_book").on(t.userId, t.bookId),
+]);
+
+export type AudiolibraryBookmark = typeof audiolibraryBookmarks.$inferSelect;
+export type InsertAudiolibraryBookmark = typeof audiolibraryBookmarks.$inferInsert;
+
 // ── Subscription Tiers ───────────────────────────────────────────────────
 //
 // FREE tier:  Limited access to test the platform

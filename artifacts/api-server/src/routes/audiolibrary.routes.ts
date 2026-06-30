@@ -22,7 +22,7 @@ import { z } from "zod";
 import { and, eq, sql, desc, asc, isNull, isNotNull } from "drizzle-orm";
 
 import { db } from "../db";
-import { audiolibraryBooks, audiolibraryProgress } from "../../../../lib/db/src/schema";
+import { audiolibraryBooks, audiolibraryProgress, audiolibraryBookmarks, gutenbergBooks } from "../../../../lib/db/src/schema";
 import { logger } from "../lib/logger";
 import { logRouteError } from "../lib/log-route-error";
 
@@ -287,6 +287,141 @@ router.post("/api/audiolibrary/progress/:bookId", async (req: any, res) => {
     res.status(500).json({ message: "Failed to save progress" });
   }
 });
+
+// ── Bookmarks ────────────────────────────────────────────────────────
+
+// GET /api/audiolibrary/bookmarks/:bookId
+router.get("/api/audiolibrary/bookmarks/:bookId", async (req: any, res) => {
+  try {
+    if (!req.isAuthenticated()) { res.json({ bookmarks: [] }); return; }
+    const userId = req.user.id as number;
+    const bookId = Number(req.params.bookId);
+    if (!bookId) { res.status(400).json({ message: "Invalid bookId" }); return; }
+    const rows = await db
+      .select()
+      .from(audiolibraryBookmarks)
+      .where(and(eq(audiolibraryBookmarks.userId, userId), eq(audiolibraryBookmarks.bookId, bookId)))
+      .orderBy(asc(audiolibraryBookmarks.chapterIndex), asc(audiolibraryBookmarks.positionSeconds));
+    res.json({ bookmarks: rows });
+  } catch (err) {
+    logRouteError(req, err, "audiolibrary.bookmarks.list");
+    res.status(500).json({ message: "Failed to load bookmarks" });
+  }
+});
+
+// POST /api/audiolibrary/bookmarks
+router.post("/api/audiolibrary/bookmarks", async (req: any, res) => {
+  try {
+    if (!req.isAuthenticated()) { res.status(401).json({ message: "Sign in required" }); return; }
+    const userId = req.user.id as number;
+    const body = z.object({
+      bookId: z.number().int().positive(),
+      chapterIndex: z.number().int().min(0).max(999),
+      positionSeconds: z.number().int().min(0).max(86_400),
+      label: z.string().max(200).optional().nullable(),
+    }).parse(req.body);
+    const [row] = await db
+      .insert(audiolibraryBookmarks)
+      .values({
+        userId,
+        bookId: body.bookId,
+        chapterIndex: body.chapterIndex,
+        positionSeconds: body.positionSeconds,
+        label: body.label ?? null,
+      })
+      .returning();
+    res.status(201).json(row);
+  } catch (err: any) {
+    if (err?.name === "ZodError") { res.status(400).json({ message: "Invalid body" }); return; }
+    logRouteError(req, err, "audiolibrary.bookmarks.create");
+    res.status(500).json({ message: "Failed to create bookmark" });
+  }
+});
+
+// DELETE /api/audiolibrary/bookmarks/:id
+router.delete("/api/audiolibrary/bookmarks/:id", async (req: any, res) => {
+  try {
+    if (!req.isAuthenticated()) { res.status(401).json({ message: "Sign in required" }); return; }
+    const userId = req.user.id as number;
+    const id = Number(req.params.id);
+    if (!id) { res.status(400).json({ message: "Invalid id" }); return; }
+    const [existing] = await db
+      .select()
+      .from(audiolibraryBookmarks)
+      .where(eq(audiolibraryBookmarks.id, id))
+      .limit(1);
+    if (!existing) { res.status(404).json({ message: "Not found" }); return; }
+    if (existing.userId !== userId) { res.status(403).json({ message: "Not yours" }); return; }
+    await db.delete(audiolibraryBookmarks).where(eq(audiolibraryBookmarks.id, id));
+    res.status(204).send();
+  } catch (err) {
+    logRouteError(req, err, "audiolibrary.bookmarks.delete");
+    res.status(500).json({ message: "Failed to delete bookmark" });
+  }
+});
+
+// ── Read+Listen sync: match an audiobook to its Gutenberg text ───────
+//
+// Looks up the Gutenberg cache for a book with a matching title +
+// author. If found, returns its id so the player can fetch the
+// content via the existing /api/gutenberg/books/:id/content endpoint
+// and render text alongside the audio. Best-effort matching — only
+// exact-ish title + last-name overlap counts as a hit.
+router.get("/api/audiolibrary/:id/text-match", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) { res.status(400).json({ message: "Invalid id" }); return; }
+    const [audio] = await db.select().from(audiolibraryBooks).where(eq(audiolibraryBooks.id, id)).limit(1);
+    if (!audio) { res.status(404).json({ message: "Audiobook not found" }); return; }
+
+    // Normalise the audiobook title for fuzzy matching.
+    const normTitle = (audio.title || "")
+      .toLowerCase()
+      .replace(/^(the|a|an)\s+/, "")
+      .replace(/\([^)]*\)/g, "")
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
+      .trim();
+    const authorLastName = (audio.author || "")
+      .split(",")[0]
+      .trim()
+      .split(/\s+/)
+      .pop()
+      ?.toLowerCase() ?? "";
+    if (!normTitle || !authorLastName) { res.json({ match: null }); return; }
+
+    // Use the same normalisation in SQL so the comparison is fair.
+    const candidates = await db.execute(sql`
+      SELECT gutenberg_id, title, authors
+      FROM gutenberg_books
+      WHERE
+        lower(regexp_replace(coalesce(title, ''), '^(the|a|an)\\s+', '')) LIKE ${'%' + normTitle + '%'}
+        AND lower(authors::text) LIKE ${'%' + authorLastName + '%'}
+        AND content IS NOT NULL
+      LIMIT 5
+    `);
+    const rows = (candidates as any).rows ?? candidates;
+    if (!rows || rows.length === 0) { res.json({ match: null }); return; }
+
+    // Score: prefer exact title match, then shortest title.
+    const scored = (rows as any[])
+      .map((r) => ({
+        gutId: r.gutenberg_id ?? r.gutenbergId,
+        title: r.title as string,
+        score:
+          (r.title?.toLowerCase().includes(normTitle) ? 100 : 0)
+          + (r.title?.toLowerCase() === normTitle ? 50 : 0)
+          - Math.abs((r.title?.length ?? 999) - normTitle.length),
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    res.json({ match: { gutenbergId: scored[0].gutId, title: scored[0].title } });
+  } catch (err) {
+    logRouteError(req, err, "audiolibrary.text-match");
+    res.json({ match: null });
+  }
+});
+
+void gutenbergBooks; // referenced via raw SQL above; keep import
 
 // ── Sync jobs (called from server startup, idempotent) ───────────────
 
