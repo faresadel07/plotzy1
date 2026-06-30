@@ -56,6 +56,36 @@ export interface StudioConversation {
   updatedAt: string;
 }
 
+/** Attachment uploaded by the writer alongside a message. The backend
+ *  /api/studio/upload endpoint returns a row of this shape; the
+ *  composer renders chips from this shape; sendMessage passes the
+ *  list of IDs to the chat endpoint which loads the bytes from disk
+ *  and feeds them to the provider as multi-modal input. */
+export interface StudioAttachment {
+  /** Server-generated id used in /api/studio/upload responses. */
+  id: string;
+  /** Original filename the writer chose (for the chip label). */
+  filename: string;
+  /** MIME type as detected on upload. */
+  mimeType: string;
+  /** Size in bytes for the chip's secondary text. */
+  size: number;
+  /** Bucketed type the UI uses to pick the right chip icon. */
+  kind: "image" | "pdf" | "doc" | "text" | "other";
+  /** Public-ish URL the composer uses to render image previews
+   *  inline (signed/short-lived, scoped to the uploader). */
+  url?: string;
+}
+
+/** Which providers can accept image / PDF inputs. Anything not in
+ *  this set must reject attached files in the UI, since the backend
+ *  will refuse the request. */
+export const VISION_PROVIDERS: readonly ProviderId[] = ["claude", "gpt", "gemini"] as const;
+
+export function providerAcceptsVision(id: ProviderId): boolean {
+  return (VISION_PROVIDERS as readonly string[]).includes(id);
+}
+
 /** Messages on the wire during streaming. */
 export type StreamEvent =
   | { type: "start"; conversationId: number; userMessageId: number; providerId: ProviderId }

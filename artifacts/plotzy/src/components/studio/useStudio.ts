@@ -58,7 +58,7 @@ interface UseStudioReturn {
   archiveConversation: (id: number, archived: boolean) => Promise<void>;
   deleteConversation: (id: number) => Promise<void>;
   selectProvider: (id: ProviderId) => void;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, attachmentIds?: string[]) => Promise<void>;
   cancelSend: () => void;
   refreshAll: () => Promise<void>;
 }
@@ -261,8 +261,8 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
   }, []);
 
   const sendMessage = useCallback(
-    async (content: string) => {
-      if (!activeId || !content.trim() || isSending) return;
+    async (content: string, attachmentIds?: string[]) => {
+      if (!activeId || (!content.trim() && (!attachmentIds || attachmentIds.length === 0)) || isSending) return;
       setError(null);
       setIsSending(true);
       setStreamingText("");
@@ -292,6 +292,7 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
             conversationId: activeId,
             providerId: selectedProviderId,
             content,
+            attachmentIds: attachmentIds && attachmentIds.length > 0 ? attachmentIds : undefined,
           }),
           signal: abortController.signal,
         });

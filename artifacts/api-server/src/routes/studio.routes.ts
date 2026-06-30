@@ -43,6 +43,7 @@
 
 import { Router } from "express";
 import { z } from "zod";
+import multer from "multer";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "../db";
@@ -67,11 +68,23 @@ import {
   listProviders,
   openSse,
   writeSse,
+  type AiAttachment,
   type AiMessage,
   type ProviderId,
 } from "../lib/studio/providers";
 
+import { storeAttachment, getAttachment, deleteAttachment } from "../lib/studio/attachments";
+
 const router = Router();
+
+// 25 MB per file is a generous ceiling for the most useful inputs
+// (a 100-page PDF, a typical DOCX outline, a high-res character
+// reference). Anything bigger almost certainly belongs in a separate
+// file-hosting flow, not in the Studio chat context.
+const uploadMw = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+});
 
 // All Studio routes require an authenticated writer.
 router.use("/api/studio", requireAuth);
@@ -546,25 +559,115 @@ async function incrementAndCheckQuota(
   return { count };
 }
 
+// ─── POST /api/studio/upload ─────────────────────────────────────
+//
+// Multipart upload of a single attachment for the next chat turn.
+// Stores the bytes in an in-memory cache keyed by an opaque id and
+// returns that id to the composer; the writer then includes the id in
+// the next /api/studio/chat call. Bytes are also text-extracted on
+// the way in (for PDF/DOCX/TXT) so the chat handler doesn't pay the
+// extraction cost on every turn.
+//
+// Limits: 25 MB per file (multer); 80 MB outstanding per user (the
+// attachments lib enforces this).
+router.post(
+  "/api/studio/upload",
+  uploadMw.single("file"),
+  async (req: any, res) => {
+    try {
+      const userId = req.user.id as number;
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) {
+        res.status(400).json({ message: "Missing file" });
+        return;
+      }
+      const rec = await storeAttachment({
+        ownerId: userId,
+        filename: file.originalname || "attachment",
+        mimeType: file.mimetype || "application/octet-stream",
+        data: file.buffer,
+      });
+      res.status(201).json({
+        id: rec.id,
+        filename: rec.filename,
+        mimeType: rec.mimeType,
+        size: rec.size,
+        kind: rec.kind,
+      });
+    } catch (err: any) {
+      if (err?.code === "STUDIO_UPLOAD_QUOTA") {
+        res.status(413).json({ message: err.message });
+        return;
+      }
+      logRouteError(req, err, "studio.upload");
+      res.status(500).json({ message: "Upload failed" });
+    }
+  },
+);
+
+// ─── DELETE /api/studio/upload/:id ───────────────────────────────
+//
+// Free a queued attachment the writer dismissed before sending. The
+// in-memory cache also sweeps itself after the 1-hour TTL, so this
+// is a soft hint rather than a strict requirement.
+router.delete("/api/studio/upload/:id", async (req: any, res) => {
+  try {
+    const userId = req.user.id as number;
+    deleteAttachment(req.params.id, userId);
+    res.status(204).send();
+  } catch (err) {
+    logRouteError(req, err, "studio.upload.delete");
+    res.status(500).json({ message: "Delete failed" });
+  }
+});
+
 router.post("/api/studio/chat", async (req, res): Promise<void> => {
   const userId = (req.user as any).id as number;
   const bodySchema = z.object({
     conversationId: z.number().int().positive(),
     providerId: z.enum(["claude", "gpt", "gemini", "cerebras", "llama"]),
     content: z.string().min(1).max(20_000),
+    // Opaque attachment ids the writer uploaded via /api/studio/upload.
+    // The handler loads bytes from the in-memory cache, refuses the
+    // request if any id is missing, and surfaces them to the provider.
+    attachmentIds: z.array(z.string().min(1)).max(8).optional(),
   });
   const parsed = bodySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ message: "Invalid body" });
     return;
   }
-  const { conversationId, providerId, content } = parsed.data;
+  const { conversationId, providerId, content, attachmentIds = [] } = parsed.data;
 
   const provider = getProvider(providerId);
   if (!provider.enabled) {
     res
       .status(503)
       .json({ message: `${provider.displayName} is not configured on this server.` });
+    return;
+  }
+
+  // Load attachments first so we can reject early if any id has
+  // expired or never belonged to this user. Cerebras and Llama are
+  // text-only, so we refuse the chat when those are paired with image
+  // or PDF attachments — the writer's UI should already have warned
+  // them but this is the backend's belt-and-braces guard.
+  const attachmentRecs = attachmentIds
+    .map((id) => getAttachment(id, userId))
+    .filter((r): r is NonNullable<typeof r> => !!r);
+  if (attachmentRecs.length !== attachmentIds.length) {
+    res.status(410).json({
+      message: "One or more attachments have expired. Please re-upload.",
+    });
+    return;
+  }
+  if (
+    (providerId === "cerebras" || providerId === "llama") &&
+    attachmentRecs.some((a) => a.kind === "image" || a.kind === "pdf")
+  ) {
+    res.status(400).json({
+      message: `${provider.displayName} cannot read images or PDFs. Switch to Claude, GPT, or Gemini for visual attachments.`,
+    });
     return;
   }
 
@@ -631,12 +734,48 @@ router.post("/api/studio/chat", async (req, res): Promise<void> => {
     userLanguage,
   });
 
+  // Translate the in-memory attachment records into the provider-
+  // agnostic AiAttachment shape. For doc/text uploads we ALSO append
+  // the extracted text into the user's message content so providers
+  // that don't speak the native binary format (GPT for PDFs, every
+  // provider for DOCX) still see the content.
+  let augmentedContent = content;
+  const aiAttachments: AiAttachment[] = [];
+  for (const rec of attachmentRecs) {
+    if (rec.kind === "doc" || rec.kind === "text") {
+      if (rec.extractedText) {
+        augmentedContent += `\n\n--- ${rec.filename} ---\n${rec.extractedText}\n--- end ${rec.filename} ---`;
+      }
+      // No binary payload to the provider for these.
+      continue;
+    }
+    if (rec.kind === "pdf" && providerId === "gpt" && rec.extractedText) {
+      // GPT-5 chat completions doesn't accept PDFs inline; inject text.
+      augmentedContent += `\n\n--- ${rec.filename} ---\n${rec.extractedText}\n--- end ${rec.filename} ---`;
+      continue;
+    }
+    aiAttachments.push({
+      kind: rec.kind,
+      mimeType: rec.mimeType,
+      data: rec.data,
+      filename: rec.filename,
+      extractedText: rec.extractedText,
+    });
+  }
+
   const messages: AiMessage[] = [
     { role: "system", content: systemPrompt },
-    ...priorMessages.map((m) => ({
+    ...priorMessages.slice(0, -1).map((m) => ({
       role: m.role as "user" | "assistant" | "system",
       content: m.content,
     })),
+    // Replace the just-persisted user message with the augmented
+    // version that carries attachments + any inlined doc text.
+    {
+      role: "user" as const,
+      content: augmentedContent,
+      attachments: aiAttachments.length > 0 ? aiAttachments : undefined,
+    },
   ];
 
   openSse(res);

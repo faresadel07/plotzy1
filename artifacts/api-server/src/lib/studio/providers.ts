@@ -30,12 +30,36 @@ export const PROVIDER_IDS: readonly ProviderId[] = [
   "llama",
 ] as const;
 
+/** Binary attachment associated with a single user-turn message.
+ *  Carried separately from `content` because each provider wraps it
+ *  differently (Claude wants base64 in a content array, GPT wants a
+ *  data URL, Gemini wants inlineData). The provider implementation
+ *  knows how to translate. Only the `user` role can carry these. */
+export interface AiAttachment {
+  /** image / pdf are passed through binary; doc / text get inlined
+   *  into the prompt as plain text. The wrapper code in each provider
+   *  branches on this. */
+  kind: "image" | "pdf" | "doc" | "text" | "other";
+  mimeType: string;
+  /** Raw bytes for image/pdf. Empty for text-only attachments where
+   *  we already inlined `extractedText` into the content string. */
+  data: Buffer;
+  /** Filename, used for prompt context: "the writer attached
+   *  outline.pdf" so the model can refer to it. */
+  filename: string;
+  /** Pre-extracted text for doc/text/pdf when present. The chat
+   *  handler appends this to the user content for providers that
+   *  don't speak the native format. */
+  extractedText?: string;
+}
+
 /** A single message in a conversation. role/content shape matches the
  *  OpenAI chat format because all four providers normalise to or from
- *  it. */
+ *  it. User turns can also carry binary attachments (file uploads). */
 export interface AiMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  attachments?: AiAttachment[];
 }
 
 /** Streaming options forwarded to every provider. The Studio always
@@ -113,16 +137,55 @@ const claudeProvider: AiProvider = {
 
     // Anthropic splits system from the conversation rather than
     // mixing it inline. Pull all 'system' messages out, join, send
-    // separately. The rest stays in the messages array.
+    // separately. The rest stays in the messages array. User turns
+    // with attachments are converted to Claude's content array shape:
+    //   [{type:"text", text}, {type:"image", source:{...}}, {type:"document", source:{...}}]
     const systemParts = messages
       .filter((m) => m.role === "system")
       .map((m) => m.content);
     const convo = messages
       .filter((m) => m.role !== "system")
-      .map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }));
+      .map((m) => {
+        const role = m.role as "user" | "assistant";
+        // Assistant turns are always plain text, and so are user
+        // turns without attachments — keep the simple `content: string`
+        // shape there.
+        if (role === "assistant" || !m.attachments || m.attachments.length === 0) {
+          return { role, content: m.content };
+        }
+        // Multi-modal user turn. Walk the attachments and translate
+        // each into Claude's content block shape. Skip `other` since
+        // Claude won't know what to do with arbitrary mime types;
+        // their extracted text (if any) already landed in m.content.
+        const blocks: any[] = [];
+        for (const att of m.attachments) {
+          if (att.kind === "image" && att.data.length > 0) {
+            blocks.push({
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: att.mimeType,
+                data: att.data.toString("base64"),
+              },
+            });
+          } else if (att.kind === "pdf" && att.data.length > 0) {
+            blocks.push({
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: att.data.toString("base64"),
+              },
+            });
+          }
+        }
+        // Text block sits last so the writer's actual question follows
+        // the visual context — matches how a person describes an
+        // image: "[image] What about this?" reads better than the
+        // reverse.
+        if (m.content) blocks.push({ type: "text", text: m.content });
+        return { role, content: blocks.length > 0 ? blocks : m.content };
+      });
 
     let inputTokens = 0;
     let outputTokens = 0;
@@ -177,13 +240,35 @@ const gptProvider: AiProvider = {
     let inputTokens = 0;
     let outputTokens = 0;
 
+    // Convert messages: a user turn with image attachments becomes the
+    // OpenAI "content parts" shape with text + image_url blocks.
+    // PDFs are NOT supported in chat completions — for those, the
+    // chat handler upstream already merged extractedText into the
+    // text content, so we just send text here.
+    const openaiMessages: any[] = messages.map((m) => {
+      if (m.role !== "user" || !m.attachments || m.attachments.length === 0) {
+        return { role: m.role, content: m.content };
+      }
+      const parts: any[] = [];
+      for (const att of m.attachments) {
+        if (att.kind === "image" && att.data.length > 0) {
+          parts.push({
+            type: "image_url",
+            image_url: {
+              url: `data:${att.mimeType};base64,${att.data.toString("base64")}`,
+              detail: "auto",
+            },
+          });
+        }
+      }
+      if (m.content) parts.push({ type: "text", text: m.content });
+      return { role: "user", content: parts.length > 0 ? parts : m.content };
+    });
+
     const stream = await client.chat.completions.create(
       {
         model: "gpt-5",
-        messages: messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: openaiMessages,
         max_tokens: opts?.maxOutputTokens ?? 1500,
         temperature: opts?.temperature ?? 0.8,
         stream: true,
@@ -229,12 +314,30 @@ const geminiProvider: AiProvider = {
     const systemParts = messages
       .filter((m) => m.role === "system")
       .map((m) => m.content);
+    // Gemini supports both image and PDF natively via inlineData.
+    // For user turns with attachments we build a parts array; for
+    // everything else we keep the simple { text } single-part shape.
     const contents = messages
       .filter((m) => m.role !== "system")
-      .map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+      .map((m) => {
+        const role = m.role === "assistant" ? "model" : "user";
+        if (m.role !== "user" || !m.attachments || m.attachments.length === 0) {
+          return { role, parts: [{ text: m.content }] };
+        }
+        const parts: any[] = [];
+        for (const att of m.attachments) {
+          if ((att.kind === "image" || att.kind === "pdf") && att.data.length > 0) {
+            parts.push({
+              inlineData: {
+                mimeType: att.mimeType,
+                data: att.data.toString("base64"),
+              },
+            });
+          }
+        }
+        if (m.content) parts.push({ text: m.content });
+        return { role, parts: parts.length > 0 ? parts : [{ text: m.content }] };
+      });
 
     const model = client.getGenerativeModel({
       model: "gemini-2.5-pro",

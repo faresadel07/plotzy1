@@ -29,10 +29,16 @@ import {
   Sparkles,
   ArrowRight,
   Lightbulb,
+  Paperclip,
+  FileText,
+  Image as ImageIcon,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useStudio } from "./useStudio";
-import type { ProviderId, ProviderMeta, StudioMessage } from "./types";
+import type { ProviderId, ProviderMeta, StudioMessage, StudioAttachment } from "./types";
+import { providerAcceptsVision } from "./types";
 import { ProviderIcon, StudioIcon } from "./icons";
 
 const SF =
@@ -86,6 +92,12 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
   const [input, setInput] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  // Attachments queued for the next message. The composer renders
+  // these as chips; sendMessage forwards the ids to the backend; on
+  // success the array is cleared.
+  const [attachments, setAttachments] = useState<StudioAttachment[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 720 : false,
@@ -128,10 +140,100 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
 
   async function handleSend() {
     const value = input.trim();
-    if (!value) return;
+    if (!value && attachments.length === 0) return;
+    const ids = attachments.map((a) => a.id);
     setInput("");
-    await sendMessage(value);
+    setAttachments([]);
+    setUploadError(null);
+    await sendMessage(value, ids.length > 0 ? ids : undefined);
   }
+
+  // Upload one file to /api/studio/upload, push the resulting
+  // attachment row into local state so the chip renders.
+  async function uploadFile(file: File) {
+    setUploadError(null);
+    if (!providerAcceptsVision(selectedProviderId)) {
+      setUploadError(
+        ar
+          ? "هذا النموذج لا يقرأ الصور أو الملفات. اختر Claude أو GPT أو Gemini."
+          : "This model can't read files. Switch to Claude, GPT, or Gemini.",
+      );
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setUploadError(ar ? "الحدّ الأقصى 25 ميغابايت لكل ملف." : "Max file size is 25 MB.");
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const r = await fetch("/api/studio/upload", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(body?.message || `Upload failed (${r.status})`);
+      }
+      const data = (await r.json()) as StudioAttachment;
+      setAttachments((prev) => [...prev, data]);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function uploadMany(files: FileList | File[]) {
+    const arr = Array.from(files);
+    for (const f of arr) {
+      // Stop adding past 8 attachments (matches backend cap).
+      if (attachments.length >= 8) {
+        setUploadError(ar ? "حدّ 8 مرفقات للرسالة الواحدة." : "Max 8 attachments per message.");
+        break;
+      }
+      await uploadFile(f);
+    }
+  }
+
+  function removeAttachment(id: string) {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+    // Best-effort: tell the backend it can free the bytes. The
+    // 1-hour TTL would also reap it eventually, so we don't block on
+    // the response.
+    fetch(`/api/studio/upload/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      credentials: "include",
+    }).catch(() => {});
+  }
+
+  // Allow the writer to paste an image directly from the clipboard
+  // into the Studio panel — way faster than the file picker for
+  // anything they just screenshot.
+  useEffect(() => {
+    if (!open) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === "file") {
+          const f = item.getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length > 0) {
+        e.preventDefault();
+        void uploadMany(files);
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedProviderId, attachments.length]);
 
   function handleQuickAction(prompt: string) {
     setInput(prompt);
@@ -281,6 +383,13 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         onCancel={cancelSend}
         isSending={isSending}
         ar={ar}
+        attachments={attachments}
+        onAttachFiles={uploadMany}
+        onRemoveAttachment={removeAttachment}
+        isUploading={isUploading}
+        uploadError={uploadError}
+        visionEnabled={providerAcceptsVision(selectedProviderId)}
+        activeProviderName={providers.find((p) => p.id === selectedProviderId)?.displayName ?? ""}
       />
     </div>
   );
@@ -1126,6 +1235,13 @@ function Composer({
   onCancel,
   isSending,
   ar,
+  attachments,
+  onAttachFiles,
+  onRemoveAttachment,
+  isUploading,
+  uploadError,
+  visionEnabled,
+  activeProviderName,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -1133,38 +1249,193 @@ function Composer({
   onCancel: () => void;
   isSending: boolean;
   ar: boolean;
+  attachments: StudioAttachment[];
+  onAttachFiles: (files: File[] | FileList) => void;
+  onRemoveAttachment: (id: string) => void;
+  isUploading: boolean;
+  uploadError: string | null;
+  visionEnabled: boolean;
+  activeProviderName: string;
 }) {
   const hasText = value.trim().length > 0;
+  const canSend = (hasText || attachments.length > 0) && !isUploading;
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   return (
     <div
       style={{
         padding: "12px 18px 18px",
         borderTop: `1px solid ${BORDER}`,
         background: PANEL_BG,
+        position: "relative",
+      }}
+      onDragOver={(e) => {
+        if (!visionEnabled) return;
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (!visionEnabled) return;
+        if (e.dataTransfer.files?.length) onAttachFiles(e.dataTransfer.files);
       }}
     >
+      {/* Drag overlay covers the composer while the writer is
+          dragging a file onto it. */}
+      {isDragging && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 8,
+            borderRadius: 20,
+            border: `2px dashed ${BORDER_ACTIVE}`,
+            background: "rgba(56, 132, 255, 0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#3884ff",
+            fontSize: 13,
+            fontWeight: 600,
+            pointerEvents: "none",
+            zIndex: 5,
+          }}
+        >
+          {ar ? "أفلت لإرفاق" : "Drop to attach"}
+        </div>
+      )}
+
+      {/* Error banner above the input. */}
+      {uploadError && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 8,
+            padding: "8px 12px",
+            borderRadius: 10,
+            background: "rgba(239,68,68,0.10)",
+            border: "1px solid rgba(239,68,68,0.28)",
+            color: "#fca5a5",
+            fontSize: 12,
+            lineHeight: 1.45,
+          }}
+        >
+          <AlertCircle size={13} style={{ flexShrink: 0 }} />
+          {uploadError}
+        </div>
+      )}
+
+      {/* Attachment chips strip above the textarea. */}
+      {attachments.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            marginBottom: 8,
+          }}
+        >
+          {attachments.map((a) => (
+            <AttachmentChip
+              key={a.id}
+              attachment={a}
+              onRemove={() => onRemoveAttachment(a.id)}
+            />
+          ))}
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",
           gap: 8,
           alignItems: "flex-end",
           background: CARD_BG,
-          border: `1px solid ${hasText ? BORDER_STRONG : BORDER}`,
+          border: `1px solid ${hasText || attachments.length > 0 ? BORDER_STRONG : BORDER}`,
           borderRadius: 18,
-          padding: "10px 10px 10px 16px",
+          padding: "10px 10px 10px 12px",
           transition: "border-color 140ms ease",
         }}
       >
+        {/* Hidden file picker the Paperclip button triggers. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            if (e.target.files?.length) onAttachFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+
+        {/* Attach (paperclip) button — disabled when the active provider
+            can't read images / PDFs. Tooltip explains why. */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!visionEnabled || isUploading || isSending}
+          aria-label={ar ? "إرفاق ملف" : "Attach file"}
+          title={
+            !visionEnabled
+              ? ar
+                ? `${activeProviderName} لا يقرأ الملفات`
+                : `${activeProviderName} can't read attachments`
+              : ar
+                ? "أرفق صورة، PDF، أو DOCX"
+                : "Attach image, PDF, or DOCX"
+          }
+          style={{
+            width: 32,
+            height: 32,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 10,
+            background: "transparent",
+            border: "none",
+            color: visionEnabled ? TEXT_DIM : TEXT_MUTE,
+            cursor: visionEnabled && !isUploading && !isSending ? "pointer" : "not-allowed",
+            flexShrink: 0,
+            transition: "all 140ms ease",
+            opacity: visionEnabled ? 1 : 0.4,
+          }}
+          onMouseEnter={(e) => {
+            if (visionEnabled && !isUploading && !isSending) {
+              e.currentTarget.style.background = CARD_BG_STRONG;
+              e.currentTarget.style.color = TEXT;
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = visionEnabled ? TEXT_DIM : TEXT_MUTE;
+          }}
+        >
+          {isUploading ? <Loader2 size={15} className="animate-spin" /> : <Paperclip size={15} />}
+        </button>
+
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              if (!isSending) onSend();
+              if (canSend && !isSending) onSend();
             }
           }}
-          placeholder={ar ? "اكتب رسالتك…" : "Type your message…"}
+          placeholder={
+            attachments.length > 0
+              ? ar
+                ? "أضف وصفاً أو سؤالاً…"
+                : "Add a question or description…"
+              : ar
+                ? "اكتب رسالتك…"
+                : "Type your message…"
+          }
           rows={1}
           style={{
             flex: 1,
@@ -1204,7 +1475,7 @@ function Composer({
         ) : (
           <button
             onClick={onSend}
-            disabled={!hasText}
+            disabled={!canSend}
             aria-label={ar ? "إرسال" : "Send"}
             style={{
               width: 34,
@@ -1213,19 +1484,98 @@ function Composer({
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 11,
-              background: hasText ? TEXT : "transparent",
-              border: `1px solid ${hasText ? TEXT : BORDER}`,
-              color: hasText ? "#000" : TEXT_MUTE,
-              cursor: hasText ? "pointer" : "default",
+              background: canSend ? TEXT : "transparent",
+              border: `1px solid ${canSend ? TEXT : BORDER}`,
+              color: canSend ? "#000" : TEXT_MUTE,
+              cursor: canSend ? "pointer" : "default",
               transition: "all 160ms ease",
               flexShrink: 0,
-              transform: hasText ? "scale(1)" : "scale(0.96)",
+              transform: canSend ? "scale(1)" : "scale(0.96)",
             }}
           >
             <Send size={13} />
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+// Compact chip showing one queued attachment in the composer. Image
+// attachments show a thumbnail; documents show a glyph + filename.
+function AttachmentChip({
+  attachment,
+  onRemove,
+}: {
+  attachment: StudioAttachment;
+  onRemove: () => void;
+}) {
+  const isImg = attachment.kind === "image";
+  const sizeKb = Math.round(attachment.size / 1024);
+  const sizeLabel = sizeKb < 1024 ? `${sizeKb} KB` : `${(sizeKb / 1024).toFixed(1)} MB`;
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "5px 10px 5px 6px",
+        borderRadius: 999,
+        background: CARD_BG_STRONG,
+        border: `1px solid ${BORDER}`,
+        maxWidth: 220,
+      }}
+    >
+      <span
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 6,
+          background: CARD_BG,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: TEXT_DIM,
+          flexShrink: 0,
+        }}
+      >
+        {isImg ? <ImageIcon size={12} /> : <FileText size={12} />}
+      </span>
+      <span
+        style={{
+          fontSize: 11.5,
+          color: TEXT,
+          fontWeight: 500,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          minWidth: 0,
+        }}
+      >
+        {attachment.filename}
+      </span>
+      <span style={{ fontSize: 10, color: TEXT_MUTE, flexShrink: 0 }}>{sizeLabel}</span>
+      <button
+        onClick={onRemove}
+        aria-label="Remove"
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: "50%",
+          background: "transparent",
+          border: "none",
+          color: TEXT_MUTE,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = TEXT)}
+        onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_MUTE)}
+      >
+        <X size={11} />
+      </button>
     </div>
   );
 }
