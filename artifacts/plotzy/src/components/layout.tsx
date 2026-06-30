@@ -705,11 +705,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
             {/* Read & Explore — discovery surfaces */}
             <FooterCol title="Read & Explore" links={[
-              { label: 'Community Library',  href: '/library' },
-              { label: 'Public Domain Books',href: '/discover' },
-              { label: 'Authors',            href: '/library' },
-              { label: 'Blog',               href: '/blog' },
-              { label: 'Messages',           href: '/messages' },
+              { label: 'Community Library',   href: '/library' },
+              { label: 'Public Domain Books', href: '/discover' },
+              { label: 'Audio Library',       href: '/audiolibrary' },
+              { label: 'Authors',             href: '/library' },
+              { label: 'Blog',                href: '/blog' },
+              { label: 'Messages',            href: '/messages' },
             ]} />
 
             {/* Learn — every educational surface in one place */}

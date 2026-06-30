@@ -36,6 +36,7 @@ import miscRouter from "./routes/misc.routes";
 import courseRouter from "./routes/course.routes";
 import studioRouter from "./routes/studio.routes";
 import publisherTrackerRouter from "./routes/publisher-tracker.routes";
+import audiolibraryRouter, { syncLibrivox, syncInternetArchiveArabic } from "./routes/audiolibrary.routes";
 import { logger } from "./lib/logger";
 import { memoize, invalidate as invalidateMemoryCache } from "./lib/memory-cache";
 import { fileURLToPath } from "url";
@@ -3090,6 +3091,17 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ── Publisher submission tracker (./routes/publisher-tracker.routes.ts) ──
   app.use(publisherTrackerRouter);
+
+  // ── Audiolibrary (./routes/audiolibrary.routes.ts) ──
+  app.use(audiolibraryRouter);
+  setImmediate(async () => {
+    try {
+      await syncLibrivox();
+      await syncInternetArchiveArabic();
+    } catch (err) {
+      logger.error({ err }, "Audiolibrary startup sync failed");
+    }
+  });
 
   // ── Series, Admin CRUD, Banner, Support (extracted to ./routes/misc.routes.ts) ──
   app.use(miscRouter);

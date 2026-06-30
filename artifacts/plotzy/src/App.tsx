@@ -65,6 +65,8 @@ const LearnFinalProjectPage = lazy(() => import("@/pages/learn-final-project"));
 const CertificateVerifyPage = lazy(() => import("@/pages/certificate-verify"));
 const VisualsPreview = lazy(() => import("@/pages/learn-visuals-preview"));
 const DonateThanks = lazy(() => import("@/pages/donate-thanks"));
+const AudiolibraryPage = lazy(() => import("@/pages/audiolibrary"));
+const AudiolibraryPlayerPage = lazy(() => import("@/pages/audiolibrary-player"));
 
 function EmailVerifyHandler() {
   const { toast } = useToast();
@@ -365,6 +367,8 @@ function Router() {
         <Route path="/course" component={CourseLandingPage} />
         <Route path="/learn/visuals-preview" component={VisualsPreview} />
         <Route path="/donate/thanks" component={DonateThanks} />
+        <Route path="/audiolibrary" component={AudiolibraryPage} />
+        <Route path="/audiolibrary/:id" component={AudiolibraryPlayerPage} />
         <Route path="/certificates/:uuid" component={CertificateVerifyPage} />
 
         {/* ── Auth-required routes ── */}
