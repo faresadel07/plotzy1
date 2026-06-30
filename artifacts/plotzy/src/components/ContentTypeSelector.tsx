@@ -17,6 +17,10 @@ interface ContentTypeSelectorProps {
   onCreateBook: (data: { title: string; summary: string; authorName: string; language: string; genre?: string }) => Promise<void>;
   onCreateArticle: (data: { title: string; authorName: string; language: string; category: string }) => Promise<void>;
   isCreating: boolean;
+  /** When set, clicking the Book card closes this picker and hands
+   *  control to the parent so it can open the new 10-question
+   *  BookCreationWizard instead of this dialog's simple book form. */
+  onChooseBookWizard?: () => void;
 }
 
 const BLOG_CATEGORIES = [
@@ -45,6 +49,7 @@ const BLOG_FEATURES = [
 export function ContentTypeSelector({
   open, onClose, lang, isRTL,
   onCreateBook, onCreateArticle, isCreating,
+  onChooseBookWizard,
 }: ContentTypeSelectorProps) {
   const [step, setStep] = useState<"choose" | "book" | "blog">("choose");
   const [title, setTitle] = useState("");
@@ -164,7 +169,19 @@ export function ContentTypeSelector({
         {step === "choose" && (
           <div style={{ padding: "0 26px 26px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <button
-              onClick={() => setStep("book")}
+              onClick={() => {
+                // Hand off to the parent so the full 10-question wizard
+                // opens. Falls back to the legacy in-dialog book form
+                // when no handler was passed (kept so the picker still
+                // works in any older entry-points).
+                if (onChooseBookWizard) {
+                  onChooseBookWizard();
+                  reset();
+                  onClose();
+                  return;
+                }
+                setStep("book");
+              }}
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)")}
