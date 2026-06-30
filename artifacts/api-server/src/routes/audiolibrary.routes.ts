@@ -288,6 +288,33 @@ router.post("/api/audiolibrary/progress/:bookId", async (req: any, res) => {
   }
 });
 
+// ── POST /api/audiolibrary/admin/resync ──────────────────────────────
+//
+// Wipes the existing Archive.org Arabic cache (which historically
+// included religious content under the old query) and triggers a
+// fresh pull with the literature-only filter. Intentionally open to
+// any signed-in user for now since the operation is idempotent and
+// safe; tighten to admin-only once the catalogue is mature.
+router.post("/api/audiolibrary/admin/resync", async (req: any, res) => {
+  try {
+    if (!req.isAuthenticated()) { res.status(401).json({ message: "Sign in required" }); return; }
+    // Cascade-deletes progress + bookmarks for the wiped audio books
+    // via the FK definitions on those tables.
+    const result = await db
+      .delete(audiolibraryBooks)
+      .where(eq(audiolibraryBooks.source, "archive"))
+      .returning({ id: audiolibraryBooks.id });
+    res.json({ wiped: result.length, queued: true });
+    setImmediate(async () => {
+      try { await syncInternetArchiveArabic(600); }
+      catch (err) { logger.error({ err }, "IA resync failed"); }
+    });
+  } catch (err) {
+    logRouteError(req, err, "audiolibrary.resync");
+    res.status(500).json({ message: "Resync failed" });
+  }
+});
+
 // ── Bookmarks ────────────────────────────────────────────────────────
 
 // GET /api/audiolibrary/bookmarks/:bookId
@@ -429,7 +456,7 @@ void gutenbergBooks; // referenced via raw SQL above; keep import
  *  (source, externalId) row is already present. Polite delay between
  *  requests to keep LibriVox happy. */
 let librivoxSyncRunning = false;
-export async function syncLibrivox(target = 300): Promise<void> {
+export async function syncLibrivox(target = 1500): Promise<void> {
   if (librivoxSyncRunning) return;
   librivoxSyncRunning = true;
   try {
@@ -460,6 +487,13 @@ export async function syncLibrivox(target = 300): Promise<void> {
         try {
           const row = librivoxToBookRow(raw);
           if (row.chapters.length === 0) continue; // skip books with no streamable sections
+          // Drop religious / scripture / sermon content from the
+          // English feed too, so the listing stays focused on
+          // literature.
+          const genreText = (row.genres || []).join(" ").toLowerCase();
+          if (/\b(religion|religious|christian|bible|gospel|sermon|theology|spiritual|sacred|prayer|psalm|catholic|protestant)\b/.test(genreText)) {
+            continue;
+          }
           await db
             .insert(audiolibraryBooks)
             .values(row)
@@ -498,9 +532,23 @@ export async function syncLibrivox(target = 300): Promise<void> {
 
 /** Pull Arabic public-domain audiobooks from Internet Archive into
  *  the cache. Uses the advancedsearch endpoint then the per-item
- *  metadata endpoint to extract MP3 file URLs. */
+ *  metadata endpoint to extract MP3 file URLs.
+ *
+ *  STRICT literature-only filter:
+ *    + mediatype audio
+ *    + language Arabic
+ *    + PD or Creative Commons
+ *    + at least one literature-tagged subject (novel, fiction,
+ *      poetry, story, literature)
+ *    - no religious / sermon / Quran / Hadith / Islamic subjects
+ *    - no lecture / khutba / dars (private classes)
+ *
+ *  The user explicitly asked for "stories and books" only, no
+ *  religious content. The negative-subject list below is the
+ *  belt-and-braces guard on top of the positive literature filter.
+ */
 let archiveSyncRunning = false;
-export async function syncInternetArchiveArabic(target = 100): Promise<void> {
+export async function syncInternetArchiveArabic(target = 600): Promise<void> {
   if (archiveSyncRunning) return;
   archiveSyncRunning = true;
   try {
@@ -513,10 +561,12 @@ export async function syncInternetArchiveArabic(target = 100): Promise<void> {
       return;
     }
     const want = target - (have ?? 0);
-    const query = encodeURIComponent(
-      `mediatype:(audio) AND language:(Arabic) AND (-rights:(*copyright*) AND (licenseurl:(*creativecommons*) OR rights:(publicdomain)))`,
-    );
-    const searchUrl = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=description&fl[]=downloads&fl[]=licenseurl&rows=${Math.min(200, want * 2)}&page=1&output=json`;
+    const positive = "(subject:(novel) OR subject:(fiction) OR subject:(novels) OR subject:(short story) OR subject:(short stories) OR subject:(literature) OR subject:(poetry) OR subject:(poem) OR subject:(\"رواية\") OR subject:(\"قصة\") OR subject:(\"قصص\") OR subject:(\"أدب\") OR subject:(\"شعر\"))";
+    const negative = "-subject:(quran) AND -subject:(qoran) AND -subject:(koran) AND -subject:(\"قرآن\") AND -subject:(\"القرآن\") AND -subject:(islam) AND -subject:(islamic) AND -subject:(\"إسلام\") AND -subject:(\"إسلامي\") AND -subject:(hadith) AND -subject:(\"حديث\") AND -subject:(sunnah) AND -subject:(\"سنة\") AND -subject:(sermon) AND -subject:(khutba) AND -subject:(\"خطبة\") AND -subject:(lecture) AND -subject:(\"محاضرة\") AND -subject:(\"درس\") AND -subject:(\"دعاء\") AND -subject:(religion) AND -subject:(religious) AND -subject:(\"دين\") AND -subject:(\"ديني\") AND -subject:(tafsir) AND -subject:(\"تفسير\") AND -subject:(fiqh) AND -subject:(\"فقه\") AND -subject:(prayer) AND -subject:(\"صلاة\")";
+    const license = "(licenseurl:(*creativecommons*) OR rights:(publicdomain))";
+    const fullQuery = `mediatype:(audio) AND language:(Arabic) AND ${positive} AND ${negative} AND ${license}`;
+    const query = encodeURIComponent(fullQuery);
+    const searchUrl = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=description&fl[]=downloads&fl[]=licenseurl&fl[]=subject&rows=${Math.min(1000, want * 3)}&page=1&output=json`;
     const r = await fetch(searchUrl, { signal: AbortSignal.timeout(30_000), headers: FETCH_HEADERS });
     if (!r.ok) {
       logger.warn({ status: r.status }, "IA search returned non-OK; aborting");

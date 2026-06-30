@@ -11,7 +11,7 @@ import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/language-context";
 import {
-  Search, Globe, Filter, Clock, Headphones, BookAudio, ChevronDown,
+  Search, Clock, Headphones, BookAudio, ChevronDown,
   Loader2, ArrowRight, ArrowLeft, ListMusic,
 } from "lucide-react";
 
@@ -25,15 +25,12 @@ const TEXT = "#f0efe8";
 const MUTED = "rgba(255,255,255,0.55)";
 const MUTED2 = "rgba(255,255,255,0.35)";
 
-const LANGUAGES = [
-  { id: "",        label: "All Languages",  labelAr: "كلّ اللغات" },
-  { id: "english", label: "English",        labelAr: "الإنجليزيّة" },
-  { id: "arabic",  label: "Arabic",         labelAr: "العربيّة" },
-];
-const SOURCES = [
-  { id: "",         label: "All Sources", labelAr: "كل المصادر" },
-  { id: "librivox", label: "LibriVox",    labelAr: "ليبري فوكس" },
-  { id: "archive",  label: "Archive.org", labelAr: "أرشيف.org" },
+// Hard-split between Arabic and English. The user explicitly asked
+// for no merged view so the catalogue UI always shows one language
+// at a time. Default is picked from the writer's UI language.
+const LANGUAGE_TABS = [
+  { id: "arabic",  label: "العربيّة",      labelEn: "Arabic"  },
+  { id: "english", label: "English",       labelEn: "English" },
 ];
 const SORTS = [
   { id: "recent",   label: "Recently added", labelAr: "الأحدث" },
@@ -77,8 +74,9 @@ export default function AudiolibraryPage() {
   const [, navigate] = useLocation();
 
   const [query, setQuery] = useState("");
-  const [language, setLanguage] = useState<string>(ar ? "arabic" : "");
-  const [source, setSource] = useState<string>("");
+  // Hard-split: one language at a time, never merged. Default
+  // follows the writer's UI language.
+  const [language, setLanguage] = useState<string>(ar ? "arabic" : "english");
   const [sort, setSort] = useState<string>("recent");
   const [page, setPage] = useState(0);
 
@@ -88,18 +86,18 @@ export default function AudiolibraryPage() {
     const id = setTimeout(() => setDebouncedQ(query.trim()), 280);
     return () => clearTimeout(id);
   }, [query]);
-  useEffect(() => setPage(0), [debouncedQ, language, source, sort]);
+  useEffect(() => setPage(0), [debouncedQ, language, sort]);
 
   const params = useMemo(() => {
     const u = new URLSearchParams();
     if (debouncedQ) u.set("q", debouncedQ);
-    if (language) u.set("language", language);
-    if (source) u.set("source", source);
+    // Language is always required now (hard split).
+    u.set("language", language);
     u.set("sort", sort);
     u.set("limit", String(PAGE_SIZE));
     u.set("offset", String(page * PAGE_SIZE));
     return u.toString();
-  }, [debouncedQ, language, source, sort, page]);
+  }, [debouncedQ, language, sort, page]);
 
   const { data, isFetching } = useQuery<BrowseResp>({
     queryKey: ["/api/audiolibrary", params],
@@ -142,7 +140,49 @@ export default function AudiolibraryPage() {
             </p>
           </section>
 
-          {/* ── Search + filters ── */}
+          {/* ── Language tabs (hard split) ── */}
+          <section style={{ marginBottom: 18 }}>
+            <div
+              role="tablist"
+              style={{
+                display: "inline-flex",
+                gap: 4,
+                padding: 4,
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 14,
+              }}
+            >
+              {LANGUAGE_TABS.map((tab) => {
+                const active = language === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setLanguage(tab.id)}
+                    style={{
+                      fontFamily: SF,
+                      padding: "10px 22px",
+                      borderRadius: 10,
+                      fontSize: 13.5,
+                      fontWeight: 700,
+                      letterSpacing: "-0.005em",
+                      background: active ? TEXT : "transparent",
+                      color: active ? "#000" : MUTED,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 160ms ease",
+                    }}
+                  >
+                    {tab.id === "arabic" ? "العربيّة" : "English"}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* ── Search + sort (no source / no language; tabs above own language) ── */}
           <section
             style={{
               background: CARD,
@@ -171,9 +211,6 @@ export default function AudiolibraryPage() {
                 }}
               />
             </div>
-
-            <SelectChip icon={<Globe size={12} />} value={language} onChange={setLanguage} options={LANGUAGES.map((l) => ({ id: l.id, label: ar ? l.labelAr : l.label }))} />
-            <SelectChip icon={<Filter size={12} />} value={source} onChange={setSource} options={SOURCES.map((s) => ({ id: s.id, label: ar ? s.labelAr : s.label }))} />
             <SelectChip icon={<ListMusic size={12} />} value={sort} onChange={setSort} options={SORTS.map((s) => ({ id: s.id, label: ar ? s.labelAr : s.label }))} />
           </section>
 
