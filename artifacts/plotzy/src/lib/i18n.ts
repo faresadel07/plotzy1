@@ -181,6 +181,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // English-only for now. Other 13 languages added in Commit 7;
     // the t() resolver falls back to en until then.
     navCourse: "Course",
+    navAudioLibrary: "Audio Library",
     courseHomeEyebrow: "FREE WRITING COURSE",
     courseHomeTitle: "Learn how to write your first book",
     courseHomeSubtitle: "Free with your Plotzy account",
@@ -1353,6 +1354,7 @@ export const translations: Record<Language, Record<string, string>> = {
     navDiscover: "اكتشف",
     navMarketplace: "المتجر",
     navCourse: "الدورة",
+    navAudioLibrary: "الصوتيّة",
     navCommunity: "المجتمع",
     navPro: "تبرّع",
     navSupport: "الدعم",
