@@ -30,11 +30,11 @@ interface VoiceOption {
 // Arabic Jordanian voice. Voice IDs map to the entries in
 // artifacts/api-server/src/lib/piper-tts.ts > PIPER_VOICES.
 const VOICES: VoiceOption[] = [
-  { id: "ryan",    name: "Ryan",    nameAr: "رايان",  gender: "Male",   accent: "American",  accentAr: "أمريكي",  tone: "Warm",         toneAr: "دافئ",         emoji: "🌟" },
-  { id: "sophie",  name: "Sophie",  nameAr: "صوفي",  gender: "Female", accent: "American",  accentAr: "أمريكي",  tone: "Clear",        toneAr: "واضح",         emoji: "✨" },
-  { id: "jenny",   name: "Jenny",   nameAr: "جيني",  gender: "Female", accent: "British",   accentAr: "بريطاني", tone: "Storytelling", toneAr: "حكاية وسرد",  emoji: "📖" },
-  { id: "james",   name: "James",   nameAr: "جيمس",  gender: "Male",   accent: "British",   accentAr: "بريطاني", tone: "Northern",     toneAr: "بريطاني شمالي", emoji: "🎩" },
-  { id: "kareem",  name: "Kareem",  nameAr: "كريم",  gender: "Male",   accent: "Jordanian", accentAr: "أردني",   tone: "Clear",        toneAr: "واضح",         emoji: "🌙" },
+  { id: "ryan",    name: "Ryan",    nameAr: "رايان",  gender: "Male",   accent: "American",  accentAr: "أمريكي",  tone: "Warm",         toneAr: "دافئ",         emoji: "" },
+  { id: "sophie",  name: "Sophie",  nameAr: "صوفي",  gender: "Female", accent: "American",  accentAr: "أمريكي",  tone: "Clear",        toneAr: "واضح",         emoji: "" },
+  { id: "jenny",   name: "Jenny",   nameAr: "جيني",  gender: "Female", accent: "British",   accentAr: "بريطاني", tone: "Storytelling", toneAr: "حكاية وسرد",  emoji: "" },
+  { id: "james",   name: "James",   nameAr: "جيمس",  gender: "Male",   accent: "British",   accentAr: "بريطاني", tone: "Northern",     toneAr: "بريطاني شمالي", emoji: "" },
+  { id: "kareem",  name: "Kareem",  nameAr: "كريم",  gender: "Male",   accent: "Jordanian", accentAr: "أردني",   tone: "Clear",        toneAr: "واضح",         emoji: "" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -902,9 +902,9 @@ export default function AudiobookStudio() {
               {/* Tips */}
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {[
-                  { icon: "🎙️", title: ar ? "أصوات احترافية" : "Pro Voices",        desc: ar ? "10 أصوات ذكاء اصطناعي" : "10 AI voices to choose from" },
-                  { icon: "⬇️", title: ar ? "تحميل فصل بفصل" : "Chapter Downloads", desc: ar ? "شارك فصلاً واحداً مستقلاً" : "Share any single chapter" },
-                  { icon: "💾", title: ar ? "تصدير MP3" : "MP3 Export",             desc: ar ? "جودة عالية مع بيانات وصفية" : "High quality with metadata" },
+                  { icon: "", title: ar ? "أصوات احترافية" : "Pro Voices",        desc: ar ? "10 أصوات ذكاء اصطناعي" : "10 AI voices to choose from" },
+                  { icon: "", title: ar ? "تحميل فصل بفصل" : "Chapter Downloads", desc: ar ? "شارك فصلاً واحداً مستقلاً" : "Share any single chapter" },
+                  { icon: "", title: ar ? "تصدير MP3" : "MP3 Export",             desc: ar ? "جودة عالية مع بيانات وصفية" : "High quality with metadata" },
                 ].map(tip => (
                   <div key={tip.title} className="p-4 rounded-xl transition-all hover:shadow-sm" style={{ background: "#111111", border: "1px solid #252525" }}>
                     <span className="text-xl">{tip.icon}</span>

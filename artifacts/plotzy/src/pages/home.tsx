@@ -788,27 +788,27 @@ export default function Home() {
                   title: t("fldWriteTitle"),
                   subtitle: t("fldFeaturesHint"),
                   cards: [
-                    { id: "w1", icon: "✦", headline: t("fldW1H"), sub: t("fldW1S") },
-                    { id: "w2", icon: "📖", headline: t("fldW2H"), sub: t("fldW2S") },
-                    { id: "w3", icon: "🤖", headline: t("fldW3H"), sub: t("fldW3S") },
+                    { id: "w1", icon: "", headline: t("fldW1H"), sub: t("fldW1S") },
+                    { id: "w2", icon: "", headline: t("fldW2H"), sub: t("fldW2S") },
+                    { id: "w3", icon: "", headline: t("fldW3H"), sub: t("fldW3S") },
                   ],
                 },
                 {
                   title: t("fldPublishTitle"),
                   subtitle: t("fldFeaturesHint"),
                   cards: [
-                    { id: "p1", icon: "🚀", headline: t("fldP1H"), sub: t("fldP1S") },
-                    { id: "p2", icon: "🌍", headline: t("fldP2H"), sub: t("fldP2S") },
-                    { id: "p3", icon: "📊", headline: t("fldP3H"), sub: t("fldP3S") },
+                    { id: "p1", icon: "", headline: t("fldP1H"), sub: t("fldP1S") },
+                    { id: "p2", icon: "", headline: t("fldP2H"), sub: t("fldP2S") },
+                    { id: "p3", icon: "", headline: t("fldP3H"), sub: t("fldP3S") },
                   ],
                 },
                 {
                   title: t("fldListenTitle"),
                   subtitle: t("fldFeaturesHint"),
                   cards: [
-                    { id: "l1", icon: "🎙️", headline: t("fldL1H"), sub: t("fldL1S") },
-                    { id: "l2", icon: "🌐", headline: t("fldL2H"), sub: t("fldL2S") },
-                    { id: "l3", icon: "📚", headline: t("fldL3H"), sub: t("fldL3S") },
+                    { id: "l1", icon: "", headline: t("fldL1H"), sub: t("fldL1S") },
+                    { id: "l2", icon: "", headline: t("fldL2H"), sub: t("fldL2S") },
+                    { id: "l3", icon: "", headline: t("fldL3H"), sub: t("fldL3S") },
                   ],
                 },
               ].map((folder, i) => (

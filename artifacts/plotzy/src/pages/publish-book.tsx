@@ -33,17 +33,6 @@ const ACCENT = "rgba(255,255,255,0.10)";
 
 const SF = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
-const REGION_FLAGS: Record<string, string> = {
-  "North America": "🌎",
-  "Europe": "🌍",
-  "Middle East & North Africa": "🌙",
-  "South Asia": "🌏",
-  "East Asia": "🌏",
-  "Latin America": "🌎",
-  "Oceania": "🌏",
-  "Africa": "🌍",
-};
-
 const PUBLISHING_STEPS = [
   {
     id: 1,
@@ -535,7 +524,7 @@ export default function PublishBook() {
                     <ChevronRight size={11} color={MUTED2} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
                     <select value={selectedRegion} onChange={e => setSelectedRegion(e.target.value)} data-testid="select-region"
                       style={{ ...selectStyle, paddingLeft: 28, paddingRight: 28 }}>
-                      {REGIONS.map(r => <option key={r} value={r} style={{ background: "#1a1a1a" }}>{REGION_FLAGS[r] || "🌐"} {r}</option>)}
+                      {REGIONS.map(r => <option key={r} value={r} style={{ background: "#1a1a1a" }}>{r}</option>)}
                     </select>
                   </div>
 
@@ -667,7 +656,7 @@ export default function PublishBook() {
                 <MapPin size={11} />
                 <span>{selectedPublisher.country}</span>
                 <span style={{ opacity: 0.4 }}>·</span>
-                <span>{REGION_FLAGS[selectedPublisher.region]} {selectedPublisher.region}</span>
+                <span>{selectedPublisher.region}</span>
                 {selectedPublisher.founded && (
                   <><span style={{ opacity: 0.4 }}>·</span><span>est. {selectedPublisher.founded}</span></>
                 )}

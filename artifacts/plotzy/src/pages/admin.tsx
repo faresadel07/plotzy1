@@ -465,7 +465,7 @@ function UsersTab() {
 
 // ─── Activity Tab ─────────────────────────────────────────────────────────────
 
-const EVENT_ICONS: Record<string, string> = { user: "👤", book: "📖", support: "🎫", payment: "💳" };
+const EVENT_ICONS: Record<string, string> = { user: "", book: "", support: "", payment: "" };
 const EVENT_COLORS: Record<string, string> = { user: "#818cf8", book: "#34d399", support: "#fb923c", payment: "#10b981" };
 
 function ActivityTab() {
@@ -606,7 +606,7 @@ function BannerTab() {
             padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
             background: selectedColor.bg, color: selectedColor.fg,
           }}>
-            📢 {message}
+            {message}
           </div>
         )}
 
@@ -2234,7 +2234,7 @@ function TutorialsTab() {
               </div>
             ) : (
               <div>
-                <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }}>🎬</div>
+                <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }} />
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>Drag & drop a YouTube or Vimeo link here</div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>or paste the URL below</div>
                 <input
@@ -2322,7 +2322,7 @@ function TutorialsTab() {
       {/* ── Tutorial Cards Grid ── */}
       {tutorials.length === 0 && !showForm ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.25)" }}>
-          <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.4 }}>🎬</div>
+          <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.4 }} />
           <p style={{ fontSize: 14 }}>No tutorials yet</p>
           <p style={{ fontSize: 12, color: "rgba(255,255,255,0.15)", marginTop: 4 }}>Click "Add Tutorial" to create your first video guide</p>
         </div>
@@ -2338,7 +2338,7 @@ function TutorialsTab() {
                 {t.thumbnailUrl ? (
                   <img src={t.thumbnailUrl} alt={`${t.title} thumbnail`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <span style={{ fontSize: 24, opacity: 0.3 }}>🎬</span>
+                  <span style={{ fontSize: 24, opacity: 0.3 }} />
                 )}
                 {t.duration && (
                   <span style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.75)", borderRadius: 4, padding: "2px 6px", fontSize: 10, fontWeight: 600, color: "#fff" }}>{t.duration}</span>
@@ -2533,7 +2533,7 @@ export default function AdminPage() {
   if (!user?.isAdmin) {
     return (
       <div style={{ ...S.page, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-        <div style={{ fontSize: 48 }}>🔒</div>
+        <div style={{ fontSize: 48 }} />
         <div style={{ fontSize: 18, fontWeight: 600 }}>Access Denied</div>
         <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>You don't have permission to view this page.</div>
         <button onClick={() => setLocation("/")} style={{ ...S.btn("default"), marginTop: 8, padding: "10px 24px" }}>Go Home</button>

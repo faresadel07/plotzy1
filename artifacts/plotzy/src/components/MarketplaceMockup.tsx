@@ -5,7 +5,7 @@ const TABS = ["All", "Editing", "Design", "Marketing"];
 
 const SERVICES = [
   {
-    icon: "📖",
+    icon: "",
     title: "AI Developmental Editor",
     subtitle: "Full manuscript structure analysis",
     badge: "Most Used",
@@ -13,7 +13,7 @@ const SERVICES = [
     time: "~3 min",
   },
   {
-    icon: "✏️",
+    icon: "",
     title: "AI Copy Editor",
     subtitle: "Grammar, style & voice consistency",
     badge: "Editing",
@@ -21,7 +21,7 @@ const SERVICES = [
     time: "~2 min",
   },
   {
-    icon: "🎨",
+    icon: "",
     title: "AI Cover Generator",
     subtitle: "Professional cover design in seconds",
     badge: "Design",

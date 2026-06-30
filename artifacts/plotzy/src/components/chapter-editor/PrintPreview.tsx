@@ -15,10 +15,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Printer, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
-  a5:     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",      labelAr: "رواية كلاسيكية",  icon: "📖" },
-  pocket: { width: 416,  height: 680,  widthCm: 11.0, heightCm: 18.0, label: "Pocket Book",        labelAr: "كتاب جيب",        icon: "✋" },
-  trade:  { width: 576,  height: 864,  widthCm: 15.2, heightCm: 22.9, label: "Professional Trade", labelAr: "تجاري احترافي",   icon: "📚" },
-  a4:     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",        labelAr: "A4 قياسي",        icon: "📄" },
+  a5:     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",      labelAr: "رواية كلاسيكية",  icon: "" },
+  pocket: { width: 416,  height: 680,  widthCm: 11.0, heightCm: 18.0, label: "Pocket Book",        labelAr: "كتاب جيب",        icon: "" },
+  trade:  { width: 576,  height: 864,  widthCm: 15.2, heightCm: 22.9, label: "Professional Trade", labelAr: "تجاري احترافي",   icon: "" },
+  a4:     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",        labelAr: "A4 قياسي",        icon: "" },
 };
 
 interface PrintPreviewProps {

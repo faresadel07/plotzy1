@@ -413,7 +413,6 @@ function CalendarCard() {
           <div className="flex items-baseline gap-1.5">
             <span className="text-white text-3xl font-bold tracking-tight" style={{ fontFamily: SF }}>{streakCount}</span>
             <span className="text-white/40 text-xs" style={{ fontFamily: SF }}>day streak</span>
-            <span className="text-lg">🔥</span>
           </div>
           <p className="text-white/35 text-xs mt-1" style={{ fontFamily: SF }}>
             Track every writing session. Keep your momentum alive.
@@ -428,12 +427,12 @@ function CalendarCard() {
    CARD 8 — Achievements
 ════════════════════════════════════════ */
 const BADGES = [
-  { icon: "🌱", name: "First Words",       desc: "Write your first chapter",          rarity: "common",    color: "#4ade80" },
-  { icon: "✍️", name: "Apprentice Scribe",  desc: "Write your first 5,000 words",     rarity: "common",    color: "#60a5fa" },
-  { icon: "🚀", name: "Published!",         desc: "Publish your first book",           rarity: "rare",      color: "#a78bfa" },
-  { icon: "🔥", name: "Week of Words",      desc: "Maintain a 7-day writing streak",   rarity: "common",    color: "#fb923c" },
-  { icon: "📖", name: "Novel Crafter",      desc: "Write 60,000 words",               rarity: "rare",      color: "#f472b6" },
-  { icon: "💎", name: "Month of Mastery",   desc: "Maintain a 30-day writing streak",  rarity: "legendary", color: "#e879f9" },
+  { icon: "", name: "First Words",       desc: "Write your first chapter",          rarity: "common",    color: "#4ade80" },
+  { icon: "", name: "Apprentice Scribe",  desc: "Write your first 5,000 words",     rarity: "common",    color: "#60a5fa" },
+  { icon: "", name: "Published!",         desc: "Publish your first book",           rarity: "rare",      color: "#a78bfa" },
+  { icon: "", name: "Week of Words",      desc: "Maintain a 7-day writing streak",   rarity: "common",    color: "#fb923c" },
+  { icon: "", name: "Novel Crafter",      desc: "Write 60,000 words",               rarity: "rare",      color: "#f472b6" },
+  { icon: "", name: "Month of Mastery",   desc: "Maintain a 30-day writing streak",  rarity: "legendary", color: "#e879f9" },
 ];
 
 const rarityLabel: Record<string, string> = { common: "Common", rare: "Rare", legendary: "Legendary" };
@@ -585,10 +584,10 @@ function StoryBibleCard() {
    CARD 11 — Ambient Soundscape
 ════════════════════════════════════════ */
 const SOUNDS = [
-  { name: "Rainstorm",    emoji: "🌧️", bars: [3,5,4,7,5,4,6,3,5,7,4,5,3,6,5] },
-  { name: "Forest Birds", emoji: "🦜", bars: [2,4,6,3,5,7,4,2,5,3,6,4,5,3,7] },
-  { name: "Coffee Shop",  emoji: "☕", bars: [5,3,4,6,3,5,4,7,3,5,6,4,3,5,4] },
-  { name: "Soft Wind",    emoji: "🍃", bars: [2,3,5,4,3,2,4,5,3,4,2,5,3,4,2] },
+  { name: "Rainstorm",    emoji: "", bars: [3,5,4,7,5,4,6,3,5,7,4,5,3,6,5] },
+  { name: "Forest Birds", emoji: "", bars: [2,4,6,3,5,7,4,2,5,3,6,4,5,3,7] },
+  { name: "Coffee Shop",  emoji: "", bars: [5,3,4,6,3,5,4,7,3,5,6,4,3,5,4] },
+  { name: "Soft Wind",    emoji: "", bars: [2,3,5,4,3,2,4,5,3,4,2,5,3,4,2] },
 ];
 
 function SoundCard() {

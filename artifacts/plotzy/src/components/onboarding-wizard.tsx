@@ -10,14 +10,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Sentry } from "@/lib/sentry";
 
 const GENRES = [
-    { id: "fantasy", label: "Fantasy", icon: "✨" },
-    { id: "scifi", label: "Sci-Fi", icon: "🚀" },
-    { id: "romance", label: "Romance", icon: "💖" },
-    { id: "mystery", label: "Mystery", icon: "🔍" },
-    { id: "thriller", label: "Thriller", icon: "🔪" },
-    { id: "historical", label: "Historical", icon: "🏛️" },
-    { id: "nonfiction", label: "Non-Fiction", icon: "📚" },
-    { id: "other", label: "Other", icon: "✏️" },
+    { id: "fantasy", label: "Fantasy", icon: "" },
+    { id: "scifi", label: "Sci-Fi", icon: "" },
+    { id: "romance", label: "Romance", icon: "" },
+    { id: "mystery", label: "Mystery", icon: "" },
+    { id: "thriller", label: "Thriller", icon: "" },
+    { id: "historical", label: "Historical", icon: "" },
+    { id: "nonfiction", label: "Non-Fiction", icon: "" },
+    { id: "other", label: "Other", icon: "" },
 ];
 
 export function OnboardingWizard({

@@ -2038,7 +2038,7 @@ function ArticleShareButton({
             </ShareItem>
 
             <ShareItem onClick={shareTo.whatsapp}>
-              <span style={{ width: 13, textAlign: "center", color: "#25d366", fontWeight: 700, fontSize: 12 }}>✓</span>
+              <span style={{ width: 13, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#25d366" }}><Check size={12} strokeWidth={2.5} /></span>
               <span style={{ color: "rgba(255,255,255,0.85)" }}>WhatsApp</span>
             </ShareItem>
 

@@ -501,7 +501,6 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
             >
               <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                <span className="text-base">🎙️</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
@@ -674,7 +673,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                         onSuccess: () => {
                           setIsPublishConfirmOpen(false);
                           toast({
-                            title: lang === "ar" ? "🎉 تم النشر!" : "🎉 Published!",
+                            title: lang === "ar" ? "تم النشر!" : "Published!",
                             description: lang === "ar"
                               ? "كتابك الآن متاح في المكتبة المجتمعية."
                               : "Your book is now live in the Plotzy Community Library.",

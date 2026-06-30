@@ -19,7 +19,7 @@ import { RichChapterEditor } from "@/components/RichChapterEditor";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash, Sparkles } from "lucide-react";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { PrintPreview } from "@/components/chapter-editor/PrintPreview";
 import { PageSetupModal } from "@/components/chapter-editor/PageSetupModal";
@@ -142,10 +142,10 @@ function serializePages(pages: PageBlock[]): string {
 // ── Paper Size Definitions ────────────────────────────────────────────────────
 // All sizes in CSS pixels at 96 dpi (1 inch = 96 px; 1 cm = 37.795 px)
 const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
-  "a5":     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",       labelAr: "رواية كلاسيكية",  icon: "📖" },
-  "pocket": { width: 416,  height: 680,  widthCm: 11.0, heightCm: 18.0, label: "Pocket Book",         labelAr: "كتاب جيب",        icon: "✋" },
-  "trade":  { width: 576,  height: 864,  widthCm: 15.2, heightCm: 22.9, label: "Professional Trade",  labelAr: "تجاري احترافي",   icon: "📚" },
-  "a4":     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",         labelAr: "A4 قياسي",        icon: "📄" },
+  "a5":     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",       labelAr: "رواية كلاسيكية",  icon: "" },
+  "pocket": { width: 416,  height: 680,  widthCm: 11.0, heightCm: 18.0, label: "Pocket Book",         labelAr: "كتاب جيب",        icon: "" },
+  "trade":  { width: 576,  height: 864,  widthCm: 15.2, heightCm: 22.9, label: "Professional Trade",  labelAr: "تجاري احترافي",   icon: "" },
+  "a4":     { width: 794,  height: 1123, widthCm: 21.0, heightCm: 29.7, label: "Standard A4",         labelAr: "A4 قياسي",        icon: "" },
 };
 
 const DEFAULT_MARGIN = 60; // px — 0.625 inch at 96 dpi (tighter margins = more text per page)
@@ -626,7 +626,7 @@ export default function ChapterEditor() {
       localStorage.setItem("plotzy-typewriter-mode", String(next));
       toast({
         title: next
-          ? (ar ? "⌨️ تم تفعيل تمركز المؤشر" : "⌨️ Center Typing enabled")
+          ? (ar ? "تم تفعيل تمركز المؤشر" : "Center Typing enabled")
           : (ar ? "تم إيقاف تمركز المؤشر" : "Center Typing off"),
         description: next
           ? (ar ? "المؤشر يبقى في منتصف الشاشة والنص هو اللي بيتحرك — زي الآلة الكاتبة." : "Your cursor stays in the middle; the text scrolls beneath it as you write.")
@@ -3159,7 +3159,7 @@ export default function ChapterEditor() {
                           className="w-full rounded-xl px-3 py-2.5 flex items-start gap-2.5"
                           style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.18)' }}
                         >
-                          <span style={{ fontSize: '13px', color: 'rgba(99,102,241,0.5)', flexShrink: 0, marginTop: '1px' }}>✦</span>
+                          <span style={{ color: 'rgba(99,102,241,0.5)', flexShrink: 0, marginTop: '1px', display: 'inline-flex' }}><Sparkles size={13} /></span>
                           <span
                             className="flex-1 text-[13px] leading-relaxed italic select-none"
                             style={{
@@ -3220,7 +3220,6 @@ export default function ChapterEditor() {
                         style={{ border: '1px solid rgba(251,191,36,0.25)', background: 'rgba(251,191,36,0.05)' }}
                       >
                         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
-                          <span style={{ fontSize: '13px' }}>✍️</span>
                           <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: 'rgba(251,191,36,0.7)' }}>
                             {ar ? "أظهر لا تخبر" : "Show, Don't Tell"}
                           </span>
@@ -3268,7 +3267,6 @@ export default function ChapterEditor() {
                   {/* SDT loading indicator */}
                   {activePageIndex === index && sdtLoading && sdtFindings.length === 0 && !inlineSuggestion && !suggestionLoading && (
                     <div className="flex items-center gap-1.5 px-3 pb-2 opacity-20" style={{ direction: textDir }}>
-                      <span style={{ fontSize: '11px' }}>✍️</span>
                       <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
                       <div className="w-1 h-1 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -3642,7 +3640,7 @@ export default function ChapterEditor() {
         {/* Panel Footer */}
         <div style={{ padding: '10px 16px', borderTop: '1px solid hsl(var(--border)/20%)', background: 'hsl(var(--muted)/20%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', letterSpacing: '0.08em', opacity: 0.7 }}>
-            {ar ? '🔒 وضع القراءة فقط — لا يمكن التعديل' : '🔒 Read-only — no edits possible'}
+            {ar ? 'وضع القراءة فقط — لا يمكن التعديل' : 'Read-only — no edits possible'}
           </span>
         </div>
       </div>

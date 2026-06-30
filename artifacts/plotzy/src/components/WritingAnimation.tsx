@@ -145,7 +145,7 @@ export function WritingAnimation() {
         <span style={{ fontSize: "7.5px", color: "rgba(255,255,255,0.2)" }}>1 pg · {wordCount} w</span>
         <div style={{ width: 1, height: 10, background: "rgba(255,255,255,0.1)", margin: "0 4px" }} />
         {/* Icon row */}
-        {["↩","↪","🎙","⊞","📖","🖼","🏷","⊕","🔊","▤","🖨","⋮"].map((ic, i) => (
+        {["↩","↪","⊞","▢","▥","⊕","◐","▤","▥","⋮"].map((ic, i) => (
           <span key={i} style={{ fontSize: "7px", color: "rgba(255,255,255,0.22)", flexShrink: 0 }}>{ic}</span>
         ))}
         <div style={{ flex: 1 }} />
@@ -156,13 +156,13 @@ export function WritingAnimation() {
           animate={{ boxShadow: isDone ? ["0 0 0px #f5c84244", "0 0 8px #f5c84299", "0 0 0px #f5c84244"] : "0 0 0px transparent" }}
           transition={{ duration: 1.6, repeat: isDone ? Infinity : 0 }}
         >
-          ✦ AI Writing Assistant
+          AI Writing Assistant
         </motion.span>
         <span
           className="flex items-center gap-1 rounded-md px-2 py-1 ml-1"
           style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.12)", fontSize: "7.5px", fontWeight: 600, color: "rgba(255,255,255,0.7)", flexShrink: 0 }}
         >
-          💾 Save
+          Save
         </span>
       </div>
 

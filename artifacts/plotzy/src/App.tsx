@@ -19,6 +19,7 @@ import QuickDropNotepad from "@/components/QuickDropNotepad";
 import MobileBlocker from "@/components/MobileBlocker";
 import GoogleOneTap from "@/components/GoogleOneTap";
 import { CookieBanner } from "@/components/CookieBanner";
+import { Check } from "lucide-react";
 
 /* Eager: landing page (must load instantly) */
 import Home from "@/pages/home";
@@ -86,7 +87,7 @@ function EmailVerifyHandler() {
         {status === "loading" && <p style={{ color: "rgba(255,255,255,0.5)" }}>Verifying...</p>}
         {status === "success" && (
           <>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Check size={32} strokeWidth={2.5} /></div>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Email verified!</h3>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>Your account is now fully activated.</p>
             <button onClick={() => { window.history.replaceState({}, "", "/"); window.location.reload(); }}
@@ -172,7 +173,7 @@ function EmailChangeLinkHandler() {
         )}
         {status === "success" && (
           <>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}><Check size={32} strokeWidth={2.5} /></div>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
               {isVerify ? "Email updated" : "Email change cancelled"}
             </h3>

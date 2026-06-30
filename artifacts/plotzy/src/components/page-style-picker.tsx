@@ -272,12 +272,6 @@ export function PageStylePicker({ currentStyle, isDark, onSelect, onClose }: Pag
         style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)" }}
       >
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-base"
-            style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }}
-          >
-            🎨
-          </div>
           <div>
             <p className="text-sm font-bold text-foreground leading-tight">Page Style</p>
             <p className="text-[10px] text-muted-foreground">Choose your writing surface</p>

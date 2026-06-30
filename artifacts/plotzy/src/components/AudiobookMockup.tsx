@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 const VOICE_TABS = ["All", "Female", "Male", "Neutral"];
 
 const VOICES = [
-  { id: "nova",    emoji: "☀️", label: "Nova",    meta: "American · Warm & Upbeat",       gender: "Female"  },
-  { id: "alloy",   emoji: "⚡", label: "Alloy",   meta: "American · Versatile & Clear",   gender: "Neutral" },
-  { id: "shimmer", emoji: "✨", label: "Shimmer", meta: "American · Light & Feminine",    gender: "Female"  },
-  { id: "onyx",    emoji: "🎩", label: "Onyx",    meta: "American · Deep & Authoritative",gender: "Male"    },
-  { id: "echo",    emoji: "📣", label: "Echo",    meta: "American · Resonant & Clear",    gender: "Neutral" },
-  { id: "sage",    emoji: "🌿", label: "Sage",    meta: "American · Calm & Thoughtful",   gender: "Neutral" },
+  { id: "nova",    emoji: "", label: "Nova",    meta: "American · Warm & Upbeat",       gender: "Female"  },
+  { id: "alloy",   emoji: "", label: "Alloy",   meta: "American · Versatile & Clear",   gender: "Neutral" },
+  { id: "shimmer", emoji: "", label: "Shimmer", meta: "American · Light & Feminine",    gender: "Female"  },
+  { id: "onyx",    emoji: "", label: "Onyx",    meta: "American · Deep & Authoritative",gender: "Male"    },
+  { id: "echo",    emoji: "", label: "Echo",    meta: "American · Resonant & Clear",    gender: "Neutral" },
+  { id: "sage",    emoji: "", label: "Sage",    meta: "American · Calm & Thoughtful",   gender: "Neutral" },
 ];
 
 const CHAPTERS = [
@@ -212,7 +212,7 @@ export function AudiobookMockup() {
                   className="flex-1 text-center py-1 rounded-lg"
                   style={{ fontSize: "8px", fontWeight: 700, cursor: "default" }}
                 >
-                  {q === "HD" ? "💎 HD" : "⚡ Standard"}
+                  {q === "HD" ? "HD" : "Standard"}
                 </motion.div>
               ))}
             </div>

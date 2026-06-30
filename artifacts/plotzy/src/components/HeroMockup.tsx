@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Check, Star } from "lucide-react";
 
 const SCENES = ["write", "ai", "publish", "stats"] as const;
 type Scene = typeof SCENES[number];
@@ -57,12 +58,12 @@ function Dot({ color, size = 6 }: { color: string; size?: number }) {
    SCENE 1 — WRITE
 ══════════════════════════════════════════════ */
 const ANNS = [
-  { t: "💡 Stronger opening?", c: "#a78bfa" },
-  { t: "🔎 Passive voice here", c: "#f59e0b" },
-  { t: "✦ AI rephrase ready", c: "#60a5fa" },
-  { t: "📖 Show, don't tell", c: "#34d399" },
-  { t: "⚡ Great pacing!", c: "#f472b6" },
-  { t: "🎯 Voice consistent ✓", c: "#34d399" },
+  { t: "Stronger opening?", c: "#a78bfa" },
+  { t: "Passive voice here", c: "#f59e0b" },
+  { t: "AI rephrase ready", c: "#60a5fa" },
+  { t: "Show, don't tell", c: "#34d399" },
+  { t: "Great pacing!", c: "#f472b6" },
+  { t: "Voice consistent", c: "#34d399" },
 ];
 const CHAPTERS = [
   { n: "I. The Beginning", w: 3420, done: true },
@@ -159,20 +160,19 @@ function WriteScene() {
             <AnimatePresence>
               {saved && (
                 <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                  style={{ fontSize: 8.5, color: "#34d399", fontWeight: 600 }}>✓ Saved</motion.span>
+                  style={{ fontSize: 8.5, color: "#34d399", fontWeight: 600 }}>Saved</motion.span>
               )}
             </AnimatePresence>
           </div>
           <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
             <motion.div animate={{ scale: pulse ? [1, 1.15, 1] : 1 }} transition={{ duration: 0.25 }}
               style={{ display: "flex", alignItems: "center", gap: 3, padding: "2px 7px", borderRadius: 99, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}>
-              <span style={{ fontSize: 9 }}>🔥</span>
               <span style={{ fontSize: 9, fontWeight: 700, color: "#f59e0b" }}>{streak}d</span>
             </motion.div>
             <motion.span animate={{ color: pulse ? "#e8e8e8" : "#555" }} transition={{ duration: 0.25 }} style={{ fontSize: 10, fontWeight: 700 }}>
               {wc.toLocaleString()} w
             </motion.span>
-            <div style={{ padding: "2px 8px", borderRadius: 5, fontSize: 9, fontWeight: 600, background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>AI ✦</div>
+            <div style={{ padding: "2px 8px", borderRadius: 5, fontSize: 9, fontWeight: 600, background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>AI</div>
           </div>
         </div>
 
@@ -243,12 +243,12 @@ const REVIEWS = [
   { name: "Omar T.", stars: 5, text: "The character depth is extraordinary.", avatar: "OT" },
 ];
 const READER_NOTIFS = [
-  "📖 @chen added to reading list",
-  "⭐ New 5-star review just in",
-  "🔖 @sara shared your excerpt",
-  "💬 @james left a comment",
-  "🌍 Reader joined from Tokyo",
-  "📚 Added to community picks",
+  "@chen added to reading list",
+  "New 5-star review just in",
+  "@sara shared your excerpt",
+  "@james left a comment",
+  "Reader joined from Tokyo",
+  "Added to community picks",
 ];
 
 function AIScene() {
@@ -301,7 +301,7 @@ function AIScene() {
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ fontSize: 12, fontWeight: 800, color: "#fbbf24" }}>4.8</span>
               <div style={{ display: "flex", gap: 1 }}>
-                {[0,1,2,3,4].map(i => <span key={i} style={{ fontSize: 7, color: "#fbbf24" }}>★</span>)}
+                {[0,1,2,3,4].map(i => <Star key={i} size={7} fill="#fbbf24" stroke="#fbbf24" strokeWidth={0} />)}
               </div>
             </div>
           </div>
@@ -348,7 +348,11 @@ function AIScene() {
               <div>
                 <div style={{ fontSize: 9.5, fontWeight: 700, color: "#ccc" }}>{review.name}</div>
                 <div style={{ display: "flex", gap: 1 }}>
-                  {[0,1,2,3,4].map(i => <span key={i} style={{ fontSize: 8, color: i < review.stars ? "#fbbf24" : "#2a2a2a" }}>★</span>)}
+                  {[0,1,2,3,4].map(i => {
+                    const filled = i < review.stars;
+                    const col = filled ? "#fbbf24" : "#2a2a2a";
+                    return <Star key={i} size={8} fill={col} stroke={col} strokeWidth={0} />;
+                  })}
                 </div>
               </div>
             </div>
@@ -393,10 +397,10 @@ const CHECKLIST = [
   { label: "Select Formats", done: false },
 ];
 const FORMAT_OPTIONS = [
-  { label: "PDF", icon: "📄", active: true },
-  { label: "ePub", icon: "📱", active: true },
-  { label: "Hardcover", icon: "📚", active: false },
-  { label: "Audiobook", icon: "🎧", active: false },
+  { label: "PDF", icon: "", active: true },
+  { label: "ePub", icon: "", active: true },
+  { label: "Hardcover", icon: "", active: false },
+  { label: "Audiobook", icon: "", active: false },
 ];
 const PUB_STEPS = [
   { label: "Formatting your manuscript…", color: "#60a5fa" },
@@ -476,7 +480,7 @@ function PublishScene() {
                 <motion.div
                   animate={{ background: done ? "#34d399" : "rgba(255,255,255,0.05)", borderColor: done ? "#34d399" : "rgba(255,255,255,0.1)" }}
                   style={{ width: 13, height: 13, borderRadius: "50%", border: "1.5px solid", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {done && <span style={{ fontSize: 7, color: "#000", fontWeight: 900 }}>✓</span>}
+                  {done && <Check size={8} strokeWidth={3} color="#000" />}
                 </motion.div>
                 <span style={{ fontSize: 9, color: done ? "#aaa" : "#2e2e2e", fontWeight: done ? 400 : 600 }}>{item.label}</span>
               </motion.div>
@@ -539,7 +543,7 @@ function PublishScene() {
           <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 1.8, repeat: Infinity }}
             style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", pointerEvents: "none" }} />
           <span style={{ fontSize: 10, fontWeight: 700, color: published ? "#34d399" : "#c4b5fd" }}>
-            {published ? "✓ Published!" : "Publish Now ✦"}
+            {published ? "Published!" : "Publish Now"}
           </span>
         </motion.div>
       </div>
@@ -557,9 +561,9 @@ const STATS4 = [
   { v: 47000, l: "Authors", c: "#f472b6", suf: "+" },
 ];
 const FEAT6 = [
-  { i: "✦", n: "AI Cover Art", c: "#a78bfa" },
+  { i: "", n: "AI Cover Art", c: "#a78bfa" },
   { i: "◆", n: "Smart Editor", c: "#60a5fa" },
-  { i: "★", n: "World Publish", c: "#f59e0b" },
+  { i: "", n: "World Publish", c: "#f59e0b" },
   { i: "●", n: "Plot Detect", c: "#34d399" },
   { i: "▲", n: "Writing Coach", c: "#f472b6" },
   { i: "◉", n: "PDF & EPUB", c: "#fb923c" },
@@ -567,7 +571,7 @@ const FEAT6 = [
 const SPARK_A = [9, 14, 11, 19, 16, 24, 20, 29, 24, 34, 30, 39];
 const SPARK_B = [5, 9, 13, 8, 16, 12, 20, 15, 24, 19, 28, 24];
 const maxA = Math.max(...SPARK_A), maxB = Math.max(...SPARK_B);
-const FEED = ["📖 @sara finished Ch. 7", "🌟 @james published a novel", "✦ @ali ran AI analysis", "🎉 @chen: 500 readers!", "📚 @mia exported EPUB", "🏆 @leo won top prize"];
+const FEED = ["@sara finished Ch. 7", "@james published a novel", "@ali ran AI analysis", "@chen: 500 readers!", "@mia exported EPUB", "@leo won top prize"];
 const LEADERBOARD = [
   { name: "sara_k", words: 312800, c: "#f59e0b" },
   { name: "james_w", words: 284200, c: "#60a5fa" },
@@ -740,7 +744,7 @@ export function HeroMockup() {
     return () => clearInterval(t);
   }, []);
 
-  const LABELS: Record<Scene, string> = { write: "✍ Write", ai: "👥 Readers", publish: "📘 Publish", stats: "📊 Stats" };
+  const LABELS: Record<Scene, string> = { write: "Write", ai: "Readers", publish: "Publish", stats: "Stats" };
 
   const sparks = [
     { x: "4%", y: "15%", c: "#a78bfa55", d: 0, s: 4 },

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -69,10 +70,10 @@ export function ScrollBookHero({ onStartWriting, onExplore }: ScrollBookHeroProp
   }, [smoothProgress, bookLanded, bookOpen, contentVisible, hasScrolled]);
 
   const features = [
-    { icon: "✦", label: "AI Writing Assistant" },
-    { icon: "✦", label: "Smart Outline Builder" },
-    { icon: "✦", label: "One-Click Publish" },
-    { icon: "✦", label: "Live Analytics" },
+    { icon: "", label: "AI Writing Assistant" },
+    { icon: "", label: "Smart Outline Builder" },
+    { icon: "", label: "One-Click Publish" },
+    { icon: "", label: "Live Analytics" },
   ];
 
   return (
@@ -186,7 +187,7 @@ export function ScrollBookHero({ onStartWriting, onExplore }: ScrollBookHeroProp
                 fontWeight: 600,
                 textTransform: "uppercase",
                 marginBottom: 22,
-              }}>✦ Your story starts here</div>
+              }}>Your story starts here</div>
 
               <h1 style={{
                 fontSize: "clamp(2.2rem, 6vw, 5rem)",
@@ -422,10 +423,10 @@ export function ScrollBookHero({ onStartWriting, onExplore }: ScrollBookHeroProp
           {/* Gold particle sparks */}
           <motion.div style={{ position: "absolute", top: -60, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 14 }}
             initial={{ opacity: 0 }} animate={contentVisible ? { opacity: 1 } : {}}>
-            {["✦","✧","✦","✧","✦"].map((s, i) => (
-              <motion.span key={i} style={{ color: GOLD, fontSize: i % 2 === 0 ? 12 : 8, opacity: 0.7 }}
+            {[0,1,2,3,4].map((i) => (
+              <motion.span key={i} style={{ color: GOLD, opacity: 0.7, display: "inline-flex" }}
                 animate={{ y: [0, -12, 0], opacity: [0.7, 1, 0.7] }}
-                transition={{ repeat: Infinity, duration: 2 + i * 0.4, delay: i * 0.2 }}>{s}</motion.span>
+                transition={{ repeat: Infinity, duration: 2 + i * 0.4, delay: i * 0.2 }}><Sparkles size={i % 2 === 0 ? 12 : 8} /></motion.span>
             ))}
           </motion.div>
 
@@ -513,7 +514,7 @@ export function ScrollBookHero({ onStartWriting, onExplore }: ScrollBookHeroProp
                 (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 8px 32px ${GOLD}55, 0 2px 8px rgba(0,0,0,0.4)`;
               }}
             >
-              📖 Start Writing Now
+              Start Writing Now
             </button>
 
             <button
