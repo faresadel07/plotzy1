@@ -21,7 +21,7 @@ const BookViewerOverlay = lazy(() =>
 );
 import { useBooks, useCreateBook, useGenerateCover, useTrashBook, useDuplicateBook, useUpdateBook } from "@/hooks/use-books";
 import { SeriesSection } from "@/components/SeriesSection";
-import { OnboardingWizard } from "@/components/onboarding-wizard";
+import { BookCreationWizard, type WizardAnswers } from "@/components/BookCreationWizard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -429,24 +429,52 @@ export default function Home() {
     mouseY.set(0);
   }, [mouseX, mouseY]);
 
-  const handleCreateWizardBook = async (data: { title: string; summary: string; authorName: string; genre: string; protagonist: string }) => {
+  // New comprehensive 10-question wizard. Builds a structured summary
+  // that the AI Studio can lean on from the first chapter, and writes
+  // the writer-chosen genre + word goal into the dedicated columns so
+  // the rest of the platform (dashboard, marketplace match score,
+  // publisher recommendations) can use them too.
+  const handleCreateFromWizard = async (answers: WizardAnswers) => {
     try {
+      const ar = lang === "ar";
+      const ageLabelEn: Record<string, string> = {
+        children: "ages 5 to 8", middle_grade: "ages 8 to 12", ya: "young adult (13 to 18)",
+        new_adult: "new adult (18 to 25)", adult: "adult",
+      };
+      const povLabelEn: Record<string, string> = {
+        first: "first person", third_limited: "third person limited",
+        third_omni: "third person omniscient", multi: "multiple POVs",
+      };
+      const formatLabelEn: Record<string, string> = {
+        novel: "Novel", novella: "Novella", short_story: "Short story",
+        nonfiction: "Non-fiction", memoir: "Memoir", children: "Children's book",
+      };
+
+      // Build a thoughtful structured summary the Studio injects into
+      // every system prompt. Plain English (the LLMs handle Arabic
+      // metadata fine but English keys keep the prompt compact).
+      const lines: string[] = [];
+      lines.push(`Format: ${formatLabelEn[answers.format] || answers.format}`);
+      lines.push(`Genre: ${answers.genre}`);
+      lines.push(`Audience: ${ageLabelEn[answers.audience] || answers.audience}`);
+      lines.push(`Target length: ${answers.targetWords.toLocaleString("en-US")} words (about ${Math.round(answers.targetWords / 250)} pages)`);
+      if (answers.pov) lines.push(`POV: ${povLabelEn[answers.pov] || answers.pov}`);
+      if (answers.tense) lines.push(`Tense: ${answers.tense}`);
+      if (answers.setting) lines.push(`Setting: ${answers.setting}`);
+      if (answers.protagonist) lines.push(`Protagonist: ${answers.protagonist}`);
+      if (answers.topic) lines.push(`Topic: ${answers.topic}`);
+      lines.push(`Pitch: ${answers.pitch}`);
+      lines.push(`Schedule: ${answers.daysPerWeek} days/week, daily goal ${answers.dailyWordGoal.toLocaleString("en-US")} words`);
+      const summary = lines.join("\n");
+
       const newBook = await createBook.mutateAsync({
-        title: data.title,
-        summary: data.summary,
-        authorName: data.authorName,
+        title: answers.title || (ar ? "كتاب بلا عنوان" : "Untitled book"),
+        summary,
+        authorName: answers.authorName,
         language: lang,
-      });
-
-      // AI cover auto-generation temporarily disabled — gpt-image-1 is
-      // a paid API and credits aren't provisioned pre-launch. The user
-      // lands on /books/<id> with a default placeholder cover and can
-      // pick "Upload cover" or design one from scratch in /cover-
-      // designer/<id>. Re-enable once image-API credits land.
-      // if (data.protagonist) {
-      //   generateCover.mutate({ id: newBook.id, prompt: `A ${data.genre} book cover featuring ${data.protagonist}` });
-      // }
-
+        genre: answers.genre,
+        wordGoal: answers.targetWords,
+      } as any);
       setLocation(`/books/${newBook.id}`);
     } catch (err: any) {
       toast({ variant: "destructive", title: t("hmCreateFailed"), description: err?.message || String(err) });
@@ -1904,7 +1932,7 @@ export default function Home() {
 
       </Layout>
 
-      <OnboardingWizard open={showWizard} onClose={() => setShowWizard(false)} onCreateBook={handleCreateWizardBook} />
+      <BookCreationWizard open={showWizard} onClose={() => setShowWizard(false)} onCreate={handleCreateFromWizard} />
       <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </>
   );
