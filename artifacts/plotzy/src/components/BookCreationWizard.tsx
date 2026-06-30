@@ -28,8 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   BookOpen, ArrowRight, ArrowLeft, Loader2, Wand2, Check,
-  Feather, Newspaper, User, Baby, Heart, Globe2, Calendar,
-  Type, Target, Eye, Lightbulb, Pencil,
+  Feather, Newspaper, User, Baby, Globe2, Calendar,
+  Target, Eye, Lightbulb, Pencil,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
@@ -38,8 +38,6 @@ import { useToast } from "@/hooks/use-toast";
 
 export type BookFormat = "novel" | "novella" | "short_story" | "nonfiction" | "memoir" | "children";
 export type BookAudience = "children" | "middle_grade" | "ya" | "new_adult" | "adult";
-export type BookPov = "first" | "third_limited" | "third_omni" | "multi";
-export type BookTense = "past" | "present";
 
 export interface WizardAnswers {
   format: BookFormat;
@@ -48,12 +46,8 @@ export interface WizardAnswers {
   genre: string;
   audience: BookAudience;
   targetWords: number;
-  pov?: BookPov;
-  tense?: BookTense;
   setting?: string;
-  protagonist?: string;
   topic?: string;
-  pitch: string;
   daysPerWeek: number;
   dailyWordGoal: number;
 }
@@ -112,13 +106,6 @@ const AUDIENCES: Array<{ id: BookAudience; label: string; labelAr: string; age: 
   { id: "adult",        label: "Adult",        labelAr: "كبار",        age: "Ages 18 and up", ageAr: "18 فأكثر" },
 ];
 
-const POVS: Array<{ id: BookPov; label: string; labelAr: string; example: string; exampleAr: string }> = [
-  { id: "first",          label: "First Person",            labelAr: "ضمير المتكلّم",        example: "I walked into the room",         exampleAr: "دخلتُ الغرفة" },
-  { id: "third_limited",  label: "Third Person Limited",    labelAr: "ضمير الغائب المحدود",  example: "She walked into the room",       exampleAr: "دخلَتْ الغرفة" },
-  { id: "third_omni",     label: "Third Person Omniscient", labelAr: "ضمير الغائب الشامل",   example: "She walked in, unaware that...", exampleAr: "دخلت دون أن تعلم أنّ..." },
-  { id: "multi",          label: "Multiple POVs",           labelAr: "وجهات نظر متعدّدة",     example: "Switches per chapter",           exampleAr: "تتغيّر مع كل فصل" },
-];
-
 const SETTINGS_FICTION: Array<{ id: string; label: string; labelAr: string }> = [
   { id: "contemporary", label: "Contemporary, today",         labelAr: "معاصرة، اليوم" },
   { id: "historical",   label: "Historical, real past period", labelAr: "تاريخية، حقبة حقيقية" },
@@ -154,12 +141,8 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const [genre, setGenre] = useState<string>("");
   const [audience, setAudience] = useState<BookAudience | null>(null);
   const [targetWords, setTargetWords] = useState<number>(80_000);
-  const [pov, setPov] = useState<BookPov | null>(null);
-  const [tense, setTense] = useState<BookTense>("past");
   const [setting, setSetting] = useState<string>("");
-  const [protagonist, setProtagonist] = useState("");
   const [topic, setTopic] = useState("");
-  const [pitch, setPitch] = useState("");
   const [daysPerWeek, setDaysPerWeek] = useState<number>(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -167,9 +150,10 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const isFiction = format && !["nonfiction", "memoir"].includes(format);
   const isChildren = format === "children";
 
-  // The total number of steps depends on the format (non-fiction skips
-  // POV question). Sequential numbering for the progress dots only.
-  const totalSteps = isFiction ? 10 : 9;
+  // Seven steps total. Setting (fiction) and Topic (non-fiction)
+  // share the same slot; both branches advance to the schedule step
+  // afterwards so the counter stays the same in both flows.
+  const totalSteps = 7;
 
   // Default word goal as the writer crosses through the first three
   // steps; only nudges if they haven't manually touched it.
@@ -194,12 +178,8 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
     setGenre("");
     setAudience(null);
     setTargetWords(80_000);
-    setPov(null);
-    setTense("past");
     setSetting("");
-    setProtagonist("");
     setTopic("");
-    setPitch("");
     setDaysPerWeek(5);
   }, [open]);
 
@@ -219,19 +199,15 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const canAdvance = useMemo(() => {
     switch (step) {
       case 1: return !!format;
-      case 2: return true; // title optional
+      case 2: return true; // title + author optional
       case 3: return !!genre;
       case 4: return !!audience;
       case 5: return targetWords > 0;
-      case 6: // POV is fiction only; for non-fiction we jump straight to setting/topic
-        return isFiction ? !!pov : true;
-      case 7: return isFiction ? !!setting : topic.trim().length > 0;
-      case 8: return isFiction ? protagonist.trim().length > 0 : true;
-      case 9: return pitch.trim().length > 0;
-      case 10: return daysPerWeek > 0;
+      case 6: return isFiction ? !!setting : topic.trim().length > 0;
+      case 7: return daysPerWeek > 0;
       default: return true;
     }
-  }, [step, format, genre, audience, targetWords, pov, setting, topic, protagonist, pitch, daysPerWeek, isFiction]);
+  }, [step, format, genre, audience, targetWords, setting, topic, daysPerWeek, isFiction]);
 
   const next = () => {
     if (!canAdvance) return;
@@ -239,24 +215,15 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
       void submit();
       return;
     }
-    // Skip POV step for non-fiction
-    if (step === 5 && !isFiction) {
-      setStep(7);
-      return;
-    }
     setStep((s) => s + 1);
   };
   const back = () => {
     if (step <= 1) return;
-    if (step === 7 && !isFiction) {
-      setStep(5);
-      return;
-    }
     setStep((s) => s - 1);
   };
 
   const submit = async () => {
-    if (!format || !genre || !audience || !pitch.trim()) {
+    if (!format || !genre || !audience) {
       toast({
         variant: "destructive",
         title: ar ? "معلومات ناقصة" : "Some answers are missing",
@@ -275,12 +242,8 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
         genre,
         audience,
         targetWords,
-        pov: pov ?? undefined,
-        tense: isFiction ? tense : undefined,
         setting: isFiction ? setting : undefined,
-        protagonist: isFiction ? protagonist.trim() : undefined,
         topic: !isFiction ? topic.trim() : undefined,
-        pitch: pitch.trim(),
         daysPerWeek,
         dailyWordGoal,
       });
@@ -461,31 +424,6 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
               {step === 6 && isFiction && (
                 <motion.section key="s6" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
-                    title={ar ? "من خلال عيون من نرى القصّة؟" : "Whose eyes do we see through?"}
-                    sub={ar ? "الراوي وزمن السرد. تستطيع تغييره لاحقاً." : "The narrator and the tense. You can change these later."}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {POVS.map((p) => (
-                      <Choice
-                        key={p.id}
-                        active={pov === p.id}
-                        onClick={() => setPov(p.id)}
-                        title={ar ? p.labelAr : p.label}
-                        sub={ar ? p.exampleAr : p.example}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 pt-2">
-                    <span className="text-sm text-muted-foreground">{ar ? "زمن السرد" : "Tense"}</span>
-                    <Pill active={tense === "past"}    onClick={() => setTense("past")}    label={ar ? "ماضٍ" : "Past"} />
-                    <Pill active={tense === "present"} onClick={() => setTense("present")} label={ar ? "مضارع" : "Present"} />
-                  </div>
-                </motion.section>
-              )}
-
-              {step === 7 && isFiction && (
-                <motion.section key="s7" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
-                  <Q
                     title={ar ? "أين ومتى تدور القصّة؟" : "Where and when is your story set?"}
                     sub={ar ? "الإطار الزماني والمكاني." : "Time and place that frame the story."}
                     icon={<Globe2 size={16} />}
@@ -503,8 +441,8 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                 </motion.section>
               )}
 
-              {step === 7 && !isFiction && (
-                <motion.section key="s7-nf" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 6 && !isFiction && (
+                <motion.section key="s6-nf" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "ما الموضوع وما الذي يحتاج القارئ معرفته؟" : "What's your topic and what does the reader need to know?"}
                     sub={ar ? "الفكرة الرئيسية. سيستخدمها الذكاء الاصطناعي لتخصيص المساعدة." : "The central idea. The AI uses this to tailor every suggestion."}
@@ -523,69 +461,8 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                 </motion.section>
               )}
 
-              {step === 8 && isFiction && (
-                <motion.section key="s8" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
-                  <Q
-                    title={ar ? "أخبرنا عن البطل." : "Tell us about your protagonist."}
-                    sub={ar ? "بسطر أو سطرين. اسم، ما يريد، وما يخاف منه." : "A line or two. Name, what they want, what they fear."}
-                    icon={<User size={16} />}
-                  />
-                  <Textarea
-                    autoFocus
-                    value={protagonist}
-                    onChange={(e) => setProtagonist(e.target.value)}
-                    rows={4}
-                    placeholder={ar
-                      ? "مثال: لينا، 28 عاماً، طاهية في مطعم صغير. تريد أن تثبت لأبيها أنّها قادرة، تخاف أن يتركها كما ترك أمّها."
-                      : "e.g. Lena, 28, line cook in a small bistro. Wants to prove herself to her father, terrified of being abandoned like her mother."}
-                    className="rounded-xl text-base p-4 min-h-[140px]"
-                  />
-                </motion.section>
-              )}
-
-              {step === 8 && !isFiction && (
-                <motion.section key="s8-nf" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
-                  <Q
-                    title={ar ? "ما خبرتك في هذا الموضوع؟" : "What's your authority on this topic?"}
-                    sub={ar ? "اختياري لكنّ مهمّ. يساعد الذكاء الاصطناعي في تحديد نبرة الخبير المناسبة." : "Optional but powerful. Helps the AI match your level of authority."}
-                  />
-                  <Textarea
-                    value={protagonist}
-                    onChange={(e) => setProtagonist(e.target.value)}
-                    rows={4}
-                    placeholder={ar
-                      ? "مثال: عملت معالجاً نفسياً لمدّة 12 عاماً، رأيت أكثر من 800 حالة قلق."
-                      : "e.g. 12 years as a licensed therapist, worked with over 800 anxiety cases."}
-                    className="rounded-xl text-base p-4 min-h-[140px]"
-                  />
-                </motion.section>
-              )}
-
-              {step === 9 && (
-                <motion.section key="s9" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
-                  <Q
-                    title={ar ? "صف كتابك بجملة واحدة." : "Pitch your book in one sentence."}
-                    sub={ar ? "إن لم تستطع بجملة واحدة، الفكرة ليست جاهزة بعد. (وهذا طبيعي. كثير من الكتّاب يصلون لها لاحقاً.)" : "If you can't yet, the idea isn't fully cooked. (Totally normal. Many writers find it mid-draft.)"}
-                    icon={<Type size={16} />}
-                  />
-                  <Textarea
-                    autoFocus
-                    value={pitch}
-                    onChange={(e) => setPitch(e.target.value)}
-                    rows={3}
-                    placeholder={ar
-                      ? "مثال: بعد وفاة جدّتها، تكتشف طاهية شابّة وصفة تجعلها تطبخ للموتى."
-                      : "e.g. After her grandmother dies, a young chef discovers a recipe that lets her cook for the dead."}
-                    className="rounded-xl text-base p-4 min-h-[100px]"
-                  />
-                  <div className="text-xs text-muted-foreground -mt-2">
-                    {pitch.length}/200
-                  </div>
-                </motion.section>
-              )}
-
-              {step === 10 && (
-                <motion.section key="s10" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 7 && (
+                <motion.section key="s7" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "ما هو جدول الكتابة؟" : "What's your writing schedule?"}
                     sub={ar ? "نحسب لك هدف الكلمات اليومي بناءً على هدف 6 أشهر." : "We'll calculate a daily word goal based on a 6 month target."}
@@ -720,7 +597,6 @@ function Pill({ active, onClick, label }: { active: boolean; onClick: () => void
   );
 }
 
-// Touch unused icons so tree-shake doesn't complain in dev. The icons
-// are kept around so future additions (a Heart-flagged "romance"
-// shortcut, etc.) don't need a new import.
-void Heart;
+// Touch unused icon so tree-shake doesn't complain in dev. The icon
+// is kept around for future use (a User-flagged "author" shortcut).
+void User;

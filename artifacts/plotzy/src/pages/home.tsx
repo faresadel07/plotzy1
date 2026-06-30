@@ -441,29 +441,21 @@ export default function Home() {
         children: "ages 5 to 8", middle_grade: "ages 8 to 12", ya: "young adult (13 to 18)",
         new_adult: "new adult (18 to 25)", adult: "adult",
       };
-      const povLabelEn: Record<string, string> = {
-        first: "first person", third_limited: "third person limited",
-        third_omni: "third person omniscient", multi: "multiple POVs",
-      };
       const formatLabelEn: Record<string, string> = {
         novel: "Novel", novella: "Novella", short_story: "Short story",
         nonfiction: "Non-fiction", memoir: "Memoir", children: "Children's book",
       };
 
-      // Build a thoughtful structured summary the Studio injects into
-      // every system prompt. Plain English (the LLMs handle Arabic
-      // metadata fine but English keys keep the prompt compact).
+      // Build a structured summary the Studio injects into every
+      // system prompt. Plain English (the LLMs handle Arabic metadata
+      // fine but English keys keep the prompt compact).
       const lines: string[] = [];
       lines.push(`Format: ${formatLabelEn[answers.format] || answers.format}`);
       lines.push(`Genre: ${answers.genre}`);
       lines.push(`Audience: ${ageLabelEn[answers.audience] || answers.audience}`);
       lines.push(`Target length: ${answers.targetWords.toLocaleString("en-US")} words (about ${Math.round(answers.targetWords / 250)} pages)`);
-      if (answers.pov) lines.push(`POV: ${povLabelEn[answers.pov] || answers.pov}`);
-      if (answers.tense) lines.push(`Tense: ${answers.tense}`);
       if (answers.setting) lines.push(`Setting: ${answers.setting}`);
-      if (answers.protagonist) lines.push(`Protagonist: ${answers.protagonist}`);
       if (answers.topic) lines.push(`Topic: ${answers.topic}`);
-      lines.push(`Pitch: ${answers.pitch}`);
       lines.push(`Schedule: ${answers.daysPerWeek} days/week, daily goal ${answers.dailyWordGoal.toLocaleString("en-US")} words`);
       const summary = lines.join("\n");
 
