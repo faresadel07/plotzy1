@@ -1465,65 +1465,29 @@ export type InsertSavedPublisher = typeof savedPublishers.$inferInsert;
 // AUDIOLIBRARY (Public-Domain Audiobooks)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Curated audiobook directory pulling from LibriVox (English, 20k+
-// public-domain recordings) and Internet Archive's Arabic audio
-// collection (700+ public-domain or CC-licensed books). Both feeds
-// are aggregated through this single table so the front-end Audio
-// Library page renders one homogeneous grid regardless of source.
+// Architecture: pure proxy. The browse + detail endpoints hit
+// LibriVox and Internet Archive directly on every request. We do
+// NOT cache any catalogue rows in our DB.
 //
-// We DO NOT re-host the audio. The chapters array carries direct
-// streaming URLs back to the original CDN (LibriVox/Archive.org), so
-// our DB stays small and the bandwidth cost stays with the source
-// (LibriVox is donor-funded and explicitly designed for hot-link
-// streaming; Archive.org likewise).
-export const audiolibraryBooks = pgTable("audiolibrary_books", {
-  id: serial("id").primaryKey(),
-  // 'librivox' | 'archive' | 'youtube' (the last for curated embeds).
-  source: text("source").notNull(),
-  // Source-native id (LibriVox book id, Archive identifier, YouTube
-  // video id). Unique within each source.
-  externalId: text("external_id").notNull(),
-  title: text("title").notNull(),
-  author: text("author"),
-  language: text("language"),
-  description: text("description"),
-  coverUrl: text("cover_url"),
-  // Total length of all chapters concatenated, in seconds.
-  totalDuration: integer("total_duration"),
-  // [{ title, audioUrl, duration, sectionNumber }] in order.
-  chapters: jsonb("chapters").$type<Array<{
-    title: string;
-    audioUrl: string;
-    duration: number;
-    sectionNumber: number;
-  }>>(),
-  // Link back to the source page so we can satisfy attribution
-  // requirements and let curious users go deeper.
-  sourceUrl: text("source_url"),
-  genres: jsonb("genres").$type<string[]>(),
-  // Catalogue popularity used for sort=trending. LibriVox doesn't
-  // surface download counts directly but Archive.org does; we copy
-  // both into this single column.
-  downloads: integer("downloads").default(0),
-  cachedAt: timestamp("cached_at").defaultNow().notNull(),
-}, (t) => [
-  // The browse query reads "all books in this language, ordered by
-  // downloads desc" — index covers it.
-  index("idx_audio_books_lang").on(t.language),
-  index("idx_audio_books_source").on(t.source),
-  // Lookups by (source, externalId) when streaming a single book.
-  uniqueIndex("uniq_audio_books_source_ext").on(t.source, t.externalId),
-]);
-
-export type AudiolibraryBook = typeof audiolibraryBooks.$inferSelect;
-export type InsertAudiolibraryBook = typeof audiolibraryBooks.$inferInsert;
-
+// Why: the writer asked for "the largest possible catalogue" + "no
+// database usage for this section". Caching 1.5k LibriVox + 600 IA
+// rows was both small (5 MB) AND artificially capped the catalogue.
+// Direct proxy gives them the full upstream catalogues (20k+ LibriVox,
+// thousands of IA Arabic) at zero storage cost.
+//
+// The only rows we keep are PER-USER data (bookmarks + listening
+// progress). Books are identified by a string key of the form
+// "<source>:<external_id>" e.g. "librivox:1234" or "archive:abc-xyz".
+//
 // Per-user listening position. Lets the writer pause at chapter 5,
 // 12:34, close the tab, and pick up later from the same spot.
 export const audiolibraryProgress = pgTable("audiolibrary_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  bookId: integer("book_id").notNull().references(() => audiolibraryBooks.id, { onDelete: "cascade" }),
+  // Source-prefixed book identifier, e.g. "librivox:1234" or
+  // "archive:some-book-id". Free text so we don't need to migrate
+  // when a new source is added.
+  bookKey: text("book_key").notNull(),
   chapterIndex: integer("chapter_index").default(0).notNull(),
   // Position inside the current chapter, in seconds.
   positionSeconds: integer("position_seconds").default(0).notNull(),
@@ -1532,7 +1496,7 @@ export const audiolibraryProgress = pgTable("audiolibrary_progress", {
   playbackRate: numeric("playback_rate", { precision: 3, scale: 2 }).default("1.00").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [
-  uniqueIndex("uniq_audio_progress_user_book").on(t.userId, t.bookId),
+  uniqueIndex("uniq_audio_progress_user_key").on(t.userId, t.bookKey),
   index("idx_audio_progress_user").on(t.userId),
 ]);
 
@@ -1545,7 +1509,7 @@ export type InsertAudiolibraryProgress = typeof audiolibraryProgress.$inferInser
 export const audiolibraryBookmarks = pgTable("audiolibrary_bookmarks", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  bookId: integer("book_id").notNull().references(() => audiolibraryBooks.id, { onDelete: "cascade" }),
+  bookKey: text("book_key").notNull(),
   chapterIndex: integer("chapter_index").default(0).notNull(),
   positionSeconds: integer("position_seconds").default(0).notNull(),
   // Optional one-line description ("the bit about the lighthouse").
@@ -1553,7 +1517,7 @@ export const audiolibraryBookmarks = pgTable("audiolibrary_bookmarks", {
   label: text("label"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
-  index("idx_audio_bookmarks_user_book").on(t.userId, t.bookId),
+  index("idx_audio_bookmarks_user_key").on(t.userId, t.bookKey),
 ]);
 
 export type AudiolibraryBookmark = typeof audiolibraryBookmarks.$inferSelect;

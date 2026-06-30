@@ -44,9 +44,9 @@ interface Chapter {
 }
 
 interface AudioBookDetail {
-  id: number;
   source: "librivox" | "archive";
   externalId: string;
+  bookKey: string;
   title: string;
   author: string | null;
   language: string | null;
@@ -91,8 +91,11 @@ function fmtTime(seconds: number): string {
 export default function AudiolibraryPlayerPage() {
   const { lang, isRTL } = useLanguage();
   const ar = lang === "ar";
-  const [, params] = useRoute("/audiolibrary/:id");
-  const bookId = params?.id ? Number(params.id) : 0;
+  const [, params] = useRoute("/audiolibrary/:source/:externalId");
+  const source = params?.source as "librivox" | "archive" | undefined;
+  const externalId = params?.externalId ? decodeURIComponent(params.externalId) : "";
+  const bookKey = source && externalId ? `${source}:${externalId}` : "";
+  const apiPath = source && externalId ? `${source}/${encodeURIComponent(externalId)}` : "";
 
   // ── Audio state ──
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -115,22 +118,22 @@ export default function AudiolibraryPlayerPage() {
 
   // ── Data ──
   const { data: book, isLoading } = useQuery<AudioBookDetail>({
-    queryKey: [`/api/audiolibrary/${bookId}`],
+    queryKey: [`/api/audiolibrary/book/${apiPath}`],
     queryFn: async () => {
-      const r = await fetch(`/api/audiolibrary/${bookId}`, { credentials: "include" });
+      const r = await fetch(`/api/audiolibrary/book/${apiPath}`, { credentials: "include" });
       if (!r.ok) throw new Error("Failed to load audiobook");
       return r.json();
     },
-    enabled: bookId > 0,
+    enabled: !!apiPath,
   });
   const { data: progress } = useQuery<Progress>({
-    queryKey: [`/api/audiolibrary/progress/${bookId}`],
+    queryKey: [`/api/audiolibrary/progress/${apiPath}`],
     queryFn: async () => {
-      const r = await fetch(`/api/audiolibrary/progress/${bookId}`, { credentials: "include" });
+      const r = await fetch(`/api/audiolibrary/progress/${apiPath}`, { credentials: "include" });
       if (!r.ok) return { chapterIndex: 0, positionSeconds: 0, playbackRate: 1 };
       return r.json();
     },
-    enabled: bookId > 0,
+    enabled: !!apiPath,
   });
 
   // Restore listening position once both book + progress have arrived.
@@ -153,7 +156,7 @@ export default function AudiolibraryPlayerPage() {
 
   const saveProgress = useMutation({
     mutationFn: async (input: { chapterIndex: number; positionSeconds: number; playbackRate: number }) => {
-      await fetch(`/api/audiolibrary/progress/${bookId}`, {
+      await fetch(`/api/audiolibrary/progress/${apiPath}`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -164,13 +167,13 @@ export default function AudiolibraryPlayerPage() {
 
   // ── Bookmarks ──
   const bookmarksQuery = useQuery<{ bookmarks: BookmarkRow[] }>({
-    queryKey: [`/api/audiolibrary/bookmarks/${bookId}`],
+    queryKey: [`/api/audiolibrary/bookmarks/${apiPath}`],
     queryFn: async () => {
-      const r = await fetch(`/api/audiolibrary/bookmarks/${bookId}`, { credentials: "include" });
+      const r = await fetch(`/api/audiolibrary/bookmarks/${apiPath}`, { credentials: "include" });
       if (!r.ok) return { bookmarks: [] };
       return r.json();
     },
-    enabled: bookId > 0,
+    enabled: !!apiPath,
   });
   const createBookmark = useMutation({
     mutationFn: async (input: { chapterIndex: number; positionSeconds: number; label: string | null }) => {
@@ -178,7 +181,7 @@ export default function AudiolibraryPlayerPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, ...input }),
+        body: JSON.stringify({ bookKey, ...input }),
       });
       if (!r.ok) throw new Error(`Failed (${r.status})`);
       return r.json();
@@ -198,13 +201,13 @@ export default function AudiolibraryPlayerPage() {
 
   // ── Read + Listen: find a matching Gutenberg text ──
   const textMatchQuery = useQuery<TextMatch>({
-    queryKey: [`/api/audiolibrary/${bookId}/text-match`],
+    queryKey: [`/api/audiolibrary/text-match/${apiPath}`],
     queryFn: async () => {
-      const r = await fetch(`/api/audiolibrary/${bookId}/text-match`, { credentials: "include" });
+      const r = await fetch(`/api/audiolibrary/text-match/${apiPath}`, { credentials: "include" });
       if (!r.ok) return { match: null };
       return r.json();
     },
-    enabled: bookId > 0,
+    enabled: !!apiPath,
   });
   const textBodyQuery = useQuery<{ content: string }>({
     queryKey: [`/api/gutenberg/books/${textMatchQuery.data?.match?.gutenbergId ?? 0}/content`],
@@ -230,7 +233,7 @@ export default function AudiolibraryPlayerPage() {
     }, 10_000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, chapterIndex, currentTime, rate, book?.id]);
+  }, [isPlaying, chapterIndex, currentTime, rate, book?.bookKey]);
 
   // ── Player handlers ──
   const togglePlay = useCallback(() => {
@@ -291,10 +294,10 @@ export default function AudiolibraryPlayerPage() {
   }, [sleepUntil]);
 
   // ── Render ──
-  if (!bookId) {
+  if (!apiPath) {
     return (
       <Layout>
-        <div style={{ padding: 40, textAlign: "center", color: MUTED, fontFamily: SF }}>Invalid book id</div>
+        <div style={{ padding: 40, textAlign: "center", color: MUTED, fontFamily: SF }}>Invalid audiobook URL</div>
       </Layout>
     );
   }

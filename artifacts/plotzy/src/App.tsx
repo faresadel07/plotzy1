@@ -368,7 +368,7 @@ function Router() {
         <Route path="/learn/visuals-preview" component={VisualsPreview} />
         <Route path="/donate/thanks" component={DonateThanks} />
         <Route path="/audiolibrary" component={AudiolibraryPage} />
-        <Route path="/audiolibrary/:id" component={AudiolibraryPlayerPage} />
+        <Route path="/audiolibrary/:source/:externalId" component={AudiolibraryPlayerPage} />
         <Route path="/certificates/:uuid" component={CertificateVerifyPage} />
 
         {/* ── Auth-required routes ── */}

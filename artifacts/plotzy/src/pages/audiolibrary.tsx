@@ -41,9 +41,9 @@ const SORTS = [
 const PAGE_SIZE = 30;
 
 interface AudioBook {
-  id: number;
   source: "librivox" | "archive";
   externalId: string;
+  bookKey: string;
   title: string;
   author: string | null;
   language: string | null;
@@ -54,9 +54,8 @@ interface AudioBook {
 }
 
 interface BrowseResp {
-  total: number;
+  page: number;
   limit: number;
-  offset: number;
   books: AudioBook[];
 }
 
@@ -91,25 +90,26 @@ export default function AudiolibraryPage() {
   const params = useMemo(() => {
     const u = new URLSearchParams();
     if (debouncedQ) u.set("q", debouncedQ);
-    // Language is always required now (hard split).
-    u.set("language", language);
+    u.set("lang", language);
     u.set("sort", sort);
-    u.set("limit", String(PAGE_SIZE));
-    u.set("offset", String(page * PAGE_SIZE));
+    u.set("page", String(page));
     return u.toString();
   }, [debouncedQ, language, sort, page]);
 
   const { data, isFetching } = useQuery<BrowseResp>({
-    queryKey: ["/api/audiolibrary", params],
+    queryKey: ["/api/audiolibrary/browse", params],
     queryFn: async () => {
-      const r = await fetch(`/api/audiolibrary?${params}`, { credentials: "include" });
+      const r = await fetch(`/api/audiolibrary/browse?${params}`, { credentials: "include" });
       if (!r.ok) throw new Error("Failed to load audiolibrary");
       return r.json();
     },
     staleTime: 60_000,
   });
 
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
+  // The proxy doesn't expose a total count (upstream pagination is
+  // cursor-based). We show Next/Prev based on whether the current
+  // page filled.
+  const canGoNext = (data?.books?.length ?? 0) === PAGE_SIZE;
 
   return (
     <Layout>
@@ -214,41 +214,38 @@ export default function AudiolibraryPage() {
             <SelectChip icon={<ListMusic size={12} />} value={sort} onChange={setSort} options={SORTS.map((s) => ({ id: s.id, label: ar ? s.labelAr : s.label }))} />
           </section>
 
-          {/* ── Stats bar ── */}
+          {/* ── Stats + pager ── */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <p style={{ fontSize: 12.5, color: MUTED, margin: 0 }}>
               {isFetching && !data
                 ? (ar ? "جارٍ التحميل..." : "Loading...")
                 : (
                   <>
-                    <span style={{ fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>{data?.total ?? 0}</span>{" "}
-                    {ar ? "كتاب صوتي" : `audiobook${(data?.total ?? 0) === 1 ? "" : "s"}`}
+                    {ar ? "الصفحة" : "Page"} <span style={{ fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>{page + 1}</span>
+                    {" · "}
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>{data?.books?.length ?? 0}</span>{" "}
+                    {ar ? "كتاب على هذه الصفحة" : `book${(data?.books?.length ?? 0) === 1 ? "" : "s"}`}
                   </>
                 )}
             </p>
-            {data && totalPages > 1 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  style={iconBtn(page === 0)}
-                  aria-label={ar ? "السابق" : "Previous"}
-                >
-                  {isRTL ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
-                </button>
-                <span style={{ fontSize: 12, color: MUTED, fontVariantNumeric: "tabular-nums", minWidth: 60, textAlign: "center" }}>
-                  {ar ? `${page + 1} من ${totalPages}` : `${page + 1} of ${totalPages}`}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                  style={iconBtn(page >= totalPages - 1)}
-                  aria-label={ar ? "التالي" : "Next"}
-                >
-                  {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
-                </button>
-              </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0 || isFetching}
+                style={iconBtn(page === 0 || isFetching)}
+                aria-label={ar ? "السابق" : "Previous"}
+              >
+                {isRTL ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
+              </button>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={!canGoNext || isFetching}
+                style={iconBtn(!canGoNext || isFetching)}
+                aria-label={ar ? "التالي" : "Next"}
+              >
+                {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
+              </button>
+            </div>
           </div>
 
           {/* ── Grid ── */}
@@ -265,7 +262,12 @@ export default function AudiolibraryPage() {
               }}
             >
               {data.books.map((b) => (
-                <BookCard key={b.id} book={b} ar={ar} onOpen={() => navigate(`/audiolibrary/${b.id}`)} />
+                <BookCard
+                  key={b.bookKey}
+                  book={b}
+                  ar={ar}
+                  onOpen={() => navigate(`/audiolibrary/${b.source}/${encodeURIComponent(b.externalId)}`)}
+                />
               ))}
             </div>
           )}

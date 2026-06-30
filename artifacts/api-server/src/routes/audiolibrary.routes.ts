@@ -1,232 +1,302 @@
-// Audiolibrary routes — public-domain audiobooks from two upstream
-// catalogues:
+// Audiolibrary routes — DIRECT PROXY to LibriVox + Internet Archive.
 //
-//   - LibriVox (https://librivox.org) for English. ~20k recordings, all
-//     in the public domain, no API key required. Their /api/feed/
-//     endpoints return JSON with one entry per book plus a `sections`
-//     array of chapter rows that includes a direct `listen_url`. We
-//     proxy those URLs through to the client so the player can stream
-//     directly from LibriVox's CDN with no re-hosting on our side.
+// Architecture (revised per writer feedback):
+//   - Browse + detail hit the upstream APIs on every request.
+//   - We do NOT cache catalogues in our DB. Zero storage cost.
+//   - The writer sees the FULL upstream catalogue (20k+ LibriVox
+//     English; thousands of Arabic literature on Archive.org).
+//   - Per-user data (bookmarks, listening progress) still lives in
+//     audiolibrary_progress / audiolibrary_bookmarks, keyed by a
+//     "<source>:<external_id>" string instead of an internal FK.
 //
-//   - Internet Archive (https://archive.org) for Arabic. Search the
-//     audio collection filtered to mediatype:audio + language:Arabic +
-//     a public-domain or Creative Commons rights statement. The /
-//     metadata endpoint returns the file manifest; we pick the MP3
-//     entries and build a chapters array.
+// LibriVox: https://librivox.org/api/feed/audiobooks/?format=json
+//   Free, no key, returns one entry per book. ?extended=1 includes
+//   the sections array with direct listen_url streaming URLs.
 //
-// Both sources are designed for hot-link streaming and explicitly
-// allow it in their terms.
+// Internet Archive: https://archive.org/advancedsearch.php
+//   Free, no key, returns hits with identifier we then resolve via
+//   https://archive.org/metadata/<id> for the audio file manifest.
 
 import { Router } from "express";
 import { z } from "zod";
-import { and, eq, sql, desc, asc, isNull, isNotNull } from "drizzle-orm";
+import { and, eq, asc, sql } from "drizzle-orm";
 
 import { db } from "../db";
-import { audiolibraryBooks, audiolibraryProgress, audiolibraryBookmarks, gutenbergBooks } from "../../../../lib/db/src/schema";
+import { audiolibraryProgress, audiolibraryBookmarks, gutenbergBooks } from "../../../../lib/db/src/schema";
 import { logger } from "../lib/logger";
 import { logRouteError } from "../lib/log-route-error";
 
 const router = Router();
 
-const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const FETCH_HEADERS: Record<string, string> = {
   "User-Agent": "PlotzyAudio/1.0 (+https://plotzy.co; library@plotzy.co)",
   Accept: "application/json, */*;q=0.5",
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────
+// ── Shared types ────────────────────────────────────────────────────
 
-type Chapter = { title: string; audioUrl: string; duration: number; sectionNumber: number };
-
-interface LibrivoxBookRaw {
-  id: number | string;
+interface CommonBook {
+  source: "librivox" | "archive";
+  externalId: string;
+  bookKey: string; // source:externalId
   title: string;
-  description?: string;
+  author: string | null;
   language: string;
-  url_iarchive?: string;
-  url_librivox?: string;
-  url_text_source?: string;
-  url_zip_file?: string;
-  totaltime?: string;
-  totaltimesecs?: number;
-  authors?: Array<{ first_name: string; last_name: string }>;
-  genres?: Array<{ id: number; name: string }>;
-  sections?: Array<{
-    section_number: string;
-    title: string;
-    file_name: string;
-    listen_url: string;
-    playtime: string;
-  }>;
+  coverUrl: string | null;
+  totalDuration: number | null;
+  chapterCount: number;
+  genres: string[];
 }
 
-function authorName(book: LibrivoxBookRaw): string {
-  if (!book.authors || book.authors.length === 0) return "Unknown";
-  return book.authors
-    .map((a) => `${a.first_name} ${a.last_name}`.trim())
-    .filter(Boolean)
-    .join(", ");
+interface CommonChapter {
+  title: string;
+  audioUrl: string;
+  duration: number;
+  sectionNumber: number;
 }
 
-function parsePlaytime(s: string | undefined): number {
+interface CommonBookDetail extends CommonBook {
+  description: string | null;
+  chapters: CommonChapter[];
+  sourceUrl: string;
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────
+
+function parsePlaytime(s: string | undefined | null): number {
   if (!s) return 0;
-  // Format: "HH:MM:SS" or "MM:SS"
-  const parts = s.split(":").map((p) => Number(p));
+  const parts = String(s).split(":").map((p) => Number(p));
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   return Number(s) || 0;
 }
 
-function librivoxToBookRow(raw: LibrivoxBookRaw) {
-  const chapters: Chapter[] = (raw.sections ?? []).map((s) => ({
+function librivoxAuthorName(book: any): string {
+  if (!book.authors || book.authors.length === 0) return "Unknown";
+  return book.authors
+    .map((a: any) => `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+// LibriVox cover via Archive.org. The book's url_iarchive ends in the
+// archive identifier; we substitute it into the services/img endpoint.
+function librivoxCover(book: any): string | null {
+  const u = book.url_iarchive as string | undefined;
+  if (!u) return null;
+  const id = u.split("/").pop();
+  if (!id) return null;
+  return `https://archive.org/services/img/${id}`;
+}
+
+function librivoxIsReligious(book: any): boolean {
+  const genres = (book.genres || []).map((g: any) => g.name?.toLowerCase() ?? "").join(" ");
+  return /\b(religion|religious|christian|bible|gospel|sermon|theology|spiritual|sacred|psalm|catholic|protestant)\b/.test(genres);
+}
+
+// ── LibriVox: list ──────────────────────────────────────────────────
+
+async function librivoxList(params: { q: string; limit: number; offset: number }): Promise<CommonBook[]> {
+  // LibriVox doesn't expose a server-side title search through the
+  // feed, but it does have a `title` filter and a `since` cursor.
+  // For our purposes the simplest path is page through the feed and
+  // do the keyword match in JS for the page window.
+  const url = `https://librivox.org/api/feed/audiobooks/?format=json&limit=${params.limit}&offset=${params.offset}${params.q ? `&title=${encodeURIComponent(params.q)}` : ""}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
+  if (!r.ok) throw new Error(`LibriVox list failed: ${r.status}`);
+  const data = (await r.json()) as { books?: any[] };
+  const rows = data.books ?? [];
+  return rows
+    .filter((b) => !librivoxIsReligious(b))
+    .map((b) => ({
+      source: "librivox" as const,
+      externalId: String(b.id),
+      bookKey: `librivox:${b.id}`,
+      title: b.title || "Untitled",
+      author: librivoxAuthorName(b),
+      language: (b.language || "English").toLowerCase(),
+      coverUrl: librivoxCover(b),
+      totalDuration: parsePlaytime(b.totaltime) || Number(b.totaltimesecs) || null,
+      chapterCount: 0, // not returned in the basic feed
+      genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
+    }));
+}
+
+// ── LibriVox: detail ────────────────────────────────────────────────
+
+async function librivoxDetail(externalId: string): Promise<CommonBookDetail | null> {
+  const url = `https://librivox.org/api/feed/audiobooks/?format=json&extended=1&id=${encodeURIComponent(externalId)}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
+  if (!r.ok) return null;
+  const data = (await r.json()) as { books?: any[] };
+  const b = (data.books || [])[0];
+  if (!b) return null;
+  const chapters: CommonChapter[] = (b.sections || []).map((s: any) => ({
     title: s.title || `Section ${s.section_number}`,
     audioUrl: s.listen_url,
     duration: parsePlaytime(s.playtime),
     sectionNumber: Number(s.section_number) || 0,
   }));
   return {
-    source: "librivox" as const,
-    externalId: String(raw.id),
-    title: raw.title,
-    author: authorName(raw),
-    language: (raw.language || "English").toLowerCase(),
-    description: raw.description ?? null,
-    coverUrl: raw.url_iarchive
-      ? `https://archive.org/services/img/${raw.url_iarchive.split("/").pop()}`
-      : null,
-    totalDuration: raw.totaltimesecs ?? parsePlaytime(raw.totaltime),
+    source: "librivox",
+    externalId,
+    bookKey: `librivox:${externalId}`,
+    title: b.title || "Untitled",
+    author: librivoxAuthorName(b),
+    language: (b.language || "English").toLowerCase(),
+    description: b.description ?? null,
+    coverUrl: librivoxCover(b),
+    totalDuration: Number(b.totaltimesecs) || parsePlaytime(b.totaltime),
+    chapterCount: chapters.length,
     chapters,
-    sourceUrl: raw.url_librivox ?? null,
-    genres: (raw.genres ?? []).map((g) => g.name),
-    downloads: 0,
+    sourceUrl: b.url_librivox || `https://librivox.org/?p=${externalId}`,
+    genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
   };
 }
 
-// ── GET /api/audiolibrary ────────────────────────────────────────────
+// ── Internet Archive: literature-only Arabic search ─────────────────
+
+const IA_POSITIVE = '(subject:(novel) OR subject:(fiction) OR subject:(novels) OR subject:("short story") OR subject:("short stories") OR subject:(literature) OR subject:(poetry) OR subject:(poem) OR subject:("رواية") OR subject:("قصة") OR subject:("قصص") OR subject:("أدب") OR subject:("شعر"))';
+const IA_NEGATIVE = [
+  "quran", "qoran", "koran", "قرآن", "القرآن",
+  "islam", "islamic", "إسلام", "إسلامي",
+  "hadith", "حديث", "sunnah", "سنة",
+  "sermon", "khutba", "خطبة",
+  "lecture", "محاضرة", "درس", "دعاء",
+  "religion", "religious", "دين", "ديني",
+  "tafsir", "تفسير", "fiqh", "فقه",
+  "prayer", "صلاة",
+]
+  .map((t) => `-subject:(${t.includes("؀") ? `"${t}"` : t})`)
+  .join(" AND ");
+const IA_LICENSE = "(licenseurl:(*creativecommons*) OR rights:(publicdomain))";
+
+async function archiveSearch(params: { q: string; limit: number; offset: number; sort: string }): Promise<CommonBook[]> {
+  const sortClause =
+    params.sort === "title"    ? "&sort[]=titleSorter asc" :
+    params.sort === "duration" ? "&sort[]=runtime desc" :
+    "&sort[]=publicdate desc";
+  const userQuery = params.q ? ` AND (title:(${JSON.stringify(params.q)}) OR creator:(${JSON.stringify(params.q)}))` : "";
+  const fullQuery = `mediatype:(audio) AND language:(Arabic) AND ${IA_POSITIVE} AND ${IA_NEGATIVE} AND ${IA_LICENSE}${userQuery}`;
+  const page = Math.floor(params.offset / params.limit) + 1;
+  const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(fullQuery)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=runtime&fl[]=downloads&rows=${params.limit}&page=${page}&output=json${sortClause}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
+  if (!r.ok) throw new Error(`IA search failed: ${r.status}`);
+  const data = (await r.json()) as { response?: { docs?: any[] } };
+  const docs = data.response?.docs ?? [];
+  return docs.map((d) => {
+    const title = Array.isArray(d.title) ? d.title[0] : (d.title ?? d.identifier);
+    const author = Array.isArray(d.creator) ? d.creator.join(", ") : (d.creator ?? "Unknown");
+    return {
+      source: "archive" as const,
+      externalId: d.identifier,
+      bookKey: `archive:${d.identifier}`,
+      title: title || "Untitled",
+      author,
+      language: "arabic",
+      coverUrl: `https://archive.org/services/img/${d.identifier}`,
+      totalDuration: parsePlaytime(d.runtime) || null,
+      chapterCount: 0,
+      genres: [],
+    };
+  });
+}
+
+async function archiveDetail(externalId: string): Promise<CommonBookDetail | null> {
+  const url = `https://archive.org/metadata/${encodeURIComponent(externalId)}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
+  if (!r.ok) return null;
+  const meta = (await r.json()) as { metadata?: any; files?: any[] };
+  if (!meta.metadata) return null;
+  const files = (meta.files || []).filter((f: any) => (f.format ?? "").toLowerCase().includes("mp3"));
+  if (files.length === 0) return null;
+  const chapters: CommonChapter[] = files.map((f: any, i: number) => ({
+    title: f.title || f.name,
+    audioUrl: `https://archive.org/download/${encodeURIComponent(externalId)}/${encodeURIComponent(f.name)}`,
+    duration: f.length ? parsePlaytime(f.length) : 0,
+    sectionNumber: i + 1,
+  }));
+  const md = meta.metadata;
+  const title = Array.isArray(md.title) ? md.title[0] : (md.title ?? externalId);
+  const author = Array.isArray(md.creator) ? md.creator.join(", ") : (md.creator ?? "Unknown");
+  const description = Array.isArray(md.description) ? md.description.join("\n") : md.description ?? null;
+  return {
+    source: "archive",
+    externalId,
+    bookKey: `archive:${externalId}`,
+    title,
+    author,
+    language: "arabic",
+    description,
+    coverUrl: `https://archive.org/services/img/${externalId}`,
+    totalDuration: chapters.reduce((a, c) => a + c.duration, 0),
+    chapterCount: chapters.length,
+    chapters,
+    sourceUrl: `https://archive.org/details/${externalId}`,
+    genres: [],
+  };
+}
+
+// ── Routes ──────────────────────────────────────────────────────────
+
+// GET /api/audiolibrary/browse
 //
-// Browse + search. Reads from our cache table; if the cache is stale
-// or too small for the requested language, performs a refresh against
-// the upstream API on the fly.
-router.get("/api/audiolibrary", async (req, res) => {
+// Browse + optional search. Hits the upstream API live for the
+// requested language.
+router.get("/api/audiolibrary/browse", async (req, res) => {
   try {
-    const params = z
-      .object({
-        q: z.string().optional(),
-        language: z.string().optional(),
-        source: z.enum(["librivox", "archive"]).optional(),
-        limit: z.coerce.number().min(1).max(60).default(30),
-        offset: z.coerce.number().min(0).default(0),
-        sort: z.enum(["recent", "title", "duration"]).default("recent"),
-      })
-      .parse(req.query);
-
-    const conds = [] as any[];
-    if (params.language) conds.push(eq(audiolibraryBooks.language, params.language.toLowerCase()));
-    if (params.source) conds.push(eq(audiolibraryBooks.source, params.source));
-    if (params.q) {
-      const like = `%${params.q.toLowerCase()}%`;
-      conds.push(
-        sql`(lower(${audiolibraryBooks.title}) like ${like} OR lower(${audiolibraryBooks.author}) like ${like})`,
-      );
-    }
-    const where = conds.length > 0 ? and(...conds) : undefined;
-    const order =
-      params.sort === "title"     ? asc(audiolibraryBooks.title) :
-      params.sort === "duration"  ? desc(audiolibraryBooks.totalDuration) :
-      desc(audiolibraryBooks.cachedAt);
-
-    const [{ total }] = await db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(audiolibraryBooks)
-      .where(where);
-    const rows = await db
-      .select()
-      .from(audiolibraryBooks)
-      .where(where)
-      .orderBy(order)
-      .limit(params.limit)
-      .offset(params.offset);
-
-    res.json({
-      total,
-      limit: params.limit,
-      offset: params.offset,
-      books: rows.map((r) => ({
-        id: r.id,
-        source: r.source,
-        externalId: r.externalId,
-        title: r.title,
-        author: r.author,
-        language: r.language,
-        coverUrl: r.coverUrl,
-        totalDuration: r.totalDuration,
-        chapterCount: Array.isArray(r.chapters) ? r.chapters.length : 0,
-        genres: r.genres ?? [],
-      })),
-    });
-  } catch (err) {
-    logRouteError(req, err, "audiolibrary.list");
-    res.status(500).json({ message: "Failed to load audiolibrary" });
+    const params = z.object({
+      lang: z.enum(["english", "arabic"]),
+      q: z.string().optional().default(""),
+      page: z.coerce.number().min(0).max(200).default(0),
+      sort: z.enum(["recent", "title", "duration"]).default("recent"),
+    }).parse(req.query);
+    const limit = 30;
+    const offset = params.page * limit;
+    const books =
+      params.lang === "english"
+        ? await librivoxList({ q: params.q, limit, offset })
+        : await archiveSearch({ q: params.q, limit, offset, sort: params.sort });
+    res.json({ page: params.page, limit, books });
+  } catch (err: any) {
+    if (err?.name === "ZodError") { res.status(400).json({ message: "Invalid query" }); return; }
+    logRouteError(req, err, "audiolibrary.browse");
+    res.status(502).json({ message: "Upstream catalogue unavailable" });
   }
 });
 
-// ── GET /api/audiolibrary/:id ────────────────────────────────────────
-//
-// Book detail including chapters with direct streaming URLs.
-router.get("/api/audiolibrary/:id", async (req, res) => {
+// GET /api/audiolibrary/book/:source/:externalId
+router.get("/api/audiolibrary/book/:source/:externalId", async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    if (!id) {
-      res.status(400).json({ message: "Invalid id" });
-      return;
+    const source = req.params.source;
+    const externalId = req.params.externalId;
+    if (source !== "librivox" && source !== "archive") {
+      res.status(400).json({ message: "Unknown source" }); return;
     }
-    const [row] = await db.select().from(audiolibraryBooks).where(eq(audiolibraryBooks.id, id)).limit(1);
-    if (!row) {
-      res.status(404).json({ message: "Audiobook not found" });
-      return;
-    }
-    res.json({
-      id: row.id,
-      source: row.source,
-      externalId: row.externalId,
-      title: row.title,
-      author: row.author,
-      language: row.language,
-      description: row.description,
-      coverUrl: row.coverUrl,
-      totalDuration: row.totalDuration,
-      chapters: row.chapters ?? [],
-      sourceUrl: row.sourceUrl,
-      genres: row.genres ?? [],
-    });
+    const detail = source === "librivox"
+      ? await librivoxDetail(externalId)
+      : await archiveDetail(externalId);
+    if (!detail) { res.status(404).json({ message: "Audiobook not found" }); return; }
+    res.json(detail);
   } catch (err) {
-    logRouteError(req, err, "audiolibrary.get");
-    res.status(500).json({ message: "Failed to load audiobook" });
+    logRouteError(req, err, "audiolibrary.book");
+    res.status(502).json({ message: "Upstream catalogue unavailable" });
   }
 });
 
-// ── GET /api/audiolibrary/progress/:bookId ───────────────────────────
-router.get("/api/audiolibrary/progress/:bookId", async (req: any, res) => {
+// ── Listening progress (keyed by bookKey now) ──
+
+router.get("/api/audiolibrary/progress/:source/:externalId", async (req: any, res) => {
   try {
-    if (!req.isAuthenticated()) {
-      res.json({ chapterIndex: 0, positionSeconds: 0, playbackRate: 1 });
-      return;
-    }
+    if (!req.isAuthenticated()) { res.json({ chapterIndex: 0, positionSeconds: 0, playbackRate: 1 }); return; }
     const userId = req.user.id as number;
-    const bookId = Number(req.params.bookId);
-    if (!bookId) {
-      res.status(400).json({ message: "Invalid bookId" });
-      return;
-    }
+    const bookKey = `${req.params.source}:${req.params.externalId}`;
     const [row] = await db
       .select()
       .from(audiolibraryProgress)
-      .where(and(eq(audiolibraryProgress.userId, userId), eq(audiolibraryProgress.bookId, bookId)))
+      .where(and(eq(audiolibraryProgress.userId, userId), eq(audiolibraryProgress.bookKey, bookKey)))
       .limit(1);
-    if (!row) {
-      res.json({ chapterIndex: 0, positionSeconds: 0, playbackRate: 1 });
-      return;
-    }
+    if (!row) { res.json({ chapterIndex: 0, positionSeconds: 0, playbackRate: 1 }); return; }
     res.json({
       chapterIndex: row.chapterIndex,
       positionSeconds: row.positionSeconds,
@@ -238,42 +308,27 @@ router.get("/api/audiolibrary/progress/:bookId", async (req: any, res) => {
   }
 });
 
-// ── POST /api/audiolibrary/progress/:bookId ──────────────────────────
-//
-// Upsert listening position. Body: { chapterIndex, positionSeconds,
-// playbackRate? }. Silently no-ops for unauthenticated requests so
-// the player can fire-and-forget on every "timeupdate" tick without
-// the front-end having to gate on auth state.
-router.post("/api/audiolibrary/progress/:bookId", async (req: any, res) => {
+router.post("/api/audiolibrary/progress/:source/:externalId", async (req: any, res) => {
   try {
-    if (!req.isAuthenticated()) {
-      res.status(204).send();
-      return;
-    }
+    if (!req.isAuthenticated()) { res.status(204).send(); return; }
     const userId = req.user.id as number;
-    const bookId = Number(req.params.bookId);
-    if (!bookId) {
-      res.status(400).json({ message: "Invalid bookId" });
-      return;
-    }
-    const body = z
-      .object({
-        chapterIndex: z.number().int().min(0).max(999),
-        positionSeconds: z.number().int().min(0).max(86_400),
-        playbackRate: z.number().min(0.5).max(3).optional(),
-      })
-      .parse(req.body);
+    const bookKey = `${req.params.source}:${req.params.externalId}`;
+    const body = z.object({
+      chapterIndex: z.number().int().min(0).max(999),
+      positionSeconds: z.number().int().min(0).max(86_400),
+      playbackRate: z.number().min(0.5).max(3).optional(),
+    }).parse(req.body);
     await db
       .insert(audiolibraryProgress)
       .values({
         userId,
-        bookId,
+        bookKey,
         chapterIndex: body.chapterIndex,
         positionSeconds: body.positionSeconds,
         playbackRate: (body.playbackRate ?? 1).toFixed(2),
       })
       .onConflictDoUpdate({
-        target: [audiolibraryProgress.userId, audiolibraryProgress.bookId],
+        target: [audiolibraryProgress.userId, audiolibraryProgress.bookKey],
         set: {
           chapterIndex: body.chapterIndex,
           positionSeconds: body.positionSeconds,
@@ -288,46 +343,17 @@ router.post("/api/audiolibrary/progress/:bookId", async (req: any, res) => {
   }
 });
 
-// ── POST /api/audiolibrary/admin/resync ──────────────────────────────
-//
-// Wipes the existing Archive.org Arabic cache (which historically
-// included religious content under the old query) and triggers a
-// fresh pull with the literature-only filter. Intentionally open to
-// any signed-in user for now since the operation is idempotent and
-// safe; tighten to admin-only once the catalogue is mature.
-router.post("/api/audiolibrary/admin/resync", async (req: any, res) => {
-  try {
-    if (!req.isAuthenticated()) { res.status(401).json({ message: "Sign in required" }); return; }
-    // Cascade-deletes progress + bookmarks for the wiped audio books
-    // via the FK definitions on those tables.
-    const result = await db
-      .delete(audiolibraryBooks)
-      .where(eq(audiolibraryBooks.source, "archive"))
-      .returning({ id: audiolibraryBooks.id });
-    res.json({ wiped: result.length, queued: true });
-    setImmediate(async () => {
-      try { await syncInternetArchiveArabic(600); }
-      catch (err) { logger.error({ err }, "IA resync failed"); }
-    });
-  } catch (err) {
-    logRouteError(req, err, "audiolibrary.resync");
-    res.status(500).json({ message: "Resync failed" });
-  }
-});
+// ── Bookmarks (keyed by bookKey now) ──
 
-// ── Bookmarks ────────────────────────────────────────────────────────
-
-// GET /api/audiolibrary/bookmarks/:bookId
-router.get("/api/audiolibrary/bookmarks/:bookId", async (req: any, res) => {
+router.get("/api/audiolibrary/bookmarks/:source/:externalId", async (req: any, res) => {
   try {
     if (!req.isAuthenticated()) { res.json({ bookmarks: [] }); return; }
     const userId = req.user.id as number;
-    const bookId = Number(req.params.bookId);
-    if (!bookId) { res.status(400).json({ message: "Invalid bookId" }); return; }
+    const bookKey = `${req.params.source}:${req.params.externalId}`;
     const rows = await db
       .select()
       .from(audiolibraryBookmarks)
-      .where(and(eq(audiolibraryBookmarks.userId, userId), eq(audiolibraryBookmarks.bookId, bookId)))
+      .where(and(eq(audiolibraryBookmarks.userId, userId), eq(audiolibraryBookmarks.bookKey, bookKey)))
       .orderBy(asc(audiolibraryBookmarks.chapterIndex), asc(audiolibraryBookmarks.positionSeconds));
     res.json({ bookmarks: rows });
   } catch (err) {
@@ -336,13 +362,12 @@ router.get("/api/audiolibrary/bookmarks/:bookId", async (req: any, res) => {
   }
 });
 
-// POST /api/audiolibrary/bookmarks
 router.post("/api/audiolibrary/bookmarks", async (req: any, res) => {
   try {
     if (!req.isAuthenticated()) { res.status(401).json({ message: "Sign in required" }); return; }
     const userId = req.user.id as number;
     const body = z.object({
-      bookId: z.number().int().positive(),
+      bookKey: z.string().min(1).max(300),
       chapterIndex: z.number().int().min(0).max(999),
       positionSeconds: z.number().int().min(0).max(86_400),
       label: z.string().max(200).optional().nullable(),
@@ -351,7 +376,7 @@ router.post("/api/audiolibrary/bookmarks", async (req: any, res) => {
       .insert(audiolibraryBookmarks)
       .values({
         userId,
-        bookId: body.bookId,
+        bookKey: body.bookKey,
         chapterIndex: body.chapterIndex,
         positionSeconds: body.positionSeconds,
         label: body.label ?? null,
@@ -365,7 +390,6 @@ router.post("/api/audiolibrary/bookmarks", async (req: any, res) => {
   }
 });
 
-// DELETE /api/audiolibrary/bookmarks/:id
 router.delete("/api/audiolibrary/bookmarks/:id", async (req: any, res) => {
   try {
     if (!req.isAuthenticated()) { res.status(401).json({ message: "Sign in required" }); return; }
@@ -387,249 +411,46 @@ router.delete("/api/audiolibrary/bookmarks/:id", async (req: any, res) => {
   }
 });
 
-// ── Read+Listen sync: match an audiobook to its Gutenberg text ───────
-//
-// Looks up the Gutenberg cache for a book with a matching title +
-// author. If found, returns its id so the player can fetch the
-// content via the existing /api/gutenberg/books/:id/content endpoint
-// and render text alongside the audio. Best-effort matching — only
-// exact-ish title + last-name overlap counts as a hit.
-router.get("/api/audiolibrary/:id/text-match", async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    if (!id) { res.status(400).json({ message: "Invalid id" }); return; }
-    const [audio] = await db.select().from(audiolibraryBooks).where(eq(audiolibraryBooks.id, id)).limit(1);
-    if (!audio) { res.status(404).json({ message: "Audiobook not found" }); return; }
+// ── Read-along: match audiobook to Gutenberg text ────────────────────
 
-    // Normalise the audiobook title for fuzzy matching.
-    const normTitle = (audio.title || "")
+router.get("/api/audiolibrary/text-match/:source/:externalId", async (req, res) => {
+  try {
+    const source = req.params.source;
+    const externalId = req.params.externalId;
+    if (source !== "librivox" && source !== "archive") { res.status(400).json({ match: null }); return; }
+    const detail = source === "librivox" ? await librivoxDetail(externalId) : await archiveDetail(externalId);
+    if (!detail) { res.json({ match: null }); return; }
+    const normTitle = (detail.title || "")
       .toLowerCase()
       .replace(/^(the|a|an)\s+/, "")
       .replace(/\([^)]*\)/g, "")
       .replace(/[^\p{L}\p{N}\s]/gu, "")
       .trim();
-    const authorLastName = (audio.author || "")
+    const authorLastName = (detail.author || "")
       .split(",")[0]
       .trim()
       .split(/\s+/)
       .pop()
       ?.toLowerCase() ?? "";
     if (!normTitle || !authorLastName) { res.json({ match: null }); return; }
-
-    // Use the same normalisation in SQL so the comparison is fair.
     const candidates = await db.execute(sql`
-      SELECT gutenberg_id, title, authors
+      SELECT gutenberg_id, title
       FROM gutenberg_books
       WHERE
         lower(regexp_replace(coalesce(title, ''), '^(the|a|an)\\s+', '')) LIKE ${'%' + normTitle + '%'}
         AND lower(authors::text) LIKE ${'%' + authorLastName + '%'}
         AND content IS NOT NULL
-      LIMIT 5
+      LIMIT 1
     `);
-    const rows = (candidates as any).rows ?? candidates;
+    const rows = ((candidates as any).rows ?? candidates) as any[];
     if (!rows || rows.length === 0) { res.json({ match: null }); return; }
-
-    // Score: prefer exact title match, then shortest title.
-    const scored = (rows as any[])
-      .map((r) => ({
-        gutId: r.gutenberg_id ?? r.gutenbergId,
-        title: r.title as string,
-        score:
-          (r.title?.toLowerCase().includes(normTitle) ? 100 : 0)
-          + (r.title?.toLowerCase() === normTitle ? 50 : 0)
-          - Math.abs((r.title?.length ?? 999) - normTitle.length),
-      }))
-      .sort((a, b) => b.score - a.score);
-
-    res.json({ match: { gutenbergId: scored[0].gutId, title: scored[0].title } });
+    res.json({ match: { gutenbergId: rows[0].gutenberg_id ?? rows[0].gutenbergId, title: rows[0].title } });
   } catch (err) {
     logRouteError(req, err, "audiolibrary.text-match");
     res.json({ match: null });
   }
 });
 
-void gutenbergBooks; // referenced via raw SQL above; keep import
-
-// ── Sync jobs (called from server startup, idempotent) ───────────────
-
-/** Pull N books from LibriVox into the cache. Skips any book whose
- *  (source, externalId) row is already present. Polite delay between
- *  requests to keep LibriVox happy. */
-let librivoxSyncRunning = false;
-export async function syncLibrivox(target = 1500): Promise<void> {
-  if (librivoxSyncRunning) return;
-  librivoxSyncRunning = true;
-  try {
-    const [{ have }] = await db
-      .select({ have: sql<number>`count(*)::int` })
-      .from(audiolibraryBooks)
-      .where(eq(audiolibraryBooks.source, "librivox"));
-    if ((have ?? 0) >= target) {
-      logger.info({ have }, "LibriVox cache already at target — skipping");
-      return;
-    }
-    const want = target - (have ?? 0);
-    const batchSize = 50;
-    let offset = 0;
-    let inserted = 0;
-    while (inserted < want) {
-      const url = `https://librivox.org/api/feed/audiobooks/?format=json&limit=${batchSize}&offset=${offset}&extended=1`;
-      const r = await fetch(url, { signal: AbortSignal.timeout(30_000), headers: FETCH_HEADERS });
-      if (!r.ok) {
-        logger.warn({ status: r.status, offset }, "LibriVox feed returned non-OK; stopping sync");
-        break;
-      }
-      const data = (await r.json()) as { books?: LibrivoxBookRaw[] };
-      const books = data.books ?? [];
-      if (books.length === 0) break;
-      for (const raw of books) {
-        if (inserted >= want) break;
-        try {
-          const row = librivoxToBookRow(raw);
-          if (row.chapters.length === 0) continue; // skip books with no streamable sections
-          // Drop religious / scripture / sermon content from the
-          // English feed too, so the listing stays focused on
-          // literature.
-          const genreText = (row.genres || []).join(" ").toLowerCase();
-          if (/\b(religion|religious|christian|bible|gospel|sermon|theology|spiritual|sacred|prayer|psalm|catholic|protestant)\b/.test(genreText)) {
-            continue;
-          }
-          await db
-            .insert(audiolibraryBooks)
-            .values(row)
-            .onConflictDoUpdate({
-              target: [audiolibraryBooks.source, audiolibraryBooks.externalId],
-              set: {
-                title: row.title,
-                author: row.author,
-                description: row.description,
-                coverUrl: row.coverUrl,
-                totalDuration: row.totalDuration,
-                chapters: row.chapters,
-                sourceUrl: row.sourceUrl,
-                genres: row.genres,
-                cachedAt: new Date(),
-              },
-            });
-          inserted++;
-        } catch (err) {
-          logger.warn({ err: (err as Error).message, id: raw.id }, "LibriVox book insert failed");
-        }
-      }
-      offset += batchSize;
-      await new Promise((r) => setTimeout(r, 1_500));
-    }
-    logger.info({ inserted }, "LibriVox sync complete");
-  } catch (err) {
-    logger.error({ err }, "LibriVox sync failed");
-  } finally {
-    librivoxSyncRunning = false;
-  }
-  void CACHE_TTL_MS;
-  void isNull;
-  void isNotNull;
-}
-
-/** Pull Arabic public-domain audiobooks from Internet Archive into
- *  the cache. Uses the advancedsearch endpoint then the per-item
- *  metadata endpoint to extract MP3 file URLs.
- *
- *  STRICT literature-only filter:
- *    + mediatype audio
- *    + language Arabic
- *    + PD or Creative Commons
- *    + at least one literature-tagged subject (novel, fiction,
- *      poetry, story, literature)
- *    - no religious / sermon / Quran / Hadith / Islamic subjects
- *    - no lecture / khutba / dars (private classes)
- *
- *  The user explicitly asked for "stories and books" only, no
- *  religious content. The negative-subject list below is the
- *  belt-and-braces guard on top of the positive literature filter.
- */
-let archiveSyncRunning = false;
-export async function syncInternetArchiveArabic(target = 600): Promise<void> {
-  if (archiveSyncRunning) return;
-  archiveSyncRunning = true;
-  try {
-    const [{ have }] = await db
-      .select({ have: sql<number>`count(*)::int` })
-      .from(audiolibraryBooks)
-      .where(eq(audiolibraryBooks.source, "archive"));
-    if ((have ?? 0) >= target) {
-      logger.info({ have }, "Internet Archive Arabic cache already at target — skipping");
-      return;
-    }
-    const want = target - (have ?? 0);
-    const positive = "(subject:(novel) OR subject:(fiction) OR subject:(novels) OR subject:(short story) OR subject:(short stories) OR subject:(literature) OR subject:(poetry) OR subject:(poem) OR subject:(\"رواية\") OR subject:(\"قصة\") OR subject:(\"قصص\") OR subject:(\"أدب\") OR subject:(\"شعر\"))";
-    const negative = "-subject:(quran) AND -subject:(qoran) AND -subject:(koran) AND -subject:(\"قرآن\") AND -subject:(\"القرآن\") AND -subject:(islam) AND -subject:(islamic) AND -subject:(\"إسلام\") AND -subject:(\"إسلامي\") AND -subject:(hadith) AND -subject:(\"حديث\") AND -subject:(sunnah) AND -subject:(\"سنة\") AND -subject:(sermon) AND -subject:(khutba) AND -subject:(\"خطبة\") AND -subject:(lecture) AND -subject:(\"محاضرة\") AND -subject:(\"درس\") AND -subject:(\"دعاء\") AND -subject:(religion) AND -subject:(religious) AND -subject:(\"دين\") AND -subject:(\"ديني\") AND -subject:(tafsir) AND -subject:(\"تفسير\") AND -subject:(fiqh) AND -subject:(\"فقه\") AND -subject:(prayer) AND -subject:(\"صلاة\")";
-    const license = "(licenseurl:(*creativecommons*) OR rights:(publicdomain))";
-    const fullQuery = `mediatype:(audio) AND language:(Arabic) AND ${positive} AND ${negative} AND ${license}`;
-    const query = encodeURIComponent(fullQuery);
-    const searchUrl = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=description&fl[]=downloads&fl[]=licenseurl&fl[]=subject&rows=${Math.min(1000, want * 3)}&page=1&output=json`;
-    const r = await fetch(searchUrl, { signal: AbortSignal.timeout(30_000), headers: FETCH_HEADERS });
-    if (!r.ok) {
-      logger.warn({ status: r.status }, "IA search returned non-OK; aborting");
-      return;
-    }
-    const data = (await r.json()) as {
-      response?: { docs?: Array<{ identifier: string; title?: string | string[]; creator?: string | string[]; description?: string | string[]; downloads?: number }> };
-    };
-    const docs = data.response?.docs ?? [];
-    let inserted = 0;
-    for (const doc of docs) {
-      if (inserted >= want) break;
-      try {
-        const metaUrl = `https://archive.org/metadata/${doc.identifier}`;
-        const m = await fetch(metaUrl, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
-        if (!m.ok) continue;
-        const meta = (await m.json()) as {
-          metadata?: { title?: string; creator?: string; description?: string; language?: string };
-          files?: Array<{ name: string; format?: string; length?: string; title?: string }>;
-        };
-        const files = (meta.files ?? []).filter((f) => (f.format ?? "").toLowerCase().includes("mp3"));
-        if (files.length === 0) continue;
-        const chapters: Chapter[] = files.map((f, i) => ({
-          title: f.title || f.name,
-          audioUrl: `https://archive.org/download/${doc.identifier}/${encodeURIComponent(f.name)}`,
-          duration: f.length ? parsePlaytime(f.length) : 0,
-          sectionNumber: i + 1,
-        }));
-        const total = chapters.reduce((a, c) => a + c.duration, 0);
-        const title = Array.isArray(doc.title) ? doc.title[0] : doc.title ?? doc.identifier;
-        const author = Array.isArray(doc.creator) ? doc.creator.join(", ") : doc.creator ?? "Unknown";
-        const description = Array.isArray(doc.description) ? doc.description.join("\n") : doc.description ?? null;
-        await db
-          .insert(audiolibraryBooks)
-          .values({
-            source: "archive",
-            externalId: doc.identifier,
-            title,
-            author,
-            language: "arabic",
-            description,
-            coverUrl: `https://archive.org/services/img/${doc.identifier}`,
-            totalDuration: total,
-            chapters,
-            sourceUrl: `https://archive.org/details/${doc.identifier}`,
-            genres: [],
-            downloads: doc.downloads ?? 0,
-          })
-          .onConflictDoNothing({
-            target: [audiolibraryBooks.source, audiolibraryBooks.externalId],
-          });
-        inserted++;
-        await new Promise((r) => setTimeout(r, 800));
-      } catch (err) {
-        logger.warn({ err: (err as Error).message, id: doc.identifier }, "IA book insert failed");
-      }
-    }
-    logger.info({ inserted }, "Internet Archive Arabic sync complete");
-  } catch (err) {
-    logger.error({ err }, "IA sync failed");
-  } finally {
-    archiveSyncRunning = false;
-  }
-}
-
+void gutenbergBooks;
+void logger;
 export default router;
