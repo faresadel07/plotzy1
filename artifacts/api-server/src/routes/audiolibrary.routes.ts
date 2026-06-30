@@ -97,11 +97,12 @@ function librivoxIsReligious(book: any): boolean {
 // ── LibriVox: list ──────────────────────────────────────────────────
 
 async function librivoxList(params: { q: string; limit: number; offset: number }): Promise<CommonBook[]> {
-  // LibriVox doesn't expose a server-side title search through the
-  // feed, but it does have a `title` filter and a `since` cursor.
-  // For our purposes the simplest path is page through the feed and
-  // do the keyword match in JS for the page window.
-  const url = `https://librivox.org/api/feed/audiobooks/?format=json&limit=${params.limit}&offset=${params.offset}${params.q ? `&title=${encodeURIComponent(params.q)}` : ""}`;
+  // extended=1 is REQUIRED here even though we only need the cover
+  // url. The slim feed omits url_iarchive, genres, and num_sections —
+  // without those the card grid renders as featureless grey
+  // placeholders. The response gets larger but it's a single network
+  // hop per browse page so the cost is small.
+  const url = `https://librivox.org/api/feed/audiobooks/?format=json&extended=1&limit=${params.limit}&offset=${params.offset}${params.q ? `&title=${encodeURIComponent(params.q)}` : ""}`;
   const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
   if (!r.ok) throw new Error(`LibriVox list failed: ${r.status}`);
   const data = (await r.json()) as { books?: any[] };
@@ -117,7 +118,9 @@ async function librivoxList(params: { q: string; limit: number; offset: number }
       language: (b.language || "English").toLowerCase(),
       coverUrl: librivoxCover(b),
       totalDuration: parsePlaytime(b.totaltime) || Number(b.totaltimesecs) || null,
-      chapterCount: 0, // not returned in the basic feed
+      // Sections come back with extended=1 so we can show the real
+      // chapter count on the card.
+      chapterCount: Array.isArray(b.sections) ? b.sections.length : (Number(b.num_sections) || 0),
       genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
     }));
 }
@@ -154,37 +157,69 @@ async function librivoxDetail(externalId: string): Promise<CommonBookDetail | nu
   };
 }
 
-// ── Internet Archive: literature-only Arabic search ─────────────────
+// ── Internet Archive: Arabic audio search ────────────────────────────
+//
+// Reality check: IA's Arabic audio catalogue is ~95% religious
+// (Quran recitation, hadith, sermons, ruqya, nasheed). Lucene-side
+// filters miss most of it because the religious nature lives in the
+// Arabic title text rather than in clean subject tags, and the user
+// uploader bucket (`opensource_audio`) gets used for everything.
+//
+// Strategy:
+//   1. Lucene query excludes the obvious religious collections.
+//   2. We oversample (fetch ~3x the page size).
+//   3. JS post-filter strips anything whose title/creator hits a
+//      large religious-keyword regex (Arabic + English).
+//   4. Return up to `limit` survivors.
+//
+// This gives us "best available literature" instead of "nothing" or
+// "a wall of Quran".
 
-const IA_POSITIVE = '(subject:(novel) OR subject:(fiction) OR subject:(novels) OR subject:("short story") OR subject:("short stories") OR subject:(literature) OR subject:(poetry) OR subject:(poem) OR subject:("رواية") OR subject:("قصة") OR subject:("قصص") OR subject:("أدب") OR subject:("شعر"))';
-const IA_NEGATIVE = [
-  "quran", "qoran", "koran", "قرآن", "القرآن",
-  "islam", "islamic", "إسلام", "إسلامي",
-  "hadith", "حديث", "sunnah", "سنة",
-  "sermon", "khutba", "خطبة",
-  "lecture", "محاضرة", "درس", "دعاء",
-  "religion", "religious", "دين", "ديني",
-  "tafsir", "تفسير", "fiqh", "فقه",
-  "prayer", "صلاة",
-]
-  .map((t) => `-subject:(${t.includes("؀") ? `"${t}"` : t})`)
-  .join(" AND ");
-const IA_LICENSE = "(licenseurl:(*creativecommons*) OR rights:(publicdomain))";
+const IA_RELIGIOUS_AR = /قرآن|قران|مصحف|سور[ةتها]|تلاو|تجويد|ختمة|إسلام|اسلام|دين[ي\s]|حديث|أحاديث|سنّة|سنة\s+نبو|تفسير|فقه|دعاء|أدعية|ادعية|أذكار|اذكار|ذكر\s|خطبة|خطب\s|محاضر[ةت]|درس\s+دين|نشيد|أناشيد|اناشيد|رقية|إذاعة|آية|آيات|عقيدة|توحيد|عبادة|عمرة|الحج|الرسول|نبوي|الصحاب[ةي]|أهل\s+السنة|التراويح|ابتهال|تسبيح|تكبير|أذان|اذان|الإمام|الشيخ|الحصري|السديس|الشاطري|العفاسي|الجهني|المنشاوي|عبد\s*الباسط|الغامدي|البخاري|مسلم\s+بن|البيهقي|الترمذي|النووي|الطبري|الشعراوي|كشك|الجبرين|العثيمين|بن\s+باز|القرضاوي|عبد\s+الله|عبدالله|عبد\s+الرحمن|عبدالرحمن|عبد\s+الباري|عبدالباري|عبد\s+الكريم|رواية\s+ورش|رواية\s+حفص|رواية\s+قالون|الأنبياء|أنبياء|سيرة\s+نبو|الإسلامية|نبيل\s+العوضي|محمد\s+حسان|الكهف|البقرة|سورة\s+/i;
+const IA_RELIGIOUS_EN = /\b(quran|qoran|koran|islam|islamic|hadith|sunnah|tafsir|fiqh|sermon|sheikh|sheik|shaykh|imam|allah|prophet|prophets|prayer|dhikr|zikr|dua|adhan|salat|tajweed|surah|surat|surahs|ayah|ayat|juz|juzz|nasheed|ruqya|ruqia|murotal|murottal|tarteel|recitation|reciter|mushaf|umrah|hajj|ramadan|bukhari|maulana|kajian|ceramah|sirah)\b/i;
+
+function looksReligious(doc: any): boolean {
+  const title = Array.isArray(doc.title) ? doc.title.join(" ") : doc.title || "";
+  const creator = Array.isArray(doc.creator) ? doc.creator.join(" ") : doc.creator || "";
+  const subject = Array.isArray(doc.subject) ? doc.subject.join(" ") : doc.subject || "";
+  const text = `${title} ${creator} ${subject}`;
+  return IA_RELIGIOUS_AR.test(text) || IA_RELIGIOUS_EN.test(text);
+}
+
+// Positive filter — search by literature subject tags + the few
+// curated literature collections. Avoids the open dump of religious
+// uploads.
+const IA_LITERATURE = `(
+  collection:(audio_bookspoetry) OR collection:(librivoxaudio) OR
+  subject:(audiobook) OR subject:(audiobooks) OR
+  subject:(novel) OR subject:(novels) OR subject:(fiction) OR
+  subject:(poetry) OR subject:(poem) OR subject:(literature) OR
+  subject:("short story") OR subject:("short stories") OR
+  subject:("رواية") OR subject:("روايات") OR
+  subject:("قصة") OR subject:("قصص") OR
+  subject:("شعر") OR subject:("أدب") OR subject:("ديوان") OR
+  subject:("مسرحية") OR subject:("مسرحيات") OR
+  subject:("كتاب مسموع") OR subject:("كتب مسموعة")
+)`.replace(/\s+/g, " ");
 
 async function archiveSearch(params: { q: string; limit: number; offset: number; sort: string }): Promise<CommonBook[]> {
   const sortClause =
     params.sort === "title"    ? "&sort[]=titleSorter asc" :
     params.sort === "duration" ? "&sort[]=runtime desc" :
-    "&sort[]=publicdate desc";
+    "&sort[]=downloads desc";
   const userQuery = params.q ? ` AND (title:(${JSON.stringify(params.q)}) OR creator:(${JSON.stringify(params.q)}))` : "";
-  const fullQuery = `mediatype:(audio) AND language:(Arabic) AND ${IA_POSITIVE} AND ${IA_NEGATIVE} AND ${IA_LICENSE}${userQuery}`;
+  const fullQuery = `mediatype:(audio) AND language:(Arabic OR ara) AND ${IA_LITERATURE}${userQuery}`;
+  // Oversample 3x because the JS filter throws away rows where the
+  // "literature" tag actually means Quranic recitation (رواية ورش).
+  const oversample = params.limit * 3;
   const page = Math.floor(params.offset / params.limit) + 1;
-  const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(fullQuery)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=runtime&fl[]=downloads&rows=${params.limit}&page=${page}&output=json${sortClause}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
+  const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(fullQuery)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=subject&fl[]=runtime&fl[]=downloads&rows=${oversample}&page=${page}&output=json${sortClause}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(25_000), headers: FETCH_HEADERS });
   if (!r.ok) throw new Error(`IA search failed: ${r.status}`);
   const data = (await r.json()) as { response?: { docs?: any[] } };
   const docs = data.response?.docs ?? [];
-  return docs.map((d) => {
+  const kept = docs.filter((d) => !looksReligious(d)).slice(0, params.limit);
+  return kept.map((d) => {
     const title = Array.isArray(d.title) ? d.title[0] : (d.title ?? d.identifier);
     const author = Array.isArray(d.creator) ? d.creator.join(", ") : (d.creator ?? "Unknown");
     return {
