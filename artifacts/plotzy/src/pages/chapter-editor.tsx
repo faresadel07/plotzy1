@@ -1707,9 +1707,26 @@ export default function ChapterEditor() {
         } catch (err) {
           console.error("Whisper transcription failed", err);
           setWhisperLoadProgress(null);
+          const raw = err instanceof Error ? err.message : String(err ?? "");
+          // Common failure modes rendered as bilingual hints so a
+          // writer knows whether the issue is their microphone, their
+          // connection, or a browser incompatibility.
+          let hint = ar ? "حاول ثانية." : "Try again.";
+          const lower = raw.toLowerCase();
+          if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch") || lower.includes("timeout")) {
+            hint = ar
+              ? "تعذّر تنزيل نموذج التحويل الصوتي. تأكّد من اتّصال الإنترنت وأعد المحاولة."
+              : "Could not download the speech model. Check your connection and try again.";
+          } else if (lower.includes("audio") || lower.includes("decode") || lower.includes("codec")) {
+            hint = ar
+              ? "تعذّر معالجة التسجيل. حاول تسجيلاً أطول أو تحقّق من الميكروفون."
+              : "Could not process the audio. Try a longer recording or check your microphone.";
+          } else if (raw) {
+            hint = raw.slice(0, 220);
+          }
           toast({
             title: ar ? "فشل التحويل" : "Transcription failed",
-            description: ar ? "حاول ثانية أو تحقّق من اتّصال الإنترنت." : "Try again, or check your internet connection.",
+            description: hint,
             variant: "destructive",
           });
         } finally {

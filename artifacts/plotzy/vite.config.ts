@@ -15,6 +15,17 @@ const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
   base: basePath,
+  // @huggingface/transformers dynamically imports @onnx/onnxruntime-web
+  // and its WASM shards at runtime. Vite's default pre-bundling in
+  // dev breaks those dynamic imports because esbuild inlines the ONNX
+  // wrapper into a chunk that no longer resolves the WASM URLs. Also
+  // needed in prod so Rollup preserves the lazy-import boundary.
+  optimizeDeps: {
+    exclude: ["@huggingface/transformers"],
+  },
+  worker: {
+    format: "es",
+  },
   plugins: [
     react(),
     tailwindcss(),
