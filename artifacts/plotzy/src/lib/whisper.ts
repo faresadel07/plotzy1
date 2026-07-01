@@ -192,7 +192,13 @@ export async function blobToWhisperAudio(blob: Blob): Promise<Float32Array> {
 }
 
 export interface TranscribeOptions {
-  language: string;
+  // Optional hint. When omitted (or "auto"), Whisper detects the
+  // spoken language from the audio itself. In practice we want this
+  // to be the default — a writer setting a book's default language to
+  // English while dictating in Arabic used to trigger Whisper's
+  // translation behaviour and hand back an English rendering of what
+  // the writer said. Auto-detect avoids that entirely.
+  language?: string;
   onProgress?: (p: WhisperProgress) => void;
 }
 
@@ -202,15 +208,25 @@ export async function transcribe(
 ): Promise<string> {
   const pipe = await loadWhisper(onProgress);
   const audio = await blobToWhisperAudio(blob);
-  // Chunk long recordings (> 30s) so Whisper can process them without
-  // OOM. 30s window with 5s stride is the recommended default.
-  const output = await pipe(audio, {
-    language: whisperLanguage(language),
+
+  // Chunk long recordings (> 30s) so Whisper can process them
+  // without OOM. 30s window with 5s stride is the recommended
+  // default. `task: "transcribe"` (never "translate") guarantees the
+  // output is in the SPOKEN language rather than English.
+  const opts: Record<string, unknown> = {
     task: "transcribe",
     chunk_length_s: 30,
     stride_length_s: 5,
     return_timestamps: false,
-  } as unknown as Record<string, unknown>);
+  };
+  // Only pin the language when the caller passed an explicit hint
+  // (something other than "auto"). Otherwise let Whisper detect from
+  // the audio itself so Arabic dictation stays Arabic even when the
+  // book / UI language is English.
+  if (language && language !== "auto") {
+    opts.language = whisperLanguage(language);
+  }
+  const output = await pipe(audio, opts);
   if (Array.isArray(output)) {
     return output.map((o) => (o as { text?: string }).text ?? "").join(" ").trim();
   }

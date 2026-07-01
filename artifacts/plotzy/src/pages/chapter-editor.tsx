@@ -1702,8 +1702,13 @@ export default function ChapterEditor() {
           // whisper-small) and cached by Transformers.js for every
           // subsequent dictation.
           const { transcribe } = await import("@/lib/whisper");
+          // Auto-detect the spoken language. Passing book.language
+          // here previously forced Whisper into "translate to English"
+          // whenever the writer dictated in Arabic inside an
+          // English-defaulted book. Detecting from audio keeps Arabic
+          // Arabic and English English regardless of book settings.
           const text = await transcribe(blob, {
-            language: book?.language || lang,
+            language: "auto",
             onProgress: (p) => {
               if (p.status === "downloading" && typeof p.progress === "number") {
                 setWhisperLoadProgress(Math.max(0, Math.min(1, p.progress)));
