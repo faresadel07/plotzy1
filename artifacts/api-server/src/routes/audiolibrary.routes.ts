@@ -195,6 +195,41 @@ function catalogueToCommonBook(row: CatalogueRow): CommonBook {
   };
 }
 
+// Ranking score for the default "recommended" sort. LibriVox mixes
+// several different things in one catalogue:
+//   1. Full-length novels / classic non-fiction (5-30 hours, chapters)
+//   2. Reference works: Bibles, Summa Theologica, Encyclopedias
+//      (60-120 hours, hundreds of chapters — technically the longest
+//      recordings but nobody sits down and "listens to a Bible")
+//   3. Short-story / poetry collections (30 min - 2 hours)
+//   4. Weekly / Fortnightly Poem singles (5-20 min, 1-2 chapters)
+//
+// A naive `sort by duration desc` puts category 2 on page 1, which
+// reads as "the audiobook library is just religious texts." We want
+// category 1 (novels) first, which means:
+//   - Cap the duration reward at 20 hours (so an 80-hour Bible ties
+//     with a 20-hour novel on that axis)
+//   - Cap the chapter reward at 30 chapters (same reason)
+//   - Multiplicative demotion when title or genre matches obvious
+//     reference/religious keywords
+//   - Small multiplicative boost when genre is a recognised literary
+//     bucket (fiction, novel, poetry, etc.)
+//
+// Nothing is filtered out — the writer can still find religious
+// texts by searching for them or scrolling further.
+const REFERENCE_TERMS = /\b(bible|quran|torah|scripture|sermon|theolog|holy|catechism|psalm|apostle|epistle|summa|jesus|christ|prayer|catholic|protestant|christian|priest|gospel|mormon|reformation|encyclical)\b/i;
+const LITERARY_GENRES = /\b(novel|romance|adventure|mystery|detective|fiction|drama|comedy|fantasy|tale|story|stories|poem|poetry|thriller|humor|satire)\b/i;
+
+function recommendedScore(row: CatalogueRow): number {
+  const dur = Math.min(row.totalDuration ?? 0, 72000);   // cap 20 hours
+  const chBonus = Math.min(row.chapterCount || 0, 30) * 300;
+  const bag = ((row.title || "") + " " + row.genres.join(" ")).toLowerCase();
+  let multiplier = 1;
+  if (REFERENCE_TERMS.test(bag)) multiplier *= 0.35;
+  if (LITERARY_GENRES.test(row.genres.join(" "))) multiplier *= 1.15;
+  return (dur + chBonus) * multiplier;
+}
+
 function catalogueList(params: {
   q: string;
   limit: number;
@@ -213,10 +248,12 @@ function catalogueList(params: {
     matched = matched.slice().sort((a, b) => (b.totalDuration ?? 0) - (a.totalDuration ?? 0));
   } else if (params.sort === "shortest") {
     matched = matched.slice().sort((a, b) => (a.totalDuration ?? Infinity) - (b.totalDuration ?? Infinity));
-  } else {
-    // "recent" — the JSON is sorted by ID ascending, and newer books
-    // have larger IDs, so we reverse for recent-first.
+  } else if (params.sort === "recent") {
+    // JSON is sorted by ID ascending; newer books have larger IDs.
     matched = matched.slice().reverse();
+  } else {
+    // "recommended" — default. See recommendedScore comment above.
+    matched = matched.slice().sort((a, b) => recommendedScore(b) - recommendedScore(a));
   }
 
   return matched
@@ -399,7 +436,7 @@ router.get("/api/audiolibrary/browse", async (req, res) => {
     const params = z.object({
       q: z.string().optional().default(""),
       page: z.coerce.number().min(0).max(1000).default(0),
-      sort: z.enum(["recent", "popular", "title", "longest", "shortest"]).default("recent"),
+      sort: z.enum(["recommended", "recent", "popular", "title", "longest", "shortest"]).default("recommended"),
       category: z.string().optional().default("all"),
     }).parse(req.query);
     const limit = 30;

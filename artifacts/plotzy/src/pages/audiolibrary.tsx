@@ -56,10 +56,11 @@ const CATEGORIES = [
 ];
 
 const SORTS = [
-  { id: "recent",   label: "Recently added", labelAr: "الأحدث" },
-  { id: "title",    label: "Title A to Z",   labelAr: "العنوان أ إلى ي" },
-  { id: "longest",  label: "Longest first",  labelAr: "الأطول أوّلاً" },
-  { id: "shortest", label: "Shortest first", labelAr: "الأقصر أوّلاً" },
+  { id: "recommended", label: "Recommended",     labelAr: "المفضّلة" },
+  { id: "longest",     label: "Longest first",   labelAr: "الأطول أوّلاً" },
+  { id: "title",       label: "Title A to Z",    labelAr: "العنوان أ إلى ي" },
+  { id: "recent",      label: "Recently added",  labelAr: "الأحدث" },
+  { id: "shortest",    label: "Shortest first",  labelAr: "الأقصر أوّلاً" },
 ];
 
 const PAGE_SIZE = 30;
@@ -102,7 +103,7 @@ export default function AudiolibraryPage() {
   const [, navigate] = useLocation();
 
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<string>("recent");
+  const [sort, setSort] = useState<string>("recommended");
   const [category, setCategory] = useState<string>("all");
   const [page, setPage] = useState(0);
 
