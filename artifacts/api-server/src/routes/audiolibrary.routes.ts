@@ -1,21 +1,18 @@
-// Audiolibrary routes — DIRECT PROXY to LibriVox + Internet Archive.
+// Audiolibrary routes — DIRECT PROXY to LibriVox (English only).
 //
-// Architecture (revised per writer feedback):
-//   - Browse + detail hit the upstream APIs on every request.
-//   - We do NOT cache catalogues in our DB. Zero storage cost.
-//   - The writer sees the FULL upstream catalogue (20k+ LibriVox
-//     English; thousands of Arabic literature on Archive.org).
-//   - Per-user data (bookmarks, listening progress) still lives in
+// Design decisions:
+//   - Browse + detail hit LibriVox on every request. No DB cache.
+//   - The writer sees the FULL upstream catalogue (~20,000 books).
+//   - Per-user data (bookmarks, listening progress) live in
 //     audiolibrary_progress / audiolibrary_bookmarks, keyed by a
-//     "<source>:<external_id>" string instead of an internal FK.
+//     "librivox:<external_id>" string.
+//   - The `source` path segment is kept in the URL for forward
+//     compatibility (if we add a second English source later we
+//     don't have to rev every route).
 //
 // LibriVox: https://librivox.org/api/feed/audiobooks/?format=json
-//   Free, no key, returns one entry per book. ?extended=1 includes
-//   the sections array with direct listen_url streaming URLs.
-//
-// Internet Archive: https://archive.org/advancedsearch.php
-//   Free, no key, returns hits with identifier we then resolve via
-//   https://archive.org/metadata/<id> for the audio file manifest.
+//   Free, no key, ?extended=1 includes the sections array with direct
+//   listen_url streaming URLs.
 
 import { Router } from "express";
 import { z } from "zod";
@@ -36,9 +33,9 @@ const FETCH_HEADERS: Record<string, string> = {
 // ── Shared types ────────────────────────────────────────────────────
 
 interface CommonBook {
-  source: "librivox" | "archive";
+  source: "librivox";
   externalId: string;
-  bookKey: string; // source:externalId
+  bookKey: string; // "librivox:<id>"
   title: string;
   author: string | null;
   language: string;
@@ -79,8 +76,6 @@ function librivoxAuthorName(book: any): string {
     .join(", ");
 }
 
-// LibriVox cover via Archive.org. The book's url_iarchive ends in the
-// archive identifier; we substitute it into the services/img endpoint.
 function librivoxCover(book: any): string | null {
   const u = book.url_iarchive as string | undefined;
   if (!u) return null;
@@ -89,40 +84,85 @@ function librivoxCover(book: any): string | null {
   return `https://archive.org/services/img/${id}`;
 }
 
-function librivoxIsReligious(book: any): boolean {
-  const genres = (book.genres || []).map((g: any) => g.name?.toLowerCase() ?? "").join(" ");
-  return /\b(religion|religious|christian|bible|gospel|sermon|theology|spiritual|sacred|psalm|catholic|protestant)\b/.test(genres);
-}
-
 // ── LibriVox: list ──────────────────────────────────────────────────
+//
+// LibriVox exposes a genre filter (?genre=Fiction) but no combined
+// sort. We map our category IDs to the exact genre strings LibriVox
+// accepts, then sort the returned window on our side by title/length
+// when the caller asked for that ordering. "recent" is the natural
+// LibriVox order (most recently catalogued first).
 
-async function librivoxList(params: { q: string; limit: number; offset: number }): Promise<CommonBook[]> {
-  // extended=1 is REQUIRED here even though we only need the cover
-  // url. The slim feed omits url_iarchive, genres, and num_sections —
-  // without those the card grid renders as featureless grey
-  // placeholders. The response gets larger but it's a single network
-  // hop per browse page so the cost is small.
-  const url = `https://librivox.org/api/feed/audiobooks/?format=json&extended=1&limit=${params.limit}&offset=${params.offset}${params.q ? `&title=${encodeURIComponent(params.q)}` : ""}`;
+const CATEGORY_TO_GENRE: Record<string, string | null> = {
+  all: null,
+  fiction: "*Non-fiction",              // handled specially below
+  classics: "Historical Fiction",
+  mystery: "Detective Fiction",
+  adventure: "Action & Adventure Fiction",
+  scifi: "Science Fiction",
+  romance: "Romance",
+  horror: "Horror & Supernatural Fiction",
+  poetry: "Poetry",
+  children: "Children's Fiction",
+  shortstories: "Short Stories",
+  history: "History",
+  philosophy: "Philosophy",
+  biography: "Biography & Autobiography",
+  humor: "Humorous Fiction",
+};
+
+async function librivoxList(params: {
+  q: string;
+  limit: number;
+  offset: number;
+  category: string;
+  sort: string;
+}): Promise<CommonBook[]> {
+  // The base URL. extended=1 is required for covers, sections and
+  // genres. LibriVox caps offset around 10k — that's the practical
+  // upper bound of the catalogue.
+  const u = new URLSearchParams();
+  u.set("format", "json");
+  u.set("extended", "1");
+  u.set("limit", String(params.limit));
+  u.set("offset", String(params.offset));
+  if (params.q) u.set("title", params.q);
+  const cat = CATEGORY_TO_GENRE[params.category];
+  // Fiction is a wide bucket — LibriVox doesn't have a "Fiction" genre
+  // per se, so we accept everything and let the JS layer drop non-
+  // fiction if a strict fiction-only view is asked for. For now the
+  // "fiction" tab is treated as "all".
+  if (cat && cat !== "*Non-fiction") u.set("genre", cat);
+
+  const url = `https://librivox.org/api/feed/audiobooks/?${u.toString()}`;
   const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
   if (!r.ok) throw new Error(`LibriVox list failed: ${r.status}`);
   const data = (await r.json()) as { books?: any[] };
   const rows = data.books ?? [];
-  return rows
-    .filter((b) => !librivoxIsReligious(b))
-    .map((b) => ({
-      source: "librivox" as const,
-      externalId: String(b.id),
-      bookKey: `librivox:${b.id}`,
-      title: b.title || "Untitled",
-      author: librivoxAuthorName(b),
-      language: (b.language || "English").toLowerCase(),
-      coverUrl: librivoxCover(b),
-      totalDuration: parsePlaytime(b.totaltime) || Number(b.totaltimesecs) || null,
-      // Sections come back with extended=1 so we can show the real
-      // chapter count on the card.
-      chapterCount: Array.isArray(b.sections) ? b.sections.length : (Number(b.num_sections) || 0),
-      genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
-    }));
+
+  const mapped: CommonBook[] = rows.map((b) => ({
+    source: "librivox" as const,
+    externalId: String(b.id),
+    bookKey: `librivox:${b.id}`,
+    title: b.title || "Untitled",
+    author: librivoxAuthorName(b),
+    language: (b.language || "English").toLowerCase(),
+    coverUrl: librivoxCover(b),
+    totalDuration: parsePlaytime(b.totaltime) || Number(b.totaltimesecs) || null,
+    chapterCount: Array.isArray(b.sections) ? b.sections.length : (Number(b.num_sections) || 0),
+    genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
+  }));
+
+  // Client-side sort on the returned window (LibriVox has no server sort).
+  if (params.sort === "title") {
+    mapped.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (params.sort === "longest") {
+    mapped.sort((a, b) => (b.totalDuration ?? 0) - (a.totalDuration ?? 0));
+  } else if (params.sort === "shortest") {
+    mapped.sort((a, b) => (a.totalDuration ?? Infinity) - (b.totalDuration ?? Infinity));
+  }
+  // "recent" and "popular" fall through as LibriVox's default ordering.
+
+  return mapped;
 }
 
 // ── LibriVox: detail ────────────────────────────────────────────────
@@ -157,141 +197,73 @@ async function librivoxDetail(externalId: string): Promise<CommonBookDetail | nu
   };
 }
 
-// ── Internet Archive: Arabic audio search ────────────────────────────
+// ── Featured picks ──────────────────────────────────────────────────
 //
-// Reality check: IA's Arabic audio catalogue is ~95% religious
-// (Quran recitation, hadith, sermons, ruqya, nasheed). Lucene-side
-// filters miss most of it because the religious nature lives in the
-// Arabic title text rather than in clean subject tags, and the user
-// uploader bucket (`opensource_audio`) gets used for everything.
+// A hand-picked strip of famous public-domain audiobooks that lands
+// at the top of the browse page. The IDs are LibriVox book IDs looked
+// up once; we re-fetch metadata live so covers, chapter counts and
+// runtimes stay in sync with LibriVox.
 //
-// Strategy:
-//   1. Lucene query excludes the obvious religious collections.
-//   2. We oversample (fetch ~3x the page size).
-//   3. JS post-filter strips anything whose title/creator hits a
-//      large religious-keyword regex (Arabic + English).
-//   4. Return up to `limit` survivors.
-//
-// This gives us "best available literature" instead of "nothing" or
-// "a wall of Quran".
+// Chosen to span genres and be immediately recognisable: Dickens,
+// Austen, Tolstoy, Twain, Wells, Doyle, Melville, Wilde, Verne, Stoker.
 
-const IA_RELIGIOUS_AR = /قرآن|قران|مصحف|سور[ةتها]|تلاو|تجويد|ختمة|إسلام|اسلام|دين[ي\s]|حديث|أحاديث|سنّة|سنة\s+نبو|تفسير|فقه|دعاء|أدعية|ادعية|أذكار|اذكار|ذكر\s|خطبة|خطب\s|محاضر[ةت]|درس\s+دين|نشيد|أناشيد|اناشيد|رقية|إذاعة|آية|آيات|عقيدة|توحيد|عبادة|عمرة|الحج|الرسول|نبوي|الصحاب[ةي]|أهل\s+السنة|التراويح|ابتهال|تسبيح|تكبير|أذان|اذان|الإمام|الشيخ|الحصري|السديس|الشاطري|العفاسي|الجهني|المنشاوي|عبد\s*الباسط|الغامدي|البخاري|مسلم\s+بن|البيهقي|الترمذي|النووي|الطبري|الشعراوي|كشك|الجبرين|العثيمين|بن\s+باز|القرضاوي|عبد\s+الله|عبدالله|عبد\s+الرحمن|عبدالرحمن|عبد\s+الباري|عبدالباري|عبد\s+الكريم|رواية\s+ورش|رواية\s+حفص|رواية\s+قالون|الأنبياء|أنبياء|سيرة\s+نبو|الإسلامية|نبيل\s+العوضي|محمد\s+حسان|الكهف|البقرة|سورة\s+/i;
-const IA_RELIGIOUS_EN = /\b(quran|qoran|koran|islam|islamic|hadith|sunnah|tafsir|fiqh|sermon|sheikh|sheik|shaykh|imam|allah|prophet|prophets|prayer|dhikr|zikr|dua|adhan|salat|tajweed|surah|surat|surahs|ayah|ayat|juz|juzz|nasheed|ruqya|ruqia|murotal|murottal|tarteel|recitation|reciter|mushaf|umrah|hajj|ramadan|bukhari|maulana|kajian|ceramah|sirah)\b/i;
+const FEATURED_LIBRIVOX_IDS = [
+  "253",   // Pride and Prejudice — Austen
+  "314",   // Adventures of Sherlock Holmes — Doyle
+  "510",   // A Tale of Two Cities — Dickens
+  "200",   // Alice's Adventures in Wonderland — Carroll
+  "817",   // The Time Machine — Wells
+  "365",   // The Picture of Dorian Gray — Wilde
+  "271",   // Dracula — Stoker
+  "2591",  // Great Expectations — Dickens
+  "448",   // Adventures of Tom Sawyer — Twain
+  "911",   // Wuthering Heights — Brontë
+  "133",   // Jane Eyre — Brontë
+  "449",   // Treasure Island — Stevenson
+  "65",    // Odyssey — Homer
+  "690",   // Iliad — Homer
+];
 
-function looksReligious(doc: any): boolean {
-  const title = Array.isArray(doc.title) ? doc.title.join(" ") : doc.title || "";
-  const creator = Array.isArray(doc.creator) ? doc.creator.join(" ") : doc.creator || "";
-  const subject = Array.isArray(doc.subject) ? doc.subject.join(" ") : doc.subject || "";
-  const text = `${title} ${creator} ${subject}`;
-  return IA_RELIGIOUS_AR.test(text) || IA_RELIGIOUS_EN.test(text);
-}
-
-// Positive filter — search by literature subject tags + the few
-// curated literature collections. Avoids the open dump of religious
-// uploads.
-const IA_LITERATURE = `(
-  collection:(audio_bookspoetry) OR collection:(librivoxaudio) OR
-  subject:(audiobook) OR subject:(audiobooks) OR
-  subject:(novel) OR subject:(novels) OR subject:(fiction) OR
-  subject:(poetry) OR subject:(poem) OR subject:(literature) OR
-  subject:("short story") OR subject:("short stories") OR
-  subject:("رواية") OR subject:("روايات") OR
-  subject:("قصة") OR subject:("قصص") OR
-  subject:("شعر") OR subject:("أدب") OR subject:("ديوان") OR
-  subject:("مسرحية") OR subject:("مسرحيات") OR
-  subject:("كتاب مسموع") OR subject:("كتب مسموعة")
-)`.replace(/\s+/g, " ");
-
-async function archiveSearch(params: { q: string; limit: number; offset: number; sort: string }): Promise<CommonBook[]> {
-  const sortClause =
-    params.sort === "title"    ? "&sort[]=titleSorter asc" :
-    params.sort === "duration" ? "&sort[]=runtime desc" :
-    "&sort[]=downloads desc";
-  const userQuery = params.q ? ` AND (title:(${JSON.stringify(params.q)}) OR creator:(${JSON.stringify(params.q)}))` : "";
-  const fullQuery = `mediatype:(audio) AND language:(Arabic OR ara) AND ${IA_LITERATURE}${userQuery}`;
-  // Oversample 3x because the JS filter throws away rows where the
-  // "literature" tag actually means Quranic recitation (رواية ورش).
-  const oversample = params.limit * 3;
-  const page = Math.floor(params.offset / params.limit) + 1;
-  const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(fullQuery)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=subject&fl[]=runtime&fl[]=downloads&rows=${oversample}&page=${page}&output=json${sortClause}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(25_000), headers: FETCH_HEADERS });
-  if (!r.ok) throw new Error(`IA search failed: ${r.status}`);
-  const data = (await r.json()) as { response?: { docs?: any[] } };
-  const docs = data.response?.docs ?? [];
-  const kept = docs.filter((d) => !looksReligious(d)).slice(0, params.limit);
-  return kept.map((d) => {
-    const title = Array.isArray(d.title) ? d.title[0] : (d.title ?? d.identifier);
-    const author = Array.isArray(d.creator) ? d.creator.join(", ") : (d.creator ?? "Unknown");
-    return {
-      source: "archive" as const,
-      externalId: d.identifier,
-      bookKey: `archive:${d.identifier}`,
-      title: title || "Untitled",
-      author,
-      language: "arabic",
-      coverUrl: `https://archive.org/services/img/${d.identifier}`,
-      totalDuration: parsePlaytime(d.runtime) || null,
-      chapterCount: 0,
-      genres: [],
-    };
-  });
-}
-
-async function archiveDetail(externalId: string): Promise<CommonBookDetail | null> {
-  const url = `https://archive.org/metadata/${encodeURIComponent(externalId)}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
-  if (!r.ok) return null;
-  const meta = (await r.json()) as { metadata?: any; files?: any[] };
-  if (!meta.metadata) return null;
-  const files = (meta.files || []).filter((f: any) => (f.format ?? "").toLowerCase().includes("mp3"));
-  if (files.length === 0) return null;
-  const chapters: CommonChapter[] = files.map((f: any, i: number) => ({
-    title: f.title || f.name,
-    audioUrl: `https://archive.org/download/${encodeURIComponent(externalId)}/${encodeURIComponent(f.name)}`,
-    duration: f.length ? parsePlaytime(f.length) : 0,
-    sectionNumber: i + 1,
-  }));
-  const md = meta.metadata;
-  const title = Array.isArray(md.title) ? md.title[0] : (md.title ?? externalId);
-  const author = Array.isArray(md.creator) ? md.creator.join(", ") : (md.creator ?? "Unknown");
-  const description = Array.isArray(md.description) ? md.description.join("\n") : md.description ?? null;
-  return {
-    source: "archive",
-    externalId,
-    bookKey: `archive:${externalId}`,
-    title,
-    author,
-    language: "arabic",
-    description,
-    coverUrl: `https://archive.org/services/img/${externalId}`,
-    totalDuration: chapters.reduce((a, c) => a + c.duration, 0),
-    chapterCount: chapters.length,
-    chapters,
-    sourceUrl: `https://archive.org/details/${externalId}`,
-    genres: [],
-  };
+async function librivoxFeatured(): Promise<CommonBook[]> {
+  // LibriVox's feed accepts a single id at a time — fire them all in
+  // parallel and drop failures.
+  const results = await Promise.allSettled(
+    FEATURED_LIBRIVOX_IDS.map(async (id) => {
+      const d = await librivoxDetail(id);
+      return d;
+    }),
+  );
+  const books: CommonBook[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value) {
+      const { chapters: _c, description: _d, sourceUrl: _s, ...rest } = r.value;
+      void _c; void _d; void _s;
+      books.push(rest);
+    }
+  }
+  return books;
 }
 
 // ── Routes ──────────────────────────────────────────────────────────
 
 // GET /api/audiolibrary/browse
-//
-// Browse + optional search. Hits the upstream API live for the
-// requested language.
 router.get("/api/audiolibrary/browse", async (req, res) => {
   try {
     const params = z.object({
-      lang: z.enum(["english", "arabic"]),
       q: z.string().optional().default(""),
-      page: z.coerce.number().min(0).max(200).default(0),
-      sort: z.enum(["recent", "title", "duration"]).default("recent"),
+      page: z.coerce.number().min(0).max(300).default(0),
+      sort: z.enum(["recent", "popular", "title", "longest", "shortest"]).default("recent"),
+      category: z.string().optional().default("all"),
     }).parse(req.query);
     const limit = 30;
     const offset = params.page * limit;
-    const books =
-      params.lang === "english"
-        ? await librivoxList({ q: params.q, limit, offset })
-        : await archiveSearch({ q: params.q, limit, offset, sort: params.sort });
+    const books = await librivoxList({
+      q: params.q,
+      limit,
+      offset,
+      category: params.category,
+      sort: params.sort,
+    });
     res.json({ page: params.page, limit, books });
   } catch (err: any) {
     if (err?.name === "ZodError") { res.status(400).json({ message: "Invalid query" }); return; }
@@ -300,17 +272,24 @@ router.get("/api/audiolibrary/browse", async (req, res) => {
   }
 });
 
+// GET /api/audiolibrary/featured — curated home row
+router.get("/api/audiolibrary/featured", async (req, res) => {
+  try {
+    const books = await librivoxFeatured();
+    res.json({ books });
+  } catch (err) {
+    logRouteError(req, err, "audiolibrary.featured");
+    res.status(502).json({ message: "Featured picks unavailable" });
+  }
+});
+
 // GET /api/audiolibrary/book/:source/:externalId
 router.get("/api/audiolibrary/book/:source/:externalId", async (req, res) => {
   try {
     const source = req.params.source;
     const externalId = req.params.externalId;
-    if (source !== "librivox" && source !== "archive") {
-      res.status(400).json({ message: "Unknown source" }); return;
-    }
-    const detail = source === "librivox"
-      ? await librivoxDetail(externalId)
-      : await archiveDetail(externalId);
+    if (source !== "librivox") { res.status(400).json({ message: "Unknown source" }); return; }
+    const detail = await librivoxDetail(externalId);
     if (!detail) { res.status(404).json({ message: "Audiobook not found" }); return; }
     res.json(detail);
   } catch (err) {
@@ -319,7 +298,7 @@ router.get("/api/audiolibrary/book/:source/:externalId", async (req, res) => {
   }
 });
 
-// ── Listening progress (keyed by bookKey now) ──
+// ── Listening progress ──
 
 router.get("/api/audiolibrary/progress/:source/:externalId", async (req: any, res) => {
   try {
@@ -378,7 +357,7 @@ router.post("/api/audiolibrary/progress/:source/:externalId", async (req: any, r
   }
 });
 
-// ── Bookmarks (keyed by bookKey now) ──
+// ── Bookmarks ──
 
 router.get("/api/audiolibrary/bookmarks/:source/:externalId", async (req: any, res) => {
   try {
@@ -452,8 +431,8 @@ router.get("/api/audiolibrary/text-match/:source/:externalId", async (req, res) 
   try {
     const source = req.params.source;
     const externalId = req.params.externalId;
-    if (source !== "librivox" && source !== "archive") { res.status(400).json({ match: null }); return; }
-    const detail = source === "librivox" ? await librivoxDetail(externalId) : await archiveDetail(externalId);
+    if (source !== "librivox") { res.status(400).json({ match: null }); return; }
+    const detail = await librivoxDetail(externalId);
     if (!detail) { res.json({ match: null }); return; }
     const normTitle = (detail.title || "")
       .toLowerCase()

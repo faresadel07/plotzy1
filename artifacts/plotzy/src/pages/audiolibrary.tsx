@@ -1,10 +1,20 @@
-// /audiolibrary — public-domain audiobook discovery.
+// /audiolibrary — public-domain audiobook discovery (English, LibriVox).
 //
-// Single-page browse + search across LibriVox (English) and Internet
-// Archive (Arabic). Cards land in a responsive grid; each card opens
-// the full player in /audiolibrary/:id.
+// Layout:
+//   1. Hero
+//   2. Featured strip — curated famous classics (horizontal scroll)
+//   3. Category pills — quick filters (Fiction, Classics, Mystery, ...)
+//   4. Search + sort bar
+//   5. Grid (30 per page)
+//   6. Pagination
+//
+// The Arabic tab was removed after user testing — Internet Archive's
+// Arabic audio catalogue is overwhelmingly Quran recitation and even
+// aggressive filtering couldn't yield a clean literature browse.
+// Reverting to English-only means the writer sees a 20,000+ book
+// LibriVox catalogue front and center.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
@@ -12,7 +22,7 @@ import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/language-context";
 import {
   Search, Clock, Headphones, BookAudio, ChevronDown,
-  Loader2, ArrowRight, ArrowLeft, ListMusic,
+  ArrowRight, ArrowLeft, ListMusic, Sparkles, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -24,24 +34,38 @@ const BORDER_STRONG = "rgba(255,255,255,0.16)";
 const TEXT = "#f0efe8";
 const MUTED = "rgba(255,255,255,0.55)";
 const MUTED2 = "rgba(255,255,255,0.35)";
+const ACCENT = "#c9a96e";
 
-// Hard-split between Arabic and English. The user explicitly asked
-// for no merged view so the catalogue UI always shows one language
-// at a time. Default is picked from the writer's UI language.
-const LANGUAGE_TABS = [
-  { id: "arabic",  label: "العربيّة",      labelEn: "Arabic"  },
-  { id: "english", label: "English",       labelEn: "English" },
+// Category pills — map to backend `category=` parameter which the
+// server translates to LibriVox's exact genre string.
+const CATEGORIES = [
+  { id: "all",          label: "All",             labelAr: "الكل" },
+  { id: "classics",     label: "Classics",        labelAr: "الكلاسيكيّات" },
+  { id: "mystery",      label: "Mystery",         labelAr: "الغموض" },
+  { id: "adventure",    label: "Adventure",       labelAr: "المغامرة" },
+  { id: "scifi",        label: "Sci-Fi",          labelAr: "الخيال العلمي" },
+  { id: "romance",      label: "Romance",         labelAr: "الرومانسيّة" },
+  { id: "horror",       label: "Horror",          labelAr: "الرعب" },
+  { id: "poetry",       label: "Poetry",          labelAr: "الشعر" },
+  { id: "children",     label: "Children",        labelAr: "الأطفال" },
+  { id: "shortstories", label: "Short Stories",   labelAr: "قصص قصيرة" },
+  { id: "history",      label: "History",         labelAr: "التاريخ" },
+  { id: "philosophy",   label: "Philosophy",      labelAr: "الفلسفة" },
+  { id: "biography",    label: "Biography",       labelAr: "السيرة الذاتيّة" },
+  { id: "humor",        label: "Humor",           labelAr: "الفكاهة" },
 ];
+
 const SORTS = [
   { id: "recent",   label: "Recently added", labelAr: "الأحدث" },
   { id: "title",    label: "Title A to Z",   labelAr: "العنوان أ إلى ي" },
-  { id: "duration", label: "Longest",        labelAr: "الأطول" },
+  { id: "longest",  label: "Longest first",  labelAr: "الأطول أوّلاً" },
+  { id: "shortest", label: "Shortest first", labelAr: "الأقصر أوّلاً" },
 ];
 
 const PAGE_SIZE = 30;
 
 interface AudioBook {
-  source: "librivox" | "archive";
+  source: "librivox";
   externalId: string;
   bookKey: string;
   title: string;
@@ -59,8 +83,12 @@ interface BrowseResp {
   books: AudioBook[];
 }
 
+interface FeaturedResp {
+  books: AudioBook[];
+}
+
 function fmtDuration(seconds: number | null, ar: boolean): string {
-  if (!seconds) return ar ? "—" : "—";
+  if (!seconds) return "—";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   if (h > 0) return ar ? `${h} س ${m} د` : `${h}h ${m}m`;
@@ -73,28 +101,25 @@ export default function AudiolibraryPage() {
   const [, navigate] = useLocation();
 
   const [query, setQuery] = useState("");
-  // Hard-split: one language at a time, never merged. Default
-  // follows the writer's UI language.
-  const [language, setLanguage] = useState<string>(ar ? "arabic" : "english");
   const [sort, setSort] = useState<string>("recent");
+  const [category, setCategory] = useState<string>("all");
   const [page, setPage] = useState(0);
 
-  // Debounce the search query so we don't fire on every keystroke.
   const [debouncedQ, setDebouncedQ] = useState("");
   useEffect(() => {
     const id = setTimeout(() => setDebouncedQ(query.trim()), 280);
     return () => clearTimeout(id);
   }, [query]);
-  useEffect(() => setPage(0), [debouncedQ, language, sort]);
+  useEffect(() => setPage(0), [debouncedQ, sort, category]);
 
   const params = useMemo(() => {
     const u = new URLSearchParams();
     if (debouncedQ) u.set("q", debouncedQ);
-    u.set("lang", language);
     u.set("sort", sort);
+    u.set("category", category);
     u.set("page", String(page));
     return u.toString();
-  }, [debouncedQ, language, sort, page]);
+  }, [debouncedQ, sort, category, page]);
 
   const { data, isFetching } = useQuery<BrowseResp>({
     queryKey: ["/api/audiolibrary/browse", params],
@@ -106,83 +131,75 @@ export default function AudiolibraryPage() {
     staleTime: 60_000,
   });
 
-  // The proxy doesn't expose a total count (upstream pagination is
-  // cursor-based). We show Next/Prev based on whether the current
-  // page filled.
+  const { data: featured } = useQuery<FeaturedResp>({
+    queryKey: ["/api/audiolibrary/featured"],
+    queryFn: async () => {
+      const r = await fetch(`/api/audiolibrary/featured`, { credentials: "include" });
+      if (!r.ok) throw new Error("Failed to load featured");
+      return r.json();
+    },
+    staleTime: 5 * 60_000,
+  });
+
   const canGoNext = (data?.books?.length ?? 0) === PAGE_SIZE;
+  const showFeatured = !debouncedQ && category === "all" && page === 0;
 
   return (
     <Layout>
       <SEO
         title={ar ? "المكتبة الصوتيّة | بلوتزي" : "Audio Library | Plotzy"}
         description={ar
-          ? "آلاف الكتب الصوتيّة المجانيّة والقانونيّة من LibriVox وأرشيف الإنترنت، بالعربيّة والإنجليزيّة."
-          : "Thousands of free, public-domain audiobooks from LibriVox and Internet Archive, in Arabic and English."}
+          ? "أكثر من عشرين ألف كتاب صوتي مجاني بالإنجليزيّة من LibriVox. كل التسجيلات قانونيّة لأنّ نصوصها في الملك العامّ."
+          : "20,000+ free public-domain audiobooks in English from LibriVox. Every recording is fully legal — the underlying texts are in the public domain."}
       />
       <div dir={isRTL ? "rtl" : "ltr"} style={{ background: BG, color: TEXT, fontFamily: SF, minHeight: "100vh" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 20px 80px" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "32px 20px 80px" }}>
 
           {/* ── Hero ── */}
-          <section style={{ marginBottom: 28 }}>
+          <section style={{ marginBottom: 32 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 999, background: CARD, border: `1px solid ${BORDER}`, marginBottom: 14 }}>
               <Headphones size={12} color={MUTED} />
               <span style={{ fontSize: 11, fontWeight: 700, color: MUTED, letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 {ar ? "Public Domain" : "Public Domain"}
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 10px", lineHeight: 1.1 }}>
+            <h1 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 12px", lineHeight: 1.1 }}>
               {ar ? "المكتبة الصوتيّة" : "Audio Library"}
             </h1>
-            <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65, maxWidth: 700, margin: 0 }}>
+            <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65, maxWidth: 720, margin: "0 0 8px" }}>
               {ar
-                ? "آلاف الكتب الصوتيّة المجانيّة. كل ما هنا قانونيّ بالكامل لأنّ النصوص الأصليّة قد دخلت الملك العامّ. تيار مباشر من LibriVox وأرشيف الإنترنت بدون أيّ إعادة استضافة."
-                : "Thousands of free audiobooks. Every recording here is fully legal because the underlying texts have entered the public domain. Streamed direct from LibriVox and the Internet Archive with no re-hosting."}
+                ? "أكثر من عشرين ألف كتاب صوتي بالإنجليزيّة، تيار مباشر من LibriVox، بدون أيّ إعادة استضافة. كل التسجيلات قانونيّة لأنّ نصوصها الأصليّة قد دخلت الملك العامّ."
+                : "More than 20,000 English audiobooks streamed direct from LibriVox with no re-hosting. Every recording is fully legal because the underlying texts have entered the public domain."}
             </p>
           </section>
 
-          {/* ── Language tabs (hard split) ── */}
-          <section style={{ marginBottom: 18 }}>
-            <div
-              role="tablist"
-              style={{
-                display: "inline-flex",
-                gap: 4,
-                padding: 4,
-                background: CARD,
-                border: `1px solid ${BORDER}`,
-                borderRadius: 14,
-              }}
-            >
-              {LANGUAGE_TABS.map((tab) => {
-                const active = language === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setLanguage(tab.id)}
-                    style={{
-                      fontFamily: SF,
-                      padding: "10px 22px",
-                      borderRadius: 10,
-                      fontSize: 13.5,
-                      fontWeight: 700,
-                      letterSpacing: "-0.005em",
-                      background: active ? TEXT : "transparent",
-                      color: active ? "#000" : MUTED,
-                      border: "none",
-                      cursor: "pointer",
-                      transition: "all 160ms ease",
-                    }}
-                  >
-                    {tab.id === "arabic" ? "العربيّة" : "English"}
-                  </button>
-                );
-              })}
-            </div>
+          {/* ── Featured strip ── */}
+          {showFeatured && (
+            <section style={{ marginBottom: 34 }}>
+              <SectionHeader
+                icon={<Sparkles size={14} color={ACCENT} />}
+                title={ar ? "كلاسيكيّات مختارة" : "Featured Classics"}
+                subtitle={ar ? "أشهر ما في المكتبة" : "The most famous books in the catalogue"}
+              />
+              <FeaturedStrip
+                books={featured?.books ?? []}
+                loading={!featured}
+                ar={ar}
+                onOpen={(b) => navigate(`/audiolibrary/${b.source}/${encodeURIComponent(b.externalId)}`)}
+              />
+            </section>
+          )}
+
+          {/* ── Category pills ── */}
+          <section style={{ marginBottom: 22 }}>
+            <CategoryPills
+              value={category}
+              onChange={setCategory}
+              options={CATEGORIES.map((c) => ({ id: c.id, label: ar ? c.labelAr : c.label }))}
+            />
           </section>
 
-          {/* ── Search + sort (no source / no language; tabs above own language) ── */}
+          {/* ── Search + sort ── */}
           <section
             style={{
               background: CARD,
@@ -197,21 +214,22 @@ export default function AudiolibraryPage() {
             }}
           >
             <div style={{ flex: 1, minWidth: 240, position: "relative" }}>
-              <Search size={14} color={MUTED} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)" }} />
+              <Search size={14} color={MUTED} style={{ position: "absolute", insetInlineStart: 11, top: "50%", transform: "translateY(-50%)" }} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={ar ? "ابحث بعنوان أو مؤلف..." : "Search by title or author..."}
                 style={{
-                  fontFamily: SF, width: "100%", padding: "10px 12px 10px 34px",
+                  fontFamily: SF, width: "100%",
+                  padding: isRTL ? "10px 34px 10px 12px" : "10px 12px 10px 34px",
                   fontSize: 13, color: TEXT, background: "rgba(255,255,255,0.04)",
                   border: `1px solid ${BORDER}`, borderRadius: 10, outline: "none",
                   boxSizing: "border-box",
                 }}
               />
             </div>
-            <SelectChip icon={<ListMusic size={12} />} value={sort} onChange={setSort} options={SORTS.map((s) => ({ id: s.id, label: ar ? s.labelAr : s.label }))} />
+            <SelectChip icon={<ListMusic size={12} />} value={sort} onChange={setSort} options={SORTS.map((s) => ({ id: s.id, label: ar ? s.labelAr : s.label }))} isRTL={isRTL} />
           </section>
 
           {/* ── Stats + pager ── */}
@@ -221,10 +239,13 @@ export default function AudiolibraryPage() {
                 ? (ar ? "جارٍ التحميل..." : "Loading...")
                 : (
                   <>
-                    {ar ? "الصفحة" : "Page"} <span style={{ fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>{page + 1}</span>
+                    {ar ? "الصفحة" : "Page"}{" "}
+                    <span style={{ fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>{page + 1}</span>
                     {" · "}
                     <span style={{ fontVariantNumeric: "tabular-nums" }}>{data?.books?.length ?? 0}</span>{" "}
-                    {ar ? "كتاب على هذه الصفحة" : `book${(data?.books?.length ?? 0) === 1 ? "" : "s"}`}
+                    {ar ? "كتاب" : `book${(data?.books?.length ?? 0) === 1 ? "" : "s"}`}
+                    {" · "}
+                    <span style={{ color: MUTED2 }}>{ar ? "من ٢٠٠٠٠+" : "of 20,000+"}</span>
                   </>
                 )}
             </p>
@@ -257,7 +278,7 @@ export default function AudiolibraryPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
                 gap: 16,
               }}
             >
@@ -271,9 +292,183 @@ export default function AudiolibraryPage() {
               ))}
             </div>
           )}
+
+          {/* Bottom pager for long grids */}
+          {data && data.books.length > 12 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 28 }}>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0 || isFetching} style={iconBtn(page === 0 || isFetching)} aria-label={ar ? "السابق" : "Previous"}>
+                {isRTL ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
+              </button>
+              <div style={{ padding: "8px 14px", fontSize: 12.5, color: MUTED, fontFamily: SF }}>
+                {ar ? "الصفحة" : "Page"} <span style={{ color: TEXT, fontWeight: 700 }}>{page + 1}</span>
+              </div>
+              <button onClick={() => setPage((p) => p + 1)} disabled={!canGoNext || isFetching} style={iconBtn(!canGoNext || isFetching)} aria-label={ar ? "التالي" : "Next"}>
+                {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ─── Section header ───────────────────────────────────────────────
+
+function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
+      <div>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          {icon}
+          <span style={{ fontSize: 11, fontWeight: 700, color: ACCENT, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            {subtitle}
+          </span>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: TEXT }}>{title}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Featured horizontal strip ────────────────────────────────────
+
+function FeaturedStrip({ books, loading, ar, onOpen }: {
+  books: AudioBook[]; loading: boolean; ar: boolean; onOpen: (b: AudioBook) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollBy = (delta: number) => {
+    scrollRef.current?.scrollBy({ left: delta, behavior: "smooth" });
+  };
+  const items = loading ? Array.from({ length: 8 }).map(() => null) : books;
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => scrollBy(-400)}
+        style={{
+          position: "absolute", insetInlineStart: -4, top: "50%", transform: "translateY(-50%)",
+          width: 34, height: 34, borderRadius: 999,
+          background: "rgba(20,20,20,0.85)", backdropFilter: "blur(8px)",
+          border: `1px solid ${BORDER_STRONG}`, color: TEXT,
+          display: "grid", placeItems: "center", cursor: "pointer",
+          zIndex: 2, boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
+        }}
+        aria-label="Scroll left"
+      >
+        <ChevronLeft size={16} />
+      </button>
+      <button
+        onClick={() => scrollBy(400)}
+        style={{
+          position: "absolute", insetInlineEnd: -4, top: "50%", transform: "translateY(-50%)",
+          width: 34, height: 34, borderRadius: 999,
+          background: "rgba(20,20,20,0.85)", backdropFilter: "blur(8px)",
+          border: `1px solid ${BORDER_STRONG}`, color: TEXT,
+          display: "grid", placeItems: "center", cursor: "pointer",
+          zIndex: 2, boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
+        }}
+        aria-label="Scroll right"
+      >
+        <ChevronRight size={16} />
+      </button>
+      <div
+        ref={scrollRef}
+        style={{
+          display: "grid",
+          gridAutoFlow: "column",
+          gridAutoColumns: "minmax(180px, 180px)",
+          gap: 14,
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollBehavior: "smooth",
+          scrollbarWidth: "none",
+          padding: "4px 2px",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {items.map((b, i) =>
+          b ? (
+            <BookCardCompact key={b.bookKey} book={b} ar={ar} onOpen={() => onOpen(b)} />
+          ) : (
+            <div
+              key={`skel-${i}`}
+              style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, opacity: 0.4, aspectRatio: "2 / 3" }}
+            />
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: () => void }) {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <button
+      onClick={onOpen}
+      style={{
+        fontFamily: SF,
+        background: CARD,
+        border: `1px solid ${BORDER}`,
+        borderRadius: 14,
+        padding: 0,
+        cursor: "pointer",
+        textAlign: "start",
+        color: TEXT,
+        overflow: "hidden",
+        transition: "all 160ms ease",
+        display: "flex",
+        flexDirection: "column",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = CARD_HOVER;
+        e.currentTarget.style.borderColor = BORDER_STRONG;
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = CARD;
+        e.currentTarget.style.borderColor = BORDER;
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
+    >
+      <div style={{ aspectRatio: "1 / 1", background: "#000", position: "relative", overflow: "hidden" }}>
+        {!imgError && book.coverUrl ? (
+          <img
+            src={book.coverUrl}
+            alt={book.title}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(201,169,110,0.20), rgba(56,132,255,0.15))" }}>
+            <BookAudio size={38} color="rgba(255,255,255,0.35)" />
+          </div>
+        )}
+        {book.totalDuration ? (
+          <div
+            style={{
+              position: "absolute", bottom: 8, insetInlineEnd: 8,
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "3px 8px", borderRadius: 999,
+              background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)",
+              color: "#fff", fontSize: 10, fontWeight: 600, fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            <Clock size={9} />
+            {fmtDuration(book.totalDuration, ar)}
+          </div>
+        ) : null}
+      </div>
+      <div style={{ padding: "10px 12px 12px" }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: 3 }}>
+          {book.title}
+        </div>
+        <div style={{ fontSize: 11, color: MUTED, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {book.author || (ar ? "مؤلّف مجهول" : "Unknown author")}
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -331,24 +526,14 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
             <BookAudio size={42} color="rgba(255,255,255,0.35)" />
           </div>
         )}
-        {/* Duration badge */}
         {book.totalDuration ? (
           <div
             style={{
-              position: "absolute",
-              top: 8,
-              insetInlineEnd: 8,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "3px 8px",
-              borderRadius: 999,
-              background: "rgba(0,0,0,0.55)",
-              backdropFilter: "blur(8px)",
-              color: "#fff",
-              fontSize: 10.5,
-              fontWeight: 600,
-              fontVariantNumeric: "tabular-nums",
+              position: "absolute", top: 8, insetInlineEnd: 8,
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "3px 8px", borderRadius: 999,
+              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
+              color: "#fff", fontSize: 10.5, fontWeight: 600, fontVariantNumeric: "tabular-nums",
             }}
           >
             <Clock size={10} />
@@ -359,48 +544,64 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
       <div style={{ padding: "12px 14px 14px" }}>
         <div
           style={{
-            fontSize: 13.5,
-            fontWeight: 700,
-            color: TEXT,
-            lineHeight: 1.35,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            marginBottom: 4,
-            letterSpacing: "-0.005em",
+            fontSize: 13.5, fontWeight: 700, color: TEXT, lineHeight: 1.35,
+            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+            overflow: "hidden", marginBottom: 4, letterSpacing: "-0.005em",
           }}
         >
           {book.title}
         </div>
-        <div
-          style={{
-            fontSize: 11.5,
-            color: MUTED,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
+        <div style={{ fontSize: 11.5, color: MUTED, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {book.author || (ar ? "مؤلّف مجهول" : "Unknown author")}
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: 10,
-            fontSize: 10.5,
-            color: MUTED2,
-          }}
-        >
-          <span style={{ textTransform: "capitalize" }}>{book.source}</span>
-          <span>
-            {book.chapterCount} {ar ? "فصل" : "ch"}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10, fontSize: 10.5, color: MUTED2 }}>
+          <span style={{ textTransform: "capitalize" }}>LibriVox</span>
+          <span>{book.chapterCount} {ar ? "فصل" : "ch"}</span>
         </div>
       </div>
     </button>
+  );
+}
+
+// ─── Category pills ──────────────────────────────────────────────
+
+function CategoryPills({ value, onChange, options }: {
+  value: string; onChange: (v: string) => void; options: Array<{ id: string; label: string }>;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex", gap: 8, overflowX: "auto", overflowY: "hidden",
+        paddingBottom: 6, scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {options.map((o) => {
+        const active = value === o.id;
+        return (
+          <button
+            key={o.id}
+            onClick={() => onChange(o.id)}
+            style={{
+              fontFamily: SF,
+              flex: "0 0 auto",
+              padding: "9px 16px",
+              borderRadius: 999,
+              fontSize: 12.5,
+              fontWeight: 600,
+              letterSpacing: "-0.005em",
+              background: active ? TEXT : CARD,
+              color: active ? "#000" : MUTED,
+              border: `1px solid ${active ? TEXT : BORDER}`,
+              cursor: "pointer",
+              transition: "all 160ms ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -408,24 +609,18 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
 
 function EmptyState({ ar, hasQuery }: { ar: boolean; hasQuery: boolean }) {
   return (
-    <div
-      style={{
-        background: CARD,
-        border: `1px dashed ${BORDER}`,
-        borderRadius: 18,
-        padding: "60px 24px",
-        textAlign: "center",
-        color: MUTED2,
-      }}
-    >
+    <div style={{
+      background: CARD, border: `1px dashed ${BORDER}`, borderRadius: 18,
+      padding: "60px 24px", textAlign: "center", color: MUTED2,
+    }}>
       <BookAudio size={32} color={MUTED2} style={{ marginBottom: 14 }} />
       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 6 }}>
-        {hasQuery ? (ar ? "لا نتائج" : "No results") : (ar ? "قريباً..." : "Coming soon...")}
+        {hasQuery ? (ar ? "لا نتائج" : "No results") : (ar ? "لا شيء هنا" : "Nothing here yet")}
       </div>
       <div style={{ fontSize: 13, color: MUTED, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>
         {hasQuery
-          ? (ar ? "جرّب كلمات مختلفة أو غيّر اللغة." : "Try different keywords or change the language filter.")
-          : (ar ? "نزامن المكتبة الآن. عد بعد دقيقتين." : "The library is syncing for the first time. Check back in a moment.")}
+          ? (ar ? "جرّب كلمات مختلفة أو تصنيفاً آخر." : "Try different keywords or another category.")
+          : (ar ? "غيّر التصنيف أو أعد المحاولة." : "Change the category or try again.")}
       </div>
     </div>
   );
@@ -433,12 +628,9 @@ function EmptyState({ ar, hasQuery }: { ar: boolean; hasQuery: boolean }) {
 
 function SkeletonGrid() {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 16 }}>
       {Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={i}
-          style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden", opacity: 0.5 }}
-        >
+        <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden", opacity: 0.5 }}>
           <div style={{ aspectRatio: "1 / 1", background: "rgba(255,255,255,0.05)" }} />
           <div style={{ padding: "12px 14px" }}>
             <div style={{ height: 12, width: "85%", background: "rgba(255,255,255,0.08)", borderRadius: 4, marginBottom: 8 }} />
@@ -446,47 +638,34 @@ function SkeletonGrid() {
           </div>
         </div>
       ))}
-      <Loader2 size={18} className="animate-spin" style={{ position: "absolute", opacity: 0 }} />
     </div>
   );
 }
 
 // ─── Select chip ───────────────────────────────────────────────────
 
-function SelectChip({
-  icon, value, onChange, options,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  onChange: (v: string) => void;
-  options: Array<{ id: string; label: string }>;
+function SelectChip({ icon, value, onChange, options, isRTL }: {
+  icon: React.ReactNode; value: string; onChange: (v: string) => void;
+  options: Array<{ id: string; label: string }>; isRTL: boolean;
 }) {
   return (
     <div style={{ position: "relative" }}>
-      <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }}>{icon}</span>
-      <ChevronDown size={11} color={MUTED2} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+      <span style={{ position: "absolute", insetInlineStart: 10, top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }}>{icon}</span>
+      <ChevronDown size={11} color={MUTED2} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          fontFamily: SF,
-          appearance: "none",
-          WebkitAppearance: "none",
-          padding: "10px 30px 10px 30px",
-          fontSize: 12.5,
-          color: TEXT,
-          background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${BORDER}`,
-          borderRadius: 10,
-          outline: "none",
-          cursor: "pointer",
-          minWidth: 150,
+          fontFamily: SF, appearance: "none", WebkitAppearance: "none",
+          padding: "10px 30px",
+          fontSize: 12.5, color: TEXT, background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${BORDER}`, borderRadius: 10, outline: "none",
+          cursor: "pointer", minWidth: 160,
+          direction: isRTL ? "rtl" : "ltr",
         }}
       >
         {options.map((o) => (
-          <option key={o.id} value={o.id} style={{ background: "#1a1a1a" }}>
-            {o.label}
-          </option>
+          <option key={o.id} value={o.id} style={{ background: "#1a1a1a" }}>{o.label}</option>
         ))}
       </select>
     </div>
@@ -495,17 +674,11 @@ function SelectChip({
 
 function iconBtn(disabled: boolean): React.CSSProperties {
   return {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    background: CARD,
-    border: `1px solid ${BORDER}`,
+    width: 30, height: 30, borderRadius: 8,
+    background: CARD, border: `1px solid ${BORDER}`,
     color: disabled ? MUTED2 : MUTED,
     cursor: disabled ? "not-allowed" : "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: SF,
-    opacity: disabled ? 0.4 : 1,
+    display: "inline-flex", alignItems: "center", justifyContent: "center",
+    fontFamily: SF, opacity: disabled ? 0.4 : 1,
   };
 }
