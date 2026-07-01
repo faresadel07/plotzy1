@@ -1679,7 +1679,7 @@ export default function Home() {
               {/* LEFT: Image */}
               <div>
                 <img
-                  src={`${import.meta.env.BASE_URL}protection-hero.png`}
+                  src={`${import.meta.env.BASE_URL}protection-hero.jpg`}
                   alt="A writer's desk showing how Plotzy protects creative work"
                   style={{
                     width: "100%",
