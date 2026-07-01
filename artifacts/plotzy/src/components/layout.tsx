@@ -143,10 +143,33 @@ function FooterSocialIcons() {
 }
 
 type FooterLink =
-  | { label: string; href: string; onClick?: never }
-  | { label: string; onClick: () => void; href?: never };
+  | { label: string; href: string; badge?: string; onClick?: never }
+  | { label: string; onClick: () => void; badge?: string; href?: never };
 
 function FooterCol({ title, links }: { title: string; links: FooterLink[] }) {
+  const renderLabel = (link: FooterLink) => (
+    <>
+      {link.label}
+      {link.badge ? (
+        <span
+          style={{
+            marginLeft: 6,
+            padding: '1px 6px',
+            fontSize: 8.5,
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            borderRadius: 4,
+            background: 'rgba(124,108,247,0.18)',
+            color: '#b7a8ff',
+            verticalAlign: 'middle',
+          }}
+        >
+          {link.badge}
+        </span>
+      ) : null}
+    </>
+  );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', margin: '0 0 6px', fontFamily: SF_FONT }}>
@@ -159,19 +182,19 @@ function FooterCol({ title, links }: { title: string; links: FooterLink[] }) {
               style={{ ...FOOTER_LINK_STYLE, background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'inherit' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
-            >{link.label}</button>
+            >{renderLabel(link)}</button>
           );
         }
         return link.href!.startsWith('/') ? (
           <Link key={link.label} href={link.href!} style={FOOTER_LINK_STYLE}
             onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
             onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
-          >{link.label}</Link>
+          >{renderLabel(link)}</Link>
         ) : (
           <a key={link.label} href={link.href!} style={FOOTER_LINK_STYLE}
             onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.48)')}
-          >{link.label}</a>
+          >{renderLabel(link)}</a>
         );
       })}
     </div>
@@ -706,9 +729,9 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
             {/* Read & Explore — discovery surfaces */}
             <FooterCol title="Read & Explore" links={[
-              { label: 'Community Library',   href: '/library' },
+              { label: 'Audio Library',       href: '/audiolibrary', badge: 'New' },
               { label: 'Public Domain Books', href: '/discover' },
-              { label: 'Audio Library',       href: '/audiolibrary' },
+              { label: 'Community Library',   href: '/library' },
               { label: 'Authors',             href: '/library' },
               { label: 'Blog',                href: '/blog' },
               { label: 'Messages',            href: '/messages' },

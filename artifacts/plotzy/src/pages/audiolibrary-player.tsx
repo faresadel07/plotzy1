@@ -23,6 +23,7 @@ import {
   Volume2, VolumeX, Moon, ChevronUp, ChevronDown, BookAudio,
   Loader2, ExternalLink, Gauge, Bookmark, BookmarkPlus, Trash2,
   Sparkles, BookOpen, X,
+  Star, Download, Rss, Users, Calendar, Info,
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -41,6 +42,17 @@ interface Chapter {
   audioUrl: string;
   duration: number;
   sectionNumber: number;
+  readers?: { id: string; name: string }[];
+}
+
+interface Reader { id: string; name: string; count: number }
+interface Translator { name: string }
+interface Review {
+  stars: number;
+  title: string;
+  author: string;
+  body: string;
+  date: string | null;
 }
 
 interface AudioBookDetail {
@@ -56,6 +68,20 @@ interface AudioBookDetail {
   chapters: Chapter[];
   sourceUrl: string | null;
   genres: string[];
+  // Extras surfaced from LibriVox + Archive.org — all optional so the
+  // page still renders if any field is missing on an older recording.
+  wikipediaUrl?: string | null;
+  archiveUrl?: string | null;
+  zipDownloadUrl?: string | null;
+  rssUrl?: string | null;
+  textSourceUrl?: string | null;
+  copyrightYear?: string | null;
+  translators?: Translator[];
+  readers?: Reader[];
+  avgRating?: number | null;
+  downloadCount?: number | null;
+  numReviews?: number | null;
+  reviews?: Review[];
 }
 
 interface Progress {
@@ -842,19 +868,183 @@ export default function AudiolibraryPlayerPage() {
               <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>
                 {ar ? "عن الكتاب" : "About this audiobook"}
               </h2>
-              <p style={{ fontSize: 14.5, color: TEXT, lineHeight: 1.75, opacity: 0.85, margin: 0, maxWidth: 760 }}>
-                {book.description}
+              <p style={{ fontSize: 14.5, color: TEXT, lineHeight: 1.75, opacity: 0.85, margin: 0, maxWidth: 760 }} dangerouslySetInnerHTML={{ __html: sanitizeDescription(book.description) }} />
+            </section>
+          )}
+
+          {/* ── Rating + stats badge row ── */}
+          {(book.avgRating || book.downloadCount || book.copyrightYear) && (
+            <section style={{ marginBottom: 30 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {book.avgRating ? (
+                  <StatChip
+                    icon={<Star size={12} color="#f5c76b" fill="#f5c76b" />}
+                    label={`${book.avgRating.toFixed(2)} ★`}
+                    sub={book.numReviews ? `${book.numReviews} ${ar ? "تقييم" : book.numReviews === 1 ? "review" : "reviews"}` : (ar ? "التقييم" : "Rating")}
+                  />
+                ) : null}
+                {book.downloadCount ? (
+                  <StatChip
+                    icon={<Download size={12} color={MUTED} />}
+                    label={fmtCompact(book.downloadCount)}
+                    sub={ar ? "تحميلاً" : "downloads"}
+                  />
+                ) : null}
+                {book.copyrightYear ? (
+                  <StatChip
+                    icon={<Calendar size={12} color={MUTED} />}
+                    label={book.copyrightYear}
+                    sub={ar ? "تاريخ النشر" : "published"}
+                  />
+                ) : null}
+                {book.readers && book.readers.length > 0 ? (
+                  <StatChip
+                    icon={<Users size={12} color={MUTED} />}
+                    label={String(book.readers.length)}
+                    sub={ar ? "من قرأ" : book.readers.length === 1 ? "narrator" : "narrators"}
+                  />
+                ) : null}
+              </div>
+            </section>
+          )}
+
+          {/* ── Extras: RSS, ZIP, Wikipedia, Gutenberg text, Archive.org, LibriVox page ── */}
+          {(book.rssUrl || book.zipDownloadUrl || book.wikipediaUrl || book.textSourceUrl || book.archiveUrl || book.sourceUrl) && (
+            <section style={{ marginBottom: 30 }}>
+              <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
+                {ar ? "خدمات وروابط" : "Services and links"}
+              </h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10, maxWidth: 900 }}>
+                {book.rssUrl ? (
+                  <ExtraLink
+                    href={book.rssUrl}
+                    icon={<Rss size={14} color="#f5a623" />}
+                    title={ar ? "اشترك بالبودكاست" : "Subscribe as podcast"}
+                    sub={ar ? "افتح في تطبيق البودكاست" : "Open in your podcast app"}
+                  />
+                ) : null}
+                {book.zipDownloadUrl ? (
+                  <ExtraLink
+                    href={book.zipDownloadUrl}
+                    icon={<Download size={14} color="#7cd9a8" />}
+                    title={ar ? "تحميل كامل" : "Download all as ZIP"}
+                    sub={ar ? "لسماع الكتاب دون إنترنت" : "For offline listening"}
+                  />
+                ) : null}
+                {book.wikipediaUrl ? (
+                  <ExtraLink
+                    href={book.wikipediaUrl}
+                    icon={<Info size={14} color="#5eb3ff" />}
+                    title={ar ? "اقرأ على ويكيبيديا" : "Read on Wikipedia"}
+                    sub={ar ? "خلفية عن الكتاب" : "Background on the book"}
+                  />
+                ) : null}
+                {book.textSourceUrl ? (
+                  <ExtraLink
+                    href={book.textSourceUrl}
+                    icon={<BookOpen size={14} color="#c9a96e" />}
+                    title={ar ? "النصّ المصدر" : "Original text"}
+                    sub={ar ? "على مشروع غوتنبرغ" : "On Project Gutenberg"}
+                  />
+                ) : null}
+                {book.archiveUrl ? (
+                  <ExtraLink
+                    href={book.archiveUrl}
+                    icon={<ExternalLink size={14} color={MUTED} />}
+                    title={ar ? "على أرشيف الإنترنت" : "On Internet Archive"}
+                    sub={ar ? "الصفحة الأصليّة" : "Original archive page"}
+                  />
+                ) : null}
+                {book.sourceUrl ? (
+                  <ExtraLink
+                    href={book.sourceUrl}
+                    icon={<ExternalLink size={14} color={MUTED} />}
+                    title={ar ? "على LibriVox" : "On LibriVox"}
+                    sub={ar ? "المصدر الأصلي" : "Source page"}
+                  />
+                ) : null}
+              </div>
+            </section>
+          )}
+
+          {/* ── Narrators (cast list) ── */}
+          {book.readers && book.readers.length > 0 && (
+            <section style={{ marginBottom: 30 }}>
+              <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
+                {ar ? `القرّاء المتطوّعون (${book.readers.length})` : `Volunteer narrators (${book.readers.length})`}
+              </h2>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxWidth: 900 }}>
+                {book.readers.slice(0, 40).map((r) => (
+                  <div
+                    key={r.id + r.name}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "6px 10px", borderRadius: 999,
+                      background: CARD, border: `1px solid ${BORDER}`,
+                      fontSize: 12, color: TEXT,
+                    }}
+                  >
+                    <span>{r.name}</span>
+                    <span style={{ fontSize: 10, color: MUTED2, fontVariantNumeric: "tabular-nums" }}>
+                      · {r.count}
+                    </span>
+                  </div>
+                ))}
+                {book.readers.length > 40 && (
+                  <div style={{ padding: "6px 10px", fontSize: 12, color: MUTED }}>
+                    {ar ? `+${book.readers.length - 40} آخرون` : `+${book.readers.length - 40} more`}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* ── Translators ── */}
+          {book.translators && book.translators.length > 0 && (
+            <section style={{ marginBottom: 30 }}>
+              <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>
+                {ar ? "المترجمون" : "Translators"}
+              </h2>
+              <p style={{ fontSize: 14, color: TEXT, opacity: 0.85, margin: 0 }}>
+                {book.translators.map((t) => t.name).join(", ")}
               </p>
-              {book.sourceUrl && (
-                <a
-                  href={book.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 12, fontSize: 12, color: MUTED, textDecoration: "underline" }}
-                >
-                  {ar ? "افتح على المصدر" : "View at source"} <ExternalLink size={11} />
-                </a>
-              )}
+            </section>
+          )}
+
+          {/* ── Reviews from Archive.org ── */}
+          {book.reviews && book.reviews.length > 0 && (
+            <section style={{ marginBottom: 30 }}>
+              <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
+                {ar ? "ماذا يقول المستمعون" : "What listeners are saying"}
+              </h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, maxWidth: 900 }}>
+                {book.reviews.slice(0, 6).map((r, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: CARD, border: `1px solid ${BORDER}`,
+                      borderRadius: 12, padding: "14px 16px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      {Array.from({ length: 5 }).map((_, s) => (
+                        <Star key={s} size={11} color={s < r.stars ? "#f5c76b" : "rgba(255,255,255,0.15)"} fill={s < r.stars ? "#f5c76b" : "transparent"} />
+                      ))}
+                    </div>
+                    {r.title && (
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: TEXT, marginBottom: 4, lineHeight: 1.35 }}>
+                        {r.title}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.55, marginBottom: 8, whiteSpace: "pre-wrap" }}>
+                      {(r.body || "").length > 260 ? `${r.body.slice(0, 260)}...` : r.body}
+                    </div>
+                    <div style={{ fontSize: 11, color: MUTED2 }}>
+                      {ar ? "بقلم" : "— "}{r.author}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
@@ -1150,4 +1340,80 @@ function FastForwardIcon() {
       <text x="12" y="15" textAnchor="middle" fontSize="6" fill="currentColor" stroke="none" fontWeight="700">30</text>
     </svg>
   );
+}
+
+// ─── Small chip for rating / downloads / year ──────────────────────
+function StatChip({ icon, label, sub }: { icon: React.ReactNode; label: string; sub: string }) {
+  return (
+    <div
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 8,
+        padding: "8px 14px", borderRadius: 12,
+        background: CARD, border: `1px solid ${BORDER}`,
+      }}
+    >
+      {icon}
+      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>{label}</span>
+        <span style={{ fontSize: 10.5, color: MUTED2, textTransform: "uppercase", letterSpacing: "0.05em" }}>{sub}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── One clickable card in the "Services and links" grid ───────────
+function ExtraLink({ href, icon, title, sub }: { href: string; icon: React.ReactNode; title: string; sub: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "12px 14px", borderRadius: 12,
+        background: CARD, border: `1px solid ${BORDER}`,
+        color: TEXT, textDecoration: "none",
+        transition: "all 140ms ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = CARD_HOVER;
+        e.currentTarget.style.borderColor = BORDER_STRONG;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = CARD;
+        e.currentTarget.style.borderColor = BORDER;
+      }}
+    >
+      <div
+        style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: "rgba(255,255,255,0.05)",
+          display: "grid", placeItems: "center",
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.005em" }}>{title}</div>
+        <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1 }}>{sub}</div>
+      </div>
+      <ExternalLink size={12} color={MUTED2} />
+    </a>
+  );
+}
+
+// Compact number formatter — 10_253_329 -> "10.3M", 3508 -> "3.5K"
+function fmtCompact(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
+
+// LibriVox descriptions contain a limited HTML subset (<em>, <i>,
+// <p>, <br>). We keep those tags and strip anything scripty. This
+// is a whitelist approach: only tags we recognise pass through.
+const ALLOWED_TAGS = /^<\/?(em|i|b|strong|p|br|a\s[^>]*)>$/i;
+function sanitizeDescription(html: string): string {
+  return String(html || "").replace(/<[^>]+>/g, (tag) => (ALLOWED_TAGS.test(tag) ? tag : ""));
 }

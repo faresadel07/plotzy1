@@ -50,12 +50,35 @@ interface CommonChapter {
   audioUrl: string;
   duration: number;
   sectionNumber: number;
+  readers: { id: string; name: string }[];
+}
+
+interface CommonReview {
+  stars: number;
+  title: string;
+  author: string;
+  body: string;
+  date: string | null;
 }
 
 interface CommonBookDetail extends CommonBook {
   description: string | null;
   chapters: CommonChapter[];
   sourceUrl: string;
+  // Extras surfaced from LibriVox + Archive.org so the detail page
+  // can offer everything the upstream item does.
+  wikipediaUrl: string | null;
+  archiveUrl: string | null;
+  zipDownloadUrl: string | null;
+  rssUrl: string | null;
+  textSourceUrl: string | null;
+  copyrightYear: string | null;
+  translators: { name: string }[];
+  readers: { id: string; name: string; count: number }[]; // unique readers with chapter count
+  avgRating: number | null;
+  downloadCount: number | null;
+  numReviews: number | null;
+  reviews: CommonReview[];
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -110,41 +133,8 @@ const CATEGORY_TO_GENRE: Record<string, string | null> = {
   humor: "Humorous Fiction",
 };
 
-async function librivoxList(params: {
-  q: string;
-  limit: number;
-  offset: number;
-  category: string;
-  sort: string;
-}): Promise<CommonBook[]> {
-  // The catalogue is ~84% English, so to guarantee we return `limit`
-  // English books per page we oversample by ~1.5x and drop anything
-  // that isn't English on our side. LibriVox has no ?language= filter
-  // (they accept the param but ignore it), so JS is the only way.
-  const oversample = Math.ceil(params.limit * 1.5);
-  const oversampleOffset = Math.ceil(params.offset * 1.5);
-
-  const u = new URLSearchParams();
-  u.set("format", "json");
-  u.set("extended", "1");
-  u.set("limit", String(oversample));
-  u.set("offset", String(oversampleOffset));
-  if (params.q) u.set("title", params.q);
-  const cat = CATEGORY_TO_GENRE[params.category];
-  // "fiction" is treated as "all" — LibriVox has no wide "Fiction"
-  // genre, so the tab just accepts everything.
-  if (cat && cat !== "*Non-fiction") u.set("genre", cat);
-
-  const url = `https://librivox.org/api/feed/audiobooks/?${u.toString()}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
-  if (!r.ok) throw new Error(`LibriVox list failed: ${r.status}`);
-  const data = (await r.json()) as { books?: any[] };
-  const rows = (data.books ?? []).filter((b) => {
-    const lang = String(b.language || "").toLowerCase();
-    return lang === "english" || lang === "multilingual" || lang.includes("english");
-  }).slice(0, params.limit);
-
-  const mapped: CommonBook[] = rows.map((b) => ({
+function mapLibrivoxRow(b: any): CommonBook {
+  return {
     source: "librivox" as const,
     externalId: String(b.id),
     bookKey: `librivox:${b.id}`,
@@ -155,9 +145,178 @@ async function librivoxList(params: {
     totalDuration: parsePlaytime(b.totaltime) || Number(b.totaltimesecs) || null,
     chapterCount: Array.isArray(b.sections) ? b.sections.length : (Number(b.num_sections) || 0),
     genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
-  }));
+  };
+}
 
-  // Client-side sort on the returned window (LibriVox has no server sort).
+function isEnglishRow(b: any): boolean {
+  const lang = String(b.language || "").toLowerCase();
+  return lang === "english" || lang === "multilingual" || lang.includes("english");
+}
+
+async function librivoxFetchRaw(qs: URLSearchParams): Promise<any[]> {
+  const url = `https://librivox.org/api/feed/audiobooks/?${qs.toString()}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
+  if (!r.ok) return [];
+  try {
+    const data = (await r.json()) as { books?: any[] };
+    return data.books ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// Fetch a LibriVox book by exact title. Tries the query as-is, and
+// also with "The " stripped and with the subtitle after a comma
+// dropped. Returns the first hit or null.
+async function librivoxByExactTitle(title: string): Promise<any | null> {
+  const variants = new Set<string>([
+    title,
+    title.replace(/^(the|a|an)\s+/i, ""),
+    title.split(",")[0].trim(),
+    title.replace(/^(the|a|an)\s+/i, "").split(",")[0].trim(),
+  ]);
+  for (const v of variants) {
+    if (!v) continue;
+    const u = new URLSearchParams();
+    u.set("format", "json");
+    u.set("extended", "1");
+    u.set("limit", "1");
+    u.set("title", v);
+    const rows = await librivoxFetchRaw(u);
+    if (rows.length > 0) return rows[0];
+  }
+  return null;
+}
+
+// LibriVox's `title=` filter is a whole-title exact match — it happily
+// 0-hits "Pride" or "Sherlock". `author=` is forgiving for surnames
+// but not partial title words. So we fan out:
+//   1. LibriVox title exact
+//   2. LibriVox author exact
+//   3. Archive.org librivoxaudio fuzzy search (real fuzzy title
+//      matching) — for each hit we resolve back to a LibriVox book
+//      via exact-title lookup with common variants
+//   4. If STILL thin, JS fuzzy scan across a wider window
+async function librivoxSearch(q: string, category: string, limit: number): Promise<CommonBook[]> {
+  const cat = CATEGORY_TO_GENRE[category];
+  const base = () => {
+    const u = new URLSearchParams();
+    u.set("format", "json");
+    u.set("extended", "1");
+    u.set("limit", "60");
+    if (cat && cat !== "*Non-fiction") u.set("genre", cat);
+    return u;
+  };
+  const titleQs = base(); titleQs.set("title", q);
+  const authorQs = base(); authorQs.set("author", q);
+
+  // Archive.org fuzzy search over the librivoxaudio collection.
+  // Real substring/token matching, unlike LibriVox's own search.
+  const archiveQuery = `collection:(librivoxaudio) AND (title:(${JSON.stringify(q)}) OR creator:(${JSON.stringify(q)}))`;
+  const archiveUrl = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(archiveQuery)}&fl[]=identifier&fl[]=title&rows=15&output=json&sort[]=downloads%20desc`;
+  const archivePromise: Promise<any> = fetch(archiveUrl, { signal: AbortSignal.timeout(15_000), headers: FETCH_HEADERS })
+    .then((r) => r.ok ? r.json() : { response: { docs: [] } })
+    .catch(() => ({ response: { docs: [] } }));
+
+  const [titleHits, authorHits, archiveResp] = await Promise.all([
+    librivoxFetchRaw(titleQs),
+    librivoxFetchRaw(authorQs),
+    archivePromise,
+  ]);
+
+  const seen = new Set<string>();
+  const merged: any[] = [];
+  const pushIfNew = (row: any) => {
+    const id = String(row.id);
+    if (seen.has(id)) return false;
+    if (!isEnglishRow(row)) return false;
+    seen.add(id);
+    merged.push(row);
+    return true;
+  };
+  for (const row of [...titleHits, ...authorHits]) pushIfNew(row);
+
+  // Map archive.org hits back to LibriVox books via exact-title lookup.
+  const archiveDocs = (archiveResp?.response?.docs || []) as any[];
+  const titles = archiveDocs
+    .map((d: any) => (Array.isArray(d.title) ? d.title[0] : d.title))
+    .filter(Boolean)
+    .slice(0, 10);
+  if (titles.length > 0 && merged.length < limit) {
+    const resolved = await Promise.all(titles.map((t: string) => librivoxByExactTitle(t)));
+    for (const row of resolved) {
+      if (!row) continue;
+      pushIfNew(row);
+      if (merged.length >= limit) break;
+    }
+  }
+
+  if (merged.length >= limit) return merged.slice(0, limit).map(mapLibrivoxRow);
+
+  // Last resort — JS fuzzy scan across ~600 books in parallel.
+  const scanPages = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540];
+  const scanQs = scanPages.map((offset) => {
+    const u = base();
+    u.set("offset", String(offset));
+    return u;
+  });
+  const scanBatches = await Promise.all(scanQs.map((qs) => librivoxFetchRaw(qs)));
+  const needle = q.toLowerCase();
+  for (const batch of scanBatches) {
+    for (const row of batch) {
+      if (!isEnglishRow(row)) continue;
+      const title = String(row.title || "").toLowerCase();
+      const author = librivoxAuthorName(row).toLowerCase();
+      if (title.includes(needle) || author.includes(needle)) {
+        pushIfNew(row);
+        if (merged.length >= limit) break;
+      }
+    }
+    if (merged.length >= limit) break;
+  }
+  return merged.slice(0, limit).map(mapLibrivoxRow);
+}
+
+async function librivoxList(params: {
+  q: string;
+  limit: number;
+  offset: number;
+  category: string;
+  sort: string;
+}): Promise<CommonBook[]> {
+  // Search takes a different path — LibriVox's built-in search is
+  // exact-match only, so we merge title + author + a fuzzy pass to
+  // deliver the results a writer would actually expect.
+  if (params.q) {
+    const results = await librivoxSearch(params.q, params.category, params.limit);
+    if (params.sort === "title") {
+      results.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (params.sort === "longest") {
+      results.sort((a, b) => (b.totalDuration ?? 0) - (a.totalDuration ?? 0));
+    } else if (params.sort === "shortest") {
+      results.sort((a, b) => (a.totalDuration ?? Infinity) - (b.totalDuration ?? Infinity));
+    }
+    return results;
+  }
+
+  // Non-search browse: catalogue is ~84% English so we oversample by
+  // 1.5x, drop non-English, and slice back to the requested size.
+  const oversample = Math.ceil(params.limit * 1.5);
+  const oversampleOffset = Math.ceil(params.offset * 1.5);
+
+  const u = new URLSearchParams();
+  u.set("format", "json");
+  u.set("extended", "1");
+  u.set("limit", String(oversample));
+  u.set("offset", String(oversampleOffset));
+  const cat = CATEGORY_TO_GENRE[params.category];
+  if (cat && cat !== "*Non-fiction") u.set("genre", cat);
+
+  const rows = (await librivoxFetchRaw(u))
+    .filter(isEnglishRow)
+    .slice(0, params.limit);
+  const mapped = rows.map(mapLibrivoxRow);
+
   if (params.sort === "title") {
     mapped.sort((a, b) => a.title.localeCompare(b.title));
   } else if (params.sort === "longest") {
@@ -165,12 +324,63 @@ async function librivoxList(params: {
   } else if (params.sort === "shortest") {
     mapped.sort((a, b) => (a.totalDuration ?? Infinity) - (b.totalDuration ?? Infinity));
   }
-  // "recent" and "popular" fall through as LibriVox's default ordering.
-
   return mapped;
 }
 
 // ── LibriVox: detail ────────────────────────────────────────────────
+
+async function fetchArchiveStats(archiveId: string | null): Promise<{
+  avgRating: number | null;
+  downloadCount: number | null;
+  numReviews: number | null;
+  reviews: CommonReview[];
+}> {
+  const empty = { avgRating: null, downloadCount: null, numReviews: null, reviews: [] as CommonReview[] };
+  if (!archiveId) return empty;
+  try {
+    // The stats live on advancedsearch; reviews live on metadata.
+    // Fire both in parallel; either failing is non-fatal.
+    const [statsRes, metaRes] = await Promise.allSettled([
+      fetch(
+        `https://archive.org/advancedsearch.php?q=identifier:${encodeURIComponent(archiveId)}&fl[]=downloads&fl[]=avg_rating&fl[]=num_reviews&output=json`,
+        { signal: AbortSignal.timeout(15_000), headers: FETCH_HEADERS },
+      ),
+      fetch(
+        `https://archive.org/metadata/${encodeURIComponent(archiveId)}`,
+        { signal: AbortSignal.timeout(15_000), headers: FETCH_HEADERS },
+      ),
+    ]);
+    let avgRating: number | null = null;
+    let downloadCount: number | null = null;
+    let numReviews: number | null = null;
+    if (statsRes.status === "fulfilled" && statsRes.value.ok) {
+      const j = await statsRes.value.json() as any;
+      const doc = j?.response?.docs?.[0];
+      if (doc) {
+        avgRating = doc.avg_rating ? Number(doc.avg_rating) : null;
+        downloadCount = doc.downloads ? Number(doc.downloads) : null;
+        numReviews = doc.num_reviews ? Number(doc.num_reviews) : null;
+      }
+    }
+    let reviews: CommonReview[] = [];
+    if (metaRes.status === "fulfilled" && metaRes.value.ok) {
+      const j = await metaRes.value.json() as any;
+      const raw = Array.isArray(j?.reviews) ? j.reviews : [];
+      reviews = raw
+        .slice(0, 6)
+        .map((r: any) => ({
+          stars: Number(r.stars) || 0,
+          title: String(r.reviewtitle || "").slice(0, 200),
+          author: String(r.reviewer || "Anonymous").slice(0, 80),
+          body: String(r.reviewbody || "").slice(0, 1200),
+          date: r.reviewdate || r.createdate || null,
+        }));
+    }
+    return { avgRating, downloadCount, numReviews, reviews };
+  } catch {
+    return empty;
+  }
+}
 
 async function librivoxDetail(externalId: string): Promise<CommonBookDetail | null> {
   const url = `https://librivox.org/api/feed/audiobooks/?format=json&extended=1&id=${encodeURIComponent(externalId)}`;
@@ -179,12 +389,34 @@ async function librivoxDetail(externalId: string): Promise<CommonBookDetail | nu
   const data = (await r.json()) as { books?: any[] };
   const b = (data.books || [])[0];
   if (!b) return null;
+
   const chapters: CommonChapter[] = (b.sections || []).map((s: any) => ({
     title: s.title || `Section ${s.section_number}`,
     audioUrl: s.listen_url,
     duration: parsePlaytime(s.playtime),
     sectionNumber: Number(s.section_number) || 0,
+    readers: Array.isArray(s.readers)
+      ? s.readers.map((r: any) => ({ id: String(r.reader_id ?? ""), name: String(r.display_name ?? "Reader") }))
+      : [],
   }));
+
+  // Aggregate unique readers across the whole book with per-chapter
+  // counts, so the detail page can show a proper cast list rather
+  // than repeating the same volunteer 30 times.
+  const readerMap = new Map<string, { id: string; name: string; count: number }>();
+  for (const ch of chapters) {
+    for (const r of ch.readers) {
+      const key = r.id || r.name;
+      const cur = readerMap.get(key);
+      if (cur) cur.count++;
+      else readerMap.set(key, { id: r.id, name: r.name, count: 1 });
+    }
+  }
+  const readers = Array.from(readerMap.values()).sort((a, b) => b.count - a.count);
+
+  const archiveId = (b.url_iarchive as string | undefined)?.split("/").pop() || null;
+  const stats = await fetchArchiveStats(archiveId);
+
   return {
     source: "librivox",
     externalId,
@@ -199,6 +431,22 @@ async function librivoxDetail(externalId: string): Promise<CommonBookDetail | nu
     chapters,
     sourceUrl: b.url_librivox || `https://librivox.org/?p=${externalId}`,
     genres: (b.genres || []).map((g: any) => g.name).filter(Boolean),
+    wikipediaUrl: (b.url_project as string) || null,
+    archiveUrl: (b.url_iarchive as string) || null,
+    zipDownloadUrl: (b.url_zip_file as string) || null,
+    rssUrl: (b.url_rss as string) || null,
+    textSourceUrl: (b.url_text_source as string) || null,
+    copyrightYear: b.copyright_year ? String(b.copyright_year) : null,
+    translators: Array.isArray(b.translators)
+      ? b.translators
+          .map((t: any) => ({ name: `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim() }))
+          .filter((t: { name: string }) => t.name)
+      : [],
+    readers,
+    avgRating: stats.avgRating,
+    downloadCount: stats.downloadCount,
+    numReviews: stats.numReviews,
+    reviews: stats.reviews,
   };
 }
 
@@ -230,21 +478,22 @@ const FEATURED_LIBRIVOX_IDS = [
 ];
 
 async function librivoxFeatured(): Promise<CommonBook[]> {
-  // LibriVox's feed accepts a single id at a time — fire them all in
-  // parallel and drop failures.
+  // Cards only need the CommonBook fields — skip the archive.org
+  // stats/reviews fetch (which fires 2 HTTP calls per book) since the
+  // featured row would otherwise trigger ~28 upstream requests.
   const results = await Promise.allSettled(
     FEATURED_LIBRIVOX_IDS.map(async (id) => {
-      const d = await librivoxDetail(id);
-      return d;
+      const url = `https://librivox.org/api/feed/audiobooks/?format=json&extended=1&id=${encodeURIComponent(id)}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(15_000), headers: FETCH_HEADERS });
+      if (!r.ok) return null;
+      const data = (await r.json()) as { books?: any[] };
+      const b = (data.books || [])[0];
+      return b ? mapLibrivoxRow(b) : null;
     }),
   );
   const books: CommonBook[] = [];
   for (const r of results) {
-    if (r.status === "fulfilled" && r.value) {
-      const { chapters: _c, description: _d, sourceUrl: _s, ...rest } = r.value;
-      void _c; void _d; void _s;
-      books.push(rest);
-    }
+    if (r.status === "fulfilled" && r.value) books.push(r.value);
   }
   return books;
 }
