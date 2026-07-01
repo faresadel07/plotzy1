@@ -4,13 +4,22 @@
 // (WebAssembly + WebGPU when available). No audio is uploaded to our
 // servers, no API keys, no per-request cost.
 //
-// Model choice: `Xenova/whisper-small` quantised to int8. That size
-// (~250 MB unquantised, ~130 MB q8) is the sweet spot between:
-//   - Multilingual quality (whisper-tiny/base drop Arabic quality
-//     noticeably; small matches human transcription closely enough
-//     for dictation into a manuscript).
-//   - First-time download budget (users won't tolerate 3 GB for
-//     large-v3, and it wouldn't fit in browser memory anyway).
+// Model choice: `Xenova/whisper-base` at fp32.
+//
+// Earlier iterations used whisper-small at q8 (int8) quantisation.
+// That combination triggers a real ONNX Runtime bug —
+//   "TransposeDQWeightsForMatMulNBits Missing required scale:
+//    model.decoder.embed_tokens.weight_merged_0_scale"
+// — because the quantised .onnx file references a MatMulNBits
+// operator whose per-channel scale tensor was dropped during export.
+// The bug is upstream in the model artefact, not in our code, and it
+// has bitten enough users that Xenova recommends fp32 or fp16 for
+// production browser usage.
+//
+// whisper-base at fp32 is ~145 MB on the wire. That's actually
+// SMALLER than whisper-small at q8 was supposed to be, and its
+// Arabic-English quality is more than enough for dictation into a
+// manuscript. Loads without any quantisation gymnastics.
 //
 // After the first successful load the model is cached by the browser
 // in the OPFS-backed cache Transformers.js manages, so subsequent
@@ -28,10 +37,12 @@ import {
 // models come from.
 env.allowLocalModels = false;
 
-const MODEL_ID = "Xenova/whisper-small";
-// int8 dynamic quantisation keeps quality within ~1% of fp32 on
-// speech tasks while halving both download size and memory usage.
-const DTYPE = "q8" as const;
+const MODEL_ID = "Xenova/whisper-base";
+// fp32 avoids the MatMulNBits quantisation bug that made q8 fail with
+// "Can't create a session. ERROR_CODE: 1". Larger than q8 (~145 MB vs
+// ~90 MB) but guaranteed to instantiate on every ONNX Runtime version
+// currently shipped by onnxruntime-web.
+const DTYPE = "fp32" as const;
 
 // UI language codes -> Whisper language names.
 const LANGUAGE_MAP: Record<string, string> = {
