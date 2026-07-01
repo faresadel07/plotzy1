@@ -115,11 +115,25 @@ export function loadWhisper(
   return pipelinePromise;
 }
 
+// Minimum viable recording payload. Anything smaller almost certainly
+// means MediaRecorder never wrote container headers (writer released
+// the mic button too fast) — decodeAudioData throws an opaque
+// "Unable to decode" for those, which reads as "the app is broken"
+// rather than "hold the button longer".
+const MIN_RECORDING_BYTES = 2_000;
+
 // Convert a browser-recorded audio Blob (webm/opus, mp4, wav, ...)
 // into a mono Float32Array at 16 kHz — Whisper's required input.
 // Uses OfflineAudioContext so we can pick the target sample rate
 // directly and skip a manual resample pass.
 export async function blobToWhisperAudio(blob: Blob): Promise<Float32Array> {
+  if (!blob || blob.size === 0) {
+    throw new Error("EMPTY_RECORDING: microphone captured no audio");
+  }
+  if (blob.size < MIN_RECORDING_BYTES) {
+    throw new Error(`SHORT_RECORDING: only ${blob.size} bytes captured — hold the mic longer`);
+  }
+
   const arrayBuffer = await blob.arrayBuffer();
   // We need a real (online) AudioContext to decode the codec, then an
   // OfflineAudioContext to resample to 16 kHz. Some browsers refuse
@@ -130,8 +144,17 @@ export async function blobToWhisperAudio(blob: Blob): Promise<Float32Array> {
   let decoded: AudioBuffer;
   try {
     decoded = await decodeCtx.decodeAudioData(arrayBuffer.slice(0));
+  } catch (err) {
+    // Wrap with the blob's mime + size so the outer toast can say
+    // something more useful than "decode failed".
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`DECODE_FAILED: type=${blob.type || "?"} size=${blob.size} — ${msg}`);
   } finally {
-    await decodeCtx.close();
+    try { await decodeCtx.close(); } catch { /* noop */ }
+  }
+
+  if (!decoded || decoded.duration < 0.15) {
+    throw new Error(`SHORT_RECORDING: audio duration ${decoded?.duration ?? 0}s — hold the mic longer`);
   }
 
   const targetSampleRate = 16_000;

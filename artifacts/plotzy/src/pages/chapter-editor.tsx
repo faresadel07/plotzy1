@@ -1664,7 +1664,22 @@ export default function ChapterEditor() {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      // Pick the best MIME the browser actually supports. Safari
+      // rejects "audio/webm" so we have to fall through to mp4/aac
+      // or the browser default. Whisper's audio decode handles all
+      // three uniformly once we resample.
+      const preferredMimes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4;codecs=mp4a.40.2",
+        "audio/mp4",
+        "audio/mpeg",
+        "",
+      ];
+      const chosenMime = preferredMimes.find((m) => !m || MediaRecorder.isTypeSupported(m)) ?? "";
+      const mediaRecorder = chosenMime
+        ? new MediaRecorder(stream, { mimeType: chosenMime })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -1676,7 +1691,11 @@ export default function ChapterEditor() {
         setRecordingTime(0);
         setIsTranscribing(true);
         try {
-          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+          // Reuse whatever mimeType the recorder was actually using —
+          // Blobs constructed with a mismatched type still play, but
+          // decodeAudioData is stricter and will reject them.
+          const type = mediaRecorder.mimeType || "audio/webm";
+          const blob = new Blob(chunksRef.current, { type });
           // Whisper runs entirely in the writer's browser — the audio
           // never leaves their device and there is no per-request cost.
           // Model files are downloaded once (~130 MB q8-quantised
@@ -1708,21 +1727,29 @@ export default function ChapterEditor() {
           console.error("Whisper transcription failed", err);
           setWhisperLoadProgress(null);
           const raw = err instanceof Error ? err.message : String(err ?? "");
-          // Common failure modes rendered as bilingual hints so a
-          // writer knows whether the issue is their microphone, their
-          // connection, or a browser incompatibility.
+          // Discriminate by the tagged prefix our whisper module now
+          // emits (SHORT_RECORDING / EMPTY_RECORDING / DECODE_FAILED),
+          // then by generic network/audio keywords. Falls back to the
+          // raw error so users always have something diagnostic to
+          // send back.
           let hint = ar ? "حاول ثانية." : "Try again.";
-          const lower = raw.toLowerCase();
-          if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch") || lower.includes("timeout")) {
+          if (raw.startsWith("EMPTY_RECORDING") || raw.startsWith("SHORT_RECORDING")) {
             hint = ar
-              ? "تعذّر تنزيل نموذج التحويل الصوتي. تأكّد من اتّصال الإنترنت وأعد المحاولة."
-              : "Could not download the speech model. Check your connection and try again.";
-          } else if (lower.includes("audio") || lower.includes("decode") || lower.includes("codec")) {
+              ? "التسجيل قصير جداً. اضغط الميكروفون، تكلّم بضع ثوانٍ، ثم اضغط الإيقاف."
+              : "Recording is too short. Press the mic, speak for a few seconds, then press stop.";
+          } else if (raw.startsWith("DECODE_FAILED")) {
             hint = ar
-              ? "تعذّر معالجة التسجيل. حاول تسجيلاً أطول أو تحقّق من الميكروفون."
-              : "Could not process the audio. Try a longer recording or check your microphone.";
-          } else if (raw) {
-            hint = raw.slice(0, 220);
+              ? `تعذّر تحليل التسجيل. جرّب متصفّح Chrome أو Edge. (${raw.slice(0, 180)})`
+              : `Could not parse the recording. Try Chrome or Edge. (${raw.slice(0, 180)})`;
+          } else {
+            const lower = raw.toLowerCase();
+            if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch") || lower.includes("timeout")) {
+              hint = ar
+                ? "تعذّر تنزيل نموذج التحويل الصوتي. تأكّد من اتّصال الإنترنت وأعد المحاولة."
+                : "Could not download the speech model. Check your connection and try again.";
+            } else if (raw) {
+              hint = raw.slice(0, 220);
+            }
           }
           toast({
             title: ar ? "فشل التحويل" : "Transcription failed",
@@ -1734,7 +1761,13 @@ export default function ChapterEditor() {
         }
       };
 
-      mediaRecorder.start();
+      // Timeslice = 1s. Without a timeslice, MediaRecorder emits ONE
+      // ondataavailable when stop() is called, and on quick clicks
+      // (< 500ms) the resulting blob can be empty or corrupt because
+      // the container muxer never wrote its headers. A 1s timeslice
+      // forces periodic flushes so even a short recording holds a
+      // decodable payload.
+      mediaRecorder.start(1000);
       setIsRecording(true);
       setRecordingTime(0);
       timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
@@ -1744,7 +1777,14 @@ export default function ChapterEditor() {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
+    const mr = mediaRecorderRef.current;
+    if (mr?.state === "recording") {
+      // Ask for one final chunk before stopping. Chrome sometimes
+      // holds ~200 ms of audio in an internal buffer that never
+      // reaches ondataavailable unless we explicitly requestData().
+      try { mr.requestData(); } catch { /* older Safari lacks requestData */ }
+      mr.stop();
+    }
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
