@@ -841,6 +841,19 @@ export default function ChapterEditor() {
   // shards from Hugging Face. Shown to the user so a slow "Nothing is
   // happening" state doesn't feel broken.
   const [whisperLoadProgress, setWhisperLoadProgress] = useState<number | null>(null);
+  // Dictation language override. "auto" lets Whisper detect from audio;
+  // an explicit code (ar/en/fr/...) forces that language. Auto-detect
+  // on whisper-base isn't reliable enough for Arabic — the model
+  // silently falls back to English translation when confidence is low
+  // — so we let the writer pick explicitly. Persisted per session
+  // via localStorage so the choice survives navigation.
+  const [dictationLang, setDictationLang] = useState<string>(() => {
+    if (typeof window === "undefined") return "auto";
+    return window.localStorage?.getItem("plotzy.dictationLang") || "auto";
+  });
+  useEffect(() => {
+    try { window.localStorage?.setItem("plotzy.dictationLang", dictationLang); } catch { /* noop */ }
+  }, [dictationLang]);
   // Transcribed text held in a review modal so the user can fix mistakes
   // before deciding whether to insert into the current page or just copy.
   // Null when the modal is closed.
@@ -1702,13 +1715,13 @@ export default function ChapterEditor() {
           // whisper-small) and cached by Transformers.js for every
           // subsequent dictation.
           const { transcribe } = await import("@/lib/whisper");
-          // Auto-detect the spoken language. Passing book.language
-          // here previously forced Whisper into "translate to English"
-          // whenever the writer dictated in Arabic inside an
-          // English-defaulted book. Detecting from audio keeps Arabic
-          // Arabic and English English regardless of book settings.
+          // Use the writer's explicit dictation-language pick. Not
+          // book.language (that's a document setting, not a speaker
+          // hint) and not lang (that's the UI chrome). When
+          // dictationLang is "auto" the whisper module drops the
+          // language hint entirely and lets Whisper detect from audio.
           const text = await transcribe(blob, {
-            language: "auto",
+            language: dictationLang,
             onProgress: (p) => {
               if (p.status === "downloading" && typeof p.progress === "number") {
                 setWhisperLoadProgress(Math.max(0, Math.min(1, p.progress)));
@@ -2139,9 +2152,36 @@ export default function ChapterEditor() {
                 <span className="font-mono">{formatTime(recordingTime)}</span>
               </button>
             ) : (
-              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors text-muted-foreground" onClick={startRecording} title={ar ? "تسجيل صوتي" : "Voice dictation"} aria-label={ar ? "تسجيل صوتي" : "Voice dictation"} data-testid="button-start-recording">
-                <Mic className="w-4 h-4" />
-              </Button>
+              <>
+                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors text-muted-foreground" onClick={startRecording} title={ar ? "تسجيل صوتي" : "Voice dictation"} aria-label={ar ? "تسجيل صوتي" : "Voice dictation"} data-testid="button-start-recording">
+                  <Mic className="w-4 h-4" />
+                </Button>
+                {/* Dictation-language chip — auto-detect on whisper-base
+                    is unreliable for Arabic (it falls back to English
+                    translation), so we let the writer pin the language
+                    explicitly. The compact 2-char pill (AR / EN / AUTO)
+                    keeps it out of the way but always visible. */}
+                <select
+                  value={dictationLang}
+                  onChange={(e) => setDictationLang(e.target.value)}
+                  title={ar ? "لغة التسجيل" : "Dictation language"}
+                  aria-label={ar ? "لغة التسجيل" : "Dictation language"}
+                  className="h-7 px-1.5 rounded-lg bg-transparent hover:bg-primary/10 text-muted-foreground hover:text-primary text-[10px] font-semibold tracking-wide uppercase border border-transparent hover:border-border cursor-pointer outline-none appearance-none"
+                  style={{ WebkitAppearance: "none" }}
+                >
+                  <option value="auto">{ar ? "تلقائي" : "Auto"}</option>
+                  <option value="ar">AR</option>
+                  <option value="en">EN</option>
+                  <option value="fr">FR</option>
+                  <option value="es">ES</option>
+                  <option value="de">DE</option>
+                  <option value="it">IT</option>
+                  <option value="tr">TR</option>
+                  <option value="ru">RU</option>
+                  <option value="ja">JA</option>
+                  <option value="zh">ZH</option>
+                </select>
+              </>
             )}
 
             <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"} aria-label={ar ? "استعراض الصفحات" : "Page Navigator"}>
