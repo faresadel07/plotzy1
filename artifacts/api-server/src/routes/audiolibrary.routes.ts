@@ -132,7 +132,16 @@ interface CatalogueRow {
   copyrightYear: string | null;
 }
 
-const CATALOGUE: CatalogueRow[] = (catalogueData as { books: CatalogueRow[] }).books;
+// LibriVox occasionally catalogues a title before its archive.org
+// upload is finalised. Those rows come back with no url_iarchive and
+// therefore no cover — ~2.5% of the raw feed. Rendering them yields
+// a wall of grey placeholders, mostly concentrated in the "recent"
+// sort where the newest catalogued items land. Drop them from browse.
+// The JSON keeps the raw rows; the next catalogue refresh picks up
+// covers as LibriVox backfills url_iarchive.
+const CATALOGUE: CatalogueRow[] = (catalogueData as { books: CatalogueRow[] }).books.filter(
+  (r) => !!r.coverUrl && !!r.archiveId,
+);
 
 // Category ID -> LibriVox genre string(s) as they appear in the
 // catalogue's `genres` field. We match against the exact string
