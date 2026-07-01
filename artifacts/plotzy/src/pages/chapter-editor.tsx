@@ -836,6 +836,11 @@ export default function ChapterEditor() {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  // First-time Whisper model download progress: null when the model is
+  // already loaded (or hasn't started downloading), 0..1 while streaming
+  // shards from Hugging Face. Shown to the user so a slow "Nothing is
+  // happening" state doesn't feel broken.
+  const [whisperLoadProgress, setWhisperLoadProgress] = useState<number | null>(null);
   // Transcribed text held in a review modal so the user can fix mistakes
   // before deciding whether to insert into the current page or just copy.
   // Null when the modal is closed.
@@ -1672,31 +1677,41 @@ export default function ChapterEditor() {
         setIsTranscribing(true);
         try {
           const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-          const base64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+          // Whisper runs entirely in the writer's browser — the audio
+          // never leaves their device and there is no per-request cost.
+          // Model files are downloaded once (~130 MB q8-quantised
+          // whisper-small) and cached by Transformers.js for every
+          // subsequent dictation.
+          const { transcribe } = await import("@/lib/whisper");
+          const text = await transcribe(blob, {
+            language: book?.language || lang,
+            onProgress: (p) => {
+              if (p.status === "downloading" && typeof p.progress === "number") {
+                setWhisperLoadProgress(Math.max(0, Math.min(1, p.progress)));
+              } else if (p.status === "ready") {
+                setWhisperLoadProgress(null);
+              }
+            },
           });
-          const res = await fetch("/api/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audio: base64, language: book?.language || lang }),
-            credentials: "include",
-          });
-          if (!res.ok) throw new Error("Transcription failed");
-          const { text } = await res.json();
+          setWhisperLoadProgress(null);
           if (text?.trim()) {
-            // Open the review modal instead of writing straight into the page.
-            // The user reviews/edits the transcription, then chooses whether
-            // to insert it at the active page or just copy it to the
-            // clipboard.
+            // Open the review modal instead of writing straight into
+            // the page. The user reviews/edits the transcription, then
+            // chooses whether to insert it at the active page or just
+            // copy it to the clipboard.
             setTranscribedDraft(text.trim());
             setTranscribedCopied(false);
           } else {
             toast({ title: ar ? "لم يتم التقاط أي كلام" : "No speech detected" });
           }
-        } catch {
-          toast({ title: ar ? "فشل التحويل" : "Transcription failed", variant: "destructive" });
+        } catch (err) {
+          console.error("Whisper transcription failed", err);
+          setWhisperLoadProgress(null);
+          toast({
+            title: ar ? "فشل التحويل" : "Transcription failed",
+            description: ar ? "حاول ثانية أو تحقّق من اتّصال الإنترنت." : "Try again, or check your internet connection.",
+            variant: "destructive",
+          });
         } finally {
           setIsTranscribing(false);
         }
@@ -2033,9 +2048,22 @@ export default function ChapterEditor() {
 
             {/* Voice */}
             {isTranscribing ? (
-              <div className="flex items-center gap-1 px-2 h-7 rounded-lg bg-primary/10 text-primary text-[10px] font-medium">
+              <div
+                className="flex items-center gap-1.5 px-2 h-7 rounded-lg bg-primary/10 text-primary text-[10px] font-medium"
+                title={
+                  whisperLoadProgress !== null
+                    ? (ar ? "تنزيل نموذج التحويل الصوتي — مرّة واحدة" : "Downloading speech model — one-time only")
+                    : (ar ? "جارٍ التحويل" : "Transcribing")
+                }
+              >
                 <Loader2 className="w-3 h-3 animate-spin" />
-                <span className="hidden sm:block">{ar ? "جارٍ..." : "…"}</span>
+                {whisperLoadProgress !== null ? (
+                  <span className="hidden sm:block font-mono">
+                    {ar ? "التنزيل" : "Loading"} {Math.round(whisperLoadProgress * 100)}%
+                  </span>
+                ) : (
+                  <span className="hidden sm:block">{ar ? "جارٍ..." : "…"}</span>
+                )}
               </div>
             ) : isRecording ? (
               <button
