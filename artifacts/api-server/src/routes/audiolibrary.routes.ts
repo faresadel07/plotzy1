@@ -117,27 +117,32 @@ async function librivoxList(params: {
   category: string;
   sort: string;
 }): Promise<CommonBook[]> {
-  // The base URL. extended=1 is required for covers, sections and
-  // genres. LibriVox caps offset around 10k — that's the practical
-  // upper bound of the catalogue.
+  // The catalogue is ~84% English, so to guarantee we return `limit`
+  // English books per page we oversample by ~1.5x and drop anything
+  // that isn't English on our side. LibriVox has no ?language= filter
+  // (they accept the param but ignore it), so JS is the only way.
+  const oversample = Math.ceil(params.limit * 1.5);
+  const oversampleOffset = Math.ceil(params.offset * 1.5);
+
   const u = new URLSearchParams();
   u.set("format", "json");
   u.set("extended", "1");
-  u.set("limit", String(params.limit));
-  u.set("offset", String(params.offset));
+  u.set("limit", String(oversample));
+  u.set("offset", String(oversampleOffset));
   if (params.q) u.set("title", params.q);
   const cat = CATEGORY_TO_GENRE[params.category];
-  // Fiction is a wide bucket — LibriVox doesn't have a "Fiction" genre
-  // per se, so we accept everything and let the JS layer drop non-
-  // fiction if a strict fiction-only view is asked for. For now the
-  // "fiction" tab is treated as "all".
+  // "fiction" is treated as "all" — LibriVox has no wide "Fiction"
+  // genre, so the tab just accepts everything.
   if (cat && cat !== "*Non-fiction") u.set("genre", cat);
 
   const url = `https://librivox.org/api/feed/audiobooks/?${u.toString()}`;
   const r = await fetch(url, { signal: AbortSignal.timeout(20_000), headers: FETCH_HEADERS });
   if (!r.ok) throw new Error(`LibriVox list failed: ${r.status}`);
   const data = (await r.json()) as { books?: any[] };
-  const rows = data.books ?? [];
+  const rows = (data.books ?? []).filter((b) => {
+    const lang = String(b.language || "").toLowerCase();
+    return lang === "english" || lang === "multilingual" || lang.includes("english");
+  }).slice(0, params.limit);
 
   const mapped: CommonBook[] = rows.map((b) => ({
     source: "librivox" as const,

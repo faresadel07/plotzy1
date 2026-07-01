@@ -149,8 +149,8 @@ export default function AudiolibraryPage() {
       <SEO
         title={ar ? "المكتبة الصوتيّة | بلوتزي" : "Audio Library | Plotzy"}
         description={ar
-          ? "أكثر من عشرين ألف كتاب صوتي مجاني بالإنجليزيّة من LibriVox. كل التسجيلات قانونيّة لأنّ نصوصها في الملك العامّ."
-          : "20,000+ free public-domain audiobooks in English from LibriVox. Every recording is fully legal — the underlying texts are in the public domain."}
+          ? "أكثر من ثمانية عشر ألف كتاب صوتي مجاني بالإنجليزيّة من LibriVox. كل التسجيلات قانونيّة لأنّ نصوصها في الملك العامّ."
+          : "18,000+ free public-domain audiobooks in English from LibriVox. Every recording is fully legal because the underlying texts are in the public domain."}
       />
       <div dir={isRTL ? "rtl" : "ltr"} style={{ background: BG, color: TEXT, fontFamily: SF, minHeight: "100vh" }}>
         <div style={{ maxWidth: 1240, margin: "0 auto", padding: "32px 20px 80px" }}>
@@ -168,8 +168,8 @@ export default function AudiolibraryPage() {
             </h1>
             <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65, maxWidth: 720, margin: "0 0 8px" }}>
               {ar
-                ? "أكثر من عشرين ألف كتاب صوتي بالإنجليزيّة، تيار مباشر من LibriVox، بدون أيّ إعادة استضافة. كل التسجيلات قانونيّة لأنّ نصوصها الأصليّة قد دخلت الملك العامّ."
-                : "More than 20,000 English audiobooks streamed direct from LibriVox with no re-hosting. Every recording is fully legal because the underlying texts have entered the public domain."}
+                ? "أكثر من ثمانية عشر ألف كتاب صوتي بالإنجليزيّة، تيار مباشر من LibriVox، بدون أيّ إعادة استضافة. كل التسجيلات قانونيّة لأنّ نصوصها الأصليّة قد دخلت الملك العامّ."
+                : "More than 18,000 English audiobooks streamed direct from LibriVox with no re-hosting. Every recording is fully legal because the underlying texts have entered the public domain."}
             </p>
           </section>
 
@@ -245,7 +245,7 @@ export default function AudiolibraryPage() {
                     <span style={{ fontVariantNumeric: "tabular-nums" }}>{data?.books?.length ?? 0}</span>{" "}
                     {ar ? "كتاب" : `book${(data?.books?.length ?? 0) === 1 ? "" : "s"}`}
                     {" · "}
-                    <span style={{ color: MUTED2 }}>{ar ? "من ٢٠٠٠٠+" : "of 20,000+"}</span>
+                    <span style={{ color: MUTED2 }}>{ar ? "من ١٨٠٠٠+" : "of 18,000+"}</span>
                   </>
                 )}
             </p>
