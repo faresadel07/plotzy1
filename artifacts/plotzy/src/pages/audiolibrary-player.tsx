@@ -307,6 +307,78 @@ export default function AudiolibraryPlayerPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [togglePlay, seekBy]);
 
+  // Media Session API — tells the OS what's playing so that:
+  //   1. The audiobook shows up on the phone's lock screen with title,
+  //      author, cover, and play/pause/next/prev controls.
+  //   2. iOS + Android don't kill the audio when the screen locks
+  //      (they otherwise assume a random <audio> tag is a fire-and-
+  //      forget sound effect).
+  //   3. Bluetooth headphones and car head units can control playback
+  //      (play/pause button, next-track button).
+  // Without this the audiobook stops the moment the writer's phone
+  // locks, which is the single most-asked-for background-audio bug.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!book) return;
+    const currentChapter = book.chapters[chapterIndex];
+    if (!currentChapter) return;
+    const nav = navigator as Navigator & { mediaSession: MediaSession };
+
+    // 1. Metadata (lock screen card).
+    try {
+      nav.mediaSession.metadata = new MediaMetadata({
+        title: currentChapter.title || book.title,
+        artist: book.author ?? "Unknown",
+        album: book.title,
+        artwork: book.coverUrl
+          ? [
+              { src: book.coverUrl, sizes: "96x96",   type: "image/jpeg" },
+              { src: book.coverUrl, sizes: "192x192", type: "image/jpeg" },
+              { src: book.coverUrl, sizes: "512x512", type: "image/jpeg" },
+            ]
+          : [],
+      });
+    } catch { /* older browsers reject certain artwork sizes silently */ }
+
+    // 2. Action handlers (lock screen + bluetooth buttons).
+    const handlers: Array<[MediaSessionAction, MediaSessionActionHandler]> = [
+      ["play",           () => { audioRef.current?.play().catch(() => {}); }],
+      ["pause",          () => { audioRef.current?.pause(); }],
+      ["seekbackward",   (d) => { seekBy(-(d.seekOffset ?? 15)); }],
+      ["seekforward",    (d) => { seekBy(d.seekOffset ?? 30); }],
+      ["previoustrack",  () => { goToChapter(chapterIndex - 1); requestAnimationFrame(() => audioRef.current?.play().catch(() => {})); }],
+      ["nexttrack",      () => { goToChapter(chapterIndex + 1); requestAnimationFrame(() => audioRef.current?.play().catch(() => {})); }],
+      ["seekto",         (d) => { const a = audioRef.current; if (a && typeof d.seekTime === "number") a.currentTime = d.seekTime; }],
+    ];
+    for (const [action, handler] of handlers) {
+      try { nav.mediaSession.setActionHandler(action, handler); }
+      catch { /* browsers reject actions they don't support */ }
+    }
+    return () => {
+      for (const [action] of handlers) {
+        try { nav.mediaSession.setActionHandler(action, null); } catch { /* noop */ }
+      }
+    };
+  }, [book, chapterIndex, seekBy, goToChapter]);
+
+  // 3. Playback state — flips the lock-screen icon between play/pause
+  // and, on Chrome, sets the position/duration so the seekbar renders.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    const nav = navigator as Navigator & { mediaSession: MediaSession };
+    try { nav.mediaSession.playbackState = isPlaying ? "playing" : "paused"; } catch { /* noop */ }
+    const a = audioRef.current;
+    if (a && Number.isFinite(a.duration) && a.duration > 0) {
+      try {
+        nav.mediaSession.setPositionState?.({
+          duration: a.duration,
+          position: Math.min(a.currentTime, a.duration),
+          playbackRate: a.playbackRate || 1,
+        });
+      } catch { /* older Safari throws on setPositionState */ }
+    }
+  }, [isPlaying, currentTime, chapterIndex, rate]);
+
   // Sleep timer tick.
   useEffect(() => {
     if (!sleepUntil) return;

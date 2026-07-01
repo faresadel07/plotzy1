@@ -22,7 +22,7 @@ import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/language-context";
 import {
   Search, Clock, Headphones, BookAudio, ChevronDown,
-  ArrowRight, ArrowLeft, ListMusic, Sparkles, ChevronLeft, ChevronRight,
+  ArrowRight, ArrowLeft, ListMusic, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -34,7 +34,7 @@ const BORDER_STRONG = "rgba(255,255,255,0.16)";
 const TEXT = "#f0efe8";
 const MUTED = "rgba(255,255,255,0.55)";
 const MUTED2 = "rgba(255,255,255,0.35)";
-const ACCENT = "#c9a96e";
+const ACCENT = TEXT; // was gold #c9a96e — writer preferred plain white accents on this page
 
 // Category pills — map to backend `category=` parameter which the
 // server translates to LibriVox's exact genre string.
@@ -178,9 +178,7 @@ export default function AudiolibraryPage() {
           {showFeatured && (
             <section style={{ marginBottom: 34 }}>
               <SectionHeader
-                icon={<Sparkles size={14} color={ACCENT} />}
                 title={ar ? "كلاسيكيّات مختارة" : "Featured Classics"}
-                subtitle={ar ? "أشهر ما في المكتبة" : "The most famous books in the catalogue"}
               />
               <FeaturedStrip
                 books={featured?.books ?? []}
@@ -324,18 +322,10 @@ export default function AudiolibraryPage() {
 
 // ─── Section header ───────────────────────────────────────────────
 
-function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
+function SectionHeader({ title }: { title: string }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
-      <div>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          {icon}
-          <span style={{ fontSize: 11, fontWeight: 700, color: ACCENT, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-            {subtitle}
-          </span>
-        </div>
-        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: TEXT }}>{title}</div>
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: TEXT }}>{title}</div>
     </div>
   );
 }
@@ -450,7 +440,7 @@ function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; o
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(201,169,110,0.20), rgba(56,132,255,0.15))" }}>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))" }}>
             <BookAudio size={38} color="rgba(255,255,255,0.35)" />
           </div>
         )}
@@ -515,7 +505,7 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
         style={{
           aspectRatio: "1 / 1",
           background: imgError || !book.coverUrl
-            ? "linear-gradient(135deg, rgba(124,108,247,0.20), rgba(56,132,255,0.15))"
+            ? "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))"
             : "#000",
           position: "relative",
           overflow: "hidden",
