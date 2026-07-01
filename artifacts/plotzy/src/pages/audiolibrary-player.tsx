@@ -23,7 +23,7 @@ import {
   Volume2, VolumeX, Moon, ChevronUp, ChevronDown, BookAudio,
   Loader2, ExternalLink, Gauge, Bookmark, BookmarkPlus, Trash2,
   Sparkles, BookOpen, X,
-  Star, Download, Rss, Users, Calendar, Info,
+  Star, Download, Rss, Users, Calendar, Info, Smartphone,
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -35,7 +35,13 @@ const BORDER_STRONG = "rgba(255,255,255,0.18)";
 const TEXT = "#f0efe8";
 const MUTED = "rgba(255,255,255,0.55)";
 const MUTED2 = "rgba(255,255,255,0.35)";
-const ACCENT = "#7c6af7";
+const ACCENT = "#ffffff";
+// Soft tinted washes derived from ACCENT — kept as vars so we don't
+// scatter the same `rgba(255,255,255,...)` literals across the file.
+const ACCENT_WASH_STRONG = "rgba(255,255,255,0.12)";
+const ACCENT_WASH_MEDIUM = "rgba(255,255,255,0.08)";
+const ACCENT_WASH_SOFT   = "rgba(255,255,255,0.06)";
+const ACCENT_WASH_FAINT  = "rgba(255,255,255,0.04)";
 
 interface Chapter {
   title: string;
@@ -436,11 +442,32 @@ export default function AudiolibraryPlayerPage() {
           {/* Back link */}
           <Link
             href="/audiolibrary"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED, textDecoration: "none", marginBottom: 22 }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: MUTED, textDecoration: "none", marginBottom: 18 }}
           >
             {isRTL ? <ArrowRight size={13} /> : <ArrowLeft size={13} />}
             {ar ? "المكتبة الصوتيّة" : "Audio Library"}
           </Link>
+
+          {/* Lockscreen-audio hint. Kept as a subtle inline notice —
+              no dismiss button, no colour accent — so it reads as
+              "helpful footnote" instead of "urgent banner". */}
+          <div
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 10,
+              padding: "8px 14px", borderRadius: 999,
+              background: CARD, border: `1px solid ${BORDER}`,
+              color: MUTED, fontSize: 12,
+              marginBottom: 22,
+              maxWidth: "100%",
+            }}
+          >
+            <Smartphone size={13} color={MUTED} style={{ flexShrink: 0 }} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+              {ar
+                ? "بتقدر تقفل تلفونك أو تخفّض الشاشة والصوت بيضلّ شغّال. تحكّم بالتشغيل من شاشة القفل."
+                : "You can lock your phone while listening. Playback controls stay on your lock screen."}
+            </span>
+          </div>
 
           {/* ── Top: cover + meta + transport ── */}
           <div
@@ -472,7 +499,7 @@ export default function AudiolibraryPlayerPage() {
                 aspectRatio: "1 / 1",
                 borderRadius: 16,
                 overflow: "hidden",
-                background: "linear-gradient(135deg, rgba(124,108,247,0.18), rgba(56,132,255,0.12))",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
                 boxShadow: "0 18px 60px rgba(0,0,0,0.55)",
                 border: `1px solid ${BORDER}`,
                 position: "relative",
@@ -984,7 +1011,7 @@ export default function AudiolibraryPlayerPage() {
                         gap: 14,
                         width: "100%",
                         padding: "12px 18px",
-                        background: active ? "rgba(124,108,247,0.08)" : "transparent",
+                        background: active ? ACCENT_WASH_MEDIUM : "transparent",
                         border: "none",
                         borderInlineStart: active ? `3px solid ${ACCENT}` : `3px solid transparent`,
                         cursor: "pointer",
@@ -1367,8 +1394,8 @@ function ActionChip({
         gap: 8,
         padding: "9px 14px",
         borderRadius: 999,
-        background: active ? "rgba(124,108,247,0.12)" : CARD,
-        border: `1px solid ${active ? "rgba(124,108,247,0.40)" : BORDER}`,
+        background: active ? ACCENT_WASH_STRONG : CARD,
+        border: `1px solid ${active ? "rgba(255,255,255,0.32)" : BORDER}`,
         color: active ? ACCENT : TEXT,
         fontFamily: SF,
         fontSize: 12.5,
