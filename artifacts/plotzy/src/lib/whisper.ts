@@ -4,26 +4,25 @@
 // (WebAssembly + WebGPU when available). No audio is uploaded to our
 // servers, no API keys, no per-request cost.
 //
-// Model choice: `Xenova/whisper-base` at fp32.
+// Model choice: `onnx-community/whisper-base` with per-part dtypes.
 //
-// Earlier iterations used whisper-small at q8 (int8) quantisation.
-// That combination triggers a real ONNX Runtime bug —
-//   "TransposeDQWeightsForMatMulNBits Missing required scale:
-//    model.decoder.embed_tokens.weight_merged_0_scale"
-// — because the quantised .onnx file references a MatMulNBits
-// operator whose per-channel scale tensor was dropped during export.
-// The bug is upstream in the model artefact, not in our code, and it
-// has bitten enough users that Xenova recommends fp32 or fp16 for
-// production browser usage.
+// History:
+//   1. Started on Xenova/whisper-small q8. Failed with ERROR_CODE 1 —
+//      "TransposeDQWeightsForMatMulNBits Missing required scale". The
+//      quantised .onnx was exported without the per-channel scale
+//      tensor its MatMulNBits kernel needs.
+//   2. Fell back to Xenova/whisper-base at a global fp32 dtype. Still
+//      failed with the SAME error, because passing dtype as a bare
+//      string doesn't cover every sub-file: Transformers.js pattern-
+//      matches "decoder_model_merged" separately and can still land
+//      on the buggy quantised export.
 //
-// whisper-base at fp32 is ~145 MB on the wire. That's actually
-// SMALLER than whisper-small at q8 was supposed to be, and its
-// Arabic-English quality is more than enough for dictation into a
-// manuscript. Loads without any quantisation gymnastics.
-//
-// After the first successful load the model is cached by the browser
-// in the OPFS-backed cache Transformers.js manages, so subsequent
-// dictations start instantly.
+// Fix that actually works: switch to the onnx-community re-exports
+// (Xenova's models are being deprecated in favour of these) and
+// specify dtype per sub-module. The community docs explicitly warn
+// that decoder_model_merged fp16 is broken; q4 and fp32 are the
+// blessed options. q4 loads cleanly and is much smaller than fp32
+// for the decoder.
 
 import {
   pipeline,
@@ -37,12 +36,16 @@ import {
 // models come from.
 env.allowLocalModels = false;
 
-const MODEL_ID = "Xenova/whisper-base";
-// fp32 avoids the MatMulNBits quantisation bug that made q8 fail with
-// "Can't create a session. ERROR_CODE: 1". Larger than q8 (~145 MB vs
-// ~90 MB) but guaranteed to instantiate on every ONNX Runtime version
-// currently shipped by onnxruntime-web.
-const DTYPE = "fp32" as const;
+const MODEL_ID = "onnx-community/whisper-base";
+// Per-module dtype. Encoder in fp32 (small; fp16 wobbly on some
+// Chromium versions), decoder in q4 (the recommended quantisation
+// that has clean per-channel scales, unlike q8). Combined download
+// is ~85 MB, actually smaller than the Xenova/whisper-small q8 we
+// started with.
+const DTYPE = {
+  encoder_model: "fp32",
+  decoder_model_merged: "q4",
+} as const;
 
 // UI language codes -> Whisper language names.
 const LANGUAGE_MAP: Record<string, string> = {

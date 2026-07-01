@@ -52,6 +52,15 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Take over the page from the previous SW on install and
+        // activate immediately. Without these, users see stale JS
+        // for one refresh after every deploy — enough that Whisper
+        // fixes were rolling out but writers kept hitting the old
+        // error toasts from cached bundles. Safe here because our SW
+        // only manages precache + a handful of runtime rules that
+        // are backwards-compatible across releases.
+        skipWaiting: true,
+        clientsClaim: true,
         // Cache the app shell (JS, CSS, HTML) for offline access
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
 
