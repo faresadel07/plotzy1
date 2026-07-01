@@ -55,21 +55,29 @@ export function ShareBookModal({ open, onClose, bookId, title, author, coverImag
   const [showQr, setShowQr] = useState(false);
   const qrContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Regenerate QR whenever the URL changes or the panel opens. Small
-  // and instant on modern devices; no reason to bother memoising.
+  // Regenerate QR whenever the URL changes or the panel opens. We
+  // strip the width/height attributes from the SVG and rely on CSS
+  // to size it — the library emits fixed pixel dims which overflow
+  // any container smaller than the requested width. `preserveAspectRatio`
+  // + viewBox keeps the QR crisp at any target size.
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     (async () => {
       try {
-        const svg = await QRCode.toString(publicUrl, {
+        const raw = await QRCode.toString(publicUrl, {
           type: "svg",
           errorCorrectionLevel: "M",
           margin: 1,
-          width: 260,
           color: { dark: "#0a0a0a", light: "#ffffff" },
         });
-        if (!cancelled) setQrSvg(svg);
+        // Strip hard-coded dimensions so the SVG scales to its parent
+        // instead of asserting a fixed pixel size.
+        const responsive = raw
+          .replace(/\swidth="[^"]*"/, "")
+          .replace(/\sheight="[^"]*"/, "")
+          .replace("<svg", '<svg style="display:block;width:100%;height:100%" preserveAspectRatio="xMidYMid meet"');
+        if (!cancelled) setQrSvg(responsive);
       } catch {
         if (!cancelled) setQrSvg("");
       }
@@ -128,14 +136,22 @@ export function ShareBookModal({ open, onClose, bookId, title, author, coverImag
     if (!qrContainerRef.current) return;
     const svg = qrContainerRef.current.querySelector("svg");
     if (!svg) return;
-    // Serialise, wrap in a canvas at 2x for retina print, then export.
-    const serialized = new XMLSerializer().serializeToString(svg);
+    // Clone the SVG and set explicit width/height so <img> renders it
+    // at a real size — the on-screen SVG is CSS-sized to 100%/100%,
+    // which many browsers interpret as 300x150 when loaded via a data
+    // URL, producing a distorted PNG.
+    const clone = svg.cloneNode(true) as SVGElement;
+    clone.setAttribute("width", "1024");
+    clone.setAttribute("height", "1024");
+    // Strip the inline style we injected for on-screen sizing.
+    clone.removeAttribute("style");
+    const serialized = new XMLSerializer().serializeToString(clone);
     const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement("canvas");
       const size = 1024;
+      const canvas = document.createElement("canvas");
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext("2d");
@@ -154,6 +170,7 @@ export function ShareBookModal({ open, onClose, bookId, title, author, coverImag
       }, "image/png");
       URL.revokeObjectURL(url);
     };
+    img.onerror = () => URL.revokeObjectURL(url);
     img.src = url;
   };
 
@@ -418,26 +435,33 @@ export function ShareBookModal({ open, onClose, bookId, title, author, coverImag
             </button>
             {showQr && qrSvg && (
               <div style={{
-                marginTop: 12, padding: 16, borderRadius: 14,
+                marginTop: 12, padding: 20, borderRadius: 14,
                 background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+                display: "flex", flexDirection: "column", alignItems: "center",
               }}>
+                {/* QR sits in its own white matte with generous padding
+                    so the finder patterns aren't cut off. The inner
+                    SVG stretches to fill via the responsive style we
+                    injected in the generator effect. */}
                 <div
                   ref={qrContainerRef}
                   style={{
-                    width: 220, height: 220, padding: 12, borderRadius: 10,
-                    background: "#ffffff", display: "grid", placeItems: "center",
+                    width: 220, height: 220, padding: 14, borderRadius: 12,
+                    background: "#ffffff", boxSizing: "border-box",
+                    boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+                    display: "block",
                   }}
                   dangerouslySetInnerHTML={{ __html: qrSvg }}
                 />
-                <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", textAlign: "center", maxWidth: 320, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", textAlign: "center", maxWidth: 320, lineHeight: 1.5, marginTop: 18 }}>
                   {ar
                     ? "اطبعه على بطاقتك أو بروموشن كتابك — أي كاميرا هاتف تفتح الرابط."
-                    : "Print it on a card or a promo — any phone camera opens the link."}
+                    : "Print it on a card or a promo. Any phone camera opens the link."}
                 </div>
                 <button
                   onClick={downloadQrPng}
                   style={{
+                    marginTop: 14,
                     padding: "9px 14px", borderRadius: 10,
                     background: "#f0efe8", color: "#0a0a0a",
                     border: "1px solid #f0efe8", fontSize: 12.5, fontWeight: 700,
