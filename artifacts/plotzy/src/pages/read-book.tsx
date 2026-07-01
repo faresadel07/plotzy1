@@ -1,4 +1,9 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from "react";
+
+// Share panel lazy-loaded — reader is public and often visited from
+// social previews, so we don't want to ship the QR generator on
+// first paint. Only spins up when the reader taps Share.
+const ShareBookModal = lazy(() => import("@/components/ShareBookModal").then((m) => ({ default: m.ShareBookModal })));
 import { useRoute, Link, useLocation } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import {
@@ -573,6 +578,10 @@ export default function ReadBook() {
   const [spreadIndex, setSpreadIndex] = useState(0);
   const [totalSpreads, setTotalSpreads] = useState(1);
   const [showToc, setShowToc] = useState(false);
+  // Share panel — visible to everyone (readers, not just the author),
+  // because the whole point of a public link is that readers pass it
+  // along too.
+  const [showShare, setShowShare] = useState(false);
   const [viewCounted, setViewCounted] = useState(false);
   const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [currentPageInChapter, setCurrentPageInChapter] = useState(0);
@@ -778,6 +787,18 @@ export default function ReadBook() {
               {sortedChapters.length} {sortedChapters.length === 1 ? t("rbChapterWord") : t("rbChaptersWord")}
             </span>
           )}
+
+          {/* Share — every reader gets to spread the book, not just
+              the author. The modal handles WhatsApp / X / QR / copy. */}
+          <button onClick={() => setShowShare(true)}
+            aria-label={t("rbShare") || "Share"}
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 6, flexShrink: 0 }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#bbb")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#666")}
+          >
+            <Send style={{ width: 15, height: 15 }} />
+            <span>{t("rbShare") || (t("rbBy") === "بقلم" ? "شارك" : "Share")}</span>
+          </button>
 
           <button onClick={() => setShowToc(!showToc)}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 6, flexShrink: 0 }}
@@ -1226,6 +1247,20 @@ export default function ReadBook() {
           </p>
         </div>
       )}
+
+      {/* Share panel — mounted at the reader root so it overlays
+          both the content and the inline-comments sidebar. */}
+      <Suspense fallback={null}>
+        <ShareBookModal
+          open={showShare}
+          onClose={() => setShowShare(false)}
+          bookId={book.id}
+          title={book.title}
+          author={authorName}
+          coverImage={book.coverImage || null}
+          summary={(book as any).summary || (book as any).blurb || null}
+        />
+      </Suspense>
     </div>
   );
 }

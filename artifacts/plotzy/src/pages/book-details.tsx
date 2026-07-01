@@ -1,4 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
+
+// Share modal lazy-loaded — includes QR generator and inline social
+// glyphs, no reason to pay its ~15 KB gzip on every book-details load.
+const ShareBookModal = lazy(() => import("@/components/ShareBookModal").then((m) => ({ default: m.ShareBookModal })));
 import { createPortal } from "react-dom";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +28,7 @@ import {
   FileText, Image as ImageIcon, Loader2, Plus, Wand2, Calendar, Sparkles,
   BookOpen, Palette, PenLine, Zap, Download, FileDown, Upload, Globe,
   BarChart3, ScrollText, Check, Edit3, Target, ChevronDown, Quote, User, Eye, EyeOff,
-  GripVertical, BookMarked, Users, Copy, Trash2, X as XIcon
+  GripVertical, BookMarked, Users, Copy, Trash2, X as XIcon, Send,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import type { BookPages } from "@/shared/schema";
@@ -174,6 +178,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
   const [goalDraft, setGoalDraft] = useState("");
   // Finish & Publish confirmation dialog
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  // Share modal opens after a successful publish and any time the
+  // writer clicks the "Share" button next to the published-badge.
+  const [isShareOpen, setIsShareOpen] = useState(false);
   // Collaboration
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
@@ -603,6 +610,17 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               {isOwner && book && (
                 (book as any).isPublished ? (
                   <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setIsShareOpen(true)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+                      style={{ background: 'rgba(255,255,255,0.92)', color: '#111', border: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#fff')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.92)')}
+                      data-testid="button-share-book"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "شارك" : "Share"}
+                    </button>
                     <Link href={`/read/${bookId}`}>
                       <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all" style={{ color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent' }}>
                         <Eye className="w-3.5 h-3.5" />
@@ -678,7 +696,11 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                               ? "كتابك الآن متاح في المكتبة المجتمعية."
                               : "Your book is now live in the Plotzy Community Library.",
                           });
-                          navigate("/library");
+                          // Immediately open the share panel — the
+                          // whole point of publishing is to share, so
+                          // the writer shouldn't have to hunt for the
+                          // button afterwards.
+                          setIsShareOpen(true);
                         },
                         onError: (err: any) => {
                           const status = (err as any)?.status;
@@ -1192,6 +1214,22 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
 
       <AuthModal open={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      {/* Share panel — mounted lazily so the QR generator + brand SVGs
+          only ship when a writer actually publishes a book. */}
+      {book && (
+        <Suspense fallback={null}>
+          <ShareBookModal
+            open={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            bookId={bookId}
+            title={book.title}
+            author={(book as any).authorName || null}
+            coverImage={book.coverImage || null}
+            summary={(book as any).blurb || (book as any).summary || null}
+          />
+        </Suspense>
+      )}
 
       {/* ── Collaboration Modal ── */}
       {showCollabModal && createPortal(
