@@ -132,7 +132,7 @@ export default function AudiolibraryPlayerPage() {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [rate, setRate] = useState(1);
-  const [showChapters, setShowChapters] = useState(false);
+  const [showChapters, setShowChapters] = useState(true);
   const [showRateMenu, setShowRateMenu] = useState(false);
   const [showSleepMenu, setShowSleepMenu] = useState(false);
   const [sleepUntil, setSleepUntil] = useState<number | null>(null); // epoch ms
@@ -862,6 +862,90 @@ export default function AudiolibraryPlayerPage() {
             </section>
           )}
 
+          {/* ── Chapter list ── (moved to the top of the metadata stack;
+               it is the single most useful control on the page for
+               someone who has already picked a book to listen to). */}
+          <section style={{ marginBottom: 30 }}>
+            <button
+              onClick={() => setShowChapters((v) => !v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: TEXT,
+                marginBottom: 14,
+              }}
+            >
+              <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+                {ar ? `الفصول (${book.chapters.length})` : `Chapters (${book.chapters.length})`}
+              </h2>
+              {showChapters ? <ChevronUp size={16} color={MUTED} /> : <ChevronDown size={16} color={MUTED} />}
+            </button>
+            {showChapters && (
+              <div
+                style={{
+                  background: CARD,
+                  border: `1px solid ${BORDER}`,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  maxHeight: 420,
+                  overflowY: "auto",
+                }}
+              >
+                {book.chapters.map((c, i) => {
+                  const active = i === chapterIndex;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        goToChapter(i);
+                        requestAnimationFrame(() => audioRef.current?.play().catch(() => {}));
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        width: "100%",
+                        padding: "12px 18px",
+                        background: active ? "rgba(124,108,247,0.08)" : "transparent",
+                        border: "none",
+                        borderInlineStart: active ? `3px solid ${ACCENT}` : `3px solid transparent`,
+                        cursor: "pointer",
+                        color: active ? TEXT : MUTED,
+                        textAlign: isRTL ? "right" : "left",
+                        fontFamily: SF,
+                        transition: "background 140ms",
+                        borderBottom: `1px solid ${BORDER}`,
+                      }}
+                      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = CARD_HOVER; }}
+                      onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                    >
+                      <span style={{ minWidth: 22, fontSize: 11.5, color: MUTED2, fontVariantNumeric: "tabular-nums" }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: active ? 700 : 500, lineHeight: 1.4 }}>
+                        {c.title}
+                      </span>
+                      <span style={{ fontSize: 11, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
+                        {fmtTime(c.duration)}
+                      </span>
+                      {active && isPlaying && (
+                        <div style={{ display: "flex", gap: 2 }}>
+                          <Bar /><Bar delay={0.15} /><Bar delay={0.3} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
           {/* ── Description ── */}
           {book.description && (
             <section style={{ marginBottom: 30 }}>
@@ -1048,87 +1132,6 @@ export default function AudiolibraryPlayerPage() {
             </section>
           )}
 
-          {/* ── Chapter list ── */}
-          <section>
-            <button
-              onClick={() => setShowChapters((v) => !v)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                background: "transparent",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                color: TEXT,
-                marginBottom: 14,
-              }}
-            >
-              <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
-                {ar ? `الفصول (${book.chapters.length})` : `Chapters (${book.chapters.length})`}
-              </h2>
-              {showChapters ? <ChevronUp size={16} color={MUTED} /> : <ChevronDown size={16} color={MUTED} />}
-            </button>
-            {showChapters && (
-              <div
-                style={{
-                  background: CARD,
-                  border: `1px solid ${BORDER}`,
-                  borderRadius: 14,
-                  overflow: "hidden",
-                  maxHeight: 420,
-                  overflowY: "auto",
-                }}
-              >
-                {book.chapters.map((c, i) => {
-                  const active = i === chapterIndex;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        goToChapter(i);
-                        requestAnimationFrame(() => audioRef.current?.play().catch(() => {}));
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        width: "100%",
-                        padding: "12px 18px",
-                        background: active ? "rgba(124,108,247,0.08)" : "transparent",
-                        border: "none",
-                        borderInlineStart: active ? `3px solid ${ACCENT}` : `3px solid transparent`,
-                        cursor: "pointer",
-                        color: active ? TEXT : MUTED,
-                        textAlign: isRTL ? "right" : "left",
-                        fontFamily: SF,
-                        transition: "background 140ms",
-                        borderBottom: `1px solid ${BORDER}`,
-                      }}
-                      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = CARD_HOVER; }}
-                      onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
-                    >
-                      <span style={{ minWidth: 22, fontSize: 11.5, color: MUTED2, fontVariantNumeric: "tabular-nums" }}>
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: active ? 700 : 500, lineHeight: 1.4 }}>
-                        {c.title}
-                      </span>
-                      <span style={{ fontSize: 11, color: MUTED, fontVariantNumeric: "tabular-nums" }}>
-                        {fmtTime(c.duration)}
-                      </span>
-                      {active && isPlaying && (
-                        <div style={{ display: "flex", gap: 2 }}>
-                          <Bar /><Bar delay={0.15} /><Bar delay={0.3} />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </section>
         </div>
 
         <style>{`
