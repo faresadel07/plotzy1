@@ -22,7 +22,7 @@ import {
   ArrowLeft, ArrowRight, Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Moon, ChevronUp, ChevronDown, BookAudio,
   Loader2, ExternalLink, Gauge, Bookmark, BookmarkPlus, Trash2,
-  Sparkles, BookOpen, X,
+  BookOpen, X,
   Star, Download, Rss, Users, Calendar, Info, Smartphone,
 } from "lucide-react";
 
@@ -448,25 +448,28 @@ export default function AudiolibraryPlayerPage() {
             {ar ? "المكتبة الصوتيّة" : "Audio Library"}
           </Link>
 
-          {/* Lockscreen-audio hint. Kept as a subtle inline notice —
-              no dismiss button, no colour accent — so it reads as
-              "helpful footnote" instead of "urgent banner". */}
-          <div
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 10,
-              padding: "8px 14px", borderRadius: 999,
-              background: CARD, border: `1px solid ${BORDER}`,
-              color: MUTED, fontSize: 12,
-              marginBottom: 22,
-              maxWidth: "100%",
-            }}
-          >
-            <Smartphone size={13} color={MUTED} style={{ flexShrink: 0 }} />
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-              {ar
-                ? "بتقدر تقفل تلفونك أو تخفّض الشاشة والصوت بيضلّ شغّال. تحكّم بالتشغيل من شاشة القفل."
-                : "You can lock your phone while listening. Playback controls stay on your lock screen."}
-            </span>
+          {/* Lockscreen-audio hint — centered on its own line so it
+              doesn't collide with the back link, and wraps cleanly on
+              narrow phones. Subtle CARD/BORDER treatment reads as a
+              helpful footnote instead of an urgent banner. */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
+            <div
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                padding: "8px 14px", borderRadius: 999,
+                background: CARD, border: `1px solid ${BORDER}`,
+                color: MUTED, fontSize: 12,
+                textAlign: "center", lineHeight: 1.4,
+                maxWidth: "100%",
+              }}
+            >
+              <Smartphone size={13} color={MUTED} style={{ flexShrink: 0 }} />
+              <span>
+                {ar
+                  ? "بتقدر تقفل تلفونك أو تخفّض الشاشة والصوت بيضلّ شغّال. تحكّم بالتشغيل من شاشة القفل."
+                  : "You can lock your phone while listening. Playback controls stay on your lock screen."}
+              </span>
+            </div>
           </div>
 
           {/* ── Top: cover + meta + transport ── */}
@@ -619,8 +622,10 @@ export default function AudiolibraryPlayerPage() {
                 </div>
               </div>
 
-              {/* Transport row */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* Transport row — flexWrap so it re-flows into 2 rows
+                  on narrow phones (5 buttons + volume + rate + sleep
+                  exceeds ~570px total, iPhone SE is 375). */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <IconBtn onClick={() => goToChapter(chapterIndex - 1)} disabled={chapterIndex === 0} title={ar ? "الفصل السابق" : "Previous chapter"} icon={<SkipBack size={15} />} />
                 <IconBtn onClick={() => seekBy(-15)} title={ar ? "خلف 15 ثانية" : "Back 15s"} icon={<RewindIcon />} />
                 <PlayBtn onClick={togglePlay} isPlaying={isPlaying} />
@@ -746,23 +751,6 @@ export default function AudiolibraryPlayerPage() {
                 active={showText}
               />
             )}
-            <ActionChip
-              icon={<Sparkles size={14} />}
-              label={ar ? "ناقش مع الذكاء" : "Discuss with AI"}
-              onClick={() => {
-                // Stash audiobook context so the Studio (when next
-                // opened from a chapter editor) can read it. For the
-                // public audiolibrary page there's no chapter editor
-                // open, so the simplest path is to copy a prompt to
-                // the clipboard the writer can paste into the Studio
-                // they already have open in another tab.
-                const ctx = ar
-                  ? `أنا أستمع إلى كتاب "${book.title}" بقلم ${book.author ?? "مؤلّف مجهول"}. أنا حالياً في الفصل ${chapterIndex + 1} (${chapter?.title ?? ""}). `
-                  : `I'm listening to "${book.title}" by ${book.author ?? "Unknown"}. Currently on chapter ${chapterIndex + 1} (${chapter?.title ?? ""}). `;
-                navigator.clipboard?.writeText(ctx).catch(() => {});
-                window.open("/dashboard", "_blank");
-              }}
-            />
           </div>
 
           {/* Bookmark add inline dialog */}
@@ -1097,7 +1085,7 @@ export default function AudiolibraryPlayerPage() {
               <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
                 {ar ? "خدمات وروابط" : "Services and links"}
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10, maxWidth: 900 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(200px, 100%), 1fr))", gap: 10, maxWidth: 900 }}>
                 {book.rssUrl ? (
                   <ExtraLink
                     href={book.rssUrl}
@@ -1200,7 +1188,7 @@ export default function AudiolibraryPlayerPage() {
               <h2 style={{ fontSize: 13, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
                 {ar ? "ماذا يقول المستمعون" : "What listeners are saying"}
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, maxWidth: 900 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: 12, maxWidth: 900 }}>
                 {book.reviews.slice(0, 6).map((r, i) => (
                   <div
                     key={i}
@@ -1376,7 +1364,7 @@ function Bar({ delay = 0 }: { delay?: number }) {
 }
 
 // Reusable action chip used by the row above the Description section
-// (Bookmark / Read along / Discuss with AI).
+// (Bookmark / Read along).
 function ActionChip({
   icon, label, onClick, active,
 }: {
