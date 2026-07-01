@@ -397,6 +397,37 @@ export default function Home() {
   const [confirmTrashId, setConfirmTrashId] = useState<number | null>(null);
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  // openMenuId is which book card is currently showing its action overlay
+  // on TOUCH devices. On desktop the overlay stays hover-driven and this
+  // stays null. Populated on tap so the writer sees Continue/Duplicate/
+  // Rename/Delete instead of jumping straight into the editor.
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  // Cache the "no fine pointer" (touch device) check on mount. matchMedia
+  // is cheap but a state read is cheaper and we branch on it inside every
+  // book card's click handler.
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(hover: none), (pointer: coarse)");
+    const update = () => setIsTouchDevice(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
+  // Close the touch menu when tapping outside a card (documented touch
+  // pattern — otherwise there is no way to dismiss the overlay short of
+  // opening another card).
+  useEffect(() => {
+    if (openMenuId === null) return;
+    const onDown = (e: PointerEvent | MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-book-card]")) return;
+      setOpenMenuId(null);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    return () => document.removeEventListener("pointerdown", onDown, true);
+  }, [openMenuId]);
   const { toast } = useToast();
 
   const commitRename = (e: React.MouseEvent | React.FormEvent, id: number) => {
@@ -1058,8 +1089,25 @@ export default function Home() {
                         >
                           {/* ── Card wrapper: plain div navigates on click; overlay uses stopPropagation ── */}
                           <div
+                            data-book-card
                             className="group cursor-pointer"
-                            onClick={() => setLocation(isArticle ? `/articles/${book.id}` : `/books/${book.id}`)}
+                            onClick={(e) => {
+                              // On touch devices the first tap OPENS the
+                              // menu overlay so the writer can pick
+                              // Continue / Duplicate / Rename / Delete
+                              // rather than being teleported straight
+                              // into the editor. A second tap on the
+                              // background of the same card closes it.
+                              // Desktop mice keep the direct-navigate
+                              // behaviour because hover already shows
+                              // the overlay.
+                              if (isTouchDevice) {
+                                e.stopPropagation();
+                                setOpenMenuId((cur) => (cur === book.id ? null : book.id));
+                                return;
+                              }
+                              setLocation(isArticle ? `/articles/${book.id}` : `/books/${book.id}`);
+                            }}
                           >
                             {isArticle ? (
                               /* ── Blog / Article Card ── */
@@ -1112,7 +1160,7 @@ export default function Home() {
                                 </div>
                                 {/* Hover overlay — no backdropFilter to avoid 3D-ancestor full-page blur bug */}
                                 <div
-                                  className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                                  className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id || openMenuId === book.id ? 'opacity-100 pointer-events-auto' : 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'}`}
                                   style={{ background: 'rgba(8,8,18,0.88)', borderRadius: 10 }}
                                 >
                                   {renamingId === book.id ? (
@@ -1126,10 +1174,10 @@ export default function Home() {
                                     </form>
                                   ) : (
                                     <>
-                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/articles/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">{t("hmContinueWriting")}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? t("hmDuplicating") : t("hmDuplicate")}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">{t("hmRename")}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">{t("hmDelete")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/articles/${book.id}`); }} className="text-white text-[11px] md:text-[9px] font-semibold tracking-[0.2em] uppercase px-5 py-2.5 md:px-4 md:py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 active:bg-white/25 transition-all duration-300">{t("hmContinueWriting")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/70 text-[10px] md:text-[8px] font-semibold tracking-[0.2em] uppercase px-4 py-2 md:px-3 md:py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 active:bg-white/20 transition-colors disabled:opacity-40">{duplicateBook.isPending ? t("hmDuplicating") : t("hmDuplicate")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/70 text-[10px] md:text-[8px] font-semibold tracking-[0.2em] uppercase px-4 py-2 md:px-3 md:py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 active:bg-white/20 transition-colors">{t("hmRename")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/80 text-[10px] md:text-[8px] font-semibold tracking-[0.2em] uppercase px-4 py-2 md:px-3 md:py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 active:bg-red-500/30 transition-colors">{t("hmDelete")}</button>
                                     </>
                                   )}
                                 </div>
@@ -1150,7 +1198,7 @@ export default function Home() {
                                 {/* Hover overlay — inside PerspectiveBook so it gets the 3D transform */}
                                 {/* NOTE: no backdropFilter here — backdrop-filter inside CSS 3D transform blurs the entire page */}
                                 <div
-                                  className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                                  className={`absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${renamingId === book.id || openMenuId === book.id ? 'opacity-100 pointer-events-auto' : 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'}`}
                                   style={{ background: 'rgba(0,0,0,0.82)', borderRadius: '6px 4px 4px 6px' }}
                                 >
                                   {renamingId === book.id ? (
@@ -1164,10 +1212,10 @@ export default function Home() {
                                     </form>
                                   ) : (
                                     <>
-                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/books/${book.id}`); }} className="text-white text-[9px] font-semibold tracking-[0.2em] uppercase px-4 py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all duration-300">{t("hmContinueWriting")}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors disabled:opacity-40">{duplicateBook.isPending ? t("hmDuplicating") : t("hmDuplicate")}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/60 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 transition-colors">{t("hmRename")}</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/75 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 transition-colors">{t("hmDelete")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setLocation(`/books/${book.id}`); }} className="text-white text-[11px] md:text-[9px] font-semibold tracking-[0.2em] uppercase px-5 py-2.5 md:px-4 md:py-2 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 active:bg-white/25 transition-all duration-300">{t("hmContinueWriting")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); duplicateBook.mutate(book.id); }} disabled={duplicateBook.isPending} className="text-white/70 text-[10px] md:text-[8px] font-semibold tracking-[0.2em] uppercase px-4 py-2 md:px-3 md:py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 active:bg-white/20 transition-colors disabled:opacity-40">{duplicateBook.isPending ? t("hmDuplicating") : t("hmDuplicate")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setRenamingId(book.id); setRenameValue(book.title); }} className="text-white/70 text-[10px] md:text-[8px] font-semibold tracking-[0.2em] uppercase px-4 py-2 md:px-3 md:py-1.5 rounded-full border border-white/15 bg-white/8 hover:bg-white/15 active:bg-white/20 transition-colors">{t("hmRename")}</button>
+                                      <button onClick={(e) => { e.stopPropagation(); setConfirmTrashId(book.id); }} className="text-red-300/80 text-[10px] md:text-[8px] font-semibold tracking-[0.2em] uppercase px-4 py-2 md:px-3 md:py-1.5 rounded-full border border-red-400/18 bg-red-500/8 hover:bg-red-500/20 active:bg-red-500/30 transition-colors">{t("hmDelete")}</button>
                                     </>
                                   )}
                                 </div>
