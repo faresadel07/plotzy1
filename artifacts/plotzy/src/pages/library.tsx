@@ -374,7 +374,32 @@ export default function Library() {
   const isAdmin = !!(user?.isAdmin);
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState("All");
-  const [sort, setSort] = useState<"recent" | "popular">("recent");
+  // Default sort is "substantial" — books that look finished (real
+  // cover, real summary, named author, some views) land at the top,
+  // half-empty title-only stubs land at the bottom. This is what a
+  // reader wants when they open the community library: full books,
+  // not test stubs. Recent / Popular stay available as explicit
+  // sort options.
+  const [sort, setSort] = useState<"substantial" | "recent" | "popular">("substantial");
+
+  // Depth heuristic. The PublishedBook payload doesn't include chapter
+  // or word counts (adding them would require an API change we can't
+  // ship right now), so we score by the metadata signals that DO
+  // survive to the public feed. A book that has a cover, a written
+  // summary, a named author, and has picked up some views is almost
+  // certainly a real, finished book — and the score bumps it above
+  // anything missing those signals.
+  const depthScore = (b: any): number => {
+    let s = 0;
+    if (b.coverImage) s += 30;
+    if ((b.summary || "").trim().length >= 80) s += 20;
+    if (b.authorName || b.authorDisplayName) s += 10;
+    // Views cap prevents one runaway book from dominating; caps at
+    // 40 so a 100-view novel and a 100k-view novel both count as
+    // "substantial" and share the front page with the newest books.
+    s += Math.min(b.viewCount || 0, 400) / 10;
+    return s;
+  };
 
   const filtered = books?.filter(b => {
     const q = search.toLowerCase().trim();
@@ -383,6 +408,10 @@ export default function Library() {
     return matchSearch && matchGenre;
   }).sort((a, b) => {
     if (sort === "popular") return (b.viewCount || 0) - (a.viewCount || 0);
+    if (sort === "recent") return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
+    // "substantial" — depth score DESC, then recent as tiebreaker.
+    const diff = depthScore(b) - depthScore(a);
+    if (diff !== 0) return diff;
     return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
   });
 
@@ -518,16 +547,24 @@ export default function Library() {
               ))}
             </div>
 
-            {/* Sort */}
+            {/* Sort — cycles substantial ▸ recent ▸ popular */}
             <button
-              onClick={() => setSort(s => s === "recent" ? "popular" : "recent")}
+              onClick={() => setSort(s =>
+                s === "substantial" ? "recent"
+                : s === "recent" ? "popular"
+                : "substantial"
+              )}
               style={{
                 display: "flex", alignItems: "center", gap: 5, padding: "6px 14px",
                 borderRadius: 10, background: C2, border: `1px solid ${B}`,
                 fontFamily: SF, fontSize: 12, color: TS, cursor: "pointer",
               }}
             >
-              {sort === "recent" ? t("libNewest") : t("libPopular")}
+              {sort === "substantial"
+                ? (t("libSubstantial") || (t("libNewest") === "الأحدث" ? "الأكمل أوّلاً" : "Most complete"))
+                : sort === "recent"
+                ? t("libNewest")
+                : t("libPopular")}
               <ChevronDown style={{ width: 12, height: 12 }} />
             </button>
           </div>}

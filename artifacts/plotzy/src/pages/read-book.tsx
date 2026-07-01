@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useContentProtection } from "@/hooks/use-content-protection";
 import { useLanguage } from "@/contexts/language-context";
+import { useIsPhone } from "@/hooks/use-is-phone";
 
 /* ─── Content Parser ─────────────────────────────────────── */
 
@@ -577,6 +578,10 @@ export default function ReadBook() {
 
   const [spreadIndex, setSpreadIndex] = useState(0);
   const [totalSpreads, setTotalSpreads] = useState(1);
+  // Phone gets a single stacked page — the two-page book spread is
+  // beautiful on tablet/desktop but would compress each column into a
+  // 150-px sliver on a 375 px iPhone screen.
+  const isPhone = useIsPhone();
   const [showToc, setShowToc] = useState(false);
   // Share panel — visible to everyone (readers, not just the author),
   // because the whole point of a public link is that readers pass it
@@ -1005,17 +1010,78 @@ export default function ReadBook() {
         )}
       </AnimatePresence>
 
-      {/* ── Reading area — scrollable pages ── */}
-      <div className="read-book-container" style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
+      {/* ── Reading area — two-page book spread on desktop, single
+           stacked page on phone. Desktop uses the BookSpread renderer
+           (CSS-columned continuous flow, spine effect, 2:3 page
+           proportions) — phones would compress each column into an
+           unreadable sliver so they stay on the classic paginated
+           layout. ── */}
+      <div
+        className="read-book-container"
+        style={{
+          maxWidth: isPhone ? 700 : 1120,
+          margin: "0 auto",
+          padding: isPhone ? "0 24px" : "28px 24px 0",
+        }}
+      >
 
         {!readerUnits.length ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#555" }}>
             <BookOpen style={{ width: 48, height: 48, margin: "0 auto 16px", opacity: 0.3 }} />
             <p style={{ fontFamily: "Georgia, serif", fontSize: 16 }}>{t("rbNoChapters")}</p>
           </div>
+        ) : !isPhone && sortedChapters.length > 0 ? (
+          <>
+            {/* Two-page book spread — the whole book flows across
+                CSS columns, page-turn animation, keyboard nav via
+                the goSpread effect above. */}
+            <BookSpread
+              chapters={sortedChapters}
+              spreadIndex={spreadIndex}
+              totalSpreads={totalSpreads}
+              onTotalSpreads={setTotalSpreads}
+              onPrev={() => goSpread(spreadIndex - 1)}
+              onNext={() => goSpread(spreadIndex + 1)}
+            />
+            {/* Compact spread controls — a slim strip below the book
+                with prev/next + a "N of M" indicator. */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "24px auto 40px", gap: 12, maxWidth: 700 }}>
+              <button
+                disabled={spreadIndex === 0}
+                onClick={() => goSpread(spreadIndex - 1)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10,
+                  background: spreadIndex === 0 ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: spreadIndex === 0 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.6)",
+                  fontSize: 13, fontWeight: 500, cursor: spreadIndex === 0 ? "default" : "pointer",
+                  fontFamily: "Georgia, serif",
+                }}
+              >
+                <ChevronLeft style={{ width: 16, height: 16 }} /> {t("rbPrevious")}
+              </button>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", fontFamily: "Georgia, serif" }}>
+                {t("rbPage")} {spreadIndex * 2 + 1}–{Math.min(spreadIndex * 2 + 2, totalSpreads * 2)} {t("rbOf")} {totalSpreads * 2}
+              </span>
+              <button
+                disabled={spreadIndex >= totalSpreads - 1}
+                onClick={() => goSpread(spreadIndex + 1)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10,
+                  background: spreadIndex >= totalSpreads - 1 ? "rgba(255,255,255,0.03)" : "#fff",
+                  border: "none",
+                  color: spreadIndex >= totalSpreads - 1 ? "rgba(255,255,255,0.15)" : "#000",
+                  fontSize: 13, fontWeight: 600, cursor: spreadIndex >= totalSpreads - 1 ? "default" : "pointer",
+                  fontFamily: "Georgia, serif",
+                }}
+              >
+                {t("rbNext")} <ChevronRight style={{ width: 16, height: 16 }} />
+              </button>
+            </div>
+          </>
         ) : (
           <>
-            {/* One "unit" at a time — front matter, chapter, or back matter. */}
+            {/* Phone / matter-only fallback — single page at a time. */}
             {(() => {
               const unit = readerUnits[Math.min(currentChapterIdx, readerUnits.length - 1)];
               if (!unit) return null;
@@ -1160,18 +1226,21 @@ export default function ReadBook() {
                 </div>
               );
             })()}
-
-            {/* Rating & Comments */}
-            <div style={{ maxWidth: 600, margin: "40px auto", paddingBottom: 64 }}>
-              <div style={{ background: "#1a1815", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 32px", textAlign: "center", marginBottom: 28 }}>
-                <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>{t("rbReachedEnd")}</p>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>{t("rbEnjoyStory")}</h3>
-                <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>{t("rbRatingHelps")}</p>
-                <StarRating bookId={bookId} currentAvg={ratingStats?.avg ?? 0} count={ratingStats?.count ?? 0} />
-              </div>
-              <CommentsSection bookId={bookId} />
-            </div>
           </>
+        )}
+
+        {/* Rating & Comments — shown at the end regardless of the
+            spread/phone rendering choice. */}
+        {readerUnits.length > 0 && (
+          <div style={{ maxWidth: 600, margin: "40px auto", paddingBottom: 64 }}>
+            <div style={{ background: "#1a1815", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 32px", textAlign: "center", marginBottom: 28 }}>
+              <p style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "#444", marginBottom: 8, fontFamily: "Georgia, serif" }}>{t("rbReachedEnd")}</p>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: "#e0d8cc", fontFamily: "Georgia, serif", marginBottom: 6 }}>{t("rbEnjoyStory")}</h3>
+              <p style={{ fontSize: 13, color: "#555", marginBottom: 22, fontFamily: "Georgia, serif" }}>{t("rbRatingHelps")}</p>
+              <StarRating bookId={bookId} currentAvg={ratingStats?.avg ?? 0} count={ratingStats?.count ?? 0} />
+            </div>
+            <CommentsSection bookId={bookId} />
+          </div>
         )}
       </div>
 
