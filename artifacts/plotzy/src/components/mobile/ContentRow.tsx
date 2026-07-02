@@ -20,7 +20,7 @@ const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 
 // ─── One poster card ───────────────────────────────────────────────
 
 export function PosterCard({
-  book, ar, width = 132, rank,
+  book, ar, width = 96, rank,
 }: {
   book: MobileBook;
   ar: boolean;
@@ -46,7 +46,7 @@ export function PosterCard({
         display: "flex",
         flexDirection: "column",
         // Rank numerals need room to bleed off the left.
-        paddingInlineStart: rank ? 22 : 0,
+        paddingInlineStart: rank ? 16 : 0,
         position: "relative",
       }}
     >
@@ -55,9 +55,9 @@ export function PosterCard({
         <span
           style={{
             position: "absolute",
-            insetInlineStart: -6,
-            bottom: 46,
-            fontSize: 66,
+            insetInlineStart: -4,
+            bottom: 40,
+            fontSize: 48,
             fontWeight: 800,
             lineHeight: 1,
             color: "rgba(255,255,255,0.92)",

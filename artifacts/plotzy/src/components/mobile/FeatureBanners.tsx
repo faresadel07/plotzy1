@@ -162,9 +162,9 @@ export function CourseBanner({ ar }: { ar: boolean }) {
 // near the bottom of the mobile home as a closing beat.
 export function DevicesBanner({ ar }: { ar: boolean }) {
   return (
-    <div style={{ padding: "8px 16px 0", marginBottom: 8 }}>
-      <div style={{ textAlign: "center", marginBottom: 18 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>
+    <div style={{ background: "#000", padding: "12px 8px 8px", marginBottom: 8 }}>
+      <div style={{ textAlign: "center", marginBottom: 20, padding: "0 16px" }}>
+        <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: "-0.02em", color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>
           {ar ? "اكتب من أي مكان. قصّتك معك دائماً." : "Write anywhere. Your story comes with you."}
         </div>
         <div style={{ fontSize: 13.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, maxWidth: 340, margin: "0 auto" }}>
@@ -173,11 +173,13 @@ export function DevicesBanner({ ar }: { ar: boolean }) {
             : "At your desk or on your iPad, Plotzy follows you. Cloud sync and instant saving."}
         </div>
       </div>
+      {/* Bleed slightly past the container edges so the devices read
+          larger, on the same pure-black canvas as the rest of the home. */}
       <img
         src="/images/devices-showcase.png"
         alt={ar ? "بلوتزي على الآيباد والحاسوب" : "Plotzy on iPad and laptop"}
         loading="lazy"
-        style={{ width: "100%", height: "auto", display: "block", borderRadius: 14 }}
+        style={{ width: "104%", maxWidth: "104%", height: "auto", display: "block", margin: "0 -2%" }}
       />
     </div>
   );
