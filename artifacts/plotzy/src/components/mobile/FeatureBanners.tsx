@@ -157,6 +157,32 @@ export function CourseBanner({ ar }: { ar: boolean }) {
   );
 }
 
+// "Write anywhere" showcase — the same iPad + laptop image the desktop
+// landing uses, framed for the phone. Purely visual (no CTA); it sits
+// near the bottom of the mobile home as a closing beat.
+export function DevicesBanner({ ar }: { ar: boolean }) {
+  return (
+    <div style={{ padding: "8px 16px 0", marginBottom: 8 }}>
+      <div style={{ textAlign: "center", marginBottom: 18 }}>
+        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: "#fff", lineHeight: 1.2, marginBottom: 8 }}>
+          {ar ? "اكتب من أي مكان. قصّتك معك دائماً." : "Write anywhere. Your story comes with you."}
+        </div>
+        <div style={{ fontSize: 13.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, maxWidth: 340, margin: "0 auto" }}>
+          {ar
+            ? "على مكتبك أو على جهازك اللوحي، بلوتزي يتبعك. مزامنة سحابيّة وحفظ لحظي."
+            : "At your desk or on your iPad, Plotzy follows you. Cloud sync and instant saving."}
+        </div>
+      </div>
+      <img
+        src="/images/devices-showcase.png"
+        alt={ar ? "بلوتزي على الآيباد والحاسوب" : "Plotzy on iPad and laptop"}
+        loading="lazy"
+        style={{ width: "100%", height: "auto", display: "block", borderRadius: 14 }}
+      />
+    </div>
+  );
+}
+
 const badgeStyle: React.CSSProperties = {
   width: 34, height: 34, borderRadius: 10,
   background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)",

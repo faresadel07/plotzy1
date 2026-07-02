@@ -19,7 +19,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useBooks } from "@/hooks/use-books";
 import { MobileHero } from "./MobileHero";
 import { ContentRow } from "./ContentRow";
-import { AiWriteBanner, DonateBanner, CourseBanner } from "./FeatureBanners";
+import { AiWriteBanner, DonateBanner, CourseBanner, DevicesBanner } from "./FeatureBanners";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -107,6 +107,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
 
         {/* Donate */}
         <DonateBanner ar={ar} />
+
+        {/* Closing showcase — write anywhere (iPad + laptop) */}
+        <DevicesBanner ar={ar} />
       </div>
     </div>
   );

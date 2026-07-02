@@ -17,23 +17,33 @@ interface IconProps {
   style?: CSSProperties;
 }
 
-/** Anthropic / Claude. The geometric "A" wordmark used as
- *  Anthropic's primary brand identity, in their signature
- *  terracotta. Simple Icons "Anthropic". */
+/** Anthropic / Claude. The Claude "spark" sunburst — the product
+ *  mark used across the Claude app and claude.ai, in the signature
+ *  terracotta. A radial burst of rounded rays from the centre. */
 export function ClaudeIcon({ size = 16, color = "#D97757", style }: IconProps) {
+  // 11 rays at irregular lengths give the organic, hand-drawn look of
+  // the real mark rather than a mechanical asterisk.
+  const rays: Array<[number, number]> = [
+    [0, 9.2], [33, 7.6], [65, 9.0], [98, 7.4], [131, 9.3],
+    [164, 7.7], [197, 9.1], [229, 7.5], [262, 9.2], [295, 7.6], [328, 9.0],
+  ];
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      style={style}
-      aria-hidden
-    >
-      <path
-        d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5527h3.7442L10.5363 3.541Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"
-        fill={color}
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style} aria-hidden>
+      <g stroke={color} strokeWidth="1.7" strokeLinecap="round">
+        {rays.map(([deg, len], i) => {
+          const rad = (deg * Math.PI) / 180;
+          const inner = 1.6;
+          return (
+            <line
+              key={i}
+              x1={12 + Math.cos(rad) * inner}
+              y1={12 + Math.sin(rad) * inner}
+              x2={12 + Math.cos(rad) * len}
+              y2={12 + Math.sin(rad) * len}
+            />
+          );
+        })}
+      </g>
     </svg>
   );
 }
