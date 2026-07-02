@@ -99,7 +99,7 @@ export interface UserDataExport {
 
 const EXCLUDED_FIELDS_NOTICE =
   "Per security policy, this export omits: passwordHash (cryptographic key), " +
-  "OAuth subject IDs (googleId/appleId/linkedinId/facebookId — provider-issued " +
+  "OAuth subject IDs (googleId/appleId/linkedinId/facebookId/microsoftId — provider-issued " +
   "identifiers), and active/expired auth tokens (password reset, email verify). " +
   "Operational telemetry (page_views, api_logs) is also omitted as it constitutes " +
   "system observability rather than user-meaningful personal data.";

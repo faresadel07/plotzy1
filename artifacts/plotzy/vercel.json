@@ -35,6 +35,14 @@
       "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/linkedin"
     },
     {
+      "source": "/auth/microsoft/callback",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/microsoft/callback"
+    },
+    {
+      "source": "/auth/microsoft",
+      "destination": "https://workspaceapi-server-production-14b0.up.railway.app/auth/microsoft"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

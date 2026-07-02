@@ -13,6 +13,7 @@ declare global {
       googleId?: string | null;
       appleId?: string | null;
       linkedinId?: string | null;
+      microsoftId?: string | null;
       avatarUrl?: string | null;
       role?: string;
       subscriptionStatus?: string | null;
@@ -176,11 +177,12 @@ export function setupPassport() {
 
 export function getEnabledProviders() {
   return {
-    google:   !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-    apple:    !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY),
-    linkedin: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
-    facebook: false,
-    email:    true,
+    google:    !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    apple:     !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY),
+    linkedin:  !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
+    microsoft: !!(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET),
+    facebook:  false,
+    email:     true,
   };
 }
 
@@ -188,4 +190,10 @@ export function getLinkedinCallbackUrl(): string {
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
   const base = domain ? `https://${domain}` : `http://localhost:5000`;
   return `${base}/auth/linkedin/callback`;
+}
+
+export function getMicrosoftCallbackUrl(): string {
+  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
+  const base = domain ? `https://${domain}` : `http://localhost:5000`;
+  return `${base}/auth/microsoft/callback`;
 }

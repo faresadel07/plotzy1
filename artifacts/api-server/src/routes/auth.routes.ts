@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import passport from "passport";
 import { OAuth2Client } from "google-auth-library";
 import { storage } from "../storage";
-import { getEnabledProviders, getLinkedinCallbackUrl } from "../auth";
+import { getEnabledProviders, getLinkedinCallbackUrl, getMicrosoftCallbackUrl } from "../auth";
 import { ACHIEVEMENT_DEFINITIONS, computeXp, computeLevel, xpForNextLevel, xpForCurrentLevel } from "../../../../lib/shared/src/achievements";
 import { logger } from "../lib/logger";
 import { sendEmail, sendWelcomeEmailIfFirstTime, sendNewLoginEmail, sendPasswordChangedEmail, sendEmailChangeVerifyEmail, sendEmailChangeRequestedEmail, sendEmailChangedConfirmationEmail } from "../lib/email";
@@ -818,6 +818,158 @@ router.get("/auth/linkedin/callback", async (req, res) => {
     res.redirect("/?auth=success");
   } catch (err) {
     logger.error({ err }, "LinkedIn callback error");
+    res.redirect("/?auth=error");
+  }
+});
+
+// ─── Microsoft OAuth (OpenID Connect via Microsoft identity platform) ─────
+//
+// Uses the multi-tenant /common endpoint so both personal Microsoft
+// accounts (@outlook.com, @hotmail.com, @live.com) AND organisation
+// accounts (Azure AD / Entra ID work + school) can sign in. Free tier
+// covers 50,000 monthly active users — well beyond anything Plotzy
+// will hit for a long time.
+//
+// Same manual-fetch pattern as LinkedIn (no passport-microsoft dep):
+// authorisation code -> token -> Microsoft Graph userinfo.
+
+router.get("/auth/microsoft", (req, res) => {
+  if (!process.env.MICROSOFT_CLIENT_ID || !process.env.MICROSOFT_CLIENT_SECRET) {
+    return res.redirect("/?auth=error&msg=microsoft-not-configured");
+  }
+  const state = crypto.randomBytes(32).toString("hex");
+  (req.session as any).microsoftOAuthState = state;
+  const params = new URLSearchParams({
+    client_id: process.env.MICROSOFT_CLIENT_ID,
+    response_type: "code",
+    redirect_uri: getMicrosoftCallbackUrl(),
+    response_mode: "query",
+    // `openid profile email` are the OpenID Connect basics; `User.Read`
+    // grants access to the /me endpoint on Microsoft Graph.
+    scope: "openid profile email User.Read",
+    state,
+    // `select_account` prompts the user to choose which Microsoft
+    // account to use when they have several logged in. Removes the
+    // "why am I signed in as my old account?" confusion.
+    prompt: "select_account",
+  });
+  res.redirect(`https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params}`);
+});
+
+router.get("/auth/microsoft/callback", async (req, res) => {
+  try {
+    const { code, state, error, error_description } = req.query as Record<string, string>;
+
+    if (error) {
+      logger.error({ error, error_description }, "Microsoft OAuth error");
+      return res.redirect("/?auth=error");
+    }
+
+    const savedState = (req.session as any).microsoftOAuthState;
+    if (!state || state !== savedState) {
+      logger.error("Microsoft state mismatch");
+      return res.redirect("/?auth=error");
+    }
+    delete (req.session as any).microsoftOAuthState;
+
+    if (!code) return res.redirect("/?auth=error");
+
+    if (!process.env.MICROSOFT_CLIENT_ID || !process.env.MICROSOFT_CLIENT_SECRET) {
+      return res.redirect("/?auth=error");
+    }
+
+    // Exchange authorisation code for access token
+    const tokenRes = await fetch("https://login.microsoftonline.com/common/oauth2/v2.0/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.MICROSOFT_CLIENT_ID,
+        client_secret: process.env.MICROSOFT_CLIENT_SECRET,
+        code,
+        redirect_uri: getMicrosoftCallbackUrl(),
+        grant_type: "authorization_code",
+        scope: "openid profile email User.Read",
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!tokenRes.ok) {
+      const txt = await tokenRes.text();
+      logger.error({ response: txt }, "Microsoft token exchange failed");
+      return res.redirect("/?auth=error");
+    }
+
+    const { access_token } = await tokenRes.json() as { access_token: string };
+
+    // Fetch profile via Microsoft Graph /me. This returns the org
+    // account by default and personal-account fields when signed in
+    // with a Microsoft consumer account.
+    const infoRes = await fetch("https://graph.microsoft.com/v1.0/me", {
+      headers: { Authorization: `Bearer ${access_token}` },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!infoRes.ok) {
+      logger.error({ status: infoRes.status }, "Microsoft graph fetch failed");
+      return res.redirect("/?auth=error");
+    }
+
+    const profile = await infoRes.json() as {
+      id: string;
+      displayName?: string;
+      givenName?: string;
+      surname?: string;
+      mail?: string | null;
+      userPrincipalName?: string;
+    };
+
+    const microsoftId = profile.id;
+    if (!microsoftId) return res.redirect("/?auth=error");
+
+    // Microsoft's `mail` field is null for many personal accounts;
+    // fall back to userPrincipalName (which is the login handle,
+    // often an email itself). The `email` OpenID scope also delivers
+    // an email claim inside the ID token but Graph is what we already
+    // fetched.
+    const email = profile.mail || profile.userPrincipalName || null;
+    // Microsoft doesn't send an email_verified claim on the Graph
+    // response. Their consumer accounts are always email-verified;
+    // work/school accounts are verified by the org's admin. Both
+    // qualify as "verified" for our email-linking security check.
+    const emailVerified = !!email;
+    const displayName = profile.displayName
+      || [profile.givenName, profile.surname].filter(Boolean).join(" ")
+      || null;
+    const avatarUrl = null; // Microsoft Graph photo requires a separate call + extra permission
+
+    let user = await storage.getUserByMicrosoftId(microsoftId);
+    if (!user) {
+      // Only link to an existing Plotzy account by email when Microsoft
+      // provided one AND the existing account is already email-verified.
+      // Same security rationale as LinkedIn.
+      if (email && emailVerified) {
+        const existing = await storage.getUserByEmail(email);
+        if (existing && (existing as any).emailVerified) {
+          user = await storage.updateUser(existing.id, { microsoftId, avatarUrl: existing.avatarUrl || avatarUrl } as any);
+        }
+      }
+      if (!user) {
+        user = await storage.createUser({
+          microsoftId, email, displayName, avatarUrl,
+          emailVerified,
+        } as any);
+      }
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      req.login(user!, err => (err ? reject(err) : resolve()));
+    });
+
+    sendWelcomeEmailIfFirstTime(user!.id).catch(() => {});
+
+    res.redirect("/?auth=success");
+  } catch (err) {
+    logger.error({ err }, "Microsoft callback error");
     res.redirect("/?auth=error");
   }
 });

@@ -43,6 +43,7 @@ export const users = pgTable("users", {
   appleId: text("apple_id").unique(),
   linkedinId: text("linkedin_id").unique(),
   facebookId: text("facebook_id").unique(),
+  microsoftId: text("microsoft_id").unique(),
   passwordHash: text("password_hash"),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow(),
