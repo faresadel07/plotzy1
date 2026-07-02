@@ -173,13 +173,13 @@ export function DevicesBanner({ ar }: { ar: boolean }) {
             : "At your desk or on your iPad, Plotzy follows you. Cloud sync and instant saving."}
         </div>
       </div>
-      {/* Bleed slightly past the container edges so the devices read
-          larger, on the same pure-black canvas as the rest of the home. */}
+      {/* Black-background version blends seamlessly into the page, so
+          it reads as a full-bleed device shot rather than a boxed image. */}
       <img
-        src="/images/devices-showcase.png"
+        src="/images/devices-showcase-dark.jpg"
         alt={ar ? "بلوتزي على الآيباد والحاسوب" : "Plotzy on iPad and laptop"}
         loading="lazy"
-        style={{ width: "104%", maxWidth: "104%", height: "auto", display: "block", margin: "0 -2%" }}
+        style={{ width: "106%", maxWidth: "106%", height: "auto", display: "block", margin: "0 -3%" }}
       />
     </div>
   );
