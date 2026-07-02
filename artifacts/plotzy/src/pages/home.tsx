@@ -42,6 +42,7 @@ import { BOOK_LANGUAGES } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { LandingCanvas } from "@/components/landing/LandingCanvas";
 import { DevicesShowcase } from "@/components/landing/DevicesShowcase";
+import { TestimonialsDesktop } from "@/components/testimonials/TestimonialsDesktop";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { BookCoverShader } from "@/components/ui/book-cover-shader";
@@ -1881,6 +1882,9 @@ export default function Home() {
             }
           `}</style>
         </section>
+
+        {/* ===== TESTIMONIALS WALL (social proof before the final CTA) ===== */}
+        <TestimonialsDesktop />
 
         {/* ===== CTA SECTION ===== */}
         <section className="relative bg-[#080808] text-center py-10 px-6 sm:px-8 overflow-hidden">

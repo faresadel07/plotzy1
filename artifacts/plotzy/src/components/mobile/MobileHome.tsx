@@ -21,6 +21,7 @@ import { useBooks } from "@/hooks/use-books";
 import { MobileHero } from "./MobileHero";
 import { ContentRow } from "./ContentRow";
 import { AiWriteBanner, DonateBanner, CourseBanner, DevicesBanner } from "./FeatureBanners";
+import { TestimonialsMobile } from "@/components/testimonials/TestimonialsMobile";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -121,6 +122,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           ar={ar}
           onSeeAll={() => navigate("/library")}
         />
+
+        {/* Social proof — real early testers, in their own words */}
+        <TestimonialsMobile ar={ar} />
 
         {/* Donate */}
         <DonateBanner ar={ar} />
