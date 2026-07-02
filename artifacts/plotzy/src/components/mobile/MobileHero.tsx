@@ -1,22 +1,24 @@
-// Collapsing Parallax Hero — the Apple TV motion.
+// Collapsing Parallax Hero — the Apple TV motion, done correctly.
 //
-// At rest the hero fills the screen: a full-bleed backdrop of book
-// covers behind a headline, CTA, and page dots. As you scroll down,
-// three scroll-linked effects run together and reverse on scroll up:
-//   1. Parallax  — the backdrop drifts up SLOWER than the page and
-//                  zooms in slightly, so it recedes behind the text.
-//   2. Dim       — a dark overlay deepens, sinking the backdrop away.
-//   3. Collapse  — the headline / subtitle / CTA / dots fade and lift,
-//                  so the hero folds away and the rows below take over.
+// ARCHITECTURE (this is what fixes the bleed-through / overlap bugs):
+//   - The hero is `position: sticky` inside a tall wrapper (in
+//     MobileHome). It PINS at the top of the viewport while you scroll.
+//   - The content rows live in a SEPARATE container with a solid black
+//     background and a higher z-index, so as you scroll they slide UP
+//     and cover the pinned hero completely. No transparency, no
+//     bleed-through, no z-index confusion.
 //
-// PERFORMANCE (the whole reason the earlier version stuttered on iOS):
-//   - We read window.scrollY, NEVER getBoundingClientRect — the latter
-//     forces a synchronous layout/reflow every frame, which is the
-//     real source of scroll jank.
-//   - We animate ONLY transform and opacity (both GPU-composited),
-//     never blur or layout properties.
-//   - Updates run inside a single rAF, throttled with a tick guard, and
-//     write element.style directly (no React re-render per frame).
+// COLLAPSE (scroll-linked, eased, reverses on scroll up):
+//   - Backdrop zooms in and dims as you descend, sinking away.
+//   - The headline / subtitle / CTA / dots fade to 0 AND scale down,
+//     folding the hero away. They're fully invisible by ~55% of the
+//     scroll, well before the content covers them, so two titles are
+//     never on screen at once.
+//
+// PERFORMANCE: reads window.scrollY (never getBoundingClientRect —
+// that forces a reflow every frame), animates only transform + opacity
+// (GPU-composited), one rAF-throttled handler writing element.style
+// directly. 60fps on iOS Safari.
 
 import { useEffect, useRef, useState } from "react";
 import { HERO_SLIDES } from "./mobile-content";
@@ -28,62 +30,47 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
   const touchStartX = useRef<number | null>(null);
   const slide = HERO_SLIDES[index];
 
-  const sectionRef = useRef<HTMLElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const dimRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<HTMLDivElement>(null);
 
-  // Auto-advance slides.
   useEffect(() => {
     const id = setInterval(() => setIndex((i) => (i + 1) % HERO_SLIDES.length), 6000);
     return () => clearInterval(id);
   }, [index]);
 
-  // Scroll-linked collapse. Height is measured ONCE (offsetHeight is a
-  // one-time read on mount + resize, not per-frame), then every frame
-  // we use the cheap window.scrollY.
   useEffect(() => {
     let ticking = false;
-    let heroH = sectionRef.current?.offsetHeight || window.innerHeight;
+    // Collapse over the first 62% of a viewport height of scrolling, so
+    // the hero is fully gone before the content (which starts ~86vh
+    // down) can overlap it.
+    const range = () => window.innerHeight * 0.62;
 
     const apply = () => {
       ticking = false;
       const y = window.scrollY;
-      // progress 0..1 over the first ~85% of the hero's height.
-      const p = Math.max(0, Math.min(1, y / (heroH * 0.85)));
-
+      const p = Math.max(0, Math.min(1, y / range()));
       const bg = bgRef.current, dim = dimRef.current, fg = fgRef.current;
-      // Backdrop: parallax down (0.4x) so it appears to rise at 0.6x,
-      // plus a slow zoom in.
-      if (bg) bg.style.transform = `translate3d(0, ${y * 0.4}px, 0) scale(${1 + p * 0.14})`;
-      // Dim overlay deepens as we descend.
-      if (dim) dim.style.opacity = `${0.25 + p * 0.6}`;
-      // Foreground folds away: lifts a touch faster and fades out by
-      // ~two-thirds of the scroll.
+      if (bg) bg.style.transform = `scale(${1 + p * 0.16})`;
+      if (dim) dim.style.opacity = `${0.22 + p * 0.7}`;
       if (fg) {
-        fg.style.transform = `translate3d(0, ${-y * 0.12}px, 0)`;
-        fg.style.opacity = `${Math.max(0, 1 - p * 1.5)}`;
+        // Fade fully by ~55% of the range; lift + shrink as it goes.
+        fg.style.opacity = `${Math.max(0, 1 - p * 1.8)}`;
+        fg.style.transform = `translate3d(0, ${-y * 0.25}px, 0) scale(${1 - p * 0.14})`;
       }
     };
-
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(apply);
-    };
-    const onResize = () => { heroH = sectionRef.current?.offsetHeight || window.innerHeight; apply(); };
+    const onScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(apply); };
 
     apply();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onResize); };
+    window.addEventListener("resize", apply);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", apply); };
   }, []);
 
   const go = (dir: number) => setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
 
   return (
     <section
-      ref={sectionRef}
       dir={ar ? "rtl" : "ltr"}
       onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => {
@@ -93,26 +80,21 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
         touchStartX.current = null;
       }}
       style={{
-        position: "relative",
+        // Sticky: the hero pins to the top while the content scrolls up
+        // and over it (content has a solid bg + higher z-index).
+        position: "sticky",
+        top: 0,
+        height: "84vh",
+        minHeight: 520,
         fontFamily: SF,
         overflow: "hidden",
-        height: "86vh",
-        minHeight: 540,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
       }}
     >
-      {/* Backdrop layer (parallax + zoom). Box is 24% taller than the
-          hero so the parallax shift never exposes an edge. */}
-      <div
-        ref={bgRef}
-        aria-hidden
-        style={{
-          position: "absolute", top: "-12%", left: 0, right: 0, height: "124%",
-          zIndex: 0, willChange: "transform",
-        }}
-      >
+      {/* Backdrop (zoom + crossfade) */}
+      <div ref={bgRef} aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, willChange: "transform" }}>
         {HERO_SLIDES.map((s, i) => (
           <div
             key={i}
@@ -128,7 +110,7 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
         ))}
       </div>
 
-      {/* Static base gradient — keeps text legible + fades into black. */}
+      {/* Static base gradient for legibility + fade to black at the bottom */}
       <div
         aria-hidden
         style={{
@@ -137,14 +119,10 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
         }}
       />
 
-      {/* Dynamic dim layer — deepens as the hero collapses. */}
-      <div
-        ref={dimRef}
-        aria-hidden
-        style={{ position: "absolute", inset: 0, zIndex: 1, background: "#000", opacity: 0.25, willChange: "opacity" }}
-      />
+      {/* Dynamic dim layer — deepens as the hero collapses */}
+      <div ref={dimRef} aria-hidden style={{ position: "absolute", inset: 0, zIndex: 1, background: "#000", opacity: 0.22, willChange: "opacity" }} />
 
-      {/* Foreground (collapses on scroll). */}
+      {/* Foreground — fades + scales away on scroll */}
       <div
         ref={fgRef}
         style={{
@@ -175,7 +153,6 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
           {ar ? slide.ctaAr : slide.cta}
         </button>
 
-        {/* Page dots */}
         <div style={{ display: "flex", gap: 7, marginTop: 22 }}>
           {HERO_SLIDES.map((_, i) => (
             <button

@@ -51,13 +51,18 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
       }}
     >
-      {/* Hero — scrolls up naturally with the content, exactly like
-          Apple TV. No fade/transform (that left an empty black gap). */}
-      <MobileHero ar={ar} onStartWriting={onStartWriting} />
+      {/* Hero wrapper — defines the sticky pin range. The MobileHero
+          inside is position:sticky and collapses (fade + scale) as you
+          scroll, while the content container below slides up over it. */}
+      <div style={{ position: "relative", height: "84vh", zIndex: 1 }}>
+        <MobileHero ar={ar} onStartWriting={onStartWriting} />
+      </div>
 
-      {/* Content rows — a small gap so the first row's header + card
-          tops peek below the hero, inviting the scroll (Apple TV). */}
-      <div style={{ marginTop: 14 }}>
+      {/* Content rows — SOLID black background + higher z-index. As you
+          scroll, this slides up and fully covers the pinned hero (no
+          bleed-through, no overlap, correct stacking). At rest the
+          first row's header peeks just below the hero. */}
+      <div style={{ position: "relative", zIndex: 2, background: "#000", paddingTop: 16 }}>
         {myBooks.length > 0 && (
           <ContentRow
             title={ar ? "تابع الكتابة" : "Continue Writing"}
