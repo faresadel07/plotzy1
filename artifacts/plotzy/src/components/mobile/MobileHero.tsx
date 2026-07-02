@@ -19,9 +19,9 @@ const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 
 
 export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
   const [index, setIndex] = useState(0);
-  const [parallax, setParallax] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const slide = HERO_SLIDES[index];
 
   // Auto-advance slides.
@@ -30,18 +30,32 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
     return () => clearInterval(id);
   }, [index]);
 
-  // Parallax: move the backdrop at ~40% of the scroll distance while
-  // the hero is on screen. The section is in normal flow so once it
-  // scrolls past, it's gone — never leaves an empty gap.
+  // Parallax: drift the backdrop up at ~35% of the scroll distance.
+  // CRITICAL for smoothness: we write element.style.transform DIRECTLY
+  // inside a requestAnimationFrame, never through React state. A state
+  // update on every scroll frame re-renders the whole component and
+  // makes the motion stutter; a direct DOM write on the GPU-composited
+  // `transform` property stays buttery at 60fps.
   useEffect(() => {
-    const onScroll = () => {
-      const top = sectionRef.current?.getBoundingClientRect().top ?? 0;
-      // top goes from 0 (at rest) to negative as we scroll down.
-      setParallax(Math.max(0, -top) * 0.4);
+    let raf = 0;
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const el = backdropRef.current;
+      const section = sectionRef.current;
+      if (!el || !section) return;
+      const top = section.getBoundingClientRect().top; // 0 at rest, negative as we scroll
+      const shift = Math.max(0, -top) * 0.35;
+      el.style.transform = `translate3d(0, ${shift}px, 0)`;
     };
-    onScroll();
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      raf = requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
   }, []);
 
   const go = (dir: number) => setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
@@ -69,30 +83,38 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
         justifyContent: "flex-end",
       }}
     >
-      {/* Full-bleed image backdrop with parallax + crossfade. The image
-          box is 20% taller than the hero so the parallax shift never
-          exposes an edge. */}
-      {HERO_SLIDES.map((s, i) => (
-        <div
-          key={i}
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "-10%",
-            left: 0,
-            right: 0,
-            height: "120%",
-            backgroundImage: `url(${s.image})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: i === index ? 1 : 0,
-            transform: `translateY(${parallax}px)`,
-            transition: "opacity 700ms ease",
-            zIndex: 0,
-            willChange: "transform",
-          }}
-        />
-      ))}
+      {/* Full-bleed image backdrop with parallax + crossfade. One
+          ref'd container is translated (GPU transform, updated via rAF)
+          so all slides share the same smooth parallax. The box is 25%
+          taller than the hero so the shift never exposes an edge. */}
+      <div
+        ref={backdropRef}
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: "-12%",
+          left: 0,
+          right: 0,
+          height: "124%",
+          zIndex: 0,
+          willChange: "transform",
+        }}
+      >
+        {HERO_SLIDES.map((s, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${s.image})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: i === index ? 1 : 0,
+              transition: "opacity 700ms ease",
+            }}
+          />
+        ))}
+      </div>
 
       {/* Gradient — legible text + smooth fade into the black page. */}
       <div
