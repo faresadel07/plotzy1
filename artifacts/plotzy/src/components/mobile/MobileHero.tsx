@@ -1,26 +1,20 @@
 // The Apple-TV-style hero for the mobile home.
 //
-// A full-bleed collage of blurred book covers behind a headline, a
-// subtitle, and a white pill CTA — with page dots underneath. The
-// slide auto-advances and can be swiped. Tapping the CTA navigates.
-//
-// The "transform on scroll" effect the writer asked for is handled by
-// the parent (MobileHome) fading/scaling this block as the page
-// scrolls; here we just render one beautiful slide at a time.
+// A full-bleed image of professionally designed book covers behind a
+// headline, a subtitle, and a white pill CTA — with page dots. All
+// three slides pitch writing; the CTA opens the book-creation wizard
+// via the onStartWriting callback. Auto-advances, swipeable.
 
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
 import { HERO_SLIDES } from "./mobile-content";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
-export function MobileHero({ ar }: { ar: boolean }) {
-  const [, navigate] = useLocation();
+export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
   const [index, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const slide = HERO_SLIDES[index];
 
-  // Auto-advance every 6s; pause is implicit (resets on manual swipe).
   useEffect(() => {
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % HERO_SLIDES.length);
@@ -45,39 +39,34 @@ export function MobileHero({ ar }: { ar: boolean }) {
       style={{
         position: "relative",
         fontFamily: SF,
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
         overflow: "hidden",
+        minHeight: 560,
       }}
     >
-      {/* Collage backdrop — a tilted grid of covers, blurred + darkened */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: -40, left: -40, right: -40, height: 420,
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 8,
-          transform: "rotate(-8deg) scale(1.25)",
-          filter: "blur(2px) brightness(0.5)",
-          opacity: 0.9,
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      >
-        {slide.collage.concat(slide.collage).slice(0, 9).map((c, i) => (
-          <div key={i} style={{ aspectRatio: "2/3", borderRadius: 8, overflow: "hidden", background: "#111" }}>
-            <img src={c} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
-        ))}
-      </div>
+      {/* Full-bleed image backdrop — crossfades between slides */}
+      {HERO_SLIDES.map((s, i) => (
+        <div
+          key={i}
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${s.image})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: i === index ? 1 : 0,
+            transition: "opacity 700ms ease",
+            zIndex: 0,
+          }}
+        />
+      ))}
 
-      {/* Gradient scrim so text is always legible over the collage */}
+      {/* Scrim so text stays legible and the bottom fades into black */}
       <div
         aria-hidden
         style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 45%, #000 92%)",
+          background: "linear-gradient(180deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.80) 78%, #000 100%)",
           zIndex: 1,
         }}
       />
@@ -87,7 +76,7 @@ export function MobileHero({ ar }: { ar: boolean }) {
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "150px 24px 0",
+          padding: "calc(env(safe-area-inset-top, 0px) + 300px) 24px 0",
           textAlign: "center",
           display: "flex",
           flexDirection: "column",
@@ -100,7 +89,7 @@ export function MobileHero({ ar }: { ar: boolean }) {
             fontWeight: 700,
             letterSpacing: "0.14em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.65)",
+            color: "rgba(255,255,255,0.7)",
             marginBottom: 10,
           }}
         >
@@ -115,6 +104,7 @@ export function MobileHero({ ar }: { ar: boolean }) {
             color: "#fff",
             margin: "0 0 12px",
             maxWidth: 340,
+            textShadow: "0 2px 18px rgba(0,0,0,0.5)",
           }}
         >
           {ar ? slide.titleAr : slide.title}
@@ -123,26 +113,27 @@ export function MobileHero({ ar }: { ar: boolean }) {
           style={{
             fontSize: 14.5,
             lineHeight: 1.5,
-            color: "rgba(255,255,255,0.75)",
+            color: "rgba(255,255,255,0.82)",
             margin: "0 0 22px",
             maxWidth: 320,
+            textShadow: "0 1px 10px rgba(0,0,0,0.5)",
           }}
         >
           {ar ? slide.subtitleAr : slide.subtitle}
         </p>
         <button
-          onClick={() => navigate(slide.href)}
+          onClick={onStartWriting}
           style={{
             background: "#fff",
             color: "#000",
             border: "none",
             borderRadius: 999,
-            padding: "13px 30px",
+            padding: "14px 32px",
             fontSize: 15,
             fontWeight: 700,
             fontFamily: SF,
             cursor: "pointer",
-            boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+            boxShadow: "0 6px 24px rgba(0,0,0,0.4)",
           }}
         >
           {ar ? slide.ctaAr : slide.cta}
@@ -161,7 +152,7 @@ export function MobileHero({ ar }: { ar: boolean }) {
                 borderRadius: 999,
                 border: "none",
                 padding: 0,
-                background: i === index ? "#fff" : "rgba(255,255,255,0.35)",
+                background: i === index ? "#fff" : "rgba(255,255,255,0.4)",
                 transition: "all 240ms ease",
                 cursor: "pointer",
               }}

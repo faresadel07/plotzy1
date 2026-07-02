@@ -8,17 +8,16 @@
 
 import { useLocation } from "wouter";
 import { ClaudeIcon, GPTIcon, GeminiIcon, StudioIcon } from "@/components/studio/icons";
-import { Heart, ArrowRight, ArrowLeft } from "lucide-react";
+import { Heart, ArrowRight, ArrowLeft, GraduationCap } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
-export function AiWriteBanner({ ar }: { ar: boolean }) {
-  const [, navigate] = useLocation();
+export function AiWriteBanner({ ar, onStart }: { ar: boolean; onStart: () => void }) {
   const Arrow = ar ? ArrowLeft : ArrowRight;
   return (
     <div style={{ padding: "0 16px", marginBottom: 26 }}>
       <button
-        onClick={() => navigate("/dashboard")}
+        onClick={onStart}
         dir={ar ? "rtl" : "ltr"}
         style={{
           width: "100%",
@@ -103,6 +102,53 @@ export function DonateBanner({ ar }: { ar: boolean }) {
           </div>
           <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.45 }}>
             {ar ? "لو أعجبك، تبرّعك يبقيه مجّاناً للكتّاب الآخرين." : "If it helps you, a donation keeps it free for other writers."}
+          </div>
+        </div>
+        <Arrow size={18} color="rgba(255,255,255,0.5)" style={{ flexShrink: 0 }} />
+      </button>
+    </div>
+  );
+}
+
+export function CourseBanner({ ar }: { ar: boolean }) {
+  const [, navigate] = useLocation();
+  const Arrow = ar ? ArrowLeft : ArrowRight;
+  return (
+    <div style={{ padding: "0 16px", marginBottom: 26 }}>
+      <button
+        onClick={() => navigate("/course")}
+        dir={ar ? "rtl" : "ltr"}
+        style={{
+          width: "100%",
+          border: "1px solid rgba(255,255,255,0.10)",
+          borderRadius: 20,
+          padding: "22px",
+          cursor: "pointer",
+          fontFamily: SF,
+          textAlign: ar ? "right" : "left",
+          background:
+            "radial-gradient(120% 120% at 0% 0%, rgba(56,132,255,0.20), transparent 50%),#0d0d10",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          flexDirection: ar ? "row-reverse" : "row",
+        }}
+      >
+        <div
+          style={{
+            width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+            background: "rgba(56,132,255,0.16)", border: "1px solid rgba(56,132,255,0.3)",
+            display: "grid", placeItems: "center",
+          }}
+        >
+          <GraduationCap size={22} color="#5eb3ff" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 3 }}>
+            {ar ? "دورة الكتابة المجانيّة" : "Free Writing Course"}
+          </div>
+          <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.45 }}>
+            {ar ? "تعلّم كيف تخطّط وتكتب وتنشر كتابك خطوة بخطوة." : "Learn to plot, write, and publish your book, step by step."}
           </div>
         </div>
         <Arrow size={18} color="rgba(255,255,255,0.5)" style={{ flexShrink: 0 }} />

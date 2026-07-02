@@ -20,12 +20,12 @@ import { useLanguage } from "@/contexts/language-context";
 import { useBooks } from "@/hooks/use-books";
 import { MobileHero } from "./MobileHero";
 import { ContentRow } from "./ContentRow";
-import { AiWriteBanner, DonateBanner } from "./FeatureBanners";
+import { AiWriteBanner, DonateBanner, CourseBanner } from "./FeatureBanners";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
-export function MobileHome() {
+export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
   const { lang } = useLanguage();
   const ar = lang === "ar";
   const [, navigate] = useLocation();
@@ -62,8 +62,7 @@ export function MobileHome() {
         background: "#000",
         minHeight: "100vh",
         fontFamily: SF,
-        // Room for the floating tab bar at the bottom.
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
       }}
     >
       {/* Hero (transforms on scroll) */}
@@ -76,7 +75,7 @@ export function MobileHome() {
           pointerEvents: heroOpacity < 0.15 ? "none" : "auto",
         }}
       >
-        <MobileHero ar={ar} />
+        <MobileHero ar={ar} onStartWriting={onStartWriting} />
       </div>
 
       {/* Content rows */}
@@ -112,8 +111,12 @@ export function MobileHome() {
           onSeeAll={() => navigate("/discover?src=hindawi")}
         />
 
-        {/* AI writing studio banner with official model logos */}
-        <AiWriteBanner ar={ar} />
+        {/* AI writing studio banner with official model logos —
+            opens the book-creation wizard directly. */}
+        <AiWriteBanner ar={ar} onStart={onStartWriting} />
+
+        {/* Free writing course */}
+        <CourseBanner ar={ar} />
 
         {/* Community shelf — reuse English + Arabic mix as a teaser row,
             linking to the real community library. */}

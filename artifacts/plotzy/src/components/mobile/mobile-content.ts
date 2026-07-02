@@ -69,7 +69,11 @@ export const ARABIC_BOOKS: MobileBook[] = [
   { title: "الأمومة عند العرب",        author: "عبد الله زخير",    cover: hindawiCover(14024730), href: AR, genre: "فكر" },
 ];
 
-// ── Hero slides — the rotating collage banner ──────────────────────
+// ── Hero slides — all three pitch the core action: writing a book. ─
+// Each uses a full-bleed image of professionally designed book covers
+// (the kind Plotzy helps writers create) as the backdrop. The CTA
+// opens the book-creation wizard, so `href` is unused for these — the
+// caller wires the button to onStartWriting instead.
 export interface HeroSlide {
   eyebrow: string;
   eyebrowAr: string;
@@ -79,9 +83,8 @@ export interface HeroSlide {
   subtitleAr: string;
   cta: string;
   ctaAr: string;
-  href: string;
-  // Collage of covers used as the blurred backdrop.
-  collage: string[];
+  // Full-bleed background image (from /public).
+  image: string;
 }
 
 export const HERO_SLIDES: HeroSlide[] = [
@@ -94,31 +97,28 @@ export const HERO_SLIDES: HeroSlide[] = [
     subtitleAr: "استوديو كتابة متكامل مع مساعد ذكاء يخطّط ويسوّد ويحرّر إلى جانبك.",
     cta: "Start writing",
     ctaAr: "ابدأ الكتابة",
-    href: "/dashboard",
-    collage: ENGLISH_BOOKS.slice(0, 6).map((b) => b.cover),
+    image: "/hero-write-1.jpg",
   },
   {
-    eyebrow: "Audio Library",
-    eyebrowAr: "المكتبة الصوتيّة",
-    title: "Thousands of free audiobooks.",
-    titleAr: "آلاف الكتب الصوتيّة المجانيّة.",
-    subtitle: "Public-domain classics narrated by volunteers. Listen anywhere, lock your screen, keep playing.",
-    subtitleAr: "كلاسيكيّات من الملك العامّ بأصوات متطوّعين. استمع في أي مكان، اقفل شاشتك، والصوت يكمّل.",
-    cta: "Browse audiobooks",
-    ctaAr: "تصفّح الصوتيّات",
-    href: "/audiolibrary",
-    collage: AUDIO_BOOKS.slice(0, 6).map((b) => b.cover),
+    eyebrow: "Any genre, any language",
+    eyebrowAr: "أي نوع، أي لغة",
+    title: "Your story, beautifully made.",
+    titleAr: "قصّتك، بأبهى صورة.",
+    subtitle: "Romance, mystery, fantasy, sci-fi — Plotzy shapes your manuscript and its cover to match.",
+    subtitleAr: "رومانسي، غموض، خيال، خيال علمي — بلوتزي يصوغ مخطوطتك وغلافها ليناسبانها.",
+    cta: "Create a book",
+    ctaAr: "أنشئ كتاباً",
+    image: "/hero-write-2.jpg",
   },
   {
-    eyebrow: "Arabic Library",
-    eyebrowAr: "المكتبة العربيّة",
-    title: "كنوز الأدب العربي.",
-    titleAr: "كنوز الأدب العربي.",
-    subtitle: "Read the great works of Arabic literature, free, from the Hindawi public-domain collection.",
-    subtitleAr: "اقرأ روائع الأدب العربي مجّاناً من مجموعة هنداوي في الملك العامّ.",
-    cta: "افتح المكتبة",
-    ctaAr: "افتح المكتبة",
-    href: "/discover?src=hindawi",
-    collage: ARABIC_BOOKS.slice(0, 6).map((b) => b.cover),
+    eyebrow: "From blank page to finished book",
+    eyebrowAr: "من صفحة فارغة إلى كتاب مكتمل",
+    title: "Answer a few questions. Start writing.",
+    titleAr: "أجب بعض الأسئلة. وابدأ الكتابة.",
+    subtitle: "Plotzy asks about your idea, then sets up your chapters, cover, and outline in seconds.",
+    subtitleAr: "يسألك بلوتزي عن فكرتك، ثم يجهّز فصولك وغلافك ومخطّطك في ثوانٍ.",
+    cta: "Start writing",
+    ctaAr: "ابدأ الكتابة",
+    image: "/hero-write-3.jpg",
   },
 ];

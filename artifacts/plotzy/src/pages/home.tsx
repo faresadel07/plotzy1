@@ -611,13 +611,23 @@ export default function Home() {
   // All hooks above have run (React rules satisfied). Phones render a
   // dedicated home inside the normal Layout chrome; everything below
   // this block is the desktop/tablet landing page, unchanged.
+  //
+  // "Start writing" (hero + AI banner) opens the book-creation wizard
+  // directly — the 7 guided questions — creating the book and dropping
+  // the writer into the editor. Requires sign-in first.
   if (isPhone) {
+    const startWriting = () => {
+      if (!user) { setShowAuthModal(true); return; }
+      setShowWizard(true);
+    };
     return (
       <>
         <SEO titleOverride="Plotzy" />
         <Layout isLanding>
-          <MobileHome />
+          <MobileHome onStartWriting={startWriting} />
         </Layout>
+        <BookCreationWizard open={showWizard} onClose={() => setShowWizard(false)} onCreate={handleCreateFromWizard} />
+        <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </>
     );
   }
