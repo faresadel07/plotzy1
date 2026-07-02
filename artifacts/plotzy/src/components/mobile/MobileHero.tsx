@@ -25,7 +25,7 @@ import { HERO_SLIDES } from "./mobile-content";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
-export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
+export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; onStartWriting: () => void; heroHeight: number }) {
   const [index, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const slide = HERO_SLIDES[index];
@@ -41,31 +41,31 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
 
   useEffect(() => {
     let ticking = false;
-    // Collapse over the first 62% of a viewport height of scrolling, so
-    // the hero is fully gone before the content (which starts ~86vh
-    // down) can overlap it.
-    const range = () => window.innerHeight * 0.62;
-
     const apply = () => {
       ticking = false;
       const y = window.scrollY;
-      const p = Math.max(0, Math.min(1, y / range()));
+      // Collapse over 60% of the (fixed, px) hero height. Using a px
+      // height captured once — NOT vh — means the address bar showing/
+      // hiding on mobile never resizes anything, so there are no jumps.
+      const range = heroHeight * 0.6;
+      const p = Math.max(0, Math.min(1, y / range));
       const bg = bgRef.current, dim = dimRef.current, fg = fgRef.current;
-      if (bg) bg.style.transform = `scale(${1 + p * 0.16})`;
-      if (dim) dim.style.opacity = `${0.22 + p * 0.7}`;
+      // PROBLEM 1 fix: barely-there parallax zoom, 1.0 -> 1.05 max.
+      if (bg) bg.style.transform = `scale(${1 + p * 0.05})`;
+      if (dim) dim.style.opacity = `${0.24 + p * 0.58}`;
       if (fg) {
-        // Fade fully by ~55% of the range; lift + shrink as it goes.
-        fg.style.opacity = `${Math.max(0, 1 - p * 1.8)}`;
-        fg.style.transform = `translate3d(0, ${-y * 0.25}px, 0) scale(${1 - p * 0.14})`;
+        // PROBLEM 3 fix: gentle, scroll-linked fade (reaches 0 near the
+        // end of the range, not abruptly) + a small lift and shrink.
+        fg.style.opacity = `${Math.max(0, 1 - p * 1.25)}`;
+        fg.style.transform = `translate3d(0, ${-y * 0.12}px, 0) scale(${1 - p * 0.06})`;
       }
     };
     const onScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(apply); };
 
     apply();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", apply);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", apply); };
-  }, []);
+    return () => { window.removeEventListener("scroll", onScroll); };
+  }, [heroHeight]);
 
   const go = (dir: number) => setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
 
@@ -80,12 +80,13 @@ export function MobileHero({ ar, onStartWriting }: { ar: boolean; onStartWriting
         touchStartX.current = null;
       }}
       style={{
-        // Sticky: the hero pins to the top while the content scrolls up
-        // and over it (content has a solid bg + higher z-index).
+        // Sticky: pins to the top while the content scrolls up and over
+        // it. PROBLEM 2 fix: FIXED px height (never vh) so nothing
+        // resizes mid-scroll — no jumps, no black gap. All motion is
+        // transform + opacity only; height/margin/padding never change.
         position: "sticky",
         top: 0,
-        height: "84vh",
-        minHeight: 520,
+        height: heroHeight,
         fontFamily: SF,
         overflow: "hidden",
         display: "flex",

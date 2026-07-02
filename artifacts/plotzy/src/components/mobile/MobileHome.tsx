@@ -14,6 +14,7 @@
 //   8. Donate banner
 //   9. bottom spacer so the floating tab bar never covers content
 
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/language-context";
 import { useBooks } from "@/hooks/use-books";
@@ -29,6 +30,17 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
   const ar = lang === "ar";
   const [, navigate] = useLocation();
   const { data: books } = useBooks();
+
+  // Hero height captured ONCE in pixels. Using px (not vh) means the
+  // mobile address bar showing/hiding never resizes the hero mid-scroll
+  // — the root cause of the black gap / jumps. Only re-measure on a
+  // real orientation change, never on scroll-driven viewport changes.
+  const [heroH, setHeroH] = useState(() => (typeof window !== "undefined" ? window.innerHeight : 800));
+  useEffect(() => {
+    const onOrient = () => setHeroH(window.innerHeight);
+    window.addEventListener("orientationchange", onOrient);
+    return () => window.removeEventListener("orientationchange", onOrient);
+  }, []);
 
   // The writer's own books → "Continue Writing" row.
   const myBooks: MobileBook[] = (books ?? [])
@@ -51,17 +63,17 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
       }}
     >
-      {/* Hero wrapper — defines the sticky pin range. The MobileHero
-          inside is position:sticky and collapses (fade + scale) as you
-          scroll, while the content container below slides up over it. */}
-      <div style={{ position: "relative", height: "84vh", zIndex: 1 }}>
-        <MobileHero ar={ar} onStartWriting={onStartWriting} />
+      {/* Hero wrapper — fixed PX height (never vh) = the sticky pin
+          range. The MobileHero inside pins and collapses (fade + scale)
+          as you scroll, while the content below slides up over it. */}
+      <div style={{ position: "relative", height: heroH, zIndex: 1 }}>
+        <MobileHero ar={ar} onStartWriting={onStartWriting} heroHeight={heroH} />
       </div>
 
-      {/* Content rows — SOLID black background + higher z-index. As you
-          scroll, this slides up and fully covers the pinned hero (no
-          bleed-through, no overlap, correct stacking). At rest the
-          first row's header peeks just below the hero. */}
+      {/* Content rows — SOLID black background + higher z-index. Starts
+          immediately after the hero (no empty black gap) and slides up
+          to fully cover the pinned hero (no bleed-through, no overlap,
+          correct stacking). */}
       <div style={{ position: "relative", zIndex: 2, background: "#000", paddingTop: 16 }}>
         {myBooks.length > 0 && (
           <ContentRow
