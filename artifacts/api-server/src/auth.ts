@@ -25,7 +25,14 @@ declare global {
   }
 }
 
-function getCallbackBase(): string {
+// Single source of truth for the public origin used to build OAuth
+// callback URLs. In production Railway sets APP_DOMAIN
+// (https://plotzy.co); Replit sets REPLIT_DOMAINS; local dev falls
+// back to localhost. Exported so every provider (Google, Apple,
+// LinkedIn, Microsoft) resolves the SAME origin — a mismatch here
+// makes the provider reject the token exchange with
+// "redirect_uri does not match".
+export function getCallbackBase(): string {
   if (process.env.APP_DOMAIN) return process.env.APP_DOMAIN;
   const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
   if (domain) return `https://${domain}`;
@@ -187,13 +194,14 @@ export function getEnabledProviders() {
 }
 
 export function getLinkedinCallbackUrl(): string {
-  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-  const base = domain ? `https://${domain}` : `http://localhost:5000`;
-  return `${base}/auth/linkedin/callback`;
+  // MUST use the same origin resolver as Google/Apple. The old
+  // implementation only read REPLIT_DOMAINS, so on Railway (which sets
+  // APP_DOMAIN, not REPLIT_DOMAINS) it fell back to localhost:5000 and
+  // LinkedIn rejected the token exchange because the redirect_uri
+  // didn't match the registered https://plotzy.co/auth/linkedin/callback.
+  return `${getCallbackBase()}/auth/linkedin/callback`;
 }
 
 export function getMicrosoftCallbackUrl(): string {
-  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-  const base = domain ? `https://${domain}` : `http://localhost:5000`;
-  return `${base}/auth/microsoft/callback`;
+  return `${getCallbackBase()}/auth/microsoft/callback`;
 }

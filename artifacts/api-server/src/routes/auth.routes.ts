@@ -693,7 +693,7 @@ router.get("/auth/linkedin", (req, res) => {
   if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
     return res.redirect("/?auth=error&msg=linkedin-not-configured");
   }
-  const state = require("crypto").randomBytes(32).toString("hex");
+  const state = crypto.randomBytes(32).toString("hex");
   (req.session as any).linkedinOAuthState = state;
   const params = new URLSearchParams({
     response_type: "code",
@@ -950,14 +950,14 @@ router.get("/auth/microsoft/callback", async (req, res) => {
       if (email && emailVerified) {
         const existing = await storage.getUserByEmail(email);
         if (existing && (existing as any).emailVerified) {
-          user = await storage.updateUser(existing.id, { microsoftId, avatarUrl: existing.avatarUrl || avatarUrl } as any);
+          user = await storage.updateUser(existing.id, { microsoftId, avatarUrl: existing.avatarUrl || avatarUrl });
         }
       }
       if (!user) {
         user = await storage.createUser({
           microsoftId, email, displayName, avatarUrl,
           emailVerified,
-        } as any);
+        });
       }
     }
 
