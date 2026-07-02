@@ -10,10 +10,10 @@
 //
 // COLLAPSE (scroll-linked, eased, reverses on scroll up):
 //   - Backdrop zooms in and dims as you descend, sinking away.
-//   - The headline / subtitle / CTA / dots fade to 0 AND scale down,
-//     folding the hero away. They're fully invisible by ~55% of the
-//     scroll, well before the content covers them, so two titles are
-//     never on screen at once.
+//   - The headline / subtitle / CTA / dots stay FULLY WHITE (no fade,
+//     no colour change) and disappear purely by motion: they slide up
+//     with the scroll and are then cleanly covered by the solid-black
+//     content layer rising over them. No two titles on screen at once.
 //
 // PERFORMANCE: reads window.scrollY (never getBoundingClientRect —
 // that forces a reflow every frame), animates only transform + opacity
@@ -50,14 +50,15 @@ export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; on
       const range = heroHeight * 0.6;
       const p = Math.max(0, Math.min(1, y / range));
       const bg = bgRef.current, dim = dimRef.current, fg = fgRef.current;
-      // PROBLEM 1 fix: barely-there parallax zoom, 1.0 -> 1.05 max.
+      // Barely-there parallax zoom, 1.0 -> 1.05 max.
       if (bg) bg.style.transform = `scale(${1 + p * 0.05})`;
       if (dim) dim.style.opacity = `${0.24 + p * 0.58}`;
       if (fg) {
-        // PROBLEM 3 fix: gentle, scroll-linked fade (reaches 0 near the
-        // end of the range, not abruptly) + a small lift and shrink.
-        fg.style.opacity = `${Math.max(0, 1 - p * 1.25)}`;
-        fg.style.transform = `translate3d(0, ${-y * 0.12}px, 0) scale(${1 - p * 0.06})`;
+        // The text stays FULLY WHITE (no opacity/colour change). It
+        // disappears purely by motion: it slides up with the scroll and
+        // is then cleanly covered by the solid-black content layer
+        // rising over it. No fade, no scale.
+        fg.style.transform = `translate3d(0, ${-y * 0.35}px, 0)`;
       }
     };
     const onScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(apply); };
@@ -123,7 +124,7 @@ export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; on
       {/* Dynamic dim layer — deepens as the hero collapses */}
       <div ref={dimRef} aria-hidden style={{ position: "absolute", inset: 0, zIndex: 1, background: "#000", opacity: 0.22, willChange: "opacity" }} />
 
-      {/* Foreground — fades + scales away on scroll */}
+      {/* Foreground — stays white, slides up and is covered on scroll */}
       <div
         ref={fgRef}
         style={{
@@ -131,7 +132,7 @@ export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; on
           padding: "0 24px 24px",
           textAlign: "center",
           display: "flex", flexDirection: "column", alignItems: "center",
-          willChange: "transform, opacity",
+          willChange: "transform",
         }}
       >
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.72)", marginBottom: 10 }}>
