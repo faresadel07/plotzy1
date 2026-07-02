@@ -554,10 +554,11 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
         <div style={{ fontSize: 11.5, color: MUTED, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {book.author || (ar ? "مؤلّف مجهول" : "Unknown author")}
         </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10, fontSize: 10.5, color: MUTED2 }}>
-          <span style={{ textTransform: "capitalize" }}>LibriVox</span>
-          <span>{book.chapterCount} {ar ? "فصل" : "ch"}</span>
-        </div>
+        {book.chapterCount > 0 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 10, fontSize: 10.5, color: MUTED2 }}>
+            <span>{book.chapterCount} {ar ? "فصل" : "ch"}</span>
+          </div>
+        )}
       </div>
     </button>
   );
