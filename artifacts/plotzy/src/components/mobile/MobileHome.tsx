@@ -55,8 +55,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           Apple TV. No fade/transform (that left an empty black gap). */}
       <MobileHero ar={ar} onStartWriting={onStartWriting} />
 
-      {/* Content rows */}
-      <div style={{ marginTop: 20 }}>
+      {/* Content rows — a small gap so the first row's header + card
+          tops peek below the hero, inviting the scroll (Apple TV). */}
+      <div style={{ marginTop: 14 }}>
         {myBooks.length > 0 && (
           <ContentRow
             title={ar ? "تابع الكتابة" : "Continue Writing"}
