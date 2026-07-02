@@ -51,6 +51,33 @@ if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
   }
 }
 
+// ── Self-heal on stale-chunk failures ────────────────────────────
+// After a deploy, the hashed JS chunk filenames change. A browser (or
+// a stale Service Worker) that cached the old index.html will request
+// chunk files that no longer exist → the dynamic import rejects and,
+// left unhandled, the app crashes to the "Something went wrong"
+// screen. Vite fires `vite:preloadError` for exactly this case; we
+// catch it (plus generic chunk-load errors) and hard-reload ONCE,
+// guarded by sessionStorage so we never loop. The reload fetches the
+// fresh index.html and the correct chunk list, and the writer just
+// sees a blink instead of a crash.
+{
+  const RELOAD_FLAG = "plotzy-chunk-reload";
+  const isChunkError = (msg: string) =>
+    /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Loading chunk .* failed|ChunkLoadError/i.test(msg);
+  const recover = () => {
+    if (sessionStorage.getItem(RELOAD_FLAG)) return; // already tried this session
+    sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+    window.location.reload();
+  };
+  window.addEventListener("vite:preloadError", (e) => { e.preventDefault(); recover(); });
+  window.addEventListener("error", (e) => { if (isChunkError(e?.message || "")) recover(); });
+  window.addEventListener("unhandledrejection", (e) => {
+    const msg = (e?.reason && (e.reason.message || String(e.reason))) || "";
+    if (isChunkError(msg)) recover();
+  });
+}
+
 // Initialise Sentry BEFORE React renders so errors thrown during
 // component initialisation are captured. No-op when VITE_SENTRY_DSN
 // isn't set.

@@ -13,6 +13,20 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+
+    // A dynamic import that fails because its chunk was replaced by a
+    // newer deploy (or served stale by a Service Worker) surfaces here
+    // as a render error. Rather than show the crash screen, hard-reload
+    // ONCE to pull the fresh index.html + chunk list. Guarded by
+    // sessionStorage so a genuinely broken build can't loop forever.
+    const msg = error?.message || "";
+    const isChunkError = /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Loading chunk .* failed|ChunkLoadError/i.test(msg);
+    if (isChunkError && !sessionStorage.getItem("plotzy-chunk-reload")) {
+      sessionStorage.setItem("plotzy-chunk-reload", String(Date.now()));
+      window.location.reload();
+      return;
+    }
+
     // Ship React render errors to Sentry with the component stack
     // attached as context — without this, the stack we'd see in the
     // dashboard is just the minified bundle and triage is painful.
