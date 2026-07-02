@@ -36,6 +36,8 @@ import { format } from "date-fns";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence, useInView } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useIsPhone } from "@/hooks/use-is-phone";
+import { MobileHome } from "@/components/mobile/MobileHome";
 import { BOOK_LANGUAGES } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { LandingCanvas } from "@/components/landing/LandingCanvas";
@@ -539,6 +541,10 @@ export default function Home() {
   };
 
   const { user } = useAuth();
+  // Phones get an entirely separate Apple-TV-style home (see the early
+  // return below). Desktop/tablet fall through to the existing landing
+  // page, 100% untouched.
+  const isPhone = useIsPhone();
   const { data: sharedBooks = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerName: string | null }[]>({
     queryKey: ["/api/books/shared-with-me"],
     queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
@@ -600,6 +606,21 @@ export default function Home() {
   const scrollToFeatures = () => {
     document.getElementById('platform-features')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // ── Phone: Apple-TV-style home ──────────────────────────────────
+  // All hooks above have run (React rules satisfied). Phones render a
+  // dedicated home inside the normal Layout chrome; everything below
+  // this block is the desktop/tablet landing page, unchanged.
+  if (isPhone) {
+    return (
+      <>
+        <SEO titleOverride="Plotzy" />
+        <Layout isLanding>
+          <MobileHome />
+        </Layout>
+      </>
+    );
+  }
 
   return (
     <>

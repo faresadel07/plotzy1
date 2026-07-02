@@ -18,6 +18,8 @@ import { LanguagePicker } from "@/components/language-picker";
 import { DisplayNameModal } from "@/components/display-name-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useIsPhone } from "@/hooks/use-is-phone";
+import { MobileTabBar } from "@/components/mobile/MobileTabBar";
 
 function getInitials(name?: string | null, email?: string | null): string {
   if (name) {
@@ -205,6 +207,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
   const [location, navigate] = useLocation();
   const { t, isRTL } = useLanguage();
   const { toast } = useToast();
+  const isPhone = useIsPhone();
   const { user, isLoading, logout, refetch: refetchAuth } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showDisplayName, setShowDisplayName] = useState(false);
@@ -780,6 +783,11 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         </div>
       </footer>
       )}
+
+      {/* Floating bottom tab bar — phones only. The `noScroll` editor
+          surfaces (chapter editor etc.) hide it so it never covers
+          the writing toolbar. Desktop never renders it. */}
+      {isPhone && !noScroll && <MobileTabBar />}
 
       <input
         ref={avatarInputRef}
