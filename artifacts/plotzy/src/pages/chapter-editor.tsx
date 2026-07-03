@@ -2103,25 +2103,8 @@ export default function ChapterEditor() {
           {/* ── Center: tool icons ── */}
           <div className="flex items-center gap-0.5 flex-1 justify-start sm:justify-center overflow-x-auto" style={{ scrollbarWidth: "none" }}>
 
-            {/* Undo / Redo */}
-            <Button
-              variant="ghost" size="icon"
-              className="w-8 h-8 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              title={ar ? "تراجع (Ctrl+Z)" : "Undo (Ctrl+Z)"}
-              onMouseDown={(e) => { e.preventDefault(); document.execCommand("undo"); }}
-            >
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost" size="icon"
-              className="w-8 h-8 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              title={ar ? "إعادة (Ctrl+Y)" : "Redo (Ctrl+Y)"}
-              onMouseDown={(e) => { e.preventDefault(); document.execCommand("redo"); }}
-            >
-              <RotateCw className="w-4 h-4" />
-            </Button>
-
-            <div className="w-px h-5 bg-border/40 mx-1" />
+            {/* Undo/Redo live in the formatting bar below (single home),
+                so they are intentionally not duplicated up here. */}
 
             {/* Voice */}
             {isTranscribing ? (
@@ -2190,15 +2173,26 @@ export default function ChapterEditor() {
                 the mobile More sheet can trigger the picker. */}
             <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
 
-            {isPhone ? (
-              <button
-                onClick={() => setMoreToolsOpen(true)}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold shrink-0"
-                style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.14)", cursor: "pointer" }}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" /> {ar ? "المزيد" : "More"}
-              </button>
-            ) : (
+            <div className="w-px h-5 bg-border/40 mx-1" />
+
+            {/* Focus mode — kept inline; the signature writing view. */}
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setIsFocusMode(!isFocusMode)} title={ar ? "وضع التركيز" : "Focus Mode"} aria-label={ar ? "وضع التركيز" : "Focus Mode"}>
+              {isFocusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </Button>
+
+            {/* Everything else is one tap away in the More sheet. */}
+            <button
+              onClick={() => setMoreToolsOpen(true)}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold shrink-0"
+              style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.14)", cursor: "pointer" }}
+              aria-label={ar ? "المزيد من الأدوات" : "More tools"}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> {ar ? "المزيد" : "More"}
+            </button>
+
+            {/* Legacy inline tools now live in the More sheet; kept here as
+                dead code (never rendered) to avoid a risky bulk deletion. */}
+            {false && (
             <>
             <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"} aria-label={ar ? "استعراض الصفحات" : "Page Navigator"}>
               <LayoutGrid className="w-4 h-4" />
@@ -2305,22 +2299,20 @@ export default function ChapterEditor() {
                 button. On phones the label collapses so the icon still
                 fits next to Save / Search. */}
             <button
-              className="h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
+              className="h-9 px-4 rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
               style={{
-                background: aiChatOpen ? "rgba(255,255,255,0.10)" : "#000",
+                background: aiChatOpen ? "rgba(255,255,255,0.16)" : "#000",
                 color: "#fff",
-                border: "1px solid rgba(255,255,255,0.16)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
+                border: "1px solid rgba(255,255,255,0.22)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.55)",
               }}
               onClick={() => setAiChatOpen(true)}
               aria-label={ar ? "الاستوديو" : "The Studio"}
               title={ar ? "الاستوديو" : "The Studio"}
               data-testid="button-studio-topbar"
             >
-              <StudioIcon size={14} color="#fff" />
-              <span className="hidden sm:inline">
-                {ar ? "الاستوديو" : "Studio"}
-              </span>
+              <StudioIcon size={16} color="#fff" />
+              {ar ? "الاستوديو" : "Studio"}
             </button>
 
             {/* AI Assistant pill. Visible on every viewport now — was
@@ -2328,16 +2320,17 @@ export default function ChapterEditor() {
                 without their primary AI surface there. On phones the
                 label collapses to just the wand so the pill still fits
                 next to Save / Search on a narrow header. */}
+            {/* AI Assistant — secondary now, a quiet icon so the Studio
+                (the primary AI surface) clearly stands out. */}
             <button
-              className="h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 flex items-center transition-all hover:opacity-90 hover:-translate-y-px active:translate-y-0"
-              style={{ background: "linear-gradient(135deg, #d4a017 0%, #f5c518 50%, #e8a020 100%)", color: "#5a3a00", boxShadow: "0 2px 8px rgba(212,160,23,0.45)" }}
+              className="h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
+              style={{ background: "transparent", color: "#f5c518", border: "1px solid rgba(245,197,24,0.35)" }}
               onClick={() => setShowAI(true)}
               aria-label={t("aiAssistant")}
               title={t("aiAssistant")}
               data-testid="button-ai-assistant"
             >
-              <Wand2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t("aiAssistant")}</span>
+              <Wand2 className="w-4 h-4" />
             </button>
 
             {autoSaving && (
@@ -2375,7 +2368,7 @@ export default function ChapterEditor() {
 
       {/* ── Phone "More tools" sheet ── the crowded center toolbar tools,
           laid out as a clean icon grid one tap away from the top bar. ── */}
-      {isPhone && moreToolsOpen && (
+      {moreToolsOpen && (
         <div className="fixed inset-0 z-[70]" dir={isRTL ? "rtl" : "ltr"}>
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setMoreToolsOpen(false)} />
           <div
@@ -2407,7 +2400,7 @@ export default function ChapterEditor() {
                 { Icon: PanelRight,  label: ar ? "مرجع" : "Reference",      action: () => { setShowRefPanel(true); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); } },
                 { Icon: Printer,     label: ar ? "طباعة" : "Print",         action: () => { setIsPrintView(true); setCurrentSpread(0); } },
                 { Icon: AlignCenter, label: ar ? "تمركز" : "Center",        action: () => toggleTypewriterMode() },
-                { Icon: EyeOff,      label: ar ? "تركيز" : "Focus",         action: () => setIsFocusMode(true) },
+                { Icon: Layers,      label: ar ? "نمط الصفحة" : "Page style", action: () => setShowPageStylePicker(true) },
                 { Icon: History,     label: ar ? "الإصدارات" : "History",   action: () => setShowVersionHistory(true) },
               ].map(({ Icon, label, action }, i) => (
                 <button
@@ -2419,8 +2412,26 @@ export default function ChapterEditor() {
                   <span style={{ fontSize: 11, fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>{label}</span>
                 </button>
               ))}
+              {/* Ambient sound — a self-contained control, given its own cell */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "10px 6px 12px", borderRadius: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff" }}>
+                <AmbientSoundscape />
+                <span style={{ fontSize: 11, fontWeight: 600 }}>{ar ? "صوت" : "Sound"}</span>
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Page Style picker — rendered standalone so it needs no inline
+          anchor. Bottom sheet on phones, top-right panel on desktop. */}
+      {showPageStylePicker && (
+        <div className="fixed top-14 right-4 z-[80]">
+          <PageStylePicker
+            currentStyle={prefs.pageStyle || "blank"}
+            isDark={isDark}
+            onSelect={(styleId) => { const newPrefs = { ...prefs, pageStyle: styleId }; setPrefs(newPrefs); handleSavePrefs(newPrefs); }}
+            onClose={() => setShowPageStylePicker(false)}
+          />
         </div>
       )}
 

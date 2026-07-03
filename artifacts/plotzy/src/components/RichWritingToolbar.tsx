@@ -363,6 +363,9 @@ export function RichWritingToolbar({
           onMouseDown={e => e.preventDefault()}
         >
           <div className="px-2 h-11 flex items-center gap-1" style={{ color: fg }} dir="ltr">
+            <button onClick={() => editor?.chain().focus().undo().run()} style={mBtn()} aria-label="Undo"><Undo2 className="w-4 h-4" /></button>
+            <button onClick={() => editor?.chain().focus().redo().run()} style={mBtn()} aria-label="Redo"><Redo2 className="w-4 h-4" /></button>
+            <div className="w-px self-stretch my-2 mx-1" style={{ background: dividerColor }} />
             <button onClick={() => runBulk((c) => c.toggleBold())} style={mBtn(editor?.isActive("bold"))} aria-label="Bold"><Bold className="w-4 h-4" /></button>
             <button onClick={() => runBulk((c) => c.toggleItalic())} style={mBtn(editor?.isActive("italic"))} aria-label="Italic"><Italic className="w-4 h-4" /></button>
             <button onClick={() => runBulk((c) => c.toggleUnderline())} style={mBtn(editor?.isActive("underline"))} aria-label="Underline"><UnderlineIcon className="w-4 h-4" /></button>
