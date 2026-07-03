@@ -133,6 +133,22 @@ export default defineConfig({
               networkTimeoutSeconds: 3,
             },
           },
+          {
+            // Bundled book covers + testimonial photos. CacheFirst so
+            // that after the very first view they are served straight
+            // from the cache, never a network round trip. These are
+            // same-origin static files (public/images/covers and
+            // /testimonials), so the first load is already fast and
+            // reliable; this makes every load after it instant and
+            // offline-proof. Fixes the blank grey cover cards for good.
+            urlPattern: /\/images\/(covers|testimonials)\/.*\.(?:jpg|jpeg|png|webp)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "plotzy-images",
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),

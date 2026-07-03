@@ -1,9 +1,13 @@
 // Curated content for the Apple-TV-style mobile home.
 //
-// All covers resolve from public CDNs (Gutenberg, Archive.org,
-// Hindawi) with NO backend dependency, so the mobile home always
-// renders a rich, populated experience even while our own API server
-// is down. Each card links to a real destination route.
+// Covers are BUNDLED LOCALLY (public/images/covers), downloaded once
+// from Gutenberg, Archive.org, and Hindawi. Serving them from our own
+// origin means they are precached by the PWA service worker and paint
+// instantly on every visit, with no dependency on those (often slow or
+// rate-limited) third-party CDNs. That was the cause of the blank grey
+// cover cards on first load; local files fix it permanently. To add a
+// new book, download its cover into public/images/covers with the
+// matching name below. Each card links to a real destination route.
 
 export interface MobileBook {
   title: string;
@@ -15,12 +19,11 @@ export interface MobileBook {
 }
 
 // ── Cover URL helpers ──────────────────────────────────────────────
-const gutCover = (id: number) =>
-  `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`;
-const audioCover = (archiveId: string) =>
-  `https://archive.org/services/img/${archiveId}`;
-const hindawiCover = (id: number) =>
-  `https://downloads.hindawi.org/covers/304x406/${id}.jpg`;
+// Resolve to locally bundled files (see note above). The ids match the
+// filenames in public/images/covers.
+const gutCover = (id: number) => `/images/covers/gutenberg-${id}.jpg`;
+const audioCover = (archiveId: string) => `/images/covers/audio-${archiveId}.jpg`;
+const hindawiCover = (id: number) => `/images/covers/hindawi-${id}.jpg`;
 
 // ── Audiobooks (LibriVox) — link straight to the player ────────────
 // id = LibriVox book id (route /audiolibrary/librivox/:id)

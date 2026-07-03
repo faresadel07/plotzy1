@@ -50,35 +50,14 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
               padding: "20px 18px",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "space-between",
               minHeight: 230,
             }}
           >
-            {/* Quote mark + text */}
-            <div>
-              <div
-                aria-hidden
-                style={{
-                  fontFamily: "Georgia, serif",
-                  fontSize: 42,
-                  lineHeight: 0.7,
-                  color: t.accent,
-                  height: 22,
-                  marginBottom: 6,
-                }}
-              >
-                &ldquo;
-              </div>
-              <p style={{ fontSize: 14, lineHeight: 1.55, color: "rgba(255,255,255,0.9)", margin: 0 }}>
-                {ar ? t.quoteAr : t.quote}
-              </p>
-            </div>
-
-            {/* Person */}
-            <div style={{ display: "flex", alignItems: "center", gap: 11, marginTop: 18, flexDirection: ar ? "row-reverse" : "row" }}>
+            {/* Person first — photo above the words */}
+            <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16, flexDirection: ar ? "row-reverse" : "row" }}>
               <div
                 style={{
-                  width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
+                  width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
                   padding: 2, background: `linear-gradient(135deg, ${t.accent}, rgba(255,255,255,0.15))`,
                 }}
               >
@@ -98,6 +77,11 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
                 </div>
               </div>
             </div>
+
+            {/* Quote */}
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: "rgba(255,255,255,0.9)", margin: 0 }}>
+              {ar ? t.quoteAr : t.quote}
+            </p>
           </article>
         ))}
       </div>
