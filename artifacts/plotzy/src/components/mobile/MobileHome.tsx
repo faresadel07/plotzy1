@@ -20,7 +20,8 @@ import { useLanguage } from "@/contexts/language-context";
 import { useBooks } from "@/hooks/use-books";
 import { MobileHero } from "./MobileHero";
 import { ContentRow } from "./ContentRow";
-import { AiWriteBanner, CourseBanner, DevicesBanner } from "./FeatureBanners";
+import { AiWriteBanner, DevicesBanner } from "./FeatureBanners";
+import { CourseCoverMobile } from "./CourseCoverMobile";
 import { TestimonialsMobile } from "@/components/testimonials/TestimonialsMobile";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
 
@@ -111,9 +112,6 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
             opens the book-creation wizard directly. */}
         <AiWriteBanner ar={ar} onStart={onStartWriting} />
 
-        {/* Free writing course */}
-        <CourseBanner ar={ar} />
-
         {/* Community shelf — reuse English + Arabic mix as a teaser row,
             linking to the real community library. */}
         <ContentRow
@@ -125,6 +123,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
 
         {/* Social proof — real early testers, in their own words */}
         <TestimonialsMobile ar={ar} />
+
+        {/* Free writing course, presented as its own book cover */}
+        <CourseCoverMobile ar={ar} />
 
         {/* Closing showcase — write anywhere (iPad + laptop) */}
         <DevicesBanner ar={ar} />
