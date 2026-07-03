@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, Settings2, Ruler, Minus, Plus, ChevronDown } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, Settings2, Ruler, Minus, Plus, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import type { BookPreferences } from "@/shared/schema";
 
 const FONT_OPTIONS = [
@@ -84,8 +85,10 @@ export function WritingToolbar({
 }: WritingToolbarProps) {
   const [fontDropOpen, setFontDropOpen] = useState(false);
   const [lineDropOpen, setLineDropOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const fontDropRef = useRef<HTMLDivElement>(null);
   const lineDropRef = useRef<HTMLDivElement>(null);
+  const isPhone = useIsPhone();
 
   const currentFontId = effectivePrefs.fontFamily || "eb-garamond";
   const currentFont = FONT_OPTIONS.find(f => f.id === currentFontId);
@@ -165,6 +168,226 @@ export function WritingToolbar({
 
   const currentAlign = effectivePrefs.textAlign || (isRTL ? "right" : "left");
   const currentLineSpacing = effectivePrefs.lineHeight || "normal";
+
+  // ─────────────────────────────────────────────────────────────
+  // PHONE LAYOUT
+  // A clean, uncluttered bar with only the tools writers reach for
+  // constantly (bold / italic / underline + text size). Everything
+  // else lives one tap away in a "More" bottom sheet, ordered from
+  // most to least used. Desktop is left completely untouched below.
+  // ─────────────────────────────────────────────────────────────
+  if (isPhone) {
+    const sheetBg = isDark ? "#17171c" : "#ffffff";
+    const sheetText = isDark ? "#e4e4e7" : "#18181b";
+    const sheetSub = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
+    const chipIdle = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+    const chipActiveBg = isDark ? "#ffffff" : "#18181b";
+    const chipActiveFg = isDark ? "#000000" : "#ffffff";
+
+    const mBtn = (active?: boolean): React.CSSProperties => ({
+      display: "flex", alignItems: "center", justifyContent: "center",
+      width: 40, height: 34, borderRadius: 9, border: "none",
+      background: active ? activeBg : "transparent",
+      color: active ? (isDark ? "#fff" : "#18181b") : toolbarColor,
+      cursor: "pointer", transition: "background 0.12s", flexShrink: 0,
+    });
+    const seg = (active: boolean): React.CSSProperties => ({
+      flex: 1, height: 42, borderRadius: 11, border: "none", cursor: "pointer",
+      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+      fontSize: 13.5, fontWeight: 600,
+      background: active ? chipActiveBg : chipIdle,
+      color: active ? chipActiveFg : sheetText,
+      transition: "background 0.12s",
+    });
+    const sectionLabel: React.CSSProperties = {
+      fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase",
+      color: sheetSub, marginBottom: 11,
+    };
+    const rowGap: React.CSSProperties = { display: "flex", gap: 8 };
+
+    return (
+      <>
+        {/* Compact sticky bar */}
+        <div
+          className="sticky top-12 z-40 border-b shrink-0"
+          style={{
+            background: toolbarBg,
+            borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
+            backdropFilter: "blur(12px)",
+            opacity: isFocusMode ? 0.12 : 1,
+          }}
+        >
+          <div className="px-2 h-11 flex items-center gap-1" style={{ color: toolbarColor }} dir="ltr">
+            <button onClick={() => toggle("isBold")} style={mBtn(effectivePrefs.isBold)} aria-label="Bold"><Bold className="w-4 h-4" /></button>
+            <button onClick={() => toggle("isItalic")} style={mBtn(effectivePrefs.isItalic)} aria-label="Italic"><Italic className="w-4 h-4" /></button>
+            <button onClick={() => toggle("isUnderline")} style={mBtn(effectivePrefs.isUnderline)} aria-label="Underline"><Underline className="w-4 h-4" /></button>
+
+            <div className="w-px self-stretch my-2 bg-current opacity-10 mx-1" />
+
+            <button onClick={() => changeSize(-1)} style={mBtn()} aria-label="Decrease size"><Minus className="w-4 h-4" /></button>
+            <span className="text-sm font-semibold tabular-nums w-6 text-center" style={{ color: toolbarColor }}>{currentSizePx}</span>
+            <button onClick={() => changeSize(1)} style={mBtn()} aria-label="Increase size"><Plus className="w-4 h-4" /></button>
+
+            <div style={{ flex: 1 }} />
+
+            <button
+              onClick={() => setMoreOpen(true)}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-full"
+              style={{ background: activeBg, color: isDark ? "#fff" : "#18181b", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              {ar ? "المزيد" : "More"}
+            </button>
+          </div>
+        </div>
+
+        {/* More bottom sheet */}
+        {moreOpen && (
+          <div className="fixed inset-0 z-[60]" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setMoreOpen(false)} />
+            <div
+              className="absolute left-0 right-0 bottom-0 rounded-t-3xl"
+              style={{
+                background: sheetBg, color: sheetText,
+                maxHeight: "82vh", overflowY: "auto",
+                padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
+                boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+              }}
+            >
+              {/* Grip + header */}
+              <div style={{ display: "flex", justifyContent: "center", paddingTop: 4, paddingBottom: 10 }}>
+                <div style={{ width: 40, height: 5, borderRadius: 999, background: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.02em" }}>{ar ? "التنسيق" : "Formatting"}</span>
+                <button onClick={() => setMoreOpen(false)} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 999, border: "none", cursor: "pointer", background: chipIdle, color: sheetText, display: "grid", placeItems: "center" }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 1. Font */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>{ar ? "الخط" : "Font"}</div>
+                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+                  {FONT_OPTIONS.map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => setFont(f.id)}
+                      style={{
+                        flex: "0 0 auto", padding: "10px 16px", borderRadius: 11, border: "none", cursor: "pointer",
+                        whiteSpace: "nowrap", fontFamily: f.fontFamily, fontSize: 15,
+                        background: f.id === currentFontId ? chipActiveBg : chipIdle,
+                        color: f.id === currentFontId ? chipActiveFg : sheetText,
+                      }}
+                    >
+                      {ar ? f.labelAr : f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Alignment */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>{ar ? "المحاذاة" : "Alignment"}</div>
+                <div style={rowGap}>
+                  {(["left", "center", "right", "justify"] as const).map(a => {
+                    const Icon = a === "left" ? AlignLeft : a === "center" ? AlignCenter : a === "right" ? AlignRight : AlignJustify;
+                    return (
+                      <button key={a} onClick={() => setAlign(a)} style={seg(currentAlign === a)} aria-label={a}>
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Line spacing */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>{ar ? "تباعد الأسطر" : "Line spacing"}</div>
+                <div style={rowGap}>
+                  {LINE_SPACING_OPTIONS.map(opt => (
+                    <button key={opt.value} onClick={() => setLineSpacing(opt.value)} style={seg(opt.value === currentLineSpacing)}>
+                      {ar ? opt.labelAr : opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Colors */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>{ar ? "الألوان" : "Colors"}</div>
+                <div style={rowGap}>
+                  <button
+                    onClick={() => document.getElementById("tb-text-color-m")?.click()}
+                    style={{ flex: 1, height: 54, borderRadius: 12, border: "none", cursor: "pointer", background: chipIdle, color: sheetText, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}
+                  >
+                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>{ar ? "لون النص" : "Text"}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: effectivePrefs.textColor || (isDark ? "#e4e4e7" : "#18181b"), border: "2px solid rgba(128,128,128,0.4)" }} />
+                  </button>
+                  <button
+                    onClick={() => document.getElementById("tb-highlight-color-m")?.click()}
+                    style={{ flex: 1, height: 54, borderRadius: 12, border: "none", cursor: "pointer", background: chipIdle, color: sheetText, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}
+                  >
+                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>{ar ? "تمييز" : "Highlight"}</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: effectivePrefs.highlightColor || "#fef08a", border: "2px solid rgba(128,128,128,0.4)" }} />
+                  </button>
+                  <input id="tb-text-color-m" type="color" value={effectivePrefs.textColor || (isDark ? "#e4e4e7" : "#18181b")} onChange={e => { const np = { ...prefs, textColor: e.target.value }; onPrefsChange(np); }} onBlur={e => { const np = { ...prefs, textColor: e.target.value }; onSavePrefs(np); }} style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }} />
+                  <input id="tb-highlight-color-m" type="color" value={effectivePrefs.highlightColor || "#fef08a"} onChange={e => { const np = { ...prefs, highlightColor: e.target.value }; onPrefsChange(np); }} onBlur={e => { const np = { ...prefs, highlightColor: e.target.value }; onSavePrefs(np); }} style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }} />
+                </div>
+              </div>
+
+              {/* 5. Page theme */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>{ar ? "نسق الصفحة" : "Page theme"}</div>
+                <div style={rowGap}>
+                  {PAGE_THEMES.map(t => {
+                    const active = (effectivePrefs.pageTheme || "white") === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTheme(t)}
+                        style={{
+                          flex: 1, height: 52, borderRadius: 12, cursor: "pointer",
+                          background: t.bg, color: t.text,
+                          border: active ? `2px solid ${isDark ? "#fff" : "#18181b"}` : `1px solid ${t.border}`,
+                          fontSize: 12.5, fontWeight: 700,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}
+                      >
+                        {ar ? t.labelAr : t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 6. Zoom */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>{ar ? "التكبير" : "Zoom"}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <button onClick={() => onZoomChange(Math.max(50, zoom - 10))} style={{ ...seg(false), flex: "0 0 46px", height: 44 }} aria-label="Zoom out"><Minus className="w-4 h-4" /></button>
+                  <input type="range" min={50} max={200} step={5} value={zoom} onChange={e => onZoomChange(Number(e.target.value))} style={{ flex: 1, accentColor: isDark ? "#fff" : "#18181b" }} />
+                  <span className="tabular-nums" style={{ fontSize: 13, fontWeight: 700, width: 44, textAlign: "center" }}>{zoom}%</span>
+                  <button onClick={() => onZoomChange(Math.min(200, zoom + 10))} style={{ ...seg(false), flex: "0 0 46px", height: 44 }} aria-label="Zoom in"><Plus className="w-4 h-4" /></button>
+                </div>
+              </div>
+
+              {/* 7. Ruler + Page setup */}
+              <div style={rowGap}>
+                <button onClick={setRuler} style={seg(!!effectivePrefs.showRuler)}>
+                  <Ruler className="w-4 h-4" /> {ar ? "مسطرة" : "Ruler"}
+                </button>
+                <button onClick={() => { onOpenPageSetup(); setMoreOpen(false); }} style={seg(false)}>
+                  <Settings2 className="w-4 h-4" /> {ar ? "إعداد الصفحة" : "Page setup"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div

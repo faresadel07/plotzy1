@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plotzy — Phone Preview</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; min-height: 100%;
+      background: radial-gradient(1200px 800px at 50% -10%, #1a1a22, #0a0a0c 60%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e8e8ea;
+    }
+    .wrap {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 18px 16px 28px; gap: 14px;
+    }
+    .title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: rgba(255,255,255,0.85); }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .controls button {
+      background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px; padding: 7px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .controls button:hover { background: rgba(255,255,255,0.16); }
+    .controls button.active { background: #fff; color: #000; border-color: #fff; }
+
+    /* Stage reserves the SCALED height so there is no huge empty gap. */
+    .stage { display: flex; justify-content: center; width: 100%; }
+
+    /* The phone bezel wraps the live site in an iframe sized to the exact
+       logical resolution of the chosen device (default iPhone 14 Pro Max
+       = 430 x 932 CSS px). The whole bezel is then uniformly scaled to
+       fit the laptop screen, so the mobile layout stays pixel-accurate. */
+    .phone {
+      position: relative;
+      background: #000;
+      border-radius: 52px;
+      padding: 13px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,255,255,0.06);
+      transform-origin: top center;
+    }
+    /* Dynamic Island */
+    .phone::before {
+      content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 30px; background: #000; border-radius: 999px; z-index: 2;
+    }
+    .phone iframe {
+      width: var(--w, 430px); height: var(--h, 932px);
+      border: none; border-radius: 40px; background: #000; display: block;
+    }
+    .caption { font-size: 12px; color: rgba(255,255,255,0.4); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Plotzy · Phone preview</div>
+    <div class="controls">
+      <button data-w="430" data-h="932" class="active">14 Pro Max (430 x 932)</button>
+      <button data-w="393" data-h="852">14 Pro (393 x 852)</button>
+      <button data-w="375" data-h="812">Mini / SE (375 x 812)</button>
+      <button id="reload">Reload</button>
+    </div>
+    <div class="stage" id="stage">
+      <div class="phone" id="phone">
+        <iframe id="frame" src="/" title="Plotzy phone preview"></iframe>
+      </div>
+    </div>
+    <div class="caption" id="caption">iPhone 14 Pro Max · 430 x 932</div>
+  </div>
+
+  <script>
+    var phone = document.getElementById('phone');
+    var frame = document.getElementById('frame');
+    var stage = document.getElementById('stage');
+    var caption = document.getElementById('caption');
+    var btns = document.querySelectorAll('.controls button[data-w]');
+    var curW = 430, curH = 932;
+
+    function fit() {
+      // Reset transform to read the natural (unscaled) size.
+      phone.style.transform = 'none';
+      var naturalH = phone.offsetHeight;
+      var naturalW = phone.offsetWidth;
+      var availH = window.innerHeight - 150;
+      var availW = window.innerWidth - 40;
+      var scale = Math.min(1, availH / naturalH, availW / naturalW);
+      phone.style.transform = 'scale(' + scale + ')';
+      // Reserve the scaled footprint so the page does not leave a big gap.
+      stage.style.height = (naturalH * scale) + 'px';
+      stage.style.width = (naturalW * scale) + 'px';
+    }
+
+    function setDevice(w, h) {
+      curW = w; curH = h;
+      phone.style.setProperty('--w', w + 'px');
+      phone.style.setProperty('--h', h + 'px');
+      fit();
+    }
+
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        btns.forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        setDevice(parseInt(b.getAttribute('data-w'), 10), parseInt(b.getAttribute('data-h'), 10));
+        caption.textContent = b.textContent.trim();
+      });
+    });
+    document.getElementById('reload').addEventListener('click', function () { frame.src = frame.src; });
+
+    window.addEventListener('resize', fit);
+    setDevice(430, 932);
+  </script>
+</body>
+</html>
