@@ -115,7 +115,7 @@ export function CourseLandingHero() {
       <div className="course-hero-content relative z-10 h-full flex items-end px-6 sm:px-10 py-8 sm:py-10">
         <div className="course-hero-textblock max-w-2xl text-white">
           <h1
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-tight"
+            className="font-sans text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-tight"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.45)" }}
           >
             {t("courseLandingTitle")}

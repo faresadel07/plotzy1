@@ -290,7 +290,7 @@ export function PrintPreview({
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-          <span style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.20)", fontFamily: "system-ui" }}>
+          <span style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.20)", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
             {totalWords.toLocaleString()} {ar ? "كلمة" : "words"}
             {"  ·  "}
             ~{readMins} {ar ? "د قراءة" : "min read"}
@@ -433,7 +433,7 @@ export function PrintPreview({
                 {isRTL ? <ChevronLeft style={{ width: "12px", height: "12px" }} /> : <ChevronRight style={{ width: "12px", height: "12px" }} />}
               </button>
 
-              <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "system-ui", marginLeft: "4px" }}>
+              <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", marginLeft: "4px" }}>
                 ← →  ·  Esc
               </span>
             </div>
@@ -567,10 +567,10 @@ function renderBookPage(args: {
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, letterSpacing: "0.32em", textTransform: "uppercase", color: "rgba(0,0,0,0.20)", fontFamily: "system-ui" }}>
+        <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, letterSpacing: "0.32em", textTransform: "uppercase", color: "rgba(0,0,0,0.20)", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
           {headerText || ""}
         </span>
-        <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, color: "rgba(0,0,0,0.15)", fontFamily: "system-ui" }}>&#10087;</span>
+        <span style={{ fontSize: `${Math.round(7 * pvScale)}px`, color: "rgba(0,0,0,0.15)", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>&#10087;</span>
       </div>
 
       {/* Body. dir attribute lets the writer's mixed-language quotes

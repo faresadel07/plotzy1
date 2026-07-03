@@ -121,7 +121,7 @@ export default function LearnPage() {
             <GraduationCap className="h-3.5 w-3.5" aria-hidden />
             {t("courseLandingBadge")}
           </div>
-          <h1 className="text-3xl sm:text-5xl font-serif tracking-tight">
+          <h1 className="text-3xl sm:text-5xl font-sans tracking-tight">
             {t("courseLandingTitle")}
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">

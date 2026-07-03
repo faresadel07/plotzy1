@@ -130,7 +130,7 @@ export function CourseSidebarCard({ state }: CourseSidebarCardProps) {
 
         <div className="p-6 space-y-5">
         <div>
-          <div className="font-serif text-xl">{t("courseLandingTitle")}</div>
+          <div className="font-sans text-xl">{t("courseLandingTitle")}</div>
           <div className="text-xs text-muted-foreground mt-1">
             {t("courseLandingSidebarSubtitle")}
           </div>

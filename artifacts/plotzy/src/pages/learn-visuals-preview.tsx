@@ -43,7 +43,7 @@ export default function VisualsPreview() {
           <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Batch 2.7 / B1
           </div>
-          <h1 className="text-4xl font-serif tracking-tight">Course visual primitives</h1>
+          <h1 className="text-4xl font-sans tracking-tight">Course visual primitives</h1>
           <p className="text-base text-muted-foreground max-w-2xl">
             Six components that the rest of Batch 2.7 leans on. Each rendered with sample
             content; resize the window to confirm responsive behaviour, toggle{" "}
@@ -264,7 +264,7 @@ function Section({
   return (
     <section className="space-y-3">
       <header className="space-y-1 border-b pb-2">
-        <h2 className="text-2xl font-serif tracking-tight">{title}</h2>
+        <h2 className="text-2xl font-sans tracking-tight">{title}</h2>
         <p className="text-xs text-muted-foreground italic">{notes}</p>
       </header>
       <div className="space-y-3">{children}</div>

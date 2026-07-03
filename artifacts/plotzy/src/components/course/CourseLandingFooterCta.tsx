@@ -17,7 +17,7 @@ export function CourseLandingFooterCta({ state }: CourseLandingFooterCtaProps) {
 
   return (
     <section className="rounded-2xl border bg-secondary/30 p-6 sm:p-10 text-center space-y-6">
-      <h2 className="text-2xl sm:text-3xl font-serif tracking-tight">
+      <h2 className="text-2xl sm:text-3xl font-sans tracking-tight">
         {t("courseLandingFooterCtaHeading")}
       </h2>
       <div className="max-w-md mx-auto">

@@ -134,7 +134,7 @@ export default function LearnFinalProjectPage() {
         />
 
         <header className="space-y-2">
-          <h1 className="text-3xl font-serif tracking-tight">{t("courseFinalProjectTitle")}</h1>
+          <h1 className="text-3xl font-sans tracking-tight">{t("courseFinalProjectTitle")}</h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             {t("courseFinalProjectSubtitle")}
           </p>

@@ -68,7 +68,7 @@ export function Hero({
                   {overlayTitle.eyebrow}
                 </div>
               )}
-              <h1 className="font-serif text-3xl sm:text-5xl tracking-tight">
+              <h1 className="font-sans text-3xl sm:text-5xl tracking-tight">
                 {overlayTitle.title}
               </h1>
             </div>

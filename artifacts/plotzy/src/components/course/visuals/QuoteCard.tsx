@@ -58,7 +58,7 @@ export function QuoteCard({
         viewport={{ once: true, margin: "-50px" }}
         transition={transition}
       >
-        <blockquote className="font-serif text-2xl sm:text-4xl tracking-tight leading-tight max-w-3xl mx-auto">
+        <blockquote className="font-sans text-2xl sm:text-4xl tracking-tight leading-tight max-w-3xl mx-auto">
           {children}
         </blockquote>
         {attribution && (
@@ -79,7 +79,7 @@ export function QuoteCard({
       viewport={{ once: true, margin: "-50px" }}
       transition={transition}
     >
-      <blockquote className="font-serif text-xl sm:text-2xl tracking-tight leading-snug">
+      <blockquote className="font-sans text-xl sm:text-2xl tracking-tight leading-snug">
         {children}
       </blockquote>
       {attribution && (

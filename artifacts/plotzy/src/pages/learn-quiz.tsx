@@ -171,7 +171,7 @@ export default function LearnQuizPage() {
           <>
             <header className="space-y-2 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-serif tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-sans tracking-tight">
                   {quizQ.data.type === "final"
                     ? t("courseQuizFinalTitle")
                     : t("courseQuizModuleTitle")}
@@ -251,7 +251,7 @@ export default function LearnQuizPage() {
         {quizQ.data && result && (
           <>
             <header className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl font-serif tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-sans tracking-tight">
                 {t("courseQuizResultTitle")}
               </h1>
             </header>

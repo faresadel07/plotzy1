@@ -93,7 +93,7 @@ export function HeroBook() {
             color: "rgba(255,255,240,0.42)",
             fontSize: 8, letterSpacing: "0.35em",
             textTransform: "uppercase", marginTop: 8,
-            fontFamily: "system-ui, sans-serif",
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
             textAlign: "center",
           }}>
             Write · Create · Publish
