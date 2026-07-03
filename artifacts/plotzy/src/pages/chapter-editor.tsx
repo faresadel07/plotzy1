@@ -421,6 +421,8 @@ export default function ChapterEditor() {
   const [showEditorSearch, setShowEditorSearch] = useState(false);
   const [editorSearchQuery, setEditorSearchQuery] = useState("");
   const [editorSearchCount, setEditorSearchCount] = useState(0);
+  // Phone-only: collapses the crowded center toolbar into a "More" sheet.
+  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
   const [showStoryBible, setShowStoryBible] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showPageStylePicker, setShowPageStylePicker] = useState(false);
@@ -2184,6 +2186,20 @@ export default function ChapterEditor() {
               </>
             )}
 
+            {/* Image input — always mounted so both the desktop button and
+                the mobile More sheet can trigger the picker. */}
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+
+            {isPhone ? (
+              <button
+                onClick={() => setMoreToolsOpen(true)}
+                className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold shrink-0"
+                style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.14)", cursor: "pointer" }}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" /> {ar ? "المزيد" : "More"}
+              </button>
+            ) : (
+            <>
             <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showPagePanel ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setShowPagePanel(v => !v)} title={ar ? "استعراض الصفحات" : "Page Navigator"} aria-label={ar ? "استعراض الصفحات" : "Page Navigator"}>
               <LayoutGrid className="w-4 h-4" />
             </Button>
@@ -2192,7 +2208,6 @@ export default function ChapterEditor() {
               <BookOpen className="w-4 h-4" />
             </Button>
 
-            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
             <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => fileInputRef.current?.click()} title={ar ? "إدراج صورة" : "Insert Image"} aria-label={ar ? "إدراج صورة" : "Insert Image"}>
               <ImageIcon className="w-4 h-4" />
             </Button>
@@ -2263,6 +2278,8 @@ export default function ChapterEditor() {
               <History className="w-4 h-4" />
               {versions.length > 0 && <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white" />}
             </Button>
+            </>
+            )}
           </div>
 
           {/* ── Right: Search + AI + Save ── */}
@@ -2355,6 +2372,57 @@ export default function ChapterEditor() {
 
         </div>
       </header>
+
+      {/* ── Phone "More tools" sheet ── the crowded center toolbar tools,
+          laid out as a clean icon grid one tap away from the top bar. ── */}
+      {isPhone && moreToolsOpen && (
+        <div className="fixed inset-0 z-[70]" dir={isRTL ? "rtl" : "ltr"}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setMoreToolsOpen(false)} />
+          <div
+            className="absolute left-0 right-0 bottom-0 rounded-t-3xl"
+            style={{
+              background: "#1b1b20", color: "#fff",
+              maxHeight: "82vh", overflowY: "auto",
+              padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
+              boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "center", paddingTop: 4, paddingBottom: 10 }}>
+              <div style={{ width: 40, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.18)" }} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <span style={{ fontSize: 18, fontWeight: 800 }}>{ar ? "الأدوات" : "Tools"}</span>
+              <button onClick={() => setMoreToolsOpen(false)} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 999, border: "none", background: "rgba(255,255,255,0.08)", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+              {[
+                { Icon: LayoutGrid,  label: ar ? "الصفحات" : "Pages",       action: () => setShowPagePanel(true) },
+                { Icon: BookOpen,    label: ar ? "مرجع القصة" : "Story",    action: () => setShowStoryBible(true) },
+                { Icon: ImageIcon,   label: ar ? "صورة" : "Image",          action: () => fileInputRef.current?.click() },
+                { Icon: Palette,     label: ar ? "الإعدادات" : "Settings",  action: () => setShowCustomizer(true) },
+                { Icon: Hash,        label: ar ? "رقم الصفحة" : "Page No.",  action: () => setShowPageSetup(true) },
+                { Icon: PanelRight,  label: ar ? "مرجع" : "Reference",      action: () => { setShowRefPanel(true); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); } },
+                { Icon: Printer,     label: ar ? "طباعة" : "Print",         action: () => { setIsPrintView(true); setCurrentSpread(0); } },
+                { Icon: AlignCenter, label: ar ? "تمركز" : "Center",        action: () => toggleTypewriterMode() },
+                { Icon: EyeOff,      label: ar ? "تركيز" : "Focus",         action: () => setIsFocusMode(true) },
+                { Icon: History,     label: ar ? "الإصدارات" : "History",   action: () => setShowVersionHistory(true) },
+              ].map(({ Icon, label, action }, i) => (
+                <button
+                  key={i}
+                  onClick={() => { action(); setMoreToolsOpen(false); }}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 6px", borderRadius: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff", cursor: "pointer" }}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span style={{ fontSize: 11, fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Rich Writing Toolbar (Google Docs style) ── */}
       {!isPrintView && (
