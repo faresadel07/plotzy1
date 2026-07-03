@@ -1744,6 +1744,9 @@ export default function Home() {
         {/* ===== AUDIO LIBRARY (LIBRIVOX) CAROUSEL ===== */}
         <AudioBookCarousel />
 
+        {/* ===== TESTIMONIALS WALL (social proof) ===== */}
+        <TestimonialsDesktop />
+
         {/* ===== WRITER PROTECTION TEASER ===== */}
         <section className="relative bg-[#080808] py-20 px-6 sm:px-8 overflow-hidden">
           <div className="max-w-6xl mx-auto">
@@ -1882,9 +1885,6 @@ export default function Home() {
             }
           `}</style>
         </section>
-
-        {/* ===== TESTIMONIALS WALL (social proof before the final CTA) ===== */}
-        <TestimonialsDesktop />
 
         {/* ===== CTA SECTION ===== */}
         <section className="relative bg-[#080808] text-center py-10 px-6 sm:px-8 overflow-hidden">

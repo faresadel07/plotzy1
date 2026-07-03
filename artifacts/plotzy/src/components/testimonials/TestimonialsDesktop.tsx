@@ -16,8 +16,9 @@ export function TestimonialsDesktop() {
 
   return (
     <section
+      id="testimonials"
       dir={ar ? "rtl" : "ltr"}
-      style={{ background: "#080808", padding: "88px 24px 96px", fontFamily: SF, overflow: "hidden" }}
+      style={{ background: "#080808", padding: "88px 24px 96px", fontFamily: SF, overflow: "hidden", scrollMarginTop: 80 }}
     >
       <div style={{ maxWidth: 1140, margin: "0 auto" }}>
         {/* Heading */}
@@ -51,19 +52,8 @@ export function TestimonialsDesktop() {
                 position: "relative",
               }}
             >
-              {/* Accent quote glyph */}
-              <div
-                aria-hidden
-                style={{ fontFamily: "Georgia, serif", fontSize: 52, lineHeight: 0.7, color: t.accent, height: 26, marginBottom: 10 }}
-              >
-                &ldquo;
-              </div>
-
-              <p style={{ fontSize: 15.5, lineHeight: 1.68, color: "rgba(255,255,255,0.9)", margin: "0 0 22px" }}>
-                {ar ? t.quoteAr : t.quote}
-              </p>
-
-              <div style={{ display: "flex", alignItems: "center", gap: 13, flexDirection: ar ? "row-reverse" : "row" }}>
+              {/* Person first — photo above the words */}
+              <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 18, flexDirection: ar ? "row-reverse" : "row" }}>
                 <div
                   style={{
                     width: 50, height: 50, borderRadius: "50%", flexShrink: 0,
@@ -82,6 +72,10 @@ export function TestimonialsDesktop() {
                   <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.5)", marginTop: 1 }}>{ar ? t.roleAr : t.role}</div>
                 </div>
               </div>
+
+              <p style={{ fontSize: 15.5, lineHeight: 1.68, color: "rgba(255,255,255,0.9)", margin: 0 }}>
+                {ar ? t.quoteAr : t.quote}
+              </p>
             </article>
           ))}
         </div>

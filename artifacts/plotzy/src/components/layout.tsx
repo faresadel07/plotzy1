@@ -750,6 +750,11 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             {/* Company — who we are, how to reach us, how to help us */}
             <FooterCol title="Company" links={[
               { label: 'About Plotzy',  href: '/about' },
+              { label: 'Reviews',       onClick: () => {
+                const scroll = () => document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (window.location.pathname === '/') scroll();
+                else { navigate('/'); setTimeout(scroll, 400); }
+              } },
               { label: 'Pricing',       href: '/pricing' },
               { label: 'Donate',        href: '/pricing' },
               { label: 'Contact',       href: '/support' },

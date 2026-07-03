@@ -13,7 +13,7 @@ const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 
 
 export function TestimonialsMobile({ ar }: { ar: boolean }) {
   return (
-    <section style={{ marginBottom: 30, fontFamily: SF }} dir={ar ? "rtl" : "ltr"}>
+    <section id="testimonials" style={{ marginBottom: 30, fontFamily: SF, scrollMarginTop: 60 }} dir={ar ? "rtl" : "ltr"}>
       {/* Header */}
       <div style={{ padding: "0 16px", marginBottom: 14, textAlign: ar ? "right" : "left" }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginBottom: 6 }}>
