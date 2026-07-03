@@ -25,27 +25,33 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
           {ar ? "دورة الكتابة المجّانيّة" : "Free Writing Course"}
         </div>
 
-        {/* Book cover on a soft purple glow so it lifts off the black */}
-        <div style={{ position: "relative", display: "inline-block" }}>
+        {/* Two course covers side by side on a soft purple glow so they
+            lift off the black. Order is fixed (not RTL-mirrored): the
+            newer "Learning Writing 101" sits to the right of the
+            original "Basics of Writing 101". */}
+        <div style={{ position: "relative" }}>
           <div
             aria-hidden
             style={{
-              position: "absolute", inset: "-10% -12%",
+              position: "absolute", inset: "-8% -6%",
               background: "radial-gradient(ellipse at center, rgba(124,92,196,0.5), transparent 70%)",
-              filter: "blur(28px)", zIndex: 0,
+              filter: "blur(30px)", zIndex: 0,
             }}
           />
-          <img
-            src="/course-book-cover.jpg"
-            alt={ar ? "أساسيّات الكتابة ١٠١" : "The Basics of Writing 101"}
-            loading="lazy"
-            style={{
-              position: "relative", zIndex: 1,
-              width: "66%", maxWidth: 250, height: "auto", display: "block", margin: "0 auto",
-              borderRadius: 8,
-              boxShadow: "0 26px 60px rgba(0,0,0,0.65)",
-            }}
-          />
+          <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 16 }}>
+            <img
+              src="/course-book-cover.jpg"
+              alt={ar ? "أساسيّات الكتابة ١٠١" : "The Basics of Writing 101"}
+              loading="lazy"
+              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px rgba(0,0,0,0.65)" }}
+            />
+            <img
+              src="/course-book-cover-2.jpg"
+              alt={ar ? "تعلّم الكتابة ١٠١" : "Learning Writing 101"}
+              loading="lazy"
+              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px rgba(0,0,0,0.65)" }}
+            />
+          </div>
         </div>
 
         <div
