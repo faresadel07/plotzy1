@@ -8,6 +8,7 @@ import {
   Minus, Plus, Undo2, Redo2, ChevronDown,
   Highlighter, Indent, Outdent, Quote,
   BookOpen, Book, Layers, FileText, TextSelect,
+  SlidersHorizontal, X,
 } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -185,6 +186,7 @@ export function RichWritingToolbar({
   const [sizeInput, setSizeInput] = useState<string | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
   const currentPageSize = PAGE_SIZE_OPTIONS.find(p => p.id === paperSize) || PAGE_SIZE_OPTIONS[2];
   const isPhone = useIsPhone();
   const sizeInputRef = useRef<HTMLInputElement>(null);
@@ -313,6 +315,249 @@ export function RichWritingToolbar({
     background: "transparent", color: fg, cursor: "pointer", fontSize: 13,
     display: "block", transition: "background 0.1s",
   };
+
+  // ─────────────────────────────────────────────────────────────
+  // PHONE LAYOUT — essentials inline, everything else in a "More"
+  // bottom sheet, ordered most-to-least used. Desktop untouched below.
+  // ─────────────────────────────────────────────────────────────
+  if (isPhone) {
+    const sheetBg = isDark || isFocusMode ? "#17171c" : "#ffffff";
+    const sheetText = fgStrong;
+    const sheetSub = isDark || isFocusMode ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
+    const chipIdle = isDark || isFocusMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+    const chipActiveBg = isDark || isFocusMode ? "#ffffff" : "#18181b";
+    const chipActiveFg = isDark || isFocusMode ? "#000000" : "#ffffff";
+
+    const mBtn = (active?: boolean): React.CSSProperties => ({
+      display: "flex", alignItems: "center", justifyContent: "center",
+      width: 40, height: 34, borderRadius: 9, border: "none",
+      background: active ? activeBg : "transparent",
+      color: active ? fgStrong : fg,
+      cursor: "pointer", transition: "background 0.12s", flexShrink: 0,
+    });
+    const seg = (active: boolean): React.CSSProperties => ({
+      flex: 1, minWidth: 0, height: 42, borderRadius: 11, border: "none", cursor: "pointer",
+      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+      fontSize: 13.5, fontWeight: 600,
+      background: active ? chipActiveBg : chipIdle,
+      color: active ? chipActiveFg : sheetText,
+      transition: "background 0.12s",
+    });
+    const sectionLabel: React.CSSProperties = {
+      fontSize: 11, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase",
+      color: sheetSub, marginBottom: 11,
+    };
+    const rowGap: React.CSSProperties = { display: "flex", gap: 8 };
+    const activeStyleLabel = getActiveStyle();
+
+    return (
+      <>
+        {/* Compact sticky bar */}
+        <div
+          className="sticky z-40 border-b flex-shrink-0"
+          style={{
+            background: toolbarBg, borderColor: dividerColor,
+            backdropFilter: "blur(12px)", opacity: isFocusMode ? 0.08 : 1,
+            top: 48,
+          }}
+          onMouseDown={e => e.preventDefault()}
+        >
+          <div className="px-2 h-11 flex items-center gap-1" style={{ color: fg }} dir="ltr">
+            <button onClick={() => runBulk((c) => c.toggleBold())} style={mBtn(editor?.isActive("bold"))} aria-label="Bold"><Bold className="w-4 h-4" /></button>
+            <button onClick={() => runBulk((c) => c.toggleItalic())} style={mBtn(editor?.isActive("italic"))} aria-label="Italic"><Italic className="w-4 h-4" /></button>
+            <button onClick={() => runBulk((c) => c.toggleUnderline())} style={mBtn(editor?.isActive("underline"))} aria-label="Underline"><UnderlineIcon className="w-4 h-4" /></button>
+
+            <div className="w-px self-stretch my-2 mx-1" style={{ background: dividerColor }} />
+
+            <button onMouseDown={e => { e.preventDefault(); changeSize(-1); }} style={mBtn()} aria-label="Decrease size"><Minus className="w-4 h-4" /></button>
+            <span className="text-sm font-semibold tabular-nums w-6 text-center" style={{ color: fg }}>{currentSize}</span>
+            <button onMouseDown={e => { e.preventDefault(); changeSize(1); }} style={mBtn()} aria-label="Increase size"><Plus className="w-4 h-4" /></button>
+
+            <div style={{ flex: 1 }} />
+
+            <button
+              onClick={() => setMoreOpen(true)}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-full"
+              style={{ background: activeBg, color: fgStrong, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              More
+            </button>
+          </div>
+        </div>
+
+        {/* More bottom sheet */}
+        {moreOpen && (
+          <div className="fixed inset-0 z-[60]">
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setMoreOpen(false)} />
+            <div
+              className="absolute left-0 right-0 bottom-0 rounded-t-3xl"
+              style={{
+                background: sheetBg, color: sheetText,
+                maxHeight: "84vh", overflowY: "auto",
+                padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
+                boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+              }}
+              dir="ltr"
+            >
+              <div style={{ display: "flex", justifyContent: "center", paddingTop: 4, paddingBottom: 10 }}>
+                <div style={{ width: 40, height: 5, borderRadius: 999, background: isDark || isFocusMode ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.02em" }}>Formatting</span>
+                <button onClick={() => setMoreOpen(false)} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 999, border: "none", cursor: "pointer", background: chipIdle, color: sheetText, display: "grid", placeItems: "center" }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 1. Paragraph style */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>Paragraph style</div>
+                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+                  {TEXT_STYLES.map(s => (
+                    <button key={s.value} onClick={() => applyTextStyle(s.value)} style={{ ...seg(activeStyleLabel === s.label), flex: "0 0 auto", padding: "0 16px" }}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Font */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>Font</div>
+                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+                  {FONT_OPTIONS.map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => applyFont(f)}
+                      style={{
+                        flex: "0 0 auto", padding: "10px 16px", borderRadius: 11, border: "none", cursor: "pointer",
+                        whiteSpace: "nowrap", fontFamily: f.fontFamily, fontSize: 15,
+                        background: f.id === currentFontObj.id ? chipActiveBg : chipIdle,
+                        color: f.id === currentFontObj.id ? chipActiveFg : sheetText,
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Alignment */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>Alignment</div>
+                <div style={rowGap}>
+                  {(["left", "center", "right", "justify"] as const).map(a => {
+                    const Icon = a === "left" ? AlignLeft : a === "center" ? AlignCenter : a === "right" ? AlignRight : AlignJustify;
+                    return (
+                      <button key={a} onClick={() => runBulk((c) => c.setTextAlign(a))} style={seg(!!editor?.isActive({ textAlign: a }))} aria-label={a}>
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Lists & indent */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>Lists</div>
+                <div style={rowGap}>
+                  <button onClick={() => runBulk((c) => c.toggleBulletList())} style={seg(!!editor?.isActive("bulletList"))} aria-label="Bulleted list"><List className="w-4 h-4" /></button>
+                  <button onClick={() => runBulk((c) => c.toggleOrderedList())} style={seg(!!editor?.isActive("orderedList"))} aria-label="Numbered list"><ListOrdered className="w-4 h-4" /></button>
+                  <button onClick={() => runBulk((c) => c.liftListItem("listItem"))} style={seg(false)} aria-label="Outdent"><Outdent className="w-4 h-4" /></button>
+                  <button onClick={() => runBulk((c) => c.sinkListItem("listItem"))} style={seg(false)} aria-label="Indent"><Indent className="w-4 h-4" /></button>
+                </div>
+              </div>
+
+              {/* 5. Format */}
+              <div style={{ marginBottom: 22 }}>
+                <div style={sectionLabel}>Format</div>
+                <div style={rowGap}>
+                  <button onClick={() => runBulk((c) => c.toggleStrike())} style={seg(!!editor?.isActive("strike"))} aria-label="Strikethrough"><Strikethrough className="w-4 h-4" /></button>
+                  <button onClick={() => runBulk((c) => c.toggleBlockquote())} style={seg(!!editor?.isActive("blockquote"))} aria-label="Blockquote"><Quote className="w-4 h-4" /></button>
+                  <button
+                    onClick={() => { const existing = editor?.getAttributes("link")?.href || ""; setLinkUrl(existing); setLinkDialogOpen(true); setMoreOpen(false); }}
+                    style={seg(!!editor?.isActive("link"))} aria-label="Link"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 6. Colors */}
+              <div style={{ marginBottom: onApplyFontToWholeChapter ? 22 : 4 }}>
+                <div style={sectionLabel}>Colors</div>
+                <div style={rowGap}>
+                  <button onClick={() => document.getElementById("rich-text-color-m")?.click()} style={{ flex: 1, height: 54, borderRadius: 12, border: "none", cursor: "pointer", background: chipIdle, color: sheetText, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>Text</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: editor?.getAttributes("textStyle")?.color || fgStrong, border: "2px solid rgba(128,128,128,0.4)" }} />
+                  </button>
+                  <button onClick={() => document.getElementById("rich-highlight-color-m")?.click()} style={{ flex: 1, height: 54, borderRadius: 12, border: "none", cursor: "pointer", background: chipIdle, color: sheetText, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>Highlight</span>
+                    <span style={{ width: 26, height: 26, borderRadius: 8, background: editor?.getAttributes("highlight")?.color || "#fef08a", border: "2px solid rgba(128,128,128,0.4)" }} />
+                  </button>
+                  <input id="rich-text-color-m" type="color" defaultValue="#111111" onChange={e => { const v = e.target.value; runBulk((c) => c.setColor(v)); }} style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }} />
+                  <input id="rich-highlight-color-m" type="color" defaultValue="#fef08a" onChange={e => { const v = e.target.value; runBulk((c) => c.setHighlight({ color: v })); }} style={{ position: "absolute", opacity: 0, width: 1, height: 1, pointerEvents: "none" }} />
+                </div>
+              </div>
+
+              {/* 7. Apply to the whole chapter */}
+              {onApplyFontToWholeChapter && (
+                <button
+                  onClick={() => {
+                    if (chapterWideMode) { onExitChapterWideMode?.(); return; }
+                    const css = (editor?.getAttributes("textStyle")?.fontFamily as string | undefined) ?? "";
+                    const derived = css ? FONT_OPTIONS.find(f => f.fontFamily === css)?.id : undefined;
+                    const id = lastFontId ?? derived ?? currentFontObj.id;
+                    onApplyFontToWholeChapter(id);
+                  }}
+                  style={{
+                    width: "100%", height: 48, borderRadius: 12, border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    fontSize: 14, fontWeight: 700,
+                    background: chapterWideMode ? "rgba(56,132,255,0.16)" : chipIdle,
+                    color: chapterWideMode ? "#3884ff" : sheetText,
+                  }}
+                >
+                  <Book className="w-4 h-4" />
+                  {chapterWideMode ? "Editing whole chapter · tap to exit" : "Apply to whole chapter"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Link dialog (shared with the sheet's Link action) */}
+        {linkDialogOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center"
+            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
+            onClick={() => setLinkDialogOpen(false)}>
+            <div className="rounded-2xl shadow-2xl p-6 w-[86%] max-w-sm"
+              style={{ background: dropBg, border: `1px solid ${dropBorder}` }}
+              onClick={e => e.stopPropagation()}>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: fgStrong }}>Insert Link</h3>
+              <input
+                autoFocus value={linkUrl}
+                onChange={e => setLinkUrl(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") applyLink(); if (e.key === "Escape") setLinkDialogOpen(false); }}
+                placeholder="https://example.com"
+                className="w-full px-3 py-2 rounded-lg text-sm mb-3 outline-none"
+                style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)", color: fgStrong, border: `1px solid ${dropBorder}` }}
+              />
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setLinkDialogOpen(false)} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: hoverBg, color: fg, border: "none", cursor: "pointer" }}>Cancel</button>
+                {editor?.isActive("link") && (
+                  <button onClick={() => { editor.chain().focus().unsetLink().run(); setLinkDialogOpen(false); }} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "none", cursor: "pointer" }}>Remove</button>
+                )}
+                <button onClick={applyLink} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: "#2563eb", color: "#fff", border: "none", cursor: "pointer" }}>Apply</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <>

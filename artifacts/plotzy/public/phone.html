@@ -28,13 +28,10 @@
     .controls button:hover { background: rgba(255,255,255,0.16); }
     .controls button.active { background: #fff; color: #000; border-color: #fff; }
 
-    /* Stage reserves the SCALED height so there is no huge empty gap. */
     .stage { display: flex; justify-content: center; width: 100%; }
 
-    /* The phone bezel wraps the live site in an iframe sized to the exact
-       logical resolution of the chosen device (default iPhone 14 Pro Max
-       = 430 x 932 CSS px). The whole bezel is then uniformly scaled to
-       fit the laptop screen, so the mobile layout stays pixel-accurate. */
+    /* Phone bezel (default iPhone 14 Pro Max = 430 x 932 CSS px). The
+       whole bezel is uniformly scaled to fit the laptop screen. */
     .phone {
       position: relative;
       background: #000;
@@ -43,14 +40,27 @@
       box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,255,255,0.06);
       transform-origin: top center;
     }
-    /* Dynamic Island */
-    .phone::before {
-      content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-      width: 120px; height: 30px; background: #000; border-radius: 999px; z-index: 2;
-    }
-    .phone iframe {
+    /* The screen = a status bar (with the Dynamic Island) ON TOP of the
+       site, so the island never covers the app's own top bar. */
+    .screen {
       width: var(--w, 430px); height: var(--h, 932px);
-      border: none; border-radius: 40px; background: #000; display: block;
+      border-radius: 40px; overflow: hidden; background: #000;
+      display: flex; flex-direction: column;
+    }
+    .statusbar {
+      height: 46px; flex-shrink: 0; position: relative; background: #000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 26px; color: #fff;
+      font-size: 13px; font-weight: 600;
+    }
+    .statusbar .island {
+      position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+      width: 118px; height: 30px; background: #000; border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .statusbar .dots { display: flex; align-items: center; gap: 5px; font-size: 12px; opacity: 0.9; }
+    .screen iframe {
+      width: 100%; flex: 1; border: none; background: #000; display: block;
     }
     .caption { font-size: 12px; color: rgba(255,255,255,0.4); }
   </style>
@@ -66,7 +76,14 @@
     </div>
     <div class="stage" id="stage">
       <div class="phone" id="phone">
-        <iframe id="frame" src="/" title="Plotzy phone preview"></iframe>
+        <div class="screen">
+          <div class="statusbar">
+            <span>9:41</span>
+            <div class="island"></div>
+            <span class="dots">&#9679;&#9679;&#9679; &#128246; &#128267;</span>
+          </div>
+          <iframe id="frame" src="/" title="Plotzy phone preview"></iframe>
+        </div>
       </div>
     </div>
     <div class="caption" id="caption">iPhone 14 Pro Max · 430 x 932</div>
@@ -78,10 +95,8 @@
     var stage = document.getElementById('stage');
     var caption = document.getElementById('caption');
     var btns = document.querySelectorAll('.controls button[data-w]');
-    var curW = 430, curH = 932;
 
     function fit() {
-      // Reset transform to read the natural (unscaled) size.
       phone.style.transform = 'none';
       var naturalH = phone.offsetHeight;
       var naturalW = phone.offsetWidth;
@@ -89,13 +104,11 @@
       var availW = window.innerWidth - 40;
       var scale = Math.min(1, availH / naturalH, availW / naturalW);
       phone.style.transform = 'scale(' + scale + ')';
-      // Reserve the scaled footprint so the page does not leave a big gap.
       stage.style.height = (naturalH * scale) + 'px';
       stage.style.width = (naturalW * scale) + 'px';
     }
 
     function setDevice(w, h) {
-      curW = w; curH = h;
       phone.style.setProperty('--w', w + 'px');
       phone.style.setProperty('--h', h + 'px');
       fit();
