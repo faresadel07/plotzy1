@@ -33,21 +33,37 @@ export function CourseLandingHero() {
         minHeight: "clamp(220px, 42vw, 360px)",
       }}
     >
-      {/* The hero illustration is shown on every device. On phones we
-          switch the aspect ratio to 4:3 (taller, more readable) and
-          shift object-position so the writer / book on the right of
-          the original panorama stays visible after the crop. */}
+      {/* Two illustrations: a panoramic one for iPad / laptop, and a
+          dedicated PORTRAIT one for phones. The phone art has a tall
+          book-of-imagination composition with clean dark sky at the
+          top, so on phones we switch to a portrait frame, anchor the
+          title to the TOP over that sky, and centre it: reads as a
+          polished course poster instead of a cramped, cropped panorama. */}
       <style>{`
+        /* Phone: portrait poster with the vertical illustration. */
         @media (max-width: 699px) {
           .course-hero-frame {
-            aspect-ratio: 4 / 3 !important;
-            min-height: 280px !important;
+            aspect-ratio: 2 / 3 !important;
+            min-height: 460px !important;
           }
-          .course-hero-image {
-            object-position: 70% center !important;
+          .course-hero-image-desktop,
+          .course-hero-scrim-desktop { display: none !important; }
+          .course-hero-content {
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding-top: 34px !important;
+            text-align: center !important;
           }
+          .course-hero-textblock { margin-left: auto !important; margin-right: auto !important; }
+        }
+        /* iPad / laptop: keep the original panorama untouched. */
+        @media (min-width: 700px) {
+          .course-hero-image-mobile,
+          .course-hero-scrim-mobile { display: none !important; }
         }
       `}</style>
+
+      {/* Desktop / iPad panoramic illustration */}
       <img
         src="/course-hero.png"
         alt=""
@@ -55,23 +71,49 @@ export function CourseLandingHero() {
         aria-hidden="true"
         loading="eager"
         decoding="async"
-        className="course-hero-image absolute inset-0 h-full w-full object-cover"
+        className="course-hero-image-desktop absolute inset-0 h-full w-full object-cover"
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
       />
-      {/* Subtle bottom-left scrim — keeps the title readable while
+      {/* Phone portrait illustration */}
+      <img
+        src="/course-hero-mobile.jpg"
+        alt=""
+        role="presentation"
+        aria-hidden="true"
+        loading="eager"
+        decoding="async"
+        className="course-hero-image-mobile absolute inset-0 h-full w-full object-cover"
+        style={{ objectPosition: "center" }}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+
+      {/* Desktop scrim — bottom-left, keeps the title readable while
          leaving the illustration's right-side focal point clear. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0"
+        className="course-hero-scrim-desktop absolute inset-0"
         style={{
           background:
             "linear-gradient(110deg, rgba(15,26,51,0.78) 0%, rgba(15,26,51,0.55) 40%, rgba(15,26,51,0.10) 70%, rgba(15,26,51,0) 100%)",
         }}
       />
-      <div className="relative z-10 h-full flex items-end px-6 sm:px-10 py-8 sm:py-10">
-        <div className="max-w-2xl text-white">
+      {/* Phone scrim — a soft veil across the top sky so the centred
+         title stays crisp without hiding the illustration below. */}
+      <div
+        aria-hidden="true"
+        className="course-hero-scrim-mobile absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(10,14,30,0.88) 0%, rgba(10,14,30,0.66) 24%, rgba(10,14,30,0.28) 44%, rgba(10,14,30,0.05) 58%, rgba(10,14,30,0) 70%)",
+        }}
+      />
+
+      <div className="course-hero-content relative z-10 h-full flex items-end px-6 sm:px-10 py-8 sm:py-10">
+        <div className="course-hero-textblock max-w-2xl text-white">
           <h1
             className="font-serif text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-tight"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.45)" }}
