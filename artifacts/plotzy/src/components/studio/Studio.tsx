@@ -44,18 +44,22 @@ import { ProviderIcon, ClaudeIcon } from "./icons";
 const SF =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif';
 
-// Plotzy palette constants. Inlined so the panel feels native without
-// depending on the global CSS variable layer.
-const PANEL_BG = "#000";
-const CARD_BG = "rgba(255,255,255,0.04)";
-const CARD_BG_STRONG = "rgba(255,255,255,0.07)";
-const CARD_BG_HOVER = "rgba(255,255,255,0.06)";
-const BORDER = "rgba(255,255,255,0.08)";
-const BORDER_STRONG = "rgba(255,255,255,0.16)";
-const BORDER_ACTIVE = "rgba(255,255,255,0.32)";
-const TEXT = "#fff";
-const TEXT_DIM = "rgba(255,255,255,0.65)";
-const TEXT_MUTE = "rgba(255,255,255,0.42)";
+// Claude palette. The panel mirrors the real Claude app: warm cream
+// canvas, ink text, and the signature terracotta accent, so the chat
+// feels like Claude itself living inside Plotzy.
+const PANEL_BG = "#FAF9F5";           // Claude cream canvas
+const CARD_BG = "#F0EEE6";            // warm card
+const CARD_BG_STRONG = "#E8E5DA";     // pressed / active card
+const CARD_BG_HOVER = "#EDEAE0";
+const BORDER = "rgba(31,30,27,0.10)";
+const BORDER_STRONG = "rgba(31,30,27,0.18)";
+const BORDER_ACTIVE = "rgba(31,30,27,0.30)";
+const TEXT = "#1F1E1B";               // warm ink
+const TEXT_DIM = "rgba(31,30,27,0.65)";
+const TEXT_MUTE = "rgba(31,30,27,0.45)";
+const ACCENT = "#D97757";             // Claude terracotta
+// The Claude wordmark is a serif; used for the panel title only.
+const CLAUDE_SERIF = 'ui-serif, Georgia, "Times New Roman", serif';
 
 interface StudioProps {
   open: boolean;
@@ -254,8 +258,8 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         zIndex: 60,
         width: isMobile ? "100vw" : 440,
         background: PANEL_BG,
-        borderInlineStart: `1px solid ${BORDER}`,
-        boxShadow: "-12px 0 60px rgba(0,0,0,0.5)",
+        borderInlineStart: `1px solid ${BORDER_STRONG}`,
+        boxShadow: "-12px 0 60px rgba(0,0,0,0.18)",
         display: "grid",
         gridTemplateRows: "auto 1fr auto",
         fontFamily: SF,
@@ -324,6 +328,11 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
           />
         ))}
 
+        {/* While Claude is working but hasn't produced the first token
+            yet, show a live "reading / thinking / shaping" status line so
+            the writer sees progress instead of a dead pause. */}
+        {isSending && !streamingText && <ThinkingIndicator ar={ar} />}
+
         {streamingText && (
           <MessageBubble
             key="streaming"
@@ -353,7 +362,7 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
               background: "rgba(239,68,68,0.10)",
               border: "1px solid rgba(239,68,68,0.30)",
               borderRadius: 12,
-              color: "#fca5a5",
+              color: "#c2410c",
               fontSize: 13,
             }}
           >
@@ -428,11 +437,12 @@ function Header({
           <ClaudeIcon size={22} />
           <div
             style={{
-              fontSize: 18,
-              fontWeight: 700,
+              fontSize: 20,
+              fontWeight: 600,
               color: TEXT,
-              letterSpacing: "-0.018em",
+              letterSpacing: "-0.01em",
               lineHeight: 1.1,
+              fontFamily: CLAUDE_SERIF,
             }}
           >
             Claude
@@ -479,7 +489,7 @@ function Header({
           <span
             style={{
               fontSize: 10.5,
-              color: quota.remaining === 0 ? "#fca5a5" : TEXT_MUTE,
+              color: quota.remaining === 0 ? "#c2410c" : TEXT_MUTE,
               fontVariantNumeric: "tabular-nums",
               fontWeight: 500,
             }}
@@ -630,7 +640,7 @@ function ModelMenu({
                     <span
                       style={{
                         fontSize: 10.5,
-                        color: overLimit ? "#fca5a5" : TEXT_MUTE,
+                        color: overLimit ? "#c2410c" : TEXT_MUTE,
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
@@ -691,7 +701,7 @@ function Drawer({
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0,0,0,0.45)",
+          background: "rgba(31,30,27,0.25)",
           zIndex: 20,
           animation: "studio-fade 160ms ease-out",
         }}
@@ -703,7 +713,7 @@ function Drawer({
           bottom: 0,
           insetInlineStart: 0,
           width: 280,
-          background: "#070707",
+          background: "#F5F4EF",
           borderInlineEnd: `1px solid ${BORDER_STRONG}`,
           zIndex: 21,
           display: "flex",
@@ -960,7 +970,7 @@ function EmptyState({
             insetInlineStart: "50%",
             transform: "translate(-50%, -50%)",
             background:
-              "radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 65%)",
+              "radial-gradient(circle, rgba(217,119,87,0.22) 0%, rgba(217,119,87,0) 65%)",
             pointerEvents: "none",
             animation: "studio-pulse 3.5s ease-in-out infinite",
           }}
@@ -976,11 +986,12 @@ function EmptyState({
 
       <div
         style={{
-          fontSize: 20,
-          fontWeight: 700,
+          fontSize: 22,
+          fontWeight: 600,
           color: TEXT,
           marginBottom: 6,
-          letterSpacing: "-0.02em",
+          letterSpacing: "-0.01em",
+          fontFamily: CLAUDE_SERIF,
         }}
       >
         {ar ? "شريكك في الكتابة" : "Your writing partner"}
@@ -1047,6 +1058,81 @@ function EmptyState({
   );
 }
 
+// ─── Thinking indicator ───────────────────────────────────────────
+//
+// Shown between "message sent" and "first token arrives". A pulsing
+// Claude spark plus a status phrase that advances every ~1.8s, so the
+// wait reads as visible work (reading, thinking, shaping) rather than
+// a frozen panel.
+
+const THINKING_STEPS_EN = [
+  "Reading your message…",
+  "Thinking it through…",
+  "Checking your chapter…",
+  "Shaping the reply…",
+];
+const THINKING_STEPS_AR = [
+  "يقرأ رسالتك…",
+  "يفكّر…",
+  "يراجع فصلك…",
+  "يصيغ الردّ…",
+];
+
+function ThinkingIndicator({ ar }: { ar: boolean }) {
+  const steps = ar ? THINKING_STEPS_AR : THINKING_STEPS_EN;
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    // Advance through the phrases, then hold on the last one — the
+    // reply can take a while and looping back to "reading" would lie.
+    const id = setInterval(() => {
+      setStep((s) => Math.min(s + 1, steps.length - 1));
+    }, 1800);
+    return () => clearInterval(id);
+  }, [steps.length]);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        paddingInlineStart: 4,
+        color: TEXT_DIM,
+      }}
+    >
+      <span
+        style={{
+          display: "inline-flex",
+          animation: "studio-think-pulse 1.4s ease-in-out infinite",
+        }}
+      >
+        <ClaudeIcon size={16} />
+      </span>
+      <span
+        key={step}
+        style={{
+          fontSize: 12.5,
+          fontWeight: 500,
+          animation: "studio-think-in 260ms ease-out",
+        }}
+      >
+        {steps[step]}
+      </span>
+      <style>{`
+        @keyframes studio-think-pulse {
+          0%, 100% { opacity: 0.55; transform: scale(1) rotate(0deg); }
+          50%      { opacity: 1;    transform: scale(1.15) rotate(12deg); }
+        }
+        @keyframes studio-think-in {
+          from { opacity: 0; transform: translateY(3px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // ─── Message bubble ────────────────────────────────────────────────
 
 function MessageBubble({
@@ -1097,13 +1183,15 @@ function MessageBubble({
       <div
         style={{
           maxWidth: "88%",
-          padding: "11px 14px",
-          borderRadius: 14,
-          background: isUser ? CARD_BG_STRONG : CARD_BG,
-          border: `1px solid ${isUser ? BORDER_STRONG : BORDER}`,
+          // Claude-app look: the assistant speaks as plain text on the
+          // cream canvas; only the writer's own messages get a bubble.
+          padding: isUser ? "11px 14px" : "2px 4px",
+          borderRadius: 16,
+          background: isUser ? CARD_BG : "transparent",
+          border: isUser ? `1px solid ${BORDER}` : "1px solid transparent",
           color: TEXT,
-          fontSize: 13,
-          lineHeight: 1.65,
+          fontSize: 13.5,
+          lineHeight: 1.7,
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
           userSelect: "text",
@@ -1281,7 +1369,7 @@ function Composer({
             borderRadius: 10,
             background: "rgba(239,68,68,0.10)",
             border: "1px solid rgba(239,68,68,0.28)",
-            color: "#fca5a5",
+            color: "#c2410c",
             fontSize: 12,
             lineHeight: 1.45,
           }}
@@ -1316,11 +1404,12 @@ function Composer({
           display: "flex",
           gap: 8,
           alignItems: "flex-end",
-          background: CARD_BG,
-          border: `1px solid ${hasText || attachments.length > 0 ? BORDER_STRONG : BORDER}`,
+          background: "#FFFFFF",
+          border: `1px solid ${hasText || attachments.length > 0 ? "rgba(217,119,87,0.45)" : BORDER_STRONG}`,
           borderRadius: 18,
           padding: "10px 10px 10px 12px",
           transition: "border-color 140ms ease",
+          boxShadow: "0 1px 4px rgba(31,30,27,0.06)",
         }}
       >
         {/* Hidden file picker the Paperclip button triggers. */}
@@ -1427,7 +1516,7 @@ function Composer({
               borderRadius: 11,
               background: "rgba(239,68,68,0.14)",
               border: "1px solid rgba(239,68,68,0.34)",
-              color: "#fca5a5",
+              color: "#c2410c",
               cursor: "pointer",
               flexShrink: 0,
             }}
@@ -1446,9 +1535,9 @@ function Composer({
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 11,
-              background: canSend ? TEXT : "transparent",
-              border: `1px solid ${canSend ? TEXT : BORDER}`,
-              color: canSend ? "#000" : TEXT_MUTE,
+              background: canSend ? ACCENT : "transparent",
+              border: `1px solid ${canSend ? ACCENT : BORDER}`,
+              color: canSend ? "#fff" : TEXT_MUTE,
               cursor: canSend ? "pointer" : "default",
               transition: "all 160ms ease",
               flexShrink: 0,
