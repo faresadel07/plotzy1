@@ -71,7 +71,7 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
   const [messages, setMessages] = useState<StudioMessage[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [selectedProviderId, setSelectedProviderId] = useState<ProviderId>("llama");
+  const [selectedProviderId, setSelectedProviderId] = useState<ProviderId>("claude");
   const [error, setError] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -149,7 +149,7 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
           body: JSON.stringify({
             bookId,
             chapterId: chapterId || undefined,
-            providerId: "llama",
+            providerId: "claude",
           }),
         });
         if (r.ok) {

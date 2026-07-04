@@ -8,7 +8,7 @@ import { SEO } from "@/components/SEO";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
 import { AIAssistant } from "@/components/ai-assistant";
 import { Studio } from "@/components/studio/Studio";
-import { StudioIcon } from "@/components/studio/icons";
+import { ClaudeIcon } from "@/components/studio/icons";
 import { DictionaryPopover } from "@/components/editor-tools/DictionaryPopover";
 import { QuickAIBubble } from "@/components/editor-tools/QuickAIBubble";
 import { BookCustomizer } from "@/components/book-customizer";
@@ -2307,12 +2307,12 @@ export default function ChapterEditor() {
                 boxShadow: "0 4px 16px rgba(0,0,0,0.55)",
               }}
               onClick={() => setAiChatOpen(true)}
-              aria-label={ar ? "الاستوديو" : "The Studio"}
-              title={ar ? "الاستوديو" : "The Studio"}
+              aria-label="Claude"
+              title="Claude"
               data-testid="button-studio-topbar"
             >
-              <StudioIcon size={16} color="#fff" />
-              {ar ? "الاستوديو" : "Studio"}
+              <ClaudeIcon size={16} />
+              Claude
             </button>
 
             {/* AI Assistant pill. Visible on every viewport now — was
@@ -4081,7 +4081,7 @@ export default function ChapterEditor() {
           e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
         }}
       >
-        <StudioIcon size={26} color="#fff" />
+        <ClaudeIcon size={26} />
       </button>
       {/* Quick AI actions bubble. Appears whenever 2+ words are
           selected in the TipTap editor. Hidden while the Studio panel

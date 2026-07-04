@@ -39,7 +39,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useStudio } from "./useStudio";
 import type { ProviderId, ProviderMeta, StudioMessage, StudioAttachment } from "./types";
 import { providerAcceptsVision } from "./types";
-import { ProviderIcon, StudioIcon } from "./icons";
+import { ProviderIcon, ClaudeIcon } from "./icons";
 
 const SF =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif';
@@ -275,20 +275,7 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         activeTitle={activeConversation?.title ?? null}
       />
 
-      {/* ── Model dropdown (positioned absolute under header) ── */}
-      {modelMenuOpen && (
-        <ModelMenu
-          ar={ar}
-          providers={providers}
-          quotas={quotas}
-          activeId={selectedProviderId}
-          onSelect={(id) => {
-            selectProvider(id);
-            setModelMenuOpen(false);
-          }}
-          onClose={() => setModelMenuOpen(false)}
-        />
-      )}
+      {/* Model dropdown removed — Plotzy runs on Claude only. */}
 
       {/* ── Drawer (absolute overlay) ─────────────────────────── */}
       {drawerOpen && (
@@ -438,17 +425,17 @@ function Header({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <StudioIcon size={22} color={TEXT} />
+          <ClaudeIcon size={22} />
           <div
             style={{
-              fontSize: 17,
+              fontSize: 18,
               fontWeight: 700,
               color: TEXT,
               letterSpacing: "-0.018em",
               lineHeight: 1.1,
             }}
           >
-            {ar ? "الاستوديو" : "The Studio"}
+            Claude
           </div>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
@@ -470,40 +457,23 @@ function Header({
         </div>
       </div>
 
-      {/* Row 2: model picker */}
-      <button
-        onClick={onToggleModelMenu}
-        aria-expanded={modelMenuOpen}
-        aria-haspopup="menu"
+      {/* Row 2: the model — Claude Sonnet, the only model. Static (no
+          picker) since there is nothing to switch to. */}
+      <div
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: 9,
-          padding: "7px 11px 7px 9px",
-          background: modelMenuOpen ? CARD_BG_STRONG : CARD_BG,
-          border: `1px solid ${modelMenuOpen ? BORDER_ACTIVE : BORDER}`,
+          gap: 8,
+          padding: "6px 12px",
+          background: CARD_BG,
+          border: `1px solid ${BORDER}`,
           borderRadius: 999,
-          cursor: "pointer",
           color: TEXT,
-          transition: "all 140ms ease",
-          fontFamily: "inherit",
         }}
       >
-        {activeProvider && (
-          <ProviderIcon
-            providerId={activeProvider.id}
-            size={14}
-            color={activeProvider.color}
-          />
-        )}
-        <span
-          style={{
-            fontSize: 12.5,
-            fontWeight: 600,
-            letterSpacing: "-0.005em",
-          }}
-        >
-          {activeProvider?.displayName ?? "—"}
+        <ClaudeIcon size={13} />
+        <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: "-0.005em" }}>
+          {ar ? "سونيت" : "Sonnet"}
         </span>
         {quota && quota.limit !== null && (
           <span
@@ -517,15 +487,7 @@ function Header({
             {quota.used}/{quota.limit}
           </span>
         )}
-        <ChevronDown
-          size={13}
-          color={TEXT_DIM}
-          style={{
-            transition: "transform 160ms ease",
-            transform: modelMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        />
-      </button>
+      </div>
 
       {/* Row 3: subtle conversation breadcrumb */}
       {activeTitle && (
@@ -1003,7 +965,7 @@ function EmptyState({
             animation: "studio-pulse 3.5s ease-in-out infinite",
           }}
         />
-        <StudioIcon size={36} color={TEXT} style={{ opacity: 0.95 }} />
+        <ClaudeIcon size={36} style={{ opacity: 0.95 }} />
         <style>{`
           @keyframes studio-pulse {
             0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
@@ -1021,7 +983,7 @@ function EmptyState({
           letterSpacing: "-0.02em",
         }}
       >
-        {ar ? "اسأل أيّ شيء." : "Ask anything."}
+        {ar ? "شريكك في الكتابة" : "Your writing partner"}
       </div>
       <div
         style={{

@@ -22,12 +22,12 @@ export type ProviderId = "claude" | "gpt" | "gemini" | "cerebras" | "llama";
 /** The five shipping providers in display order. Cerebras sits next
  *  to Llama because both are free-tier inference; the paid frontier
  *  models (Claude, GPT, Gemini) lead the row. */
+// Plotzy runs on Claude only. The other provider implementations are
+// kept in this file (so re-enabling any of them later is a one-line
+// change to this list), but only Claude is listed, so the Studio shows
+// a single, unbranded-clutter model.
 export const PROVIDER_IDS: readonly ProviderId[] = [
   "claude",
-  "gpt",
-  "gemini",
-  "cerebras",
-  "llama",
 ] as const;
 
 /** Binary attachment associated with a single user-turn message.
@@ -125,7 +125,7 @@ function costFromTokens(
 
 const claudeProvider: AiProvider = {
   id: "claude",
-  displayName: "Claude 4.5",
+  displayName: "Claude",
   get enabled() {
     return !!process.env.ANTHROPIC_API_KEY;
   },
@@ -192,7 +192,7 @@ const claudeProvider: AiProvider = {
 
     const stream = await client.messages.stream(
       {
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6",
         max_tokens: opts?.maxOutputTokens ?? 1500,
         temperature: opts?.temperature ?? 0.8,
         system: systemParts.length > 0 ? systemParts.join("\n\n") : undefined,

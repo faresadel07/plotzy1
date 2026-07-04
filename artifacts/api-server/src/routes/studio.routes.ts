@@ -274,7 +274,7 @@ router.post("/api/studio/conversations", async (req, res) => {
       chapterId: z.number().int().positive().optional(),
       title: z.string().max(200).optional(),
       parentConversationId: z.number().int().positive().optional(),
-      providerId: z.enum(["claude", "gpt", "gemini", "cerebras", "llama"]).default("llama"),
+      providerId: z.enum(["claude", "gpt", "gemini", "cerebras", "llama"]).default("claude"),
     });
     const parsed = bodySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -480,8 +480,12 @@ async function buildSystemPrompt(args: {
 
   const lines: string[] = [];
   lines.push(
-    "You are The Studio, a creative writing companion built into Plotzy.",
+    "You are Claude, the writing companion built into Plotzy.",
     "You help the writer of the book described below. Be specific, concrete, and direct. Avoid generic writing advice; tailor every suggestion to this book.",
+    // Hard scope: writing only. This keeps the assistant on task and
+    // stops writers turning it into a free general-purpose or coding bot.
+    "SCOPE: You ONLY help with writing and this book: plotting, drafting, prose, rewriting, editing, characters, dialogue, structure, worldbuilding, brainstorming, titles, blurbs, and writing craft. You may write or continue prose on the writer's behalf.",
+    "If the writer asks for anything outside writing (software, code, apps, spreadsheets, math, homework, general knowledge, personal tasks, or any heavy non-writing job), politely decline in one short sentence and steer them back to their book. Do not attempt those tasks, even partially.",
     lang === "ar"
       ? "Respond in Modern Standard Arabic by default, unless the writer's message is in English."
       : "Respond in English by default, unless the writer's message is in another language.",
