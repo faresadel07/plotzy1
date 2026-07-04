@@ -330,7 +330,9 @@ export function RichWritingToolbar({
 
     const mBtn = (active?: boolean): React.CSSProperties => ({
       display: "flex", alignItems: "center", justifyContent: "center",
-      width: 40, height: 34, borderRadius: 9, border: "none",
+      // Slim enough that undo/redo + B/I/U + size stepper + More all
+      // fit a 360px screen with no horizontal overflow.
+      width: 32, height: 32, borderRadius: 8, border: "none",
       background: active ? activeBg : "transparent",
       color: active ? fgStrong : fg,
       cursor: "pointer", transition: "background 0.12s", flexShrink: 0,
@@ -362,28 +364,28 @@ export function RichWritingToolbar({
           }}
           onMouseDown={e => e.preventDefault()}
         >
-          <div className="px-2 h-11 flex items-center gap-1" style={{ color: fg }} dir="ltr">
+          <div className="px-1.5 h-11 flex items-center gap-0.5" style={{ color: fg }} dir="ltr">
             <button onClick={() => editor?.chain().focus().undo().run()} style={mBtn()} aria-label="Undo"><Undo2 className="w-4 h-4" /></button>
             <button onClick={() => editor?.chain().focus().redo().run()} style={mBtn()} aria-label="Redo"><Redo2 className="w-4 h-4" /></button>
-            <div className="w-px self-stretch my-2 mx-1" style={{ background: dividerColor }} />
+            <div className="w-px self-stretch my-2.5 mx-0.5" style={{ background: dividerColor }} />
             <button onClick={() => runBulk((c) => c.toggleBold())} style={mBtn(editor?.isActive("bold"))} aria-label="Bold"><Bold className="w-4 h-4" /></button>
             <button onClick={() => runBulk((c) => c.toggleItalic())} style={mBtn(editor?.isActive("italic"))} aria-label="Italic"><Italic className="w-4 h-4" /></button>
             <button onClick={() => runBulk((c) => c.toggleUnderline())} style={mBtn(editor?.isActive("underline"))} aria-label="Underline"><UnderlineIcon className="w-4 h-4" /></button>
 
-            <div className="w-px self-stretch my-2 mx-1" style={{ background: dividerColor }} />
+            <div className="w-px self-stretch my-2.5 mx-0.5" style={{ background: dividerColor }} />
 
-            <button onMouseDown={e => { e.preventDefault(); changeSize(-1); }} style={mBtn()} aria-label="Decrease size"><Minus className="w-4 h-4" /></button>
-            <span className="text-sm font-semibold tabular-nums w-6 text-center" style={{ color: fg }}>{currentSize}</span>
-            <button onMouseDown={e => { e.preventDefault(); changeSize(1); }} style={mBtn()} aria-label="Increase size"><Plus className="w-4 h-4" /></button>
+            <button onMouseDown={e => { e.preventDefault(); changeSize(-1); }} style={mBtn()} aria-label="Decrease size"><Minus className="w-3.5 h-3.5" /></button>
+            <span className="text-[13px] font-semibold tabular-nums w-5 text-center" style={{ color: fg }}>{currentSize}</span>
+            <button onMouseDown={e => { e.preventDefault(); changeSize(1); }} style={mBtn()} aria-label="Increase size"><Plus className="w-3.5 h-3.5" /></button>
 
             <div style={{ flex: 1 }} />
 
             <button
               onClick={() => setMoreOpen(true)}
-              className="flex items-center gap-1.5 px-3 h-8 rounded-full"
-              style={{ background: activeBg, color: fgStrong, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, flexShrink: 0 }}
+              className="flex items-center gap-1 px-2.5 h-7 rounded-full mr-0.5"
+              style={{ background: activeBg, color: fgStrong, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, flexShrink: 0 }}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <SlidersHorizontal className="w-3 h-3" />
               More
             </button>
           </div>
