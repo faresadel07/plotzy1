@@ -7,7 +7,7 @@
 //   DonateBanner   — a warm, low-pressure nudge toward the donate page.
 
 import { useLocation } from "wouter";
-import { ClaudeIcon, GPTIcon, GeminiIcon, StudioIcon } from "@/components/studio/icons";
+import { ClaudeIcon, GPTIcon, GeminiIcon, LlamaIcon } from "@/components/studio/icons";
 import { Heart, ArrowRight, ArrowLeft, GraduationCap } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -35,29 +35,41 @@ export function AiWriteBanner({ ar, onStart }: { ar: boolean; onStart: () => voi
           overflow: "hidden",
         }}
       >
-        {/* Provider marks */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={badgeStyle}><StudioIcon size={18} /></div>
-          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.14)" }} />
-          <div style={badgeStyle}><ClaudeIcon size={18} /></div>
-          <div style={badgeStyle}><GPTIcon size={18} /></div>
-          <div style={badgeStyle}><GeminiIcon size={18} /></div>
+        {/* Claude leads: mark + name + role */}
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16, flexDirection: ar ? "row-reverse" : "row" }}>
+          <div style={{ ...badgeStyle, width: 40, height: 40, borderRadius: 12, background: "rgba(217,119,87,0.14)", border: "1px solid rgba(217,119,87,0.30)" }}>
+            <ClaudeIcon size={22} />
+          </div>
+          <div style={{ textAlign: ar ? "right" : "left" }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>Claude</div>
+            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)" }}>{ar ? "رفيقك في الكتابة" : "Your writing partner"}</div>
+          </div>
         </div>
 
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 8 }}>
-          {ar ? "استوديو الكتابة بالذكاء" : "AI Writing Studio"}
+          {ar ? "استوديو الكتابة" : "AI Writing Studio"}
         </div>
         <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em", color: "#fff", lineHeight: 1.2, marginBottom: 8, maxWidth: 300 }}>
-          {ar ? "اكتب كتابك بمساعدة أقوى نماذج الذكاء" : "Write your book with the best AI models"}
+          {ar ? "اكتب كتابك مع Claude" : "Write your book with Claude"}
         </div>
         <div style={{ fontSize: 13.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: 16, maxWidth: 320 }}>
           {ar
-            ? "يخطّط، يسوّد، ويحرّر إلى جانبك. أنت تملك كل كلمة تكتبها."
-            : "It plots, drafts, and edits beside you. You own every word you write."}
+            ? "Claude يساعدك بكل شيء في كتابتك: يخطّط، يسوّد، ويحرّر إلى جانبك. وتبقى كل كلمة ملكك."
+            : "Claude helps with everything in your writing. It plots, drafts, and edits beside you, and you own every word."}
         </div>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 700, color: "#fff" }}>
           {ar ? "ابدأ الكتابة" : "Start writing"} <Arrow size={16} />
         </span>
+
+        {/* Other models — coming soon */}
+        <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 9, flexDirection: ar ? "row-reverse" : "row" }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
+            {ar ? "قريباً" : "Soon"}
+          </span>
+          <div style={{ ...badgeStyle, opacity: 0.5 }}><GPTIcon size={16} /></div>
+          <div style={{ ...badgeStyle, opacity: 0.5 }}><GeminiIcon size={16} /></div>
+          <div style={{ ...badgeStyle, opacity: 0.5 }}><LlamaIcon size={16} /></div>
+        </div>
       </button>
     </div>
   );
