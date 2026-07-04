@@ -18,8 +18,9 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import { ContentRow } from "@/components/mobile/ContentRow";
 import type { MobileBook } from "@/components/mobile/mobile-content";
 import {
-  COMICS, COMIC_GENRES, comicCover, comicCoverRemote, comicCoverFallback, type ComicGenre,
+  COMICS, COMIC_GENRES, comicCover, comicCoverRemote, comicCoverFallback, type ComicGenre, type ComicIssue,
 } from "@/lib/comics";
+import { searchComics } from "@/lib/comics-search";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -63,34 +64,157 @@ export default function ComicsPage() {
   );
 }
 
-// ─── Phone: genre shelf rows ────────────────────────────────────────
+// ─── Smart search box (shared by both layouts) ─────────────────────
+
+function ComicsSearchBox({ ar, value, onChange, autoFocusable }: {
+  ar: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  autoFocusable?: boolean;
+}) {
+  return (
+    <div style={{ position: "relative", width: "100%" }}>
+      <Search size={15} color="rgba(255,255,255,0.4)" style={{ position: "absolute", insetInlineStart: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={ar ? "ابحث عن عدد أو سلسلة أو نوع" : "Search issues, series, or genres"}
+        inputMode="search"
+        enterKeyHint="search"
+        autoFocus={autoFocusable}
+        style={{
+          fontFamily: SF, fontSize: 14.5, color: "#fff", width: "100%",
+          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 14, padding: "12px 40px 12px 40px",
+          outline: "none",
+        }}
+      />
+      {value && (
+        <button
+          onClick={() => onChange("")}
+          aria-label={ar ? "مسح" : "Clear"}
+          style={{
+            position: "absolute", insetInlineEnd: 8, top: "50%", transform: "translateY(-50%)",
+            width: 26, height: 26, borderRadius: 999, border: "none", cursor: "pointer",
+            background: "rgba(255,255,255,0.12)", color: "#fff", fontSize: 13, lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Series suggestion chips: one tap narrows to exactly what you meant.
+function SeriesSuggestions({ ar, series, onPick }: {
+  ar: boolean;
+  series: Array<{ series: string; count: number }>;
+  onPick: (s: string) => void;
+}) {
+  if (series.length === 0) return null;
+  return (
+    <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "12px 0 2px", scrollbarWidth: "none" }}>
+      {series.map((s) => (
+        <button
+          key={s.series}
+          onClick={() => onPick(s.series)}
+          style={{
+            flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7,
+            padding: "8px 14px", borderRadius: 999, cursor: "pointer",
+            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)",
+            color: "#fff", fontFamily: SF, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap",
+          }}
+        >
+          {s.series}
+          <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.5)", fontVariantNumeric: "tabular-nums" }}>
+            {s.count} {ar ? "عدداً" : s.count === 1 ? "issue" : "issues"}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Compact result card grid shared by the phone results view.
+function ResultsGrid({ issues, ar, columns }: { issues: ComicIssue[]; ar: boolean; columns: number }) {
+  const [, navigate] = useLocation();
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: "18px 12px" }}>
+      {issues.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => navigate(`/comics/${c.id}`)}
+          style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "start", fontFamily: SF }}
+        >
+          <div style={{ width: "100%", aspectRatio: "2 / 3", borderRadius: 9, overflow: "hidden", background: "#141416", boxShadow: "0 6px 18px rgba(0,0,0,0.45)" }}>
+            <ComicCoverImg id={c.id} alt={c.title} />
+          </div>
+          <div style={{ marginTop: 7, fontSize: 12, fontWeight: 600, color: "#f0efe8", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
+            {c.title}
+          </div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.42)", marginTop: 1 }}>
+            {c.year || c.series}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Phone: search + genre shelf rows ───────────────────────────────
 
 function PhoneShelves({ ar }: { ar: boolean }) {
   const [, navigate] = useLocation();
+  const [q, setQ] = useState("");
+  const results = useMemo(() => searchComics(q, 60), [q]);
+  const searching = q.trim().length > 0;
+
   return (
     <div>
-      {COMIC_GENRES.map((g) => {
-        const items = COMICS.filter((c) => c.genre === g.id);
-        if (items.length === 0) return null;
-        const books: MobileBook[] = items.map((c) => ({
-          title: c.title,
-          author: c.series,
-          cover: comicCover(c.id),
-          href: `/comics/${c.id}`,
-          genre: c.year || (ar ? "كوميكس" : "Comics"),
-          genreAr: c.year || "كوميكس",
-        }));
-        return (
-          <ContentRow
-            key={g.id}
-            title={ar ? g.ar : g.en}
-            books={books}
-            ar={ar}
-            cardWidth={108}
-            onSeeAll={() => navigate("/comics")}
-          />
-        );
-      })}
+      {/* Search bar */}
+      <div style={{ padding: "0 16px 6px" }}>
+        <ComicsSearchBox ar={ar} value={q} onChange={setQ} />
+        {searching && (
+          <>
+            <SeriesSuggestions ar={ar} series={results.series} onPick={(s) => setQ(s)} />
+            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.4)", padding: "8px 2px 2px", fontFamily: SF }}>
+              {results.total > 0
+                ? `${results.total} ${ar ? "نتيجة" : results.total === 1 ? "result" : "results"}`
+                : ar ? "لا نتائج. جرّب اسم سلسلة أو نوعاً مثل رعب أو جريمة" : "No results. Try a series name or a genre like horror or crime"}
+            </div>
+          </>
+        )}
+      </div>
+
+      {searching ? (
+        <div style={{ padding: "10px 16px 0" }}>
+          <ResultsGrid issues={results.issues} ar={ar} columns={3} />
+        </div>
+      ) : (
+        COMIC_GENRES.map((g) => {
+          const items = COMICS.filter((c) => c.genre === g.id);
+          if (items.length === 0) return null;
+          const books: MobileBook[] = items.map((c) => ({
+            title: c.title,
+            author: c.series,
+            cover: comicCover(c.id),
+            href: `/comics/${c.id}`,
+            genre: c.year || (ar ? "كوميكس" : "Comics"),
+            genreAr: c.year || "كوميكس",
+          }));
+          return (
+            <ContentRow
+              key={g.id}
+              title={ar ? g.ar : g.en}
+              books={books}
+              ar={ar}
+              cardWidth={108}
+              onSeeAll={() => navigate("/comics")}
+            />
+          );
+        })
+      )}
     </div>
   );
 }
@@ -101,14 +225,15 @@ function DesktopWall({ ar }: { ar: boolean }) {
   const [, navigate] = useLocation();
   const [genre, setGenre] = useState<ComicGenre | "all">("all");
   const [q, setQ] = useState("");
+  const searching = q.trim().length > 0;
 
+  // Ranked, typo-tolerant search over the whole catalogue; the genre
+  // chips then narrow whatever the search returned.
+  const searchRes = useMemo(() => searchComics(q, 400), [q]);
   const filtered = useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return COMICS.filter((c) =>
-      (genre === "all" || c.genre === genre) &&
-      (!query || c.title.toLowerCase().includes(query) || c.series.toLowerCase().includes(query)),
-    );
-  }, [genre, q]);
+    const base = searching ? searchRes.issues : COMICS;
+    return genre === "all" ? base : base.filter((c) => c.genre === genre);
+  }, [searching, searchRes, genre]);
 
   const chip = (active: boolean): React.CSSProperties => ({
     padding: "8px 16px", borderRadius: 999, cursor: "pointer",
@@ -133,24 +258,19 @@ function DesktopWall({ ar }: { ar: boolean }) {
           </button>
         ))}
         <div style={{ flex: 1 }} />
-        <div style={{ position: "relative" }}>
-          <Search size={14} color="rgba(255,255,255,0.35)" style={{ position: "absolute", insetInlineStart: 12, top: "50%", transform: "translateY(-50%)" }} />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={ar ? "ابحث في الأعداد" : "Search issues"}
-            style={{
-              fontFamily: SF, fontSize: 13, color: "#fff",
-              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 999, padding: "9px 14px", paddingInlineStart: 34,
-              outline: "none", width: 220,
-            }}
-          />
+        <div style={{ width: 300 }}>
+          <ComicsSearchBox ar={ar} value={q} onChange={setQ} />
         </div>
       </div>
 
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 16 }}>
-        {filtered.length} {ar ? "عدداً" : filtered.length === 1 ? "issue" : "issues"}
+      {searching && (
+        <SeriesSuggestions ar={ar} series={searchRes.series} onPick={(s) => setQ(s)} />
+      )}
+
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "10px 0 16px" }}>
+        {filtered.length > 0
+          ? `${filtered.length} ${ar ? "عدداً" : filtered.length === 1 ? "issue" : "issues"}`
+          : ar ? "لا نتائج. جرّب اسم سلسلة أو نوعاً مثل رعب أو جريمة" : "No results. Try a series name or a genre like horror or crime"}
       </div>
 
       {/* Poster wall */}
