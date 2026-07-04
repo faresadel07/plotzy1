@@ -25,6 +25,7 @@ import { AiWriteBanner, DevicesBanner, BookJourneyGrid } from "./FeatureBanners"
 import { CourseCoverMobile } from "./CourseCoverMobile";
 import { TestimonialsMobile } from "@/components/testimonials/TestimonialsMobile";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
+import { COMICS, comicCover } from "@/lib/comics";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -128,6 +129,24 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           ar={ar}
           onSeeAll={() => navigate("/discover?src=hindawi")}
         />
+
+        {/* Classic comics teaser shelf — clearly labelled as comics. */}
+        {COMICS.length > 0 && (
+          <ContentRow
+            title={ar ? "كوميكس كلاسيكيّة" : "Classic Comics"}
+            books={COMICS.slice(0, 10).map((c): MobileBook => ({
+              title: c.title,
+              author: c.series,
+              cover: comicCover(c.id),
+              href: `/comics/${c.id}`,
+              genre: ar ? "كوميكس" : "Comics",
+              genreAr: "كوميكس",
+            }))}
+            ar={ar}
+            cardWidth={108}
+            onSeeAll={() => navigate("/comics")}
+          />
+        )}
 
         {/* AI writing studio banner with official model logos —
             opens the book-creation wizard directly. */}

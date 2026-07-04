@@ -1,0 +1,353 @@
+[
+  {
+    "id": "captain-science-1-images",
+    "series": "Captain Science",
+    "issue": 1,
+    "rawTitle": "Captain Science No. 1",
+    "year": "1950",
+    "pages": 36,
+    "genre": "scifi"
+  },
+  {
+    "id": "captain-science-3-images",
+    "series": "Captain Science",
+    "issue": 3,
+    "rawTitle": "Captain Science No. 3",
+    "year": "1951",
+    "pages": 36,
+    "genre": "scifi"
+  },
+  {
+    "id": "captain-science-4-images",
+    "series": "Captain Science",
+    "issue": 4,
+    "rawTitle": "Captain Science No. 4",
+    "year": "1951",
+    "pages": 36,
+    "genre": "scifi"
+  },
+  {
+    "id": "strange-worlds-of-your-dreams.-compilations-de-voltaire-57-seulement-bd",
+    "series": "Strange Worlds",
+    "issue": 57,
+    "rawTitle": "Strange Worlds Of Your Dreams. Compilations De Voltaire 57",
+    "year": "1955",
+    "pages": 96,
+    "genre": "scifi"
+  },
+  {
+    "id": "strange_worlds_05_c2c_JVJ_Cimm32_Geo",
+    "series": "Strange Worlds",
+    "issue": 12,
+    "rawTitle": "Strange Worlds (12 issues)",
+    "year": "1951",
+    "pages": 37,
+    "genre": "scifi"
+  },
+  {
+    "id": "AtomicWar003195302",
+    "series": "Atomic War",
+    "issue": 3,
+    "rawTitle": "ATOMIC WAR! No. 3 - Comic Book, 1953",
+    "year": "1953",
+    "pages": 36,
+    "genre": "scifi"
+  },
+  {
+    "id": "AtomicAttack05195301Ctc",
+    "series": "Atomic War",
+    "issue": 1,
+    "rawTitle": "ATOMIC WAR! No. 1 - Comic Book, 1952",
+    "year": "1952",
+    "pages": 36,
+    "genre": "scifi"
+  },
+  {
+    "id": "WorldWarIII02",
+    "series": "World War III",
+    "issue": 2,
+    "rawTitle": "World War III #02",
+    "year": "",
+    "pages": 31,
+    "genre": "scifi"
+  },
+  {
+    "id": "space-action-01",
+    "series": "Space Action",
+    "issue": 1,
+    "rawTitle": "Space Action 01",
+    "year": "",
+    "pages": 37,
+    "genre": "scifi"
+  },
+  {
+    "id": "BlueBeetle022",
+    "series": "Blue Beetle",
+    "issue": 22,
+    "rawTitle": "Blue Beetle 022 ",
+    "year": "",
+    "pages": 69,
+    "genre": "hero"
+  },
+  {
+    "id": "BlueBeetle015",
+    "series": "Blue Beetle",
+    "issue": 15,
+    "rawTitle": "Blue Beetle 015 ",
+    "year": "",
+    "pages": 69,
+    "genre": "hero"
+  },
+  {
+    "id": "BlueBeetle029",
+    "series": "Blue Beetle",
+    "issue": 29,
+    "rawTitle": "Blue Beetle 029",
+    "year": "",
+    "pages": 33,
+    "genre": "hero"
+  },
+  {
+    "id": "phantom-lady",
+    "series": "Phantom Lady",
+    "issue": null,
+    "rawTitle": "Phantom Lady",
+    "year": "",
+    "pages": 36,
+    "genre": "hero"
+  },
+  {
+    "id": "SilverStreakComics001B",
+    "series": "Silver Streak Comics",
+    "issue": 1,
+    "rawTitle": "Silver Streak Comics 001  b",
+    "year": "",
+    "pages": 67,
+    "genre": "hero"
+  },
+  {
+    "id": "SilverStreakComics009",
+    "series": "Silver Streak Comics",
+    "issue": 9,
+    "rawTitle": "Silver Streak Comics 009 ",
+    "year": "",
+    "pages": 67,
+    "genre": "hero"
+  },
+  {
+    "id": "DaredevilComics068",
+    "series": "Daredevil Comics",
+    "issue": 68,
+    "rawTitle": "Daredevil Comics 068",
+    "year": "",
+    "pages": 53,
+    "genre": "hero"
+  },
+  {
+    "id": "DaredevilComics059",
+    "series": "Daredevil Comics",
+    "issue": 59,
+    "rawTitle": "Daredevil Comics 059",
+    "year": "",
+    "pages": 53,
+    "genre": "hero"
+  },
+  {
+    "id": "AmazingManComics021inc-41pgs",
+    "series": "Amazing Man Comics",
+    "issue": 21,
+    "rawTitle": "Amazing Man Comics 021 (inc)-41pgs ",
+    "year": "",
+    "pages": 42,
+    "genre": "hero"
+  },
+  {
+    "id": "AmazingManComics005paperfiche_573",
+    "series": "Amazing Man Comics",
+    "issue": 5,
+    "rawTitle": "Amazing Man Comics 005 (paper+fiche) ",
+    "year": "",
+    "pages": 69,
+    "genre": "hero"
+  },
+  {
+    "id": "MisterMystery10",
+    "series": "Mister Mystery",
+    "issue": 10,
+    "rawTitle": "Mister Mystery 10 ",
+    "year": "",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "MisterMystery15",
+    "series": "Mister Mystery",
+    "issue": 15,
+    "rawTitle": "Mister Mystery 15",
+    "year": "",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "MisterMystery07",
+    "series": "Mister Mystery",
+    "issue": 7,
+    "rawTitle": "Mister Mystery 07 ",
+    "year": "",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "manga_BeyondTheBeyond-v01c01",
+    "series": "The Beyond",
+    "issue": 1,
+    "rawTitle": "MANGA: Beyond The Beyond Volume 01 Chapter 01",
+    "year": "",
+    "pages": 47,
+    "genre": "horror"
+  },
+  {
+    "id": "manga_BeyondTheBeyond-v01c05",
+    "series": "The Beyond",
+    "issue": 1,
+    "rawTitle": "MANGA: Beyond The Beyond Volume 01 Chapter 05",
+    "year": "",
+    "pages": 31,
+    "genre": "horror"
+  },
+  {
+    "id": "webofmystery-comics-04",
+    "series": "Web of Mystery",
+    "issue": 4,
+    "rawTitle": "Web of Mystery Issue 04",
+    "year": "",
+    "pages": 36,
+    "genre": "horror"
+  },
+  {
+    "id": "webofmystery-comics-17",
+    "series": "Web of Mystery",
+    "issue": 17,
+    "rawTitle": "Web of Mystery Issue 17",
+    "year": "",
+    "pages": 36,
+    "genre": "horror"
+  },
+  {
+    "id": "DarkMysteries005master",
+    "series": "Dark Mysteries",
+    "issue": 5,
+    "rawTitle": "Dark Mysteries 005 (Master)  ",
+    "year": "",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "corto-maltese-b05",
+    "series": "Voodoo",
+    "issue": 5,
+    "rawTitle": "Corto Maltese - B05 - Voodoo Voor De President & De Lagune Van De Schone Dromen",
+    "year": "",
+    "pages": 48,
+    "genre": "horror"
+  },
+  {
+    "id": "JourneyIntoFear0141954",
+    "series": "Journey into Fear",
+    "issue": 14,
+    "rawTitle": "Journey Into Fear 014 (1954)",
+    "year": "1954",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "JourneyIntoFear0131953",
+    "series": "Journey into Fear",
+    "issue": 13,
+    "rawTitle": "Journey Into Fear 013 (1953)",
+    "year": "1953",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "StartlingTerrorTalesV10131952",
+    "series": "Startling Terror Tales",
+    "issue": 1,
+    "rawTitle": "Startling Terror Tales v1 013 (1952)",
+    "year": "1952",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "TalesOfHorror006toby",
+    "series": "Tales of Horror",
+    "issue": 6,
+    "rawTitle": "Tales of Horror 006 (Toby)",
+    "year": "",
+    "pages": 37,
+    "genre": "horror"
+  },
+  {
+    "id": "jumbo-comics-105-november-1947",
+    "series": "Jumbo Comics",
+    "issue": 105,
+    "rawTitle": "Jumbo Comics #105",
+    "year": "1947",
+    "pages": 53,
+    "genre": "jungle"
+  },
+  {
+    "id": "jumbo-comics-08",
+    "series": "Jumbo Comics",
+    "issue": 8,
+    "rawTitle": "Jumbo Comics",
+    "year": "",
+    "pages": 36,
+    "genre": "jungle"
+  },
+  {
+    "id": "CrimeDoesNotPay051C2c",
+    "series": "Crime Does Not Pay",
+    "issue": 51,
+    "rawTitle": "Crime Does Not Pay 051 c2c",
+    "year": "",
+    "pages": 54,
+    "genre": "crime"
+  },
+  {
+    "id": "CrimeDoesNotPay086",
+    "series": "Crime Does Not Pay",
+    "issue": 86,
+    "rawTitle": "Crime Does Not Pay 086",
+    "year": "",
+    "pages": 52,
+    "genre": "crime"
+  },
+  {
+    "id": "CrimeDoesNotPay091",
+    "series": "Crime Does Not Pay",
+    "issue": 91,
+    "rawTitle": "Crime Does Not Pay 091",
+    "year": "",
+    "pages": 53,
+    "genre": "crime"
+  },
+  {
+    "id": "CrimeAndPunishment065",
+    "series": "Crime and Punishment",
+    "issue": 65,
+    "rawTitle": "Crime and Punishment 065",
+    "year": "",
+    "pages": 37,
+    "genre": "crime"
+  },
+  {
+    "id": "CrimeAndPunishment070",
+    "series": "Crime and Punishment",
+    "issue": 70,
+    "rawTitle": "Crime and Punishment 070 ",
+    "year": "",
+    "pages": 37,
+    "genre": "crime"
+  }
+]

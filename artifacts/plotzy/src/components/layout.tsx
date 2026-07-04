@@ -38,6 +38,7 @@ const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/audiolibrary",  key: "navAudioLibrary" },
   // Marketplace temporarily hidden site-wide; re-add to restore.
   // { href: "/marketplace",   key: "navMarketplace" },
+  { href: "/comics",        key: "navComics" },
   { href: "/library",       key: "navCommunity" },
   { href: "/pricing",       key: "navPro" },
   { href: "/support",       key: "navSupport" },
@@ -763,7 +764,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
             {/* Read & Explore — discovery surfaces */}
             <FooterCol title="Read & Explore" links={[
-              { label: 'Audio Library',       href: '/audiolibrary', badge: 'New' },
+              { label: 'Audio Library',       href: '/audiolibrary' },
+              { label: 'Classic Comics',      href: '/comics', badge: 'New' },
               { label: 'Public Domain Books', href: '/discover' },
               { label: 'Community Library',   href: '/library' },
               { label: 'Blog',                href: '/blog' },

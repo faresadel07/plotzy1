@@ -26,6 +26,8 @@ import Home from "@/pages/home";
 
 /* Lazy: everything else (loaded on demand) */
 const DashboardDemo = lazy(() => import("@/pages/dashboard-demo"));
+const ComicsPage = lazy(() => import("@/pages/comics"));
+const ComicReader = lazy(() => import("@/pages/comic-reader"));
 const BookDetails = lazy(() => import("@/pages/book-details"));
 const ChapterEditor = lazy(() => import("@/pages/chapter-editor"));
 const CoverDesigner = lazy(() => import("@/pages/cover-designer"));
@@ -366,6 +368,8 @@ function Router() {
         {/* Marketplace temporarily hidden site-wide (nav, footer, and
             route). Uncomment to relaunch. */}
         {/* <Route path="/marketplace" component={Marketplace} /> */}
+        <Route path="/comics" component={ComicsPage} />
+        <Route path="/comics/:id" component={ComicReader} />
         <Route path="/course" component={CourseLandingPage} />
         <Route path="/learn/visuals-preview" component={VisualsPreview} />
         <Route path="/donate/thanks" component={DonateThanks} />
