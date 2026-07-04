@@ -35,6 +35,9 @@ export default function ComicReader() {
   const [chrome, setChrome] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Desktop-only in-site PDF overlay (phones open the system viewer in
+  // a new tab instead; iframed PDFs are broken on iOS).
+  const [pdfOpen, setPdfOpen] = useState(false);
   const touchX = useRef<number | null>(null);
   const width = isPhone ? 800 : 1400;
   const pdfUrl = comic ? comicPdfUrl(comic) : null;
@@ -190,8 +193,10 @@ export default function ComicReader() {
           {page + 1} / {comic.pages}
         </div>
 
-        {/* Download the whole issue as PDF (when the archive has one) */}
-        {pdfUrl && (
+        {/* Download the whole issue as PDF. Desktop opens an in-site
+            viewer overlay (no leaving Plotzy); phones open the system
+            viewer in a new tab, keeping this tab on the site. */}
+        {pdfUrl && (isPhone ? (
           <a
             href={pdfUrl}
             target="_blank"
@@ -207,7 +212,21 @@ export default function ComicReader() {
           >
             <Download size={15} />
           </a>
-        )}
+        ) : (
+          <button
+            onClick={() => setPdfOpen(true)}
+            aria-label="Download PDF"
+            title="Download PDF"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 34, height: 34, borderRadius: 999, flexShrink: 0,
+              background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.14)",
+              color: "#fff", cursor: "pointer",
+            }}
+          >
+            <Download size={15} />
+          </button>
+        ))}
 
         {/* Fullscreen (desktop) */}
         {!isPhone && (
@@ -252,6 +271,38 @@ export default function ComicReader() {
           style={{ width: "100%", accentColor: "#fff", cursor: "pointer" }}
         />
       </div>
+
+      {/* In-site PDF overlay (desktop): the browser's PDF viewer inside
+          Plotzy, with its own save button — the reader never leaves. */}
+      {pdfOpen && pdfUrl && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#141416", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+            <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {comic.title} · PDF
+            </span>
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.6)", textDecoration: "none", padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.14)" }}
+            >
+              Open in new tab
+            </a>
+            <button
+              onClick={() => setPdfOpen(false)}
+              aria-label="Close PDF"
+              style={{ width: 32, height: 32, borderRadius: 999, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.10)", color: "#fff", display: "grid", placeItems: "center" }}
+            >
+              <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>×</span>
+            </button>
+          </div>
+          <iframe
+            src={pdfUrl}
+            title={`${comic.title} PDF`}
+            style={{ flex: 1, border: "none", background: "#333" }}
+          />
+        </div>
+      )}
     </div>
   );
 }
