@@ -141,11 +141,11 @@ export default defineConfig({
             // /testimonials), so the first load is already fast and
             // reliable; this makes every load after it instant and
             // offline-proof. Fixes the blank grey cover cards for good.
-            urlPattern: /\/images\/(covers|testimonials)\/.*\.(?:jpg|jpeg|png|webp)$/i,
+            urlPattern: /\/images\/(covers|testimonials|comics)\/.*\.(?:jpg|jpeg|png|webp)$/i,
             handler: "CacheFirst",
             options: {
               cacheName: "plotzy-images",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              expiration: { maxEntries: 1200, maxAgeSeconds: 60 * 60 * 24 * 365 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

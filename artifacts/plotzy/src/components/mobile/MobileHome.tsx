@@ -123,18 +123,11 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           onSeeAll={() => navigate("/discover")}
         />
 
-        <ContentRow
-          title={ar ? "المكتبة العربيّة" : "Arabic Library"}
-          books={ARABIC_BOOKS}
-          ar={ar}
-          onSeeAll={() => navigate("/discover?src=hindawi")}
-        />
-
         {/* Classic comics teaser shelf — clearly labelled as comics. */}
         {COMICS.length > 0 && (
           <ContentRow
             title={ar ? "كوميكس كلاسيكيّة" : "Classic Comics"}
-            books={COMICS.slice(0, 10).map((c): MobileBook => ({
+            books={COMICS.slice(0, 12).map((c): MobileBook => ({
               title: c.title,
               author: c.series,
               cover: comicCover(c.id),
@@ -147,6 +140,13 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
             onSeeAll={() => navigate("/comics")}
           />
         )}
+
+        <ContentRow
+          title={ar ? "المكتبة العربيّة" : "Arabic Library"}
+          books={ARABIC_BOOKS}
+          ar={ar}
+          onSeeAll={() => navigate("/discover?src=hindawi")}
+        />
 
         {/* AI writing studio banner with official model logos —
             opens the book-creation wizard directly. */}

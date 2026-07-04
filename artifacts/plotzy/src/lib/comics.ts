@@ -22,7 +22,14 @@ export interface ComicIssue {
   /** Total page images (imagecount from IA metadata). */
   pages: number;
   genre: ComicGenre;
+  /** Whole-issue PDF filename on the archive item, when one exists —
+   *  powers the reader's Download PDF button. */
+  pdf?: string | null;
 }
+
+/** Direct download URL for the whole-issue PDF. */
+export const comicPdfUrl = (c: ComicIssue) =>
+  c.pdf ? `https://archive.org/download/${c.id}/${encodeURIComponent(c.pdf)}` : null;
 
 export const COMIC_GENRES: Array<{ id: ComicGenre; en: string; ar: string }> = [
   { id: "scifi",  en: "Science Fiction",    ar: "خيال علمي" },
@@ -33,11 +40,15 @@ export const COMIC_GENRES: Array<{ id: ComicGenre; en: string; ar: string }> = [
   { id: "crime",  en: "Crime",              ar: "جريمة" },
 ];
 
-/** Crisp cover: the actual first-page scan at 400px wide. */
-export const comicCover = (id: string) =>
-  `https://archive.org/download/${id}/page/n0_w400.jpg`;
+/** Covers are BUNDLED with the frontend (public/images/comics, filled
+ *  by scripts/fetch-comic-covers.mjs), so they paint instantly and
+ *  never re-download from the archive on each visit. */
+export const comicCover = (id: string) => `/images/comics/${id}.jpg`;
 
-/** Fallback thumbnail if the page endpoint ever hiccups. */
+/** Network fallbacks if a bundled cover is ever missing: the real
+ *  first-page scan, then the archive thumbnail. */
+export const comicCoverRemote = (id: string) =>
+  `https://archive.org/download/${id}/page/n0_w400.jpg`;
 export const comicCoverFallback = (id: string) =>
   `https://archive.org/services/img/${id}`;
 
@@ -48,12 +59,14 @@ export const comicPage = (id: string, n: number, w: number) =>
 export const findComic = (id: string) => COMICS.find((c) => c.id === id);
 
 // ── Catalogue ───────────────────────────────────────────────────────
-// 34 hand-curated issues from the verified builder output (39 found; a
-// modern manga, a copyrighted Corto Maltese scan, a foreign
-// compilation, and an incomplete scan were removed by hand). Years
-// come from item metadata where present, otherwise from the standard
-// golden-age indices for these runs.
-export const COMICS: ComicIssue[] = [
+// Generated at scale by scripts/build-comics-catalog.mjs (scrape +
+// whitelist + live verification) and emitted by emit-comics-ts.mjs.
+import { COMICS_DATA } from "./comics-data";
+export const COMICS: ComicIssue[] = COMICS_DATA;
+
+/* Original hand-curated launch set, superseded by the generated
+   catalogue above:
+[
   // Science fiction
   { id: "captain-science-1-images", title: "Captain Science 1", series: "Captain Science", year: "1950", pages: 36, genre: "scifi" },
   { id: "captain-science-3-images", title: "Captain Science 3", series: "Captain Science", year: "1951", pages: 36, genre: "scifi" },
@@ -94,4 +107,5 @@ export const COMICS: ComicIssue[] = [
   { id: "CrimeDoesNotPay091", title: "Crime Does Not Pay 91", series: "Crime Does Not Pay", year: "1950", pages: 53, genre: "crime" },
   { id: "CrimeAndPunishment065", title: "Crime and Punishment 65", series: "Crime and Punishment", year: "1953", pages: 37, genre: "crime" },
   { id: "CrimeAndPunishment070", title: "Crime and Punishment 70", series: "Crime and Punishment", year: "1954", pages: 37, genre: "crime" },
-];
+]
+*/

@@ -10,10 +10,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Download, Maximize, Minimize } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { useIsPhone } from "@/hooks/use-is-phone";
-import { findComic, comicPage } from "@/lib/comics";
+import { findComic, comicPage, comicPdfUrl } from "@/lib/comics";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -34,8 +34,18 @@ export default function ComicReader() {
   });
   const [chrome, setChrome] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const touchX = useRef<number | null>(null);
   const width = isPhone ? 800 : 1400;
+  const pdfUrl = comic ? comicPdfUrl(comic) : null;
+
+  // Track fullscreen state so the toggle icon stays honest even when
+  // the user exits with Escape.
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
 
   // Unknown id (stale link): land on the library instead of a black
   // screen.
@@ -179,6 +189,45 @@ export default function ComicReader() {
         <div style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.75)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
           {page + 1} / {comic.pages}
         </div>
+
+        {/* Download the whole issue as PDF (when the archive has one) */}
+        {pdfUrl && (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download PDF"
+            title="Download PDF"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 34, height: 34, borderRadius: 999, flexShrink: 0,
+              background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.14)",
+              color: "#fff", textDecoration: "none",
+            }}
+          >
+            <Download size={15} />
+          </a>
+        )}
+
+        {/* Fullscreen (desktop) */}
+        {!isPhone && (
+          <button
+            onClick={() => {
+              if (document.fullscreenElement) void document.exitFullscreen();
+              else void document.documentElement.requestFullscreen();
+            }}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 34, height: 34, borderRadius: 999, flexShrink: 0,
+              background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.14)",
+              color: "#fff", cursor: "pointer",
+            }}
+          >
+            {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+          </button>
+        )}
       </div>
 
       {/* Bottom chrome: page slider */}

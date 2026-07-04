@@ -42,6 +42,7 @@ import { BOOK_LANGUAGES } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { LandingCanvas } from "@/components/landing/LandingCanvas";
 import { DevicesShowcase } from "@/components/landing/DevicesShowcase";
+import { ComicsShowcase } from "@/components/landing/ComicsShowcase";
 import { TestimonialsDesktop } from "@/components/testimonials/TestimonialsDesktop";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
@@ -1745,6 +1746,9 @@ export default function Home() {
 
         {/* ===== AUDIO LIBRARY (LIBRIVOX) CAROUSEL ===== */}
         <AudioBookCarousel />
+
+        {/* ===== CLASSIC COMICS (public domain, Internet Archive) ===== */}
+        <ComicsShowcase />
 
         {/* ===== TESTIMONIALS WALL (social proof) ===== */}
         <TestimonialsDesktop />

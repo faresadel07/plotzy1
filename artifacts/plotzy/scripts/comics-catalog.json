@@ -1,353 +1,5186 @@
 [
-  {
-    "id": "captain-science-1-images",
-    "series": "Captain Science",
-    "issue": 1,
-    "rawTitle": "Captain Science No. 1",
-    "year": "1950",
-    "pages": 36,
-    "genre": "scifi"
-  },
-  {
-    "id": "captain-science-3-images",
-    "series": "Captain Science",
-    "issue": 3,
-    "rawTitle": "Captain Science No. 3",
-    "year": "1951",
-    "pages": 36,
-    "genre": "scifi"
-  },
-  {
-    "id": "captain-science-4-images",
-    "series": "Captain Science",
-    "issue": 4,
-    "rawTitle": "Captain Science No. 4",
-    "year": "1951",
-    "pages": 36,
-    "genre": "scifi"
-  },
-  {
-    "id": "strange-worlds-of-your-dreams.-compilations-de-voltaire-57-seulement-bd",
-    "series": "Strange Worlds",
-    "issue": 57,
-    "rawTitle": "Strange Worlds Of Your Dreams. Compilations De Voltaire 57",
-    "year": "1955",
-    "pages": 96,
-    "genre": "scifi"
-  },
-  {
-    "id": "strange_worlds_05_c2c_JVJ_Cimm32_Geo",
-    "series": "Strange Worlds",
-    "issue": 12,
-    "rawTitle": "Strange Worlds (12 issues)",
-    "year": "1951",
-    "pages": 37,
-    "genre": "scifi"
-  },
-  {
-    "id": "AtomicWar003195302",
-    "series": "Atomic War",
-    "issue": 3,
-    "rawTitle": "ATOMIC WAR! No. 3 - Comic Book, 1953",
-    "year": "1953",
-    "pages": 36,
-    "genre": "scifi"
-  },
-  {
-    "id": "AtomicAttack05195301Ctc",
-    "series": "Atomic War",
-    "issue": 1,
-    "rawTitle": "ATOMIC WAR! No. 1 - Comic Book, 1952",
-    "year": "1952",
-    "pages": 36,
-    "genre": "scifi"
-  },
-  {
-    "id": "WorldWarIII02",
-    "series": "World War III",
-    "issue": 2,
-    "rawTitle": "World War III #02",
-    "year": "",
-    "pages": 31,
-    "genre": "scifi"
-  },
-  {
-    "id": "space-action-01",
-    "series": "Space Action",
-    "issue": 1,
-    "rawTitle": "Space Action 01",
-    "year": "",
-    "pages": 37,
-    "genre": "scifi"
-  },
-  {
-    "id": "BlueBeetle022",
-    "series": "Blue Beetle",
-    "issue": 22,
-    "rawTitle": "Blue Beetle 022 ",
-    "year": "",
-    "pages": 69,
-    "genre": "hero"
-  },
-  {
-    "id": "BlueBeetle015",
-    "series": "Blue Beetle",
-    "issue": 15,
-    "rawTitle": "Blue Beetle 015 ",
-    "year": "",
-    "pages": 69,
-    "genre": "hero"
-  },
-  {
-    "id": "BlueBeetle029",
-    "series": "Blue Beetle",
-    "issue": 29,
-    "rawTitle": "Blue Beetle 029",
-    "year": "",
-    "pages": 33,
-    "genre": "hero"
-  },
-  {
-    "id": "phantom-lady",
-    "series": "Phantom Lady",
-    "issue": null,
-    "rawTitle": "Phantom Lady",
-    "year": "",
-    "pages": 36,
-    "genre": "hero"
-  },
-  {
-    "id": "SilverStreakComics001B",
-    "series": "Silver Streak Comics",
-    "issue": 1,
-    "rawTitle": "Silver Streak Comics 001  b",
-    "year": "",
-    "pages": 67,
-    "genre": "hero"
-  },
-  {
-    "id": "SilverStreakComics009",
-    "series": "Silver Streak Comics",
-    "issue": 9,
-    "rawTitle": "Silver Streak Comics 009 ",
-    "year": "",
-    "pages": 67,
-    "genre": "hero"
-  },
-  {
-    "id": "DaredevilComics068",
-    "series": "Daredevil Comics",
-    "issue": 68,
-    "rawTitle": "Daredevil Comics 068",
-    "year": "",
-    "pages": 53,
-    "genre": "hero"
-  },
-  {
-    "id": "DaredevilComics059",
-    "series": "Daredevil Comics",
-    "issue": 59,
-    "rawTitle": "Daredevil Comics 059",
-    "year": "",
-    "pages": 53,
-    "genre": "hero"
-  },
-  {
-    "id": "AmazingManComics021inc-41pgs",
-    "series": "Amazing Man Comics",
-    "issue": 21,
-    "rawTitle": "Amazing Man Comics 021 (inc)-41pgs ",
-    "year": "",
-    "pages": 42,
-    "genre": "hero"
-  },
-  {
-    "id": "AmazingManComics005paperfiche_573",
-    "series": "Amazing Man Comics",
-    "issue": 5,
-    "rawTitle": "Amazing Man Comics 005 (paper+fiche) ",
-    "year": "",
-    "pages": 69,
-    "genre": "hero"
-  },
-  {
-    "id": "MisterMystery10",
-    "series": "Mister Mystery",
-    "issue": 10,
-    "rawTitle": "Mister Mystery 10 ",
-    "year": "",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "MisterMystery15",
-    "series": "Mister Mystery",
-    "issue": 15,
-    "rawTitle": "Mister Mystery 15",
-    "year": "",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "MisterMystery07",
-    "series": "Mister Mystery",
-    "issue": 7,
-    "rawTitle": "Mister Mystery 07 ",
-    "year": "",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "manga_BeyondTheBeyond-v01c01",
-    "series": "The Beyond",
-    "issue": 1,
-    "rawTitle": "MANGA: Beyond The Beyond Volume 01 Chapter 01",
-    "year": "",
-    "pages": 47,
-    "genre": "horror"
-  },
-  {
-    "id": "manga_BeyondTheBeyond-v01c05",
-    "series": "The Beyond",
-    "issue": 1,
-    "rawTitle": "MANGA: Beyond The Beyond Volume 01 Chapter 05",
-    "year": "",
-    "pages": 31,
-    "genre": "horror"
-  },
-  {
-    "id": "webofmystery-comics-04",
-    "series": "Web of Mystery",
-    "issue": 4,
-    "rawTitle": "Web of Mystery Issue 04",
-    "year": "",
-    "pages": 36,
-    "genre": "horror"
-  },
-  {
-    "id": "webofmystery-comics-17",
-    "series": "Web of Mystery",
-    "issue": 17,
-    "rawTitle": "Web of Mystery Issue 17",
-    "year": "",
-    "pages": 36,
-    "genre": "horror"
-  },
-  {
-    "id": "DarkMysteries005master",
-    "series": "Dark Mysteries",
-    "issue": 5,
-    "rawTitle": "Dark Mysteries 005 (Master)  ",
-    "year": "",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "corto-maltese-b05",
-    "series": "Voodoo",
-    "issue": 5,
-    "rawTitle": "Corto Maltese - B05 - Voodoo Voor De President & De Lagune Van De Schone Dromen",
-    "year": "",
-    "pages": 48,
-    "genre": "horror"
-  },
-  {
-    "id": "JourneyIntoFear0141954",
-    "series": "Journey into Fear",
-    "issue": 14,
-    "rawTitle": "Journey Into Fear 014 (1954)",
-    "year": "1954",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "JourneyIntoFear0131953",
-    "series": "Journey into Fear",
-    "issue": 13,
-    "rawTitle": "Journey Into Fear 013 (1953)",
-    "year": "1953",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "StartlingTerrorTalesV10131952",
-    "series": "Startling Terror Tales",
-    "issue": 1,
-    "rawTitle": "Startling Terror Tales v1 013 (1952)",
-    "year": "1952",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "TalesOfHorror006toby",
-    "series": "Tales of Horror",
-    "issue": 6,
-    "rawTitle": "Tales of Horror 006 (Toby)",
-    "year": "",
-    "pages": 37,
-    "genre": "horror"
-  },
-  {
-    "id": "jumbo-comics-105-november-1947",
-    "series": "Jumbo Comics",
-    "issue": 105,
-    "rawTitle": "Jumbo Comics #105",
-    "year": "1947",
-    "pages": 53,
-    "genre": "jungle"
-  },
-  {
-    "id": "jumbo-comics-08",
-    "series": "Jumbo Comics",
-    "issue": 8,
-    "rawTitle": "Jumbo Comics",
-    "year": "",
-    "pages": 36,
-    "genre": "jungle"
-  },
-  {
-    "id": "CrimeDoesNotPay051C2c",
-    "series": "Crime Does Not Pay",
-    "issue": 51,
-    "rawTitle": "Crime Does Not Pay 051 c2c",
-    "year": "",
-    "pages": 54,
-    "genre": "crime"
-  },
-  {
-    "id": "CrimeDoesNotPay086",
-    "series": "Crime Does Not Pay",
-    "issue": 86,
-    "rawTitle": "Crime Does Not Pay 086",
-    "year": "",
-    "pages": 52,
-    "genre": "crime"
-  },
-  {
-    "id": "CrimeDoesNotPay091",
-    "series": "Crime Does Not Pay",
-    "issue": 91,
-    "rawTitle": "Crime Does Not Pay 091",
-    "year": "",
-    "pages": 53,
-    "genre": "crime"
-  },
-  {
-    "id": "CrimeAndPunishment065",
-    "series": "Crime and Punishment",
-    "issue": 65,
-    "rawTitle": "Crime and Punishment 065",
-    "year": "",
-    "pages": 37,
-    "genre": "crime"
-  },
-  {
-    "id": "CrimeAndPunishment070",
-    "series": "Crime and Punishment",
-    "issue": 70,
-    "rawTitle": "Crime and Punishment 070 ",
-    "year": "",
-    "pages": 37,
-    "genre": "crime"
-  }
+ {
+  "id": "AmazingManComics008paper10fichediffVer-c2c",
+  "series": "Amazing Man",
+  "issue": 8,
+  "year": "",
+  "pages": 69,
+  "pdf": "Amazing_Man_Comics_008__c2c_Pmack_dsdaboss_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics009",
+  "series": "Amazing Man",
+  "issue": 9,
+  "year": "",
+  "pages": 71,
+  "pdf": "Amazing_Man_009__c2c_68p__JVJ_narfstar_bb.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics006paper-nowC2c",
+  "series": "Amazing Man",
+  "issue": 6,
+  "year": "",
+  "pages": 74,
+  "pdf": "Amazing_Man_024_Oct41-68pg-c2c_-GeoffreyTolleAmazing_Man_24-01-cov.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics012_490",
+  "series": "Amazing Man",
+  "issue": 12,
+  "year": "",
+  "pages": 69,
+  "pdf": "Amazing_Man_Comics_012.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics011upgrade-c2c",
+  "series": "Amazing Man",
+  "issue": 11,
+  "year": "",
+  "pages": 69,
+  "pdf": "Amazing_Man_Comics_011.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics015-fixed",
+  "series": "Amazing Man",
+  "issue": 15,
+  "year": "",
+  "pages": 66,
+  "pdf": "Amazing_Man_Comics_015.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics016",
+  "series": "Amazing Man",
+  "issue": 16,
+  "year": "",
+  "pages": 69,
+  "pdf": "Centaur___Amazing_Man_Comics_016.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics010paper",
+  "series": "Amazing Man",
+  "issue": 10,
+  "year": "",
+  "pages": 71,
+  "pdf": "Amazing-Man10_42.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics018fiche",
+  "series": "Amazing Man",
+  "issue": 18,
+  "year": "",
+  "pages": 71,
+  "pdf": "Amazing_Man_Comics_18F__1940___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics014fiche-corrected",
+  "series": "Amazing Man",
+  "issue": 14,
+  "year": "",
+  "pages": 70,
+  "pdf": "Amazing_Man_Comics_014__Fiche__corrected_Darkmark_DCP.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics013fiche",
+  "series": "Amazing Man",
+  "issue": 13,
+  "year": "",
+  "pages": 70,
+  "pdf": "Amazing_Man_Comics_013_Fiche__1940___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics019",
+  "series": "Amazing Man",
+  "issue": 19,
+  "year": "",
+  "pages": 66,
+  "pdf": "Amazing_Man_19_194101.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics020",
+  "series": "Amazing Man",
+  "issue": 20,
+  "year": "",
+  "pages": 71,
+  "pdf": "Amazing_Man_20__c2c_68p__JVJ_narfstar_bb.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics023_70",
+  "series": "Amazing Man",
+  "issue": 23,
+  "year": "",
+  "pages": 69,
+  "pdf": "Amazing_Man_Comics_023.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics021inc-41pgs",
+  "series": "Amazing Man",
+  "issue": 21,
+  "year": "",
+  "pages": 42,
+  "pdf": "Amazing_Man_Comics_021__1941.02__41pgs_TonyZ.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics017",
+  "series": "Amazing Man",
+  "issue": 17,
+  "year": "",
+  "pages": 71,
+  "pdf": "Amazing_Man_17__c2c_68p__JVJ_narfstar.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics022",
+  "series": "Amazing Man",
+  "issue": 22,
+  "year": "",
+  "pages": 71,
+  "pdf": "Amazing_Man_Comics_022__Centaur___May_1941__068_BC_Heritage.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics026corrected-52Of68pgs",
+  "series": "Amazing Man",
+  "issue": 26,
+  "year": "",
+  "pages": 53,
+  "pdf": "Amazing_Man__026__Jan1942__corrected__52pg_RichardB_GAtor.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AtomicAttack05195301Ctc",
+  "series": "Atomic War",
+  "issue": 1,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "Atomic_War_001_195211.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "AmazingManComics025_736",
+  "series": "Amazing Man",
+  "issue": 25,
+  "year": "",
+  "pages": 69,
+  "pdf": "Amazing_Man_Comics_025.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AtomicWar002195212",
+  "series": "Atomic War",
+  "issue": 2,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "Atomic_War_002_195212.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "AtomicWar003195302",
+  "series": "Atomic War",
+  "issue": 3,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "Atomic_War_003_195302.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "AtomicAttack06195303Ctc",
+  "series": "Atomic Attack",
+  "issue": 6,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "Atomic_Attack_06_195303_ctc.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "AtomicAttack07195305Ctc",
+  "series": "Atomic Attack",
+  "issue": 7,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "Atomic_Attack_07_195305_ctc.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "AtomicWar004195304",
+  "series": "Atomic War",
+  "issue": 4,
+  "year": "1953",
+  "pages": 32,
+  "pdf": "Atomic_War_004_195304.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "AttackOnPlanetMars_443",
+  "series": "Attack on Planet Mars",
+  "issue": 443,
+  "year": "",
+  "pages": 36,
+  "pdf": "Attack_on_Planet_Mars.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "Beware003trojan-reupload",
+  "series": "Beware",
+  "issue": 3,
+  "year": "",
+  "pages": 37,
+  "pdf": "Beware_03__Trojan__15_on_cover_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Beware005trojan-jvj-geo",
+  "series": "Beware",
+  "issue": 5,
+  "year": "",
+  "pages": 37,
+  "pdf": "Beware_005__Trojan_1953_JVJ_Geo.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "AtomicAttack08195310",
+  "series": "Atomic Attack",
+  "issue": 8,
+  "year": "1953",
+  "pages": 29,
+  "pdf": "Atomic_Attack_08_195310.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "Beware006trojan1953",
+  "series": "Beware",
+  "issue": 6,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Beware_006__Trojan_1953____fixed.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Beware007trojan",
+  "series": "Beware",
+  "issue": 7,
+  "year": "",
+  "pages": 38,
+  "pdf": "Beware_007__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Beware010trojan",
+  "series": "Beware",
+  "issue": 10,
+  "year": "",
+  "pages": 38,
+  "pdf": "0094_Beware_10_1954-07.Trojan_c2c.Cimmerian32Beware_10_-_01b_front_cover_-_Frank_Frazetta__Sid_Check.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Beware012trojan-c2c",
+  "series": "Beware",
+  "issue": 12,
+  "year": "",
+  "pages": 37,
+  "pdf": "Beware_012__Trojan__ctc.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Beware011trojan-1954_proper-jvjgeo",
+  "series": "Beware",
+  "issue": 11,
+  "year": "1954",
+  "pages": 37,
+  "pdf": "Beware_011__Trojan_1954__proper_JVJ_Geo.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Beware014trojan1955",
+  "series": "Beware",
+  "issue": 14,
+  "year": "1955",
+  "pages": 37,
+  "pdf": "Beware_014__1955_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "AttackOnPlanetMars",
+  "series": "Attack on Planet Mars",
+  "issue": null,
+  "year": "",
+  "pages": 36,
+  "pdf": "Attack_on_Planet_Mars.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "BlueBeetle013",
+  "series": "Blue Beetle",
+  "issue": 13,
+  "year": "",
+  "pages": 70,
+  "pdf": "Blue_Beetle_013.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "Beware009trojan-jvj-geo",
+  "series": "Beware",
+  "issue": 9,
+  "year": "",
+  "pages": 36,
+  "pdf": "Beware_009__Trojan_1954_JVJ_Geo.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "BlueBeetle0181955-fixed",
+  "series": "Blue Beetle",
+  "issue": 18,
+  "year": "1955",
+  "pages": 37,
+  "pdf": "Blue_Beetle_018__1955___c2c___ABPC_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle015",
+  "series": "Blue Beetle",
+  "issue": 15,
+  "year": "",
+  "pages": 69,
+  "pdf": "Blue_Beetle_015__Holyoke_1942_Archiver_USA.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle016",
+  "series": "Blue Beetle",
+  "issue": 16,
+  "year": "",
+  "pages": 69,
+  "pdf": "Blue_Beetle_016_Archiver_USA.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle020",
+  "series": "Blue Beetle",
+  "issue": 20,
+  "year": "",
+  "pages": 65,
+  "pdf": "blubeet20bhc.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle022",
+  "series": "Blue Beetle",
+  "issue": 22,
+  "year": "",
+  "pages": 69,
+  "pdf": "Blue_Beetle_22.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle024",
+  "series": "Blue Beetle",
+  "issue": 24,
+  "year": "",
+  "pages": 69,
+  "pdf": "Blue_Beetle_024__Fiche_Darkmark_DCP.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle027",
+  "series": "Blue Beetle",
+  "issue": 27,
+  "year": "",
+  "pages": 69,
+  "pdf": "Blue_Beetle_027.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle029",
+  "series": "Blue Beetle",
+  "issue": 29,
+  "year": "",
+  "pages": 33,
+  "pdf": "bb29.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle030",
+  "series": "Blue Beetle",
+  "issue": 30,
+  "year": "",
+  "pages": 69,
+  "pdf": "Bluebeetle30.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics005fiche",
+  "series": "Boy Comics",
+  "issue": 5,
+  "year": "",
+  "pages": 69,
+  "pdf": "Boy_Comics_005_fiche_ow-rolster-ont_c2cBoy_Comics_005_Aug_1942_01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics007paper3fiche-c2c",
+  "series": "Boy Comics",
+  "issue": 7,
+  "year": "",
+  "pages": 69,
+  "pdf": "Boy_Comics_007__1942___c2c_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics012",
+  "series": "Boy Comics",
+  "issue": 12,
+  "year": "",
+  "pages": 63,
+  "pdf": "Boy_Comics_012__damaged__c2c_Rangerhouse_loftypilot.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics006fiche",
+  "series": "Boy Comics",
+  "issue": 6,
+  "year": "",
+  "pages": 70,
+  "pdf": "Boy_Comics_006_fiche_ow-rolster-ont_c2cBoy_Comics_006_00_Metropolis_FC.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics014fiche",
+  "series": "Boy Comics",
+  "issue": 14,
+  "year": "",
+  "pages": 45,
+  "pdf": "Boy_Comics_14__1944_02.Lev_Gleason___c2c.OWfiche_Rolster_Cimmerian32_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics013",
+  "series": "Boy Comics",
+  "issue": 13,
+  "year": "",
+  "pages": 61,
+  "pdf": "Boy_Comics_013__1943___c2c___Team_Supreme_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics015fiche",
+  "series": "Boy Comics",
+  "issue": 15,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Boy_Comics_015__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics017fiche",
+  "series": "Boy Comics",
+  "issue": 17,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_17__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics016fiche",
+  "series": "Boy Comics",
+  "issue": 16,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_16__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics019fiche",
+  "series": "Boy Comics",
+  "issue": 19,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_19__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics022fiche",
+  "series": "Boy Comics",
+  "issue": 22,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_022__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics018",
+  "series": "Boy Comics",
+  "issue": 18,
+  "year": "",
+  "pages": 52,
+  "pdf": "Boy_Comics_18__1944_10.Lev_Gleason___c2c.Cimmerian32_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics024fiche",
+  "series": "Boy Comics",
+  "issue": 24,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_024F_Lev_Gleason-1945_47.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics025fiche",
+  "series": "Boy Comics",
+  "issue": 25,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_025_LevGleason_-_Dec_1945_fiche_052_OW-ont.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics020fiche",
+  "series": "Boy Comics",
+  "issue": 20,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_020_fiche.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics027fiche",
+  "series": "Boy Comics",
+  "issue": 27,
+  "year": "",
+  "pages": 71,
+  "pdf": "Boy_Comics_027__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics028C2cfiche",
+  "series": "Boy Comics",
+  "issue": 28,
+  "year": "",
+  "pages": 71,
+  "pdf": "Boy_Comics_028F__1946___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics026fiche",
+  "series": "Boy Comics",
+  "issue": 26,
+  "year": "",
+  "pages": 70,
+  "pdf": "Boy_Comics_026__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics029fiche",
+  "series": "Boy Comics",
+  "issue": 29,
+  "year": "",
+  "pages": 71,
+  "pdf": "Boy_Comics_029__fiche__Darkmark_DCP.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics023fiche",
+  "series": "Boy Comics",
+  "issue": 23,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_023F_Lev_Gleason-1945_49.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics021fiche",
+  "series": "Boy Comics",
+  "issue": 21,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_021F_Lev_Gleason-1945_45.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics030inc-fixed",
+  "series": "Boy Comics",
+  "issue": 30,
+  "year": "",
+  "pages": 65,
+  "pdf": "Boy_Comics_030__incomplete_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics035",
+  "series": "Boy Comics",
+  "issue": 35,
+  "year": "",
+  "pages": 46,
+  "pdf": "Boy_Comics_035_00COV.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics032",
+  "series": "Boy Comics",
+  "issue": 32,
+  "year": "",
+  "pages": 65,
+  "pdf": "Boy_Comics_032__01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics038",
+  "series": "Boy Comics",
+  "issue": 38,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_038.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics037",
+  "series": "Boy Comics",
+  "issue": 37,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_037_Yocitrus_scans.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics031",
+  "series": "Boy Comics",
+  "issue": 31,
+  "year": "",
+  "pages": 71,
+  "pdf": "Boy_Comics_031.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics033",
+  "series": "Boy Comics",
+  "issue": 33,
+  "year": "",
+  "pages": 55,
+  "pdf": "Boy_Comics_033__severe_damage_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics036fiche",
+  "series": "Boy Comics",
+  "issue": 36,
+  "year": "",
+  "pages": 55,
+  "pdf": "Boy_Comics_036__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics043",
+  "series": "Boy Comics",
+  "issue": 43,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Illustories_43Dec1948scan0001.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics039",
+  "series": "Boy Comics",
+  "issue": 39,
+  "year": "",
+  "pages": 39,
+  "pdf": "Boy_Comics_039_YingKo.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics041",
+  "series": "Boy Comics",
+  "issue": 41,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_041.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics044smallScans",
+  "series": "Boy Comics",
+  "issue": 44,
+  "year": "",
+  "pages": 53,
+  "pdf": "boy_comics_044___52_pages.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics042",
+  "series": "Boy Comics",
+  "issue": 42,
+  "year": "",
+  "pages": 54,
+  "pdf": "Boy_Comics_042__1948___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics049",
+  "series": "Boy Comics",
+  "issue": 49,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_049__1949___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics048",
+  "series": "Boy Comics",
+  "issue": 48,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Boy_Illustories_048.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics045fiche",
+  "series": "Boy Comics",
+  "issue": 45,
+  "year": "",
+  "pages": 54,
+  "pdf": "Boy_Comics_045__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics046",
+  "series": "Boy Comics",
+  "issue": 46,
+  "year": "",
+  "pages": 54,
+  "pdf": "Boy_Comics_046__fixed.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics047",
+  "series": "Boy Comics",
+  "issue": 47,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_047.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics053",
+  "series": "Boy Comics",
+  "issue": 53,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_053__Fiche__4_pgs_missing.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics069",
+  "series": "Boy Comics",
+  "issue": 69,
+  "year": "",
+  "pages": 53,
+  "pdf": "boy_comics_069___52_pages.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics054",
+  "series": "Boy Comics",
+  "issue": 54,
+  "year": "",
+  "pages": 53,
+  "pdf": "boy_comics_054___52_pages.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics056",
+  "series": "Boy Comics",
+  "issue": 56,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_056__corrected___1950___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics055",
+  "series": "Boy Comics",
+  "issue": 55,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_055__1950___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics071",
+  "series": "Boy Comics",
+  "issue": 71,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_071__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics072",
+  "series": "Boy Comics",
+  "issue": 72,
+  "year": "",
+  "pages": 38,
+  "pdf": "Boy_Comics_072__paper_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics070",
+  "series": "Boy Comics",
+  "issue": 70,
+  "year": "",
+  "pages": 54,
+  "pdf": "Boy_Comics_070_darkmark.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics073",
+  "series": "Boy Comics",
+  "issue": 73,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics073_01fc.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics074",
+  "series": "Boy Comics",
+  "issue": 74,
+  "year": "",
+  "pages": 30,
+  "pdf": "Boy_Comics_074.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics075",
+  "series": "Boy Comics",
+  "issue": 75,
+  "year": "",
+  "pages": 37,
+  "pdf": "boy_comics_075___36_pages.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics077",
+  "series": "Boy Comics",
+  "issue": 77,
+  "year": "",
+  "pages": 39,
+  "pdf": "Boy_Comics_077__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics078",
+  "series": "Boy Comics",
+  "issue": 78,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Illustories_078.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics076",
+  "series": "Boy Comics",
+  "issue": 76,
+  "year": "",
+  "pages": 38,
+  "pdf": "Boy_Comics_076__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics082",
+  "series": "Boy Comics",
+  "issue": 82,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_82Boy_082-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics080B",
+  "series": "Boy Comics",
+  "issue": 80,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_080_c2c.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics081",
+  "series": "Boy Comics",
+  "issue": 81,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_081.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics079",
+  "series": "Boy Comics",
+  "issue": 79,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_079.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics083",
+  "series": "Boy Comics",
+  "issue": 83,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_83Boy_083-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics085",
+  "series": "Boy Comics",
+  "issue": 85,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_85Boy_085-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics084",
+  "series": "Boy Comics",
+  "issue": 84,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_84Boy_084-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics088",
+  "series": "Boy Comics",
+  "issue": 88,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_088-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics087",
+  "series": "Boy Comics",
+  "issue": 87,
+  "year": "",
+  "pages": 35,
+  "pdf": "Boy_087-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics090",
+  "series": "Boy Comics",
+  "issue": 90,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_090-09.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics086",
+  "series": "Boy Comics",
+  "issue": 86,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_86Boy_086-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics089",
+  "series": "Boy Comics",
+  "issue": 89,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_089-34.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics091",
+  "series": "Boy Comics",
+  "issue": 91,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_091-09.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics092",
+  "series": "Boy Comics",
+  "issue": 92,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_92Boy_092-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics093",
+  "series": "Boy Comics",
+  "issue": 93,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_93Boy_093-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics094",
+  "series": "Boy Comics",
+  "issue": 94,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_94Boy_094-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics095",
+  "series": "Boy Comics",
+  "issue": 95,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_95Boy_095-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics097",
+  "series": "Boy Comics",
+  "issue": 97,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_097_01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics096",
+  "series": "Boy Comics",
+  "issue": 96,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_96Boy_096-01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics098",
+  "series": "Boy Comics",
+  "issue": 98,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_098_01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics101",
+  "series": "Boy Comics",
+  "issue": 101,
+  "year": "",
+  "pages": 37,
+  "pdf": "BoyComics101Gleasonnov_1959Dell4cBoy101-034.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics103",
+  "series": "Boy Comics",
+  "issue": 103,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_103_c2c.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics099",
+  "series": "Boy Comics",
+  "issue": 99,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_099_01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics102",
+  "series": "Boy Comics",
+  "issue": 102,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy10236.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics106",
+  "series": "Boy Comics",
+  "issue": 106,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy10636.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics104",
+  "series": "Boy Comics",
+  "issue": 104,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy10431.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics108",
+  "series": "Boy Comics",
+  "issue": 108,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_108__Feb__55__36pg_c2c______Jon.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics109",
+  "series": "Boy Comics",
+  "issue": 109,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy109-36b.JPG.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics107",
+  "series": "Boy Comics",
+  "issue": 107,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy10732.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics110",
+  "series": "Boy Comics",
+  "issue": 110,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Illustories_110.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics105",
+  "series": "Boy Comics",
+  "issue": 105,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy10536.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics111",
+  "series": "Boy Comics",
+  "issue": 111,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_111__1955_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics112",
+  "series": "Boy Comics",
+  "issue": 112,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy_Comics_112.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics115",
+  "series": "Boy Comics",
+  "issue": 115,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11536.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics116",
+  "series": "Boy Comics",
+  "issue": 116,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11601.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics113",
+  "series": "Boy Comics",
+  "issue": 113,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11331.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics114",
+  "series": "Boy Comics",
+  "issue": 114,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11431.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics119",
+  "series": "Boy Comics",
+  "issue": 119,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11901.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics118",
+  "series": "Boy Comics",
+  "issue": 118,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11806.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics117",
+  "series": "Boy Comics",
+  "issue": 117,
+  "year": "",
+  "pages": 37,
+  "pdf": "Boy11736.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics001",
+  "series": "Captain Aero",
+  "issue": 1,
+  "year": "",
+  "pages": 67,
+  "pdf": "Captain_Aero_Comics_001_66p_no_ifc_ibc_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics002",
+  "series": "Captain Aero",
+  "issue": 2,
+  "year": "",
+  "pages": 71,
+  "pdf": "Capt._Aero_Comics__02__fiche_paper__c2c_LoftyPilot_Yoc.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics004",
+  "series": "Captain Aero",
+  "issue": 4,
+  "year": "",
+  "pages": 70,
+  "pdf": "Captain_Aero_004.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics009",
+  "series": "Captain Aero",
+  "issue": 9,
+  "year": "",
+  "pages": 67,
+  "pdf": "Captain_Aero_009.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics012_239",
+  "series": "Captain Aero",
+  "issue": 12,
+  "year": "",
+  "pages": 58,
+  "pdf": "Captain_Aero_Comics_012_194311.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics011",
+  "series": "Captain Aero",
+  "issue": 11,
+  "year": "",
+  "pages": 61,
+  "pdf": "Captain_Aero_Comics_011__fixed_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics017_43",
+  "series": "Captain Aero",
+  "issue": 17,
+  "year": "",
+  "pages": 53,
+  "pdf": "Captain_Aero_017.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics015",
+  "series": "Captain Aero",
+  "issue": 15,
+  "year": "",
+  "pages": 50,
+  "pdf": "Captain_Aero_Comics_15_194406.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics022",
+  "series": "Captain Aero",
+  "issue": 22,
+  "year": "",
+  "pages": 53,
+  "pdf": "Captain_Aero_022.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics021",
+  "series": "Captain Aero",
+  "issue": 21,
+  "year": "",
+  "pages": 53,
+  "pdf": "Captain_Aero_Comics_21.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CaptainAeroComics023",
+  "series": "Captain Aero",
+  "issue": 23,
+  "year": "",
+  "pages": 53,
+  "pdf": "Captain_Aero_Comics_023.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CrimeAndPunishment001",
+  "series": "Crime and Punishment",
+  "issue": 1,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_and_Punishment_001__Lev.Gleason.1948___c2c___Pmack_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment003",
+  "series": "Crime and Punishment",
+  "issue": 3,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_003Crime_and_Punishment_03_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment009",
+  "series": "Crime and Punishment",
+  "issue": 9,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_009Crime_and_Punishment_09_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment004",
+  "series": "Crime and Punishment",
+  "issue": 4,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_004Crime_and_Punishment_04_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment005",
+  "series": "Crime and Punishment",
+  "issue": 5,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_005Crime_and_Punishment_05_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment012",
+  "series": "Crime and Punishment",
+  "issue": 12,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_012Crime_and_Punishment_12_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment011",
+  "series": "Crime and Punishment",
+  "issue": 11,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_011Crime_and_Punishment_11_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment013",
+  "series": "Crime and Punishment",
+  "issue": 13,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_013Crime_and_Punishment_13_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment015",
+  "series": "Crime and Punishment",
+  "issue": 15,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_and_Punishment_015__digital_camera_scans_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment002",
+  "series": "Crime and Punishment",
+  "issue": 2,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_And_Punishment_002Crime_and_Punishment_02_00_cover_1.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment020",
+  "series": "Crime and Punishment",
+  "issue": 20,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_and_Punishment_020.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment018",
+  "series": "Crime and Punishment",
+  "issue": 18,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_and_Punishment_18_00.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment022",
+  "series": "Crime and Punishment",
+  "issue": 22,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_and_Punishment_022__Jan1950__c2c_Jodyanimator.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment028",
+  "series": "Crime and Punishment",
+  "issue": 28,
+  "year": "",
+  "pages": 51,
+  "pdf": "Crime_and_Punishment_028__fixed.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment036_918",
+  "series": "Crime and Punishment",
+  "issue": 36,
+  "year": "",
+  "pages": 51,
+  "pdf": "Crime_and_Punishment_036__OldWayne___coverless_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment035inc",
+  "series": "Crime and Punishment",
+  "issue": 35,
+  "year": "",
+  "pages": 51,
+  "pdf": "Crime_and_Punishment_035_p49_OldWaynes.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment024inc-upgrade",
+  "series": "Crime and Punishment",
+  "issue": 24,
+  "year": "",
+  "pages": 42,
+  "pdf": "Crime_and_Punishment_024__upgrade.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment032inc",
+  "series": "Crime and Punishment",
+  "issue": 32,
+  "year": "",
+  "pages": 50,
+  "pdf": "Lev_Gleason___Crime_And_Punishment_032__1950_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment038",
+  "series": "Crime and Punishment",
+  "issue": 38,
+  "year": "",
+  "pages": 54,
+  "pdf": "Crime_and_Punishment_038_1951_May_bchat_scans.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment045-inc",
+  "series": "Crime and Punishment",
+  "issue": 45,
+  "year": "",
+  "pages": 35,
+  "pdf": "CrimePunishment045.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment041",
+  "series": "Crime and Punishment",
+  "issue": 41,
+  "year": "",
+  "pages": 51,
+  "pdf": "Crime_and_Punishment_041__OldWayne___coverless_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment048",
+  "series": "Crime and Punishment",
+  "issue": 48,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_48__1951_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment042",
+  "series": "Crime and Punishment",
+  "issue": 42,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_42__1951_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment043",
+  "series": "Crime and Punishment",
+  "issue": 43,
+  "year": "",
+  "pages": 50,
+  "pdf": "Crime_and_Punishment_043__inc_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment051",
+  "series": "Crime and Punishment",
+  "issue": 51,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_51_1952brianzcCAP51_00fc_brianzc.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment066",
+  "series": "Crime and Punishment",
+  "issue": 66,
+  "year": "",
+  "pages": 28,
+  "pdf": "Crime_and_Punishment_066_inc.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment053",
+  "series": "Crime and Punishment",
+  "issue": 53,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_53__1952_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment065",
+  "series": "Crime and Punishment",
+  "issue": 65,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_065__c2c___Gleason_1953___Dell4c_AgentUup_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay028",
+  "series": "Crime Does Not Pay",
+  "issue": 28,
+  "year": "",
+  "pages": 61,
+  "pdf": "Crime_Does_Not_Pay_028.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment073",
+  "series": "Crime and Punishment",
+  "issue": 73,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_73__1955_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeAndPunishment070",
+  "series": "Crime and Punishment",
+  "issue": 70,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_and_Punishment_070__1954_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay022firstIssue",
+  "series": "Crime Does Not Pay",
+  "issue": 22,
+  "year": "",
+  "pages": 69,
+  "pdf": "Crime_Does_Not_Pay_022__Quietriot.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay037",
+  "series": "Crime Does Not Pay",
+  "issue": 37,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_037__Briefer_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay039",
+  "series": "Crime Does Not Pay",
+  "issue": 39,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_039.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay041",
+  "series": "Crime Does Not Pay",
+  "issue": 41,
+  "year": "",
+  "pages": 52,
+  "pdf": "Crime_Does_Not_Pay_041__1945_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay044",
+  "series": "Crime Does Not Pay",
+  "issue": 44,
+  "year": "",
+  "pages": 70,
+  "pdf": "CrimeDoesNotPay44.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay045",
+  "series": "Crime Does Not Pay",
+  "issue": 45,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Does_Not_Pay_045__incomplete__32pg_Doortree_Pappy.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay043",
+  "series": "Crime Does Not Pay",
+  "issue": 43,
+  "year": "",
+  "pages": 27,
+  "pdf": "Crime_Does_Not_Pay_043__incomplete__26pg_Doortree.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay049",
+  "series": "Crime Does Not Pay",
+  "issue": 49,
+  "year": "",
+  "pages": 70,
+  "pdf": "Crime_Does_Not_Pay_049__Darkmark.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay048",
+  "series": "Crime Does Not Pay",
+  "issue": 48,
+  "year": "",
+  "pages": 66,
+  "pdf": "Crime_Does_Not_Pay_048.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay051C2c",
+  "series": "Crime Does Not Pay",
+  "issue": 51,
+  "year": "",
+  "pages": 54,
+  "pdf": "Crime_Does_Not_Pay_051__1947_05.Lev_Gleason___Darwin_DREGS_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay053-nowC2c",
+  "series": "Crime Does Not Pay",
+  "issue": 53,
+  "year": "",
+  "pages": 54,
+  "pdf": "Crime_Does_Not_Pay_053__now_c2c.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay058",
+  "series": "Crime Does Not Pay",
+  "issue": 58,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_058.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay057",
+  "series": "Crime Does Not Pay",
+  "issue": 57,
+  "year": "",
+  "pages": 44,
+  "pdf": "Crime_Does_Not_Pay_057__incomplete__43pgs.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay052",
+  "series": "Crime Does Not Pay",
+  "issue": 52,
+  "year": "",
+  "pages": 28,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_052__3_stories__27_pg_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay073",
+  "series": "Crime Does Not Pay",
+  "issue": 73,
+  "year": "",
+  "pages": 54,
+  "pdf": "CrimeDoesNotPay73.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay0691948",
+  "series": "Crime Does Not Pay",
+  "issue": 69,
+  "year": "1948",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_069__1948_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay066",
+  "series": "Crime Does Not Pay",
+  "issue": 66,
+  "year": "",
+  "pages": 55,
+  "pdf": "Crime_Does_Not_Pay_066_1948_c2c_Darkmark-DCP.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay063",
+  "series": "Crime Does Not Pay",
+  "issue": 63,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_063__1948_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay074",
+  "series": "Crime Does Not Pay",
+  "issue": 74,
+  "year": "",
+  "pages": 54,
+  "pdf": "CrimeDoesNotPay74.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay078",
+  "series": "Crime Does Not Pay",
+  "issue": 78,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_078.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay082",
+  "series": "Crime Does Not Pay",
+  "issue": 82,
+  "year": "",
+  "pages": 55,
+  "pdf": "Crime_Does_Not_Pay_082__1949_jodyanimator.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay079inc",
+  "series": "Crime Does Not Pay",
+  "issue": 79,
+  "year": "",
+  "pages": 50,
+  "pdf": "Crime_Does_Not_Pay_079296_4_0079.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay084",
+  "series": "Crime Does Not Pay",
+  "issue": 84,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_084__1950_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay085",
+  "series": "Crime Does Not Pay",
+  "issue": 85,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_085__1950__c2c_Tugolith.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay081",
+  "series": "Crime Does Not Pay",
+  "issue": 81,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_081__1949___brianzc_DCP_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay086",
+  "series": "Crime Does Not Pay",
+  "issue": 86,
+  "year": "",
+  "pages": 52,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_086__1950_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay090",
+  "series": "Crime Does Not Pay",
+  "issue": 90,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_090__low_res___fixed.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay096",
+  "series": "Crime Does Not Pay",
+  "issue": 96,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_096.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay098",
+  "series": "Crime Does Not Pay",
+  "issue": 98,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_098.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay088",
+  "series": "Crime Does Not Pay",
+  "issue": 88,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_088.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay106inc",
+  "series": "Crime Does Not Pay",
+  "issue": 106,
+  "year": "",
+  "pages": 35,
+  "pdf": "Lev_Gleason___Crime_Does_Not_Pay_106.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay103",
+  "series": "Crime Does Not Pay",
+  "issue": 103,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_103_blastaar.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay100",
+  "series": "Crime Does Not Pay",
+  "issue": 100,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_100.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay112-upgrade",
+  "series": "Crime Does Not Pay",
+  "issue": 112,
+  "year": "",
+  "pages": 37,
+  "pdf": "CdnPay112.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay095",
+  "series": "Crime Does Not Pay",
+  "issue": 95,
+  "year": "",
+  "pages": 43,
+  "pdf": "Crime_Does_Not_Pay_095.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay115",
+  "series": "Crime Does Not Pay",
+  "issue": 115,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_115.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay121",
+  "series": "Crime Does Not Pay",
+  "issue": 121,
+  "year": "",
+  "pages": 38,
+  "pdf": "Crime_Does_Not_Pay_121__1953_04_c2c___D_M_DREGS_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay119",
+  "series": "Crime Does Not Pay",
+  "issue": 119,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_119__fixed.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay126",
+  "series": "Crime Does Not Pay",
+  "issue": 126,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_126.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay125",
+  "series": "Crime Does Not Pay",
+  "issue": 125,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay__125_c2c_QuietRiot.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay127",
+  "series": "Crime Does Not Pay",
+  "issue": 127,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_127.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay131",
+  "series": "Crime Does Not Pay",
+  "issue": 131,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_131_1954_c2c_Darkmark-DCP.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay130",
+  "series": "Crime Does Not Pay",
+  "issue": 130,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_130_blastaar.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay133",
+  "series": "Crime Does Not Pay",
+  "issue": 133,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_133.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay132",
+  "series": "Crime Does Not Pay",
+  "issue": 132,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_132.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay146",
+  "series": "Crime Does Not Pay",
+  "issue": 146,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_146.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay147_400",
+  "series": "Crime Does Not Pay",
+  "issue": 147,
+  "year": "",
+  "pages": 37,
+  "pdf": "Crime_Does_Not_Pay_147__1955_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeMysteries005trojan1953",
+  "series": "Crime Mysteries",
+  "issue": 5,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Crime_Mysteries_005__1953_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeMysteries007trojan1952",
+  "series": "Crime Mysteries",
+  "issue": 7,
+  "year": "1952",
+  "pages": 37,
+  "pdf": "Crime_Mysteries_007__1952_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay134",
+  "series": "Crime Does Not Pay",
+  "issue": 134,
+  "year": "",
+  "pages": 38,
+  "pdf": "Crime_Does_Not_Pay_134__fixed.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeMysteries0121954",
+  "series": "Crime Mysteries",
+  "issue": 12,
+  "year": "1954",
+  "pages": 37,
+  "pdf": "Trojan___Crime_Mysteries_012__1954_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeMysteries0141954",
+  "series": "Crime Mysteries",
+  "issue": 14,
+  "year": "1954",
+  "pages": 33,
+  "pdf": "Trojan___Crime_Mysteries_014__1954_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00331Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 3,
+  "year": "",
+  "pages": 32,
+  "pdf": "Crime_Smashers_03__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00133Of36pgs-usedInS.o.t.i",
+  "series": "Crime Smashers",
+  "issue": 1,
+  "year": "",
+  "pages": 34,
+  "pdf": "Crime_Smashers_01__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00730Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 7,
+  "year": "",
+  "pages": 31,
+  "pdf": "Crime_Smashers_07__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00630Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 6,
+  "year": "",
+  "pages": 31,
+  "pdf": "Crime_Smashers_06__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers004",
+  "series": "Crime Smashers",
+  "issue": 4,
+  "year": "",
+  "pages": 38,
+  "pdf": "Crime_Smashers_004__1951_04.Trojan_Darwination_McCoy.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00831Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 8,
+  "year": "",
+  "pages": 32,
+  "pdf": "Crime_Smashers_08__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00929Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 9,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Smashers_09__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers01129Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 11,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Smashers_11__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00231Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 2,
+  "year": "",
+  "pages": 34,
+  "pdf": "Crime_Smashers_01__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers01229Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 12,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Smashers_12__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers00531Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 5,
+  "year": "",
+  "pages": 32,
+  "pdf": "Crime_Smashers_05__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers01329Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 13,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Smashers_13__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers01029Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 10,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Smashers_10__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers015",
+  "series": "Crime Smashers",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "Beware_03__Trojan__15_on_cover_.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeSmashers01429Of36pgs",
+  "series": "Crime Smashers",
+  "issue": 14,
+  "year": "",
+  "pages": 30,
+  "pdf": "Crime_Smashers_14__bhcomics.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "DaredevilComics001",
+  "series": "Daredevil",
+  "issue": 1,
+  "year": "",
+  "pages": 70,
+  "pdf": "Daredevil_Comics_002_mostly_paper_jeff_cannell_scans.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics002",
+  "series": "Daredevil",
+  "issue": 2,
+  "year": "",
+  "pages": 68,
+  "pdf": "Daredevil_Battles_Hitler__c2c_paper_fiche_ads_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics004",
+  "series": "Daredevil",
+  "issue": 4,
+  "year": "",
+  "pages": 70,
+  "pdf": "Daredevil_Comics_004__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics003",
+  "series": "Daredevil",
+  "issue": 3,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_003__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics007",
+  "series": "Daredevil",
+  "issue": 7,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_007__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics006",
+  "series": "Daredevil",
+  "issue": 6,
+  "year": "",
+  "pages": 70,
+  "pdf": "Daredevil_Comics_006__1941___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics005",
+  "series": "Daredevil",
+  "issue": 5,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_005__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics009",
+  "series": "Daredevil",
+  "issue": 9,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_008F__1942___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics011",
+  "series": "Daredevil",
+  "issue": 11,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_011_fiche_paper__Darkmark_Pappy.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics013c2c",
+  "series": "Daredevil",
+  "issue": 13,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_013__Paper2fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics012",
+  "series": "Daredevil",
+  "issue": 12,
+  "year": "",
+  "pages": 70,
+  "pdf": "Daredevil_Comics_012__corrected___1942___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics015",
+  "series": "Daredevil",
+  "issue": 15,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_15__1943___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics014",
+  "series": "Daredevil",
+  "issue": 14,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_014__1942___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics016",
+  "series": "Daredevil",
+  "issue": 16,
+  "year": "",
+  "pages": 65,
+  "pdf": "Daredevil016.SFV.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics017",
+  "series": "Daredevil",
+  "issue": 17,
+  "year": "",
+  "pages": 65,
+  "pdf": "Daredevil017.SFV.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics019",
+  "series": "Daredevil",
+  "issue": 19,
+  "year": "",
+  "pages": 63,
+  "pdf": "Daredevil_Comics_019F__1943___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics018",
+  "series": "Daredevil",
+  "issue": 18,
+  "year": "",
+  "pages": 61,
+  "pdf": "Lev_Gleason___Daredevil_Comics_018.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics023",
+  "series": "Daredevil",
+  "issue": 23,
+  "year": "",
+  "pages": 62,
+  "pdf": "Daredevil_Comics_023__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics030",
+  "series": "Daredevil",
+  "issue": 30,
+  "year": "",
+  "pages": 53,
+  "pdf": "Daredevil030-052.JPG.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics021",
+  "series": "Daredevil",
+  "issue": 21,
+  "year": "",
+  "pages": 54,
+  "pdf": "Daredevil_Comics_021_194401.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics022",
+  "series": "Daredevil",
+  "issue": 22,
+  "year": "",
+  "pages": 62,
+  "pdf": "Daredevil_Comics_022__1944___c2c___Darkmark_DCP_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics027",
+  "series": "Daredevil",
+  "issue": 27,
+  "year": "",
+  "pages": 42,
+  "pdf": "Daredevil027-041.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics032",
+  "series": "Daredevil",
+  "issue": 32,
+  "year": "",
+  "pages": 53,
+  "pdf": "Daredevil032-052.JPG.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics031",
+  "series": "Daredevil",
+  "issue": 31,
+  "year": "",
+  "pages": 55,
+  "pdf": "Daredevil_Comics_031__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics034",
+  "series": "Daredevil",
+  "issue": 34,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_Comics_034__1946_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics035",
+  "series": "Daredevil",
+  "issue": 35,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil035-068.JPG.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics033",
+  "series": "Daredevil",
+  "issue": 33,
+  "year": "",
+  "pages": 53,
+  "pdf": "Daredevil033-037.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics038",
+  "series": "Daredevil",
+  "issue": 38,
+  "year": "",
+  "pages": 65,
+  "pdf": "Daredevil038.SFV.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics041",
+  "series": "Daredevil",
+  "issue": 41,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_Comics_041.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics037inc",
+  "series": "Daredevil",
+  "issue": 37,
+  "year": "",
+  "pages": 69,
+  "pdf": "Daredevil_37DDev3700.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics039",
+  "series": "Daredevil",
+  "issue": 39,
+  "year": "",
+  "pages": 67,
+  "pdf": "Daredevil039.SFV.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics040",
+  "series": "Daredevil",
+  "issue": 40,
+  "year": "",
+  "pages": 69,
+  "pdf": "Lev_Gleason___Daredevil_040__1947_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics043",
+  "series": "Daredevil",
+  "issue": 43,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_043__1947_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics042",
+  "series": "Daredevil",
+  "issue": 42,
+  "year": "",
+  "pages": 54,
+  "pdf": "Daredevil_Comics_042.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics044",
+  "series": "Daredevil",
+  "issue": 44,
+  "year": "",
+  "pages": 50,
+  "pdf": "Lev_Gleason___Daredevil_044__1947_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics045",
+  "series": "Daredevil",
+  "issue": 45,
+  "year": "",
+  "pages": 53,
+  "pdf": "DD_45_52.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics046",
+  "series": "Daredevil",
+  "issue": 46,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_046__1948_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics048",
+  "series": "Daredevil",
+  "issue": 48,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_048__1948_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics047",
+  "series": "Daredevil",
+  "issue": 47,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_047__1948_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics049",
+  "series": "Daredevil",
+  "issue": 49,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_049__1948_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics051",
+  "series": "Daredevil",
+  "issue": 51,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_051__1948_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics050",
+  "series": "Daredevil",
+  "issue": 50,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_050__1948_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics053",
+  "series": "Daredevil",
+  "issue": 53,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_053__1949_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics054",
+  "series": "Daredevil",
+  "issue": 54,
+  "year": "",
+  "pages": 52,
+  "pdf": "Daredevil_Comics_054_c2c.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics056",
+  "series": "Daredevil",
+  "issue": 56,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_056__1949_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics057",
+  "series": "Daredevil",
+  "issue": 57,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_057__1949_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics058",
+  "series": "Daredevil",
+  "issue": 58,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_58.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics055",
+  "series": "Daredevil",
+  "issue": 55,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_055__1949_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics059",
+  "series": "Daredevil",
+  "issue": 59,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_59.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics061",
+  "series": "Daredevil",
+  "issue": 61,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_61.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics062",
+  "series": "Daredevil",
+  "issue": 62,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_62.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics060",
+  "series": "Daredevil",
+  "issue": 60,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_60.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics064",
+  "series": "Daredevil",
+  "issue": 64,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_64.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics063",
+  "series": "Daredevil",
+  "issue": 63,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_63.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics067",
+  "series": "Daredevil",
+  "issue": 67,
+  "year": "",
+  "pages": 53,
+  "pdf": "Daredevil_Comics_067.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics065",
+  "series": "Daredevil",
+  "issue": 65,
+  "year": "",
+  "pages": 50,
+  "pdf": "Gleason_DD_65.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics068",
+  "series": "Daredevil",
+  "issue": 68,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_68.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics066",
+  "series": "Daredevil",
+  "issue": 66,
+  "year": "",
+  "pages": 53,
+  "pdf": "Gleason_DD_66.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics073",
+  "series": "Daredevil",
+  "issue": 73,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_073__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics069",
+  "series": "Daredevil",
+  "issue": 69,
+  "year": "",
+  "pages": 51,
+  "pdf": "Gleason_DD_69.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics071",
+  "series": "Daredevil",
+  "issue": 71,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_071__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics052",
+  "series": "Daredevil",
+  "issue": 52,
+  "year": "",
+  "pages": 52,
+  "pdf": "Lev_Gleason___Daredevil_Comics_052__1949_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics070",
+  "series": "Daredevil",
+  "issue": 70,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_070__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics072",
+  "series": "Daredevil",
+  "issue": 72,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_072__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics075",
+  "series": "Daredevil",
+  "issue": 75,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_075__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics074",
+  "series": "Daredevil",
+  "issue": 74,
+  "year": "",
+  "pages": 49,
+  "pdf": "Lev_Gleason___Daredevil_074__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics077",
+  "series": "Daredevil",
+  "issue": 77,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_077__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics076",
+  "series": "Daredevil",
+  "issue": 76,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_076__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics078",
+  "series": "Daredevil",
+  "issue": 78,
+  "year": "",
+  "pages": 51,
+  "pdf": "Lev_Gleason___Daredevil_078__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics081",
+  "series": "Daredevil",
+  "issue": 81,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_081__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics079",
+  "series": "Daredevil",
+  "issue": 79,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_079__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics083",
+  "series": "Daredevil",
+  "issue": 83,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_083__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics080",
+  "series": "Daredevil",
+  "issue": 80,
+  "year": "",
+  "pages": 53,
+  "pdf": "Lev_Gleason___Daredevil_080__1951_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics082",
+  "series": "Daredevil",
+  "issue": 82,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_082__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics084",
+  "series": "Daredevil",
+  "issue": 84,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_084__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics085",
+  "series": "Daredevil",
+  "issue": 85,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_085__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics086",
+  "series": "Daredevil",
+  "issue": 86,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_086__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics087",
+  "series": "Daredevil",
+  "issue": 87,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_087__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics088",
+  "series": "Daredevil",
+  "issue": 88,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_088__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics089",
+  "series": "Daredevil",
+  "issue": 89,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_089__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics090",
+  "series": "Daredevil",
+  "issue": 90,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_090__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics091",
+  "series": "Daredevil",
+  "issue": 91,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_091__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics092",
+  "series": "Daredevil",
+  "issue": 92,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_092__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics093",
+  "series": "Daredevil",
+  "issue": 93,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_093__1952_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics094",
+  "series": "Daredevil",
+  "issue": 94,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_094__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics097",
+  "series": "Daredevil",
+  "issue": 97,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_097__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics095",
+  "series": "Daredevil",
+  "issue": 95,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_095__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics096_307",
+  "series": "Daredevil",
+  "issue": 96,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_DD_96.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics10",
+  "series": "Daredevil",
+  "issue": 10,
+  "year": "",
+  "pages": 66,
+  "pdf": "Daredevil010-001.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics098",
+  "series": "Daredevil",
+  "issue": 98,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_098__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics101",
+  "series": "Daredevil",
+  "issue": 101,
+  "year": "",
+  "pages": 38,
+  "pdf": "Daredevil_Comics_101.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics102",
+  "series": "Daredevil",
+  "issue": 102,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_102__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics100",
+  "series": "Daredevil",
+  "issue": 100,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_100__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics103",
+  "series": "Daredevil",
+  "issue": 103,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_103__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics105",
+  "series": "Daredevil",
+  "issue": 105,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_105__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics104",
+  "series": "Daredevil",
+  "issue": 104,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_104__1953_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics106",
+  "series": "Daredevil",
+  "issue": 106,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_106__1954_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics107",
+  "series": "Daredevil",
+  "issue": 107,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_107__1954_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics110",
+  "series": "Daredevil",
+  "issue": 110,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_110.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics109",
+  "series": "Daredevil",
+  "issue": 109,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_109.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics111",
+  "series": "Daredevil",
+  "issue": 111,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_111__1954_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics112",
+  "series": "Daredevil",
+  "issue": 112,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_112.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics113",
+  "series": "Daredevil",
+  "issue": 113,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_113.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics116",
+  "series": "Daredevil",
+  "issue": 116,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_116.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics114",
+  "series": "Daredevil",
+  "issue": 114,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_114.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics115",
+  "series": "Daredevil",
+  "issue": 115,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_115.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics119",
+  "series": "Daredevil",
+  "issue": 119,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_119.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics117",
+  "series": "Daredevil",
+  "issue": 117,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_117__1955_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics120",
+  "series": "Daredevil",
+  "issue": 120,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_120.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics121",
+  "series": "Daredevil",
+  "issue": 121,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_121.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics118",
+  "series": "Daredevil",
+  "issue": 118,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_118.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics122_459",
+  "series": "Daredevil",
+  "issue": 122,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_DD_122.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics127",
+  "series": "Daredevil",
+  "issue": 127,
+  "year": "",
+  "pages": 73,
+  "pdf": "Gleason_Daredevil_127.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics131",
+  "series": "Daredevil",
+  "issue": 131,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_131.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics126",
+  "series": "Daredevil",
+  "issue": 126,
+  "year": "",
+  "pages": 73,
+  "pdf": "Gleason_Daredevil_126.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics132",
+  "series": "Daredevil",
+  "issue": 132,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_132__1956_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics129",
+  "series": "Daredevil",
+  "issue": 129,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_129.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics130",
+  "series": "Daredevil",
+  "issue": 130,
+  "year": "",
+  "pages": 37,
+  "pdf": "DareDevil_Comics_130_Feb56-36pg-c2c_-JonDaredevil_Comics_130.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics133_313",
+  "series": "Daredevil",
+  "issue": 133,
+  "year": "",
+  "pages": 37,
+  "pdf": "DD133_30.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics99",
+  "series": "Daredevil",
+  "issue": 99,
+  "year": "",
+  "pages": 37,
+  "pdf": "Daredevil_Comics_099.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DarkMysteries007master1952",
+  "series": "Dark Mysteries",
+  "issue": 7,
+  "year": "1952",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_007__Master1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries005master",
+  "series": "Dark Mysteries",
+  "issue": 5,
+  "year": "",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_005__Master_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries006master-1952-fixed",
+  "series": "Dark Mysteries",
+  "issue": 6,
+  "year": "1952",
+  "pages": 38,
+  "pdf": "Dark_Mysteries_006_1952image6620.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries0091952",
+  "series": "Dark Mysteries",
+  "issue": 9,
+  "year": "1952",
+  "pages": 34,
+  "pdf": "Story___Dark_Mysteries_009__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries008master",
+  "series": "Dark Mysteries",
+  "issue": 8,
+  "year": "",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_008__Master_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries0131952",
+  "series": "Dark Mysteries",
+  "issue": 13,
+  "year": "1952",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_013__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries014story1953",
+  "series": "Dark Mysteries",
+  "issue": 14,
+  "year": "1953",
+  "pages": 34,
+  "pdf": "Dark_Mysteries_014__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries016story1954",
+  "series": "Dark Mysteries",
+  "issue": 16,
+  "year": "1954",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_016__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries0121953",
+  "series": "Dark Mysteries",
+  "issue": 12,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_012__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries019master1954",
+  "series": "Dark Mysteries",
+  "issue": 19,
+  "year": "1954",
+  "pages": 37,
+  "pdf": "Dark_Mysteries_019__Master1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DarkMysteries015-nowC2c",
+  "series": "Dark Mysteries",
+  "issue": 15,
+  "year": "",
+  "pages": 21,
+  "pdf": "Dark_Mysteries_015_Karswell.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "GhostlyWeirdStories1221954",
+  "series": "Ghostly Weird Stories",
+  "issue": 122,
+  "year": "1954",
+  "pages": 38,
+  "pdf": "Ghostly_Weird_Stories_122_Star_Publ_1954.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "GhostlyWeirdStories124Ctc",
+  "series": "Ghostly Weird Stories",
+  "issue": 124,
+  "year": "",
+  "pages": 37,
+  "pdf": "Ghostly_Weird_Stories_124_ctc.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "HandOfFate010",
+  "series": "Hand of Fate",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Hand_Of_Fate_010.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "HandOfFate016",
+  "series": "Hand of Fate",
+  "issue": 16,
+  "year": "",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_016__1953_02.Ace_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "HandOfFate022",
+  "series": "Hand of Fate",
+  "issue": 22,
+  "year": "",
+  "pages": 35,
+  "pdf": "Hand_of_Fate_022__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "HandOfFate025b",
+  "series": "Hand of Fate",
+  "issue": 25,
+  "year": "",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_025b__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific005",
+  "series": "Horrific",
+  "issue": 5,
+  "year": "",
+  "pages": 37,
+  "pdf": "Horrific_005_Comic_Media_1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific006",
+  "series": "Horrific",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Horrific_006__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific011",
+  "series": "Horrific",
+  "issue": 11,
+  "year": "",
+  "pages": 39,
+  "pdf": "Horrific011.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific008",
+  "series": "Horrific",
+  "issue": 8,
+  "year": "",
+  "pages": 37,
+  "pdf": "Horrific_008__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific004",
+  "series": "Horrific",
+  "issue": 4,
+  "year": "",
+  "pages": 37,
+  "pdf": "Horrific_004__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "HandOfFate023-fixed",
+  "series": "Hand of Fate",
+  "issue": 23,
+  "year": "",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_023_1954image5319.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific009",
+  "series": "Horrific",
+  "issue": 9,
+  "year": "",
+  "pages": 37,
+  "pdf": "Horrific_009__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear003",
+  "series": "Journey into Fear",
+  "issue": 3,
+  "year": "",
+  "pages": 37,
+  "pdf": "JourneyIntoMystery0031951.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear006",
+  "series": "Journey into Fear",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_006__Superior_1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear007",
+  "series": "Journey into Fear",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_007__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear004",
+  "series": "Journey into Fear",
+  "issue": 4,
+  "year": "",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_004__1951_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear0131953",
+  "series": "Journey into Fear",
+  "issue": 13,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_013__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear008",
+  "series": "Journey into Fear",
+  "issue": 8,
+  "year": "",
+  "pages": 34,
+  "pdf": "Journey_Into_Fear_008__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear011",
+  "series": "Journey into Fear",
+  "issue": 11,
+  "year": "",
+  "pages": 35,
+  "pdf": "Journey_Into_Fear_011__Superior_1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear0141954",
+  "series": "Journey into Fear",
+  "issue": 14,
+  "year": "1954",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_014__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear012",
+  "series": "Journey into Fear",
+  "issue": 12,
+  "year": "",
+  "pages": 35,
+  "pdf": "Journey_Into_Fear_012__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear010noAds",
+  "series": "Journey into Fear",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_006__Superior_1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear018",
+  "series": "Journey into Fear",
+  "issue": 18,
+  "year": "",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_018__Superior_1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear017",
+  "series": "Journey into Fear",
+  "issue": 17,
+  "year": "",
+  "pages": 34,
+  "pdf": "Journey_Into_Fear_017__Superior_1954____no_cover.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear016",
+  "series": "Journey into Fear",
+  "issue": 16,
+  "year": "",
+  "pages": 37,
+  "pdf": "Journey_Into_Fear_016__Superior_1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MisterMystery01",
+  "series": "Mister Mystery",
+  "issue": 1,
+  "year": "",
+  "pages": 37,
+  "pdf": "Mister_Mystery_001.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "JourneyIntoFear019",
+  "series": "Journey into Fear",
+  "issue": 19,
+  "year": "",
+  "pages": 34,
+  "pdf": "Journey_Into_Fear_019__Superior_1954____coverless.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MisterMystery15",
+  "series": "Mister Mystery",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "Mister_Mystery_15.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MisterMystery10",
+  "series": "Mister Mystery",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Mister_Myster_010.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MisterMystery09",
+  "series": "Mister Mystery",
+  "issue": 9,
+  "year": "",
+  "pages": 34,
+  "pdf": "Mister_Mystery_009.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MisterMystery17",
+  "series": "Mister Mystery",
+  "issue": 17,
+  "year": "",
+  "pages": 35,
+  "pdf": "Mister_Mystery_17.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "SilverStreakComics001",
+  "series": "Silver Streak",
+  "issue": 1,
+  "year": "",
+  "pages": 67,
+  "pdf": "Silver_Streak_001_bw_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "MisterMystery19",
+  "series": "Mister Mystery",
+  "issue": 19,
+  "year": "",
+  "pages": 37,
+  "pdf": "Mister_Mystery_19.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MisterMystery16",
+  "series": "Mister Mystery",
+  "issue": 16,
+  "year": "",
+  "pages": 38,
+  "pdf": "Mister_Mystery_16.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "ScienceComics0011946",
+  "series": "Science Comics",
+  "issue": 1,
+  "year": "1946",
+  "pages": 37,
+  "pdf": "Science_Comics_ACE_01_194601.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics004",
+  "series": "Silver Streak",
+  "issue": 4,
+  "year": "",
+  "pages": 70,
+  "pdf": "SilverStreakComics_004_8pg_fiche_V2colorEdit_JVJ.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics005",
+  "series": "Silver Streak",
+  "issue": 5,
+  "year": "",
+  "pages": 70,
+  "pdf": "Silver_Streak_05__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics006",
+  "series": "Silver Streak",
+  "issue": 6,
+  "year": "",
+  "pages": 70,
+  "pdf": "Lev_Gleason___Silver_Streak_Comics_006__1940__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics003",
+  "series": "Silver Streak",
+  "issue": 3,
+  "year": "",
+  "pages": 70,
+  "pdf": "Silver_Streak_03__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics013",
+  "series": "Silver Streak",
+  "issue": 13,
+  "year": "",
+  "pages": 71,
+  "pdf": "SilverStreakComics013.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics009",
+  "series": "Silver Streak",
+  "issue": 9,
+  "year": "",
+  "pages": 67,
+  "pdf": "Lev_Gleason___Silver_Streak_Comics_009.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics011",
+  "series": "Silver Streak",
+  "issue": 11,
+  "year": "",
+  "pages": 70,
+  "pdf": "Silver_Streak_Comics_011__paper_some_fiche__jeffcannell_scan.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics007",
+  "series": "Silver Streak",
+  "issue": 7,
+  "year": "",
+  "pages": 71,
+  "pdf": "Silver_Streak_7__Daredevil_Battles_Claw_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics015",
+  "series": "Silver Streak",
+  "issue": 15,
+  "year": "",
+  "pages": 69,
+  "pdf": "Lev_Gleason___Silver_Streak_Comics_015__Fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics008",
+  "series": "Silver Streak",
+  "issue": 8,
+  "year": "",
+  "pages": 54,
+  "pdf": "Silver_Streak_Comics_008__Fiche_paper__Modamim_Rolster.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics017",
+  "series": "Silver Streak",
+  "issue": 17,
+  "year": "",
+  "pages": 71,
+  "pdf": "Silver_Streak_Comics_017_JVJ_ver2_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics016",
+  "series": "Silver Streak",
+  "issue": 16,
+  "year": "",
+  "pages": 66,
+  "pdf": "Silver_Streak_Comics_016__inc._.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics019",
+  "series": "Silver Streak",
+  "issue": 19,
+  "year": "",
+  "pages": 71,
+  "pdf": "Silver_Streak_Comics_019__improved_fiche_Darkmark_DCP.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics018",
+  "series": "Silver Streak",
+  "issue": 18,
+  "year": "",
+  "pages": 70,
+  "pdf": "Silver_Streak_Comics_018.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics014",
+  "series": "Silver Streak",
+  "issue": 14,
+  "year": "",
+  "pages": 64,
+  "pdf": "SilverStreakComics014_inc_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SpaceAdventures02",
+  "series": "Space Adventures",
+  "issue": 2,
+  "year": "",
+  "pages": 32,
+  "pdf": "SpaceAdventures_02_31.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures04",
+  "series": "Space Adventures",
+  "issue": 4,
+  "year": "",
+  "pages": 32,
+  "pdf": "SpaceAdventures_04_31.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures03",
+  "series": "Space Adventures",
+  "issue": 3,
+  "year": "",
+  "pages": 32,
+  "pdf": "Space_Adventures_v1_003__narfstar_perseus_reedit_no_ifc__ibc___bc_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures05",
+  "series": "Space Adventures",
+  "issue": 5,
+  "year": "",
+  "pages": 32,
+  "pdf": "SpaceAdventures_05_31.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures06_72",
+  "series": "Space Adventures",
+  "issue": 6,
+  "year": "",
+  "pages": 31,
+  "pdf": "SpaceAdventures_06_30.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures01",
+  "series": "Space Adventures",
+  "issue": 1,
+  "year": "",
+  "pages": 31,
+  "pdf": "Space_Adventures_001.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures07",
+  "series": "Space Adventures",
+  "issue": 7,
+  "year": "",
+  "pages": 31,
+  "pdf": "SpaceAdventures_07_30.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures09",
+  "series": "Space Adventures",
+  "issue": 9,
+  "year": "",
+  "pages": 31,
+  "pdf": "SpaceAdventures_09_30.vol350000.par2.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures08_929",
+  "series": "Space Adventures",
+  "issue": 8,
+  "year": "",
+  "pages": 31,
+  "pdf": "SpaceAdventures_08_30.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures10",
+  "series": "Space Adventures",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Charlton___Space_Adventures_010__1954_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures13",
+  "series": "Space Adventures",
+  "issue": 13,
+  "year": "",
+  "pages": 30,
+  "pdf": "SpaceAdventures_13_01.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures11",
+  "series": "Space Adventures",
+  "issue": 11,
+  "year": "",
+  "pages": 37,
+  "pdf": "Charlton___Space_Adventures_011__1954_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures15",
+  "series": "Space Adventures",
+  "issue": 15,
+  "year": "",
+  "pages": 29,
+  "pdf": "SpaceAdventures_15_28.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures12",
+  "series": "Space Adventures",
+  "issue": 12,
+  "year": "",
+  "pages": 37,
+  "pdf": "Charlton___Space_Adventures_012__1954_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures14",
+  "series": "Space Adventures",
+  "issue": 14,
+  "year": "",
+  "pages": 26,
+  "pdf": "SpaceAdventures_14_25.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures17",
+  "series": "Space Adventures",
+  "issue": 17,
+  "year": "",
+  "pages": 26,
+  "pdf": "SpaceAdventures_17_25.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures16",
+  "series": "Space Adventures",
+  "issue": 16,
+  "year": "",
+  "pages": 27,
+  "pdf": "SpaceAdventures_16_26.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures18",
+  "series": "Space Adventures",
+  "issue": 18,
+  "year": "",
+  "pages": 28,
+  "pdf": "SpaceAdventures_18_27.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures20",
+  "series": "Space Adventures",
+  "issue": 20,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_020_c2c_1956_03_Charlton_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures21",
+  "series": "Space Adventures",
+  "issue": 21,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_021_c2c_1956_08_Charlton_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures19",
+  "series": "Space Adventures",
+  "issue": 19,
+  "year": "",
+  "pages": 37,
+  "pdf": "Charlton___Space_Adventures_019.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures23",
+  "series": "Space Adventures",
+  "issue": 23,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_023_c2c_1958_05_Charlton_fett_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures24",
+  "series": "Space Adventures",
+  "issue": 24,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_024_c2c_1958_07_Charlton_fett_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures25",
+  "series": "Space Adventures",
+  "issue": 25,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_025_c2c_1958_09_Charlton_fett_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures26",
+  "series": "Space Adventures",
+  "issue": 26,
+  "year": "",
+  "pages": 37,
+  "pdf": "SpaceAdventures026.P04.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures27",
+  "series": "Space Adventures",
+  "issue": 27,
+  "year": "",
+  "pages": 36,
+  "pdf": "SpaceAdventures027-010-011.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures28",
+  "series": "Space Adventures",
+  "issue": 28,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_028_Charlton_Apr_1959_36p_c2c.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures30",
+  "series": "Space Adventures",
+  "issue": 30,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_030_Charlton_Sep_1959_36p_c2c.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "SpaceAdventures29",
+  "series": "Space Adventures",
+  "issue": 29,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_029_c2c.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "StartlingTerrorTalesV10091954",
+  "series": "Startling Terror Tales",
+  "issue": 1,
+  "year": "1954",
+  "pages": 37,
+  "pdf": "Startling_Terror_Tales_09_1954.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "SpaceAdventures31",
+  "series": "Space Adventures",
+  "issue": 31,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Adventures_031_c2c.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "StrangeMysteries004",
+  "series": "Strange Mysteries",
+  "issue": 4,
+  "year": "",
+  "pages": 38,
+  "pdf": "Strange_Mysteries_004__Superior_1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries006",
+  "series": "Strange Mysteries",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_006__Superior_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries005C2c",
+  "series": "Strange Mysteries",
+  "issue": 5,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_005_Superior_1952_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries009-noAds",
+  "series": "Strange Mysteries",
+  "issue": 9,
+  "year": "",
+  "pages": 34,
+  "pdf": "Strange_Mysteries_009__Superior__no_ads_Karswell.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries007",
+  "series": "Strange Mysteries",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_007__Superior_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries008C2c",
+  "series": "Strange Mysteries",
+  "issue": 8,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_008__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries011",
+  "series": "Strange Mysteries",
+  "issue": 11,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_011_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries012",
+  "series": "Strange Mysteries",
+  "issue": 12,
+  "year": "",
+  "pages": 34,
+  "pdf": "Strange_Mysteries_012__Ontology_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries013",
+  "series": "Strange Mysteries",
+  "issue": 13,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_013__Superior_1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries0141953",
+  "series": "Strange Mysteries",
+  "issue": 14,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_014_1953imagex5372.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries015",
+  "series": "Strange Mysteries",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_015__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries019",
+  "series": "Strange Mysteries",
+  "issue": 19,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_019__Superior_1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries018",
+  "series": "Strange Mysteries",
+  "issue": 18,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_018__Superior_1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror003",
+  "series": "Tales of Horror",
+  "issue": 3,
+  "year": "",
+  "pages": 37,
+  "pdf": "Toby___Tales_Of_Horror_003.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror0011952",
+  "series": "Tales of Horror",
+  "issue": 1,
+  "year": "1952",
+  "pages": 37,
+  "pdf": "Tales_of_Horror_001__1952_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "StrangeMysteries016",
+  "series": "Strange Mysteries",
+  "issue": 16,
+  "year": "",
+  "pages": 37,
+  "pdf": "Strange_Mysteries_016__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror006toby",
+  "series": "Tales of Horror",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Tales_of_Horror_06__Toby_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror004toby",
+  "series": "Tales of Horror",
+  "issue": 4,
+  "year": "",
+  "pages": 37,
+  "pdf": "Tales_Of_Horror_004__Toby_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror0081953",
+  "series": "Tales of Horror",
+  "issue": 8,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Tales_of_Horror_008__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror010toby",
+  "series": "Tales of Horror",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Binder1Tales_Of_Horror_010__Toby_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror006",
+  "series": "Weird Terror",
+  "issue": 6,
+  "year": "",
+  "pages": 27,
+  "pdf": "WeirdTerror006.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "TalesOfHorror007toby1953",
+  "series": "Tales of Horror",
+  "issue": 7,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Tales_of_Horror_007__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror001",
+  "series": "Weird Terror",
+  "issue": 1,
+  "year": "",
+  "pages": 35,
+  "pdf": "Weird_Terror_001_missing_1st_2_story_pages.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror002",
+  "series": "Weird Terror",
+  "issue": 2,
+  "year": "",
+  "pages": 37,
+  "pdf": "WeirdTerror02.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror008",
+  "series": "Weird Terror",
+  "issue": 8,
+  "year": "",
+  "pages": 34,
+  "pdf": "Weird_Terror_008.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror007",
+  "series": "Weird Terror",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Weird_Terror_007.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror010",
+  "series": "Weird Terror",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Weird_Terror_010__Comic_Media_1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror013",
+  "series": "Weird Terror",
+  "issue": 13,
+  "year": "",
+  "pages": 33,
+  "pdf": "Weird_Terror_013__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WeirdTerror011",
+  "series": "Weird Terror",
+  "issue": 11,
+  "year": "",
+  "pages": 37,
+  "pdf": "Weird_Terror_011__1954_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "WorldWarIII02",
+  "series": "World War III",
+  "issue": 2,
+  "year": "",
+  "pages": 31,
+  "pdf": "World_War_III_02_195305.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "ace-comics-06",
+  "series": "Baffling Mysteries",
+  "issue": 6,
+  "year": "1952",
+  "pages": 33,
+  "pdf": "baffling_mysteries_06_1952.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "ace-comics-05",
+  "series": "Baffling Mysteries",
+  "issue": 5,
+  "year": "",
+  "pages": 36,
+  "pdf": "baffling_mysteries_05.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "amazing-adventures-11-1972",
+  "series": "Amazing Adventures",
+  "issue": 11,
+  "year": "",
+  "pages": 24,
+  "pdf": "Amazing Adventures 11 (1972).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "amazing-adventures-16-1973",
+  "series": "Amazing Adventures",
+  "issue": 16,
+  "year": "",
+  "pages": 22,
+  "pdf": "Amazing Adventures 16 (1973).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "amazing-adventures-12-1972",
+  "series": "Amazing Adventures",
+  "issue": 12,
+  "year": "",
+  "pages": 24,
+  "pdf": "Amazing Adventures 12 (1972).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "amazing-adventures-14-1972",
+  "series": "Amazing Adventures",
+  "issue": 14,
+  "year": "",
+  "pages": 22,
+  "pdf": "Amazing Adventures 14 (1972).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "amazing-adventures-13-1972",
+  "series": "Amazing Adventures",
+  "issue": 13,
+  "year": "",
+  "pages": 23,
+  "pdf": "Amazing Adventures 13 (1972).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "amazing-adventures-15-1972",
+  "series": "Amazing Adventures",
+  "issue": 15,
+  "year": "",
+  "pages": 22,
+  "pdf": "Amazing Adventures 15 (1972).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "amazing-adventures-17-1973",
+  "series": "Amazing Adventures",
+  "issue": 17,
+  "year": "",
+  "pages": 21,
+  "pdf": "Amazing Adventures 17 (1973).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "baffling-mysteries-07",
+  "series": "Baffling Mysteries",
+  "issue": 7,
+  "year": "1952",
+  "pages": 33,
+  "pdf": "baffling_mysteries_07_1952.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-09",
+  "series": "Baffling Mysteries",
+  "issue": 9,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "baffling_mysteries_09.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-11",
+  "series": "Baffling Mysteries",
+  "issue": 11,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "baffling_mysteries_11_1952.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-12",
+  "series": "Baffling Mysteries",
+  "issue": 12,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "baffling_mysteries_12_1952.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-14",
+  "series": "Baffling Mysteries",
+  "issue": 14,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "baffling_mysteries_14_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-13",
+  "series": "Baffling Mysteries",
+  "issue": 13,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "baffling_mysteries_13_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-17",
+  "series": "Baffling Mysteries",
+  "issue": 17,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "baffling_mysteries_17_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-19",
+  "series": "Baffling Mysteries",
+  "issue": 19,
+  "year": "1954",
+  "pages": 36,
+  "pdf": "baffling_mysteries_19_1954.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-21",
+  "series": "Baffling Mysteries",
+  "issue": 21,
+  "year": "1954",
+  "pages": 35,
+  "pdf": "baffling_mysteries_21_1954_07.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-18",
+  "series": "Baffling Mysteries",
+  "issue": 18,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "baffling_mysteries_18_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-20",
+  "series": "Baffling Mysteries",
+  "issue": 20,
+  "year": "1954",
+  "pages": 36,
+  "pdf": "baffling_mysteries_20_1954.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-24",
+  "series": "Baffling Mysteries",
+  "issue": 24,
+  "year": "1955",
+  "pages": 36,
+  "pdf": "baffling_mysteries_24_1955.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "baffling-mysteries-15",
+  "series": "Baffling Mysteries",
+  "issue": 15,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "baffling_mysteries_15_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "blue-beetle-v-1-001",
+  "series": "Blue Beetle",
+  "issue": 1,
+  "year": "",
+  "pages": 25,
+  "pdf": "Blue Beetle v1 001.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "captain-science-1-images",
+  "series": "Captain Science",
+  "issue": 1,
+  "year": "1950",
+  "pages": 36,
+  "pdf": "CaptainScience1.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "captain-science-2-images",
+  "series": "Captain Science",
+  "issue": 2,
+  "year": "1951",
+  "pages": 34,
+  "pdf": "CaptainScience2.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "captain-science-3-images",
+  "series": "Captain Science",
+  "issue": 3,
+  "year": "1951",
+  "pages": 36,
+  "pdf": "CaptainScience3.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "captain-science-4-images",
+  "series": "Captain Science",
+  "issue": 4,
+  "year": "1951",
+  "pages": 36,
+  "pdf": "CaptainScience4.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "baffling-mysteries-26",
+  "series": "Baffling Mysteries",
+  "issue": 26,
+  "year": "",
+  "pages": 34,
+  "pdf": "baffling_mysteries_26.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "captain-science-5-images",
+  "series": "Captain Science",
+  "issue": 5,
+  "year": "1951",
+  "pages": 36,
+  "pdf": "CaptainScience5.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "chilling-tales-13-images",
+  "series": "Chilling Tales",
+  "issue": 13,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "ChillingTales13.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "captain-science-6-images",
+  "series": "Captain Science",
+  "issue": 6,
+  "year": "1951",
+  "pages": 36,
+  "pdf": "CaptainScience6.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "captain-science-7-images",
+  "series": "Captain Science",
+  "issue": 7,
+  "year": "1951",
+  "pages": 16,
+  "pdf": "CaptainScience7.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "chilling-tales-14-images",
+  "series": "Chilling Tales",
+  "issue": 14,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "ChillingTales14.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "chilling-tales-15-images",
+  "series": "Chilling Tales",
+  "issue": 15,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "ChillingTales15.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "chilling-tales-16-images",
+  "series": "Chilling Tales",
+  "issue": 16,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "ChillingTales16.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "crime-and-punishment-dostoyevsky-fyodor-1821-1881",
+  "series": "Crime and Punishment",
+  "issue": null,
+  "year": "",
+  "pages": 68,
+  "pdf": "Crime and punishment -- Dostoyevsky, Fyodor, 1821-1881.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "chilling-tales-17-images",
+  "series": "Chilling Tales",
+  "issue": 17,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "ChillingTales17.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "fawcett-beware-terror-tales-002",
+  "series": "Beware",
+  "issue": 2,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "beware_terror_tales_002_1952_07.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "fawcett-beware-terror-tales-004",
+  "series": "Beware",
+  "issue": 4,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "beware_terror_tales_004_1952_11.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "hand-of-fate-08",
+  "series": "Hand of Fate",
+  "issue": 8,
+  "year": "",
+  "pages": 36,
+  "pdf": "Hand_of_Fate_08.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "hand-of-fate-21",
+  "series": "Hand of Fate",
+  "issue": 21,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "Hand_of_Fate_21_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "hand-of-fate-14",
+  "series": "Hand of Fate",
+  "issue": 14,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "Hand_of_Fate_14_1952.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "hand-of-fate-19",
+  "series": "Hand of Fate",
+  "issue": 19,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "Hand_of_Fate_19_1953.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "jumbo-comics-08",
+  "series": "Jumbo Comics",
+  "issue": 8,
+  "year": "",
+  "pages": 36,
+  "pdf": "Jumbo_Comics_082.pdf",
+  "genre": "jungle"
+ },
+ {
+  "id": "phantom-lady",
+  "series": "Phantom Lady",
+  "issue": null,
+  "year": "",
+  "pages": 36,
+  "pdf": "Phantom Lady.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "hand-of-fate-11",
+  "series": "Hand of Fate",
+  "issue": 11,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "Hand_of_Fate_11_1952.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "jumbo-comics-105-november-1947",
+  "series": "Jumbo Comics",
+  "issue": 105,
+  "year": "1947",
+  "pages": 53,
+  "pdf": "Jumbo Comics 105 November 1947.pdf",
+  "genre": "jungle"
+ },
+ {
+  "id": "planet-comics-011-gm-removed-cbpop",
+  "series": "Planet Comics",
+  "issue": 69,
+  "year": "1940",
+  "pages": 37,
+  "pdf": "0243_Planet_Comics_69__1953_Winter.Fiction_House___c2c.Cimmerian32_.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "rocket-to-the-moon-nn-avon-1951",
+  "series": "Rocket to the Moon",
+  "issue": null,
+  "year": "1951",
+  "pages": 37,
+  "pdf": "Rocket to the Moon #nn (Avon, 1951).pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "strange_worlds_05_c2c_JVJ_Cimm32_Geo",
+  "series": "Strange Worlds",
+  "issue": 12,
+  "year": "1951",
+  "pages": 37,
+  "pdf": "Strange_Worlds_002.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "space-action-03",
+  "series": "Space Action",
+  "issue": 3,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Action_03.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "space-action-02",
+  "series": "Space Action",
+  "issue": 2,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Action_02.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "space-action-01",
+  "series": "Space Action",
+  "issue": 1,
+  "year": "",
+  "pages": 37,
+  "pdf": "Space_Action_01.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "webofmystery-comics-02",
+  "series": "Web of Mystery",
+  "issue": 2,
+  "year": "",
+  "pages": 37,
+  "pdf": "Web_of_Mystery_02.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-04",
+  "series": "Web of Mystery",
+  "issue": 4,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_04.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-03",
+  "series": "Web of Mystery",
+  "issue": 3,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_03.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-06",
+  "series": "Web of Mystery",
+  "issue": 6,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_06.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-01",
+  "series": "Web of Mystery",
+  "issue": 1,
+  "year": "",
+  "pages": 37,
+  "pdf": "Web_of_Mystery_01.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-07",
+  "series": "Web of Mystery",
+  "issue": 7,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_07.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-08",
+  "series": "Web of Mystery",
+  "issue": 8,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_08.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-09",
+  "series": "Web of Mystery",
+  "issue": 9,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_09.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-10",
+  "series": "Web of Mystery",
+  "issue": 10,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_10.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-15",
+  "series": "Web of Mystery",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "Web_of_Mystery_15.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-05",
+  "series": "Web of Mystery",
+  "issue": 5,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_05.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-13",
+  "series": "Web of Mystery",
+  "issue": 13,
+  "year": "",
+  "pages": 30,
+  "pdf": "Web_of_Mystery_13.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-11",
+  "series": "Web of Mystery",
+  "issue": 11,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_11.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-12",
+  "series": "Web of Mystery",
+  "issue": 12,
+  "year": "",
+  "pages": 37,
+  "pdf": "Web_of_Mystery_12.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-18",
+  "series": "Web of Mystery",
+  "issue": 18,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_18.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-16",
+  "series": "Web of Mystery",
+  "issue": 16,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_16.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-17",
+  "series": "Web of Mystery",
+  "issue": 17,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_17.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-20",
+  "series": "Web of Mystery",
+  "issue": 20,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_20.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-23",
+  "series": "Web of Mystery",
+  "issue": 23,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_23.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-14",
+  "series": "Web of Mystery",
+  "issue": 14,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_14.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-22",
+  "series": "Web of Mystery",
+  "issue": 22,
+  "year": "",
+  "pages": 37,
+  "pdf": "Web_of_Mystery_22.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-24",
+  "series": "Web of Mystery",
+  "issue": 24,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_24.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-19",
+  "series": "Web of Mystery",
+  "issue": 19,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_19.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-25",
+  "series": "Web of Mystery",
+  "issue": 25,
+  "year": "",
+  "pages": 34,
+  "pdf": "Web_of_Mystery_25.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "weird-comics-004",
+  "series": "Weird Comics",
+  "issue": 4,
+  "year": "1940",
+  "pages": 68,
+  "pdf": "Weird Comics 004 (Fox) (1940) (c2c) (Mark Bowen) (preferred version).pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "webofmystery-comics-26",
+  "series": "Web of Mystery",
+  "issue": 26,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_26.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-28",
+  "series": "Web of Mystery",
+  "issue": 28,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_28.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "world-war-iii-01",
+  "series": "World War III",
+  "issue": 1,
+  "year": "",
+  "pages": 31,
+  "pdf": "World_War_III_01.pdf",
+  "genre": "war"
+ },
+ {
+  "id": "webofmystery-comics-27",
+  "series": "Web of Mystery",
+  "issue": 27,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_27.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "webofmystery-comics-21",
+  "series": "Web of Mystery",
+  "issue": 21,
+  "year": "",
+  "pages": 36,
+  "pdf": "Web_of_Mystery_21.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "world-war-iii-03",
+  "series": "World War III",
+  "issue": 3,
+  "year": "",
+  "pages": 31,
+  "pdf": "World_War_III_03.pdf",
+  "genre": "war"
+ }
 ]

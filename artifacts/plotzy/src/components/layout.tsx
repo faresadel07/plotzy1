@@ -38,7 +38,8 @@ const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/audiolibrary",  key: "navAudioLibrary" },
   // Marketplace temporarily hidden site-wide; re-add to restore.
   // { href: "/marketplace",   key: "navMarketplace" },
-  { href: "/comics",        key: "navComics" },
+  // Comics lives as a landing section + footer link, not a nav item.
+  // { href: "/comics",        key: "navComics" },
   { href: "/library",       key: "navCommunity" },
   { href: "/pricing",       key: "navPro" },
   { href: "/support",       key: "navSupport" },

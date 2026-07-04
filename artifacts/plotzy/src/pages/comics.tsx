@@ -18,7 +18,7 @@ import { useIsPhone } from "@/hooks/use-is-phone";
 import { ContentRow } from "@/components/mobile/ContentRow";
 import type { MobileBook } from "@/components/mobile/mobile-content";
 import {
-  COMICS, COMIC_GENRES, comicCover, comicCoverFallback, type ComicGenre,
+  COMICS, COMIC_GENRES, comicCover, comicCoverRemote, comicCoverFallback, type ComicGenre,
 } from "@/lib/comics";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
@@ -169,8 +169,10 @@ function DesktopWall({ ar }: { ar: boolean }) {
               width: "100%", aspectRatio: "2 / 3", borderRadius: 10, overflow: "hidden",
               background: "#141416", boxShadow: "0 8px 26px rgba(0,0,0,0.5)",
               transition: "transform 200ms cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 200ms ease",
+              position: "relative",
             }} className="comic-cover">
               <ComicCoverImg id={c.id} alt={c.title} />
+              <ReadingProgress id={c.id} pages={c.pages} ar={ar} />
             </div>
             <div>
               <div style={{ fontSize: 13.5, fontWeight: 650, color: "#f0efe8", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
@@ -194,16 +196,41 @@ function DesktopWall({ ar }: { ar: boolean }) {
   );
 }
 
-// Cover with automatic fallback: crisp first-page scan first, IA
-// thumbnail if that ever fails.
+// "Continue reading" indicator: if the reader saved a position for
+// this issue, show a chip and a thin progress bar over the cover.
+function ReadingProgress({ id, pages, ar }: { id: string; pages: number; ar: boolean }) {
+  let pos = 0;
+  try { pos = Number(window.localStorage?.getItem(`plotzy_comic_pos_${id}`)) || 0; } catch { /* private mode */ }
+  if (pos <= 0) return null;
+  const pct = Math.min(100, Math.round(((pos + 1) / pages) * 100));
+  return (
+    <>
+      <span style={{
+        position: "absolute", top: 8, insetInlineStart: 8,
+        padding: "3px 9px", borderRadius: 999,
+        background: "rgba(0,0,0,0.72)", backdropFilter: "blur(6px)",
+        color: "#fff", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em",
+      }}>
+        {ar ? "تابع القراءة" : "Continue"}
+      </span>
+      <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 3, background: "rgba(0,0,0,0.5)" }}>
+        <span style={{ display: "block", height: "100%", width: `${pct}%`, background: "#fff" }} />
+      </span>
+    </>
+  );
+}
+
+// Cover with a three-step fallback chain: bundled local file first
+// (instant), then the archive's first-page scan, then its thumbnail.
 function ComicCoverImg({ id, alt }: { id: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
+  const [step, setStep] = useState(0);
+  const src = step === 0 ? comicCover(id) : step === 1 ? comicCoverRemote(id) : comicCoverFallback(id);
   return (
     <img
-      src={failed ? comicCoverFallback(id) : comicCover(id)}
+      src={src}
       alt={alt}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setStep((s) => Math.min(s + 1, 2))}
       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
     />
   );
