@@ -750,14 +750,14 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               <FooterSocialIcons />
             </div>
 
-            {/* Write — the creation tools the writer uses every day */}
+            {/* Write — the creation tools the writer uses every day.
+                Per-book tools (cover designer, audiobook, publishers)
+                are NOT listed here: they live inside each book, and a
+                footer link that lands somewhere else erodes trust. */}
             <FooterCol title="Write" links={[
               { label: 'Dashboard',         href: '/dashboard' },
               { label: 'My Library',        href: '/' },
               { label: 'AI Marketplace',    href: '/marketplace' },
-              { label: 'Cover Designer',    href: '/dashboard' },
-              { label: 'Audiobook Studio',  href: '/dashboard' },
-              { label: 'Find Publishers',   href: '/dashboard' },
               { label: 'Trash',             href: '/trash' },
             ]} />
 
@@ -766,7 +766,6 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               { label: 'Audio Library',       href: '/audiolibrary', badge: 'New' },
               { label: 'Public Domain Books', href: '/discover' },
               { label: 'Community Library',   href: '/library' },
-              { label: 'Authors',             href: '/library' },
               { label: 'Blog',                href: '/blog' },
               { label: 'Messages',            href: '/messages' },
             ]} />
@@ -778,10 +777,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               { label: 'Writing Guide',       href: '/writing-guide' },
               { label: 'Tutorial Videos',     href: '/tutorial' },
               { label: 'FAQ',                 href: '/faq' },
-              { label: 'Support Center',      href: '/support' },
             ]} />
 
-            {/* Company — who we are, how to reach us, how to help us */}
+            {/* Company — who we are, how to reach us, how to help us.
+                One link per destination: Contact/Status were aliases of
+                Support Center and Pricing an alias of Donate, so taps
+                kept landing "somewhere else". */}
             <FooterCol title="Company" links={[
               { label: 'About Plotzy',  href: '/about' },
               { label: 'Reviews',       onClick: () => {
@@ -789,10 +790,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                 if (window.location.pathname === '/') scroll();
                 else { navigate('/'); setTimeout(scroll, 400); }
               } },
-              { label: 'Pricing',       href: '/pricing' },
               { label: 'Donate',        href: '/pricing' },
-              { label: 'Contact',       href: '/support' },
-              { label: 'Status',        href: '/support' },
+              { label: 'Support',       href: '/support' },
             ]} />
 
             {/* Legal — the boring-but-load-bearing stuff */}
