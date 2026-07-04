@@ -212,6 +212,40 @@ const SERIES = [
   ["barnyard comics", "Barnyard Comics", "funny"],
   ["supermouse", "Supermouse", "funny"],
   ["frisky fables", "Frisky Fables", "funny"],
+  // ── Expansion wave 4 ──────────────────────────────────────────────
+  // Charlton's famously unrenewed 1950s lines (Ditko-era suspense,
+  // Atomic Mouse funny animals, the western stable), Ace romances to
+  // fill the romance genre, plus Avon / Star / Premiere crime and
+  // horror stragglers.
+  ["unusual tales", "Unusual Tales", "horror"],
+  ["this is suspense", "This Is Suspense", "horror"],
+  ["the dead who walk", "The Dead Who Walk", "horror"],
+  ["horror from the tomb", "Horror from the Tomb", "horror"],
+  ["mysterious stories", "Mysterious Stories", "horror"],
+  ["texas rangers in action", "Texas Rangers in Action", "western"],
+  ["cheyenne kid", "Cheyenne Kid", "western"],
+  ["black fury", "Black Fury", "western"],
+  ["davy crockett", "Davy Crockett", "western"],
+  ["robin hood and his merry men", "Robin Hood", "western"],
+  ["police line-up", "Police Line-Up", "crime"],
+  ["police lineup", "Police Line-Up", "crime"],
+  ["prison break", "Prison Break", "crime"],
+  ["criminals on the run", "Criminals on the Run", "crime"],
+  ["law against crime", "Law Against Crime", "crime"],
+  ["real love", "Real Love", "romance"],
+  ["ten-story love", "Ten-Story Love", "romance"],
+  ["ten story love", "Ten-Story Love", "romance"],
+  ["love experiences", "Love Experiences", "romance"],
+  ["glamorous romances", "Glamorous Romances", "romance"],
+  ["complete love", "Complete Love", "romance"],
+  ["revealing romances", "Revealing Romances", "romance"],
+  ["secret romances", "Secret Romances", "romance"],
+  ["g.i. war brides", "G.I. War Brides", "romance"],
+  ["gi war brides", "G.I. War Brides", "romance"],
+  ["atomic mouse", "Atomic Mouse", "funny"],
+  ["atomic rabbit", "Atomic Rabbit", "funny"],
+  ["li'l genius", "Li'l Genius", "funny"],
+  ["lil genius", "Li'l Genius", "funny"],
 ];
 
 const BLOCK = /manga|manhwa|manhua|corto|maltese|tpb|-pg-|_pg\d|page-\d|complete|collection|compilation|reprint|facsimile|fac-simile|preview|sampler|annual|_full|fanzine|remix|smackjeeves|webcomic|20\d\d/i;
@@ -318,7 +352,7 @@ async function verify(c) {
       const xml = await tget(`https://archive.org/download/${c.id}/${encodeURIComponent(scan.name)}`);
       count = (xml.match(/<page\s/g) || []).length;
     }
-    if (!Number.isFinite(count) || count < 16 || count > 110) return null;
+    if (!Number.isFinite(count) || count < 16 || count > 130) return null;
 
     const pdfFile = (meta?.files || []).find(
       (f) => /\.pdf$/i.test(f.name) && !/_text\.pdf$/i.test(f.name),

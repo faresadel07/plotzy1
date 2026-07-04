@@ -1,11 +1,11 @@
 [
  {
-  "id": "AmazingManComics008paper10fichediffVer-c2c",
+  "id": "AmazingManComics008fiche",
   "series": "Amazing Man",
   "issue": 8,
   "year": "",
-  "pages": 69,
-  "pdf": "Amazing_Man_Comics_008__c2c_Pmack_dsdaboss_.pdf",
+  "pages": 77,
+  "pdf": "Amazing_Man_08__paper_4fiche__c2c_Nafstar_Pmack.pdf",
   "genre": "hero"
  },
  {
@@ -4788,30 +4788,30 @@
   "genre": "horror"
  },
  {
-  "id": "hand-of-fate-21",
+  "id": "HandOfFate0211953",
   "series": "Hand of Fate",
   "issue": 21,
   "year": "1953",
-  "pages": 36,
-  "pdf": "Hand_of_Fate_21_1953.pdf",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_021__1953_.pdf",
   "genre": "horror"
  },
  {
-  "id": "hand-of-fate-14",
+  "id": "HandOfFate0141952-fixed",
   "series": "Hand of Fate",
   "issue": 14,
   "year": "1952",
-  "pages": 36,
-  "pdf": "Hand_of_Fate_14_1952.pdf",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_014_1952image22876.pdf",
   "genre": "horror"
  },
  {
-  "id": "hand-of-fate-19",
+  "id": "HandOfFate019-fixed",
   "series": "Hand of Fate",
   "issue": 19,
-  "year": "1953",
-  "pages": 36,
-  "pdf": "Hand_of_Fate_19_1953.pdf",
+  "year": "",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_016__1953_02.Ace_.pdf",
   "genre": "horror"
  },
  {
@@ -4833,12 +4833,12 @@
   "genre": "hero"
  },
  {
-  "id": "hand-of-fate-11",
+  "id": "HandOfFate0111952",
   "series": "Hand of Fate",
   "issue": 11,
   "year": "1952",
-  "pages": 36,
-  "pdf": "Hand_of_Fate_11_1952.pdf",
+  "pages": 37,
+  "pdf": "Hand_of_Fate_011.pdf",
   "genre": "horror"
  },
  {
@@ -9664,5 +9664,842 @@
   "pages": 33,
   "pdf": "vic_torry_and_his_flying_saucer_1950.pdf",
   "genre": "scifi"
+ },
+ {
+  "id": "AmazingAdventures0031951",
+  "series": "Amazing Adventures",
+  "issue": 3,
+  "year": "1951",
+  "pages": 37,
+  "pdf": "Amazing_Adventures__03__1951___Ziff___03.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "AmazingAdventures006_jvjon",
+  "series": "Amazing Adventures",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Amazing_Adventures_006_JVJon.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "AmazingAdventures0011950",
+  "series": "Amazing Adventures",
+  "issue": 1,
+  "year": "1950",
+  "pages": 37,
+  "pdf": "Amazing_Adventures_01__1950__c2c.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "AmazingAdventures005_jvjon",
+  "series": "Amazing Adventures",
+  "issue": 5,
+  "year": "",
+  "pages": 38,
+  "pdf": "Amazing_Adventures_005_JVJon.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "AmazingAdventures004",
+  "series": "Amazing Adventures",
+  "issue": 4,
+  "year": "",
+  "pages": 37,
+  "pdf": "Amazing_Adventures_004.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "AmazingAdventures002",
+  "series": "Amazing Adventures",
+  "issue": 2,
+  "year": "",
+  "pages": 37,
+  "pdf": "AmazingAdventuresZD02_02.pdf",
+  "genre": "scifi"
+ },
+ {
+  "id": "AmazingManComics005A",
+  "series": "Amazing Man",
+  "issue": 5,
+  "year": "",
+  "pages": 70,
+  "pdf": "Amazing_Man_Comics_005F__Centaur.1939___c2c___Pmack_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AmazingManComics007fiche",
+  "series": "Amazing Man",
+  "issue": 7,
+  "year": "",
+  "pages": 72,
+  "pdf": "Amazing_Man_007F__1939_Nov__68p__c2c__Pmack_Snard_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "AtomicMouse12",
+  "series": "Atomic Mouse",
+  "issue": 12,
+  "year": "",
+  "pages": 36,
+  "pdf": "Atomic_Mouse_012.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "AtomicMouseV1026",
+  "series": "Atomic Mouse",
+  "issue": 1,
+  "year": "",
+  "pages": 70,
+  "pdf": "Atomic_Mouse_026_May_1958_bchat_scans.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "AtomicRabbit003",
+  "series": "Atomic Rabbit",
+  "issue": 3,
+  "year": "",
+  "pages": 38,
+  "pdf": "Atomic_Rabbit_003_March_1956_bchat_scans.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "AtomicRabbit004",
+  "series": "Atomic Rabbit",
+  "issue": 4,
+  "year": "",
+  "pages": 37,
+  "pdf": "AtomicRabbit04.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "AtomicRabbit005",
+  "series": "Atomic Rabbit",
+  "issue": 5,
+  "year": "",
+  "pages": 38,
+  "pdf": "Atomic_Rabbit_005_October_1956_bchat_scans.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "AtomicRabbit007",
+  "series": "Atomic Rabbit",
+  "issue": 7,
+  "year": "",
+  "pages": 38,
+  "pdf": "atomicrabbit07-25.JPG.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "BlackFuryV1005",
+  "series": "Black Fury",
+  "issue": 1,
+  "year": "",
+  "pages": 38,
+  "pdf": "Black_Fury_005_c2c_narfstar_1956.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "BlueBeetle014",
+  "series": "Blue Beetle",
+  "issue": 14,
+  "year": "",
+  "pages": 69,
+  "pdf": "Holyoke_Blue_Beetle_014_Archiver_USA.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlackFurygive-away002-fixed",
+  "series": "Black Fury",
+  "issue": 2,
+  "year": "",
+  "pages": 38,
+  "pdf": "Black_Fury__give_away__002__fixed.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "BlueBeetle0191955-fixed",
+  "series": "Blue Beetle",
+  "issue": 19,
+  "year": "1955",
+  "pages": 37,
+  "pdf": "Blue_Beetle_019__1955___c2c___ABPC_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle021",
+  "series": "Blue Beetle",
+  "issue": 21,
+  "year": "",
+  "pages": 63,
+  "pdf": "blubeet21noow.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetle025",
+  "series": "Blue Beetle",
+  "issue": 25,
+  "year": "",
+  "pages": 120,
+  "pdf": "blue_beetle25_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BlueBeetleV5001",
+  "series": "Blue Beetle",
+  "issue": 5,
+  "year": "",
+  "pages": 36,
+  "pdf": "Blue Beetle v5 001.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics004fiche",
+  "series": "Boy Comics",
+  "issue": 4,
+  "year": "",
+  "pages": 68,
+  "pdf": "Boy_Comics_004_fiche_ow-rolster-ont_c2cBoy_Comics_004_01.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics009fiche23paper-c2c",
+  "series": "Boy Comics",
+  "issue": 9,
+  "year": "",
+  "pages": 68,
+  "pdf": "Boy_Comics_09__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics050",
+  "series": "Boy Comics",
+  "issue": 50,
+  "year": "",
+  "pages": 53,
+  "pdf": "boy_comics_050___52_pages.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics051",
+  "series": "Boy Comics",
+  "issue": 51,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_051__Lev_Gleason___Mar_1950___Ontology_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "BoyComics052",
+  "series": "Boy Comics",
+  "issue": 52,
+  "year": "",
+  "pages": 53,
+  "pdf": "Boy_Comics_052__1950__now_c2c.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "CheyenneKid008C2c",
+  "series": "Cheyenne Kid",
+  "issue": 8,
+  "year": "",
+  "pages": 37,
+  "pdf": "Cheyenne_Kid_008_Charlton_Jul_1957_36p_c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "CheyenneKid011fixed",
+  "series": "Cheyenne Kid",
+  "issue": 11,
+  "year": "",
+  "pages": 69,
+  "pdf": "Cheyenne_Kid_011__fixed_narfstar_perseus_reedit_noifc.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "CheyenneKid010",
+  "series": "Cheyenne Kid",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Cheyenne_Kid_010.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "CheyenneKid017",
+  "series": "Cheyenne Kid",
+  "issue": 17,
+  "year": "",
+  "pages": 37,
+  "pdf": "Cheyenne_Kid_017.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "CheyenneKid012C2c",
+  "series": "Cheyenne Kid",
+  "issue": 12,
+  "year": "",
+  "pages": 37,
+  "pdf": "Cheyenne_Kid_012_c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "CriminalsOnTheRunV4003",
+  "series": "Criminals on the Run",
+  "issue": 4,
+  "year": "",
+  "pages": 53,
+  "pdf": "Criminals_on_the_Run_v4_03.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "CrimeDoesNotPay091",
+  "series": "Crime Does Not Pay",
+  "issue": 91,
+  "year": "",
+  "pages": 53,
+  "pdf": "Crime_Does_Not_Pay_091.pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "DaredevilComics108",
+  "series": "Daredevil",
+  "issue": 108,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_108__1954_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics123",
+  "series": "Daredevil",
+  "issue": 123,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_123__1955_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics124",
+  "series": "Daredevil",
+  "issue": 124,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_124.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics128",
+  "series": "Daredevil",
+  "issue": 128,
+  "year": "",
+  "pages": 37,
+  "pdf": "Daredevil_Comics_128.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DaredevilComics134",
+  "series": "Daredevil",
+  "issue": 134,
+  "year": "",
+  "pages": 37,
+  "pdf": "Gleason_Daredevil_134.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DarkMysteries0042Stories",
+  "series": "Dark Mysteries",
+  "issue": 4,
+  "year": "",
+  "pages": 17,
+  "pdf": "Dark_Mysteries_004_Karswell.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "DavyCrockett001C2c",
+  "series": "Davy Crockett",
+  "issue": 1,
+  "year": "",
+  "pages": 37,
+  "pdf": "Davy_Crockett_001_Charlton_Aug_1955_36p_c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockett002C2c",
+  "series": "Davy Crockett",
+  "issue": 2,
+  "year": "",
+  "pages": 37,
+  "pdf": "Davy_Crockett_002_c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DaredevilComics125",
+  "series": "Daredevil",
+  "issue": 125,
+  "year": "",
+  "pages": 37,
+  "pdf": "Lev_Gleason___Daredevil_125.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "DavyCrockett003",
+  "series": "Davy Crockett",
+  "issue": 3,
+  "year": "",
+  "pages": 37,
+  "pdf": "Davy_Crockett_003__Charlton___HP_Ontology_.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockett005",
+  "series": "Davy Crockett",
+  "issue": 5,
+  "year": "",
+  "pages": 37,
+  "pdf": "Davy_Crockett_005.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockett004",
+  "series": "Davy Crockett",
+  "issue": 4,
+  "year": "",
+  "pages": 36,
+  "pdf": "Davy_Crockett_004.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockett006C2c",
+  "series": "Davy Crockett",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Davy_Crockett_006_Charlton_Jun_1956_36p_c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockett007C2c",
+  "series": "Davy Crockett",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Davy_Crockett_007_Charlton_Aug_1956_36p_c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockett008",
+  "series": "Davy Crockett",
+  "issue": 8,
+  "year": "",
+  "pages": 38,
+  "pdf": "Davy_Crockett_08_1957_jodyanimator.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "DavyCrockettComics631639664",
+  "series": "Davy Crockett",
+  "issue": 631,
+  "year": "",
+  "pages": 36,
+  "pdf": "FourColourComic631-davyCrockett.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "GlamorousRomances071c2c",
+  "series": "Glamorous Romances",
+  "issue": 71,
+  "year": "",
+  "pages": 38,
+  "pdf": "GlamorousRomances071c2c.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "GlamorousRomances049",
+  "series": "Glamorous Romances",
+  "issue": 49,
+  "year": "",
+  "pages": 38,
+  "pdf": "Glamorous_Romances_049__1950___Fox___Twobyfour_DREGS_.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "GlamorousRomances041",
+  "series": "Glamorous Romances",
+  "issue": 41,
+  "year": "",
+  "pages": 37,
+  "pdf": "GlamorousRomances41-00.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "GlamorousRomances048",
+  "series": "Glamorous Romances",
+  "issue": 48,
+  "year": "",
+  "pages": 37,
+  "pdf": "glamourousromances48-13.JPG.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "GlamorousRomances057",
+  "series": "Glamorous Romances",
+  "issue": 57,
+  "year": "",
+  "pages": 37,
+  "pdf": "glam_rom_57_36_bc_resize.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "GhostlyWeirdStories1211953",
+  "series": "Ghostly Weird Stories",
+  "issue": 121,
+  "year": "1953",
+  "pages": 37,
+  "pdf": "Star___Ghostly_Weird_Stories_121__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "GlamorousRomances072C2c",
+  "series": "Glamorous Romances",
+  "issue": 72,
+  "year": "",
+  "pages": 37,
+  "pdf": "GlamorousRomances072c2c1953abpc.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "HandOfFate015",
+  "series": "Hand of Fate",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "100_S143.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific007",
+  "series": "Horrific",
+  "issue": 7,
+  "year": "",
+  "pages": 35,
+  "pdf": "Horrific_007__1953_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Horrific010",
+  "series": "Horrific",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Horrific_010__Comic_Media_1954__bey.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "LilGenius0061955",
+  "series": "Li'l Genius",
+  "issue": 6,
+  "year": "1955",
+  "pages": 38,
+  "pdf": "Lil_Genius_006__1955___Vigilante407_.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "LilGenius0221959",
+  "series": "Li'l Genius",
+  "issue": 22,
+  "year": "1959",
+  "pages": 37,
+  "pdf": "Lil_Genius_022__Charlton___July_1959___Hal_Ont__36p_c2c.pdf",
+  "genre": "funny"
+ },
+ {
+  "id": "LoveExperiences018",
+  "series": "Love Experiences",
+  "issue": 18,
+  "year": "",
+  "pages": 37,
+  "pdf": "Love_Experiences_018.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "MisterMystery07",
+  "series": "Mister Mystery",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Mister_Mystery_07.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "MysteriousAdventures007C2cJvj_geo",
+  "series": "Mysterious Adventures",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Mysterious_Adventures_007_c2c__JVJ_Geo.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "RealLove044C2c",
+  "series": "Real Love",
+  "issue": 44,
+  "year": "",
+  "pages": 37,
+  "pdf": "Real_Love_044_c2c__36p_Ace_Feb_1952___QuietRiot_.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "RealLove074damaged-fixed",
+  "series": "Real Love",
+  "issue": 74,
+  "year": "",
+  "pages": 37,
+  "pdf": "Ace_Real_Love_74_1956.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "RealLove071",
+  "series": "Real Love",
+  "issue": 71,
+  "year": "",
+  "pages": 37,
+  "pdf": "Real_Love_071.pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "SilverStreakComics002",
+  "series": "Silver Streak",
+  "issue": 2,
+  "year": "",
+  "pages": 69,
+  "pdf": "Silver_Streak_02__fiche_.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "SilverStreakComics020",
+  "series": "Silver Streak",
+  "issue": 20,
+  "year": "",
+  "pages": 70,
+  "pdf": "Silver_Streak_Comics_020__improved_fiche_Darkmark_DCP.pdf",
+  "genre": "hero"
+ },
+ {
+  "id": "This_Is_Suspense_023",
+  "series": "This Is Suspense",
+  "issue": 23,
+  "year": "",
+  "pages": 38,
+  "pdf": "This_Is_Suspense_023.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "This_Is_Suspense_025",
+  "series": "This Is Suspense",
+  "issue": 25,
+  "year": "",
+  "pages": 38,
+  "pdf": "This_Is_Suspense_025.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "This_Is_Suspense_024",
+  "series": "This Is Suspense",
+  "issue": 24,
+  "year": "",
+  "pages": 38,
+  "pdf": "This_Is_Suspense_024.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "This_Is_Suspense_026",
+  "series": "This Is Suspense",
+  "issue": 26,
+  "year": "",
+  "pages": 38,
+  "pdf": "This_Is_Suspense_026.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "This_Magazine_Is_Haunted_015",
+  "series": "This Magazine Is Haunted",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "This_Magazine_Is_Haunted_015__Charlton__Feb_1953___JVJ_Ont__36p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_003",
+  "series": "Unusual Tales",
+  "issue": 3,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_003_Charlton_Apr_1956_36p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_007",
+  "series": "Unusual Tales",
+  "issue": 7,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_007_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_006",
+  "series": "Unusual Tales",
+  "issue": 6,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_006__Fett.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_005",
+  "series": "Unusual Tales",
+  "issue": 5,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_005_Charlton_Sep_1956_36p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_002",
+  "series": "Unusual Tales",
+  "issue": 2,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_002__1956_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_009",
+  "series": "Unusual Tales",
+  "issue": 9,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_009__Fett.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_008",
+  "series": "Unusual Tales",
+  "issue": 8,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_008_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_010",
+  "series": "Unusual Tales",
+  "issue": 10,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_010_Charlton_Jan_1958_36p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_011",
+  "series": "Unusual Tales",
+  "issue": 11,
+  "year": "",
+  "pages": 69,
+  "pdf": "Unusual_Tales_011_Charlton_Mar_1958_68p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_012",
+  "series": "Unusual Tales",
+  "issue": 12,
+  "year": "",
+  "pages": 38,
+  "pdf": "Unusual_Tales_12__July_1958___Pyramid_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_015",
+  "series": "Unusual Tales",
+  "issue": 15,
+  "year": "",
+  "pages": 36,
+  "pdf": "Unusual_Tales_015_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_017",
+  "series": "Unusual Tales",
+  "issue": 17,
+  "year": "",
+  "pages": 38,
+  "pdf": "Unusual_Tales_017__1959___Vigilante407_.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_Tales_014",
+  "series": "Unusual Tales",
+  "issue": 14,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_014_Charlton_Dec_1958_36p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "Unusual_tales_19",
+  "series": "Unusual Tales",
+  "issue": 19,
+  "year": "",
+  "pages": 37,
+  "pdf": "Unusual_Tales_019_Charlton_Nov_1959_36p_c2c.pdf",
+  "genre": "horror"
+ },
+ {
+  "id": "black-fury-057",
+  "series": "Black Fury",
+  "issue": 15,
+  "year": "",
+  "pages": 37,
+  "pdf": "Black Fury 002.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "cheyenne-kid-053-1965",
+  "series": "Cheyenne Kid",
+  "issue": 25,
+  "year": "",
+  "pages": 36,
+  "pdf": "Cheyenne Kid 010 Charlton Dec-1957 36p c2c.pdf",
+  "genre": "western"
+ },
+ {
+  "id": "prison-break-03-1952-04.-realistic-darwin-dregs-ia",
+  "series": "Prison Break",
+  "issue": 3,
+  "year": "1952",
+  "pages": 36,
+  "pdf": "Prison Break 03 1952-04.Realistic (Darwin-DREGS-IA).pdf",
+  "genre": "crime"
+ },
+ {
+  "id": "secret-romances-026-1955-06.-superior-love-jones-ia",
+  "series": "Secret Romances",
+  "issue": 26,
+  "year": "1955",
+  "pages": 36,
+  "pdf": "Secret Romances 026 1955-06.Superior (Love Jones-IA).pdf",
+  "genre": "romance"
+ },
+ {
+  "id": "secret-romances-017-1953-12-superior-darwin-dave-h",
+  "series": "Secret Romances",
+  "issue": 17,
+  "year": "1953",
+  "pages": 36,
+  "pdf": "Secret Romances 017 (1953-12) [Superior] Darwin+DaveH.pdf",
+  "genre": "romance"
  }
 ]
