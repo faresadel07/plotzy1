@@ -264,12 +264,16 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-3xl rounded-3xl p-0 border-0 shadow-2xl overflow-hidden bg-card"
+        // Phone (<640px): a true full-screen sheet — pinned to the
+        // viewport, no centering transform, dynamic-viewport height so
+        // the soft keyboard and short screens can never clip the
+        // Continue/Create footer (the body scrolls instead).
+        className="sm:max-w-3xl sm:rounded-3xl p-0 border-0 shadow-2xl overflow-hidden bg-card max-sm:left-0 max-sm:top-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:h-[100dvh] max-sm:max-w-none max-sm:rounded-none"
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="flex flex-col min-h-[560px]">
+        <div className="flex flex-col sm:min-h-[560px] max-sm:h-full">
           {/* Header strip with step counter + progress */}
-          <header className="px-8 pt-6 pb-4 border-b border-border/40">
+          <header className="px-5 sm:px-8 pb-4 border-b border-border/40 pt-6 max-sm:pt-[calc(env(safe-area-inset-top)+14px)]">
             <div className="flex items-center justify-between mb-3">
               <div className="text-xs font-bold tracking-widest uppercase text-muted-foreground">
                 {ar ? "إنشاء كتاب" : "Create a Book"}
@@ -286,8 +290,9 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
             </div>
           </header>
 
-          {/* Body: one question per screen */}
-          <div className="flex-1 px-8 py-10 flex flex-col">
+          {/* Body: one question per screen. min-h-0 + overflow lets it
+              scroll inside the sheet instead of pushing the footer off. */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-10 flex flex-col">
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.section key="s1" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
@@ -507,7 +512,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
           </div>
 
           {/* Footer: Back / Next */}
-          <footer className="px-8 py-5 border-t border-border/40 flex items-center justify-between bg-card">
+          <footer className="px-5 sm:px-8 py-4 sm:py-5 max-sm:pb-[calc(env(safe-area-inset-bottom)+14px)] border-t border-border/40 flex items-center justify-between bg-card">
             {step > 1 ? (
               <Button variant="ghost" onClick={back} className="rounded-xl">
                 {isRTL ? <ArrowRight className="w-4 h-4 mr-1.5" /> : <ArrowLeft className="w-4 h-4 mr-1.5" />}

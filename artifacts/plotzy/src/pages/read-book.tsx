@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import {
   BookOpen, ChevronLeft, ChevronRight, ArrowLeft, Eye,
   Loader2, Star, MessageSquare, MessageSquarePlus, Send, List, X, BookMarked, Check, Trash2, Highlighter,
+  MoreHorizontal,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -583,6 +584,9 @@ export default function ReadBook() {
   // 150-px sliver on a 375 px iPhone screen.
   const isPhone = useIsPhone();
   const [showToc, setShowToc] = useState(false);
+  // Phone-only: the top bar collapses Share / Notes / meta into one
+  // "More" sheet so the 52px bar never crams six controls.
+  const [phoneMoreOpen, setPhoneMoreOpen] = useState(false);
   // Share panel — visible to everyone (readers, not just the author),
   // because the whole point of a public link is that readers pass it
   // along too.
@@ -759,42 +763,48 @@ export default function ReadBook() {
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(24,22,20,0.97)", backdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
+        // Respect the notch / Dynamic Island in standalone (PWA) mode.
+        paddingTop: "env(safe-area-inset-top, 0px)",
       }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 20px", height: 52, display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: isPhone ? "0 12px" : "0 20px", height: 52, display: "flex", alignItems: "center", gap: isPhone ? 6 : 14 }}>
           <Link href="/library">
-            <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#777", cursor: "pointer", fontSize: 13, padding: "4px 8px", borderRadius: 6 }}
+            <button
+              aria-label={t("rbLibrary")}
+              style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#777", cursor: "pointer", fontSize: 13, padding: isPhone ? "8px" : "4px 8px", borderRadius: 6 }}
               onMouseEnter={e => (e.currentTarget.style.color = "#ccc")}
               onMouseLeave={e => (e.currentTarget.style.color = "#777")}
             >
-              <ArrowLeft style={{ width: 15, height: 15 }} />
-              <span>{t("rbLibrary")}</span>
+              <ArrowLeft style={{ width: isPhone ? 18 : 15, height: isPhone ? 18 : 15 }} />
+              {!isPhone && <span>{t("rbLibrary")}</span>}
             </button>
           </Link>
 
-          <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.08)" }} />
+          {!isPhone && <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.08)" }} />}
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 14, fontWeight: 600, color: "#ddd", fontFamily: "Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {book.title}
             </p>
-            <p style={{ fontSize: 11, color: "#555", marginTop: 1 }}>{t("rbBy")} {authorName}</p>
+            <p style={{ fontSize: 11, color: "#555", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t("rbBy")} {authorName}</p>
           </div>
 
-          {ratingStats && ratingStats.count > 0 && (
+          {!isPhone && ratingStats && ratingStats.count > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#666" }}>
               <Star style={{ width: 11, height: 11, fill: "#888", color: "#888" }} />
               <span style={{ fontWeight: 700, color: "#aaa" }}>{ratingStats.avg.toFixed(1)}</span>
             </div>
           )}
 
-          {sortedChapters.length > 0 && (
+          {!isPhone && sortedChapters.length > 0 && (
             <span style={{ fontSize: 11, color: "#444", fontFamily: "Georgia, serif", flexShrink: 0 }}>
               {sortedChapters.length} {sortedChapters.length === 1 ? t("rbChapterWord") : t("rbChaptersWord")}
             </span>
           )}
 
           {/* Share — every reader gets to spread the book, not just
-              the author. The modal handles WhatsApp / X / QR / copy. */}
+              the author. The modal handles WhatsApp / X / QR / copy.
+              On phones this lives in the More sheet. */}
+          {!isPhone && (
           <button onClick={() => setShowShare(true)}
             aria-label={t("rbShare") || "Share"}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 6, flexShrink: 0 }}
@@ -804,17 +814,20 @@ export default function ReadBook() {
             <Send style={{ width: 15, height: 15 }} />
             <span>{t("rbShare") || (t("rbBy") === "بقلم" ? "شارك" : "Share")}</span>
           </button>
+          )}
 
           <button onClick={() => setShowToc(!showToc)}
-            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 6, flexShrink: 0 }}
+            aria-label={t("rbContents")}
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#666", cursor: "pointer", fontSize: 12, padding: isPhone ? "8px" : "5px 10px", borderRadius: 6, flexShrink: 0 }}
             onMouseEnter={e => (e.currentTarget.style.color = "#bbb")}
             onMouseLeave={e => (e.currentTarget.style.color = "#666")}
           >
-            {showToc ? <X style={{ width: 15, height: 15 }} /> : <List style={{ width: 15, height: 15 }} />}
-            <span>{t("rbContents")}</span>
+            {showToc ? <X style={{ width: isPhone ? 18 : 15, height: isPhone ? 18 : 15 }} /> : <List style={{ width: isPhone ? 18 : 15, height: isPhone ? 18 : 15 }} />}
+            {!isPhone && <span>{t("rbContents")}</span>}
           </button>
 
-          {/* Inline comments sidebar toggle */}
+          {/* Inline comments sidebar toggle (desktop; phones use More) */}
+          {!isPhone && (
           <button onClick={() => setShowCommentsSidebar(!showCommentsSidebar)}
             style={{ position: "relative", display: "flex", alignItems: "center", gap: 5, background: showCommentsSidebar ? "rgba(250,204,21,0.12)" : "none", border: "none", color: showCommentsSidebar ? "#facc15" : "#666", cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 6, flexShrink: 0 }}
             onMouseEnter={e => { if (!showCommentsSidebar) e.currentTarget.style.color = "#bbb"; }}
@@ -828,8 +841,87 @@ export default function ReadBook() {
               </span>
             )}
           </button>
+          )}
+
+          {/* Phone: one More button gathers Share / Notes / meta. */}
+          {isPhone && (
+            <button onClick={() => setPhoneMoreOpen(true)}
+              aria-label="More"
+              style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", color: "#888", cursor: "pointer", padding: 8, borderRadius: 6, flexShrink: 0 }}
+            >
+              <MoreHorizontal style={{ width: 20, height: 20 }} />
+              {inlineComments.length > 0 && (
+                <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: 999, background: "#facc15" }} />
+              )}
+            </button>
+          )}
         </div>
       </header>
+
+      {/* ── Phone "More" sheet: share, notes, and the book meta ── */}
+      {isPhone && phoneMoreOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 80 }}>
+          <div onClick={() => setPhoneMoreOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} />
+          <div style={{
+            position: "absolute", left: 0, right: 0, bottom: 0,
+            background: "#1f1c19", borderRadius: "24px 24px 0 0",
+            padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 22px)",
+            boxShadow: "0 -20px 60px rgba(0,0,0,0.55)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "center", padding: "4px 0 12px" }}>
+              <div style={{ width: 40, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.16)" }} />
+            </div>
+
+            {/* Meta line: rating + chapter count */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, color: "#888", fontSize: 12.5 }}>
+              <span style={{ fontFamily: "Georgia, serif", color: "#ccc", fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{book.title}</span>
+              {ratingStats && ratingStats.count > 0 && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                  <Star style={{ width: 11, height: 11, fill: "#888", color: "#888" }} />
+                  <span style={{ fontWeight: 700, color: "#aaa" }}>{ratingStats.avg.toFixed(1)}</span>
+                </span>
+              )}
+              {sortedChapters.length > 0 && (
+                <span style={{ flexShrink: 0 }}>
+                  {sortedChapters.length} {sortedChapters.length === 1 ? t("rbChapterWord") : t("rbChaptersWord")}
+                </span>
+              )}
+            </div>
+
+            {[
+              {
+                icon: <Send style={{ width: 17, height: 17 }} />,
+                label: t("rbShare") || (t("rbBy") === "بقلم" ? "شارك" : "Share"),
+                onTap: () => { setPhoneMoreOpen(false); setShowShare(true); },
+                badge: null as number | null,
+              },
+              {
+                icon: <MessageSquarePlus style={{ width: 17, height: 17 }} />,
+                label: t("rbNotes"),
+                onTap: () => { setPhoneMoreOpen(false); setShowCommentsSidebar(true); },
+                badge: inlineComments.length > 0 ? inlineComments.length : null,
+              },
+            ].map((item, i) => (
+              <button key={i} onClick={item.onTap}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 12,
+                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 14, padding: "14px 16px", marginBottom: 8,
+                  color: "#ddd", fontSize: 14.5, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                {item.icon}
+                <span style={{ flex: 1, textAlign: "start" }}>{item.label}</span>
+                {item.badge !== null && (
+                  <span style={{ background: "#facc15", color: "#000", fontSize: 10, fontWeight: 700, borderRadius: 10, padding: "2px 7px" }}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── TOC drawer ── */}
       <AnimatePresence>
