@@ -596,7 +596,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{lang === "ar" ? "تعاون" : "Collaborate"}</span>
               </button>}
-              {isOwner && <Link href="/marketplace">
+              {/* Marketplace temporarily hidden site-wide; restore this
+                  AI Suite button when the marketplace relaunches. */}
+              {false && isOwner && <Link href="/marketplace">
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                   style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}

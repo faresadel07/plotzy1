@@ -363,7 +363,9 @@ function Router() {
         <Route path="/protection" component={Protection} />
         <Route path="/about" component={About} />
         <Route path="/faq" component={FaqPage} />
-        <Route path="/marketplace" component={Marketplace} />
+        {/* Marketplace temporarily hidden site-wide (nav, footer, and
+            route). Uncomment to relaunch. */}
+        {/* <Route path="/marketplace" component={Marketplace} /> */}
         <Route path="/course" component={CourseLandingPage} />
         <Route path="/learn/visuals-preview" component={VisualsPreview} />
         <Route path="/donate/thanks" component={DonateThanks} />

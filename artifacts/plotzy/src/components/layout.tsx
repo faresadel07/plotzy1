@@ -36,7 +36,8 @@ const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/writing-guide", key: "navGuide" },
   { href: "/course",        key: "navCourse" },
   { href: "/audiolibrary",  key: "navAudioLibrary" },
-  { href: "/marketplace",   key: "navMarketplace" },
+  // Marketplace temporarily hidden site-wide; re-add to restore.
+  // { href: "/marketplace",   key: "navMarketplace" },
   { href: "/library",       key: "navCommunity" },
   { href: "/pricing",       key: "navPro" },
   { href: "/support",       key: "navSupport" },
@@ -757,7 +758,6 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             <FooterCol title="Write" links={[
               { label: 'Dashboard',         href: '/dashboard' },
               { label: 'My Library',        href: '/' },
-              { label: 'AI Marketplace',    href: '/marketplace' },
               { label: 'Trash',             href: '/trash' },
             ]} />
 
