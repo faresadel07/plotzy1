@@ -20,7 +20,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useBooks } from "@/hooks/use-books";
 import { MobileHero } from "./MobileHero";
 import { ContentRow } from "./ContentRow";
-import { AiWriteBanner, DevicesBanner } from "./FeatureBanners";
+import { AiWriteBanner, DevicesBanner, BookJourneyGrid } from "./FeatureBanners";
 import { CourseCoverMobile } from "./CourseCoverMobile";
 import { TestimonialsMobile } from "@/components/testimonials/TestimonialsMobile";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
@@ -111,6 +111,10 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         {/* AI writing studio banner with official model logos —
             opens the book-creation wizard directly. */}
         <AiWriteBanner ar={ar} onStart={onStartWriting} />
+
+        {/* Everything your book needs — voice, publish, audiobook,
+            co-writing, plus the Writer Protection trust line. */}
+        <BookJourneyGrid ar={ar} onStartWriting={onStartWriting} />
 
         {/* Community shelf — reuse English + Arabic mix as a teaser row,
             linking to the real community library. */}

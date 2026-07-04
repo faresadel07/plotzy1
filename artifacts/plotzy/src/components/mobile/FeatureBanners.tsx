@@ -8,7 +8,7 @@
 
 import { useLocation } from "wouter";
 import { ClaudeIcon, GPTIcon, GeminiIcon, LlamaIcon } from "@/components/studio/icons";
-import { Heart, ArrowRight, ArrowLeft, GraduationCap } from "lucide-react";
+import { Heart, ArrowRight, ArrowLeft, GraduationCap, Mic, BookUp, Headphones, Users, ShieldCheck, ChevronRight, ChevronLeft } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -202,3 +202,119 @@ const badgeStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)",
   display: "grid", placeItems: "center",
 };
+
+// ─── "Everything your book needs" ───────────────────────────────────
+//
+// One compact Apple-style feature grid that surfaces the services the
+// home otherwise never mentions: voice dictation, publishing, the
+// audiobook pipeline, and co-writing. Communication first; each card
+// still taps through to the most sensible surface. A quiet Writer
+// Protection line closes the section as a trust signal.
+
+export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
+  const [, navigate] = useLocation();
+  const Chevron = ar ? ChevronLeft : ChevronRight;
+
+  const cards: Array<{
+    Icon: typeof Mic;
+    tint: string;
+    title: string;
+    sub: string;
+    onTap: () => void;
+  }> = [
+    {
+      Icon: Mic, tint: "#fb7185",
+      title: ar ? "اكتب بصوتك" : "Write with your voice",
+      sub: ar ? "احكِ وبلوتزي يكتب عنك" : "Talk and Plotzy types for you",
+      onTap: onStartWriting,
+    },
+    {
+      Icon: BookUp, tint: "#5eb3ff",
+      title: ar ? "انشر كتابك" : "Publish it",
+      sub: ar ? "أوصله للقرّاء والناشرين" : "Reach readers and publishers",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      Icon: Headphones, tint: "#5fcf8e",
+      title: ar ? "حوّله لكتاب صوتي" : "Make it an audiobook",
+      sub: ar ? "فصولك مسموعة بضغطة" : "Your chapters, narrated",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      Icon: Users, tint: "#c4a1ff",
+      title: ar ? "اكتب مع شريك" : "Write with a partner",
+      sub: ar ? "ادعُ محرّراً أو مؤلّفاً معك" : "Invite an editor or co-author",
+      onTap: () => navigate("/dashboard"),
+    },
+  ];
+
+  return (
+    <section dir={ar ? "rtl" : "ltr"} style={{ padding: "0 16px", marginBottom: 26, fontFamily: SF }}>
+      {/* Heading */}
+      <div style={{ textAlign: ar ? "right" : "left", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginBottom: 6 }}>
+          {ar ? "أكثر من محرّر" : "More than an editor"}
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "#fff" }}>
+          {ar ? "كل ما يحتاجه كتابك" : "Everything your book needs"}
+        </div>
+      </div>
+
+      {/* 2x2 feature grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {cards.map(({ Icon, tint, title, sub, onTap }, i) => (
+          <button
+            key={i}
+            onClick={onTap}
+            style={{
+              textAlign: ar ? "right" : "left",
+              background: `radial-gradient(140% 100% at ${ar ? "100%" : "0%"} 0%, ${tint}1f, transparent 55%), #0d0d10`,
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 18,
+              padding: "16px 14px 15px",
+              cursor: "pointer",
+              fontFamily: SF,
+              display: "flex", flexDirection: "column", alignItems: ar ? "flex-end" : "flex-start", gap: 10,
+            }}
+          >
+            <span
+              style={{
+                width: 36, height: 36, borderRadius: 11,
+                background: `${tint}1f`, border: `1px solid ${tint}40`,
+                display: "grid", placeItems: "center", color: tint,
+              }}
+            >
+              <Icon size={17} />
+            </span>
+            <span>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.25, marginBottom: 3 }}>
+                {title}
+              </span>
+              <span style={{ display: "block", fontSize: 11.5, color: "rgba(255,255,255,0.52)", lineHeight: 1.4 }}>
+                {sub}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Trust footnote — Writer Protection */}
+      <button
+        onClick={() => navigate("/protection")}
+        style={{
+          width: "100%", marginTop: 10,
+          display: "flex", alignItems: "center", gap: 9,
+          flexDirection: ar ? "row-reverse" : "row",
+          background: "transparent", border: "none", cursor: "pointer",
+          padding: "10px 4px", fontFamily: SF,
+        }}
+      >
+        <ShieldCheck size={15} color="rgba(255,255,255,0.45)" style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, textAlign: ar ? "right" : "left", fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+          {ar ? "مخطوطتك تبقى ملكك دائماً. تعرّف على حماية الكاتب" : "Your manuscript always stays yours. See Writer Protection"}
+        </span>
+        <Chevron size={14} color="rgba(255,255,255,0.35)" style={{ flexShrink: 0 }} />
+      </button>
+    </section>
+  );
+}
