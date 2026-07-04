@@ -380,7 +380,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               width: 24,
               objectFit: "contain",
               borderRadius: 5,
-              filter: darkNav ? "invert(1)" : "none",
+              filter: "none",
               flexShrink: 0,
             }}
           />
