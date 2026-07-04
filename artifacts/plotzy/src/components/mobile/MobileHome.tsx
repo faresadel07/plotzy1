@@ -16,8 +16,9 @@
 
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { PenLine, Copy, Pencil, Trash2, X } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
-import { useBooks } from "@/hooks/use-books";
+import { useBooks, useTrashBook, useDuplicateBook, useUpdateBook } from "@/hooks/use-books";
 import { MobileHero } from "./MobileHero";
 import { ContentRow } from "./ContentRow";
 import { AiWriteBanner, DevicesBanner, BookJourneyGrid } from "./FeatureBanners";
@@ -32,6 +33,18 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
   const ar = lang === "ar";
   const [, navigate] = useLocation();
   const { data: books } = useBooks();
+  const trashBook = useTrashBook();
+  const duplicateBook = useDuplicateBook();
+  const updateBook = useUpdateBook();
+
+  // Long-press action sheet for the writer's own books (Continue
+  // Writing row): continue / duplicate / rename / delete — the same
+  // actions the desktop shelf shows on hover.
+  const [bookSheet, setBookSheet] = useState<{ id: number; title: string } | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const closeSheet = () => { setBookSheet(null); setRenaming(false); setConfirmDelete(false); };
 
   // Hero height captured ONCE in pixels. Using px (not vh) means the
   // mobile address bar showing/hiding never resizes the hero mid-scroll
@@ -83,6 +96,14 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
             books={myBooks}
             ar={ar}
             onSeeAll={() => navigate("/dashboard")}
+            onCardLongPress={(i) => {
+              const b = (books ?? [])[i];
+              if (!b) return;
+              setRenaming(false);
+              setConfirmDelete(false);
+              setRenameValue(b.title || "");
+              setBookSheet({ id: b.id, title: b.title || (ar ? "بدون عنوان" : "Untitled") });
+            }}
           />
         )}
 
@@ -134,6 +155,101 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         {/* Closing showcase — write anywhere (iPad + laptop) */}
         <DevicesBanner ar={ar} />
       </div>
+
+      {/* ── Book action sheet (long-press on a Continue Writing card) ── */}
+      {bookSheet && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 90 }} dir={ar ? "rtl" : "ltr"}>
+          <div onClick={closeSheet} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} />
+          <div style={{
+            position: "absolute", left: 0, right: 0, bottom: 0,
+            background: "#17171c", borderRadius: "24px 24px 0 0",
+            padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 22px)",
+            boxShadow: "0 -20px 60px rgba(0,0,0,0.55)", fontFamily: SF,
+          }}>
+            <div style={{ display: "flex", justifyContent: "center", padding: "4px 0 12px" }}>
+              <div style={{ width: 40, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.16)" }} />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <span style={{ flex: 1, fontSize: 16, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {bookSheet.title}
+              </span>
+              <button onClick={closeSheet} aria-label={ar ? "إغلاق" : "Close"} style={{ width: 30, height: 30, borderRadius: 999, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.08)", color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <X size={15} />
+              </button>
+            </div>
+
+            {renaming ? (
+              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape") setRenaming(false); }}
+                  placeholder={ar ? "اسم الكتاب" : "Book title"}
+                  style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 14.5, outline: "none", fontFamily: SF }}
+                />
+                <button
+                  onClick={() => {
+                    const v = renameValue.trim();
+                    if (!v) { setRenaming(false); return; }
+                    updateBook.mutate({ id: bookSheet.id, title: v }, { onSettled: closeSheet });
+                  }}
+                  style={{ flexShrink: 0, background: "#fff", color: "#000", border: "none", borderRadius: 12, padding: "0 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+                >
+                  {ar ? "حفظ" : "Save"}
+                </button>
+              </div>
+            ) : (
+              <>
+                {[
+                  {
+                    icon: <PenLine size={17} />, danger: false, primary: true,
+                    label: ar ? "متابعة الكتابة" : "Continue writing",
+                    onTap: () => { closeSheet(); navigate(`/books/${bookSheet.id}`); },
+                  },
+                  {
+                    icon: <Copy size={17} />, danger: false, primary: false,
+                    label: ar ? "نسخ الكتاب" : "Duplicate",
+                    onTap: () => { duplicateBook.mutate(bookSheet.id, { onSettled: closeSheet }); },
+                  },
+                  {
+                    icon: <Pencil size={17} />, danger: false, primary: false,
+                    label: ar ? "إعادة تسمية" : "Rename",
+                    onTap: () => setRenaming(true),
+                  },
+                  {
+                    icon: <Trash2 size={17} />, danger: true, primary: false,
+                    label: confirmDelete
+                      ? (ar ? "اضغط مرة أخرى للتأكيد" : "Tap again to confirm")
+                      : (ar ? "نقل إلى المهملات" : "Move to trash"),
+                    onTap: () => {
+                      if (!confirmDelete) { setConfirmDelete(true); return; }
+                      trashBook.mutate(bookSheet.id, { onSettled: closeSheet });
+                    },
+                  },
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={item.onTap}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 12,
+                      background: item.primary ? "#fff" : item.danger ? "rgba(239,68,68,0.10)" : "rgba(255,255,255,0.05)",
+                      border: `1px solid ${item.danger ? "rgba(239,68,68,0.30)" : "rgba(255,255,255,0.07)"}`,
+                      borderRadius: 14, padding: "14px 16px", marginBottom: 8,
+                      color: item.primary ? "#000" : item.danger ? "#f87171" : "#eee",
+                      fontSize: 14.5, fontWeight: item.primary ? 700 : 600, cursor: "pointer", fontFamily: SF,
+                    }}
+                  >
+                    {item.icon}
+                    <span style={{ flex: 1, textAlign: "start" }}>{item.label}</span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

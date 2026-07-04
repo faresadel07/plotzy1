@@ -10,7 +10,7 @@
 //   - RankedPosterCard: same, but with a giant rank numeral (1,2,3…)
 //     bleeding off the left for "Top 10"-style rows.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, ChevronRight, BookAudio } from "lucide-react";
 import type { MobileBook } from "./mobile-content";
@@ -20,21 +20,50 @@ const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 
 // ─── One poster card ───────────────────────────────────────────────
 
 export function PosterCard({
-  book, ar, width = 96, rank,
+  book, ar, width = 96, rank, onLongPress,
 }: {
   book: MobileBook;
   ar: boolean;
   width?: number;
   rank?: number;
+  /** When provided, holding the card (~450ms) fires this instead of
+   *  navigating — used for the writer's own books to open the
+   *  Continue / Duplicate / Rename / Delete action sheet. */
+  onLongPress?: () => void;
 }) {
   const [, navigate] = useLocation();
   const [imgError, setImgError] = useState(false);
   const genre = ar ? (book.genreAr || book.genre) : book.genre;
 
+  // Long-press plumbing: a timer armed on touchstart; if it fires, the
+  // click that follows is swallowed so the tap doesn't also navigate.
+  const pressTimer = useRef<number | null>(null);
+  const longPressFired = useRef(false);
+  const clearPress = () => {
+    if (pressTimer.current !== null) { window.clearTimeout(pressTimer.current); pressTimer.current = null; }
+  };
+
   return (
     <button
-      onClick={() => navigate(book.href)}
+      onClick={() => {
+        if (longPressFired.current) { longPressFired.current = false; return; }
+        navigate(book.href);
+      }}
+      onTouchStart={onLongPress ? () => {
+        longPressFired.current = false;
+        clearPress();
+        pressTimer.current = window.setTimeout(() => {
+          longPressFired.current = true;
+          try { (navigator as any).vibrate?.(12); } catch { /* no haptics */ }
+          onLongPress();
+        }, 450);
+      } : undefined}
+      onTouchEnd={onLongPress ? clearPress : undefined}
+      onTouchMove={onLongPress ? clearPress : undefined}
+      onTouchCancel={onLongPress ? clearPress : undefined}
+      onContextMenu={onLongPress ? (e) => { e.preventDefault(); onLongPress(); } : undefined}
       style={{
+        ...(onLongPress ? { WebkitTouchCallout: "none" as const, WebkitUserSelect: "none" as const, userSelect: "none" as const } : {}),
         flex: "0 0 auto",
         width,
         background: "transparent",
@@ -137,7 +166,7 @@ export function PosterCard({
 // ─── The row ───────────────────────────────────────────────────────
 
 export function ContentRow({
-  title, books, ar, onSeeAll, ranked = false, cardWidth,
+  title, books, ar, onSeeAll, ranked = false, cardWidth, onCardLongPress,
 }: {
   title: string;
   books: MobileBook[];
@@ -145,6 +174,8 @@ export function ContentRow({
   onSeeAll?: () => void;
   ranked?: boolean;
   cardWidth?: number;
+  /** Long-press handler per card index (writer's own books row). */
+  onCardLongPress?: (index: number) => void;
 }) {
   const Chevron = ar ? ChevronLeft : ChevronRight;
   return (
@@ -189,7 +220,13 @@ export function ContentRow({
       >
         {books.map((b, i) => (
           <div key={b.href + i} style={{ scrollSnapAlign: "start" }}>
-            <PosterCard book={b} ar={ar} rank={ranked ? i + 1 : undefined} width={cardWidth} />
+            <PosterCard
+              book={b}
+              ar={ar}
+              rank={ranked ? i + 1 : undefined}
+              width={cardWidth}
+              onLongPress={onCardLongPress ? () => onCardLongPress(i) : undefined}
+            />
           </div>
         ))}
       </div>
