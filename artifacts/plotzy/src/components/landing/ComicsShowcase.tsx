@@ -19,7 +19,12 @@ export function ComicsShowcase() {
   const Arrow = ar ? ArrowLeft : ArrowRight;
 
   if (COMICS.length === 0) return null;
-  const featured = COMICS.slice(0, 18);
+  // Two counter-scrolling rows, exactly like the book carousels above.
+  // Sample across the catalogue so all genres show, not just the first.
+  const step = Math.max(1, Math.floor(COMICS.length / 36));
+  const featured = COMICS.filter((_, i) => i % step === 0).slice(0, 36);
+  const rowA = featured.slice(0, 18);
+  const rowB = featured.slice(18, 36);
 
   return (
     <section dir={isRTL ? "rtl" : "ltr"} style={{ background: "#080808", padding: "72px 0 76px", fontFamily: SF, overflow: "hidden" }}>
@@ -55,57 +60,73 @@ export function ComicsShowcase() {
         </div>
       </div>
 
-      {/* Cover strip — the same self-scrolling marquee as the book
-          carousels above it: doubled content sliding 0 to -50%,
-          paused while hovered so covers stay clickable. */}
-      <div className="comics-marquee-clip" style={{ overflow: "hidden", padding: "8px 0 14px" }}>
-        <div
-          dir="ltr"
-          className="comics-marquee-track"
-          style={{ display: "flex", gap: 18, width: "max-content", animation: "comicsMarquee 55s linear infinite" }}
-        >
-          {[...featured, ...featured].map((c, i) => (
-            <button
-              key={`${c.id}-${i}`}
-              onClick={() => navigate(`/comics/${c.id}`)}
-              className="comics-showcase-card"
-              tabIndex={i >= featured.length ? -1 : 0}
-              aria-hidden={i >= featured.length}
-              style={{
-                flex: "0 0 auto", width: 148, background: "transparent", border: "none",
-                padding: 0, cursor: "pointer", textAlign: "left", fontFamily: SF,
-              }}
-            >
-              <div
-                className="comics-showcase-cover"
-                style={{
-                  width: "100%", aspectRatio: "2 / 3", borderRadius: 10, overflow: "hidden",
-                  background: "#141416", boxShadow: "0 10px 30px rgba(0,0,0,0.55)",
-                  transition: "transform 200ms cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 200ms ease",
-                }}
-              >
-                <ShowcaseCover id={c.id} alt={c.title} />
-              </div>
-              <div style={{ marginTop: 9, fontSize: 12.5, fontWeight: 600, color: "#f0efe8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {c.title}
-              </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
-                {c.year || c.series}
-              </div>
-            </button>
-          ))}
-        </div>
+      {/* Cover strip — the same two counter-scrolling marquee rows and
+          90x135 cover size as the book carousels above, with the edge
+          fades matched to this section's dark background. */}
+      <div style={{ position: "relative" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#080808,transparent)", zIndex: 2, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#080808,transparent)", zIndex: 2, pointerEvents: "none" }} />
+        <ComicTrack comics={rowA} onOpen={(id) => navigate(`/comics/${id}`)} />
+        <div style={{ height: 14 }} />
+        <ComicTrack comics={rowB} onOpen={(id) => navigate(`/comics/${id}`)} reverse />
       </div>
 
       <style>{`
-        @keyframes comicsMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .comics-marquee-clip:hover .comics-marquee-track { animation-play-state: paused; }
-        .comics-showcase-card:hover .comics-showcase-cover {
-          transform: translateY(-5px) scale(1.03);
-          box-shadow: 0 18px 44px rgba(0,0,0,0.7);
-        }
+        @keyframes comicsMarquee    { from { transform: translateX(0);    } to { transform: translateX(-50%); } }
+        @keyframes comicsMarqueeRev { from { transform: translateX(-50%); } to { transform: translateX(0);    } }
       `}</style>
     </section>
+  );
+}
+
+// One marquee row: doubled max-content flex sliding 0 to -50% (or the
+// reverse), paused on hover — identical mechanics to BookCarousel.
+function ComicTrack({ comics, onOpen, reverse }: {
+  comics: typeof COMICS;
+  onOpen: (id: string) => void;
+  reverse?: boolean;
+}) {
+  const doubled = [...comics, ...comics];
+  return (
+    <div dir="ltr" className="group" style={{ overflow: "hidden" }}>
+      <div
+        style={{ display: "flex", direction: "ltr", width: "max-content", animation: `${reverse ? "comicsMarqueeRev" : "comicsMarquee"} 45s linear infinite` }}
+        className="group-hover:[animation-play-state:paused]"
+      >
+        {doubled.map((c, i) => (
+          <button
+            key={`${c.id}-${i}`}
+            onClick={() => onOpen(c.id)}
+            tabIndex={i >= comics.length ? -1 : 0}
+            aria-hidden={i >= comics.length}
+            className="group/comic flex-shrink-0 mx-2.5"
+            style={{ width: 90, background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+          >
+            <div
+              className="relative overflow-hidden transition-transform duration-300 group-hover/comic:scale-[1.06]"
+              style={{
+                width: 90, height: 135, borderRadius: 5,
+                boxShadow: "4px 5px 16px rgba(0,0,0,0.45), 1px 1px 4px rgba(0,0,0,0.25)",
+                background: "#141416",
+              }}
+            >
+              <ShowcaseCover id={c.id} alt={c.title} />
+              {/* Spine shadow, matching the book covers above */}
+              <div style={{ position: "absolute", top: 0, left: 0, width: 7, height: "100%", background: "linear-gradient(to right,rgba(0,0,0,0.28),transparent)", pointerEvents: "none" }} />
+              {/* Hover title */}
+              <div
+                className="absolute inset-x-0 bottom-0 opacity-0 group-hover/comic:opacity-100 transition-opacity duration-200"
+                style={{ background: "linear-gradient(to top,rgba(0,0,0,0.85),transparent)", padding: "20px 6px 6px" }}
+              >
+                <p style={{ fontSize: 8.5, color: "rgba(255,255,255,0.92)", textAlign: "center", lineHeight: 1.3, margin: 0, fontFamily: SF }}>
+                  {c.title}
+                </p>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

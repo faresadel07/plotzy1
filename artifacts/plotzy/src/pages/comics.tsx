@@ -127,7 +127,7 @@ function DesktopWall({ ar }: { ar: boolean }) {
         <button style={chip(genre === "all")} onClick={() => setGenre("all")}>
           {ar ? "الكل" : "All"}
         </button>
-        {COMIC_GENRES.map((g) => (
+        {COMIC_GENRES.filter((g) => COMICS.some((c) => c.genre === g.id)).map((g) => (
           <button key={g.id} style={chip(genre === g.id)} onClick={() => setGenre(g.id)}>
             {ar ? g.ar : g.en}
           </button>
