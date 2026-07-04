@@ -103,12 +103,14 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  // Matches the app-wide PHONE_BREAKPOINT (700) so the Studio agrees
+  // with every other surface about what counts as a phone.
   const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 720 : false,
+    typeof window !== "undefined" ? window.innerWidth < 700 : false,
   );
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 720);
+    const onResize = () => setIsMobile(window.innerWidth < 700);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -253,7 +255,10 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
       style={{
         position: "fixed",
         top: 0,
-        bottom: 0,
+        // 100dvh (not bottom:0) so the panel tracks the visible
+        // viewport when the soft keyboard opens — the composer stays
+        // on screen instead of hiding behind the keyboard.
+        height: "100dvh",
         insetInlineEnd: 0,
         zIndex: 60,
         width: isMobile ? "100vw" : 440,
@@ -386,6 +391,7 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         uploadError={uploadError}
         visionEnabled={providerAcceptsVision(selectedProviderId)}
         activeProviderName={providers.find((p) => p.id === selectedProviderId)?.displayName ?? ""}
+        mobile={isMobile}
       />
     </div>
   );
@@ -1292,6 +1298,7 @@ function Composer({
   uploadError,
   visionEnabled,
   activeProviderName,
+  mobile,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -1306,6 +1313,7 @@ function Composer({
   uploadError: string | null;
   visionEnabled: boolean;
   activeProviderName: string;
+  mobile: boolean;
 }) {
   const hasText = value.trim().length > 0;
   const canSend = (hasText || attachments.length > 0) && !isUploading;
@@ -1315,7 +1323,8 @@ function Composer({
   return (
     <div
       style={{
-        padding: "12px 18px 18px",
+        padding: "12px 18px",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
         borderTop: `1px solid ${BORDER}`,
         background: PANEL_BG,
         position: "relative",
@@ -1473,7 +1482,10 @@ function Composer({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            // Desktop: Enter sends, Shift+Enter breaks the line.
+            // Phones: Enter is a newline (matching every messaging
+            // app); the terracotta button is the only send.
+            if (e.key === "Enter" && !e.shiftKey && !mobile) {
               e.preventDefault();
               if (canSend && !isSending) onSend();
             }

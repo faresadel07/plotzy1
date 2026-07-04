@@ -351,16 +351,23 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         position: "fixed",
         top: 0, left: 0, right: 0,
         zIndex: 100,
-        height: 44,
-        background: scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)",
+        // Reserve the notch / Dynamic Island area in standalone (PWA)
+        // mode: the bar grows by the inset and content stays below it.
+        height: "calc(44px + env(safe-area-inset-top, 0px))",
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        background: darkNav
+          ? (scrolled ? "rgba(8,8,8,0.80)" : "rgba(8,8,8,0.97)")
+          : (scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)"),
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderBottom: `1px solid ${scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)"}`,
+        borderBottom: `1px solid ${darkNav
+          ? (scrolled ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.06)")
+          : (scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)")}`,
         transition: "background 0.3s ease, border-color 0.3s ease",
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
         alignItems: "center",
-        padding: "0 16px",
+        padding: "env(safe-area-inset-top, 0px) 16px 0",
       }}>
 
         {/* ── Left: Logo ── */}
@@ -373,7 +380,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               width: 24,
               objectFit: "contain",
               borderRadius: 5,
-              filter: "none",
+              filter: darkNav ? "invert(1)" : "none",
               flexShrink: 0,
             }}
           />
@@ -382,7 +389,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             fontWeight: 700,
             fontSize: 14,
             letterSpacing: "-0.04em",
-            color: "#111",
+            color: darkNav ? "#fff" : "#111",
           }}>PLOTZY</span>
         </Link>
 
@@ -411,7 +418,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             border: "none",
             background: "transparent",
             cursor: "pointer",
-            color: "#111",
+            color: darkNav ? "#fff" : "#111",
             justifySelf: "center",
           }}
           aria-label="Toggle menu"
@@ -423,7 +430,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>
 
           {/* Notifications */}
-          {user && <NotificationBell darkNav={false} />}
+          {user && <NotificationBell darkNav={darkNav} />}
 
           {/* Global language switcher. The full UI is now translated
               (English + Arabic complete), so the picker is live in the
@@ -432,7 +439,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           <LanguagePicker />
 
           {/* Divider */}
-          <div style={{ width: 1, height: 16, background: "rgba(0,0,0,0.1)", margin: "0 2px" }} />
+          <div style={{ width: 1, height: 16, background: darkNav ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.1)", margin: "0 2px" }} />
 
           {/* User — show a placeholder while the /api/auth/user query is in
               flight so the header doesn't visibly "pop in" 1–2 seconds after
@@ -443,7 +450,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               aria-hidden
               style={{
                 width: 88, height: 26, borderRadius: 20,
-                background: "rgba(0,0,0,0.06)",
+                background: darkNav ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
                 animation: "authPulse 1.4s ease-in-out infinite",
               }}
             />
@@ -455,7 +462,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px 3px 4px",
                     borderRadius: 20,
-                    border: "1px solid rgba(0,0,0,0.1)",
+                    border: `1px solid ${darkNav ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.1)"}`,
                     background: "transparent", cursor: "pointer",
                     transition: "background 0.15s",
                   }}
@@ -469,7 +476,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                       </AvatarFallback>
                     </Avatar>
                     <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: darkNav ? "#ddd" : "#333", maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {user.displayName || user.email?.split("@")[0] || "Me"}
                       </span>
                       {user.isAdmin && (
@@ -547,11 +554,11 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                 style={{
                   padding: "5px 14px",
                   borderRadius: 20,
-                  background: "#111",
+                  background: darkNav ? "#fff" : "#111",
                   border: "none",
                   cursor: "pointer",
                   fontFamily: SF,
-                  fontSize: 12.5, fontWeight: 600, color: "#fff",
+                  fontSize: 12.5, fontWeight: 600, color: darkNav ? "#000" : "#fff",
                   letterSpacing: "-0.02em",
                   transition: "opacity 0.15s",
                   whiteSpace: "nowrap",
@@ -576,32 +583,50 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             left: 0,
             right: 0,
             bottom: 0,
-            zIndex: 99,
-            background: "#000",
+            // Above the header (z 100) so the white bar never floats on
+            // top of the black menu.
+            zIndex: 120,
+            background: "rgba(0,0,0,0.94)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
+            animation: "plotzyMenuIn 260ms cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
+          <style>{`
+            @keyframes plotzyMenuIn {
+              from { opacity: 0; transform: scale(1.02); }
+              to   { opacity: 1; transform: scale(1); }
+            }
+            @keyframes plotzyMenuItem {
+              from { opacity: 0; transform: translateY(10px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
           <button
             onClick={() => setMobileMenuOpen(false)}
             style={{
               position: "absolute",
-              top: 10,
+              top: "calc(env(safe-area-inset-top, 0px) + 10px)",
               right: 16,
-              background: "transparent",
-              border: "none",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 999,
               color: "#fff",
               cursor: "pointer",
               padding: 8,
+              display: "grid",
+              placeItems: "center",
             }}
             aria-label="Close menu"
           >
-            <X style={{ width: 24, height: 24 }} />
+            <X style={{ width: 20, height: 20 }} />
           </button>
-          {NAV_ITEMS.map(({ href, key }) =>
+          {NAV_ITEMS.map(({ href, key }, i) =>
             key === "myLibrary" ? (
               <a
                 key="library"
@@ -618,6 +643,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   color: location === "/" ? "#fff" : "rgba(255,255,255,0.7)",
                   textDecoration: "none",
                   padding: "10px 24px",
+                  animation: `plotzyMenuItem 320ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+                  animationDelay: `${60 + i * 28}ms`,
                 }}
               >
                 {t(key)}
@@ -634,6 +661,8 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   color: location === href ? "#fff" : "rgba(255,255,255,0.7)",
                   textDecoration: "none",
                   padding: "10px 24px",
+                  animation: `plotzyMenuItem 320ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+                  animationDelay: `${60 + i * 28}ms`,
                 }}
               >
                 {t(key)}
@@ -660,7 +689,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         const fg = FG[banner.color ?? "default"] ?? FG.default;
         return (
           <div style={{
-            position: "fixed", top: 44, left: 0, right: 0, zIndex: 90,
+            position: "fixed", top: "calc(44px + env(safe-area-inset-top, 0px))", left: 0, right: 0, zIndex: 90,
             background: bg, color: fg,
             padding: "8px 20px", fontSize: 13, fontWeight: 500,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
@@ -678,7 +707,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
       <main
         id="main-content"
         tabIndex={-1}
-        style={{ scrollMarginTop: "80px" }}
+        style={{
+          scrollMarginTop: "80px",
+          // Match the header, which grows by the safe-area inset in
+          // standalone mode; inline style wins over the pt-* classes.
+          paddingTop: `calc(${noScroll || isLanding ? 44 : isFullDark ? 60 : 72}px + env(safe-area-inset-top, 0px))`,
+        }}
         className={
           noScroll ? "flex-1 overflow-hidden pt-[44px]" :
           isLanding ? "flex-1 w-full pt-11" :

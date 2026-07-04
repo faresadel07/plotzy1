@@ -624,7 +624,9 @@ export default function Home() {
     return (
       <>
         <SEO titleOverride="Plotzy" />
-        <Layout isLanding>
+        {/* darkNav: the phone home is a black cinematic surface, so the
+            chrome goes dark too instead of a glaring white strip. */}
+        <Layout isLanding darkNav>
           <MobileHome onStartWriting={startWriting} />
         </Layout>
         <BookCreationWizard open={showWizard} onClose={() => setShowWizard(false)} onCreate={handleCreateFromWizard} />

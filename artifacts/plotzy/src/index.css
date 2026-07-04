@@ -111,6 +111,19 @@
     border-color: hsl(var(--border));
   }
 
+  /* Native-app feel on touch devices:
+     - kill the default grey tap flash on every button/link
+     - stop iOS auto-inflating text after rotation
+     - drop the double-tap-to-zoom delay on interactive elements */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
@@ -118,6 +131,9 @@
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-sans);
     transition: background-color 0.3s ease, color 0.3s ease;
+    /* Keep scroll chaining from bouncing the whole page behind
+       overlays / sheets; horizontal overscroll never makes sense. */
+    overscroll-behavior-x: none;
   }
 
   /* ── Script-specific font stacks ── */
