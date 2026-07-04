@@ -10,7 +10,7 @@
 // is far crisper than the tiny services/img thumbnail; the thumbnail
 // remains as an onError fallback (see ComicCoverImg usage in pages).
 
-export type ComicGenre = "scifi" | "hero" | "horror" | "jungle" | "war" | "crime";
+export type ComicGenre = "scifi" | "hero" | "horror" | "jungle" | "war" | "crime" | "western";
 
 export interface ComicIssue {
   /** Internet Archive identifier. */
@@ -38,6 +38,7 @@ export const COMIC_GENRES: Array<{ id: ComicGenre; en: string; ar: string }> = [
   { id: "jungle", en: "Jungle Adventure",   ar: "مغامرات" },
   { id: "war",    en: "War",                ar: "حرب" },
   { id: "crime",  en: "Crime",              ar: "جريمة" },
+  { id: "western", en: "Western",           ar: "غرب أمريكي" },
 ];
 
 /** Covers are BUNDLED with the frontend (public/images/comics, filled

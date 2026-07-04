@@ -96,6 +96,65 @@ const SERIES = [
   ["crime and punishment", "Crime and Punishment", "crime"],
   ["crime mysteries", "Crime Mysteries", "crime"],
   ["crime smashers", "Crime Smashers", "crime"],
+  // ── Expansion wave 2 ──────────────────────────────────────────────
+  // Charlton (famously unrenewed) sci-fi / war / western lines,
+  // Fawcett's lapsed horror books, Nedor horror, Story, Star, Prize
+  // and Hillman crime, Fox and Avon jungle/crime, Chesler heroes.
+  ["outer space", "Outer Space", "scifi"],
+  ["space war", "Space War", "scifi"],
+  ["mysteries of unexplored worlds", "Mysteries of Unexplored Worlds", "scifi"],
+  ["out of this world", "Out of This World", "scifi"],
+  ["space busters", "Space Busters", "scifi"],
+  ["lars of mars", "Lars of Mars", "scifi"],
+  ["crusader from mars", "Crusader from Mars", "scifi"],
+  ["strange suspense stories", "Strange Suspense Stories", "horror"],
+  ["this magazine is haunted", "This Magazine Is Haunted", "horror"],
+  ["beware terror tales", "Beware Terror Tales", "horror"],
+  ["worlds of fear", "Worlds of Fear", "horror"],
+  ["mysterious adventures", "Mysterious Adventures", "horror"],
+  ["shocking mystery cases", "Shocking Mystery Cases", "horror"],
+  ["the horrors", "The Horrors", "horror"],
+  ["blue bolt weird tales", "Blue Bolt Weird Tales", "horror"],
+  ["adventures into darkness", "Adventures into Darkness", "horror"],
+  ["out of the shadows", "Out of the Shadows", "horror"],
+  ["the unseen", "The Unseen", "horror"],
+  ["witchcraft", "Witchcraft", "horror"],
+  ["fight against crime", "Fight Against Crime", "crime"],
+  ["crime and justice", "Crime and Justice", "crime"],
+  ["lawbreakers", "Lawbreakers", "crime"],
+  ["racket squad in action", "Racket Squad in Action", "crime"],
+  ["justice traps the guilty", "Justice Traps the Guilty", "crime"],
+  ["headline comics", "Headline Comics", "crime"],
+  ["real clue crime stories", "Real Clue Crime Stories", "crime"],
+  ["crime detective comics", "Crime Detective", "crime"],
+  ["murder incorporated", "Murder Incorporated", "crime"],
+  ["crimes by women", "Crimes by Women", "crime"],
+  ["famous crimes", "Famous Crimes", "crime"],
+  ["fightin marines", "Fightin Marines", "war"],
+  ["fightin army", "Fightin Army", "war"],
+  ["fightin navy", "Fightin Navy", "war"],
+  ["battlefield action", "Battlefield Action", "war"],
+  ["soldier and marine comics", "Soldier and Marine", "war"],
+  ["atom age combat", "Atom Age Combat", "war"],
+  ["captain steve savage", "Captain Steve Savage", "war"],
+  ["cowboy western", "Cowboy Western", "western"],
+  ["six-gun heroes", "Six-Gun Heroes", "western"],
+  ["six gun heroes", "Six-Gun Heroes", "western"],
+  ["black diamond western", "Black Diamond Western", "western"],
+  ["billy the kid adventure magazine", "Billy the Kid", "western"],
+  ["blazing western", "Blazing Western", "western"],
+  ["western crime busters", "Western Crime Busters", "western"],
+  ["jesse james", "Jesse James", "western"],
+  ["wild bill hickok", "Wild Bill Hickok", "western"],
+  ["white princess of the jungle", "White Princess of the Jungle", "jungle"],
+  ["jungle jo", "Jungle Jo", "jungle"],
+  ["rulah", "Rulah", "jungle"],
+  ["zago", "Zago", "jungle"],
+  ["terrors of the jungle", "Terrors of the Jungle", "jungle"],
+  ["jungle thrills", "Jungle Thrills", "jungle"],
+  ["dynamic comics", "Dynamic Comics", "hero"],
+  ["punch comics", "Punch Comics", "hero"],
+  ["prize comics", "Prize Comics", "hero"],
 ];
 
 const BLOCK = /manga|manhwa|manhua|corto|maltese|tpb|-pg-|_pg\d|page-\d|complete|collection|compilation|reprint|facsimile|fac-simile|preview|sampler|annual|_full|fanzine|remix|smackjeeves|webcomic|20\d\d/i;
@@ -111,7 +170,14 @@ function matchSeries(title, id) {
   const t = norm(title);
   const i = norm(id);
   for (const [m, series, genre] of SERIES) {
-    if (t.startsWith(m) || i.startsWith(m)) {
+    // Word-boundary match anywhere in the title (catches uploads with
+    // prefixes like "1953 - Mister Mystery 12"), or identifier start.
+    const at = t.indexOf(m);
+    const titleHit =
+      at !== -1 &&
+      (at === 0 || t[at - 1] === " ") &&
+      (at + m.length === t.length || /[\s#0-9]/.test(t[at + m.length]));
+    if (titleHit || i.startsWith(m)) {
       if (!genre) return null; // explicit never-include
       return { series, genre };
     }
