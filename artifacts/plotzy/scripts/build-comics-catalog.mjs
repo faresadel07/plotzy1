@@ -246,6 +246,17 @@ const SERIES = [
   ["atomic rabbit", "Atomic Rabbit", "funny"],
   ["li'l genius", "Li'l Genius", "funny"],
   ["lil genius", "Li'l Genius", "funny"],
+  // ── Expansion wave 5 (final gleaning of this collection) ─────────
+  // Data-driven from the unmatched-series survey: the last PD-safe
+  // series with real issue counts, plus a misspelled-title catch.
+  ["bobby benson", "Bobby Benson", "western"],
+  ["blazing comics", "Blazing Comics", "hero"],
+  ["clue comics", "Clue Comics", "crime"],
+  ["adventures into the unknown", "Adventures into the Unknown", "horror"],
+  ["bafflng mysteries", "Baffling Mysteries", "horror"],
+  ["crime must pay the penalty", "Crime Must Pay the Penalty", "crime"],
+  ["dotty", "Dotty", "funny"],
+  ["ponytail", "Ponytail", "funny"],
 ];
 
 const BLOCK = /manga|manhwa|manhua|corto|maltese|tpb|-pg-|_pg\d|page-\d|complete|collection|compilation|reprint|facsimile|fac-simile|preview|sampler|annual|_full|fanzine|remix|smackjeeves|webcomic|20\d\d/i;
