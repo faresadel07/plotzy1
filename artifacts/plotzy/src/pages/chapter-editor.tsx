@@ -2175,10 +2175,13 @@ export default function ChapterEditor() {
 
             <div className="w-px h-5 bg-border/40 mx-1" />
 
-            {/* Focus mode — kept inline; the signature writing view. */}
+            {/* Focus mode — inline on desktop; phones reach it from the
+                More sheet to keep the bar clean. */}
+            {!isPhone && (
             <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/10 hover:text-primary"}`} onClick={() => setIsFocusMode(!isFocusMode)} title={ar ? "وضع التركيز" : "Focus Mode"} aria-label={ar ? "وضع التركيز" : "Focus Mode"}>
               {isFocusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </Button>
+            )}
 
             {/* Everything else is one tap away in the More sheet. */}
             <button
@@ -2278,7 +2281,8 @@ export default function ChapterEditor() {
 
           {/* ── Right: Search + AI + Save ── */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Search toggle */}
+            {/* Search toggle (desktop; phones use the More sheet) */}
+            {!isPhone && (
             <button
               className="h-8 px-2.5 rounded-lg text-xs flex items-center gap-1 transition-all"
               style={{ background: showEditorSearch ? "rgba(250,204,21,0.15)" : "transparent", color: showEditorSearch ? "#fbbf24" : "rgba(255,255,255,0.4)", border: showEditorSearch ? "1px solid rgba(250,204,21,0.3)" : "1px solid transparent" }}
@@ -2292,6 +2296,7 @@ export default function ChapterEditor() {
             >
               <Search className="w-3.5 h-3.5" />
             </button>
+            )}
             {/* The Studio pill, on-brand black with the Plotzy Studio
                 mark in white. Opens the multi-model side panel. Lives
                 next to the AI Assistant button so the writer has the
@@ -2320,8 +2325,10 @@ export default function ChapterEditor() {
                 without their primary AI surface there. On phones the
                 label collapses to just the wand so the pill still fits
                 next to Save / Search on a narrow header. */}
-            {/* AI Assistant — secondary now, a quiet icon so the Studio
-                (the primary AI surface) clearly stands out. */}
+            {/* AI Assistant — secondary now, a quiet icon so Claude (the
+                primary AI surface) clearly stands out. Desktop only;
+                phones reach it from the More sheet. */}
+            {!isPhone && (
             <button
               className="h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
               style={{ background: "transparent", color: "#f5c518", border: "1px solid rgba(245,197,24,0.35)" }}
@@ -2332,6 +2339,7 @@ export default function ChapterEditor() {
             >
               <Wand2 className="w-4 h-4" />
             </button>
+            )}
 
             {autoSaving && (
               <span className="h-8 px-2 rounded-lg text-[10px] font-medium flex items-center gap-1 text-muted-foreground opacity-70">
@@ -2392,6 +2400,13 @@ export default function ChapterEditor() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
               {[
+                // Phone-only entries: these live inline on desktop but
+                // fold into the sheet on phones to keep the bar clean.
+                ...(isPhone ? [
+                  { Icon: Wand2,  label: ar ? "المساعد الذكي" : "AI Assistant", action: () => setShowAI(true) },
+                  { Icon: Search, label: ar ? "بحث" : "Search",                action: () => setShowEditorSearch(true) },
+                  { Icon: EyeOff, label: ar ? "تركيز" : "Focus",               action: () => setIsFocusMode(true) },
+                ] : []),
                 { Icon: LayoutGrid,  label: ar ? "الصفحات" : "Pages",       action: () => setShowPagePanel(true) },
                 { Icon: BookOpen,    label: ar ? "مرجع القصة" : "Story",    action: () => setShowStoryBible(true) },
                 { Icon: ImageIcon,   label: ar ? "صورة" : "Image",          action: () => fileInputRef.current?.click() },
