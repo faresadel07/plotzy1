@@ -9,6 +9,7 @@ import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion
 import { AIAssistant } from "@/components/ai-assistant";
 import { Studio } from "@/components/studio/Studio";
 import { ClaudeIcon } from "@/components/studio/icons";
+import { NiceSelect } from "@/components/ui/nice-select";
 import { DictionaryPopover } from "@/components/editor-tools/DictionaryPopover";
 import { QuickAIBubble } from "@/components/editor-tools/QuickAIBubble";
 import { BookCustomizer } from "@/components/book-customizer";
@@ -2146,26 +2147,34 @@ export default function ChapterEditor() {
                     translation), so we let the writer pin the language
                     explicitly. The compact 2-char pill (AR / EN / AUTO)
                     keeps it out of the way but always visible. */}
-                <select
+                <NiceSelect
                   value={dictationLang}
-                  onChange={(e) => setDictationLang(e.target.value)}
-                  title={ar ? "لغة التسجيل" : "Dictation language"}
-                  aria-label={ar ? "لغة التسجيل" : "Dictation language"}
-                  className="h-7 px-1.5 rounded-lg bg-transparent hover:bg-primary/10 text-muted-foreground hover:text-primary text-[10px] font-semibold tracking-wide uppercase border border-transparent hover:border-border cursor-pointer outline-none appearance-none"
-                  style={{ WebkitAppearance: "none" }}
-                >
-                  <option value="auto">{ar ? "تلقائي" : "Auto"}</option>
-                  <option value="ar">AR</option>
-                  <option value="en">EN</option>
-                  <option value="fr">FR</option>
-                  <option value="es">ES</option>
-                  <option value="de">DE</option>
-                  <option value="it">IT</option>
-                  <option value="tr">TR</option>
-                  <option value="ru">RU</option>
-                  <option value="ja">JA</option>
-                  <option value="zh">ZH</option>
-                </select>
+                  onChange={setDictationLang}
+                  ariaLabel={ar ? "لغة التسجيل" : "Dictation language"}
+                  menuWidth={190}
+                  options={[
+                    { value: "auto", label: ar ? "تلقائي (Auto)" : "Auto detect" },
+                    { value: "ar", label: ar ? "العربية" : "Arabic" },
+                    { value: "en", label: "English" },
+                    { value: "fr", label: "Français" },
+                    { value: "es", label: "Español" },
+                    { value: "de", label: "Deutsch" },
+                    { value: "it", label: "Italiano" },
+                    { value: "tr", label: "Türkçe" },
+                    { value: "ru", label: "Русский" },
+                    { value: "ja", label: "日本語" },
+                    { value: "zh", label: "中文" },
+                  ]}
+                  renderTriggerLabel={(a) =>
+                    a?.value === "auto" ? (ar ? "تلقائي" : "AUTO") : (a?.value ?? "").toUpperCase()
+                  }
+                  triggerStyle={{
+                    height: 28, padding: "0 8px", borderRadius: 8,
+                    background: "transparent", border: "1px solid transparent",
+                    fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+                    color: "rgba(255,255,255,0.45)",
+                  }}
+                />
               </>
             )}
 

@@ -5,6 +5,7 @@ import { useBook } from "@/hooks/use-books";
 import { useChapters } from "@/hooks/use-chapters";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { NiceSelect } from "@/components/ui/nice-select";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 import { PUBLISHERS, REGIONS, ALL_GENRES, type Publisher } from "@/shared/publishers";
@@ -781,19 +782,27 @@ export default function PublishBook() {
                     />
                   </div>
                   <div style={{ position: "relative" }}>
-                    <BookOpen size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                    <select value={selectedGenre} onChange={e => setSelectedGenre(e.target.value)}
-                      style={{ ...selectStyle, paddingLeft: 28, paddingRight: 28 }}>
-                      {ALL_GENRES.map(g => <option key={g} value={g} style={{ background: "#1a1a1a" }}>{g}</option>)}
-                    </select>
+                    <BookOpen size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 1 }} />
+                    <NiceSelect
+                      value={selectedGenre}
+                      onChange={setSelectedGenre}
+                      menuWidth={200}
+                      options={ALL_GENRES.map(g => ({ value: g, label: g }))}
+                      triggerStyle={{ ...selectStyle, paddingLeft: 28, paddingRight: 12 }}
+                    />
                   </div>
                   <div style={{ position: "relative" }}>
-                    <ArrowUpDown size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                    <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                      style={{ ...selectStyle, paddingLeft: 28, paddingRight: 28 }}>
-                      <option value="match" style={{ background: "#1a1a1a" }}>{ar ? "ترتيب: المطابقة" : "Sort: Match score"}</option>
-                      <option value="name" style={{ background: "#1a1a1a" }}>{ar ? "ترتيب: الاسم" : "Sort: Name"}</option>
-                    </select>
+                    <ArrowUpDown size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 1 }} />
+                    <NiceSelect
+                      value={sortBy}
+                      onChange={(v) => setSortBy(v as typeof sortBy)}
+                      menuWidth={200}
+                      options={[
+                        { value: "match", label: ar ? "ترتيب: المطابقة" : "Sort: Match score" },
+                        { value: "name", label: ar ? "ترتيب: الاسم" : "Sort: Name" },
+                      ]}
+                      triggerStyle={{ ...selectStyle, paddingLeft: 28, paddingRight: 12 }}
+                    />
                   </div>
                 </div>
               </div>
@@ -913,34 +922,42 @@ export default function PublishBook() {
 
                   {/* Region select */}
                   <div style={{ position: "relative" }}>
-                    <Globe size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                    <ChevronRight size={11} color={MUTED2} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
-                    <select value={selectedRegion} onChange={e => setSelectedRegion(e.target.value)} data-testid="select-region"
-                      style={{ ...selectStyle, paddingLeft: 28, paddingRight: 28 }}>
-                      {REGIONS.map(r => <option key={r} value={r} style={{ background: "#1a1a1a" }}>{r}</option>)}
-                    </select>
+                    <Globe size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 1 }} />
+                    <NiceSelect
+                      value={selectedRegion}
+                      onChange={setSelectedRegion}
+                      menuWidth={200}
+                      options={REGIONS.map(r => ({ value: r, label: r }))}
+                      triggerStyle={{ ...selectStyle, paddingLeft: 28, paddingRight: 12 }}
+                    />
                   </div>
 
                   {/* Genre select */}
                   <div style={{ position: "relative" }}>
-                    <BookOpen size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                    <ChevronRight size={11} color={MUTED2} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
-                    <select value={selectedGenre} onChange={e => setSelectedGenre(e.target.value)} data-testid="select-genre"
-                      style={{ ...selectStyle, paddingLeft: 28, paddingRight: 28 }}>
-                      {ALL_GENRES.map(g => <option key={g} value={g} style={{ background: "#1a1a1a" }}>{g}</option>)}
-                    </select>
+                    <BookOpen size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 1 }} />
+                    <NiceSelect
+                      value={selectedGenre}
+                      onChange={setSelectedGenre}
+                      menuWidth={200}
+                      options={ALL_GENRES.map(g => ({ value: g, label: g }))}
+                      triggerStyle={{ ...selectStyle, paddingLeft: 28, paddingRight: 12 }}
+                    />
                   </div>
 
                   {/* Sort dropdown */}
                   <div style={{ position: "relative" }}>
-                    <ArrowUpDown size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                    <ChevronRight size={11} color={MUTED2} style={{ position: "absolute", right: 9, top: "50%", transform: "translateY(-50%) rotate(90deg)", pointerEvents: "none" }} />
-                    <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)}
-                      style={{ ...selectStyle, paddingLeft: 28, paddingRight: 28 }}>
-                      <option value="match" style={{ background: "#1a1a1a" }}>{ar ? "ترتيب: المطابقة" : "Sort: Match"}</option>
-                      <option value="name" style={{ background: "#1a1a1a" }}>{ar ? "ترتيب: الاسم" : "Sort: Name"}</option>
-                      <option value="rating" style={{ background: "#1a1a1a" }}>{ar ? "ترتيب: التقييم" : "Sort: Rating"}</option>
-                    </select>
+                    <ArrowUpDown size={12} color={MUTED} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 1 }} />
+                    <NiceSelect
+                      value={sortBy}
+                      onChange={(v) => setSortBy(v as typeof sortBy)}
+                      menuWidth={200}
+                      options={[
+                        { value: "match", label: ar ? "ترتيب: المطابقة" : "Sort: Match" },
+                        { value: "name", label: ar ? "ترتيب: الاسم" : "Sort: Name" },
+                        { value: "rating", label: ar ? "ترتيب: التقييم" : "Sort: Rating" },
+                      ]}
+                      triggerStyle={{ ...selectStyle, paddingLeft: 28, paddingRight: 12 }}
+                    />
                   </div>
                 </div>
 

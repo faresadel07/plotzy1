@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { NiceSelect } from "@/components/ui/nice-select";
 import AnalyticsDashboard from "@/components/analytics-dashboard";
 import { ResearchBoard } from "@/components/research-board";
 import { AIAnalysisTools } from "@/components/ai-analysis-tools";
@@ -1247,11 +1248,16 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 {lang === "ar" ? "ابعث هاد الكود لصاحبك عشان يقدر يدخل على كتابك" : "Share this code with someone to give them access to your book"}
               </p>
               <div className="flex gap-2">
-                <select value={inviteRole} onChange={e => setInviteRole(e.target.value as any)}
-                  className="rounded-xl text-sm px-3 py-2" style={{ background: "#222", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}>
-                  <option value="editor" style={{ background: "#222", color: "#fff" }}>{lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)"}</option>
-                  <option value="viewer" style={{ background: "#222", color: "#fff" }}>{lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)"}</option>
-                </select>
+                <NiceSelect
+                  value={inviteRole}
+                  onChange={(v) => setInviteRole(v as any)}
+                  menuWidth={220}
+                  options={[
+                    { value: "editor", label: lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)" },
+                    { value: "viewer", label: lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)" },
+                  ]}
+                  triggerStyle={{ background: "#222", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 12, padding: "9px 12px", fontSize: 13 }}
+                />
                 <button onClick={async () => {
                   try {
                     const res = await fetch(`/api/books/${bookId}/collaborators/invite`, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ role: inviteRole }) });

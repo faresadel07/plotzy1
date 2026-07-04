@@ -19,6 +19,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { NiceSelect } from "@/components/ui/nice-select";
 import { useLanguage } from "@/contexts/language-context";
 import {
   Search, Clock, Headphones, BookAudio, ChevronDown,
@@ -650,25 +651,23 @@ function SelectChip({ icon, value, onChange, options, isRTL }: {
   options: Array<{ id: string; label: string }>; isRTL: boolean;
 }) {
   return (
-    <div style={{ position: "relative" }}>
-      <span style={{ position: "absolute", insetInlineStart: 10, top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none" }}>{icon}</span>
-      <ChevronDown size={11} color={MUTED2} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-      <select
+    <div style={{ position: "relative", direction: isRTL ? "rtl" : "ltr" }}>
+      <span style={{ position: "absolute", insetInlineStart: 11, top: "50%", transform: "translateY(-50%)", color: MUTED, pointerEvents: "none", zIndex: 1 }}>{icon}</span>
+      <NiceSelect
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          fontFamily: SF, appearance: "none", WebkitAppearance: "none",
-          padding: "10px 30px",
-          fontSize: 12.5, color: TEXT, background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${BORDER}`, borderRadius: 10, outline: "none",
-          cursor: "pointer", minWidth: 160,
-          direction: isRTL ? "rtl" : "ltr",
+        onChange={onChange}
+        options={options.map((o) => ({ value: o.id, label: o.label }))}
+        menuWidth={210}
+        triggerStyle={{
+          fontFamily: SF,
+          padding: "10px 12px",
+          paddingInlineStart: 30,
+          fontSize: 12.5, fontWeight: 500, color: TEXT,
+          background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${BORDER}`, borderRadius: 10,
+          minWidth: 160, width: "100%", justifyContent: "space-between",
         }}
-      >
-        {options.map((o) => (
-          <option key={o.id} value={o.id} style={{ background: "#1a1a1a" }}>{o.label}</option>
-        ))}
-      </select>
+      />
     </div>
   );
 }

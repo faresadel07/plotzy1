@@ -7,6 +7,7 @@ import {
   AlignJustify, Copy, Search, LayoutGrid, Bookmark, Type,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { NiceSelect } from "@/components/ui/nice-select";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 
@@ -1108,18 +1109,23 @@ export default function GutenbergReader() {
               </div>
             </SettingRow>
             <SettingRow label={ar ? "نوع الخط" : "Font"} icon={<Type className="w-4 h-4" style={{ color: fgMuted }} />}>
-              <select value={fontFamily} onChange={e => { setFontFamily(e.target.value); try { localStorage.setItem("plotzy_reader_font", e.target.value); } catch {} }}
-                className="text-sm rounded-lg px-2 py-1 outline-none"
-                style={{ background: "rgba(128,128,128,0.15)", border: `1px solid ${border}`, color: fg, fontFamily }}>
-                <option value="Georgia, serif">Georgia</option>
-                <option value="'Merriweather', serif">Merriweather</option>
-                <option value="'Lora', serif">Lora</option>
-                <option value="'Crimson Text', serif">Crimson Text</option>
-                <option value="'Libre Baskerville', serif">Libre Baskerville</option>
-                <option value="'Inter', sans-serif">Inter</option>
-                <option value="'Source Serif 4', serif">Source Serif</option>
-                <option value="'Courier Prime', monospace">Courier Prime</option>
-              </select>
+              <NiceSelect
+                value={fontFamily}
+                onChange={(v) => { setFontFamily(v); try { localStorage.setItem("plotzy_reader_font", v); } catch {} }}
+                menuWidth={210}
+                align="end"
+                options={[
+                  { value: "Georgia, serif", label: "Georgia", labelStyle: { fontFamily: "Georgia, serif" } },
+                  { value: "'Merriweather', serif", label: "Merriweather", labelStyle: { fontFamily: "'Merriweather', serif" } },
+                  { value: "'Lora', serif", label: "Lora", labelStyle: { fontFamily: "'Lora', serif" } },
+                  { value: "'Crimson Text', serif", label: "Crimson Text", labelStyle: { fontFamily: "'Crimson Text', serif" } },
+                  { value: "'Libre Baskerville', serif", label: "Libre Baskerville", labelStyle: { fontFamily: "'Libre Baskerville', serif" } },
+                  { value: "'Inter', sans-serif", label: "Inter", labelStyle: { fontFamily: "'Inter', sans-serif" } },
+                  { value: "'Source Serif 4', serif", label: "Source Serif", labelStyle: { fontFamily: "'Source Serif 4', serif" } },
+                  { value: "'Courier Prime', monospace", label: "Courier Prime", labelStyle: { fontFamily: "'Courier Prime', monospace" } },
+                ]}
+                triggerStyle={{ background: "rgba(128,128,128,0.15)", border: `1px solid ${border}`, color: fg, fontFamily, fontSize: 13, padding: "6px 10px", borderRadius: 8 }}
+              />
             </SettingRow>
             <SettingRow label={ar ? "تباعد الأسطر" : "Line Spacing"} icon={<AlignJustify className="w-4 h-4" style={{ color: fgMuted }} />}>
               <div className="flex items-center gap-3">

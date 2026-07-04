@@ -8,6 +8,7 @@
 // page the moment you let go.
 
 import { useState } from "react";
+import { NiceSelect } from "@/components/ui/nice-select";
 import {
   X,
   FileText,
@@ -917,45 +918,25 @@ function PageNumberTab({
 
       {/* Font */}
       <Section title={ar ? "الخط" : "Font"} textDim={textDim}>
-        <div style={{ position: "relative" }}>
-          <select
-            value={prefs.pageNumFont || ""}
-            onChange={(e) => update("pageNumFont", e.target.value || undefined)}
-            className="psm-input"
-            style={{
-              width: "100%",
-              padding: "11px 36px 11px 14px",
-              borderRadius: 12,
-              background: inputBg,
-              border: `1px solid ${border}`,
-              color: text,
-              fontFamily: "inherit",
-              fontSize: 13.5,
-              letterSpacing: "-0.005em",
-              outline: "none",
-              appearance: "none",
-              WebkitAppearance: "none",
-              cursor: "pointer",
-            }}
-          >
-            {FONT_OPTIONS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-          <Minus
-            size={14}
-            style={{
-              position: "absolute",
-              insetInlineEnd: 12,
-              top: "50%",
-              transform: "translateY(-50%) rotate(90deg)",
-              color: textMute,
-              pointerEvents: "none",
-            }}
-          />
-        </div>
+        <NiceSelect
+          value={prefs.pageNumFont || ""}
+          onChange={(v) => update("pageNumFont", v || undefined)}
+          menuWidth={240}
+          options={FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }))}
+          triggerStyle={{
+            width: "100%",
+            justifyContent: "space-between",
+            padding: "11px 14px",
+            borderRadius: 12,
+            background: inputBg,
+            border: `1px solid ${border}`,
+            color: text,
+            fontFamily: "inherit",
+            fontSize: 13.5,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
+          }}
+        />
       </Section>
 
       {/* Size + Opacity */}

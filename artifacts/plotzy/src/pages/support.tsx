@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { NiceSelect } from "@/components/ui/nice-select";
 import { useLanguage } from "@/contexts/language-context";
 import type { TranslationKey } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -545,15 +546,23 @@ export default function SupportPage() {
                   <div className="support-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
                       <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spCategory")}</label>
-                      <select className="s-input s-select" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                        {CONTACT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{t(c.labelKey)}</option>)}
-                      </select>
+                      <NiceSelect
+                        value={form.category}
+                        onChange={(v) => setForm(f => ({ ...f, category: v }))}
+                        menuWidth={240}
+                        options={CONTACT_CATEGORIES.map(c => ({ value: c.value, label: t(c.labelKey) }))}
+                        triggerStyle={{ width: "100%", justifyContent: "space-between", fontFamily: SF, fontSize: 14, fontWeight: 450, color: "rgba(255,255,255,0.88)", background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "10px 14px" }}
+                      />
                     </div>
                     <div>
                       <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spPriority")}</label>
-                      <select className="s-input s-select" value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}>
-                        {CONTACT_PRIORITIES.map(p => <option key={p.value} value={p.value}>{t(p.labelKey)}: {t(p.descKey)}</option>)}
-                      </select>
+                      <NiceSelect
+                        value={form.priority}
+                        onChange={(v) => setForm(f => ({ ...f, priority: v }))}
+                        menuWidth={260}
+                        options={CONTACT_PRIORITIES.map(p => ({ value: p.value, label: `${t(p.labelKey)}: ${t(p.descKey)}` }))}
+                        triggerStyle={{ width: "100%", justifyContent: "space-between", fontFamily: SF, fontSize: 14, fontWeight: 450, color: "rgba(255,255,255,0.88)", background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "10px 14px" }}
+                      />
                     </div>
                   </div>
                   <div>
