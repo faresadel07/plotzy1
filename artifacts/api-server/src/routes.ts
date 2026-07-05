@@ -1423,14 +1423,46 @@ export async function registerRoutes(
           theme.headingFont = `${arabicStack}, ${theme.headingFont}`;
         }
 
-        // Build front/back matter HTML
-        const frontMatterSections: string[] = [];
-        if (bookPages.copyright) {
-          frontMatterSections.push(`<div class="matter-page"><p class="matter-text">${escapeHtml(bookPages.copyright).replace(/\n/g, "<br>")}</p></div>`);
-        } else {
-          const autoC = `© ${new Date().getFullYear()} ${book.authorName || ""}. All rights reserved.\n\nPublished by Plotzy.\n\nNo part of this publication may be reproduced without permission.`;
-          frontMatterSections.push(`<div class="matter-page"><p class="matter-text">${escapeHtml(autoC).replace(/\n/g, "<br>")}</p></div>`);
-        }
+        // Build front/back matter HTML, following real publishing
+        // conventions: half-title page, then a full title page with the
+        // publisher imprint, then the copyright page set small at the
+        // BOTTOM of its page (not floating mid-page), localized for RTL
+        // books. The writer's custom copyright text still wins.
+        const pubYear = new Date().getFullYear();
+        const authorName = book.authorName || "";
+        const copyrightBody = bookPages.copyright
+          ? escapeHtml(bookPages.copyright).replace(/\n/g, "<br>")
+          : rtl
+            ? [
+                `© ${pubYear} ${escapeHtml(authorName)}. جميع الحقوق محفوظة.`,
+                `الطبعة الأولى، ${pubYear}.`,
+                `صدر عن بلوتزي · plotzy.co`,
+                `لا يجوز نسخ أي جزء من هذا الكتاب أو تخزينه أو نقله بأي شكل من الأشكال دون إذن خطي مسبق من المؤلف.`,
+              ].join("<br><br>")
+            : [
+                `© ${pubYear} ${escapeHtml(authorName)}. All rights reserved.`,
+                `First edition, ${pubYear}.`,
+                `Published by Plotzy · plotzy.co`,
+                `No part of this publication may be reproduced, stored in a retrieval system, or transmitted in any form without prior written permission from the author.`,
+              ].join("<br><br>");
+
+        const frontMatterSections: string[] = [
+          // Half-title: the title alone on a quiet page.
+          `<div class="matter-page half-title"><p class="half-title-text">${escapeHtml(book.title)}</p></div>`,
+          // Title page: title, author, publisher imprint at the foot.
+          `<div class="matter-page title-page">
+            <div class="title-page-main">
+              <h1 class="title-page-title">${escapeHtml(book.title)}</h1>
+              ${authorName ? `<p class="title-page-author">${escapeHtml(authorName)}</p>` : ""}
+            </div>
+            <div class="title-page-imprint">
+              <div class="imprint-mark">PLOTZY</div>
+              <div class="imprint-site">plotzy.co</div>
+            </div>
+          </div>`,
+          // Copyright page: small type anchored to the page foot.
+          `<div class="matter-page copyright-page"><p class="matter-text copyright-text">${copyrightBody}</p></div>`,
+        ];
         if (bookPages.dedication) {
           frontMatterSections.push(`<div class="matter-page matter-center"><p class="matter-text dedication">${escapeHtml(bookPages.dedication).replace(/\n/g, "<br>")}</p></div>`);
         }
@@ -1509,7 +1541,12 @@ export async function registerRoutes(
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      /* Exactly one full paper sheet: the first page prints with zero
+         margins (see @page :first below), so sizing the cover to the
+         physical paper height makes the artwork FULL BLEED, edge to
+         edge, like a real printed book. */
+      height: ${paperCm.h};
+      width: 100%;
       page-break-after: always;
       text-align: center;
       background: #fff;
@@ -1517,12 +1554,11 @@ export async function registerRoutes(
       position: relative;
       overflow: hidden;
     }
-    /* When the user uploaded a cover image, it IS the cover — show it at
-       full fidelity (contain, not cover; opacity 1, no dark overlay, no
-       title stamped on top). Users who design a cover already include
-       the title in the artwork. */
-    .cover-image-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-    .cover-img { width: 100%; height: 100%; object-fit: contain; opacity: 1; }
+    /* The uploaded cover IS the cover: fill the entire sheet (cover,
+       not contain — a slight crop at the edges is the standard
+       full-bleed treatment), no overlay, no stamped title. */
+    .cover-image-wrap { position: absolute; inset: 0; }
+    .cover-img { width: 100%; height: 100%; object-fit: cover; opacity: 1; display: block; }
     /* Typography-only cover (no uploaded image) — unchanged. */
     .cover-page h1 { font-family: ${theme.headingFont}; font-size: 2em; font-weight: 700; margin-bottom: 16px; color: #1a1a1a; }
     .cover-page .author { font-size: 1.1em; color: #666; font-style: italic; margin-bottom: 32px; }
@@ -1539,6 +1575,30 @@ export async function registerRoutes(
     .matter-center { align-items: center; text-align: center; }
     .matter-text { line-height: 1.9; color: #444; }
     .matter-text.dedication { font-style: italic; color: #333; }
+    /* Half-title: the title alone, small caps flavor, dead center. */
+    .half-title { align-items: center; justify-content: center; text-align: center; min-height: 88vh; }
+    .half-title-text {
+      font-family: ${theme.headingFont};
+      font-size: 1.3em; font-weight: 600; letter-spacing: 0.08em;
+      color: #1a1a1a;
+    }
+    /* Title page: big title + author centered, publisher imprint at
+       the foot — the classic trade-book layout. */
+    .title-page { min-height: 88vh; justify-content: space-between; text-align: center; }
+    .title-page-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .title-page-title {
+      font-family: ${theme.headingFont};
+      font-size: 2.4em; font-weight: 700; line-height: 1.2;
+      color: #111; max-width: 85%;
+    }
+    .title-page-author { margin-top: 1.6em; font-size: 1.15em; color: #444; letter-spacing: 0.02em; }
+    .title-page-imprint { padding-bottom: 4vh; }
+    .imprint-mark { font-size: 0.85em; font-weight: 700; letter-spacing: 0.3em; color: #1a1a1a; }
+    .imprint-site { font-size: 0.7em; color: #999; margin-top: 4px; letter-spacing: 0.06em; }
+    /* Copyright page: small quiet type anchored to the page foot,
+       exactly like the verso of a printed book. */
+    .copyright-page { min-height: 88vh; justify-content: flex-end; }
+    .copyright-text { font-size: 0.78em; line-height: 2; color: #555; max-width: 460px; padding-bottom: 2vh; }
     .epigraph { font-style: italic; color: #555; border-left: 3px solid ${theme.accentColor}; padding-left: 20px; max-width: 400px; text-align: left; }
     .matter-page h2 { font-family: ${theme.headingFont}; font-size: 1.4em; margin-bottom: 20px; color: ${theme.accentColor}; border-bottom: ${theme.chapterBorder}; padding-bottom: 10px; }
     /* Chapters — no extra padding; @page margins handle whitespace */
@@ -1568,7 +1628,8 @@ export async function registerRoutes(
     .chapter-content, .chapter-content p, .chapter h2, .matter-text { text-align: right; }
     .chapter-content, .chapter-content *,
     .chapter h2, .matter-page h2, .matter-text,
-    .cover-page h1 {
+    .cover-page h1,
+    .half-title-text, .title-page-title, .title-page-author {
       font-family: ${bodyFont} !important;
     }
     .chapter-content ul, .chapter-content ol { padding-left: 0; padding-right: 1.5em; }
@@ -1583,6 +1644,11 @@ export async function registerRoutes(
       @page {
         size: ${paperCm.w} ${paperCm.h};
         margin: ${pxToCm(prefMT)} ${pxToCm(prefMR)} ${pxToCm(prefMB)} ${pxToCm(prefML)};
+      }
+      /* The cover sheet prints edge to edge: no margins on page one so
+         the artwork bleeds fully, like a real printed cover. */
+      @page :first {
+        margin: 0;
       }
     }
   </style>
