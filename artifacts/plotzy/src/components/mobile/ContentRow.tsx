@@ -12,10 +12,29 @@
 
 import { useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { ChevronLeft, ChevronRight, BookAudio } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { MobileBook } from "./mobile-content";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
+
+// Designed placeholder covers for books without cover art: a stable
+// per-title gradient with the title set on it, instead of a dead black
+// box. The palette mirrors the desktop shelf's generated covers.
+const FALLBACK_COVERS = [
+  "linear-gradient(150deg,#0f0c29,#302b63,#24243e)",
+  "linear-gradient(150deg,#1a0800,#6b2d00,#c2410c)",
+  "linear-gradient(150deg,#001c2e,#003d5b,#0369a1)",
+  "linear-gradient(150deg,#12001a,#2a003a,#7e22ce)",
+  "linear-gradient(150deg,#052010,#0f4a20,#15803d)",
+  "linear-gradient(150deg,#1a0505,#5c1010,#991b1b)",
+  "linear-gradient(150deg,#0a0a1a,#1e1b4b,#3730a3)",
+];
+
+function coverGradient(title: string): string {
+  let h = 0;
+  for (let i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) | 0;
+  return FALLBACK_COVERS[Math.abs(h) % FALLBACK_COVERS.length];
+}
 
 // ─── One poster card ───────────────────────────────────────────────
 
@@ -108,14 +127,12 @@ export function PosterCard({
           aspectRatio: "2 / 3",
           borderRadius: 12,
           overflow: "hidden",
-          background: imgError
-            ? "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))"
-            : "#111",
+          background: "#111",
           boxShadow: "0 6px 20px rgba(0,0,0,0.45)",
           position: "relative",
         }}
       >
-        {!imgError ? (
+        {book.cover && !imgError ? (
           <img
             src={book.cover}
             alt={book.title}
@@ -124,8 +141,31 @@ export function PosterCard({
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         ) : (
-          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-            <BookAudio size={30} color="rgba(255,255,255,0.35)" />
+          /* No cover art: a designed placeholder — stable per-title
+             gradient with the title set on it, like a real jacket. */
+          <div
+            style={{
+              position: "absolute", inset: 0,
+              background: coverGradient(book.title),
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              padding: "14px 10px", textAlign: "center",
+              border: "1px solid rgba(255,255,255,0.10)", borderRadius: 12,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: SF, fontSize: 12.5, fontWeight: 700, color: "#fff",
+                lineHeight: 1.35, letterSpacing: "-0.01em",
+                display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical",
+                overflow: "hidden", textShadow: "0 1px 8px rgba(0,0,0,0.5)",
+              }}
+            >
+              {book.title}
+            </span>
+            <span style={{ position: "absolute", bottom: 8, fontFamily: SF, fontSize: 6.5, fontWeight: 700, letterSpacing: "0.22em", color: "rgba(255,255,255,0.4)" }}>
+              PLOTZY
+            </span>
           </div>
         )}
       </div>
