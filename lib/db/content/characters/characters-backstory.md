@@ -18,17 +18,20 @@ Most beginners get this backwards. They write everything they know. The result i
 
 The right ratio is roughly ten percent above water. Maybe less.
 
+:::video fJfE-HMfSkk | Lecture 10: Characters Part 2 | Brandon Sanderson
+
 ## Backstory dump vs. backstory revelation
 
-A **dump** interrupts the present-tense story to deliver a paragraph (or three pages, or a whole flashback chapter) of historical context.
-
-*Sarah had grown up in a house where dinner was always at six. Her father, a stern accountant, had always insisted on this. Her mother, a gentler woman, had always set the table herself…*
-
-The reader is, somewhere around the second sentence, no longer reading a novel.
+A **dump** interrupts the present-tense story to deliver a paragraph (or three pages, or a whole flashback chapter) of historical context. The reader is, somewhere around the second sentence, no longer reading a novel.
 
 A **revelation** is a single sentence (sometimes three words) that pivots the reader's understanding of what's happening *right now*.
 
-Sarah refuses a dinner invitation. The host presses. *"My father always insisted on six,"* she says, *"and I didn't realise until last year that I still set the table for him."*
+:::example side-by-side | Same backstory, different direction
+[Dump]
+Sarah had grown up in a house where dinner was always at six. Her father, a stern accountant, had always insisted on this. Her mother, a gentler woman, had always set the table herself...
+[Revelation]
+Sarah refuses a dinner invitation. The host presses. "My father always insisted on six," she says, "and I didn't realise until last year that I still set the table for him."
+:::
 
 Same backstory. Different direction. The revelation pulls the past forward into the present moment, where it changes the meaning of what was already on the page.
 
@@ -44,9 +47,19 @@ If yes, it earns its place. If no, cut it.
 
 The test is brutal because most of what writers love about their character lore fails it. The childhood dog. The school friend. The favourite teacher. The summer they moved to the coast. All of these are wonderful in your notes. None of them belong on the page unless they're *causing* a choice the protagonist is making right now.
 
-Backstory earns its way onto the page by being *causal*, not by being interesting.
+:::quote
+Backstory earns its way onto the page by being causal, not by being interesting.
+:::
 
 This is the painful part of the lesson. Most cuts feel like losses. They aren't. They are concentrations. The fifty words that survive the cut are felt by the reader far more than the five hundred would have been.
+
+:::check
+Q: Your draft mentions that the protagonist had a beloved dog as a child. When does that line earn its place on the page?
+- When it is vivid and specific enough to feel real
+- When it is delivered as dialogue instead of narration
+-* When it explains a choice the protagonist is making in the present-day story
+X: The load-bearing test is causal, not aesthetic. Backstory stays only if it is causing a present-day choice; otherwise it lives in your notes.
+:::
 
 ## When to reveal, when to withhold
 
@@ -59,6 +72,14 @@ The general rhythm: hold most of the backstory in reserve, release it where it p
 Most beginners over-reveal in Act 1 and under-reveal in Acts 2 and 3. The reverse is the right rhythm: hold in Act 1, release in Acts 2 and 3.
 
 The instinct to over-reveal early comes from a worry that the reader won't otherwise care. The fix is in [Lesson 1](/learn/lesson/characters-protagonist-wound): give the reader a strong *want* on page one and they will wait an entire book for the wound to surface.
+
+:::check
+Q: What is the right rhythm for releasing backstory across a novel?
+- Front-load it in Act 1 so the reader cares from the start
+-* Hold in Act 1, release in Acts 2 and 3, timed to structural beats
+- Spread it evenly so no single scene carries too much
+X: Beginners over-reveal early out of worry the reader won't care. A strong want on page one buys you the patience to hold the backstory until it pays the most.
+:::
 
 ## Common backstory mistakes
 
@@ -82,13 +103,22 @@ The exercise asks you to write five hundred words of backstory and keep fifty. T
 
 ## Try it
 
-> **Exercise 3.2.1: Write 500, keep 50.** Take your protagonist. Write five hundred words of backstory in any form: a list, a paragraph, scattered notes. Their family. The house. The teacher who mattered. The first thing they wanted that they didn't get. The job they had at sixteen.
->
-> Then identify the *fifty* words a reader of your novel actually needs to know. Not what would be nice for them to know, but what would change a present-day choice if they didn't.
->
-> Cut the other four hundred and fifty words from your manuscript permanently. Keep them in your notes.
->
-> The four hundred and fifty are still doing work. They make the fifty you keep feel weighted. The reader feels the iceberg even when they only see the tip. This exercise, done properly on a real character, is one of the fastest ways to upgrade a draft.
+:::exercise
+**Write 500, keep 50.** Take your protagonist. Write five hundred words of backstory in any form: a list, a paragraph, scattered notes. Their family. The house. The teacher who mattered. The first thing they wanted that they didn't get. The job they had at sixteen.
+
+Then identify the *fifty* words a reader of your novel actually needs to know. Not what would be nice for them to know, but what would change a present-day choice if they didn't.
+
+Cut the other four hundred and fifty words from your manuscript permanently. Keep them in your notes.
+
+The four hundred and fifty are still doing work. They make the fifty you keep feel weighted. This exercise, done properly on a real character, is one of the fastest ways to upgrade a draft.
+:::
+
+:::takeaway
+- Know ten times more about your character than you put on the page. The hidden mass is what the reader feels as depth.
+- Deliver backstory as revelation, not dump: a line that pivots the present scene, not a detour into the past.
+- Apply the load-bearing test to every line: does it explain a present-day choice? If not, cut it to your notes.
+- Hold backstory in Act 1, release it in Acts 2 and 3, and time the biggest reveals to structural beats.
+:::
 
 ## Further reading
 

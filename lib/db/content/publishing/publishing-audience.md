@@ -12,7 +12,11 @@ Marketing is a transactional moment: I have a book; you might buy it.
 
 Audience is a relationship: I have written things; you have liked them; you would pay attention to the next one.
 
-Marketing without audience is cold-calling. Marketing with audience is sending a message to people who already raised their hand. The conversion rates are not in the same universe.
+:::quote
+Marketing without audience is cold-calling. Marketing with audience is sending a message to people who already raised their hand.
+:::
+
+The conversion rates are not in the same universe.
 
 Most first-time authors confuse the two. They market hard at launch and audience-build never. By book 3 the gap has compounded: the writer who built audience while drafting has six hundred engaged readers; the writer who marketed at launch has the same starting position they had three books ago.
 
@@ -27,6 +31,14 @@ For writers, the newsletter is not optional. It is the single most reliable way 
 Start it before book 1 if possible. During book 1 if not. Not after. *After* is the most common mistake; the launch happens to people who don't know you yet, because there was no list to tell.
 
 What goes in the newsletter is less important than that it exists. Behind-the-scenes notes. The next book's cover. A short story. The newsletter is a habit, not a content strategy. Twice a month is plenty. Once a month is fine. Twice a year is too rare; the list cools.
+
+:::check
+Q: Why does the lesson call a newsletter "owned" and social media "rented"?
+- A newsletter costs money to run while social media platforms are free
+-* The list is portable and belongs to you; a social platform sits between you and the reader and decides who sees your posts
+- Newsletter subscribers are legally your customers, while followers are the platform's customers
+X: Ownership here means control of the relationship. You can export a list and move platforms; you cannot take your followers with you, and the platform can throttle your reach at any time.
+:::
 
 ## Why social media is rented attention
 
@@ -68,34 +80,40 @@ During book 1 is the realistic window. Most writers start audience-building in m
 
 After book 1 launches is the worst time. The launch happens to strangers; momentum is impossible; the writer learns the lesson three years late and starts the next launch with a list of zero again. The cure is the next-book remedy from [M5 L5](/learn/lesson/process-when-to-stop): start the next book and the next list at the same time.
 
-## What this gives you
-
-A frame for the difference between audience and marketing.
-
-The newsletter as the spine of audience-building.
-
-The honest math: small and engaged beats large and indifferent.
-
-A target: two hundred is enough to start, and achievable in a year.
-
-A timeline: start now, not after launch.
+:::check
+Q: When is the best realistic time to start building your reader list?
+- After book 1 launches, once you finally have something concrete to point people to
+-* While drafting book 1, so the launch lands in front of people who already know you
+- Only after your social following is large enough to convert into subscribers
+X: Starting after launch is the most common mistake: the launch happens to strangers and momentum is impossible. Before book 1 is optimal, during book 1 is realistic, and the list does not need social media to start growing.
+:::
 
 ## Try it
 
-> **Exercise 6.3.1: The reader-facing identity.** Write a 200-word *about the author* page. Not your bio. Your reader-facing identity.
->
-> The bio version says *I have an MFA. I live in Maine. I have two cats.* These are facts. They do not tell a stranger why they should read your next book.
->
-> The reader-facing version answers a single question: *why would a reader who liked your first book want to read your second one?*
->
-> Possible angles:
->
-> - The kind of stories you write (genre + tone + texture).
-> - The themes you keep returning to.
-> - The reader you imagine writing for.
-> - One specific, honest thing about how you approach the work.
->
-> Two hundred words. The exercise is not the page itself; the exercise is figuring out what you'd actually say. The page comes after.
+:::exercise
+**Exercise 6.3.1: The reader-facing identity.** Write a 200-word *about the author* page. Not your bio. Your reader-facing identity.
+
+The bio version says *I have an MFA. I live in Maine. I have two cats.* These are facts. They do not tell a stranger why they should read your next book.
+
+The reader-facing version answers a single question: *why would a reader who liked your first book want to read your second one?*
+
+Possible angles:
+
+- The kind of stories you write (genre + tone + texture).
+- The themes you keep returning to.
+- The reader you imagine writing for.
+- One specific, honest thing about how you approach the work.
+
+Two hundred words. The exercise is not the page itself; the exercise is figuring out what you'd actually say. The page comes after.
+:::
+
+:::takeaway
+- Marketing is a transaction with strangers; audience is a relationship with readers who already raised their hand.
+- The newsletter is the only platform you own: the list is portable, the reach is unthrottled, the habit matters more than the content.
+- Social media is for finding readers, not keeping them; move them to the list.
+- One hundred engaged readers beat ten thousand indifferent followers, and two hundred is enough to start.
+- Start the list before or during book 1, never after; the launch should not happen to strangers.
+:::
 
 ## Further reading
 

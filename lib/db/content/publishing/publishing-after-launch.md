@@ -14,6 +14,8 @@ First-time authors often interpret the slump as *failure*. It is not. It is the 
 
 The discipline is to *not* spend the slump period checking sales hourly and refreshing reviews. That is the symptom of a writer who has stopped writing book 2. The cure is the daily wordcount habit from [Module 5, Lesson 2](/learn/lesson/process-first-draft): the one that produced book 1 and will produce book 2 if you let it.
 
+:::video tHdYX418PaA | Lecture 13: Publishing Part Two | Brandon Sanderson
+
 ## Reviews: how to read them, when to ignore them
 
 Three categories.
@@ -26,6 +28,14 @@ Three categories.
 
 The discipline more broadly is reading reviews *aggregated*, not *individually*. One bad review hurts. Twenty reviews together produce a pattern that's usable. Read them at quarterly intervals, not daily.
 
+:::check
+Q: Three separate reviewers say your antagonist never feels believable. What does the lesson say to do with that note?
+- Quietly revise book 1 and republish the corrected version
+-* Save it as a structural pattern and apply it to whatever you write next; book 1 is published
+- Reply to the reviews explaining the antagonist's off-page motivation
+X: Repeated structural feedback is real signal, but it is signal for book 2. The published book is done; the pattern goes into the next one. Replying to reviews is never the move.
+:::
+
 ## The second book reality
 
 The second book is often harder than the first.
@@ -36,13 +46,23 @@ The cure is the daily-wordcount habit from [M5 L2](/learn/lesson/process-first-d
 
 Most writers who finish book 1 do not finish book 2. The ones who do are usually not more talented than the ones who don't. They are more consistent.
 
+:::check
+Q: Two weeks after launch, sales fall and reviews slow to a trickle. What does the lesson call this?
+- An early warning that the launch marketing was underpowered and needs a paid boost
+-* The normal curve every book follows; the skill is writing book 2 through it
+- A sign the book missed its audience and should be repositioned immediately
+X: Every book has a launch spike, a slump, and a long tail. The slump is predictable, which is what makes it survivable; the failure mode is spending it refreshing dashboards instead of drafting the next book.
+:::
+
 ## The long arc: careers built over 5 to 10 books
 
 Most working writers' careers follow a shape: first book lands quietly, second book lands a little louder, third book finds an audience, somewhere around book five the writer has a readership that buys the next title without thinking about it.
 
 This is the median. There are exceptions in both directions: first-book breakouts; tenth-book debuts that explode after a decade of steady work. The exceptions are exceptional.
 
-The point is not to plan around the exceptions. The point is to plan around the median: a slow build over five to ten books, compounding readership, gradual discovery. The audience you have at book 3 is partly the audience that started reading at book 1 and stayed; it is partly readers who discovered book 2 and went back; it is partly readers who came to book 3 directly. The list compounds the way money compounds: slowly, then less slowly, then visibly.
+The point is not to plan around the exceptions. The point is to plan around the median: a slow build over five to ten books, compounding readership, gradual discovery.
+
+The audience you have at book 3 is partly the audience that started reading at book 1 and stayed; it is partly readers who discovered book 2 and went back; it is partly readers who came to book 3 directly. The list compounds the way money compounds: slowly, then less slowly, then visibly.
 
 Trollope wrote forty-seven novels across his career; Dickens wrote fifteen plus serials and journalism. The shape was the same in their century. The pattern is older than the modern industry.
 
@@ -64,18 +84,6 @@ The frame is what this course has been. The daily habit is what Module 5 was for
 
 Most launches do not transform a writer's life. The slow accumulation of finished books does.
 
-## What this gives you
-
-A frame for the post-launch slump as predictable, not failure.
-
-A diagnostic for reviews: patterns to use, individual taste to ignore, attacks to skip.
-
-The recognition that the second book is usually harder than the first, and that the cure is the same habit that produced the first.
-
-The shape of a career: five to ten books, slowly, compounding.
-
-The closing section of this lesson is the closing section of the course.
-
 ## Course conclusion
 
 You have the framework now.
@@ -88,29 +96,43 @@ Every story you write (this one and the next twenty) needs the three ingredients
 
 The frame is not the writing. The writing is the frame in motion. You will spend the rest of your life making versions of the same three ingredients land in front of readers who needed them.
 
-Trollope, in his *Autobiography*, described his daily writing routine (the watch on the desk, the chair, the morning before the post-office job, two hundred and fifty words every quarter-hour) and at the end of the book wrote *I do not know that I have anything further to say which would interest the reader*. He was wrong about that. The thing that interests every working writer who reads the *Autobiography* is the chair, the watch, the morning. The fact that a person can sit down at the same desk every day for forty years, and at the end of those forty years have produced forty-seven novels.
+Trollope, in his *Autobiography*, described his daily writing routine (the watch on the desk, the chair, the morning before the post-office job, two hundred and fifty words every quarter-hour) and at the end of the book wrote *I do not know that I have anything further to say which would interest the reader*.
+
+He was wrong about that. The thing that interests every working writer who reads the *Autobiography* is the chair, the watch, the morning. The fact that a person can sit down at the same desk every day for forty years, and at the end of those forty years have produced forty-seven novels.
 
 The course you are finishing is not the end of anything. It is one revolution of the loop you will spend the rest of your writing life inside.
 
 The framework is yours now. The habit will produce the next book if you let it. The audience will grow if you start the list. The career will build if you stay in the chair.
 
+:::quote standalone
 Now go finish the book.
+:::
 
 ## Try it
 
-> **Exercise 6.5.1: The 5-year plan.** Write a 200-word plan for your writing career across the next five years.
->
-> Specific enough to test against. Vague answers don't count.
->
-> Sample structure (yours will look different):
->
-> - *In five years I will have shipped X books.*
-> - *They will be in [genre], in [series form / standalone form].*
-> - *My audience target by year five is X engaged readers.*
-> - *I will write Y words per day, Z days per week.*
-> - *My next book after this one is [title or premise].*
->
-> If you cannot write this concretely, your sense of *what next* is not yet operational. The exercise is the start of having one.
+:::exercise
+**Exercise 6.5.1: The 5-year plan.** Write a 200-word plan for your writing career across the next five years.
+
+Specific enough to test against. Vague answers don't count.
+
+Sample structure (yours will look different):
+
+- *In five years I will have shipped X books.*
+- *They will be in [genre], in [series form / standalone form].*
+- *My audience target by year five is X engaged readers.*
+- *I will write Y words per day, Z days per week.*
+- *My next book after this one is [title or premise].*
+
+If you cannot write this concretely, your sense of *what next* is not yet operational. The exercise is the start of having one.
+:::
+
+:::takeaway
+- The post-launch slump is the normal curve, not failure; plan for it and write book 2 through it.
+- Read reviews aggregated and quarterly: use structural patterns for the next book, ignore individual taste, never answer attacks.
+- The second book is usually harder than the first; the cure is the same daily habit that produced the first.
+- Careers are built over five to ten books; plan around the median slow build, not the exceptional breakout.
+- Write the series or the standalone you actually want to write; five years of the wrong books produces five books that don't quite work.
+:::
 
 ## Further reading
 

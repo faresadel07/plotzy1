@@ -2,9 +2,11 @@
 
 A protagonist without a wound feels hollow even when their plot is exciting.
 
-You can usually feel it before you can name it. The book is well-paced. The prose is fine. The events are interesting. And somehow the protagonist is a hole in the middle of the story: a person you're watching go through events without ever feeling that you're watching *a person*.
+You can usually feel it before you can name it. The book is well-paced, the prose fine, the events interesting. And somehow the protagonist is a hole in the middle of the story: someone you watch go through events without ever feeling you're watching *a person*.
 
 This lesson is the framework that fixes the hollow. Three layers. Wound, want, need.
+
+:::video 1NCiuI6F5O0 | Lecture 9: Characters | Brandon Sanderson
 
 ## Wound, want, need
 
@@ -16,7 +18,11 @@ Pip is shamed about his hands by Estella, in a kitchen, when he is a small boy. 
 
 **Need.** What the character actually requires for the story to resolve, which is rarely the same as the want. The character usually doesn't know their need. The story is the process of forcing them to find out.
 
-The wound *causes* the want. The want *occludes* the need. Plot is the process by which the want is tested until the need becomes visible.
+:::quote
+The wound causes the want. The want occludes the need.
+:::
+
+Plot is the process by which the want is tested until the need becomes visible.
 
 That's the whole framework. The rest of this lesson is how to use it.
 
@@ -28,11 +34,16 @@ You can track what they want; you cannot care that they get it.
 
 Compare two openings.
 
-*Sarah wants to win the regional bake-off.* That's a preference. Six words. The reader has nothing to invest.
+:::example side-by-side | Six words vs a different book
+[Want only]
+Sarah wants to win the regional bake-off.
+[Want rooted in a wound]
+Sarah wants to win the regional bake-off because the last thing her mother said to her, on her hospital bed, was that she would never amount to anything in a kitchen.
+:::
 
-*Sarah wants to win the regional bake-off because the last thing her mother said to her, on her hospital bed, was that she would never amount to anything in a kitchen.* That's a stake. Twenty-six words and a different book.
+The first is a preference. The second is a stake.
 
-The wound is what *turns* the want into a stake. Without the wound, you can pile any number of obstacles in front of your protagonist and the reader will watch from a slight distance. With the wound, the smallest obstacle is felt.
+The wound is what *turns* the want into a stake. Without it, you can pile up obstacles and the reader watches from a slight distance. With it, the smallest obstacle is felt.
 
 ## The wound is concrete
 
@@ -44,7 +55,15 @@ Not "she's afraid of failure". *The gym teacher who laughed at her in front of t
 
 The therapy vocabulary generalises wounds because therapy is in the business of integration. Fiction is in the business of specificity. A wound that could fit any character is a wound that doesn't belong to *yours*.
 
-If you find yourself describing your protagonist's wound with the words *trauma*, *issues*, *unresolved*, or *processed*, stop and rewrite the sentence. Replace the noun with an event. The exercise of naming the *afternoon it happened* is the lesson.
+If you catch yourself describing the wound with *trauma*, *issues*, *unresolved*, or *processed*, stop. Replace the noun with an event. Naming the *afternoon it happened* is the lesson.
+
+:::check
+Q: Your notes say the protagonist "has unresolved trust issues from a difficult childhood." What is the problem with that line?
+- It reveals the wound too early in the story
+-* It names a condition instead of a specific event, so the wound could belong to anyone
+- It makes the wound too small to carry a full novel
+X: Therapy vocabulary generalises. A fictional wound is a moment: where it happened, what was said, and what the character did immediately after.
+:::
 
 ## The size of the event is not the size of the story
 
@@ -56,7 +75,7 @@ Pip's wound is small in the world's terms. A child humiliated by another child. 
 
 Trauma-tourism is the failure mode here. A writer borrows a vast historical pain (a war, a famine, a famous atrocity) to lend a character weight they haven't earned. The reader can tell. The wound is too big for the consequence the writer is willing to render.
 
-Use what you can render specifically. Let the consequence (the costume the character builds, the choices the character makes) do the heavy lifting.
+Use what you can render specifically, and let the consequence do the heavy lifting.
 
 ## When the wound becomes visible
 
@@ -64,33 +83,52 @@ The reader does not need the wound on page one.
 
 The reader needs the *want* on page one. The wound surfaces when the want is being seriously tested, usually around the [midpoint of Act 2](/learn/lesson/architecture-three-acts), often at the dark moment.
 
-The reader has been watching the protagonist pursue something, and at the midpoint they understand *why*. The why arrives like a click. The reader's investment, which was provisional, becomes total.
+The reader has been watching the protagonist pursue something, and at the midpoint they understand *why*. The why arrives like a click, and the reader's provisional investment becomes total.
 
-The trick before that point is to *seed* the wound in glances. Small reactions. A moment of irrational tenderness. A flash of anger that costs more than the situation called for. The kind of detail a careful reader files away without yet knowing why it matters.
+Before that point, *seed* the wound in glances. Small reactions. Irrational tenderness. A flash of anger that costs more than the situation called for. Details a careful reader files away without knowing why they matter.
 
-When the wound surfaces at the midpoint, those glances retroactively make sense. The reader feels the click (*that's what was going on*) and forgives every odd reaction up to that point.
+When the wound surfaces, those glances retroactively make sense. The reader feels the click (*that's what was going on*) and forgives every odd reaction up to that point.
+
+:::video ePuFJIcRKU4 | What Are the 3 Types of Character Arcs? | K.M. Weiland
+
+:::check
+Q: What does the reader need on page one?
+- The wound, so the want makes sense from the start
+-* The want, with the wound seeded in glances and surfaced later
+- The need, so the reader knows where the arc is heading
+X: The want carries page one. The wound surfaces when the want is seriously tested, usually near the midpoint, and the need becomes visible last.
+:::
 
 ## What this gives you
 
 The mechanism for the *character* ingredient from [Module 1](/learn/lesson/foundation-three-ingredients).
 
-A character a reader cares about is a character whose want is rooted in a specific wound. The wound makes the want costly. The cost makes the journey real. Without the wound, the want is decoration. With it, every page of pursuit is also a page of consequence.
+A character a reader cares about is one whose want is rooted in a specific wound. The wound makes the want costly; the cost makes the journey real. Every page of pursuit becomes a page of consequence.
 
-The next four lessons of this module are downstream. Backstory (L2) is the question of *which parts* of the wound the reader sees. The antagonist (L3) gets the same wound/want architecture. Supporting cast (L4) is who watches the want being tested. Dialogue (L5) is where voice (which rises from the wound) meets the page.
+The next four lessons are downstream. Backstory (L2) is *which parts* of the wound the reader sees. The antagonist (L3) gets the same wound/want architecture. Supporting cast (L4) is who watches the want being tested. Dialogue (L5) is where voice, which rises from the wound, meets the page.
 
 But this is the centre. Get this right and the rest of the module has something to do.
 
 ## Try it
 
-> **Exercise 3.1.1: Find your protagonist's wound.** Take the protagonist from your premise (M1, Exercise 3.2). In 100 words, describe the *moment* their wound happened.
->
-> Include three things:
->
-> - **Where they were.** Be specific. Not "at school", but *the corner of the playground by the chain-link fence*.
-> - **What specifically happened.** What was said, who said it, what they did with their hands.
-> - **What they did *immediately* afterward.** This is often the most revealing detail. Did they laugh too loudly? Walk away without speaking? Pretend it hadn't happened? The first reaction, before they had time to compose, is who they were before they started building the costume.
->
-> The moment may never appear in your book. That's fine. You need to know it exists before the first sentence. The hundred words you write here will live in your notes and shape every present-day choice the protagonist makes for the rest of the manuscript.
+:::exercise
+**Find your protagonist's wound.** Take the protagonist from your premise (M1, Exercise 3.2). In 100 words, describe the *moment* their wound happened.
+
+Include three things:
+
+- **Where they were.** Be specific. Not "at school", but *the corner of the playground by the chain-link fence*.
+- **What specifically happened.** What was said, who said it, what they did with their hands.
+- **What they did *immediately* afterward.** Often the most revealing detail. The first reaction, before they had time to compose, is who they were before they started building the costume.
+
+The moment may never appear in your book. That's fine. You need to know it exists before the first sentence; it will shape every present-day choice for the rest of the manuscript.
+:::
+
+:::takeaway
+- A wound is a specific past moment, not a therapy label.
+- The wound turns a want into a stake the reader can feel.
+- A wound's power is the size of its consequence, not of the event.
+- Open with the want; surface the wound when the want is seriously tested, usually near the midpoint.
+:::
 
 ## Further reading
 

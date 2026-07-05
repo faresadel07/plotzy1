@@ -22,6 +22,8 @@ Most blank pages are one of four specific things. Naming the cause is half the c
 
 Each cause has a different fix. The next sections are the three tactics that work for the first two, and the test for when the cause is the third or fourth.
 
+:::video sRW87vsC90I | Why You Keep Starting New Novels Instead of Finishing One | Ellen Brock
+
 ## Three tactics that work
 
 **Start in the middle of a scene.**
@@ -42,7 +44,19 @@ Drafting in order is a convention, not a rule. The momentum from a scene you wro
 
 Aim for bad. Compete with yourself for the worst opening sentence you can produce. *The morning was a morning, and Sarah was Sarah, and she did the thing that Saturdays make a person do.* Worse than that, if you can.
 
-The fear of being bad cannot survive the *requirement* to be bad. Once the page is no longer blank, the second paragraph is a different problem.
+:::quote
+The fear of being bad cannot survive the requirement to be bad.
+:::
+
+Once the page is no longer blank, the second paragraph is a different problem.
+
+:::check
+Q: You have spent two months stuck on your opening chapter because the opening "should" come first. What does this lesson tell you to do?
+- Keep at it; a novel drafted out of order loses its momentum
+-* Draft the scene you can already see in your head and write the opening later
+- Cut the opening chapter; first chapters usually get deleted anyway
+X: Drafting in order is a convention, not a rule. Momentum from a scene you write well carries you into the harder ones, and the opening can be written in the third week of drafting.
+:::
 
 ## Constraints help
 
@@ -64,29 +78,40 @@ Cure: leave the page. Go back to outline level. Ask of the scene: *what does the
 
 The blank page is not always a failure of will. Sometimes it's the writer's instinct telling you the work isn't ready. Listen for that.
 
+:::check
+Q: You sit down to write the *same* scene three days in a row and produce nothing each time. What is the most likely cause?
+- Fear of being bad; write a terrible first paragraph on purpose
+- A broken habit; lower your daily word count until it is unfailable
+-* The scene has no clear function yet; leave the page and fix it at outline level
+X: Repeated failure on the same specific scene is rarely fear. It usually means the scene does not know what it is for, and the cure lives at outline level, not typing level.
+:::
+
 ## What this gives you
-
-A diagnostic for the blank page: *which of the four causes is this one?*
-
-Three tactics that work for the first two causes (fear, perfectionism).
-
-The discipline to leave the page when the cause is the third or fourth (unclear premise, no plan), and to fix the underlying problem instead of trying to type through it.
 
 The blank page is a real problem. It is not unsolvable. The next lesson is about the longer version of the same question: once you have started, how do you keep going for six months.
 
 ## Try it
 
-> **Exercise 5.1.1: The 25-minute, 500-word session.** Set a timer for twenty-five minutes. Open a fresh document. Write 500 words on any scene from your story.
->
-> Rules:
->
-> - Do not stop typing.
-> - Do not edit while writing.
-> - Allowed: rambling, repetition, confusion, *[notes to self in brackets]*, restarting the same sentence three times.
->
-> The session does not produce *publishable* prose. It produces *prose*. That's what you need.
->
-> If you produce 500 words, the page is no longer blank. If you produce 200 words, the page is no longer blank. Tomorrow's session is easier. The lesson is mechanical.
+:::exercise
+**Exercise 5.1.1: The 25-minute, 500-word session.** Set a timer for twenty-five minutes. Open a fresh document. Write 500 words on any scene from your story.
+
+Rules:
+
+- Do not stop typing.
+- Do not edit while writing.
+- Allowed: rambling, repetition, confusion, *[notes to self in brackets]*, restarting the same sentence three times.
+
+The session does not produce *publishable* prose. It produces *prose*. That's what you need.
+
+If you produce 500 words, the page is no longer blank. If you produce 200 words, the page is no longer blank. Tomorrow's session is easier. The lesson is mechanical.
+:::
+
+:::takeaway
+- Most blank pages have one of four causes: fear of being bad, perfectionism, an unclear premise, or no plan for the scene. Name the cause first.
+- Fear and perfectionism respond to tactics: start in the middle of a scene, write the easy scene first, or write a terrible paragraph on purpose.
+- Constraints beat willpower: a 25-minute timer and a small unfailable word count outwork unlimited time.
+- If the same scene fails three days running, leave the page and fix the scene's function at outline level.
+:::
 
 ## Further reading
 

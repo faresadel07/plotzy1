@@ -22,6 +22,10 @@ This isn't laziness; it's the curve. The work is real and useful for the first t
 
 The skill is to *feel* the curve. Past a certain point, each new pass produces less gain than the same time would produce on a different book. The rest of this lesson is the diagnostic for where you are on the curve.
 
+For a working writer's honest picture of what a full revision cycle feels like from the inside, including the moment it stops paying, watch this alongside the lesson.
+
+:::video 65otc2uE7-Q | Revising a Novel: Process, Tips, and Tricks | ShaelinWrites
+
 ## Three signs you're done
 
 **You're moving commas back and forth.**
@@ -50,6 +54,14 @@ Beta readers may not catch this; you will. If you are speeding through the clima
 
 Most writers know which chapter they don't want to re-read. That chapter usually has a problem you haven't named yet. Read it. The problem will surface. Once named, it can be fixed.
 
+:::check
+Q: Last week you changed a comma in chapter five. This week you changed it back. What is the diagnosis?
+- The prose still needs line editing, so keep going until the commas settle
+-* The book is past the point where your edits change anything a reader will feel
+- You should hand the chapter to a beta reader and revise it once more
+X: Moving the same comma back and forth is the appearance of progress, not progress. It is the clearest observable sign that the manuscript has stopped changing in any way the reader will notice.
+:::
+
 ## Beta readers: calibrating their feedback
 
 Three beta readers is usually enough. Five is better. Ten is too many.
@@ -62,13 +74,25 @@ If one reader says the antagonist is unbelievable, consider it. If three say so,
 
 The other discipline: do not solve every note. Solve the patterns. A reader who didn't like a chapter and a reader who loved the same chapter are giving you usable information about *which kind of reader your book is for*. That is not the same as a problem to fix.
 
+:::check
+Q: Three beta readers flag your antagonist: one finds him too cruel, one too sympathetic, one just confusing. What is the pattern telling you?
+- The antagonist is unbelievable and needs to be softened
+-* The antagonist is unspecific, so each reader is filling the gap differently
+- The three notes cancel out, so no change is needed
+X: When several readers react to the same element in contradictory ways, the element is underdefined. They are not disagreeing about a clear character; they are each inventing a different one to fill the blank.
+:::
+
 ## Letting it go
 
 At a certain point the manuscript stops being yours.
 
 You did the work. Further work belongs to the editor, the publisher, the next book.
 
-Books are not finished; they are released. The version you publish is the version you stopped working on; if you had kept going, the version a year later would be slightly different and probably not better. Probably the same set of strengths and weaknesses, with different specific words.
+:::quote standalone
+Books are not finished. They are released.
+:::
+
+The version you publish is the version you stopped working on; if you had kept going, the version a year later would be slightly different and probably not better. Probably the same set of strengths and weaknesses, with different specific words.
 
 The mindset that lets you ship is *this is good enough for the reader I imagined writing for*. Not perfect. Not the best version possible. Good enough that the reader the book is for (the reader you have been writing toward since you started) will get what the book promises them.
 
@@ -98,23 +122,25 @@ The course you are finishing is not the end of anything. It is one revolution of
 
 ## Try it
 
-> **Exercise 5.5.1: Define "done" for your draft.** Write three specific, observable conditions that would tell you your current draft is shippable.
->
-> *Specific* means a beta reader could verify it. *Observable* means it doesn't depend on your mood that day.
->
-> Vague conditions don't count:
->
-> - *"When it's good"*: too vague.
-> - *"When I'm happy with it"*: depends on the day.
-> - *"When the chapters all flow"*: what does *flow* mean operationally?
->
-> Concrete conditions count:
->
-> - *"When three of three beta readers identify the same emotional climax."*
-> - *"When I read chapter five aloud without stopping to fix anything."*
-> - *"When I cannot, on a fresh read, name a structural change I would make."*
->
-> If you cannot write three concrete conditions, your sense of *done* is too vague to ever arrive at. The exercise is the start of having one.
+:::exercise
+**Define "done" for your draft.** Write three specific, observable conditions that would tell you your current draft is shippable.
+
+*Specific* means a beta reader could verify it. *Observable* means it doesn't depend on your mood that day.
+
+Vague conditions don't count: *"when it's good"* is too vague, *"when I'm happy with it"* depends on the day, *"when the chapters all flow"* has no operational meaning.
+
+Concrete conditions count: *"when three of three beta readers identify the same emotional climax"*, *"when I read chapter five aloud without stopping to fix anything"*, *"when I cannot, on a fresh read, name a structural change I would make."*
+
+If you cannot write three concrete conditions, your sense of *done* is too vague to ever arrive at. This exercise is the start of having one.
+:::
+
+:::takeaway
+- Revision has a diminishing returns curve: the first three to five passes do the real work, and the passes after that mostly move words around.
+- Done looks like this: you shuffle commas, you rewrite passages you already approved, and beta readers run out of structural notes.
+- Not done looks like this: you cannot say what the book is about, the ending feels rushed to you, or there is a chapter you avoid re-reading.
+- Trust patterns across beta readers, never individual notes, and solve only the patterns.
+- The most reliable cure for over-revising one book is starting the next one.
+:::
 
 ## Further reading
 

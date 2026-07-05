@@ -16,19 +16,30 @@ Most supporting characters in a novel should be functional. A book with twelve d
 
 The skill is knowing which characters earn the second dimension and which are overstaying their welcome.
 
+:::video i_ZktstkI5s | How to Write a Novel with Multiple Points of View | Heart Breathings
+
 ## The two-trait rule
 
-A supporting character with one trait is cardboard.
+A supporting character with one trait is cardboard. A supporting character with two traits is a person.
 
+:::example side-by-side | The line between cardboard and person
+[One trait]
 The brave knight. The stern father. The wise old woman.
-
-A supporting character with two traits is a person.
-
+[Two traits]
 The brave knight who is also a coward about heights. The stern father who keeps a child's drawing in his coat pocket. The wise old woman who is wrong, sometimes, and likes to be argued with.
+:::
 
 Two specifically *unrelated* traits. *Brave and noble* is one trait pretending to be two. *Brave and afraid of heights* is two, because the reader's mind has to hold a small contradiction.
 
 The rule isn't a recipe. It's a minimum. It is the line between cardboard and person, and it's a line many drafts fall on the wrong side of without the writer noticing.
+
+:::check
+Q: Which supporting character passes the two-trait rule?
+- The loyal bodyguard who is also brave and dependable
+-* The cheerful baker who visits her husband's grave every morning before opening the shop
+- The wise mentor who always knows exactly what the hero needs to hear
+X: Two traits must be unrelated, ideally holding a small contradiction. Cheerful and privately grieving forces the reader's mind to hold both. Loyal-brave-dependable is one trait wearing three names.
+:::
 
 ## The classical roles, used carefully
 
@@ -56,7 +67,9 @@ Two minor characters with overlapping functions are almost always one minor char
 
 When you merge, the character that emerges is usually richer than either of the originals. Combine the mentor and the rival into one figure and you get a much more interesting kind of help: guidance from someone who has their own stake in the outcome. Combine the confidant and the mother and you get a confidant whose advice carries weight she didn't grant herself.
 
+:::quote
 Merging is not a defeat. It's a concentration.
+:::
 
 ## Cardboard demotes the protagonist
 
@@ -68,6 +81,14 @@ The same applies to the antagonist (L3). A real antagonist with cardboard henchm
 
 The fix is not to make every supporting character dimensional. The fix is to make sure that *whichever* supporting characters share the page with your protagonist for any length of time have the second trait. The barista who appears once doesn't need it. The aunt who appears in three scenes does.
 
+:::check
+Q: Two minor characters both exist to feed the protagonist information. What does this lesson recommend?
+- Give each a second trait so they stop feeling like functions
+- Cut both and deliver the information through narration
+-* Merge them into one character, who will usually be richer than either original
+X: Overlapping functions are the merge signal. The merged character keeps the structural job and gains texture, and the reader has one less name to track.
+:::
+
 ## What this gives you
 
 A diagnostic for every secondary character in your draft.
@@ -78,16 +99,25 @@ A practical link to [Module 2's structure lesson](/learn/lesson/architecture-cho
 
 ## Try it
 
-> **Exercise 3.4.1: Cull the cast.** List every supporting character in your premise (M1, Exercise 3.2). For each, answer two questions.
->
-> 1. What is their *function*: the single job they do for the story?
-> 2. What is their *second* trait: the one unrelated to their function that turns them from cardboard into a person?
->
-> If you cannot answer (1), the character is not yet doing work. Cut them, or give them a job.
->
-> If you cannot answer (2), the character is cardboard. Add a second trait, or accept that they're a function-only role and write them sparely (one line, one moment).
->
-> If two characters share the same answer to (1), consider merging them. The character that comes out of the merger will almost always be more interesting than either of the originals.
+:::exercise
+**Cull the cast.** List every supporting character in your premise (M1, Exercise 3.2). For each, answer two questions.
+
+1. What is their *function*: the single job they do for the story?
+2. What is their *second* trait: the one unrelated to their function that turns them from cardboard into a person?
+
+If you cannot answer (1), the character is not yet doing work. Cut them, or give them a job.
+
+If you cannot answer (2), the character is cardboard. Add a second trait, or accept that they're a function-only role and write them sparely (one line, one moment).
+
+If two characters share the same answer to (1), consider merging them. The character that comes out of the merger will almost always be more interesting than either of the originals.
+:::
+
+:::takeaway
+- Most supporting characters should be functional; reserve full dimension for the few who earn it.
+- Two unrelated traits, ideally holding a small contradiction, is the minimum that separates a person from cardboard.
+- Cut any character the story would lose nothing without; merge any two who share a function.
+- Cardboard around a real protagonist demotes the protagonist. Anyone who shares the page for long needs the second trait.
+:::
 
 ## Further reading
 

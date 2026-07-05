@@ -12,11 +12,13 @@ Setting becomes character when the place does *work* in the story that an inert 
 
 It opposes the protagonist. It withholds. It changes when the protagonist changes. It outlasts them.
 
-This is not a vague claim about *the soul of the place*. It is a structural claim. The setting *acts*. The setting *behaves*. You can characterise it the way you characterised people in [Module 3](/learn/lesson/characters-protagonist-wound): through specific events, through what it withholds and gives, through what its temperament is. Loosely; the point isn't that the setting has psychology, only that it has *temperament*.
+This is not a vague claim about *the soul of the place*. It is a structural claim. The setting *acts*. The setting *behaves*. You can characterise it the way you characterised people in [Module 3](/learn/lesson/characters-protagonist-wound): through specific events, through what it withholds and gives, through what its temperament is.
 
 The moors in *Wuthering Heights* have a temperament. Indifferent. Beautiful. Willing to kill you in a storm.
 
-That sentence works because every word in it is concrete. *Indifferent* is the temperament. *Beautiful* is the inclination. *Willing to kill you in a storm* is the specific behaviour. None of the three is *the soul of the place*. All three are observable.
+That sentence works because every word in it is concrete. *Indifferent* is the temperament. *Beautiful* is the inclination. *Willing to kill you in a storm* is the specific behaviour. None of the three is *the soul of the place*; all three are observable.
+
+:::video ATNvOk5rIJA | Lecture 5: Worldbuilding Part One | Brandon Sanderson
 
 ## Setting that opposes
 
@@ -24,9 +26,17 @@ The cleanest case. The setting is the antagonist, or part of it.
 
 The London fog in *Bleak House* is the textbook example. The fog enters every chapter. It slows the law courts. It thickens around the characters at the moments their lives are thickening. It is not a metaphor for the law; it is the law made into something the reader can taste at the back of their throat.
 
-Callback to [Module 3's antagonist lesson](/learn/lesson/characters-antagonist), *system as antagonist*: a setting that opposes is a system with a face the writer is willing to render. The fog is poverty and the courts and the city in concrete form, but rendered as fog: touchable, see-able, breath-able. The system carries the weight; the rendered fog makes it confrontable.
+Callback to [Module 3's antagonist lesson](/learn/lesson/characters-antagonist), *system as antagonist*: a setting that opposes is a system with a face the writer is willing to render. The fog is poverty and the courts and the city rendered as something touchable, see-able, breath-able. The system carries the weight; the fog makes it confrontable.
 
 This is also the test for whether your setting has earned this elevation. *Can you put a finger on what the setting does?* In *Wuthering Heights*: it holds storms; it isolates farms; it kills people who are not careful in winter. In *Bleak House*: it slows the courts; it enters lungs; it hides faces. If you can write three concrete behaviours like these for your setting, the setting is doing character work. If you can't, you have backdrop.
+
+:::check
+Q: What is the test for whether a setting has earned elevation to character status?
+- You can describe its atmosphere for a full page without repeating yourself
+-* You can name three concrete behaviours: things the setting does to the people in it
+- The characters talk about the setting by name in dialogue
+X: Setting becomes character when it acts: storms that kill, fog that slows courts. If you can't list what it does, you have backdrop.
+:::
 
 ## Setting that mirrors
 
@@ -42,19 +52,26 @@ That instability is what saves the technique from cliché.
 
 It works when the weather is *specific* and *unexpected*.
 
-Cliché:
+:::example side-by-side | The same emotional content, two weathers
+[Cliché]
+The storm raged as he walked away.
+[Concrete]
+The wind kept putting the rain into his face from a different angle every time he turned, as if the weather had its own opinions about which way he should go.
+:::
 
-> The storm raged as he walked away.
-
-Concrete:
-
-> The wind kept putting the rain into his face from a different angle every time he turned, as if the weather had its own opinions about which way he should go.
-
-Same emotional content. The first is a generic hand-me-down. The second is a specific weather no other writer has used for this kind of moment. The reader feels the wind; they also feel the writer's attention.
+The first is a generic hand-me-down. The second is a specific weather no other writer has used for this kind of moment. The reader feels the wind; they also feel the writer's attention.
 
 It is cliché when the weather is generic and predictable. Rain at funerals. Sun at weddings. Mist before mysteries. The reader has seen every pairing. The writer has saved themselves the work of choosing a specific weather for *this* moment.
 
 The cure is always the same: pick one weather detail no other writer has used for this kind of moment. Render it concretely. Trust the reader to feel the resonance without your help.
+
+:::check
+Q: Your setting's weather matches your protagonist's mood in every scene. What is the fix?
+- Cut the weather entirely; pathetic fallacy is always cliché
+- Make the weather more dramatic so the mirroring is unmissable
+-* Let the mirror misbehave: agree sometimes, contradict at the worst times, ignore at others
+X: A consistent mirror is wallpaper. Instability is what turns the weather from decoration into a presence.
+:::
 
 ## One perfect detail beats ten generic
 
@@ -76,21 +93,28 @@ The world becomes too detailed for the story to breathe inside it. The reader is
 
 The cure is the load-bearing test: does this detail explain a present-day choice, set up a present-day moment, or carry an emotional weight that affects the protagonist? If yes, keep. If no, cut, even if it is beautiful.
 
-The world is not the point of your novel. *The protagonist's experience of the world* is the point. A world that is bigger than the protagonist drowns them.
+:::quote
+The world is not the point of your novel. The protagonist's experience of the world is.
+:::
+
+A world that is bigger than the protagonist drowns them.
+
+:::video KUjet7Z0S0g | How to Create and Use a Worldbuilding Bible | Ellen Brock
 
 ## Pretentiousness, and the cure
 
 The failure mode of *setting as character* is the abstract claim.
 
-> The city was a being unto itself, alive and watching, the streets a presence the men moved through.
+:::example side-by-side | The city doing character work, twice
+[Abstract claim]
+The city was a being unto itself, alive and watching, the streets a presence the men moved through.
+[Concrete detail]
+On the third day in the city, he noticed that the bus drivers all knew each other's first names, and none of them used his.
+:::
 
-That kind of sentence flatters the writer and bores the reader. It tells the reader what to feel without giving them anything to feel it with.
+The first kind of sentence flatters the writer and bores the reader. It tells the reader what to feel without giving them anything to feel it with.
 
-The cure is concreteness. Replace each abstract claim with one specific detail.
-
-> On the third day in the city, he noticed that the bus drivers all knew each other's first names, and none of them used his.
-
-The city is doing the same character work. It is excluding him; it has its own community he is not part of; it is observing without acknowledging. The second version *shows* what the first version *told*. The reader feels excluded with him; the writer didn't have to say it.
+The cure is concreteness. Replace each abstract claim with one specific detail. The second version *shows* what the first *told*: the city excludes him, has its own community he is not part of, observes without acknowledging. The reader feels excluded with him; the writer didn't have to say it.
 
 This is *show, don't tell* (L1) applied to setting. The same rule, the same cost, the same reward.
 
@@ -104,11 +128,20 @@ The discipline that prevents the elevation from collapsing into purple prose: on
 
 ## Try it
 
-> **Exercise 4.3.1: Two views of the same place.** Identify your story's primary setting. Write 100 words about it from your protagonist's perspective at the *beginning* of the story, and 100 words from their perspective at the *end*. The setting itself hasn't changed; their relationship to it has.
->
-> If the two passages read identically, the setting isn't doing character work yet. Revise: change *the details the protagonist notices* between the two passages. The same room, seen by the same person, after the journey of the novel, contains different things for them. That difference *is* the setting acting as character.
->
-> If the two passages read entirely differently, look for what stayed constant. The thing your protagonist notices in both versions is what the setting *means* to them, and that's the detail you can build the rest of the rendering around.
+:::exercise
+**Exercise 4.3.1: Two views of the same place.** Identify your story's primary setting. Write 100 words about it from your protagonist's perspective at the *beginning* of the story, and 100 words from their perspective at the *end*. The setting itself hasn't changed; their relationship to it has.
+
+If the two passages read identically, the setting isn't doing character work yet. Revise: change *the details the protagonist notices* between the two passages. The same room, seen by the same person after the journey of the novel, contains different things for them. That difference *is* the setting acting as character.
+
+If the two passages read entirely differently, look for what stayed constant. The thing your protagonist notices in both versions is what the setting *means* to them, and that's the detail to build the rest of the rendering around.
+:::
+
+:::takeaway
+- A setting earns character status when it acts: it opposes, withholds, mirrors, and outlasts.
+- The test is three concrete behaviours; if you can't list what the setting does, it's backdrop.
+- Mirrors must misbehave: weather that always agrees with the mood is wallpaper.
+- One perfect, load-bearing detail beats ten generic ones; abstract claims always lose to concrete ones.
+:::
 
 ## Further reading
 

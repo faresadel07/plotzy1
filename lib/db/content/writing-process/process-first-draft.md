@@ -4,7 +4,13 @@ The first draft is for you. Nobody else will ever see it.
 
 Publishers see revised drafts. Agents see polished pages. Beta readers see something further along. The first draft has one reader, and that reader is the writer doing the next pass.
 
-This is liberating. The first draft does not have to be good. It has to *exist*. Existence is the harder problem.
+This is liberating.
+
+:::quote
+The first draft does not have to be good. It has to exist.
+:::
+
+Existence is the harder problem.
 
 ## The two voices
 
@@ -26,6 +32,14 @@ The fix is mechanical:
 - If editor-mode keeps interrupting, set a timer and forbid editing until the timer ends. Twenty-five minutes is enough.
 
 Editor-mode comes back during revision, when it is welcome. The next three lessons are when.
+
+:::check
+Q: Halfway through a drafting session you notice yesterday's chapter opens with a weak paragraph. What does this lesson say to do?
+-* Leave it alone and keep drafting; editing comes back in revision
+- Fix it now, while you can still see the problem clearly
+- Delete the chapter and restart it from the strongest paragraph
+X: Editor-mode running during writer-mode is the most common reason a first draft never finishes. The weak paragraph will still be there in revision, when fixing it is welcome.
+:::
 
 ## The bad first draft is the standard
 
@@ -53,7 +67,17 @@ The number was small. The consistency wasn't.
 
 The habit is not about output. It is about *finishing*. Most novels die at month three because the writer skipped a week, then two weeks, then a month, and never came back. The habit makes the book inevitable. It is not glamorous. Writers' descriptions of their morning routines are mostly identical and mostly boring; that's the point.
 
+:::video E-gTGKdu4uw | How to Win the Marathon of the Middle | Jerry B. Jenkins
+
 If you find yourself negotiating with the count (*I'll do 500 today and 0 tomorrow because I'm tired*) lower the count. The number you do every day is the right number. The number you sometimes hit and sometimes don't is the wrong number, no matter how big.
+
+:::check
+Q: Which daily word count is the right one?
+- The highest number you can hit on a good day
+- A round 1,000, because that is what professionals sustain
+-* The number you hit every single day without negotiating
+X: The habit exists to finish the book, and a target you sometimes miss trains you to skip. The number you do every day is the right number, no matter how small.
+:::
 
 ## Outline vs discovery write
 
@@ -66,6 +90,8 @@ Some writers outline before drafting. Some discover the story by writing it. Bot
 **The hybrid** most professional writers use: a loose outline of major beats (inciting incident, lock-in, midpoint, dark moment, climax, callback to [Module 2, Lesson 1](/learn/lesson/architecture-three-acts)) and discovery writing the scenes between them.
 
 The choice is one of temperament. There is no right answer. The wrong answer is to insist on a method that fights how your mind actually works. A discovery writer trying to outline a fifty-page beat sheet will stall at week two; an outliner trying to discovery-write 80,000 words will produce a directionless mess. Use the method that lets you finish.
+
+:::video 4hp_7e3E7CY | How to Fix a Saggy Middle | Ellen Brock
 
 ## First-draft killers
 
@@ -81,25 +107,29 @@ Four common reasons a first draft dies in progress:
 
 ## What this gives you
 
-The separation of writer-mode and editor-mode.
-
-A daily habit small enough to keep.
-
-The recognition that bad first drafts are the standard, not failure.
-
 Permission, when you need it, to write the worst chapter of your life and continue.
 
 The next lesson is the answer to *now what?*: what you do with the bad first draft you've finished.
 
 ## Try it
 
-> **Exercise 5.2.1: Seven days of small.** Set a daily word count you'd be embarrassed to fail. Two hundred and fifty is fine. Three hundred is better. *Do not pick five hundred unless you know you'll hit it for seven days.*
->
-> Write that count every day for seven days. The goal is not quality. The goal is the habit.
->
-> At the end of the week, you will have between 1,750 and 2,100 words and a much clearer sense of what your daily writing looks like when it isn't optional.
->
-> The writer who produces at this rate for a year produces a novel. The writer who skips three days a week never finishes one.
+:::exercise
+**Exercise 5.2.1: Seven days of small.** Set a daily word count you'd be embarrassed to fail. Two hundred and fifty is fine. Three hundred is better. *Do not pick five hundred unless you know you'll hit it for seven days.*
+
+Write that count every day for seven days. The goal is not quality. The goal is the habit.
+
+At the end of the week, you will have between 1,750 and 2,100 words and a much clearer sense of what your daily writing looks like when it isn't optional.
+
+The writer who produces at this rate for a year produces a novel. The writer who skips three days a week never finishes one.
+:::
+
+:::takeaway
+- Writer-mode generates and editor-mode judges. They cannot run at once, and drafts die when the editor interrupts the writer.
+- Bad first drafts are the standard, not failure. The good comes in revision.
+- Pick a daily word count you cannot fail. Small and sustained beats large and skipped.
+- Outline, discovery write, or hybrid: the right method is whichever one lets you finish.
+- Show the draft to no one until it is complete.
+:::
 
 ## Further reading
 

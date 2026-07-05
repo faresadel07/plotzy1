@@ -12,7 +12,9 @@ On a retailer page or a bookstore shelf, your cover gets noticed (or not) in abo
 
 The conversion rate at each step is brutal. Maybe one in twenty readers who scan past the cover pause on it. Maybe one in three of those click into the page. Maybe one in five of those read the blurb. Maybe one in three of those buy.
 
-The cover does not need to be artistically interesting. It needs to *signal*.
+:::quote
+The cover does not need to be artistically interesting. It needs to signal.
+:::
 
 ## The cover signals genre, tone, and quality
 
@@ -22,7 +24,9 @@ The cover does not need to be artistically interesting. It needs to *signal*.
 
 **Quality.** Readers can tell. Hand-typeset titles, uneven kerning, stock photos with visible compositing seams. None of these are individually fatal. Together they signal *amateur*, and the reader closes the page.
 
-The argument for hiring a designer is not aesthetic; it's economic. The cost of a competent genre-savvy cover is recoverable in five to fifty extra sales over the book's lifetime. The cost of a wrong cover is invisible: the readers who would have bought never saw the book. *I designed it myself* is the most common reason a self-published book underperforms a comparable book that hired a cover.
+The argument for hiring a designer is not aesthetic; it's economic. The cost of a competent genre-savvy cover is recoverable in five to fifty extra sales over the book's lifetime. The cost of a wrong cover is invisible: the readers who would have bought never saw the book.
+
+*I designed it myself* is the most common reason a self-published book underperforms a comparable book that hired a cover.
 
 The Victorians knew this. Cheap fiction in the mid-nineteenth century was bound in coloured boards (yellow, red, green) with each colour and each illustrative style coding genre to the buyer. The signalling system is not new.
 
@@ -42,13 +46,16 @@ A 50-word blurb is harder than a 200-word blurb because the writer has to choose
 
 ## A working blurb
 
-> When a librarian inherits her grandmother's locked attic, she expects three crates of mildewed letters. She finds the answer to a disappearance that her family has been pretending didn't happen for fifty years.
->
-> Reopening the case will cost her the only relative who still speaks to her, and it will mean asking the dead woman a question her family has spent half a century not asking.
->
-> A literary mystery about the lies families keep, and what survives the keeping.
+Here is the structure in action. Tap through the three moves; each is one paragraph of the same 83-word blurb.
 
-Three paragraphs. Eighty-three words.
+:::example click-toggle | One blurb, three moves
+[Hook]
+When a librarian inherits her grandmother's locked attic, she expects three crates of mildewed letters. She finds the answer to a disappearance that her family has been pretending didn't happen for fifty years.
+[Stakes]
+Reopening the case will cost her the only relative who still speaks to her, and it will mean asking the dead woman a question her family has spent half a century not asking.
+[Promise]
+A literary mystery about the lies families keep, and what survives the keeping.
+:::
 
 The hook gives a protagonist (a librarian) and an inciting incident (the inheritance) in two sentences. The reader knows who and what within ten seconds.
 
@@ -56,7 +63,17 @@ The stakes paragraph names what's at risk (*the only relative who still speaks t
 
 The promise paragraph tells the reader what kind of book this is. *A literary mystery about the lies families keep.* Genre + theme + texture. A reader who wants a literary mystery about family secrets buys; a reader who wants a fast-paced thriller doesn't, and that is exactly what the blurb is for. The blurb's job is partly to *exclude* readers who would not be happy with this book.
 
-Most beginner blurbs leak at the third paragraph. They re-summarise the plot instead of naming the kind of book it is. Test: read your third paragraph aloud and ask, *would this make a stranger want to start chapter one?* If it makes them want to know what happens next, the third paragraph is wrong; that is the second paragraph's job. The third paragraph is selling the *experience*.
+Most beginner blurbs leak at the third paragraph. They re-summarise the plot instead of naming the kind of book it is.
+
+Test: read your third paragraph aloud and ask, *would this make a stranger want to start chapter one?* If it makes them want to know what happens next, the third paragraph is wrong; that is the second paragraph's job. The third paragraph is selling the *experience*.
+
+:::check
+Q: Your blurb's final paragraph leaves readers desperate to find out what happens next. According to the lesson, what is wrong?
+- Nothing; making readers want to know what happens is the whole point of a blurb
+-* That pull belongs to the stakes paragraph; the final paragraph should name the kind of experience the book is
+- The final paragraph should reveal the ending so readers can make an informed purchase
+X: The third move is the promise: genre, theme, texture, what the reader will feel. Curiosity about plot is the second paragraph's job. When the third paragraph re-summarises plot, the blurb leaks exactly where beginners' blurbs usually leak.
+:::
 
 ## Metadata: discoverability infrastructure
 
@@ -76,25 +93,33 @@ Test: have a stranger look at your cover for 1.5 seconds, then read your blurb, 
 
 The triad's failure mode is silent. Books with leaking triads don't get bad reviews; they get *no* reviews, because they reach no readers. The diagnostic is invisible without doing the test.
 
-## What this gives you
-
-A 1.5-second frame for cover work.
-
-A 3-paragraph blurb structure with a worked demonstration.
-
-The discipline to treat metadata as infrastructure, not afterthought.
-
-The triad test for catching mismatches before launch.
+:::check
+Q: A book whose cover, blurb, and metadata contradict each other will most likely show which symptom?
+- A wave of angry reviews from readers who feel misled by the cover
+-* Near silence: few sales and almost no reviews, because the book never reaches its readers
+- Strong first-week sales that collapse once word of mouth catches up
+X: The triad's failure mode is silent. A leaking triad doesn't anger readers; it never reaches them, so the book gets no reviews at all. That is why the stranger test has to be run deliberately before launch.
+:::
 
 ## Try it
 
-> **Exercise 6.2.1: Three blurbs in three lengths.** Write three versions of your book's blurb:
->
-> - **200 words.** The full version. Hook, stakes, promise, with room for nuance.
-> - **100 words.** The trimmed version. Each phrase has to do more work.
-> - **50 words.** The hardest version. You will have to cut everything that isn't load-bearing.
->
-> The 50-word version is the most useful. It is what you'd send in an email to a friend asking what your book is about. If you can't make 50 words work, your hook isn't sharp enough. The diagnosis is upstream of the blurb.
+:::exercise
+**Exercise 6.2.1: Three blurbs in three lengths.** Write three versions of your book's blurb:
+
+- **200 words.** The full version. Hook, stakes, promise, with room for nuance.
+- **100 words.** The trimmed version. Each phrase has to do more work.
+- **50 words.** The hardest version. You will have to cut everything that isn't load-bearing.
+
+The 50-word version is the most useful. It is what you'd send in an email to a friend asking what your book is about. If you can't make 50 words work, your hook isn't sharp enough. The diagnosis is upstream of the blurb.
+:::
+
+:::takeaway
+- A cover gets about 1.5 seconds; its job is to signal genre, tone, and quality, not to be art.
+- A blurb is a sales pitch, not a synopsis: hook, stakes, promise, in three paragraphs.
+- The promise paragraph sells the experience and deliberately excludes readers who would not be happy with the book.
+- Metadata (categories, keywords, title, series naming) is infrastructure; do the research once per book, properly.
+- Cover, blurb, and metadata must tell the same genre story; run the stranger test, because the triad fails silently.
+:::
 
 ## Further reading
 

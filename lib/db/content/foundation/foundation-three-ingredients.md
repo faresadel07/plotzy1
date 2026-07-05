@@ -26,6 +26,10 @@ Test for your premise: in one sentence, what does your protagonist *want*?
 
 If you can write the sentence and it's something a reader could feel themselves wanting (even an awful version of it) your character has the foundation to become cared-about. If the sentence is "she wants to find herself" or "he wants to be happy", you don't have a want yet. You have a vague yearning. Vague yearnings don't carry novels.
 
+Novel editor Ellen Brock has a list of the ways manuscripts fail this first test, and it maps almost one-to-one onto everything above.
+
+:::video nTUXlvOzgfg | 7 Reasons Readers Don't Care About Your Characters | Ellen Brock
+
 ## Conflict: a specific want meeting a specific obstacle
 
 Conflict is not "things go badly."
@@ -46,11 +50,21 @@ Test for your premise: in one sentence, what is *specifically* in the protagonis
 
 If the answer is "the world" or "her own demons" you don't have a conflict yet. You have a difficulty. Difficulties don't carry plots. Specific obstacles do.
 
+:::check
+Q: A premise names the obstacle as "her own demons." What does this lesson call that?
+-* A difficulty, not a conflict, because the obstacle isn't specific
+- An internal conflict, the densest and best kind
+- A stacked conflict, internal plus external
+X: Internal obstacles are powerful only when they're as concrete as the want: the pride that won't let her apologise, not "demons." Vague difficulties don't carry plots.
+:::
+
 ## Change: who they were vs. who they become
 
-The reader's payoff comes at the change.
+The reader's payoff comes at the change. The eighty thousand words before it exist to *earn* it.
 
-The eighty thousand words before that exist to *earn* it. A story with no change is a complaint dressed up in scenes.
+:::quote
+A story with no change is a complaint dressed up in scenes.
+:::
 
 Change comes in three flavours.
 
@@ -66,6 +80,14 @@ Test for your premise: in one sentence, who is the protagonist *at the end* that
 
 If you can't answer this without rewriting your premise, the premise isn't broken. It's *unfinished*. The next thing to develop is the change, because the change is what the conflict and the character exist to deliver.
 
+:::check
+Q: The detective solves the murder, but the person on the last page is the same person from the first page. Why do readers feel cheated?
+- The mystery was too easy to solve
+-* The situation changed but the character didn't, so the rehearsal produced nothing
+- The conflict was external when it should have been internal
+X: Readers come for rehearsal in transformation. Solving the case changes the world; if it changes no one, the book delivered events without the thing the events existed to earn.
+:::
+
 ## What the reader actually buys
 
 [Lesson 2](/learn/lesson/foundation-why-people-read) said the reader opens your book for rehearsal in a life they can't otherwise live.
@@ -80,9 +102,18 @@ Knowing this lets you diagnose what's going wrong before the symptom shows. Draf
 
 ## Testing your premise
 
-The exercise on the next screen is the test.
+Here's the whole test run on a book you can read in an evening. Tap through the three ingredients.
 
-Open your 100-word premise from Lesson 3. Don't change a word of it yet. Underneath, write three answers, one sentence each.
+:::example click-toggle | One premise, three ingredients: A Christmas Carol.
+[Character]
+A miser wants to be left alone with his money. Not likeable. But we recognise the wanting: safety, hoarded against a world that once hurt him.
+[Conflict]
+Three spirits who cannot be bargained with, stacked on the obstacle he carries everywhere: his own shut heart.
+[Change]
+The man who wakes on Christmas morning is not the man who counted coins on Christmas Eve. The world is the same. He isn't.
+:::
+
+Now do it to your own premise. Open the 100 words from Lesson 3. Don't change a word of it yet. Underneath, write three answers, one sentence each.
 
 Where each answer is hard to write, you've found the work that needs to happen before you start drafting. Not bad news. Specific news.
 
@@ -103,15 +134,25 @@ But the ingredients are in your hands now. Take them seriously and the architect
 
 ## Try it
 
-> **Exercise 4.1: The premise test.** Take the 100-word premise you wrote in Exercise 3.2. Don't change it yet. Underneath, write three sentences:
->
-> - **Character.** What does the protagonist want, in one sentence? Is it something a reader could feel themselves wanting, even a difficult, awkward, or unsympathetic version of it?
-> - **Conflict.** What is the specific obstacle, in one sentence? Is it another person, a circumstance, the protagonist's own nature, or some combination? Be concrete.
-> - **Change.** Who is the protagonist at the end of the book that they weren't at the start? In one sentence. Internal change, external change, or tragic change.
->
-> If any of the three sentences is hard to write, the premise has a hole. That's good news. You now know what hole to fill before you draft a single page. A book that fails at month three usually fails because one of these three sentences was never written, only assumed.
->
-> Save the answers with the premise. You'll bring all four (premise plus the three sentences) into Module 2.
+:::exercise
+**The premise test.** Take the 100-word premise you wrote in Exercise 3.2. Don't change it yet. Underneath, write three sentences:
+
+- **Character.** What does the protagonist want, in one sentence? Is it something a reader could feel themselves wanting, even a difficult, awkward, or unsympathetic version of it?
+- **Conflict.** What is the specific obstacle, in one sentence? Is it another person, a circumstance, the protagonist's own nature, or some combination? Be concrete.
+- **Change.** Who is the protagonist at the end of the book that they weren't at the start? In one sentence. Internal change, external change, or tragic change.
+
+If any of the three sentences is hard to write, the premise has a hole. That's good news. You now know what hole to fill before you draft a single page. A book that fails at month three usually fails because one of these three sentences was never written, only assumed.
+
+Save the answers with the premise. You'll bring all four (premise plus the three sentences) into Module 2.
+:::
+
+:::takeaway
+- Every story needs a character we can care about, a conflict that won't go away, and a change by the end.
+- Care is not like. Readers care when they recognise the want; adjectives don't earn care, behaviour does.
+- Conflict is a specific want meeting a specific obstacle: another person, a circumstance, the character's own self, or a stack of them.
+- Change can be internal, external, or tragic. Changing the situation without changing the character cheats the reader.
+- Test any premise with three one-sentence answers: what they want, what's specifically in the way, who they become.
+:::
 
 ## Further reading
 

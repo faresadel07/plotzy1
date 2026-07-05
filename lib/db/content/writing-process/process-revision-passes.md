@@ -4,7 +4,13 @@ You cannot fix a draft in one pass.
 
 Structural problems and line-level problems live at different scales. Trying to see both at once is why writers spend three months polishing prose in chapters they will eventually cut.
 
-The cure is sequence. Three passes (structural, scene, line) in that order. The sequence is the lesson; the rest of this module is what you do during each pass.
+The cure is sequence. Three passes, in this order. The sequence is the lesson; the rest of this module is what you do during each pass.
+
+:::checklist
+- Pass 1, structural: does the story work?
+- Pass 2, scene: does every scene earn its place?
+- Pass 3, line: does every sentence earn its words?
+:::
 
 ## Why one pass doesn't work
 
@@ -22,7 +28,13 @@ The cost of running them simultaneously is wasted polish.
 
 A perfectly worded paragraph in a chapter that will be cut is wasted work. Six months of wasted work is how a draft dies in revision.
 
-**Don't fix sentences in chapters you'll cut.** This is the spine of the lesson. Every other thing in this module is downstream of it.
+:::quote
+Don't fix sentences in chapters you'll cut.
+:::
+
+That is the spine of the lesson. Every other thing in this module is downstream of it.
+
+:::video WEFC5Oz_Dco | How to Start Editing Your Novel | Ellen Brock
 
 ## Pass 1: structural
 
@@ -66,6 +78,14 @@ Pass 2 produces scenes that work as scenes, in a manuscript whose structure is a
 
 The prose is *still* not polished. Pass 3 is where polish happens. Resist the urge to polish a sentence you encounter on Pass 2, even when the fix is obvious. A polished sentence in a scene Pass 3 will further revise is not free. It is a draw on the writer's attention budget that should be going to scene-level questions.
 
+:::check
+Q: On Pass 2 you find a clumsy sentence in a scene that clearly has all three ingredients. What do you do?
+- Fix it now; the scene is staying, so the polish will not be wasted
+-* Leave it; sentences belong to Pass 3, and polishing now spends attention Pass 2 needs
+- Cut it; most clumsy sentences are stronger when deleted
+X: Even a safe-looking polish is a draw on the attention budget that Pass 2 needs for scene-level questions. The sentence gets its turn on Pass 3.
+:::
+
 ## Pass 3: line-level
 
 Now, finally, the prose.
@@ -78,6 +98,8 @@ Cut more than you think (callback to [Module 4, Lesson 4](/learn/lesson/world-de
 
 Pass 3 is the polish. It is the smallest of the three passes by what it changes per page; it is the largest by what it requires per minute. Read slowly. Let the ear catch what the eye doesn't.
 
+:::video 8PahOZhRSIw | How to Revise a Novel Step by Step | Abbie Emmons
+
 ## Time between passes
 
 Let the draft cool.
@@ -88,38 +110,49 @@ You cannot revise a draft you can still recite. The mind reads what it expected 
 
 In the cooling period, write something else. Notes for the next book. A short story. Anything that re-engages writer-mode and lets editor-mode rest. The same principle applies between Pass 2 and Pass 3: a week off, even just five days, sharpens the line-level pass.
 
+:::check
+Q: Why does a draft need at least two weeks of cooling before the structural pass?
+- Because the ideas need time to develop on their own
+-* Because you cannot read what is on the page while you can still recite what you meant to write
+- Because structural problems only become visible after beta readers respond
+X: The mind reads what it expected to write, not what is actually there. Time off restores the ability to see the actual page.
+:::
+
 ## Tools for re-seeing
 
 A few mechanical tricks that catch what re-reading on the same screen doesn't:
 
-**Print.** Reading on paper catches different problems than reading on screen.
-
-**Different device.** A tablet, a phone, a friend's laptop, anything that breaks the visual pattern of the original document.
-
-**Reading aloud.** The single most reliable way to catch awkward sentences. If your tongue trips on a sentence, the reader's brain trips on it too.
-
-**Different room.** Sounds trivial; works.
+:::checklist
+- Print it: paper catches different problems than the screen
+- Read on a different device: anything that breaks the visual pattern of the original document
+- Read aloud: if your tongue trips on a sentence, the reader's brain trips on it too
+- Read in a different room: sounds trivial, works
+:::
 
 These are not gimmicks. They exploit the same thing: a manuscript you have stopped seeing because you've been seeing it the same way for months.
 
 ## What this gives you
 
-Three sequential passes (structural, scene, line) in that order, with cooling time between them.
-
-The discipline to *not* fix sentences before you fix structure.
-
-A specific output for each pass.
-
 The next lesson is the *what to check, specifically* version of all three passes: a working checklist with a one-sentence reason for every item.
 
 ## Try it
 
-> **Exercise 5.3.1: Pass 1 only, on one chapter.** Take a chapter from your draft. On a single sheet of paper, write a one-sentence summary of what *each scene* in that chapter does for the story.
->
-> *What does this scene do? In one sentence.*
->
-> If you can write the sentence in plain English, the scene is doing work.
->
-> If you cannot, the scene is not yet earning its place. Mark it. *Don't fix it yet*. Pass 2 is where the fixes live. Pass 1 produces a list, not a rewrite.
->
-> Doing this for one chapter is a fifteen-minute exercise. Doing it for a whole manuscript is the structural pass.
+:::exercise
+**Exercise 5.3.1: Pass 1 only, on one chapter.** Take a chapter from your draft. On a single sheet of paper, write a one-sentence summary of what *each scene* in that chapter does for the story.
+
+*What does this scene do? In one sentence.*
+
+If you can write the sentence in plain English, the scene is doing work.
+
+If you cannot, the scene is not yet earning its place. Mark it. *Don't fix it yet*. Pass 2 is where the fixes live. Pass 1 produces a list, not a rewrite.
+
+Doing this for one chapter is a fifteen-minute exercise. Doing it for a whole manuscript is the structural pass.
+:::
+
+:::takeaway
+- Revise in three passes, structural then scene then line, and never fix sentences in chapters you might cut.
+- Pass 1 reads fast for shape and produces a list of structural changes, not fixes.
+- Pass 2 makes every scene earn its place with want, obstacle, and change; Pass 3 polishes the prose, slowly and aloud.
+- Let the draft cool for at least two weeks between passes; you cannot revise what you can still recite.
+- Re-see the manuscript mechanically: paper, a different device, a different room, reading aloud.
+:::

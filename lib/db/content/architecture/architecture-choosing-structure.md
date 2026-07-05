@@ -18,6 +18,8 @@ A beat sheet is a granular map. It sits underneath either of the first two. Wher
 
 You don't have to choose one and abandon the others. You choose one as your *primary* and let the other two stay available as diagnostics.
 
+:::video eryQEZImm6Y | The Four Types of Novel Writers | Ellen Brock
+
 ## When to default to three acts
 
 Default to three acts when you don't yet know what kind of story you have.
@@ -35,6 +37,14 @@ Coming-of-age stories. Survival narratives where the protagonist is unrecognisab
 The hero's journey will give you the *why* of each beat in a way three acts won't. Three acts tells you the lock-in is at the end of Act 1; the hero's journey tells you the lock-in is the Refusal giving way, and that gives you a reason for what the lock-in *costs* the protagonist. The reasons compound through the book.
 
 A useful test: read your premise once. If the most interesting sentence you can write about the ending is a sentence about how the protagonist has *changed*, the hero's journey is your lens. If the most interesting sentence is about what the protagonist has *done* or *uncovered*, three acts probably is.
+
+:::check
+Q: The most interesting sentence you can write about your ending is "she finally proves who took the money." Which lens does that point to?
+- The hero's journey, because proving it will change her
+-* Three acts, because the engine is what the protagonist does and uncovers
+- Beat sheets, because investigations need tight pacing
+X: The test is where the interest lives. A *done or uncovered* ending points to external events as the engine, which is three-act territory. A *changed* ending would point to the hero's journey.
+:::
 
 ## When to reach for beat sheets
 
@@ -54,7 +64,7 @@ Their engine is *voice*. Or *interiority*. Or a specific obsession the prose kee
 
 Three kinds of book most often live here.
 
-**Literary fiction where the pleasure is the prose.** When the reason a reader is turning the page is the *sentence*, not the *event*, structural maps are the wrong tool. The reader didn't come for what happens next at the right page count. They came for the way this particular writer sees the world. A beat sheet would tell them when to feel what; the prose, when it's working, tells them what to feel.
+**Literary fiction where the pleasure is the prose.** When the reason a reader is turning the page is the *sentence*, not the *event*, structural maps are the wrong tool. The reader came for the way this particular writer sees the world, not for what happens next at the right page count.
 
 **Character studies where the structure is the interiority.** Books in which the events are deliberately small and the meaning is built by the slow accretion of the protagonist's inner life. *Middlemarch* (eight hundred pages of ordinary marriages and ordinary careers) has structure underneath, but it's not the structure. The structure is the slow build of a half-dozen lives crossing each other for years.
 
@@ -66,13 +76,22 @@ This is the most important opinion in this lesson. The structures in this module
 
 ## The danger of force-fitting
 
-The most common beginner mistake is to pick a structure before they've understood what their story is.
+The most common beginner mistake is to pick a structure before they've understood what their story is. The same tool serves two writers very differently depending on which way they point it.
 
-They read about the hero's journey, find it exciting, and try to write a contemporary domestic drama as if it were *The Odyssey*. The result reads as if the writer is wearing a costume that doesn't fit. The protagonist takes a *Call to adventure* that makes no sense in their life. A *Mentor* arrives because the template said one was due. The reader feels the costume and stops believing the book.
+:::example click-toggle | The same tool, pointed two ways
+[Force-fitting]
+The template says a Mentor is due, so a Mentor arrives, even though nothing in the protagonist's life would produce one. A midpoint reversal gets invented because one goes here. The reader feels the costume that doesn't fit, feels the inserted joint, and stops trusting the book.
+[Diagnosing]
+The draft feels slow and the writer doesn't know why. They read it back through a structural lens: which beat is missing, where should the gear have shifted? The sag turns out to be a missing midpoint. The tool found the problem; the story supplies the fix.
+:::
 
-The other version: a writer with a beat sheet treats every beat as a *requirement*. They invent a midpoint reversal because the template said one goes here, even though the story doesn't have one to give. They engineer a *likability beat* the protagonist's actual character would never produce. The reader feels the inserted joint and doesn't trust the rest.
+:::quote
+Structure is descriptive of stories that work. It is not prescriptive of how to make a story work.
+:::
 
-Structure is *descriptive* of stories that work. It is not *prescriptive* of how to make a story work. Use it to diagnose. Use it to plan once you know what you're planning. Do not use it to force.
+Use it to diagnose. Use it to plan once you know what you're planning. Do not use it to force.
+
+:::video v-I9N5LsvPM | How to Plot Your Novel Fast | Ellen Brock
 
 ## How to know which one
 
@@ -84,9 +103,22 @@ Pick up your premise. Read it once, slowly. Ask three questions.
 
 **Three.** Could you tell this story in a fixed page count without losing what makes it interesting?
 
-External events with strong transformation: hero's journey. External events with tight pacing: beat sheets. External events with neither: three acts. Mostly internal change with prose-led attention: none of these. Three acts as a late-draft diagnostic only.
+Then map the answers:
+
+- External events with strong transformation: hero's journey.
+- External events with tight pacing: beat sheets.
+- External events with neither: three acts.
+- Mostly internal change with prose-led attention: none of these. Three acts as a late-draft diagnostic only.
 
 If the answer is unclear, the answer is three acts. It will work for almost any story you can't otherwise classify, and it will hand the diagnostic back to you when you have written enough to know better.
+
+:::check
+Q: Your premise is a quiet character study where the meaning builds through the protagonist's inner life, and the prose is the pleasure. What should structure do for this book?
+- Nothing at all; structural thinking would contaminate it permanently
+- Provide a beat sheet so the interiority lands at the right page counts
+-* Stay out of drafting, then serve as a late-draft check if the book meanders even by its own standards
+X: Prose-led and interiority-led books shouldn't be generated from structural templates, but the diagnostic use survives: three acts as a late check, never as a generative aid.
+:::
 
 ## What this gives you
 
@@ -98,12 +130,22 @@ A framework that will make Module 3 (characters) and Module 4 (world) work toget
 
 ## Try it
 
-> **Exercise 2.4.1: Pick the structure for your book.** Take the premise you wrote at the end of [Module 1, Exercise 3.2](/learn/lesson/foundation-finding-idea). In exactly 100 words, answer two questions:
->
-> 1. Which of the four options (three acts, hero's journey, beat sheets, or none) does your story want? Cite something specific in your premise that points to that answer.
-> 2. What is the *engine* of your book? External events, internal transformation, or pacing? One sentence.
->
-> Save this answer next to the premise. You'll bring both into Module 3, where the engine you named here decides how much of your page count goes to interiority versus action.
+:::exercise
+**Pick the structure for your book.** Take the premise you wrote at the end of [Module 1, Exercise 3.2](/learn/lesson/foundation-finding-idea). In exactly 100 words, answer two questions:
+
+1. Which of the four options (three acts, hero's journey, beat sheets, or none) does your story want? Cite something specific in your premise that points to that answer.
+2. What is the *engine* of your book? External events, internal transformation, or pacing? One sentence.
+
+Save this answer next to the premise. You'll bring both into Module 3, where the engine you named here decides how much of your page count goes to interiority versus action.
+:::
+
+:::takeaway
+- The three lenses are three resolutions of one picture: pick a primary and keep the others as diagnostics.
+- Default to three acts when you don't yet know what kind of story you have; reach for the hero's journey when transformation is the engine; reach for beat sheets when pacing is the contract.
+- Some books run on voice or interiority and want none of these; for them, structure is a late-draft check only.
+- Structure describes stories that work; it does not prescribe how to make a story work. Diagnose and plan with it, never force with it.
+- When in doubt, three acts: it fits almost anything and hands the diagnostic back when you know your book better.
+:::
 
 ## Further reading
 

@@ -4,7 +4,14 @@ She woke up. She made coffee. She went to work.
 
 Three things happened. Not a story.
 
-Try this: she wanted the promotion. Her boss gave it to someone else. She quit and started her own firm.
+Now watch what six more words of want and consequence do to the same morning.
+
+:::example side-by-side | Same woman, same morning. Only one of these is a story.
+[A sequence]
+She woke up. She made coffee. She went to work.
+[A story]
+She wanted the promotion. Her boss gave it to someone else. She quit and started her own firm.
+:::
 
 Eighteen words. That's a story. Small, but complete.
 
@@ -26,7 +33,7 @@ This isn't decoration. This is why prose works at all. When you write a sentence
 
 ## Story, plot, anecdote
 
-Three words people use as if they were synonyms.
+Four words people use as if they were synonyms.
 
 A **plot** is the sequence of events. *The king died, then the queen died.*
 
@@ -37,6 +44,14 @@ Same two events. The "of grief" turns plot into story.
 An **anecdote** is a small story. It has the parts (someone wants something, hits an obstacle, is changed) but it's the size of a paragraph. "Yesterday I dropped my phone and the screen cracked, and now I'm afraid to take it out of my pocket" is an anecdote. It runs in fifteen seconds and still has all three ingredients.
 
 A **vignette** is a moment with no change. The light through the kitchen window. A face on a train. Beautiful, sometimes useful inside a story, never a story by itself.
+
+:::check
+Q: "The king died, and then the queen died of grief." What does "of grief" add that turns the plot into a story?
+- More emotional vocabulary, which makes the sentence more moving
+-* A causal-emotional link between the two events
+- A second character, which raises the stakes
+X: The events are identical in both versions. "Of grief" supplies the cause connecting them, and that causal-emotional structure under the sequence is exactly what "story" means.
+:::
 
 Most beginners write extended anecdotes and call them stories. They have the moments. They have the prose. They have a character. What they don't have is the change: the *because of this, that*. Knowing the difference is the first technical move. You can't fix a problem you can't name.
 
@@ -50,27 +65,47 @@ Two implications for you.
 
 First: the reader will look for pattern in whatever you give them. They cannot help it. Even when nothing in your scene was supposed to mean anything, they'll be hunting. Your job is to make sure the pattern they find is the one you meant.
 
-Second: the reader is hungry for meaning, not events. A twenty-page chapter where nothing means anything will feel longer than a five-page chapter that lands a reckoning. The instinct, when a chapter feels slow, is to add more action. Almost always, the cure is more *consequence*.
+Second: the reader is hungry for meaning, not events. A twenty-page chapter where nothing means anything will feel longer than a five-page chapter that lands a reckoning. The instinct, when a chapter feels slow, is to add more action. Almost always, that instinct is wrong.
+
+:::quote
+The cure is more consequence.
+:::
+
+:::check
+Q: A chapter is beautifully written: light through a window, a face on a train. No one wants anything and nothing changes. What have you got?
+- An anecdote
+-* A vignette
+- A plot without a story
+X: A vignette is a moment with no change. It can be lovely, and it can live inside a story, but on its own it is never one.
+:::
 
 ## What this gives you
 
-A definition: a story is a patterned sequence in which someone wants something, hits an obstacle, and is changed by what happens.
+A definition, and a test for everything you write from now on: sequence, plot, anecdote, vignette, or story?
 
-A way to test what you write. Sequence? Plot? Anecdote? Vignette? Or story?
-
-You'll spend the rest of this course learning to put that pattern in place on purpose. The other ingredients come in Lesson 4. The architecture that lets the pattern hold across a whole book is Module 2.
-
-For now, the definition is enough.
+You'll spend the rest of this course learning to put that pattern in place on purpose. The other ingredients come in Lesson 4. The architecture that lets the pattern hold across a whole book is Module 2. For now, the definition is enough.
 
 ## Try it
 
-> **Exercise 1.1: The 200-word change.** Pick a moment when someone's mind changed about something. Real or invented; yours, a friend's, a stranger's you once watched on a train. Write 200 words *only* about that moment. Skip the lead-up. Skip the aftermath. The mind changing is the whole story.
->
-> 200 words is shorter than you think. You'll have to cut everything that isn't the change itself. That's the exercise.
+:::exercise
+**The 200-word change.** Pick a moment when someone's mind changed about something. Real or invented; yours, a friend's, a stranger's you once watched on a train. Write 200 words *only* about that moment. Skip the lead-up. Skip the aftermath. The mind changing is the whole story.
 
-> **Exercise 1.2: The three sticky stories.** Think of three stories that have stayed with you: books, films, family stories, anything. For each, finish this sentence: "Someone wanted *X*, the obstacle was *Y*, and they ended up *Z*."
->
-> If a story you love is hard to fill in, that's information. It might be a vignette you'd been mistaking for a story. Or it might have a stranger shape than you'd noticed. Either way, useful.
+200 words is shorter than you think. You'll have to cut everything that isn't the change itself. That's the exercise.
+
+When you're done, warm down with three sticky stories. For three stories that have stayed with you (books, films, family stories), finish this sentence: "Someone wanted *X*, the obstacle was *Y*, and they ended up *Z*." If a story you love is hard to fill in, that's information: it may be a vignette you'd been mistaking for a story.
+:::
+
+One more thing before the reading list. Brandon Sanderson teaches a full university course on writing fiction and posts every lecture free. The first one pairs well with this lesson, and the series pairs well with this entire course.
+
+:::video -6HOdHEeosc | Lecture 1: Introduction to Writing Fiction | Brandon Sanderson
+
+:::takeaway
+- A story is a patterned sequence in which someone wants something, hits an obstacle, and is changed by what happens.
+- Plot is the sequence of events; story is the causal-emotional structure underneath it.
+- An anecdote is a tiny story; a vignette is a moment with no change and is never a story by itself.
+- Readers hunt for pattern and meaning in everything you give them; make sure the pattern they find is the one you meant.
+- When a chapter feels slow, the cure is more consequence, not more action.
+:::
 
 ## Further reading
 

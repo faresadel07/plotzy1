@@ -36,6 +36,14 @@ A reader will tolerate slow patches in a story if those patches are teaching the
 
 This is one of the most useful tests for whether a scene is earning its place. After this scene, has the reader learned something they didn't know about being a person? If yes, the scene works even if the prose is plain. If no, no amount of beautiful prose will save it.
 
+:::check
+Q: A quiet scene has no action, but readers keep turning pages anyway. According to this lesson, what is the scene most likely giving them?
+- Beautiful prose that rewards their patience
+-* Something new about how a person works
+- A promise that the action is coming soon
+X: Readers tolerate slow patches that teach them something about being a person. Plain prose passes that test; beautiful prose that teaches nothing does not.
+:::
+
 ## Why genres exist
 
 Each genre is a contract about which hunger the reader brought.
@@ -50,6 +58,14 @@ A **tragedy** reader walked in carrying a loss they don't know how to grieve. Th
 
 When you know which contract your reader signed, you know what they will and won't forgive you for. A mystery without resolution betrays the contract. A romance with no recognition does too. The contracts aren't formulas (within them you have enormous freedom) but breaking them costs you the reader you'd already won.
 
+:::check
+Q: You end your mystery with the case unsolved, because real life is like that. In this lesson's terms, what have you done?
+-* Broken the contract the reader signed when they picked up a mystery
+- Elevated the genre by refusing formula
+- Written a tragedy instead of a mystery
+X: The mystery reader's contract is "something will be solved." You have enormous freedom inside that contract, but an unsolved case betrays the exact hunger the reader brought to the book.
+:::
+
 ## The reader is rooting for you
 
 In Lesson 1 we said the reader will look for pattern in whatever you give them.
@@ -60,25 +76,29 @@ This changes how you write.
 
 Most beginners write as if they're convincing a reluctant reader. They over-explain. They re-state the emotion. They protect against being misunderstood. The result is prose that condescends to a reader who was already on its side.
 
-Your reader showed up. They're holding the book. They want it to work.
+Your reader showed up. They're holding the book. They want it to work. Trust them.
 
-Trust them. Write as if you're being read by someone who's already in.
-
-## What this gives you
-
-A clearer picture of what your reader actually wants from your novel: not events, not even prose, but rehearsal in a life they can't otherwise live.
-
-A test for any scene: does it teach the reader something about how a person works?
-
-A reminder for hard drafting days: your reader is on your side before you've earned them. Don't write down to them. Write up to them.
+:::quote
+Write as if you're being read by someone who's already in.
+:::
 
 ## Try it
 
-> **Exercise 2.1: The book that argued.** Pick a book that changed your view on something: a relationship, a place, a kind of person, an idea. In 250 words, describe what the book did that an argument couldn't.
->
-> Be specific. What was the moment it landed? What did you understand differently after that moment than you'd understood before?
->
-> If you can't think of a book that has done this, that's information too, about what you've been reading and what you might want to read next.
+:::exercise
+**The book that argued.** Pick a book that changed your view on something: a relationship, a place, a kind of person, an idea. In 250 words, describe what the book did that an argument couldn't.
+
+Be specific. What was the moment it landed? What did you understand differently after that moment than you'd understood before?
+
+If you can't think of a book that has done this, that's information too, about what you've been reading and what you might want to read next.
+:::
+
+:::takeaway
+- People read fiction for rehearsal: to feel things and live lives they can't otherwise reach. An argument delivers data; fiction puts the reader inside.
+- Test any scene against one question: has the reader learned something about how a person works?
+- Each genre is a contract about which hunger the reader brought. Break the contract and you lose the reader you'd already won.
+- The reader is rooting for you before you've earned it. Over-explaining condescends to someone already on your side.
+- On hard drafting days: don't write down to your reader. Write up to them.
+:::
 
 ## Further reading
 

@@ -10,25 +10,28 @@ The test is simple. Does this hesitation tell the reader something about the cha
 
 The rest of this lesson is about the harder problems (voice, subtext, attribution) that are downstream of getting that test right.
 
+:::video ecEuw8usnDM | On Writing: Dialogue Basics | Hello Future Me
+
 ## Voice differentiation, demonstrated
 
-Two characters offering the same advice (*take the job offer in another city*) to the same person.
+Two characters offering the same advice (*take the job offer in another city*) to the same person. Toggle between them.
 
-> "You should take it."
->
-> "You don't even like the place. You said it twice."
->
-> "I don't have to like it. You should take it."
+:::example click-toggle | Same advice, same person, two voices
+[Spare and literal]
+"You should take it."
 
-That's the first character. Spare. Literal. Sentences are short. They state things without explaining them. They don't reach for metaphor.
+"You don't even like the place. You said it twice."
 
-> "You've been turning it over for three weeks like a stone in your pocket. Every conversation we've had has had it in the room with us. If you stay here you'll be sitting in this kitchen at fifty wondering whether you'd have been someone else."
->
-> "That's a long way of saying you want me to take it."
->
-> "It's a long way of saying I love you and I can see when you're starving."
+"I don't have to like it. You should take it."
+[Reaching and metaphorical]
+"You've been turning it over for three weeks like a stone in your pocket. Every conversation we've had has had it in the room with us. If you stay here you'll be sitting in this kitchen at fifty wondering whether you'd have been someone else."
 
-Same underlying intent. *I think you should take the job.* Different person.
+"That's a long way of saying you want me to take it."
+
+"It's a long way of saying I love you and I can see when you're starving."
+:::
+
+The first speaker is spare. Literal. Sentences are short. They state things without explaining them and don't reach for metaphor. The second builds images and circles the point. Same underlying intent (*I think you should take the job*). Different person.
 
 If you removed the dialogue tags from a page of dialogue between these two characters, the reader could still tell which one was speaking. That is voice differentiation working.
 
@@ -37,6 +40,14 @@ The principle underneath is one of the central claims of this whole module. A ch
 The trap is differentiation by *quirk*. A character who always says *bloody hell*. A character with a stutter. A character who calls everyone *darling*. Quirks are surface decoration. The reader notices once, files them under *the one with the catchphrase*, and stops noticing. Real voice differentiation is structural: sentence length, what the character avoids, the level of abstraction they reach for, what they do with metaphor.
 
 If your dialogue can be redistributed between characters without changing meaning, voice differentiation isn't working *yet*. The fix isn't usually in the dialogue. It's upstream, in the character work.
+
+:::check
+Q: Two characters in your draft sound identical, even though one is a professor and one is a dockworker. Where does this lesson say the fix usually lives?
+- In their vocabulary: give each a register that matches their education
+- In a distinguishing verbal quirk, like a catchphrase or a stutter
+-* Upstream, in the character work: voice is structural and flows from the wound
+X: Voice tracks to the wound, not to background or decoration. Quirks get filed and forgotten; sentence length, avoidance, and abstraction are what actually differentiate.
+:::
 
 ## Subtext, demonstrated
 
@@ -58,7 +69,9 @@ Most important conversations don't happen on the surface.
 >
 > "It's fine," she said. "I'll get it."
 
+:::quote
 The conversation is about milk. The conversation is not about milk.
+:::
 
 Neither character names what the conversation is *actually* about: the months he hasn't been present, the weight she has been carrying, the question she has stopped asking. The reader feels both layers at once. The surface (a small domestic argument) does the pacing work. The subtext (a marriage going slowly cold) does the emotional work.
 
@@ -66,17 +79,31 @@ For the writer, this is an enormous gift. Surface dialogue can do exposition whi
 
 A more advanced version of the same scene would lean even less on the action beats. A cleaner version might drop the line about the car and the second hand. Different writers will draw the line in different places. The principle is the same: write *around* the thing, not *at* it.
 
-The classic public-domain example is Hemingway's *Hills Like White Elephants*, which entered US public domain in 2023. A couple sits at a station bar talking, and not talking, about a procedure they never name. The whole story is what isn't said. Read it twice. Read it once for what is on the surface. Then read it for what the surface is hiding. The second reading is a better lesson in subtext than any explanation of subtext.
+The classic public-domain example is Hemingway's *Hills Like White Elephants*, which entered US public domain in 2023. A couple sits at a station bar talking, and not talking, about a procedure they never name. The whole story is what isn't said. Read it twice. Once for what is on the surface. Then for what the surface is hiding. The second reading is a better lesson in subtext than any explanation of subtext.
 
 ## Tags, beats, and what to use when
 
 **Tags.** *Said* and *asked* are invisible. They do their job and disappear. *Whispered, muttered, exclaimed, growled*: used sparingly. Once or twice per scene, when the manner of speaking matters and isn't visible from the words alone.
 
-The beginner's instinct is to vary the tags for fear of repetition. *He said. She replied. He answered. She responded. He stated.* The reader's eye trips on every variation; the eye does not trip on *said*. Use *said* almost always. If you find a chapter where *said* feels too repetitive, the problem is usually not the tag. It's that the dialogue is too thin to sustain the page count.
+The beginner's instinct is to vary the tags for fear of repetition. *He said. She replied. He answered. She responded. He stated.* The reader's eye trips on every variation; the eye does not trip on *said*. If a chapter's *said* feels too repetitive, the problem is usually not the tag. It's that the dialogue is too thin to sustain the page count.
 
 **Action beats.** Physical movement that breaks dialogue and signals who is speaking. *She set the cup down. "I don't think you mean that."* These do triple duty: attribution, pacing, character. Most beats are better than most non-said tags.
 
-The general rule. *Said* by default. An action beat when a tag would be a missed opportunity. A non-said tag only when nothing else will carry the weight.
+The general rule:
+
+- *Said* by default.
+- An action beat when a tag would be a missed opportunity.
+- A non-said tag only when nothing else will carry the weight.
+
+:::video -e5Y2yH7RhQ | Dialogue Mistakes New Writers Make | Abbie Emmons
+
+:::check
+Q: A critique partner flags that "said" appears forty times in your chapter and suggests varying the tags. What does this lesson say?
+- They're right: rotate in replied, answered, and responded to rest the reader's eye
+- Replace every tag with an action beat so attribution disappears entirely
+-* Said is invisible; if the chapter feels repetitive, the dialogue itself is probably too thin
+X: The eye trips on tag variation, not on said. When said seems to grate, the underlying dialogue usually isn't doing enough work to sustain the page count.
+:::
 
 ## When to write the long monologue, and when to cut it
 
@@ -100,17 +127,27 @@ The next module builds the *world* this dialogue happens inside. A line of dialo
 
 ## Try it
 
-> **Exercise 3.5.1: Subtext under pressure.** Write a one-page conversation between your protagonist and your antagonist (from [L3](/learn/lesson/characters-antagonist)) in which neither says what they actually mean. The reader should be able to feel what each really wants. Neither character should *voice* it directly.
->
-> Constraints:
->
-> - At least eight exchanges.
-> - At least one action beat per character.
-> - No internal monologue. No narration explaining what they really feel. The reader gets only what is on the page: words and action.
->
-> If you can do this once, you have done one of the hardest things in fiction. If your draft reads as on-the-nose (each character voicing their actual want), revise once: cut the line where they say it directly and let the surrounding lines bear the weight.
->
-> The first attempt will probably feel awkward. That's the exercise. Subtext is a muscle; you build it by writing scenes that need it.
+:::exercise
+**Subtext under pressure.** Write a one-page conversation between your protagonist and your antagonist (from [L3](/learn/lesson/characters-antagonist)) in which neither says what they actually mean. The reader should be able to feel what each really wants. Neither character should *voice* it directly.
+
+Constraints:
+
+- At least eight exchanges.
+- At least one action beat per character.
+- No internal monologue. No narration explaining what they really feel. The reader gets only what is on the page: words and action.
+
+If you can do this once, you have done one of the hardest things in fiction. If your draft reads as on-the-nose (each character voicing their actual want), revise once: cut the line where they say it directly and let the surrounding lines bear the weight.
+
+The first attempt will probably feel awkward. That's the exercise. Subtext is a muscle; you build it by writing scenes that need it.
+:::
+
+:::takeaway
+- Fictional dialogue strips the throat-clearing of real speech and keeps only the imperfections that signal state.
+- Voice differentiation is structural (sentence length, avoidance, abstraction, metaphor) and flows from the wound, not from quirks.
+- Let the surface of a conversation do the pacing while the subtext does the meaning: write around the thing, not at it.
+- Use said by default, action beats when they add character, non-said tags only when nothing else carries the weight.
+- A long monologue must do something only a monologue can do; exposition in quotation marks is not it.
+:::
 
 ## Further reading
 

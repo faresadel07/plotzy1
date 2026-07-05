@@ -8,9 +8,11 @@ This lesson teaches you to use the tool deliberately.
 
 ## What a beat is
 
-A beat is the smallest unit of structural intent. Larger than a scene. Smaller than an act.
+:::quote
+A beat is the smallest unit of structural intent.
+:::
 
-A beat asks one question: *what emotional shift has to happen at this point in the story for the next part to make sense?*
+Larger than a scene. Smaller than an act. A beat asks one question: *what emotional shift has to happen at this point in the story for the next part to make sense?*
 
 The dark moment from [Lesson 1](/learn/lesson/architecture-three-acts) is a beat. The Refusal of the Call from [Lesson 2](/learn/lesson/architecture-heros-journey) is a beat. A beat sheet is what you get when you tile beats wall-to-wall through a story instead of leaving gaps between them.
 
@@ -22,6 +24,8 @@ Once you know that the *likability beat* (the moment the audience decides they'r
 
 The appeal is precision. Where the three-act structure tells you "your inciting incident lands in Act 1," a beat sheet tells you "around page twelve of a hundred-and-ten-page screenplay." For commercial fiction and screenwriting, that level of precision is genuinely useful. For other kinds of writing, it isn't. We'll get to which is which.
 
+:::video woMYSyOsB6M | How to Plot Your Novel Using Brain Science | Abbie Emmons
+
 ## The likability beat
 
 One specific beat is worth pulling out, because it's the most useful single lesson from this lens.
@@ -32,9 +36,15 @@ Sometimes this is a small kindness shown to a stranger. Sometimes it's a flash o
 
 The mechanism: a reader's investment is fragile in the first thirty pages. If the protagonist hasn't done *something* the reader can latch onto, emotionally and not just narratively, the reader will quietly stop turning pages. They won't be able to articulate why. They'll just have stopped.
 
-Knowing this is a beat to engineer, not a thing that happens accidentally, is half the battle. The other half is making the beat feel like an organic moment rather than a manoeuvre.
+Knowing this is a beat to engineer, not a thing that happens accidentally, is half the battle. The other half is making the beat feel like an organic moment rather than a manoeuvre. This is one of the most useful generic beats to internalise even if you never write a full beat sheet for a book.
 
-This is one of the most useful generic beats to internalise even if you never write a full beat sheet for a book.
+:::check
+Q: What is the likability beat actually engineering?
+- The reader's affection for the protagonist
+-* The reader's investment in what happens to the protagonist next
+- The protagonist's first victory over the obstacle
+X: The beat isn't about being liked. It's the moment the reader stops asking why they're reading about this person and starts asking what happens to them next.
+:::
 
 ## Where beat sheets earn their keep
 
@@ -66,6 +76,14 @@ If any heading could be lifted into someone else's outline without sounding wron
 
 A beat sheet built this way is yours. A beat sheet built by following someone else's template is an audition for the writer who wrote the template.
 
+:::check
+Q: Which beat heading belongs on a beat sheet worth keeping?
+- "The midpoint reversal"
+- "The all-is-lost moment"
+-* "The first time she lies to her sister"
+X: If a heading could be lifted into someone else's outline without sounding wrong, it's too generic. A beat sheet earns its keep when every beat is specific to your book.
+:::
+
 ## What this gives you
 
 A way to think about emotional pacing at higher resolution than acts.
@@ -76,11 +94,21 @@ The freedom to *not* use this tool. Beat sheets are for writers whose minds work
 
 ## Try it
 
-> **Exercise 2.3.1: Build your own beat sheet.** Take the premise you wrote in [Module 1, Exercise 3.2](/learn/lesson/foundation-finding-idea). Sketch the eight to ten beats your story needs.
->
-> Constraint: do not look up an existing beat sheet template. Derive the beats from what your specific story actually needs at each emotional checkpoint. Use headings from your own intuition: *the moment we stop trusting the narrator*. *The morning after the betrayal*. *The choice that can't be undone*. The headings should be specific to your book; if any of them could be lifted into someone else's outline without sounding wrong, that beat is too generic.
->
-> Then, beside each beat, write its approximate page placement (e.g. *page 30 of a 250-page book*). If your beats clump near the start or end with nothing in the middle, you've found the saggy section the next draft will need to fix.
+:::exercise
+**Build your own beat sheet.** Take the premise you wrote in [Module 1, Exercise 3.2](/learn/lesson/foundation-finding-idea). Sketch the eight to ten beats your story needs.
+
+Constraint: do not look up an existing beat sheet template. Derive the beats from what your specific story actually needs at each emotional checkpoint. Use headings from your own intuition: *the moment we stop trusting the narrator*. *The morning after the betrayal*. *The choice that can't be undone*. The headings should be specific to your book; if any of them could be lifted into someone else's outline without sounding wrong, that beat is too generic.
+
+Then, beside each beat, write its approximate page placement (e.g. *page 30 of a 250-page book*). If your beats clump near the start or end with nothing in the middle, you've found the saggy section the next draft will need to fix.
+:::
+
+:::takeaway
+- A beat is an emotional checkpoint: the shift that has to happen here for the next part to make sense.
+- Beat sheets come from screenwriting, where page count maps to runtime and pacing is engineered minute by minute.
+- The likability beat, landing in the first thirty pages, is the moment the reader becomes invested rather than merely tolerant.
+- Beat sheets earn their keep in commercial fiction, screenwriting, and diagnosing slow drafts; they fail in prose-led and interiority-led books.
+- Derive your own beats from your specific story; a borrowed template produces an audition for its author.
+:::
 
 ## Further reading
 

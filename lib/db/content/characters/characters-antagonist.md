@@ -14,7 +14,11 @@ Most are people whose want collides with the protagonist's. The cousin who inher
 
 Mr. Wickham, in *Pride and Prejudice*, is an antagonist. Not a villain. He is charming, self-interested, and not especially cruel. He works as Elizabeth's antagonist because his want (a comfortable life) is in direct contradiction with hers (to be seen accurately). His method (deception) is a thing she has to learn to read. By the end of the novel, having read him, she is more capable than she was. The antagonist made the protagonist.
 
-A villain is a moral problem. An antagonist is a structural problem with the protagonist's path. They need different tools. The instinct to write a villain when an antagonist would do (to make the opposition *evil* rather than *opposed*) flattens the conflict. Now there is only one side to the argument.
+:::quote
+A villain is a moral problem. An antagonist is a structural problem with the protagonist's path.
+:::
+
+They need different tools. The instinct to write a villain when an antagonist would do (to make the opposition *evil* rather than *opposed*) flattens the conflict. Now there is only one side to the argument.
 
 ## Mirror the protagonist's framework
 
@@ -30,6 +34,14 @@ The closer your antagonist's wound and want come to *paralleling* your protagoni
 
 When you've done this work properly, you have two characters with parallel architecture moving toward each other. Their collision *is* the plot.
 
+:::check
+Q: What makes an antagonist dangerous, in this lesson's terms?
+- A want the reader cannot understand or predict
+- A moral code the reader recognises as evil
+-* A wound and want that closely parallel the protagonist's
+X: The strongest antagonists could have been the protagonist of a different book. Parallel architecture means the collision between the two characters is the plot itself.
+:::
+
 ## They think they're the hero
 
 The line gets quoted to death because it's true. Most people in conflict believe themselves justified. The antagonist who can be made to articulate that justification, out loud, in their own voice, without authorial irony, is the antagonist who can carry a novel.
@@ -41,6 +53,8 @@ The exercise at the end of this lesson is the practical version. Write a paragra
 If you can't, your antagonist isn't ready. They are not a person yet. They are a function.
 
 If you can, read the paragraph once and ask whether your *protagonist's* want, in light of what the antagonist just said, still feels worth a novel. If yes, your conflict is real. If no, that's information about which of the two characters needs more work.
+
+:::video PdP-QFPQBPE | Examples of the Negative Character Arc | Abbie Emmons
 
 ## When evil is the right choice
 
@@ -61,6 +75,14 @@ Genuine evil fails as a choice when:
 - It's used to avoid character work. When a writer hasn't built the antagonist's wound, declaring them *evil* is the costume that hides the absence.
 
 Default to humanising. Reach for evil only when the story's scale, scope, and atmosphere can hold it.
+
+:::check
+Q: You are writing a quiet domestic novel about a failing marriage. Your antagonist is the protagonist's mother-in-law. Which approach does this lesson recommend?
+-* Build her a comprehensible wound and want, because evil at intimate scale reads as melodrama
+- Make her genuinely evil, because a small cast needs a strong moral centre of gravity
+- Keep her motives inexplicable so the reader feels the protagonist's confusion
+X: Genuine evil needs mythic scale and distance. In a small room, opposition needs a wound the reader can comprehend, or the conflict flattens into melodrama.
+:::
 
 ## The system as antagonist
 
@@ -84,13 +106,22 @@ A clearer picture of what the conflict ingredient from M1 L4 looks like at full 
 
 ## Try it
 
-> **Exercise 3.3.1: The antagonist's case.** Take your antagonist. Write a single paragraph from their point of view, sympathetic to themselves, in which they explain why they are *right*.
->
-> No irony. No authorial commentary. No adjectives that tell the reader what to think. Just the antagonist talking, in their own voice, making their case.
->
-> If you cannot write the paragraph, your antagonist isn't ready. You have a function, not a person.
->
-> If you can, read it once and ask: in light of what the antagonist just said, does my protagonist's want still feel worth a novel? If yes, the conflict is in good shape. If no, that's information about which of the two characters needs more work.
+:::exercise
+**The antagonist's case.** Take your antagonist. Write a single paragraph from their point of view, sympathetic to themselves, in which they explain why they are *right*.
+
+No irony. No authorial commentary. No adjectives that tell the reader what to think. Just the antagonist talking, in their own voice, making their case.
+
+If you cannot write the paragraph, your antagonist isn't ready. You have a function, not a person.
+
+If you can, read it once and ask: in light of what the antagonist just said, does my protagonist's want still feel worth a novel? If yes, the conflict is in good shape. If no, that's information about which of the two characters needs more work.
+:::
+
+:::takeaway
+- An antagonist opposes; a villain is evil. Most stories need opposition, not evil.
+- Give the antagonist the same architecture as the protagonist: wound, want, need. Parallel architecture makes the collision the plot.
+- Your antagonist must be able to explain, in their own voice and without irony, why they are right.
+- Genuine evil is earned only at mythic scale and held distance. Systems as antagonists still need a human face.
+:::
 
 ## Further reading
 

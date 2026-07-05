@@ -4,7 +4,11 @@ Most beginners think the hard part is *getting* the idea.
 
 The hard part is recognising which of your ideas can carry a book.
 
-Lightning never strikes the prepared. The prepared write down ten "what ifs" a day for a year and at the end of the year they have one premise worth eighteen months of their life. The unprepared sit in a chair waiting for a different storm.
+:::quote
+Lightning never strikes the prepared.
+:::
+
+The prepared write down ten "what ifs" a day for a year and at the end of the year they have one premise worth eighteen months of their life. The unprepared sit in a chair waiting for a different storm.
 
 This lesson is about getting prepared.
 
@@ -42,6 +46,10 @@ You cannot fake-care for eighty thousand words.
 
 Mine the obsession. Even if the obsession itself doesn't become the book, the *energy* of it will be what carries you to the end.
 
+Tale Foundry makes the same argument from the other direction: the story you should be writing is usually the one that has been following you around for years.
+
+:::video TwOItYgUvPA | The Story You Should Be Writing | Tale Foundry
+
 ## The intersection method
 
 Take two of your interests that have nothing to do with each other. Put them in the same room.
@@ -56,15 +64,28 @@ The intersection method works because it forces specificity. "A novel about grie
 
 When you can't find an idea, this is one of the fastest ways out. Write down five things you know more about than most people. Pair them up at random. Look at each pair for ninety seconds. One of them will not let you go.
 
+:::check
+Q: "Two robots fall in love" has been written hundreds of times. According to this lesson, what would make the next version original?
+- Waiting until you find an angle on it nobody has tried before
+-* The execution: the voice, the specific people, the exact thing they discover at the worst moment
+- Adding a twist ending that reverses the reader's expectations
+X: Originality at the idea level is overrated. Execution is where every novelist spends their actual currency, which is why ten thousand "two stubborn people misjudge each other" stories still left room for Pride and Prejudice.
+:::
+
 ## Ideas vs. premises
 
 You cannot write from an idea. You can write from a *premise*.
 
-An **idea** is a kernel. *A man builds a robot.*
+An **idea** is a kernel. A **premise** is the kernel turned into a situation.
 
-A **premise** is the kernel turned into a situation. *A grieving engineer builds a robot to keep his dead daughter company. The robot, after a year, starts to ask why she is never coming back.*
+:::example side-by-side | Same kernel. Only one of these can start a first sentence.
+[Idea]
+A man builds a robot.
+[Premise]
+A grieving engineer builds a robot to keep his dead daughter company. The robot, after a year, starts to ask why she is never coming back.
+:::
 
-Same kernel. The premise has a specific person, a specific situation, a specific tension. It has somewhere to start a first sentence that wouldn't be the same if the engineer were a chemist or the daughter were a wife.
+The premise has a specific person, a specific situation, a specific tension. It has somewhere to start a first sentence that wouldn't be the same if the engineer were a chemist or the daughter were a wife.
 
 The translation step, from idea to premise, is what most beginners skip. They sit down to write *the robot novel* and discover, two scenes in, that they don't know whose novel it is. Of course they don't. They're trying to write a kernel.
 
@@ -82,31 +103,39 @@ A premise can be the right size for a chapter and the wrong size for a book.
 
 If you can't tell the size of your premise, write it in one sentence. If the sentence has more than two proper nouns or more than three "and"s, the premise is probably bigger than your first book wants to be. Cut.
 
-## What this gives you
+:::check
+Q: "A woman gets stuck in traffic" is too small to carry anything. What is the lesson's fix?
+- Add more incidents along the journey so the plot thickens
+-* Give her something at stake at the destination
+- Widen the canvas with more characters and a longer time span
+X: Size comes from stakes, not from more events. Traffic on the way to her father's last hour turns the same premise into a want meeting an obstacle.
+:::
 
-You generate ideas by writing "what ifs" in volume, not by waiting for the right one.
+Before you run the machine yourself, watch a professional filter at work. Ellen Brock is a freelance novel editor, and her checklist for telling a workable idea from a doomed one covers the same ground as this lesson from the editor's side of the desk.
 
-You filter them by mining your obsessions for the ones you actually have energy for.
-
-You translate the survivor into a premise (kernel + character + situation + tension) because that's what you can actually write from.
-
-You check the size of the premise before you start.
-
-The exercise that follows is the whole machine in one sitting.
+:::video xnXkCTUfkKM | How to Tell If Your Novel Idea is a Good Idea | Ellen Brock
 
 ## Try it
 
-> **Exercise 3.1: Ten what-ifs in fifteen minutes.** Set a timer. Write ten "what if?" questions. Out loud, in a notebook, in any document. Only the ten matter, not where they live.
->
-> Rules: no editing, no filtering, no deleting. Some will be embarrassing. Some will be derivative. Some will be small. None of that matters now. The skill you are practising is volume; you cannot select for quality without quantity to choose from.
+The exercise that follows is the whole machine in one sitting: generate in volume, pick the survivor, translate it into a premise.
 
-> **Exercise 3.2: The 100-word premise.** Look at your ten what-ifs.
->
-> Pick the one you would most want to read.
->
-> In exactly 100 words, expand it into a premise. Cover four things: who is the central character (not just their job, but what they want), what specifically is in the way, what the central question of the book will be, and what time-frame the story will span.
->
-> Save this premise. You will bring it into Lesson 4 to test it against the three ingredients, and you will keep returning to it across the next twenty-four lessons. This is your book.
+:::exercise
+**Ten what-ifs, one premise.** Set a timer for fifteen minutes and write ten "what if?" questions. No editing, no filtering, no deleting. Some will be embarrassing, some derivative, some small. None of that matters now; you cannot select for quality without quantity to choose from.
+
+Then look at your ten. Pick the one you would most want to read.
+
+In exactly 100 words, expand it into a premise. Cover four things: who the central character is (not just their job, but what they want), what specifically is in the way, what the central question of the book will be, and what time-frame the story will span.
+
+Save this premise. You will bring it into Lesson 4 to test it against the three ingredients, and you will keep returning to it across the next twenty-four lessons. This is your book.
+:::
+
+:::takeaway
+- Originality lives in execution, not in the idea. Stop waiting for the lightning bolt.
+- "What if?" is the right shape for an idea because it forces a change into the premise.
+- Mine your obsessions: you cannot fake-care for eighty thousand words.
+- You can't write from an idea, only from a premise: kernel plus character plus situation plus tension.
+- Right-size a first book: one major character, one major question, six to twenty-four months of fictional time.
+:::
 
 ## Further reading
 

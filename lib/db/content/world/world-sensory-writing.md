@@ -6,17 +6,24 @@ Open a beginner's draft to a random scene and count the senses engaged. Almost a
 
 The reader, however, lives in five senses. A scene that engages only one feels *flat* even when the prose is good. The reader doesn't know why. They just close the book sooner than they meant to.
 
-This lesson is about the technique that fixes the flatness. It demonstrates the technique before naming it.
+This lesson is the technique that fixes the flatness, demonstrated before it is named.
 
 ## A four-sense paragraph
 
-> The kitchen was warm. The radiator was ticking; butter on the counter had begun to soften; there was a faint sweetness from the windowsill where she had left strawberries to ripen the day before. From the stairs, two floors above, he could hear his mother walking, her step uneven in one shoe.
+:::example side-by-side | One sense against four
+[Flat]
+The kitchen was warm and yellow. There was butter on the counter and a bowl of strawberries on the windowsill. It looked like a comfortable room.
+[Through the senses]
+The kitchen was warm. The radiator was ticking; butter on the counter had begun to soften; there was a faint sweetness from the windowsill where she had left strawberries to ripen the day before. From the stairs, two floors above, he could hear his mother walking, her step uneven in one shoe.
+:::
 
-Sixty-three words. Touch (warm). Sound (the ticking, the uneven step). Smell (the sweetness). Sight (the butter, the strawberries). The reader is in the kitchen.
+Both versions have the same furniture. Only one has presence. Sixty-three words in the second: touch (warm), sound (the ticking, the uneven step), smell (the sweetness), sight (the butter, the strawberries). The reader is in the kitchen.
 
 A paragraph that does this isn't longer than a paragraph that doesn't; it's *denser*. Every sense is delivered in a single phrase. *A faint sweetness from the windowsill.* Eight words. That's the entire smell.
 
 The principle that follows is the rest of the lesson. Engaged senses don't have to dominate. A single phrase per sense is enough, sometimes more than enough.
+
+:::video qMSYAxJeCu4 | Writing Vivid Descriptions and When to Shut Up | Quotidian Writer
 
 ## Smell: the fastest emotional trigger
 
@@ -38,7 +45,7 @@ The trick is to use sound as a *frame*: not as something the protagonist conscio
 
 > Outside, a car passed and the windows shook a little. She watched the second hand move on the clock above the stove.
 
-Two sentences. A motorised sound and a mechanical one. (The clock is implied; clocks don't usually click in a way the reader hears, but they often *seem* to in a quiet kitchen.) The reader has the room.
+Two sentences, and the reader has the room.
 
 Sound is also how a writer signals time of day, weather, and mood without describing them directly. *The kitchen was warm and the only sound was the kettle starting to sing* places the reader in early morning, somewhere domestic, where someone has just begun their day. Three pieces of information from one sound.
 
@@ -66,11 +73,23 @@ Every important scene needs at least two distinct senses engaged.
 
 *Important* means the scene is being *shown*, not told (callback to [L1](/learn/lesson/world-show-dont-tell)). Telling-scenes don't need this rule; they're moving past the moment, not rendering it.
 
-The rule is a floor, not a ceiling. Most scenes won't need five senses; many will work brilliantly with two well-chosen ones (sight + sound, sight + smell, sight + touch).
+The rule is a floor, not a ceiling. Most scenes won't need five senses; many will work brilliantly with two well-chosen ones.
 
-In revision, scan for shown scenes engaging only one sense. Add one sense (a single phrase) and watch the scene gain weight. The phrase rarely costs more than a few words. The gain in immersion is disproportionate.
+In revision, scan for shown scenes engaging only one sense. Add one sense, a single phrase, and watch the scene gain weight. The cost is a few words; the gain in immersion is disproportionate.
 
-There is a deeper principle underneath. Sensory choices rise from the same place as voice: what a character notices is downstream of what they protect (callback to [Module 3 on dialogue](/learn/lesson/characters-dialogue)). A character who notices the radiator first has different interior architecture from a character who notices the chip in the counter first. Sensory writing is character work in a different costume.
+There is a deeper principle underneath. Sensory choices rise from the same place as voice: what a character notices is downstream of what they protect (callback to [Module 3 on dialogue](/learn/lesson/characters-dialogue)). A character who notices the radiator first has different interior architecture from a character who notices the chip in the counter first.
+
+:::quote
+Sensory writing is character work in a different costume.
+:::
+
+:::check
+Q: Where does the two-sense rule apply?
+- To every scene in the novel, told or shown
+-* Only to scenes being shown; telling moves past the moment instead of rendering it
+- Only to scenes involving food, weather, or physical action
+X: The rule is a floor for rendered moments. Summary doesn't need sensory density because it isn't asking the reader to inhabit the moment.
+:::
 
 ## What this gives you
 
@@ -84,11 +103,20 @@ The next lesson elevates the *world* itself from background to character. Sensor
 
 ## Try it
 
-> **Exercise 4.2.1: Mark and supplement.** Take a scene you've written, one that's *shown*, not told. With a marker, highlight every sensory detail. Note the sense beside it: V, S (sound), T (touch), Sm (smell), Ta (taste).
->
-> Identify which senses are missing. Pick the one that would matter most for *this* scene (*what's the smell of this room? what sound is at the edge?*) and add it. A single phrase.
->
-> Compare the two versions. The added phrase usually doubles the scene's grip on the reader without adding to its length by more than five percent. That ratio is the lesson.
+:::exercise
+**Exercise 4.2.1: Mark and supplement.** Take a scene you've written, one that's *shown*, not told. With a marker, highlight every sensory detail. Note the sense beside it: V, S (sound), T (touch), Sm (smell), Ta (taste).
+
+Identify which senses are missing. Pick the one that would matter most for *this* scene (*what's the smell of this room? what sound is at the edge?*) and add it. A single phrase.
+
+Compare the two versions. The added phrase usually doubles the scene's grip on the reader while adding almost nothing to its length. That ratio is the lesson.
+:::
+
+:::takeaway
+- Beginner drafts default to vision; the flat feeling comes from four unused senses.
+- One phrase per sense is enough: sensory writing is density, not length.
+- Smell lands subtext fastest, sound builds atmosphere, touch puts the reader in the body, taste does memory work.
+- Every shown scene needs at least two distinct senses; told scenes are exempt.
+:::
 
 ## Further reading
 

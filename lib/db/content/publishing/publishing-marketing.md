@@ -14,13 +14,25 @@ This is not pessimism. It is the math. You have not yet built the conditions in 
 
 The fix is not *more marketing*. The fix is *honest marketing*: the small list of things that actually work for a first book, plus a frame that values consistency over one big launch.
 
+:::video IX6LggnkxG8 | How to Publish a Book, 45 Years of Experience | Jerry B. Jenkins
+
 ## Three honest tactics
 
 **The newsletter announcement.**
 
 Your list (Lesson 3) is the highest-converting audience you'll ever have. A pre-launch sequence (three to five emails over the weeks before publication) converts at rates that paid advertising cannot match. Without a list, this tactic doesn't exist; with one, it is the foundation of every honest launch.
 
-The sequence: announce the cover, share an excerpt, give the launch date, ask for pre-orders, send on launch day. Each email lands with people who already opted in. The conversion is not extraordinary; the audience pre-sorted itself.
+The sequence:
+
+:::checklist
+- Announce the cover
+- Share an excerpt
+- Give the launch date
+- Ask for pre-orders
+- Send the launch-day email
+:::
+
+Each email lands with people who already opted in. The conversion is not extraordinary; the audience pre-sorted itself.
 
 **Asking for reviews, directly, from readers you respect.**
 
@@ -54,13 +66,23 @@ Twelve guest posts on twelve writing blogs over launch week. Each blog has a tin
 
 Blog tours used to work, in the era when blog audiences were larger and writing blogs were the centre of the conversation. They mostly don't now. The exception: if the blog has a substantial audience in *your specific genre*, the post might be worth the effort. Most blogs do not.
 
+:::check
+Q: Why do paid ads usually fail at book 1?
+- Ad platforms give unknown authors worse placement than established names
+-* The writer has no retargeting data or conversion infrastructure, so the spend can't be measured or amplified and usually exceeds the royalties it earns
+- Readers distrust advertised books and prefer organic recommendations
+X: Ads work when there is data to target with and infrastructure to convert through. A first-time author has neither, which is why ads become useful around book 3, after the audience and the data exist for ads to amplify.
+:::
+
 ## The thread connecting the three failures
 
 Each of the three tactics that don't work treats *strangers* as the launch audience.
 
 Strangers convert poorly. The honest tactics treat *readers who already know you* as the launch audience. Two of them (newsletter, genre-community presence) are about deepening relationships you already have; one (asking beta readers for reviews) is about cashing in on relationships you've already built.
 
+:::quote
 The marketing that works at book 1 is the marketing of relationships, not the marketing of reach.
+:::
 
 ## The won't-do list matters more than the do list
 
@@ -96,15 +118,33 @@ Book 3: launches to seven hundred. The compound has begun.
 
 The writer who treats book 1's launch as a marketing problem to solve in two weeks misses this. The writer who treats it as the *first move* in a three-book sequence builds.
 
+:::check
+Q: What do the three failed tactics (cold posts, paid ads without an audience, blog tours) have in common?
+- They all require money the first-time author doesn't have
+-* They all treat strangers as the launch audience, and strangers convert poorly
+- They all depend on social media algorithms
+X: The connecting thread is the audience, not the cost. The honest tactics work because they reach readers who already know you; the failed tactics aim at strangers, and strangers scroll past.
+:::
+
 ## Try it
 
-> **Exercise 6.4.1: Two lists, three each.** Write two lists.
->
-> **Will-do at launch (3 things).** Specific. Each item should fit the honest-tactics frame above and be something you can actually execute. *Send a five-email newsletter sequence over the four weeks before launch.* *Ask twelve specific beta readers for reviews.* *Be active in two genre forums in the year before launch.*
->
-> **Won't-do at launch (3 things).** Specific tactics you are *refusing*. The list is shorter than the temptations; that's correct. Pick the three you'd be most likely to slip into. *No paid ads at this stage.* *No blog tour.* *No promo-site spending without retargeting data.*
->
-> The won't-do list is the more useful of the two. Re-read it the week before launch, when the temptation is highest. Re-read it again the week after, when the panic of slow sales tries to renegotiate it.
+:::exercise
+**Exercise 6.4.1: Two lists, three each.** Write two lists.
+
+**Will-do at launch (3 things).** Specific. Each item should fit the honest-tactics frame above and be something you can actually execute. *Send a five-email newsletter sequence over the four weeks before launch.* *Ask twelve specific beta readers for reviews.* *Be active in two genre forums in the year before launch.*
+
+**Won't-do at launch (3 things).** Specific tactics you are *refusing*. The list is shorter than the temptations; that's correct. Pick the three you'd be most likely to slip into. *No paid ads at this stage.* *No blog tour.* *No promo-site spending without retargeting data.*
+
+The won't-do list is the more useful of the two. Re-read it the week before launch, when the temptation is highest. Re-read it again the week after, when the panic of slow sales tries to renegotiate it.
+:::
+
+:::takeaway
+- Most first-launch marketing is waste because the conditions for conversion (audience, cover, book) aren't built yet.
+- Three honest tactics: the newsletter sequence, direct review asks, and genuine long-term presence in genre communities.
+- Three refusals: cold posts at strangers, paid ads without data, and blog tours; all three treat strangers as the launch audience.
+- The won't-do list matters more than the do list; it is pre-decision that protects book 2 from the post-launch panic.
+- The book itself is the best marketing for the next book, and book 3's marketing starts when book 1 ships.
+:::
 
 ## Further reading
 
