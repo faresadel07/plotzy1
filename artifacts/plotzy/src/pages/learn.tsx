@@ -111,7 +111,7 @@ export default function LearnPage() {
     <Layout>
       <SEO
         title="How to Write Your First Book — Free 6-Module Course"
-        description="A free 6-module writing course: foundations, story architecture, characters, world-building, the writing process, and getting published. 27 lessons, quizzes, a final project, and a verified certificate of completion."
+        description="A free 6-module writing course: foundations, story architecture, characters, world-building, the writing process, and getting published. 32 lessons, quizzes, a final project, and a verified certificate of completion."
       />
       <JsonLd data={buildCourseSchema()} />
       <JsonLd data={buildBreadcrumbSchema([{ name: "Course", path: "/learn" }])} />

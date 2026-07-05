@@ -9,6 +9,7 @@ import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/course/Markdown";
+import { ApplyToBook } from "@/components/course/ApplyToBook";
 import { LessonNavigation } from "@/components/course/LessonNavigation";
 import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { useAuth } from "@/contexts/auth-context";
@@ -169,6 +170,10 @@ export default function LearnLessonPage() {
                 storageBase={lessonQ.data.slug}
               />
             </article>
+
+            {/* The golden thread: bridge from the lesson into the
+                reader's own manuscript. */}
+            <ApplyToBook />
 
             {/* Mark complete CTA — auth-gated */}
             <section className="border-t pt-6 flex items-center justify-between gap-3 flex-wrap">
