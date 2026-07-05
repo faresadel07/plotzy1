@@ -14,7 +14,7 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/queryClient";
-import { APPLE_FONT } from "@/lib/course-ui";
+import { APPLE_FONT, arField } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
 
 interface LessonResponse {
@@ -22,14 +22,17 @@ interface LessonResponse {
   moduleId: number;
   moduleSlug: string;
   moduleTitle: string;
+  moduleTitleAr?: string | null;
   slug: string;
   title: string;
+  titleAr?: string | null;
   orderInModule: number;
   estimatedMinutes: number;
   content: string;
+  contentAr?: string | null;
   heroImageUrl: string | null;
-  prevLesson: { slug: string; title: string } | null;
-  nextLesson: { slug: string; title: string } | null;
+  prevLesson: { slug: string; title: string; titleAr?: string | null } | null;
+  nextLesson: { slug: string; title: string; titleAr?: string | null } | null;
   myCompletion: { completedAt: string; timeSpentSeconds: number } | null;
 }
 
@@ -67,17 +70,23 @@ export default function LearnLessonPage() {
     },
   });
 
+  // Localized fields: Arabic UI shows the Arabic variant when the
+  // translation exists, otherwise falls back to English.
+  const locTitle = lessonQ.data ? arField(isRTL, lessonQ.data.title, lessonQ.data.titleAr) : "";
+  const locModuleTitle = lessonQ.data ? arField(isRTL, lessonQ.data.moduleTitle, lessonQ.data.moduleTitleAr) : "";
+  const locContent = lessonQ.data ? arField(isRTL, lessonQ.data.content, lessonQ.data.contentAr) : "";
+
   const description = useMemo(() => {
-    if (!lessonQ.data) return undefined;
+    if (!locContent) return undefined;
     // First ~150 chars of content with markdown stripped — gives a
     // reasonable meta description for SEO without being too long.
-    const stripped = lessonQ.data.content
+    const stripped = locContent
       .replace(/[#*`>_~-]/g, "")
       .replace(/\[(.+?)\]\(.+?\)/g, "$1")
       .replace(/\s+/g, " ")
       .trim();
     return stripped.length > 160 ? stripped.slice(0, 157) + "…" : stripped;
-  }, [lessonQ.data]);
+  }, [locContent]);
 
   if (lessonQ.isError) {
     return <NotFound />;
@@ -93,7 +102,7 @@ export default function LearnLessonPage() {
     <Layout>
       {lessonQ.data && <ReadingProgressBar />}
       <SEO
-        title={lessonQ.data ? `${lessonQ.data.title} — ${lessonQ.data.moduleTitle}` : "Plotzy Writing Course"}
+        title={lessonQ.data ? `${locTitle} — ${locModuleTitle}` : "Plotzy Writing Course"}
         description={description}
       />
       {lessonQ.data && (
@@ -115,8 +124,8 @@ export default function LearnLessonPage() {
             items={[
               { label: t("courseHome"), href: "/" },
               { label: t("navCourse"), href: "/learn" },
-              { label: lessonQ.data.moduleTitle, href: `/learn/module/${lessonQ.data.moduleSlug}` },
-              { label: lessonQ.data.title },
+              { label: locModuleTitle, href: `/learn/module/${lessonQ.data.moduleSlug}` },
+              { label: locTitle },
             ]}
           />
         )}
@@ -130,7 +139,7 @@ export default function LearnLessonPage() {
                 <div className="aspect-[16/9]">
                   <img
                     src={lessonQ.data.heroImageUrl}
-                    alt={lessonQ.data.title}
+                    alt={locTitle}
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -141,7 +150,7 @@ export default function LearnLessonPage() {
                 {t("courseLessonNumber")} {lessonQ.data.orderInModule} · {lessonQ.data.estimatedMinutes} {t("courseMinLabel")}
               </div>
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-                {lessonQ.data.title}
+                {locTitle}
               </h1>
               {isCompleted && (
                 <div className="inline-flex items-center gap-1.5 text-xs text-primary pt-1">
@@ -156,7 +165,7 @@ export default function LearnLessonPage() {
                 Strip that single leading heading so the title shows once. */}
             <article>
               <Markdown
-                content={lessonQ.data.content.replace(/^﻿?\s*#{1,6}[^\n]*\r?\n+/, "")}
+                content={locContent.replace(/^﻿?\s*#{1,6}[^\n]*\r?\n+/, "")}
                 storageBase={lessonQ.data.slug}
               />
             </article>

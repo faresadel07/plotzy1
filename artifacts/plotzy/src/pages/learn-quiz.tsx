@@ -36,6 +36,7 @@ interface AttemptReviewItem {
   correctAnswer: Option;
   correct: boolean;
   explanation: string | null;
+  explanationAr?: string | null;
 }
 
 interface AttemptResponse {

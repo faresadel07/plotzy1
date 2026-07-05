@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { CourseProgressBar } from "./ProgressBar";
 import { useLanguage } from "@/contexts/language-context";
-import { APPLE_FONT, moduleImage } from "@/lib/course-ui";
+import { APPLE_FONT, arField, moduleImage } from "@/lib/course-ui";
 
 /**
  * Card for a single module on the /learn module grid. Title, subtitle,
@@ -30,6 +30,8 @@ interface ModuleSummary {
   title: string;
   subtitle?: string | null;
   description?: string | null;
+  titleAr?: string | null;
+  subtitleAr?: string | null;
   order: number;
   estimatedMinutes: number;
   lessonCount: number;
@@ -43,7 +45,7 @@ interface ModuleCardProps {
 }
 
 export function ModuleCard({ module, completedLessons, className = "" }: ModuleCardProps) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const showProgress =
     typeof completedLessons === "number" && module.lessonCount > 0;
   const percent = showProgress
@@ -69,8 +71,8 @@ export function ModuleCard({ module, completedLessons, className = "" }: ModuleC
           </span>
         </div>
         <CardHeader>
-          <CardTitle className="text-lg tracking-tight">{module.title}</CardTitle>
-          {module.subtitle && <CardDescription>{module.subtitle}</CardDescription>}
+          <CardTitle className="text-lg tracking-tight">{arField(isRTL, module.title, module.titleAr)}</CardTitle>
+          {module.subtitle && <CardDescription>{arField(isRTL, module.subtitle, module.subtitleAr)}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

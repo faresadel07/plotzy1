@@ -1114,6 +1114,11 @@ export const courseModules = pgTable("course_modules", {
   title: text("title").notNull(),
   subtitle: text("subtitle"),
   description: text("description"),
+  // Arabic variants. Nullable: a row without a translation falls back
+  // to the English fields in the API response.
+  titleAr: text("title_ar"),
+  subtitleAr: text("subtitle_ar"),
+  descriptionAr: text("description_ar"),
   order: integer("order").notNull(),
   estimatedMinutes: integer("estimated_minutes").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1134,9 +1139,11 @@ export const courseLessons = pgTable("course_lessons", {
   moduleId: integer("module_id").notNull().references(() => courseModules.id, { onDelete: "cascade" }),
   slug: text("slug").notNull(),
   title: text("title").notNull(),
+  titleAr: text("title_ar"),
   orderInModule: integer("order_in_module").notNull(),
   estimatedMinutes: integer("estimated_minutes").notNull(),
   content: text("content").notNull(),
+  contentAr: text("content_ar"),
   heroImageUrl: text("hero_image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1194,6 +1201,13 @@ export const courseQuizQuestions = pgTable("course_quiz_questions", {
   optionD: text("option_d").notNull(),
   correctOption: text("correct_option").notNull(),
   explanation: text("explanation"),
+  // Arabic variants, nullable with English fallback.
+  questionTextAr: text("question_text_ar"),
+  optionAAr: text("option_a_ar"),
+  optionBAr: text("option_b_ar"),
+  optionCAr: text("option_c_ar"),
+  optionDAr: text("option_d_ar"),
+  explanationAr: text("explanation_ar"),
   order: integer("order").notNull(),
 }, (t) => [
   index("idx_course_quiz_questions_quiz").on(t.quizId),

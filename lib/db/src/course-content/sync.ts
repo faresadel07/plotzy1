@@ -62,6 +62,9 @@ export async function syncCourseContent(
           title: m.title,
           subtitle: m.subtitle ?? "",
           description: m.description ?? "",
+          titleAr: m.titleAr,
+          subtitleAr: m.subtitleAr,
+          descriptionAr: m.descriptionAr,
           order: m.order,
           estimatedMinutes: m.estimatedMinutes ?? 0,
         })
@@ -75,6 +78,9 @@ export async function syncCourseContent(
           title: m.title,
           subtitle: m.subtitle ?? "",
           description: m.description ?? "",
+          titleAr: m.titleAr,
+          subtitleAr: m.subtitleAr,
+          descriptionAr: m.descriptionAr,
           order: m.order,
           estimatedMinutes: m.estimatedMinutes ?? 0,
         })
@@ -100,9 +106,11 @@ export async function syncCourseContent(
         moduleId,
         slug: l.slug,
         title: l.title,
+        titleAr: l.titleAr,
         orderInModule: l.orderInModule,
         estimatedMinutes: l.estimatedMinutes ?? 0,
         content: l.content,
+        contentAr: l.contentAr,
         heroImageUrl: l.heroImageUrl,
       });
       counts.lessons.inserted++;
@@ -112,9 +120,11 @@ export async function syncCourseContent(
         .set({
           moduleId,
           title: l.title,
+          titleAr: l.titleAr,
           orderInModule: l.orderInModule,
           estimatedMinutes: l.estimatedMinutes ?? 0,
           content: l.content,
+          contentAr: l.contentAr,
           heroImageUrl: l.heroImageUrl,
           updatedAt: new Date(),
         })
@@ -190,13 +200,19 @@ export async function syncCourseContent(
       log(`[course-sync] skipping ${list.length} questions: no quiz row for key ${key}`);
       continue;
     }
-    // Cheap content-equality check: how many rows match by (text, options, correct)?
-    // If the count matches the bundled list exactly, skip the wipe.
-    const [{ matched }] = await db
-      .select({ matched: sql<number>`count(*)::int` })
+    // Cheap content-equality check. Count alone is not enough once
+    // translations exist: adding Arabic to a bank keeps the count
+    // identical, so also compare how many rows carry an Arabic text
+    // against how many the bundle expects to carry one.
+    const [{ matched, matchedAr }] = await db
+      .select({
+        matched: sql<number>`count(*)::int`,
+        matchedAr: sql<number>`count(*) FILTER (WHERE ${courseQuizQuestions.questionTextAr} IS NOT NULL)::int`,
+      })
       .from(courseQuizQuestions)
       .where(eq(courseQuizQuestions.quizId, quizId));
-    if (matched === list.length) {
+    const bundledAr = list.filter((qq) => qq.questionTextAr != null).length;
+    if (matched === list.length && matchedAr === bundledAr) {
       // Best-effort: if the count already matches, assume the bank is
       // current. The full text compare would round-trip every row and
       // boot is supposed to be cheap. Manual re-sync is always
@@ -221,6 +237,12 @@ export async function syncCourseContent(
         optionD: qq.optionD,
         correctOption: qq.correctOption,
         explanation: qq.explanation,
+        questionTextAr: qq.questionTextAr,
+        optionAAr: qq.optionAAr,
+        optionBAr: qq.optionBAr,
+        optionCAr: qq.optionCAr,
+        optionDAr: qq.optionDAr,
+        explanationAr: qq.explanationAr,
       });
     }
     counts.questions.replaced += list.length;

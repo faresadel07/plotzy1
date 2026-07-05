@@ -11,7 +11,7 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { LessonCard } from "@/components/course/LessonCard";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
-import { APPLE_FONT, moduleImage } from "@/lib/course-ui";
+import { APPLE_FONT, arField, moduleImage } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
 
 interface ModuleResponse {
@@ -20,6 +20,9 @@ interface ModuleResponse {
   title: string;
   subtitle: string | null;
   description: string | null;
+  titleAr?: string | null;
+  subtitleAr?: string | null;
+  descriptionAr?: string | null;
   order: number;
   estimatedMinutes: number;
   lessonCount: number;
@@ -27,6 +30,7 @@ interface ModuleResponse {
     id: number;
     slug: string;
     title: string;
+    titleAr?: string | null;
     orderInModule: number;
     estimatedMinutes: number;
     heroImageUrl: string | null;
@@ -79,8 +83,12 @@ export default function LearnModulePage() {
   return (
     <Layout>
       <SEO
-        title={moduleQ.data ? `${moduleQ.data.title} — Plotzy Writing Course` : "Plotzy Writing Course"}
-        description={moduleQ.data?.subtitle ?? moduleQ.data?.description ?? undefined}
+        title={moduleQ.data ? `${arField(isRTL, moduleQ.data.title, moduleQ.data.titleAr)} — Plotzy Writing Course` : "Plotzy Writing Course"}
+        description={
+          moduleQ.data
+            ? arField(isRTL, moduleQ.data.subtitle ?? moduleQ.data.description ?? "", moduleQ.data.subtitleAr ?? moduleQ.data.descriptionAr) || undefined
+            : undefined
+        }
       />
       {moduleQ.data && (
         <JsonLd
@@ -99,7 +107,7 @@ export default function LearnModulePage() {
           items={[
             { label: t("courseHome"), href: "/" },
             { label: t("navCourse"), href: "/learn" },
-            { label: moduleQ.data?.title ?? "…" },
+            { label: moduleQ.data ? arField(isRTL, moduleQ.data.title, moduleQ.data.titleAr) : "…" },
           ]}
         />
 
@@ -111,7 +119,7 @@ export default function LearnModulePage() {
               <div className="aspect-[21/9]">
                 <img
                   src={moduleImage(moduleQ.data.order)}
-                  alt={moduleQ.data.title}
+                  alt={arField(isRTL, moduleQ.data.title, moduleQ.data.titleAr)}
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -122,10 +130,10 @@ export default function LearnModulePage() {
             </div>
             <header className="space-y-3">
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
-                {moduleQ.data.title}
+                {arField(isRTL, moduleQ.data.title, moduleQ.data.titleAr)}
               </h1>
               {moduleQ.data.subtitle && (
-                <p className="text-lg text-muted-foreground">{moduleQ.data.subtitle}</p>
+                <p className="text-lg text-muted-foreground">{arField(isRTL, moduleQ.data.subtitle, moduleQ.data.subtitleAr)}</p>
               )}
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-2">
                 <span className="inline-flex items-center gap-1">
@@ -139,7 +147,7 @@ export default function LearnModulePage() {
               </div>
               {moduleQ.data.description && (
                 <p className="text-sm text-muted-foreground max-w-2xl pt-2">
-                  {moduleQ.data.description}
+                  {arField(isRTL, moduleQ.data.description, moduleQ.data.descriptionAr)}
                 </p>
               )}
             </header>

@@ -1,10 +1,12 @@
 import { useLanguage } from "@/contexts/language-context";
+import { arField } from "@/lib/course-ui";
 
 interface ModulePreview {
   id: number;
   slug: string;
   title: string;
   subtitle: string | null;
+  titleAr?: string | null;
   order: number;
   lessonCount: number;
   estimatedMinutes: number;
@@ -22,7 +24,7 @@ interface CourseModulesPreviewProps {
  * like a syllabus.
  */
 export function CourseModulesPreview({ modules, isLoading }: CourseModulesPreviewProps) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   return (
     <section className="space-y-4">
@@ -51,7 +53,7 @@ export function CourseModulesPreview({ modules, isLoading }: CourseModulesPrevie
               <span className="text-sm font-mono text-muted-foreground tabular-nums w-8 shrink-0">
                 {String(m.order).padStart(2, "0")}
               </span>
-              <span className="flex-1 font-medium">{m.title}</span>
+              <span className="flex-1 font-medium">{arField(isRTL, m.title, m.titleAr)}</span>
               <span className="text-xs text-muted-foreground shrink-0">
                 {m.lessonCount} · {m.estimatedMinutes} min
               </span>

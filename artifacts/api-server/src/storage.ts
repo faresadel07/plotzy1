@@ -174,7 +174,7 @@ export interface IStorage {
   getCourseLessons(moduleId: number): Promise<CourseLesson[]>;
   getCourseLessonBySlug(slug: string): Promise<CourseLesson | undefined>;
   getAllCourseLessons(): Promise<CourseLesson[]>;
-  getAllCourseLessonsLite(): Promise<Array<Omit<CourseLesson, "content" | "createdAt" | "updatedAt">>>;
+  getAllCourseLessonsLite(): Promise<Array<Omit<CourseLesson, "content" | "contentAr" | "createdAt" | "updatedAt">>>;
   getCourseQuiz(quizId: number): Promise<CourseQuiz | undefined>;
   getCourseQuizQuestions(quizId: number): Promise<CourseQuizQuestion[]>;
   getModuleQuiz(moduleId: number): Promise<CourseQuiz | undefined>;
@@ -1269,6 +1269,7 @@ export class DatabaseStorage implements IStorage {
       moduleId: courseLessons.moduleId,
       slug: courseLessons.slug,
       title: courseLessons.title,
+      titleAr: courseLessons.titleAr,
       orderInModule: courseLessons.orderInModule,
       estimatedMinutes: courseLessons.estimatedMinutes,
       heroImageUrl: courseLessons.heroImageUrl,

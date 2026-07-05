@@ -20,10 +20,12 @@ interface ModuleSummary {
   title: string;
   subtitle: string | null;
   description: string | null;
+  titleAr?: string | null;
+  subtitleAr?: string | null;
   order: number;
   estimatedMinutes: number;
   lessonCount: number;
-  lessons: Array<{ id: number; slug: string; title: string; orderInModule: number; estimatedMinutes: number }>;
+  lessons: Array<{ id: number; slug: string; title: string; titleAr?: string | null; orderInModule: number; estimatedMinutes: number }>;
 }
 
 interface CatalogResponse {
@@ -245,7 +247,7 @@ function ContinueLearningLink({
   catalog: CatalogResponse | undefined;
   progress: ProgressResponse;
 }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   if (!catalog) return null;
 
   const completedByModuleId = new Map<number, number>(
@@ -261,7 +263,7 @@ function ContinueLearningLink({
         return (
           <Button asChild variant="outline" size="sm" className="self-start">
             <Link href={`/learn/lesson/${nextLesson.slug}`}>
-              {t("courseLandingContinue")}: {nextLesson.title}
+              {t("courseLandingContinue")}: {isRTL && nextLesson.titleAr ? nextLesson.titleAr : nextLesson.title}
               <ArrowRight className="ms-2 h-3.5 w-3.5" aria-hidden />
             </Link>
           </Button>

@@ -11,3 +11,11 @@ export const APPLE_FONT =
 // Modules are addressed by their 1..6 order; lessons carry their own
 // heroImageUrl from the API (set in the DB).
 export const moduleImage = (order: number) => `/images/course/module-${order}.png`;
+
+// Pick the Arabic variant of a course field when the UI is Arabic and a
+// translation exists; otherwise fall back to English. Every course
+// surface goes through this so an untranslated row degrades gracefully
+// instead of rendering blank.
+export function arField(isRTL: boolean, en: string, ar?: string | null): string {
+  return isRTL && ar ? ar : en;
+}

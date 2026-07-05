@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/language-context";
+import { arField } from "@/lib/course-ui";
 
 /**
  * Compact row for a single lesson on the module overview page. Order
@@ -16,6 +17,7 @@ import { useLanguage } from "@/contexts/language-context";
 interface LessonSummary {
   slug: string;
   title: string;
+  titleAr?: string | null;
   orderInModule: number;
   estimatedMinutes: number;
 }
@@ -31,7 +33,7 @@ export function LessonCard({
   completed = false,
   className = "",
 }: LessonCardProps) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   return (
     <Link href={`/learn/lesson/${lesson.slug}`}>
       <Card
@@ -48,7 +50,7 @@ export function LessonCard({
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">
             <span className="text-muted-foreground me-2">{lesson.orderInModule}.</span>
-            {lesson.title}
+            {arField(isRTL, lesson.title, lesson.titleAr)}
           </div>
         </div>
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground shrink-0">

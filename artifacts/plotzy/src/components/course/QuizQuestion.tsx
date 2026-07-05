@@ -25,6 +25,11 @@ export interface QuizQuestionData {
   optionB: string;
   optionC: string;
   optionD: string;
+  questionTextAr?: string | null;
+  optionAAr?: string | null;
+  optionBAr?: string | null;
+  optionCAr?: string | null;
+  optionDAr?: string | null;
   order: number;
 }
 
@@ -32,6 +37,7 @@ export interface QuizQuestionReview {
   yourAnswer: Option | null;
   correctAnswer: Option;
   explanation: string | null;
+  explanationAr?: string | null;
 }
 
 interface QuizQuestionProps {
@@ -45,11 +51,11 @@ interface QuizQuestionProps {
   className?: string;
 }
 
-const OPTIONS: { key: Option; field: keyof QuizQuestionData }[] = [
-  { key: "a", field: "optionA" },
-  { key: "b", field: "optionB" },
-  { key: "c", field: "optionC" },
-  { key: "d", field: "optionD" },
+const OPTIONS: { key: Option; field: keyof QuizQuestionData; fieldAr: keyof QuizQuestionData }[] = [
+  { key: "a", field: "optionA", fieldAr: "optionAAr" },
+  { key: "b", field: "optionB", fieldAr: "optionBAr" },
+  { key: "c", field: "optionC", fieldAr: "optionCAr" },
+  { key: "d", field: "optionD", fieldAr: "optionDAr" },
 ];
 
 export function QuizQuestion({
@@ -60,7 +66,7 @@ export function QuizQuestion({
   review,
   className = "",
 }: QuizQuestionProps) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const reviewing = !!review;
 
   return (
@@ -69,7 +75,9 @@ export function QuizQuestion({
         <div className="text-xs text-muted-foreground font-medium">
           {t("courseQuizQuestionLabel")} {index}
         </div>
-        <div className="text-base font-medium">{question.questionText}</div>
+        <div className="text-base font-medium">
+          {isRTL && question.questionTextAr ? question.questionTextAr : question.questionText}
+        </div>
       </div>
 
       <RadioGroup
@@ -78,7 +86,7 @@ export function QuizQuestion({
         disabled={reviewing}
         className="gap-2"
       >
-        {OPTIONS.map(({ key, field }) => {
+        {OPTIONS.map(({ key, field, fieldAr }) => {
           const isCorrect = reviewing && key === review!.correctAnswer;
           const isWrongSelection =
             reviewing &&
@@ -98,7 +106,7 @@ export function QuizQuestion({
             >
               <RadioGroupItem id={id} value={key} className="mt-0.5" />
               <span className="flex-1 text-sm leading-relaxed">
-                {question[field]}
+                {isRTL && question[fieldAr] ? question[fieldAr] : question[field]}
               </span>
               {isCorrect && (
                 <CheckCircle2
@@ -117,12 +125,12 @@ export function QuizQuestion({
         })}
       </RadioGroup>
 
-      {reviewing && review!.explanation && (
+      {reviewing && (isRTL && review!.explanationAr ? review!.explanationAr : review!.explanation) && (
         <div className="rounded-md border bg-secondary/30 p-3 text-sm">
           <div className="text-xs font-medium text-muted-foreground mb-1">
             {t("courseQuizExplanation")}
           </div>
-          <div>{review!.explanation}</div>
+          <div>{isRTL && review!.explanationAr ? review!.explanationAr : review!.explanation}</div>
         </div>
       )}
     </Card>

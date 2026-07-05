@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
+import { arField } from "@/lib/course-ui";
 
 /**
  * Prev / next navigation at the bottom of every lesson. Either side
@@ -20,6 +21,7 @@ import { useLanguage } from "@/contexts/language-context";
 interface NavTarget {
   slug: string;
   title: string;
+  titleAr?: string | null;
 }
 
 interface LessonNavigationProps {
@@ -47,7 +49,7 @@ export function LessonNavigation({ prev, next, className = "" }: LessonNavigatio
             <PrevIcon className="h-4 w-4 shrink-0" aria-hidden />
             <span className="flex flex-col items-start text-start min-w-0">
               <span className="text-xs text-muted-foreground">{t("coursePrev")}</span>
-              <span className="text-sm truncate w-full">{prev.title}</span>
+              <span className="text-sm truncate w-full">{arField(isRTL, prev.title, prev.titleAr)}</span>
             </span>
           </Button>
         </Link>
@@ -62,7 +64,7 @@ export function LessonNavigation({ prev, next, className = "" }: LessonNavigatio
           >
             <span className="flex flex-col items-end text-end min-w-0">
               <span className="text-xs text-muted-foreground">{t("courseNext")}</span>
-              <span className="text-sm truncate w-full">{next.title}</span>
+              <span className="text-sm truncate w-full">{arField(isRTL, next.title, next.titleAr)}</span>
             </span>
             <NextIcon className="h-4 w-4 shrink-0" aria-hidden />
           </Button>

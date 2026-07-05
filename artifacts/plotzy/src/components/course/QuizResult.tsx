@@ -22,6 +22,7 @@ interface ReviewItem {
   correctAnswer: Option;
   correct: boolean;
   explanation: string | null;
+  explanationAr?: string | null;
 }
 
 interface QuizResultProps {
@@ -98,6 +99,7 @@ export function QuizResult({
             yourAnswer: item.yourAnswer,
             correctAnswer: item.correctAnswer,
             explanation: item.explanation,
+            explanationAr: item.explanationAr,
           };
           return (
             <QuizQuestion

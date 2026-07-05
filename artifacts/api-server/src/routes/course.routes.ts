@@ -30,7 +30,7 @@ const cachedLessonBySlug = (slug: string) =>
   memoize(`course:lesson:${slug}`, 600, () => storage.getCourseLessonBySlug(slug));
 type LessonSummaryInput = Pick<
   CourseLesson,
-  "id" | "moduleId" | "slug" | "title" | "orderInModule" | "estimatedMinutes" | "heroImageUrl"
+  "id" | "moduleId" | "slug" | "title" | "titleAr" | "orderInModule" | "estimatedMinutes" | "heroImageUrl"
 >;
 import { requireAuth } from "../middleware/auth";
 import { aiLimiter, tierAiLimiter, publicReadLimiter, generalLimiter, writeLimiter } from "../middleware/rate-limit";
@@ -64,6 +64,11 @@ function publicQuestion(q: {
   optionB: string;
   optionC: string;
   optionD: string;
+  questionTextAr: string | null;
+  optionAAr: string | null;
+  optionBAr: string | null;
+  optionCAr: string | null;
+  optionDAr: string | null;
   order: number;
 }) {
   return {
@@ -73,6 +78,11 @@ function publicQuestion(q: {
     optionB: q.optionB,
     optionC: q.optionC,
     optionD: q.optionD,
+    questionTextAr: q.questionTextAr,
+    optionAAr: q.optionAAr,
+    optionBAr: q.optionBAr,
+    optionCAr: q.optionCAr,
+    optionDAr: q.optionDAr,
     order: q.order,
   };
 }
@@ -82,6 +92,7 @@ function summarizeLesson(l: LessonSummaryInput) {
     id: l.id,
     slug: l.slug,
     title: l.title,
+    titleAr: l.titleAr,
     orderInModule: l.orderInModule,
     estimatedMinutes: l.estimatedMinutes,
     heroImageUrl: l.heroImageUrl,
@@ -115,6 +126,9 @@ router.get("/api/course/modules", publicReadLimiter, async (_req, res) => {
         title: m.title,
         subtitle: m.subtitle,
         description: m.description,
+        titleAr: m.titleAr,
+        subtitleAr: m.subtitleAr,
+        descriptionAr: m.descriptionAr,
         order: m.order,
         estimatedMinutes: m.estimatedMinutes,
         lessonCount: ms.length,
@@ -149,6 +163,9 @@ router.get("/api/course/modules/:slug", requireAuth, generalLimiter, async (req,
       title: m.title,
       subtitle: m.subtitle,
       description: m.description,
+      titleAr: m.titleAr,
+      subtitleAr: m.subtitleAr,
+      descriptionAr: m.descriptionAr,
       order: m.order,
       estimatedMinutes: m.estimatedMinutes,
       lessonCount: lessons.length,
@@ -205,14 +222,17 @@ router.get("/api/course/lessons/:slug", requireAuth, generalLimiter, async (req,
       moduleId: lesson.moduleId,
       moduleSlug: module.slug,
       moduleTitle: module.title,
+      moduleTitleAr: module.titleAr,
       slug: lesson.slug,
       title: lesson.title,
+      titleAr: lesson.titleAr,
       orderInModule: lesson.orderInModule,
       estimatedMinutes: lesson.estimatedMinutes,
       content: lesson.content,
+      contentAr: lesson.contentAr,
       heroImageUrl: lesson.heroImageUrl,
-      prevLesson: prev ? { slug: prev.slug, title: prev.title } : null,
-      nextLesson: next ? { slug: next.slug, title: next.title } : null,
+      prevLesson: prev ? { slug: prev.slug, title: prev.title, titleAr: prev.titleAr } : null,
+      nextLesson: next ? { slug: next.slug, title: next.title, titleAr: next.titleAr } : null,
       myCompletion,
     });
   } catch (err) {
@@ -482,10 +502,12 @@ router.post("/api/course/quizzes/:quizId/attempts", requireAuth, writeLimiter, a
       return {
         questionId: q.id,
         questionText: q.questionText,
+        questionTextAr: q.questionTextAr,
         yourAnswer: userAnswer as "a" | "b" | "c" | "d" | null,
         correctAnswer: q.correctOption as "a" | "b" | "c" | "d",
         correct,
         explanation: q.explanation,
+        explanationAr: q.explanationAr,
       };
     });
 
