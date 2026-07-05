@@ -24,8 +24,6 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   BookOpen, ArrowRight, ArrowLeft, Loader2, Wand2, Check,
   Feather, Newspaper, User, Baby, Globe2, Calendar,
@@ -61,12 +59,24 @@ interface BookCreationWizardProps {
 // ─── Static data ─────────────────────────────────────────────────────
 
 const FORMATS: Array<{ id: BookFormat; label: string; labelAr: string; tagline: string; taglineAr: string; icon: React.ReactNode; defaultWords: number }> = [
-  { id: "novel",       label: "Novel",            labelAr: "رواية",         tagline: "40,000 words or more",         taglineAr: "40,000 كلمة فأكثر",      icon: <BookOpen size={20} />,   defaultWords: 80_000 },
-  { id: "novella",     label: "Novella",          labelAr: "رواية قصيرة",   tagline: "17,500 to 40,000 words",       taglineAr: "17,500 إلى 40,000 كلمة", icon: <Feather size={20} />,    defaultWords: 25_000 },
-  { id: "short_story", label: "Short Story",      labelAr: "قصّة قصيرة",    tagline: "Under 17,500 words",           taglineAr: "أقل من 17,500 كلمة",      icon: <Pencil size={20} />,     defaultWords: 7_500 },
-  { id: "nonfiction",  label: "Non Fiction",      labelAr: "كتاب فكري",      tagline: "Guide, essay, how to",         taglineAr: "دليل، مقالة، شرح",         icon: <Newspaper size={20} />,  defaultWords: 60_000 },
-  { id: "memoir",      label: "Memoir",           labelAr: "سيرة ذاتية",     tagline: "Your story in your voice",     taglineAr: "حكايتك بصوتك",            icon: <User size={20} />,       defaultWords: 70_000 },
-  { id: "children",    label: "Children's Book",  labelAr: "كتاب أطفال",     tagline: "Under 12,000 words",           taglineAr: "أقل من 12,000 كلمة",      icon: <Baby size={20} />,       defaultWords: 8_000 },
+  { id: "novel",       label: "Novel",            labelAr: "رواية",         tagline: "40,000 words or more, 160 pages and up",  taglineAr: "40,000 كلمة فأكثر، 160 صفحة فأكثر",   icon: <BookOpen size={20} />,   defaultWords: 80_000 },
+  { id: "novella",     label: "Novella",          labelAr: "رواية قصيرة",   tagline: "17,500 to 40,000 words, 70 to 160 pages", taglineAr: "17,500 إلى 40,000 كلمة، 70 إلى 160 صفحة", icon: <Feather size={20} />,    defaultWords: 25_000 },
+  { id: "short_story", label: "Short Story",      labelAr: "قصّة قصيرة",    tagline: "Under 17,500 words, under 70 pages",      taglineAr: "أقل من 17,500 كلمة، أقل من 70 صفحة",   icon: <Pencil size={20} />,     defaultWords: 7_500 },
+  { id: "nonfiction",  label: "Non Fiction",      labelAr: "كتاب فكري",      tagline: "Guide, essay, how to",                    taglineAr: "دليل، مقالة، شرح",                      icon: <Newspaper size={20} />,  defaultWords: 60_000 },
+  { id: "memoir",      label: "Memoir",           labelAr: "سيرة ذاتية",     tagline: "Your story in your voice",                taglineAr: "حكايتك بصوتك",                          icon: <User size={20} />,       defaultWords: 70_000 },
+  { id: "children",    label: "Children's Book",  labelAr: "كتاب أطفال",     tagline: "Under 12,000 words, under 48 pages",      taglineAr: "أقل من 12,000 كلمة، أقل من 48 صفحة",   icon: <Baby size={20} />,       defaultWords: 8_000 },
+];
+
+// Tap-only replacement for the old free-text "topic" question: what is
+// the book trying to do for its reader? The English label is what the
+// AI summary stores (prompts stay compact in English).
+const NONFICTION_GOALS: Array<{ id: string; label: string; labelAr: string; sub: string; subAr: string }> = [
+  { id: "teach",    label: "Teach a practical skill",      labelAr: "تعليم مهارة عمليّة",   sub: "Step by step, hands on",            subAr: "خطوة بخطوة وبشكل تطبيقي" },
+  { id: "guide",    label: "Guide through a process",      labelAr: "دليل يشرح طريقاً",      sub: "From starting point to result",     subAr: "من نقطة البداية حتى النتيجة" },
+  { id: "share",    label: "Share experience and lessons", labelAr: "مشاركة تجربة ودروس",   sub: "What worked and what did not",      subAr: "ما نجح وما لم ينجح" },
+  { id: "inspire",  label: "Inspire and motivate",         labelAr: "إلهام وتحفيز",          sub: "Change how the reader thinks",      subAr: "تغيير طريقة تفكير القارئ" },
+  { id: "document", label: "Document knowledge",           labelAr: "توثيق معرفة",           sub: "Organize a field or a story",       subAr: "تنظيم مجال أو حكاية" },
+  { id: "life",     label: "Tell a life story",            labelAr: "سرد قصّة حياة",         sub: "Memoir and personal history",       subAr: "سيرة وذكريات شخصيّة" },
 ];
 
 const FICTION_GENRES = [
@@ -134,10 +144,11 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const { toast } = useToast();
 
   // ── Form state ──
+  // Every answer is a TAP: no free-text questions anywhere in the
+  // wizard. The book starts untitled (renaming lives in the editor and
+  // the long-press sheet) and the author name defaults to the account.
   const [step, setStep] = useState<number>(1);
   const [format, setFormat] = useState<BookFormat | null>(null);
-  const [title, setTitle] = useState("");
-  const [authorName, setAuthorName] = useState("");
   const [genre, setGenre] = useState<string>("");
   const [audience, setAudience] = useState<BookAudience | null>(null);
   const [targetWords, setTargetWords] = useState<number>(80_000);
@@ -150,10 +161,19 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const isFiction = format && !["nonfiction", "memoir"].includes(format);
   const isChildren = format === "children";
 
-  // Seven steps total. Setting (fiction) and Topic (non-fiction)
-  // share the same slot; both branches advance to the schedule step
-  // afterwards so the counter stays the same in both flows.
-  const totalSteps = 7;
+  // Six steps total. Setting (fiction) and Goal (non-fiction) share
+  // the same slot; both branches advance to the schedule step after.
+  const totalSteps = 6;
+
+  // Auto-advance: tapping a card on a pure-choice step moves straight
+  // to the next question after a beat, so the selection registers
+  // visually first. Sliders and multi-input steps keep the button.
+  const advance = (apply: () => void) => {
+    apply();
+    window.setTimeout(() => {
+      setStep((s) => (s < totalSteps ? s + 1 : s));
+    }, 240);
+  };
 
   // Default word goal as the writer crosses through the first three
   // steps; only nudges if they haven't manually touched it.
@@ -173,8 +193,6 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
     if (!open) return;
     setStep(1);
     setFormat(null);
-    setTitle("");
-    setAuthorName("");
     setGenre("");
     setAudience(null);
     setTargetWords(80_000);
@@ -199,12 +217,11 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const canAdvance = useMemo(() => {
     switch (step) {
       case 1: return !!format;
-      case 2: return true; // title + author optional
-      case 3: return !!genre;
-      case 4: return !!audience;
-      case 5: return targetWords > 0;
-      case 6: return isFiction ? !!setting : topic.trim().length > 0;
-      case 7: return daysPerWeek > 0;
+      case 2: return !!genre;
+      case 3: return !!audience;
+      case 4: return targetWords > 0;
+      case 5: return isFiction ? !!setting : !!topic;
+      case 6: return daysPerWeek > 0;
       default: return true;
     }
   }, [step, format, genre, audience, targetWords, setting, topic, daysPerWeek, isFiction]);
@@ -237,13 +254,16 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
     try {
       await onCreate({
         format,
-        title: title.trim(),
-        authorName: authorName.trim(),
+        // No typing anywhere in the wizard: the book starts untitled
+        // (named later in the editor) and the author name falls back
+        // to the account's display name server-side.
+        title: "",
+        authorName: "",
         genre,
         audience,
         targetWords,
         setting: isFiction ? setting : undefined,
-        topic: !isFiction ? topic.trim() : undefined,
+        topic: !isFiction ? topic : undefined,
         daysPerWeek,
         dailyWordGoal,
       });
@@ -305,7 +325,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                       <Choice
                         key={f.id}
                         active={format === f.id}
-                        onClick={() => setFormat(f.id)}
+                        onClick={() => advance(() => setFormat(f.id))}
                         title={ar ? f.labelAr : f.label}
                         sub={ar ? f.taglineAr : f.tagline}
                         icon={f.icon}
@@ -316,30 +336,6 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
               )}
 
               {step === 2 && (
-                <motion.section key="s2" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
-                  <Q
-                    title={ar ? "ما العنوان المبدئي؟" : "What's the working title?"}
-                    sub={ar ? "يمكنك تركه فارغاً وتسميته لاحقاً." : "Leave it blank and name it later if you're not sure."}
-                  />
-                  <div className="space-y-4 max-w-xl">
-                    <Input
-                      autoFocus
-                      placeholder={ar ? "عنوان مبدئي" : "Working title"}
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="text-lg py-6 rounded-xl"
-                    />
-                    <Input
-                      placeholder={ar ? "اسم المؤلّف (اسم القلم)" : "Author name (pen name)"}
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      className="py-5 rounded-xl"
-                    />
-                  </div>
-                </motion.section>
-              )}
-
-              {step === 3 && (
                 <motion.section key="s3" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "أيّ نوع أدبي يناسب؟" : "Which genre fits best?"}
@@ -350,7 +346,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                       <Pill
                         key={g.id}
                         active={genre === g.id}
-                        onClick={() => setGenre(g.id)}
+                        onClick={() => advance(() => setGenre(g.id))}
                         label={ar ? g.labelAr : g.label}
                       />
                     ))}
@@ -358,7 +354,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                 </motion.section>
               )}
 
-              {step === 4 && (
+              {step === 3 && (
                 <motion.section key="s4" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "لمن هذا الكتاب؟" : "Who is this book for?"}
@@ -370,7 +366,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                       <Choice
                         key={a.id}
                         active={audience === a.id}
-                        onClick={() => setAudience(a.id)}
+                        onClick={() => advance(() => setAudience(a.id))}
                         title={ar ? a.labelAr : a.label}
                         sub={ar ? a.ageAr : a.age}
                       />
@@ -379,7 +375,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                 </motion.section>
               )}
 
-              {step === 5 && (
+              {step === 4 && (
                 <motion.section key="s5" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "ما الطول الذي تستهدفه؟" : "What length are you aiming for?"}
@@ -417,7 +413,12 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                         >
                           {p.label}
                           <span className="block opacity-60 text-[10px] font-normal mt-0.5">
-                            {p.v.toLocaleString(ar ? "ar-EG" : "en-US")}
+                            {p.v.toLocaleString(ar ? "ar-EG" : "en-US")} {ar ? "كلمة" : "words"}
+                          </span>
+                          <span className="block opacity-60 text-[10px] font-normal">
+                            {ar
+                              ? `حوالي ${Math.round(p.v / WORDS_PER_PAGE).toLocaleString("ar-EG")} صفحة`
+                              : `about ${Math.round(p.v / WORDS_PER_PAGE).toLocaleString("en-US")} pages`}
                           </span>
                         </button>
                       ))}
@@ -426,8 +427,8 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                 </motion.section>
               )}
 
-              {step === 6 && isFiction && (
-                <motion.section key="s6" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 5 && isFiction && (
+                <motion.section key="s5-f" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "أين ومتى تدور القصّة؟" : "Where and when is your story set?"}
                     sub={ar ? "الإطار الزماني والمكاني." : "Time and place that frame the story."}
@@ -438,7 +439,7 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                       <Choice
                         key={s.id}
                         active={setting === s.id}
-                        onClick={() => setSetting(s.id)}
+                        onClick={() => advance(() => setSetting(s.id))}
                         title={ar ? s.labelAr : s.label}
                       />
                     ))}
@@ -446,27 +447,28 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                 </motion.section>
               )}
 
-              {step === 6 && !isFiction && (
-                <motion.section key="s6-nf" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 5 && !isFiction && (
+                <motion.section key="s5-nf" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
-                    title={ar ? "ما الموضوع وما الذي يحتاج القارئ معرفته؟" : "What's your topic and what does the reader need to know?"}
-                    sub={ar ? "الفكرة الرئيسية. سيستخدمها الذكاء الاصطناعي لتخصيص المساعدة." : "The central idea. The AI uses this to tailor every suggestion."}
+                    title={ar ? "ما هدف كتابك؟" : "What should your book do for the reader?"}
+                    sub={ar ? "اختر الأقرب. الذكاء يستخدمه ليخصّص كل اقتراح لك." : "Pick the closest. The AI uses this to tailor every suggestion."}
                     icon={<Lightbulb size={16} />}
                   />
-                  <Textarea
-                    autoFocus
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    rows={5}
-                    placeholder={ar
-                      ? "مثال: كيف يبني المبتدئون عادة قراءة يوميّة تستمرّ. الجمهور: عمر 20 إلى 35، حاولوا ولم يلتزموا."
-                      : "e.g. How beginners build a daily reading habit that sticks. Audience: 20 to 35, tried and quit."}
-                    className="rounded-xl text-base p-4 min-h-[160px]"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {NONFICTION_GOALS.map((g) => (
+                      <Choice
+                        key={g.id}
+                        active={topic === g.label}
+                        onClick={() => advance(() => setTopic(g.label))}
+                        title={ar ? g.labelAr : g.label}
+                        sub={ar ? g.subAr : g.sub}
+                      />
+                    ))}
+                  </div>
                 </motion.section>
               )}
 
-              {step === 7 && (
+              {step === 6 && (
                 <motion.section key="s7" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
                     title={ar ? "ما هو جدول الكتابة؟" : "What's your writing schedule?"}
