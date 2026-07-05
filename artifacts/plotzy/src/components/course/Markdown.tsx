@@ -1,5 +1,16 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
+import { QuoteCard } from "@/components/course/visuals/QuoteCard";
+import { InteractiveExample } from "@/components/course/visuals/InteractiveExample";
+import { InlineImage } from "@/components/course/visuals/InlineImage";
+import {
+  VideoEmbed,
+  TakeawayCard,
+  QuickCheck,
+  ExerciseBox,
+  LessonChecklist,
+  type QuickCheckData,
+} from "@/components/course/LessonBlocks";
 
 // Project Gutenberg references in the lessons (e.g.
 // https://www.gutenberg.org/ebooks/1342) are shown as a tidy, clickable
@@ -66,10 +77,16 @@ function GutenbergCover({ id, label }: { id: string; label: string }) {
 interface MarkdownProps {
   content: string;
   className?: string;
+  /**
+   * Base key for blocks that persist state on the device (exercise
+   * drafts, checklist ticks). Pass the lesson slug. Omitting it still
+   * renders everything; persistence keys just share a generic bucket.
+   */
+  storageBase?: string;
 }
 
-export function Markdown({ content, className = "" }: MarkdownProps) {
-  const blocks = parseBlocks(content);
+export function Markdown({ content, className = "", storageBase = "" }: MarkdownProps) {
+  const blocks = parseBlocks(content, { storageBase, exercise: 0, checklist: 0 });
   return (
     <div className={`prose prose-sm sm:prose-base dark:prose-invert max-w-none ${className}`}>
       {blocks}
@@ -77,8 +94,19 @@ export function Markdown({ content, className = "" }: MarkdownProps) {
   );
 }
 
+// Mutable parse context threaded through recursion so persistent
+// blocks get stable, ordered storage keys within one lesson.
+interface ParseCtx {
+  storageBase: string;
+  exercise: number;
+  checklist: number;
+}
+
+// Standalone-line image: ![alt](src) or ![alt](src "caption")
+const IMAGE_LINE_RE = /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/;
+
 // ── Block-level parser ───────────────────────────────────────────────────
-function parseBlocks(content: string): ReactNode[] {
+function parseBlocks(content: string, ctx: ParseCtx): ReactNode[] {
   const lines = content.split("\n");
   const out: ReactNode[] = [];
   let i = 0;
@@ -86,6 +114,53 @@ function parseBlocks(content: string): ReactNode[] {
 
   while (i < lines.length) {
     const line = lines[i];
+
+    // ::: directives — the rich lesson blocks (video, takeaway, quick
+    // check, exercise, checklist, interactive example, pull quote).
+    if (line.startsWith(":::")) {
+      const header = line.slice(3).trim();
+
+      // :::video ID | Title | Channel | Duration — single line, no fence.
+      if (header.startsWith("video")) {
+        const parts = header.slice(5).split("|").map((p) => p.trim());
+        const videoId = parts[0];
+        if (videoId) {
+          out.push(
+            <VideoEmbed
+              key={key++}
+              videoId={videoId}
+              title={parts[1] || "Video"}
+              channel={parts[2] || undefined}
+              duration={parts[3] || undefined}
+            />,
+          );
+        }
+        i++;
+        continue;
+      }
+
+      // Every other directive is fenced: collect body until a bare :::
+      const body: string[] = [];
+      i++;
+      while (i < lines.length && lines[i].trim() !== ":::") {
+        body.push(lines[i]);
+        i++;
+      }
+      i++; // skip the closing :::
+      const node = renderDirective(header, body.join("\n"), ctx, key++);
+      if (node) out.push(node);
+      continue;
+    }
+
+    // Standalone image line → InlineImage (lazy, captioned figure).
+    const img = line.trim().match(IMAGE_LINE_RE);
+    if (img) {
+      out.push(
+        <InlineImage key={key++} src={img[2]} alt={img[1]} caption={img[3] || undefined} />,
+      );
+      i++;
+      continue;
+    }
 
     // Fenced code block ```lang? ... ```
     if (line.startsWith("```")) {
@@ -204,6 +279,8 @@ function parseBlocks(content: string): ReactNode[] {
       !lines[i].startsWith("#") &&
       !lines[i].startsWith("> ") &&
       !lines[i].startsWith("```") &&
+      !lines[i].startsWith(":::") &&
+      !IMAGE_LINE_RE.test(lines[i].trim()) &&
       !/^[-*] /.test(lines[i]) &&
       !/^\d+\. /.test(lines[i]) &&
       lines[i].trim() !== "---"
@@ -215,6 +292,121 @@ function parseBlocks(content: string): ReactNode[] {
   }
 
   return out;
+}
+
+// ── Directive dispatcher ─────────────────────────────────────────────────
+// Fenced ::: blocks map to the rich components. Unknown directives are
+// dropped silently so future content never crashes an older client.
+function renderDirective(header: string, body: string, ctx: ParseCtx, key: number): ReactNode {
+  const name = header.split(/[\s|]/)[0];
+  const rest = header.slice(name.length).trim();
+
+  switch (name) {
+    case "takeaway":
+      return <TakeawayCard key={key}>{parseBlocks(body, ctx)}</TakeawayCard>;
+
+    case "quote": {
+      // :::quote [standalone] [| attribution]
+      const pipeIdx = rest.indexOf("|");
+      const flags = pipeIdx === -1 ? rest : rest.slice(0, pipeIdx);
+      const attribution = pipeIdx === -1 ? undefined : rest.slice(pipeIdx + 1).trim() || undefined;
+      return (
+        <QuoteCard
+          key={key}
+          variant={flags.includes("standalone") ? "standalone" : "inline"}
+          attribution={attribution}
+        >
+          {renderInline(body.trim().split("\n").filter(Boolean).join(" "))}
+        </QuoteCard>
+      );
+    }
+
+    case "check": {
+      const q = parseQuickCheck(body);
+      return q ? <QuickCheck key={key} {...q} /> : null;
+    }
+
+    case "exercise": {
+      const idx = ctx.exercise++;
+      return (
+        <ExerciseBox
+          key={key}
+          storageKey={`plotzy-course-ex-${ctx.storageBase}-${idx}`}
+          prompt={parseBlocks(body, ctx)}
+        />
+      );
+    }
+
+    case "checklist": {
+      const idx = ctx.checklist++;
+      const items = body
+        .split("\n")
+        .filter((l) => /^[-*] /.test(l.trim()))
+        .map((l) => renderInline(l.trim().slice(2)));
+      if (items.length === 0) return null;
+      return (
+        <LessonChecklist
+          key={key}
+          storageKey={`plotzy-course-cl-${ctx.storageBase}-${idx}`}
+          items={items}
+        />
+      );
+    }
+
+    case "example": {
+      // :::example side-by-side | caption   …   [Label] sections in body
+      const parts = rest.split("|");
+      const mode = parts[0].trim() === "click-toggle" ? ("click-toggle" as const) : ("side-by-side" as const);
+      const caption = parts.slice(1).join("|").trim() || undefined;
+      const options: { label: string; content: ReactNode }[] = [];
+      let label: string | null = null;
+      let buf: string[] = [];
+      const flush = () => {
+        if (label !== null) options.push({ label, content: parseBlocks(buf.join("\n"), ctx) });
+        buf = [];
+      };
+      for (const l of body.split("\n")) {
+        const m = l.trim().match(/^\[(.+)\]$/);
+        if (m) {
+          flush();
+          label = m[1];
+        } else {
+          buf.push(l);
+        }
+      }
+      flush();
+      if (options.length === 0) return null;
+      return <InteractiveExample key={key} mode={mode} options={options} caption={caption} />;
+    }
+
+    default:
+      return null;
+  }
+}
+
+// :::check body format:
+//   Q: the question
+//   - wrong option
+//   -* correct option
+//   X: explanation shown after answering
+function parseQuickCheck(body: string): QuickCheckData | null {
+  let question = "";
+  const options: string[] = [];
+  let correctIndex = -1;
+  let explanation: string | undefined;
+
+  for (const raw of body.split("\n")) {
+    const l = raw.trim();
+    if (l.startsWith("Q:")) question = l.slice(2).trim();
+    else if (l.startsWith("-*")) {
+      correctIndex = options.length;
+      options.push(l.slice(2).trim());
+    } else if (l.startsWith("- ")) options.push(l.slice(2).trim());
+    else if (l.startsWith("X:")) explanation = l.slice(2).trim();
+  }
+
+  if (!question || options.length < 2 || correctIndex === -1) return null;
+  return { question, options, correctIndex, explanation };
 }
 
 // ── Inline parser ────────────────────────────────────────────────────────

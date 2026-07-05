@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
@@ -91,6 +91,7 @@ export default function LearnLessonPage() {
 
   return (
     <Layout>
+      {lessonQ.data && <ReadingProgressBar />}
       <SEO
         title={lessonQ.data ? `${lessonQ.data.title} — ${lessonQ.data.moduleTitle}` : "Plotzy Writing Course"}
         description={description}
@@ -156,6 +157,7 @@ export default function LearnLessonPage() {
             <article>
               <Markdown
                 content={lessonQ.data.content.replace(/^﻿?\s*#{1,6}[^\n]*\r?\n+/, "")}
+                storageBase={lessonQ.data.slug}
               />
             </article>
 
@@ -208,6 +210,40 @@ export default function LearnLessonPage() {
         )}
       </main>
     </Layout>
+  );
+}
+
+// Thin page-top bar showing how far through the lesson the reader is,
+// like a long-read article. Block-box alignment follows the document
+// direction, so the fill grows from the correct side in RTL for free.
+function ReadingProgressBar() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+    const measure = () => {
+      const el = document.documentElement;
+      const max = el.scrollHeight - el.clientHeight;
+      setProgress(max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 0);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px]" aria-hidden>
+      <div className="h-full bg-primary" style={{ width: `${progress * 100}%` }} />
+    </div>
   );
 }
 
