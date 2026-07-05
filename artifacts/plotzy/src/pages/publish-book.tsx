@@ -105,7 +105,7 @@ const PUBLISHING_STEPS = [
 ];
 
 function PublisherCard({
-  publisher, isSelected, onSelect, ar, matchScore, bookId,
+  publisher, isSelected, onSelect, ar, matchScore, bookId, matchHints,
 }: {
   publisher: Publisher;
   isSelected: boolean;
@@ -113,6 +113,9 @@ function PublisherCard({
   ar: boolean;
   matchScore?: number;
   bookId?: number;
+  /** Localized one-liners explaining WHY this publisher matches the
+   *  writer's book (genre overlap, language, open submissions). */
+  matchHints?: string[];
 }) {
   const [hovered, setHovered] = useState(false);
   // Match-score colour ramp — green (great), amber (decent), grey (low).
@@ -149,7 +152,9 @@ function PublisherCard({
       }}
       data-testid={`card-publisher-${publisher.id}`}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+      {/* paddingInlineEnd clears the absolutely-positioned bookmark so
+          the Direct/Agent badge never sits underneath it. */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 10, paddingInlineEnd: 30 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontWeight: 700, fontSize: 13, color: TEXT, lineHeight: 1.35, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {publisher.name}
@@ -211,6 +216,23 @@ function PublisherCard({
             {matchScore}% {ar ? "تطابق" : "match"}
           </div>
         ) : <span />}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          {/* Straight to the publisher's submission page (or site). */}
+          <a
+            href={publisher.submissionUrl || publisher.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            title={publisher.submissionUrl ? (ar ? "صفحة التقديم" : "Submission page") : (ar ? "موقع الناشر" : "Publisher website")}
+            aria-label={ar ? "فتح موقع الناشر" : "Open publisher site"}
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 28, height: 28, borderRadius: 8,
+              background: ACCENT, color: MUTED, border: `1px solid ${BORDER}`,
+            }}
+          >
+            <ExternalLink size={12} />
+          </a>
         <TrackSubmissionButton
           bookId={bookId}
           recipientKey={`pub:${publisher.id}`}
@@ -218,7 +240,15 @@ function PublisherCard({
           ar={ar}
           compact
         />
+        </span>
       </div>
+      {/* Why this publisher: the concrete match reasons, in the UI
+          language, so the score is explainable instead of a bare %. */}
+      {matchHints && matchHints.length > 0 && (
+        <p style={{ fontSize: 10.5, color: MUTED2, marginTop: 8, lineHeight: 1.5 }}>
+          {matchHints.join(" · ")}
+        </p>
+      )}
     </button>
     </div>
   );
@@ -383,14 +413,77 @@ export default function PublishBook() {
     return acc + text.split(/\s+/).filter(Boolean).length;
   }, 0) ?? 0;
 
-  // Book context fed into the match-scoring engine. Genres come from
-  // the book's metadata; languages default to the book's UI language;
-  // word count is the live total computed above.
-  const bookCtx: BookContext = useMemo(() => ({
-    genres: (book?.genre ? [book.genre] : []),
-    languages: book?.language ? [book.language] : ["en"],
-    wordCount: totalWords,
-  }), [book?.genre, book?.language, totalWords]);
+  // Book context fed into the match-scoring engine.
+  //
+  // THE VOCABULARY BRIDGE: books store wizard ids ("scifi", "self_help")
+  // and ISO language codes ("ar"), while the publisher directory speaks
+  // display vocabulary ("Science Fiction", "Arabic"). Without this
+  // mapping nothing ever overlapped and every card bottomed out at a
+  // meaningless flat score.
+  const bookCtx: BookContext = useMemo(() => {
+    const GENRE_ALIASES: Record<string, string[]> = {
+      fantasy:      ["Fantasy", "Speculative Fiction", "Fiction"],
+      scifi:        ["Science Fiction", "Speculative Fiction", "Fiction"],
+      romance:      ["Romance", "Women's Fiction", "Commercial Fiction", "Fiction"],
+      mystery:      ["Mystery", "Crime", "Crime Fiction", "Thriller", "Fiction"],
+      thriller:     ["Thriller", "Crime", "Crime Fiction", "Commercial Fiction", "Fiction"],
+      literary:     ["Literary Fiction", "World Literature", "Fiction"],
+      historical:   ["Historical Fiction", "History", "Fiction"],
+      horror:       ["Horror", "Speculative Fiction", "Fiction"],
+      contemporary: ["Literary Fiction", "Commercial Fiction", "Fiction"],
+      adventure:    ["Adventure", "Commercial Fiction", "Fiction"],
+      dystopian:    ["Science Fiction", "Speculative Fiction", "Political Fiction", "Fiction"],
+      self_help:    ["Self-help", "Spirituality", "Non-fiction"],
+      business:     ["Business", "Non-fiction"],
+      biography:    ["Biography", "Memoir", "Memoirs", "Non-fiction"],
+      history:      ["History", "Heritage", "Non-fiction"],
+      science:      ["Science", "Non-fiction"],
+      philosophy:   ["Philosophy", "Theory", "Non-fiction"],
+      religion:     ["Religion", "Islamic Studies", "Spirituality", "Non-fiction"],
+      psychology:   ["Self-help", "Science", "Non-fiction"],
+      essay:        ["Essays", "Essay", "Non-fiction"],
+      travel:       ["Travel", "Non-fiction"],
+      cooking:      ["Cookbooks", "Lifestyle", "Non-fiction"],
+    };
+    const LANG_NAMES: Record<string, string> = {
+      en: "English", ar: "Arabic", fr: "French", es: "Spanish", de: "German",
+      it: "Italian", pt: "Portuguese", nl: "Dutch", pl: "Polish", sv: "Swedish",
+      no: "Norwegian", fi: "Finnish", hi: "Hindi", ur: "Urdu", ja: "Japanese",
+      ko: "Korean", zh: "Chinese (Simplified)",
+    };
+    const rawGenre = (book?.genre || "").toLowerCase();
+    const genres = rawGenre ? (GENRE_ALIASES[rawGenre] ?? [book!.genre!]) : [];
+    const langCode = (book?.language || "en").toLowerCase();
+    // Arabic manuscripts get the Arab-literature signal too: it is how
+    // most Arab publishers describe their list.
+    if (langCode === "ar") genres.push("Arabic Literature", "Arab Literature");
+    return {
+      genres,
+      languages: [LANG_NAMES[langCode] ?? book?.language ?? "English"],
+      wordCount: totalWords,
+    };
+  }, [book?.genre, book?.language, totalWords]);
+
+  // Arabic books open on the publishers who can actually read them.
+  const regionDefaulted = useRef(false);
+  useEffect(() => {
+    if (regionDefaulted.current || !book?.language) return;
+    regionDefaulted.current = true;
+    if (book.language.toLowerCase() === "ar") setSelectedRegion("Middle East & North Africa");
+  }, [book?.language]);
+
+  // Localized "why it matches" one-liners for the cards.
+  const matchHintsFor = (p: Publisher): string[] => {
+    const hints: string[] = [];
+    const bg = new Set(bookCtx.genres.map((g) => g.toLowerCase()));
+    const gHit = p.genres.find((g) => bg.has(g.toLowerCase()));
+    if (gHit) hints.push(ar ? `ينشر ${gHit}` : `Publishes ${gHit}`);
+    const bl = new Set(bookCtx.languages.map((l) => l.toLowerCase()));
+    const lHit = p.languages.find((l) => bl.has(l.toLowerCase()));
+    if (lHit) hints.push(ar ? (lHit === "Arabic" ? "يقبل مخطوطات بالعربية" : `يقبل ${lHit}`) : `Accepts ${lHit} manuscripts`);
+    if (p.acceptsUnsolicited) hints.push(ar ? "يقبل التقديم المباشر" : "Open to direct submissions");
+    return hints.slice(0, 2);
+  };
 
   // Per-publisher match score, memoised so a search/filter change
   // doesn't re-score every card.
@@ -1008,6 +1101,7 @@ export default function PublishBook() {
                       onSelect={() => setSelectedPublisher(selectedPublisher?.id === pub.id ? null : pub)}
                       ar={ar}
                       matchScore={publisherScores.get(pub.id)?.score}
+                      matchHints={matchHintsFor(pub)}
                       bookId={bookId || undefined}
                     />
                   ))}
