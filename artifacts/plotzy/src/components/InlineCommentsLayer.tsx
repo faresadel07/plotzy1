@@ -139,6 +139,10 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
   const anchorOffset = useRef(0);
   const currentStart = useRef(0);
   const currentEnd = useRef(0);
+  // Timestamp of the last touch interaction: browsers replay touch
+  // taps as synthetic mouse events, which would otherwise close the
+  // selection popover the long-press just opened.
+  const lastTouchTs = useRef(0);
 
   // ── Render stored highlights ──
   useEffect(() => {
@@ -187,6 +191,22 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
     setLiveRects([]);
     // Kill any native selection
     window.getSelection()?.removeAllRanges();
+  }
+
+  // Expand the collapsed anchor to the word under the finger — the
+  // iOS-native long-press behavior. Called when touch selection arms.
+  function expandToWord() {
+    const container = anchorContainer.current;
+    if (!container) return;
+    const text = container.textContent || "";
+    let s = currentStart.current;
+    let e = currentEnd.current;
+    while (s > 0 && !/\s/.test(text[s - 1])) s--;
+    while (e < text.length && !/\s/.test(text[e])) e++;
+    currentStart.current = s;
+    currentEnd.current = e;
+    anchorOffset.current = s;
+    if (e - s >= 1) setLiveRects(buildSelectionRects(container, s, e));
   }
 
   function moveDrag(x: number, y: number) {
@@ -245,6 +265,8 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
   // ── Mouse events ──
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
+      // Ignore the synthetic mouse replay that follows a touch tap.
+      if (Date.now() - lastTouchTs.current < 700) return;
       if (layerRef.current?.contains(e.target as Node)) return;
       if ((e.target as HTMLElement).closest?.(`.${HL_CLASS}`)) return;
       // Close popovers
@@ -275,32 +297,76 @@ export function InlineCommentsLayer({ bookId, onFirstSelection }: Props) {
   }, [selectionInfo, activeComment]);
 
   // ── Touch events ──
+  //
+  // Selection on touch requires a LONG PRESS, exactly like the native
+  // iOS behavior: hold a word for ~450ms with a still finger and it
+  // selects (with a haptic tick), then drag to extend. A plain swipe
+  // never selects — the old behavior hijacked every scroll gesture
+  // into a selection, which made reading on a phone infuriating.
   useEffect(() => {
+    const LONG_PRESS_MS = 450;
+    const MOVE_TOLERANCE = 12; // px of drift before it counts as a scroll
+    let timer: number | null = null;
+    let armed = false;
+    let px = 0;
+    let py = 0;
+    let pTarget: Node | null = null;
+    const clearTimer = () => {
+      if (timer !== null) { window.clearTimeout(timer); timer = null; }
+    };
+
     const onStart = (e: TouchEvent) => {
       if (layerRef.current?.contains(e.target as Node)) return;
       if ((e.target as HTMLElement).closest?.(`.${HL_CLASS}`)) return;
       const t = e.touches[0];
-      if (!t) return;
-      startDrag(t.clientX, t.clientY, e.target as Node);
+      if (!t || e.touches.length > 1) return;
+      armed = false;
+      px = t.clientX;
+      py = t.clientY;
+      pTarget = e.target as Node;
+      lastTouchTs.current = Date.now();
+      clearTimer();
+      timer = window.setTimeout(() => {
+        if (!pTarget) return;
+        startDrag(px, py, pTarget);
+        if (dragging.current) {
+          armed = true;
+          expandToWord();
+          try { (navigator as any).vibrate?.(10); } catch { /* no haptics */ }
+        }
+      }, LONG_PRESS_MS);
     };
     const onMoveT = (e: TouchEvent) => {
-      if (!dragging.current) return;
       const t = e.touches[0];
       if (!t) return;
+      if (!armed) {
+        // Finger moved before the long press fired: it's a scroll, so
+        // cancel the pending selection and let the page move freely.
+        if (Math.abs(t.clientX - px) > MOVE_TOLERANCE || Math.abs(t.clientY - py) > MOVE_TOLERANCE) {
+          clearTimer();
+        }
+        return;
+      }
       e.preventDefault();
       moveDrag(t.clientX, t.clientY);
     };
     const onEnd = (_e: TouchEvent) => {
-      if (!dragging.current) return;
-      endDrag();
+      lastTouchTs.current = Date.now();
+      clearTimer();
+      if (!armed) return;
+      armed = false;
+      if (dragging.current) endDrag();
     };
-    document.addEventListener("touchstart", onStart, { passive: false });
+    document.addEventListener("touchstart", onStart, { passive: true });
     document.addEventListener("touchmove", onMoveT, { passive: false });
     document.addEventListener("touchend", onEnd);
+    document.addEventListener("touchcancel", onEnd);
     return () => {
+      clearTimer();
       document.removeEventListener("touchstart", onStart);
       document.removeEventListener("touchmove", onMoveT);
       document.removeEventListener("touchend", onEnd);
+      document.removeEventListener("touchcancel", onEnd);
     };
   }, [selectionInfo, activeComment]);
 

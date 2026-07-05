@@ -1345,7 +1345,7 @@ export default function ReadBook() {
         div:hover > .page-nav-hint { opacity: 1 !important; }
 
         /* Book reader content styles — preserves formatting from the editor */
-        .book-reader-content { user-select: none; -webkit-user-select: none; cursor: text; }
+        .book-reader-content { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: text; }
         .book-reader-content img { -webkit-user-drag: none; user-drag: none; }
         .book-reader-content p { margin: 0 0 1.1em; text-indent: 1.8em; orphans: 2; widows: 2; }
         .book-reader-content p:first-child { text-indent: 0; }
