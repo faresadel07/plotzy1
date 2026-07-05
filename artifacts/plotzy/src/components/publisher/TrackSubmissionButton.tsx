@@ -16,6 +16,7 @@
 // uses to namespace bookmarks and submissions.
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Send, Check, Bookmark, BookmarkCheck } from "lucide-react";
 import {
   useSubmissions, useCreateSubmission,
@@ -176,13 +177,19 @@ function TrackDialog({
   const [submittedAt, setSubmittedAt] = useState<string>(today);
   const [notes, setNotes] = useState<string>("");
 
-  return (
+  // PORTAL, not inline: this dialog is triggered from inside a
+  // publisher card that carries a CSS transform, and a transformed
+  // ancestor turns position:fixed into card-relative positioning —
+  // the backdrop stopped covering the screen and the panel visually
+  // interleaved with the cards behind it. Rendering into body
+  // escapes the card entirely.
+  return createPortal(
     <div
       onClick={onCancel}
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 100,
+        zIndex: 140,
         background: "rgba(0,0,0,0.55)",
         backdropFilter: "blur(6px)",
         display: "flex",
@@ -341,7 +348,8 @@ function TrackDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
