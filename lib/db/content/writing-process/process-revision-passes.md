@@ -12,6 +12,8 @@ The cure is sequence. Three passes, in this order. The sequence is the lesson; t
 - Pass 3, line: does every sentence earn its words?
 :::
 
+:::diagram revision-funnel | Three passes, narrowing: from the shape of the book, to the scene, to the sentence.
+
 ## Why one pass doesn't work
 
 You cannot simultaneously hold *does this chapter belong in the book* and *is this comma in the right place*.
@@ -131,6 +133,8 @@ A few mechanical tricks that catch what re-reading on the same screen doesn't:
 
 These are not gimmicks. They exploit the same thing: a manuscript you have stopped seeing because you've been seeing it the same way for months.
 
+![A manuscript page covered in handwritten corrections](/images/course/photos/manuscript.jpg "A draft with ink on it is a draft getting better.")
+
 ## What this gives you
 
 The next lesson is the *what to check, specifically* version of all three passes: a working checklist with a one-sentence reason for every item.
@@ -148,6 +152,10 @@ If you cannot, the scene is not yet earning its place. Mark it. *Don't fix it ye
 
 Doing this for one chapter is a fifteen-minute exercise. Doing it for a whole manuscript is the structural pass.
 :::
+
+Take this with you.
+
+:::resource revision-plan-en.pdf | The revision plan | Print it and schedule your three passes before you start
 
 :::takeaway
 - Revise in three passes, structural then scene then line, and never fix sentences in chapters you might cut.

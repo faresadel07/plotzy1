@@ -4,6 +4,8 @@ Readers forgive a slow chapter twelve. They do not forgive a broken ending.
 
 The ending is disproportionately what a reader remembers, what they tell their friends, what they type into the review box. A book that runs strong for three hundred pages and fumbles the last twenty gets shelved, in the reader's memory, as a fumble. Unfair, maybe. True, definitely. The good news: endings are not magic. They are payoff, and payoff can be engineered.
 
+![A climber standing on a mountain summit above the clouds](/images/course/photos/summit.jpg "The climax is the peak every step of the book has been climbing toward.")
+
 ## An ending is a promise, kept
 
 Back in [Module 1](/learn/lesson/foundation-premise-promise) you framed your premise as a promise to the reader. The opening made that promise in public. The ending is where it comes due.

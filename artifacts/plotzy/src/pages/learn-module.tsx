@@ -1,6 +1,6 @@
 import { Link, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, ChevronLeft, Clock, BookOpen, FileQuestion } from "lucide-react";
+import { ChevronRight, ChevronLeft, Clock, BookOpen, FileQuestion, Award } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
@@ -151,6 +151,24 @@ export default function LearnModulePage() {
                 </p>
               )}
             </header>
+
+            {user && moduleQ.data.lessonCount > 0 && completedCount >= moduleQ.data.lessonCount && (
+              <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-5 flex items-center gap-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
+                  <Award className="h-5 w-5" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm">
+                    {isRTL ? "أنهيت هذه الوحدة كاملة" : "You finished this whole module"}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isRTL
+                      ? "خطوة حقيقية نحو كتابك. جرب اختبار الوحدة لتثبت ما تعلمته."
+                      : "A real step toward your book. Take the module quiz to lock it in."}
+                  </p>
+                </div>
+              </div>
+            )}
 
             <section className="space-y-2">
               {moduleQ.data.lessons.map((lesson, idx) => (

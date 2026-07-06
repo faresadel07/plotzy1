@@ -8,6 +8,8 @@ That's interesting. The shape isn't a rule someone invented and the rest of us h
 
 Knowing the shape doesn't make you a paint-by-numbers writer. It makes you a writer who can diagnose a saggy middle without waiting for a beta reader to tell you it's saggy.
 
+![A person standing at the entrance of a tall hedge maze](/images/course/photos/maze.jpg "Structure is not the maze. It is the map you carry into it.")
+
 ## Why three
 
 Picture a two-act story.
@@ -37,6 +39,13 @@ Three things have to happen, in order.
 **Lock-in.** The protagonist crosses a threshold they cannot un-cross. She quits her job. She buys the train ticket. She opens the letter. Lock-in is the choice that means *I cannot go back to my old life from here*. This is the end of Act 1.
 
 Common Act 1 mistake: the protagonist *reacts* to events but never *commits*. The promotion doesn't go through; she's upset; we keep watching her be upset for ninety pages. Without lock-in, Act 2 never starts. You can spot this in your own draft by asking, around page twenty-five: *has my protagonist made a decision they cannot take back?* If no, you're still in Act 1.
+
+:::example side-by-side | Reacting is not committing.
+[Reacting]
+The promotion goes to someone else. She cries in the car park, complains to her sister, drafts a resignation letter and deletes it. Ninety pages later she is still employed, still furious, and still exactly where she started.
+[Locking in]
+The promotion goes to someone else. She walks back in, resigns, and signs the lease on the tiny office across town. Now there is no old life to go back to, and Act 2 has no choice but to begin.
+:::
 
 :::check
 Q: What separates the lock-in from the inciting incident?
@@ -79,6 +88,8 @@ The climax is short. Usually ten to fifteen percent of the book.
 After the climax: a brief resolution that shows the world after the change. The resolution is not decoration. It's the space the reader needs to *feel* what just happened. Skip it and the climax registers as a fact instead of an event.
 
 The opposite mistake: falling in love with your resolution and letting it run for fifty pages. Keep it the smallest possible thing that gives the reader breathing room, and trust the reader to fill in the rest.
+
+:::diagram three-act-curve | The five beats you just walked through, drawn as one curve
 
 :::video jrIogch5DBU | Lecture 2: Plot Part 1, Promises and Payoffs | Brandon Sanderson
 

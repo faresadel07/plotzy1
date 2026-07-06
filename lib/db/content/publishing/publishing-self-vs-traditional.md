@@ -6,6 +6,8 @@ The right path is the one that fits this book, this writer, and this moment in t
 
 This lesson is the decision frame, not a verdict.
 
+![A vintage printing press with metal type set for a page](/images/course/photos/press.jpg "The machinery keeps changing; the goal has not: your words in a reader's hands")
+
 ## The two paths exist for different reasons
 
 Traditional and self-publishing are not better/worse versions of each other. They are different *systems* with different costs and different outcomes.
@@ -34,6 +36,8 @@ Here is the whole trade in one view.
 - The ability to release, learn from readers, and iterate quickly.
 - The cost: every other job in the system (editor, designer, formatter, marketer), weak bookstore access, and the discoverability fight against hundreds of new releases a day.
 :::
+
+:::diagram publishing-paths | Two paths, two systems: what each one buys and what it costs
 
 The traditional system is not broken; it is selective and slow. Most queries don't land an agent; most agented manuscripts don't land a publisher. Writers who succeed in it usually have an exceptional manuscript, an exceptional pitch, or both, most often both.
 
@@ -112,6 +116,10 @@ Then read both lists. Identify which set is more *honest*: not which is more att
 
 The choice is then mostly made. Resist re-deciding it monthly; the indecision will cost you more than the wrong path would.
 :::
+
+Take this with you.
+
+:::resource query-letter-template-en.pdf | The query letter template | If the traditional path wins your two lists, this is the first document you will need
 
 :::takeaway
 - Traditional and self-publishing are different systems, not ranked options; arguments about which is "better" are usually survivorship stories.

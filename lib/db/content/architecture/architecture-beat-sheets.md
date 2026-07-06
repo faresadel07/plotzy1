@@ -24,6 +24,8 @@ Once you know that the *likability beat* (the moment the audience decides they'r
 
 The appeal is precision. Where the three-act structure tells you "your inciting incident lands in Act 1," a beat sheet tells you "around page twelve of a hundred-and-ten-page screenplay." For commercial fiction and screenwriting, that level of precision is genuinely useful. For other kinds of writing, it isn't. We'll get to which is which.
 
+:::diagram beat-map | Emotional checkpoints pinned to the page count
+
 :::video woMYSyOsB6M | How to Plot Your Novel Using Brain Science | Abbie Emmons
 
 ## The likability beat
@@ -76,6 +78,13 @@ If any heading could be lifted into someone else's outline without sounding wron
 
 A beat sheet built this way is yours. A beat sheet built by following someone else's template is an audition for the writer who wrote the template.
 
+:::example side-by-side | A borrowed beat and a derived one
+[Borrowed]
+Page 55: "The midpoint reversal." Correct, universal, and interchangeable. It could sit in the outline of any book ever written, which is exactly the problem.
+[Derived]
+Page 55: "The first time she lies to her sister." The same structural moment, but it could only belong to this book, and writing it down already tells you what the scene has to contain.
+:::
+
 :::check
 Q: Which beat heading belongs on a beat sheet worth keeping?
 - "The midpoint reversal"
@@ -101,6 +110,10 @@ Constraint: do not look up an existing beat sheet template. Derive the beats fro
 
 Then, beside each beat, write its approximate page placement (e.g. *page 30 of a 250-page book*). If your beats clump near the start or end with nothing in the middle, you've found the saggy section the next draft will need to fix.
 :::
+
+Take this with you.
+
+:::resource beat-sheet-en.pdf | The beat sheet | Print it and map your beats by hand
 
 :::takeaway
 - A beat is an emotional checkpoint: the shift that has to happen here for the next part to make sense.

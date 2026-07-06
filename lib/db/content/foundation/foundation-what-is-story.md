@@ -55,6 +55,8 @@ X: The events are identical in both versions. "Of grief" supplies the cause conn
 
 Most beginners write extended anecdotes and call them stories. They have the moments. They have the prose. They have a character. What they don't have is the change: the *because of this, that*. Knowing the difference is the first technical move. You can't fix a problem you can't name.
 
+:::diagram story-vs-plot | The same two events. One causal link is all it takes to turn a plot into a story.
+
 ## You're not transferring events. You're shaping meaning.
 
 Two people break up. That's data.
@@ -95,9 +97,15 @@ You'll spend the rest of this course learning to put that pattern in place on pu
 When you're done, warm down with three sticky stories. For three stories that have stayed with you (books, films, family stories), finish this sentence: "Someone wanted *X*, the obstacle was *Y*, and they ended up *Z*." If a story you love is hard to fill in, that's information: it may be a vignette you'd been mistaking for a story.
 :::
 
-One more thing before the reading list. Brandon Sanderson teaches a full university course on writing fiction and posts every lecture free. The first one pairs well with this lesson, and the series pairs well with this entire course.
-
 :::video -6HOdHEeosc | Lecture 1: Introduction to Writing Fiction | Brandon Sanderson
+
+:::cards
+Story | A patterned sequence in which someone wants something, hits an obstacle, and is changed by what happens.
+Plot | The bare sequence of events, one thing after another.
+Anecdote | A tiny complete story, paragraph-sized, with want, obstacle, and change all intact.
+Vignette | A moment with no change; sometimes beautiful, never a story by itself.
+Consequence | What an event forces to happen next; the cure for a slow chapter.
+:::
 
 :::takeaway
 - A story is a patterned sequence in which someone wants something, hits an obstacle, and is changed by what happens.

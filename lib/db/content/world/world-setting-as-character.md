@@ -6,6 +6,8 @@ The moors in *Wuthering Heights* are not a stage on which the novel's events hap
 
 When a setting carries that kind of weight, the rules for it change. This lesson teaches when to grant a setting that elevation, what concrete tools to use to do it, and where the failure mode lives. Pretentiousness, almost always.
 
+![A city street shining under rain at night](/images/course/photos/rain-street.jpg "A place with moods and opinions is a character.")
+
 ## What "setting as character" actually means
 
 Setting becomes character when the place does *work* in the story that an inert backdrop couldn't.

@@ -6,6 +6,8 @@ Reach for genuine evil only when you can earn it.
 
 That's the whole lesson. The rest is how to do both.
 
+![Chess pieces facing each other in the middle of a game](/images/course/photos/chess.jpg "The antagonist is not off the board. They are playing the same game, with a plan of their own.")
+
 ## Antagonist ≠ villain
 
 An antagonist *opposes*. A villain *is evil*. Most antagonists are not villains.
@@ -19,6 +21,13 @@ A villain is a moral problem. An antagonist is a structural problem with the pro
 :::
 
 They need different tools. The instinct to write a villain when an antagonist would do (to make the opposition *evil* rather than *opposed*) flattens the conflict. Now there is only one side to the argument.
+
+:::example side-by-side | A function vs a person
+[Evil because evil]
+Marcus blocks Sarah's promotion because he is cruel and has always resented her.
+[Opposed because wounded]
+Marcus blocks Sarah's promotion because he trained her for three years, watched her take the credit for a system he built, and has decided that this time someone is going to notice what he does.
+:::
 
 ## Mirror the protagonist's framework
 

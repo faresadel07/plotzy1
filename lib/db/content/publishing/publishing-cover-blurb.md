@@ -113,6 +113,13 @@ X: The triad's failure mode is silent. A leaking triad doesn't anger readers; it
 The 50-word version is the most useful. It is what you'd send in an email to a friend asking what your book is about. If you can't make 50 words work, your hook isn't sharp enough. The diagnosis is upstream of the blurb.
 :::
 
+:::cards
+Hook | The blurb's opening move: who the protagonist is and what disturbs their normal, in one or two sentences.
+Stakes | What is at risk and what stands in the way, named specifically enough for a reader to hold in mind.
+Promise | The closing move that sells the experience: genre, theme, and texture, not another round of plot.
+Metadata | The discoverability infrastructure of categories, keywords, title, and series naming that puts a book on the right shelf.
+:::
+
 :::takeaway
 - A cover gets about 1.5 seconds; its job is to signal genre, tone, and quality, not to be art.
 - A blurb is a sales pitch, not a synopsis: hook, stakes, promise, in three paragraphs.

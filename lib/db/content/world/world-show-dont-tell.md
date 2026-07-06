@@ -35,6 +35,8 @@ This is the case for showing. It is not the case against telling.
 
 :::video YAKcbvioxFk | How to Show, Not Tell: The Complete Writing Guide | Quotidian Writer
 
+:::diagram show-dont-tell-iceberg | The reader sees the surface; the meaning waits underneath.
+
 ## What telling actually is
 
 Telling compresses or summarises. It moves time, it bridges scenes, it gives the reader information without spending the page count of a rendered moment.
@@ -113,6 +115,13 @@ The next three lessons are downstream: sensory writing (L2) makes the shown mome
 Then ask: which version belongs in your novel? Sometimes the original. Sometimes the rewrite. Occasionally, usefully, neither, and the rewrite has shown you what the third version would be.
 
 The point isn't to convert one into the other. The point is to learn the difference by feel, not by rule.
+:::
+
+:::cards
+Showing | Rendering a moment in real time so the reader reaches the meaning by inference.
+Telling | Compressing or summarising to move time, bridge scenes, and deliver information at speed.
+The real rule | Show what matters; tell what doesn't.
+Filter words | Verbs like saw, felt, and noticed that report a perception instead of letting the reader have it directly.
 :::
 
 :::takeaway

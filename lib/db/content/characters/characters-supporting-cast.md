@@ -6,6 +6,8 @@ The cull is brutal because most beginners' drafts are full of characters who *wo
 
 This lesson teaches you to ask.
 
+![A row of theatrical masks hanging on a wall](/images/course/photos/masks.jpg "Every supporting character wears the mask of a role. The good ones let the reader glimpse a face behind it.")
+
 ## Functional vs. dimensional
 
 A **functional** supporting character does a single job in the story. The mentor who delivers the tool. The rival who applies pressure. The confidant who lets the protagonist say their thoughts aloud.
@@ -110,6 +112,13 @@ If you cannot answer (1), the character is not yet doing work. Cut them, or give
 If you cannot answer (2), the character is cardboard. Add a second trait, or accept that they're a function-only role and write them sparely (one line, one moment).
 
 If two characters share the same answer to (1), consider merging them. The character that comes out of the merger will almost always be more interesting than either of the originals.
+:::
+
+:::cards
+Foil | A character defined by contrast with the protagonist, showing who they are by being almost like them.
+Confidant | The character who lets the protagonist speak their thoughts aloud, best when they push back.
+Functional character | A supporting character who does one job for the story and is written sparely.
+Two-trait rule | The minimum for personhood: two unrelated traits, ideally holding a small contradiction.
 :::
 
 :::takeaway

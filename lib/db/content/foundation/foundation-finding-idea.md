@@ -12,6 +12,8 @@ The prepared write down ten "what ifs" a day for a year and at the end of the ye
 
 This lesson is about getting prepared.
 
+![An open notebook with a pen resting on a blank page](/images/course/photos/notebook.jpg "Ten what-ifs a day. The prepared don't wait for lightning; they keep a place for it to land.")
+
 ## You don't need an "original" idea
 
 Strip away the manners and *Pride and Prejudice* is "two stubborn people misjudge each other." There are ten thousand stories with that idea. None of the others are *Pride and Prejudice*.
@@ -45,8 +47,6 @@ These come bundled with motivation. Most novels die at month three because the w
 You cannot fake-care for eighty thousand words.
 
 Mine the obsession. Even if the obsession itself doesn't become the book, the *energy* of it will be what carries you to the end.
-
-Tale Foundry makes the same argument from the other direction: the story you should be writing is usually the one that has been following you around for years.
 
 :::video TwOItYgUvPA | The Story You Should Be Writing | Tale Foundry
 
@@ -127,6 +127,14 @@ Then look at your ten. Pick the one you would most want to read.
 In exactly 100 words, expand it into a premise. Cover four things: who the central character is (not just their job, but what they want), what specifically is in the way, what the central question of the book will be, and what time-frame the story will span.
 
 Save this premise. You will bring it into Lesson 4 to test it against the three ingredients, and you will keep returning to it across the next twenty-four lessons. This is your book.
+:::
+
+:::cards
+What if | The right shape for an idea, because it forces a change into the premise.
+Premise | An idea turned into a situation: a specific person, a specific tension, somewhere to start.
+Obsession | The question you can't stop asking; the fuel that lasts eighty thousand words.
+Intersection method | Two unrelated interests put in the same room, forcing the specificity a vague theme can't.
+Right-sized premise | One major character, one major question, six to twenty-four months of fictional time.
 :::
 
 :::takeaway

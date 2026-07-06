@@ -6,6 +6,8 @@ The fear is real. The perfectionism is real. The voice that says *anything you p
 
 This lesson is about working through it. Mechanically. Not with pep talks.
 
+![An old typewriter with a sheet of paper loaded and ready](/images/course/photos/typewriter.jpg "The page is only blank once. The first bad sentence ends that forever.")
+
 ## The blank page is real, but "writer's block" is the wrong name
 
 The phrase *writer's block* hides the diagnosis.
@@ -49,6 +51,13 @@ The fear of being bad cannot survive the requirement to be bad.
 :::
 
 Once the page is no longer blank, the second paragraph is a different problem.
+
+:::example side-by-side | The same hour, two writers
+[Waiting for the right sentence]
+Hour one: opens the document. Reads the premise again. Types "The morning of the funeral was" and deletes it. Types "Rain had been falling since" and deletes it. Checks one fact online. Closes the document with the page still blank and the right sentence still owed.
+[Writing a bad one on purpose]
+Hour one: types "The morning was a bad morning and Omar was late to the funeral, which tells you most of what you need to know about Omar." Winces. Keeps typing. Forty minutes later there are four hundred rough words, and somewhere in the middle of them, one sentence worth keeping.
+:::
 
 :::check
 Q: You have spent two months stuck on your opening chapter because the opening "should" come first. What does this lesson tell you to do?

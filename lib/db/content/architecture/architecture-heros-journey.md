@@ -34,12 +34,29 @@ Six beats. Seven if you count the boon, which is sometimes load-bearing and some
 
 The seventh beat, the boon, is what they bring back. Sometimes a literal object, more often a piece of knowledge or a power. When the boon is present, the story has a reason for the Return. When it's absent, the Return is just exposition.
 
+:::diagram heros-journey-circle | Leave, descend, change, return: the beats drawn as one circle
+
 :::check
 Q: What makes the Ordeal different from the other Tests?
 - It is the last test in the book
 - It is the most physically dangerous moment in the story
 -* It is the test that changes the protagonist permanently
 X: The Ordeal is not defined by being last or biggest. It is the test after which the protagonist is no longer the person who started the journey.
+:::
+
+:::example click-toggle | The Odyssey, walked around the circle
+[The Call]
+The war at Troy summons Odysseus away from Ithaca, his wife, and his infant son.
+[The Refusal]
+He feigns madness, yoking an ox and a donkey to his plough and sowing his fields with salt, until the trick is exposed and he has to go.
+[The Mentor]
+Athena arms him with counsel and clears his road at exactly the moments he cannot clear it himself.
+[The Tests]
+Ten years of islands: the Cyclops, Circe, the Sirens. He loses ships, men, and pieces of the man he used to be.
+[The Ordeal]
+He sails to the land of the dead and hears his own future spoken aloud. The man who returns from the underworld is not the man who entered it.
+[The Return]
+Ithaca does not recognise him. He comes home a stranger and has to win his own house back before it fits him again.
 :::
 
 ## When it works

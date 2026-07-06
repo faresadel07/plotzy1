@@ -9,8 +9,12 @@ import {
   QuickCheck,
   ExerciseBox,
   LessonChecklist,
+  FlashCards,
+  ResourceCard,
   type QuickCheckData,
+  type FlashCardItem,
 } from "@/components/course/LessonBlocks";
+import { CourseDiagram } from "@/components/course/DiagramLibrary";
 
 // Project Gutenberg references in the lessons (e.g.
 // https://www.gutenberg.org/ebooks/1342) are shown as a tidy, clickable
@@ -133,6 +137,29 @@ function parseBlocks(content: string, ctx: ParseCtx): ReactNode[] {
               channel={parts[2] || undefined}
               duration={parts[3] || undefined}
             />,
+          );
+        }
+        i++;
+        continue;
+      }
+
+      // :::diagram <name> [| caption] — single line, no fence. Renders a
+      // named SVG from the diagram library.
+      if (header.startsWith("diagram")) {
+        const parts = header.slice(7).split("|").map((p) => p.trim());
+        if (parts[0]) {
+          out.push(<CourseDiagram key={key++} name={parts[0]} caption={parts[1] || undefined} />);
+        }
+        i++;
+        continue;
+      }
+
+      // :::resource file.pdf | Label | note — single line, no fence.
+      if (header.startsWith("resource")) {
+        const parts = header.slice(8).split("|").map((p) => p.trim());
+        if (parts[0]) {
+          out.push(
+            <ResourceCard key={key++} file={parts[0]} label={parts[1] || parts[0]} note={parts[2] || undefined} />,
           );
         }
         i++;
@@ -324,6 +351,21 @@ function renderDirective(header: string, body: string, ctx: ParseCtx, key: numbe
     case "check": {
       const q = parseQuickCheck(body);
       return q ? <QuickCheck key={key} {...q} /> : null;
+    }
+
+    case "cards": {
+      // One card per line: front | back
+      const cards: FlashCardItem[] = body
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => l.includes("|"))
+        .map((l) => {
+          const idx = l.indexOf("|");
+          return { front: l.slice(0, idx).trim(), back: l.slice(idx + 1).trim() };
+        })
+        .filter((c) => c.front && c.back);
+      if (cards.length === 0) return null;
+      return <FlashCards key={key} cards={cards} />;
     }
 
     case "exercise": {

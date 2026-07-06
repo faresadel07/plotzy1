@@ -22,8 +22,6 @@ This isn't laziness; it's the curve. The work is real and useful for the first t
 
 The skill is to *feel* the curve. Past a certain point, each new pass produces less gain than the same time would produce on a different book. The rest of this lesson is the diagnostic for where you are on the curve.
 
-For a working writer's honest picture of what a full revision cycle feels like from the inside, including the moment it stops paying, watch this alongside the lesson.
-
 :::video 65otc2uE7-Q | Revising a Novel: Process, Tips, and Tricks | ShaelinWrites
 
 ## Three signs you're done
@@ -53,6 +51,13 @@ Beta readers may not catch this; you will. If you are speeding through the clima
 **You're avoiding a specific section.**
 
 Most writers know which chapter they don't want to re-read. That chapter usually has a problem you haven't named yet. Read it. The problem will surface. Once named, it can be fixed.
+
+:::example click-toggle | Six signs, two verdicts
+[Signs you are done]
+You are moving the same commas back and forth. You are rewriting passages you approved two passes ago. Your beta readers have run out of structural notes and are down to matters of taste.
+[Signs you are not done]
+You cannot say what the book is about in two sentences. The ending feels rushed to you on your own re-reads. There is one chapter you keep finding reasons not to open.
+:::
 
 :::check
 Q: Last week you changed a comma in chapter five. This week you changed it back. What is the diagnosis?
@@ -132,6 +137,13 @@ Vague conditions don't count: *"when it's good"* is too vague, *"when I'm happy 
 Concrete conditions count: *"when three of three beta readers identify the same emotional climax"*, *"when I read chapter five aloud without stopping to fix anything"*, *"when I cannot, on a fresh read, name a structural change I would make."*
 
 If you cannot write three concrete conditions, your sense of *done* is too vague to ever arrive at. This exercise is the start of having one.
+:::
+
+:::cards
+Diminishing returns | The revision curve: the first three to five passes do the real work, and later passes gain less than the same time spent on another book.
+Comma shuffling | Changing the same small things back and forth; the clearest observable sign the manuscript has stopped improving.
+Beta reader patterns | Trusting what several readers flag together rather than any single note; contradictory notes on one element mean it is unspecific.
+The next-book remedy | The most reliable cure for over-revising: start the next book, and the current one becomes shippable.
 :::
 
 :::takeaway

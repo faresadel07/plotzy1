@@ -26,8 +26,6 @@ Test for your premise: in one sentence, what does your protagonist *want*?
 
 If you can write the sentence and it's something a reader could feel themselves wanting (even an awful version of it) your character has the foundation to become cared-about. If the sentence is "she wants to find herself" or "he wants to be happy", you don't have a want yet. You have a vague yearning. Vague yearnings don't carry novels.
 
-Novel editor Ellen Brock has a list of the ways manuscripts fail this first test, and it maps almost one-to-one onto everything above.
-
 :::video nTUXlvOzgfg | 7 Reasons Readers Don't Care About Your Characters | Ellen Brock
 
 ## Conflict: a specific want meeting a specific obstacle
@@ -144,6 +142,14 @@ But the ingredients are in your hands now. Take them seriously and the architect
 If any of the three sentences is hard to write, the premise has a hole. That's good news. You now know what hole to fill before you draft a single page. A book that fails at month three usually fails because one of these three sentences was never written, only assumed.
 
 Save the answers with the premise. You'll bring all four (premise plus the three sentences) into Module 2.
+:::
+
+:::cards
+Want | A concrete desire the reader can feel themselves wanting; vague yearnings don't carry novels.
+Obstacle | The specific thing in the want's way: another person, a circumstance, or the character's own self.
+Conflict | A specific want meeting a specific obstacle; "things go badly" is a difficulty, not a conflict.
+Stakes | What failure would cost, made concrete enough for the reader to feel it.
+Change | Who the protagonist is at the end that they weren't at the start: internal, external, or tragic.
 :::
 
 :::takeaway

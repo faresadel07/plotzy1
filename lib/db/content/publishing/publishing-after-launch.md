@@ -4,6 +4,8 @@ The launch ends. The slump arrives. The writer either ships book 2 or stops bein
 
 This lesson is the realistic frame for what happens after launch, and the closer of the entire course.
 
+![An open door letting light into a dim room](/images/course/photos/door.jpg "A book closing behind you is a door opening onto the next one")
+
 ## The post-launch slump
 
 About two weeks after launch, the noise dies. Sales drop. Reviews slow. The platforms that featured you move on to the next book. The newsletter subscribers who bought immediately have already bought.
@@ -124,6 +126,13 @@ Sample structure (yours will look different):
 - *My next book after this one is [title or premise].*
 
 If you cannot write this concretely, your sense of *what next* is not yet operational. The exercise is the start of having one.
+:::
+
+:::cards
+The slump | The quiet weeks after launch: the normal curve of attention, not a verdict on the book.
+The long tail | Most of a book's lifetime sales come slowly, after the launch window closes.
+Reviews | Social proof for future readers; you read them once for patterns, never daily.
+The second book | The strongest marketing for book one and the real cure for the slump.
 :::
 
 :::takeaway

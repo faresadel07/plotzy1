@@ -145,6 +145,13 @@ One yes: cut to a single sentence. Zero yeses: cut entirely. Three yeses: leave 
 Read the chapter back. If it gained pace and kept meaning, that's the lesson. If it lost meaning, restore *only* the descriptions that were doing the lost work, and only those.
 :::
 
+:::cards
+Load-bearing description | Description that earns its place by doing structural or emotional work in the scene.
+Pacing | The speed the reader feels the story moving at, set by how much page sits between events.
+Skipping time | Crossing hours or years in a sentence of summary instead of rendering them.
+Camera cut | Ending a scene at its last load-bearing beat and opening the next where the story resumes.
+:::
+
 :::takeaway
 - The cure for slow description is not less description; it is load-bearing description.
 - The default for any room is one sentence; only load-bearing rooms earn elevation.

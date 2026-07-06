@@ -26,6 +26,8 @@ Plot is the process by which the want is tested until the need becomes visible.
 
 That's the whole framework. The rest of this lesson is how to use it.
 
+:::diagram wound-want-need | Three layers: the wound in the past, the want on the surface, the need underneath.
+
 ## Why protagonists without a wound feel hollow
 
 A protagonist with a want and no wound is a list of preferences.
@@ -122,6 +124,10 @@ Include three things:
 
 The moment may never appear in your book. That's fine. You need to know it exists before the first sentence; it will shape every present-day choice for the rest of the manuscript.
 :::
+
+Take this with you.
+
+:::resource character-profile-en.pdf | The character profile | Fill one in for your protagonist before you draft
 
 :::takeaway
 - A wound is a specific past moment, not a therapy label.

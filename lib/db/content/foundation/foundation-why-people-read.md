@@ -8,6 +8,8 @@ People who only want to escape go to sleep. They scroll their phone. They drink.
 
 Whatever fiction does, it's stronger than escape.
 
+![Rows of bookshelves in a quiet library](/images/course/photos/library.jpg "Every spine on these shelves is a life someone chose to live for a few hours.")
+
 ## The empathy machine
 
 You have never lost a child. You read a novel about a woman who has lost a child. You finish it on a train and you can't speak for half an hour.
@@ -17,6 +19,13 @@ What just happened to you?
 You ran her loss on your own simulator. The brain handed you the equipment of grief (the heaviness of it, the small involuntary glance at empty rooms) and let you experience them in safety. By the time you closed the book, you had practised an emotion you have never lived through.
 
 This is what fiction does that an argument cannot. An argument tells you about another person's life. Fiction puts you inside it. The first delivers data. The second delivers rehearsal.
+
+:::example side-by-side | The same fact, delivered twice. Only one of them stays with you.
+[As information]
+Smoking killed nearly half a million people last year.
+[As a story moment]
+The morning after the funeral, his daughter found the last pack in his coat pocket, three cigarettes missing, and could not bring herself to throw it away.
+:::
 
 For the writer, this matters at the line level.
 

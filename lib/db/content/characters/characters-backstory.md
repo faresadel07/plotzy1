@@ -6,6 +6,8 @@ How much of that does the reader need to know?
 
 Less than you think. And not in the order you'd guess.
 
+![An old manuscript page covered in handwriting](/images/course/photos/manuscript.jpg "The past is written down somewhere in full. The reader only ever needs a line of it.")
+
 ## The iceberg principle
 
 Picture an iceberg. A small fraction is above water. The bulk is below.
@@ -111,6 +113,13 @@ Then identify the *fifty* words a reader of your novel actually needs to know. N
 Cut the other four hundred and fifty words from your manuscript permanently. Keep them in your notes.
 
 The four hundred and fifty are still doing work. They make the fifty you keep feel weighted. This exercise, done properly on a real character, is one of the fastest ways to upgrade a draft.
+:::
+
+:::cards
+Backstory | Everything that happened to a character before page one, most of which stays in your notes.
+Dump | A block of historical context that interrupts the present story and moves the reader backward in time.
+Revelation | A single line of backstory that pivots the meaning of what is happening right now.
+Load-bearing detail | A piece of backstory that explains a present-day choice, which is the only kind that earns the page.
 :::
 
 :::takeaway

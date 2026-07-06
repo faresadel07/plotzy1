@@ -6,6 +6,8 @@ Marketing is what you do to people who already know who you are. The skill of bu
 
 This lesson is the principle, not the platform.
 
+![Readers browsing the shelves of a bookstore](/images/course/photos/bookstore.jpg "Readers gather where they feel known; the work is being findable there")
+
 ## Audience is not marketing
 
 Marketing is a transactional moment: I have a book; you might buy it.
@@ -19,6 +21,13 @@ Marketing without audience is cold-calling. Marketing with audience is sending a
 The conversion rates are not in the same universe.
 
 Most first-time authors confuse the two. They market hard at launch and audience-build never. By book 3 the gap has compounded: the writer who built audience while drafting has six hundred engaged readers; the writer who marketed at launch has the same starting position they had three books ago.
+
+:::example side-by-side | The same launch, two writers
+[Marketing only]
+Launch week. The writer posts the cover to social media: three hundred impressions, four likes, one sale. They buy a promo slot: forty clicks, two sales. By week two the book is invisible, and the writer has no way to reach the people who almost bought.
+[Audience first]
+Launch week. The writer emails two hundred readers who have followed the book for a year: the cover reveal, an excerpt, the date. Sixty buy in the first week. Fourteen review. And the next email will reach every one of them again.
+:::
 
 ## The newsletter is the only platform you own
 

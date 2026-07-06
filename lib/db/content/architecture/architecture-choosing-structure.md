@@ -6,6 +6,8 @@ The wrong move is to pick one and force the story to fit.
 
 The right move is to look at the premise you already have and ask which lens shows you the most about *that* story. The fourth answer, *none of these*, is sometimes the correct one. This lesson is about how to tell.
 
+![A forest path forking in two directions](/images/course/photos/crossroads.jpg "There is no single right road through a novel. There is the road that shows you the most of yours.")
+
 ## Three tools, one story
 
 These lenses are not competing. They are three resolutions of the same picture.
@@ -137,6 +139,14 @@ A framework that will make Module 3 (characters) and Module 4 (world) work toget
 2. What is the *engine* of your book? External events, internal transformation, or pacing? One sentence.
 
 Save this answer next to the premise. You'll bring both into Module 3, where the engine you named here decides how much of your page count goes to interiority versus action.
+:::
+
+:::cards
+Outliner | Plans the structure before drafting and uses the beat sheet as a map.
+Discovery writer | Finds the story by writing it, then uses structure to diagnose the draft.
+Beat sheet | A percentage-pegged list of story milestones, sharpest for pacing problems.
+Structure as diagnosis | Structure describes stories that work; use it to find what's broken, never to force a shape.
+The engine | The thing your book runs on: external events, internal change, or pacing.
 :::
 
 :::takeaway

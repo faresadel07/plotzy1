@@ -6,6 +6,8 @@ It is the one craft decision that touches literally every line. Word choice, wha
 
 Most craft decisions can be revised. This one can only be rewritten. That is why it belongs at the end of the character module, before you draft a word.
 
+![A vintage camera lens in close-up](/images/course/photos/camera.jpg "Choosing a point of view is choosing the lens. Everything the reader sees passes through it.")
+
 ## The options, with honest tradeoffs
 
 There are three camera positions that matter. Each buys you something and costs you something. Anyone who tells you one is simply better is selling their own preference.
@@ -31,6 +33,8 @@ Q: Your plot requires the reader to witness a scene between two side characters 
 - Omniscient is the only POV that can show any scene not witnessed by the protagonist
 X: First person is locked to the narrator's presence; secondhand report is possible but weaker. Third limited solves it by giving another character a viewpoint scene, so omniscient is not the only route.
 :::
+
+:::diagram pov-distances | Three camera positions, from inside one skull to above the whole town.
 
 ## Head-hopping, demonstrated
 

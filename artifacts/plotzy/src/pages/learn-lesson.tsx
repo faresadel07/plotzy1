@@ -9,6 +9,7 @@ import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/course/Markdown";
+import { VideoEmbed } from "@/components/course/LessonBlocks";
 import { ApplyToBook } from "@/components/course/ApplyToBook";
 import { LessonNavigation } from "@/components/course/LessonNavigation";
 import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
@@ -76,6 +77,22 @@ export default function LearnLessonPage() {
   const locTitle = lessonQ.data ? arField(isRTL, lessonQ.data.title, lessonQ.data.titleAr) : "";
   const locModuleTitle = lessonQ.data ? arField(isRTL, lessonQ.data.moduleTitle, lessonQ.data.moduleTitleAr) : "";
   const locContent = lessonQ.data ? arField(isRTL, lessonQ.data.content, lessonQ.data.contentAr) : "";
+
+  // Featured video: the lesson's FIRST video is hoisted out of the body
+  // and shown right under the title, where it invites a tap before the
+  // reading starts. Remaining videos stay in context where they were
+  // placed. Purely presentational: the stored content is untouched.
+  const { featuredVideo, bodyContent } = useMemo(() => {
+    const content = locContent.replace(/^﻿?\s*#{1,6}[^\n]*\r?\n+/, "");
+    const m = content.match(/^:::video[^\n]*$/m);
+    if (!m) return { featuredVideo: null as null | { id: string; title: string; channel?: string }, bodyContent: content };
+    const parts = m[0].slice(8).trim().split("|").map((s) => s.trim());
+    if (!parts[0]) return { featuredVideo: null, bodyContent: content };
+    return {
+      featuredVideo: { id: parts[0], title: parts[1] || "", channel: parts[2] || undefined },
+      bodyContent: content.replace(m[0], "").replace(/\n{3,}/g, "\n\n"),
+    };
+  }, [locContent]);
 
   const description = useMemo(() => {
     if (!locContent) return undefined;
@@ -161,14 +178,21 @@ export default function LearnLessonPage() {
               )}
             </header>
 
+            {/* Featured video: first video of the lesson, promoted to
+                the top so the page opens with something to watch. */}
+            {featuredVideo && (
+              <VideoEmbed
+                videoId={featuredVideo.id}
+                title={featuredVideo.title}
+                channel={featuredVideo.channel}
+              />
+            )}
+
             {/* Lesson body. Every lesson's markdown opens with its own
                 `# Title` heading which duplicated the page <h1> above.
                 Strip that single leading heading so the title shows once. */}
             <article>
-              <Markdown
-                content={locContent.replace(/^﻿?\s*#{1,6}[^\n]*\r?\n+/, "")}
-                storageBase={lessonQ.data.slug}
-              />
+              <Markdown content={bodyContent} storageBase={lessonQ.data.slug} />
             </article>
 
             {/* The golden thread: bridge from the lesson into the

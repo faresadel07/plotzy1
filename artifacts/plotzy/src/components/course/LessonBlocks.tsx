@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Play, Lightbulb, CheckCircle2, XCircle, PenLine, ListChecks } from "lucide-react";
+import { Play, Lightbulb, CheckCircle2, XCircle, PenLine, ListChecks, FileDown, RotateCw } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
@@ -257,6 +257,100 @@ export function ExerciseBox({ prompt, storageKey }: ExerciseBoxProps) {
         {value && <span>{isRTL ? "محفوظ" : "Saved"}</span>}
       </div>
     </section>
+  );
+}
+
+// ── FlashCards ────────────────────────────────────────────────────────
+// Tap-to-flip concept cards: term on the front, definition on the back.
+// A fast way to lock in a lesson's vocabulary without another wall of
+// prose. 3D flip with a reduced-motion fallback.
+
+export interface FlashCardItem {
+  front: string;
+  back: string;
+}
+
+export function FlashCards({ cards }: { cards: FlashCardItem[] }) {
+  const { isRTL } = useLanguage();
+  const [flipped, setFlipped] = useState<boolean[]>(() => cards.map(() => false));
+
+  const toggle = (i: number) =>
+    setFlipped((prev) => prev.map((v, j) => (j === i ? !v : v)));
+
+  return (
+    <div className="not-prose my-8">
+      <div className="mb-3 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+        <RotateCw className="h-3.5 w-3.5" aria-hidden />
+        {isRTL ? "بطاقات المفاهيم، اضغط لتقلب" : "Concept cards, tap to flip"}
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {cards.map((c, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => toggle(i)}
+            aria-pressed={flipped[i]}
+            className="group min-h-[7.5rem] cursor-pointer text-start"
+            style={{ perspective: "800px" }}
+          >
+            <span
+              className="relative block h-full min-h-[7.5rem] w-full transition-transform duration-500 motion-reduce:transition-none"
+              style={{
+                transformStyle: "preserve-3d",
+                transform: flipped[i] ? "rotateY(180deg)" : "rotateY(0deg)",
+              }}
+            >
+              <span
+                className="absolute inset-0 flex items-center justify-center rounded-xl border bg-card p-3 text-center text-sm font-bold leading-snug shadow-sm group-hover:border-primary/40"
+                style={{ backfaceVisibility: "hidden" }}
+              >
+                {c.front}
+              </span>
+              <span
+                className="absolute inset-0 flex items-center justify-center rounded-xl border border-primary/30 bg-primary/[0.06] p-3 text-center text-xs leading-relaxed"
+                style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+              >
+                {c.back}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── ResourceCard ──────────────────────────────────────────────────────
+// A downloadable worksheet or template that ships with the lesson.
+// Files live under /public/resources and download directly.
+
+interface ResourceCardProps {
+  file: string;
+  label: string;
+  note?: string;
+}
+
+export function ResourceCard({ file, label, note }: ResourceCardProps) {
+  const { isRTL } = useLanguage();
+  return (
+    <a
+      href={`/resources/${file}`}
+      download
+      className="not-prose my-6 flex items-center gap-3.5 rounded-xl border border-primary/25 bg-primary/[0.04] p-4 no-underline transition-colors hover:bg-primary/[0.08] active:scale-[0.995]"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+        <FileDown className="h-5 w-5" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold leading-snug text-foreground">{label}</span>
+        <span className="block text-xs text-muted-foreground mt-0.5">
+          {note || (isRTL ? "ملف PDF جاهز للطباعة" : "Printable PDF worksheet")}
+        </span>
+      </span>
+      <span className="shrink-0 rounded-md border border-primary/30 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-primary">
+        PDF
+      </span>
+    </a>
   );
 }
 

@@ -8,6 +8,8 @@ The rest of this lesson is a working checklist. About twenty items, organised by
 
 :::video 6xS8LykRUj0 | How to Edit Your Novel: Advice from an Editor | Ellen Brock
 
+![A red pen resting on a printed page marked with corrections](/images/course/photos/red-pen.jpg "The red pen is not the enemy of the draft. It is the draft's second chance.")
+
 ## A checklist organised by pass
 
 Three sections (Structural, Scene, Line) matching the three passes from L3. The order matters; structural items get checked first, line items last. Polishing prose in a chapter you'll cut is the failure mode the previous lesson warned you about.
@@ -98,6 +100,17 @@ The next lesson closes the module: how to know when the work is done.
 List the fixes you find here: places where dialogue tags are wrong, places where description doesn't earn its keep, places where adverbs could be cut.
 
 The list is information about your *blind spots*. Most writers consistently miss the same two or three categories. Knowing which two or three is what lets you self-edit faster on the next book.
+:::
+
+Take this with you.
+
+:::resource self-editing-checklist-en.pdf | The self-editing checklist | Print it and keep it beside the manuscript for every pass
+
+:::cards
+Structural pass | The first pass: checks want, inciting incident, lock-in, midpoint, dark moment, and change at the scale of the whole book.
+Scene pass | The second pass: makes every scene earn its place with the three ingredients, starting late and ending early.
+Line pass | The third pass: polishes the prose sentence by sentence, from dialogue tags to adverbs to rhythm.
+The out-loud test | Reading your pages aloud so the tongue catches the sentences the eye has stopped seeing.
 :::
 
 :::takeaway

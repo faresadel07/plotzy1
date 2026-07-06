@@ -84,6 +84,13 @@ Strangers convert poorly. The honest tactics treat *readers who already know you
 The marketing that works at book 1 is the marketing of relationships, not the marketing of reach.
 :::
 
+:::example side-by-side | The same ask, two ways
+[At strangers]
+A writer joins a genre forum the week before launch and posts: new dark fantasy out Friday, link below, reviews appreciated. The thread gets two polite replies and a moderator warning. Nobody clicks. The community has seen this exact post a hundred times.
+[Within relationships]
+A writer who has spent a year in that forum messages twelve beta readers: you read this book in draft and made it better; if you meant what you said about chapter nine, would you write a few honest sentences on launch week? Nine say yes.
+:::
+
 ## The won't-do list matters more than the do list
 
 This is the lesson, stated explicitly: **the won't-do list is the more important of the two.**
@@ -136,6 +143,13 @@ X: The connecting thread is the audience, not the cost. The honest tactics work 
 **Won't-do at launch (3 things).** Specific tactics you are *refusing*. The list is shorter than the temptations; that's correct. Pick the three you'd be most likely to slip into. *No paid ads at this stage.* *No blog tour.* *No promo-site spending without retargeting data.*
 
 The won't-do list is the more useful of the two. Re-read it the week before launch, when the temptation is highest. Re-read it again the week after, when the panic of slow sales tries to renegotiate it.
+:::
+
+:::cards
+Owned audience | Readers you can reach directly, on a list you control and can carry between platforms.
+Rented attention | Reach that lives on someone else's platform, throttled by an algorithm that can change at any time.
+Launch window | The short spike of visibility around publication; honest tactics spend it on readers who already know you.
+The won't-do list | The pre-decided refusals that protect book 2 from shiny tactics and post-launch panic.
 :::
 
 :::takeaway

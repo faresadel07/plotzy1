@@ -4,6 +4,8 @@ A browsing reader gives you a page. Often less. They read the first paragraph st
 
 That is not a reason to panic. It is a reason to know exactly what page one is for, because most failed first chapters fail the same way: not badly written, just doing the wrong jobs.
 
+![A theater stage with the curtain rising under the lights](/images/course/photos/stage.jpg "Page one is the curtain going up on the promise your book will spend four hundred pages keeping.")
+
 ## The three jobs of page one
 
 Page one has three jobs, and only three.
@@ -106,6 +108,10 @@ So do not spend six weeks polishing page one before drafting page two. That is t
 
 If you cannot answer the first question, you do not yet have a hook. You have a beginning. Revise once until the question exists.
 :::
+
+Take this with you.
+
+:::resource first-chapter-checklist-en.pdf | The first chapter checklist | Run your opening pages through it before anyone else reads them
 
 :::takeaway
 - Page one has three jobs: establish the voice, make the premise's promise, disturb the normal.

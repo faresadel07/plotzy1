@@ -141,6 +141,13 @@ If you can do this once, you have done one of the hardest things in fiction. If 
 The first attempt will probably feel awkward. That's the exercise. Subtext is a muscle; you build it by writing scenes that need it.
 :::
 
+:::cards
+Subtext | The layer of meaning a conversation carries underneath what the characters actually say.
+Tag | The attribution word after dialogue; said and asked are invisible and do the job best.
+Beat | A physical action that breaks dialogue and carries attribution, pacing, and character at once.
+Throat-clearing | The filler of real speech that fiction strips out, keeping only imperfections that signal state.
+:::
+
 :::takeaway
 - Fictional dialogue strips the throat-clearing of real speech and keeps only the imperfections that signal state.
 - Voice differentiation is structural (sentence length, avoidance, abstraction, metaphor) and flows from the wound, not from quirks.

@@ -18,6 +18,8 @@ This is why "conflict in every scene" is incomplete advice. Two characters can a
 If nothing changes, you don't have a scene. You have a location.
 :::
 
+:::diagram scene-value-shift | Mark the charge at the first line and the last; if the marks match, the scene is not working
+
 ## The five questions
 
 Before drafting any scene, or while performing an autopsy on a dead one, answer these five questions.
@@ -102,6 +104,10 @@ X: A chapter is where you let the reader pause; a scene is where want and change
 
 Then do two edits. First, cut the opening until the scene starts as late as it possibly can. Second, cut the ending so the scene stops within one sentence of the value shift landing. Keep both versions and compare word counts: the gap between them is the arrival-and-departure padding you've been writing without noticing.
 :::
+
+Take this with you.
+
+:::resource scene-cards-en.pdf | The scene cards | Print a stack and audit one scene per card
 
 The next lesson, [Choosing your structure](/learn/lesson/architecture-choosing-structure), zooms back out: now that you know what the bricks are, you can pick the blueprint that suits your book. And if you want to see beats and scenes meet, revisit [Beat Sheets and Granular Structure](/learn/lesson/architecture-beat-sheets): a beat is a promise, and a scene is how you keep it.
 

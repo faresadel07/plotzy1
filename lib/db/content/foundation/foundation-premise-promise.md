@@ -31,6 +31,8 @@ Notice what the premise version did. It picked a person (and gave her a flaw wir
 
 You met these parts in miniature already, and you'll dissect them properly in [the 3 ingredients every story needs](/learn/lesson/foundation-three-ingredients). The premise sentence is where they first meet each other on paper.
 
+:::diagram premise-formula | Character plus want plus obstacle plus stakes: one sentence with a slope built into it.
+
 ## Three tests before you commit
 
 Not every sentence that fits the formula is worth a year of your life. Run these three tests.
@@ -79,6 +81,8 @@ X: "Slow" is usually the reader's word for "no longer paying me in the currency 
 
 One more job for your sentence, and it may be the most valuable: it is your compass while drafting.
 
+![A lighthouse beam cutting through darkness over the sea](/images/course/photos/lighthouse.jpg "Forty thousand words from shore, the premise is the light you steer by.")
+
 Every writer gets lost in the middle of a draft. Every one. You'll be forty thousand words in, three subplots deep, and unable to remember what the book is about. When that happens, do not reread your manuscript. Reread your sentence.
 
 The sentence tells you what belongs. That gorgeous chapter where the sheriff's deputy visits his mother? Does it press on *truth-teller versus town of liars*? If yes, keep it. If no, it's a beautiful stranger in your house. The premise is the cheapest editorial tool you own: one line, written before the mess existed, that remembers what you meant.
@@ -102,6 +106,10 @@ Then write three more versions of the same premise, changing exactly one element
 
 Finally, under the winning sentence, write two lines describing the promise its opening pages would make: the genre and tone the reader signs up for, and the central question they'll expect answered by the last page. Together, that's your contract. About 150 words total.
 :::
+
+Take this with you.
+
+:::resource premise-worksheet-en.pdf | The premise worksheet | Print it and fill it by hand
 
 The premise gives you the sentence. The next lesson, [the 3 ingredients every story needs](/learn/lesson/foundation-three-ingredients), takes that sentence apart and shows you how each piece actually works.
 

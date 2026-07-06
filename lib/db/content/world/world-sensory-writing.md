@@ -8,6 +8,8 @@ The reader, however, lives in five senses. A scene that engages only one feels *
 
 This lesson is the technique that fixes the flatness, demonstrated before it is named.
 
+![Open sacks of spices at a market stall](/images/course/photos/spices.jpg "A scene the reader can smell outlives one they can only see.")
+
 ## A four-sense paragraph
 
 :::example side-by-side | One sense against four

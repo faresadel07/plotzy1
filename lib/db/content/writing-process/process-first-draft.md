@@ -33,6 +33,13 @@ The fix is mechanical:
 
 Editor-mode comes back during revision, when it is welcome. The next three lessons are when.
 
+:::example side-by-side | The same drafting session, two ways
+[Editor-mode interrupting]
+She wrote "The harbor was cold" and stopped. Was "cold" too plain? She tried "frigid", then "bitter", then went back to "cold". She reread yesterday's chapter to check the tone, fixed two commas in it, and looked up whether harbors freeze. Ninety minutes: forty-one words.
+[Writer-mode drafting]
+She wrote "The harbor was cold [better word later] and the ferryman would not meet her eyes." She kept typing. The scene lurched, rambled, found a line she liked, lost it, and reached the ending. Ninety minutes: nine hundred words, most of them bad, all of them revisable.
+:::
+
 :::check
 Q: Halfway through a drafting session you notice yesterday's chapter opens with a weak paragraph. What does this lesson say to do?
 -* Leave it alone and keep drafting; editing comes back in revision
@@ -92,6 +99,8 @@ Some writers outline before drafting. Some discover the story by writing it. Bot
 The choice is one of temperament. There is no right answer. The wrong answer is to insist on a method that fights how your mind actually works. A discovery writer trying to outline a fifty-page beat sheet will stall at week two; an outliner trying to discovery-write 80,000 words will produce a directionless mess. Use the method that lets you finish.
 
 :::video 4hp_7e3E7CY | How to Fix a Saggy Middle | Ellen Brock
+
+:::diagram tension-curve | Every draft sags in the middle. Knowing the shape of the curve is how you keep drafting through it.
 
 ## First-draft killers
 
