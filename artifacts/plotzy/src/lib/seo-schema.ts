@@ -432,7 +432,7 @@ export function buildCourseSchema(): Record<string, unknown> {
     "@type": "Course",
     name: "How to Write Your First Book",
     description:
-      "A free 6-module writing course covering story foundations, structure, characters, world-building, the writing process, and getting published. 27 lessons, quizzes, a final project, and a verified certificate of completion.",
+      "A free 6-module writing course covering story foundations, structure, characters, world-building, the writing process, and getting published. 32 lessons, quizzes, a final project, and a verified certificate of completion.",
     url: `${SITE_URL}${COURSE_LANDING_PATH}`,
     educationalLevel: "Beginner",
     inLanguage: "en",

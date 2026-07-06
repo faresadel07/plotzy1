@@ -105,7 +105,7 @@ export default function CourseLandingPage() {
               <h2 className="text-2xl font-semibold tracking-tight">
                 {t("courseLandingOverviewHeading")}
               </h2>
-              <p className="text-base leading-relaxed text-muted-foreground">
+              <p className="border-s-2 border-primary/30 ps-4 text-[1.05rem] leading-relaxed text-muted-foreground">
                 {t("courseLandingOverviewBody")}
               </p>
             </section>

@@ -336,8 +336,8 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
       ar: "دورة الكتابة",
     },
     description: {
-      en: "A six-module course on writing your first book, free for every Plotzy user. Twenty-seven lessons, six quizzes, a final project, and a verified certificate on completion.",
-      ar: "دورة من ستة فصول لكتابة كتابك الأول، مجّانية لكل مستخدم في بلوتزي. سبعة وعشرون درساً، ستة اختبارات، مشروع نهائي، وشهادة موثّقة عند الإتمام.",
+      en: "A six-module course on writing your first book, free for every Plotzy user. Thirty-two lessons, six quizzes, a final project, and a verified certificate on completion.",
+      ar: "دورة من ستة فصول لكتابة كتابك الأول، مجّانية لكل مستخدم في بلوتزي. اثنان وثلاثون درساً، ستة اختبارات، مشروع نهائي، وشهادة موثّقة عند الإتمام.",
     },
     category: "writing",
     video: {
@@ -352,7 +352,7 @@ export const TUTORIAL_GUIDES: TutorialGuide[] = [
         },
       },
       {
-        title: { en: "Twenty-seven focused lessons", ar: "سبعة وعشرون درساً مركّزاً" },
+        title: { en: "Thirty-two focused lessons", ar: "اثنان وثلاثون درساً مركّزاً" },
         body: {
           en: "Each lesson is short and ends with a concrete next step you can apply to whatever you are writing in Plotzy.",
           ar: "كل درس مختصر وينتهي بخطوة عمليّة محدّدة يمكنك تطبيقها على ما تكتبه في بلوتزي.",

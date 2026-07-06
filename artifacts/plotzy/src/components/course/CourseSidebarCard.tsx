@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from "react";
 import { useLocation } from "wouter";
-import { BookOpen, Clock, Award, ArrowRight } from "lucide-react";
+import { BookOpen, Clock, Award, ArrowRight, GraduationCap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
@@ -107,51 +107,40 @@ export function CourseSidebarCard({ state }: CourseSidebarCardProps) {
   return (
     <>
       <Card className="overflow-hidden lg:sticky lg:top-24">
-        {/* Thumbnail — same panoramic illustration as the hero, scaled
-           down. Matches the brand surface so the sidebar feels visually
-           tied to the hero rather than an unrelated card. */}
-        <div
-          className="relative w-full bg-secondary"
-          style={{ aspectRatio: "2021 / 778" }}
-        >
-          <img
-            src="/course-hero.png"
-            alt=""
-            role="presentation"
-            aria-hidden="true"
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        </div>
-
-        <div className="p-6 space-y-5">
-        <div>
-          <div className="font-sans text-xl">{t("courseLandingTitle")}</div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {t("courseLandingSidebarSubtitle")}
+        {/* Branded header — a clean gradient panel with the course mark.
+           Deliberately NOT the hero illustration again: repeating it made
+           the same image appear twice on one screen. */}
+        <div className="flex items-center gap-3 border-b bg-gradient-to-br from-primary/15 via-primary/[0.06] to-transparent px-6 py-5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-sm">
+            <GraduationCap className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <div className="font-sans text-base font-semibold leading-tight">
+              {t("courseLandingTitle")}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {t("courseLandingSidebarSubtitle")}
+            </div>
           </div>
         </div>
 
-        {cta}
+        <div className="p-6 space-y-5">
+          {cta}
 
-        <ul className="space-y-3 text-sm">
-          <li className="flex items-start gap-2.5">
-            <BookOpen className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
-            <span>{t("courseLandingFeatureLessons")}</span>
-          </li>
-          <li className="flex items-start gap-2.5">
-            <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
-            <span>{t("courseLandingFeatureHours")}</span>
-          </li>
-          <li className="flex items-start gap-2.5">
-            <Award className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
-            <span>{t("courseLandingFeatureCert")}</span>
-          </li>
-        </ul>
+          <ul className="space-y-3 text-sm border-t pt-5">
+            <li className="flex items-start gap-2.5">
+              <BookOpen className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden />
+              <span>{t("courseLandingFeatureLessons")}</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden />
+              <span>{t("courseLandingFeatureHours")}</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Award className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden />
+              <span>{t("courseLandingFeatureCert")}</span>
+            </li>
+          </ul>
         </div>
       </Card>
 

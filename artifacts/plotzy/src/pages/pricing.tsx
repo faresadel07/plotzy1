@@ -50,7 +50,7 @@ const TEXT = {
       { title: "Unlimited writing", body: "Unlimited books, unlimited chapters, unlimited words. Save as often as you like, in Arabic or English." },
       { title: "AI writing assistant", body: "A patient companion for plotting, character work, dialogue, and revision, available inside every chapter." },
       { title: "Public-domain library", body: "Tens of thousands of Arabic and English public-domain books, ready to read inside Plotzy or download as PDF." },
-      { title: "The writing course", body: "Six modules, twenty-seven lessons, six quizzes, a final project, and a verified certificate. Free." },
+      { title: "The writing course", body: "Six modules, thirty-two lessons, six quizzes, a final project, and a verified certificate. Free." },
       { title: "Audiobook narration", body: "Turn your finished chapters into a full audiobook in a single click, in your preferred voice." },
       { title: "Professional exports", body: "Download your book as a PDF, EPUB, or Word file. Arabic books export with the right typography by default." },
       { title: "Community library", body: "Publish for the public, gather readers, gather feedback. No gatekeeping, no algorithm pushing you down." },
