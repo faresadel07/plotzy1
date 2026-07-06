@@ -140,13 +140,16 @@ function ThreeActCurve() {
       {pts.map(([x, y], i) => (
         <circle key={i} cx={x} cy={y} r={5} className="fill-primary stroke-card" strokeWidth={2} />
       ))}
-      {/* point labels */}
-      <T x={130} y={272} size={14}>{t({ en: "Inciting incident", ar: "الحادثة المحرّكة" })}</T>
+      {/* point labels, each offset into clear space with a short leader */}
+      <line x1={130} y1={245} x2={126} y2={239} className="stroke-border" strokeWidth={1.5} />
+      <T x={122} y={236} size={14} anchor={E}>{t({ en: "Inciting incident", ar: "الحادثة المحرّكة" })}</T>
       <T x={198} y={192} size={14} anchor={E}>{t({ en: "Lock-in", ar: "نقطة اللاعودة" })}</T>
-      <T x={360} y={118} size={14}>{t({ en: "Midpoint reversal", ar: "انقلاب المنتصف" })}</T>
-      <T x={460} y={208} size={14}>{t({ en: "Dark moment", ar: "اللحظة المظلمة" })}</T>
-      <T x={560} y={66} size={14} weight={600}>{t({ en: "Climax", ar: "الذروة" })}</T>
-      <T x={660} y={180} size={14} anchor={E}>{t({ en: "Denouement", ar: "الخاتمة" })}</T>
+      <T x={360} y={122} size={14}>{t({ en: "Midpoint reversal", ar: "انقلاب المنتصف" })}</T>
+      <line x1={460} y1={190} x2={460} y2={204} className="stroke-border" strokeWidth={1.5} />
+      <T x={460} y={220} size={14}>{t({ en: "Dark moment", ar: "اللحظة المظلمة" })}</T>
+      <T x={560} y={68} size={14} weight={600}>{t({ en: "Climax", ar: "الذروة" })}</T>
+      <line x1={660} y1={155} x2={660} y2={168} className="stroke-border" strokeWidth={1.5} />
+      <T x={660} y={184} size={14} anchor={E}>{t({ en: "Denouement", ar: "الخاتمة" })}</T>
       {/* act labels */}
       <T x={135} y={340} weight={600}>{t({ en: "Act 1", ar: "الفصل الأول" })}</T>
       <T x={360} y={340} weight={600}>{t({ en: "Act 2", ar: "الفصل الثاني" })}</T>
@@ -226,7 +229,7 @@ function BeatMap() {
   }[] = [
     { x: px(1), pct: { en: "1%", ar: "1%" }, l: { en: "Opening image", ar: "الصورة الافتتاحية" }, side: "top", a: S, ax: 42 },
     { x: px(10), pct: { en: "10%", ar: "10%" }, l: { en: "Catalyst", ar: "الحادثة المحرّكة" }, side: "bottom", a: "middle" },
-    { x: px(20), pct: { en: "20%", ar: "20%" }, l: { en: "Break into two", ar: "الدخول في الفصل الثاني" }, side: "top", a: "middle" },
+    { x: px(20), pct: { en: "20%", ar: "20%" }, l: { en: "Break into two", ar: "الدخول في الفصل الثاني" }, side: "top", a: S, ax: 172 },
     { x: px(50), pct: { en: "50%", ar: "50%" }, l: { en: "Midpoint", ar: "انقلاب المنتصف" }, side: "bottom", a: "middle" },
     { x: px(75), pct: { en: "75%", ar: "75%" }, l: { en: "All is lost", ar: "ضياع كل شيء" }, side: "top", a: "middle" },
     { x: px(80), pct: { en: "80%", ar: "80%" }, l: { en: "Dark night", ar: "الليلة المظلمة" }, side: "bottom", a: E, ax: 556 },
@@ -371,21 +374,22 @@ function PovDistances() {
       <line x1={575} y1={158} x2={625} y2={158} className="stroke-foreground" strokeWidth={2} strokeLinecap="round" />
       <line x1={600} y1={190} x2={580} y2={225} className="stroke-foreground" strokeWidth={2} strokeLinecap="round" />
       <line x1={600} y1={190} x2={620} y2={225} className="stroke-foreground" strokeWidth={2} strokeLinecap="round" />
-      <T x={600} y={250} size={14} tone="muted">{t({ en: "the character", ar: "الشخصية" })}</T>
+      <T x={600} y={248} size={14} tone="muted">{t({ en: "the character", ar: "الشخصية" })}</T>
       {/* distance arcs */}
       <path d={arc(70)} fill="none" className="stroke-primary" strokeWidth={2.5} strokeLinecap="round" />
       <path d={arc(140)} fill="none" className="stroke-foreground" strokeWidth={2} strokeLinecap="round" />
       <path d={arc(210)} fill="none" className="stroke-muted-foreground" strokeWidth={2} strokeLinecap="round" strokeDasharray="2 7" />
-      {/* arc labels with leaders */}
-      <T x={600} y={88} weight={600}>{t({ en: "First person: inside the head", ar: "ضمير المتكلم: داخل الرأس" })}</T>
-      <line x1={556} y1={94} x2={543} y2={120} className="stroke-border" strokeWidth={2} />
-      <T x={492} y={262} anchor={S} weight={600}>{t({ en: "Third limited: on the shoulder", ar: "الغائب المحدود: على الكتف" })}</T>
-      <line x1={479} y1={240} x2={488} y2={252} className="stroke-border" strokeWidth={2} />
-      <T x={428} y={44} anchor={E} weight={600}>{t({ en: "Omniscient: above the world", ar: "الراوي العليم: فوق العالم" })}</T>
-      <line x1={422} y1={50} x2={418} y2={58} className="stroke-border" strokeWidth={2} />
+      {/* arc labels: each sits just left of its arc's top point (stacked
+          diagonally up-left into open space) with a short leader dot. */}
+      <line x1={536} y1={129} x2={539} y2={131} className="stroke-primary" strokeWidth={2} strokeLinecap="round" />
+      <T x={532} y={128} size={14} anchor={E} weight={600}>{t({ en: "First person: inside the head", ar: "ضمير المتكلم: داخل الرأس" })}</T>
+      <line x1={476} y1={94} x2={479} y2={96} className="stroke-foreground" strokeWidth={2} strokeLinecap="round" />
+      <T x={472} y={93} size={14} anchor={E} weight={600}>{t({ en: "Third limited: on the shoulder", ar: "الغائب المحدود: على الكتف" })}</T>
+      <line x1={415} y1={59} x2={418} y2={61} className="stroke-muted-foreground" strokeWidth={2} strokeLinecap="round" />
+      <T x={411} y={58} size={14} anchor={E} weight={600}>{t({ en: "Omniscient: above the world", ar: "الراوي العليم: فوق العالم" })}</T>
       {/* narrative distance axis */}
-      <line x1={206} y1={308} x2={554} y2={308} className="stroke-foreground" strokeWidth={2} markerStart={`url(#${uid}-af)`} markerEnd={`url(#${uid}-af)`} />
-      <T x={380} y={296} size={14} tone="muted">{t({ en: "Narrative distance", ar: "المسافة السردية" })}</T>
+      <line x1={206} y1={310} x2={554} y2={310} className="stroke-foreground" strokeWidth={2} markerStart={`url(#${uid}-af)`} markerEnd={`url(#${uid}-af)`} />
+      <T x={380} y={298} size={14} tone="muted">{t({ en: "Narrative distance", ar: "المسافة السردية" })}</T>
     </svg>
   );
 }

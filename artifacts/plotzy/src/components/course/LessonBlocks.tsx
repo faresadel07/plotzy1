@@ -278,36 +278,49 @@ export function FlashCards({ cards }: { cards: FlashCardItem[] }) {
     setFlipped((prev) => prev.map((v, j) => (j === i ? !v : v)));
 
   return (
-    <div className="not-prose my-8">
-      <div className="mb-3 flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-        <RotateCw className="h-3.5 w-3.5" aria-hidden />
-        {isRTL ? "بطاقات المفاهيم، اضغط لتقلب" : "Concept cards, tap to flip"}
+    <div className="not-prose my-9">
+      <div className="mb-4 flex flex-wrap items-center gap-2.5">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-[0.7rem] font-semibold text-primary">
+          <RotateCw className="h-3 w-3" aria-hidden />
+          {isRTL ? "بطاقات المفاهيم" : "Concept cards"}
+        </span>
+        <span className="text-[0.72rem] text-muted-foreground">
+          {isRTL ? "اضغط أي بطاقة لتقلبها" : "tap a card to flip it"}
+        </span>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3">
         {cards.map((c, i) => (
           <button
             key={i}
             type="button"
             onClick={() => toggle(i)}
             aria-pressed={flipped[i]}
-            className="group min-h-[7.5rem] cursor-pointer text-start"
-            style={{ perspective: "800px" }}
+            className="group min-h-[8.5rem] cursor-pointer text-start"
+            style={{ perspective: "1000px" }}
           >
             <span
-              className="relative block h-full min-h-[7.5rem] w-full transition-transform duration-500 motion-reduce:transition-none"
+              className="relative block h-full min-h-[8.5rem] w-full transition-transform duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
               style={{
                 transformStyle: "preserve-3d",
                 transform: flipped[i] ? "rotateY(180deg)" : "rotateY(0deg)",
               }}
             >
+              {/* front */}
               <span
-                className="absolute inset-0 flex items-center justify-center rounded-xl border bg-card p-3 text-center text-sm font-bold leading-snug shadow-sm group-hover:border-primary/40"
+                className="absolute inset-0 flex flex-col justify-between rounded-2xl border border-border/80 bg-gradient-to-br from-card to-muted/40 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-14px_rgba(0,0,0,0.18)] transition-colors group-hover:border-primary/40"
                 style={{ backfaceVisibility: "hidden" }}
               >
-                {c.front}
+                <span className="flex items-center justify-between">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[0.7rem] font-bold text-primary">
+                    {i + 1}
+                  </span>
+                  <RotateCw className="h-3.5 w-3.5 text-muted-foreground/40 transition-colors group-hover:text-primary/70" aria-hidden />
+                </span>
+                <span className="text-[0.95rem] font-bold leading-snug">{c.front}</span>
               </span>
+              {/* back */}
               <span
-                className="absolute inset-0 flex items-center justify-center rounded-xl border border-primary/30 bg-primary/[0.06] p-3 text-center text-xs leading-relaxed"
+                className="absolute inset-0 flex items-center rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.13] to-primary/[0.03] p-4 text-[0.82rem] leading-relaxed shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-14px_rgba(0,0,0,0.18)]"
                 style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
               >
                 {c.back}
@@ -336,19 +349,25 @@ export function ResourceCard({ file, label, note }: ResourceCardProps) {
     <a
       href={`/resources/${file}`}
       download
-      className="not-prose my-6 flex items-center gap-3.5 rounded-xl border border-primary/25 bg-primary/[0.04] p-4 no-underline transition-colors hover:bg-primary/[0.08] active:scale-[0.995]"
+      className="not-prose group my-6 flex items-center gap-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.06] to-transparent p-4 no-underline shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all hover:border-primary/45 hover:shadow-[0_10px_28px_-14px_rgba(0,0,0,0.22)] active:scale-[0.99]"
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/75 text-primary-foreground shadow-sm">
         <FileDown className="h-5 w-5" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-bold leading-snug text-foreground">{label}</span>
-        <span className="block text-xs text-muted-foreground mt-0.5">
-          {note || (isRTL ? "ملف PDF جاهز للطباعة" : "Printable PDF worksheet")}
+        <span className="flex items-center gap-2">
+          <span className="text-[0.95rem] font-bold leading-snug text-foreground">{label}</span>
+          <span className="shrink-0 rounded border border-primary/30 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-primary">
+            PDF
+          </span>
+        </span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">
+          {note || (isRTL ? "ملف جاهز للطباعة والتعبئة بيدك" : "Printable worksheet, fill it by hand")}
         </span>
       </span>
-      <span className="shrink-0 rounded-md border border-primary/30 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-primary">
-        PDF
+      <span className="hidden shrink-0 items-center gap-1.5 rounded-lg border border-primary/30 bg-background px-3.5 py-2 text-xs font-bold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground sm:inline-flex">
+        <FileDown className="h-3.5 w-3.5" aria-hidden />
+        {isRTL ? "تحميل" : "Download"}
       </span>
     </a>
   );

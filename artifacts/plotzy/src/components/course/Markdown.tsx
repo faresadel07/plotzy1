@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
+import { BookOpen } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
 import { QuoteCard } from "@/components/course/visuals/QuoteCard";
 import { InteractiveExample } from "@/components/course/visuals/InteractiveExample";
 import { InlineImage } from "@/components/course/visuals/InlineImage";
@@ -22,28 +24,41 @@ import { CourseDiagram } from "@/components/course/DiagramLibrary";
 // Plotzy's own reader (/discover/<id>) so the reader never leaves.
 const GUTENBERG_RE = /gutenberg\.org\/(?:ebooks|cache\/epub)\/(\d+)/i;
 
+// Covers load local-first (bundled under /images/course/books) so they
+// appear instantly and never leave a broken sliver mid-sentence, then
+// fall back to Gutenberg's server, then to a clean labelled chip.
 function GutenbergCover({ id, label }: { id: string; label: string }) {
-  const [failed, setFailed] = useState(false);
-  const cover = `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`;
-  if (failed) {
+  const { isRTL } = useLanguage();
+  const [stage, setStage] = useState<0 | 1 | 2>(0);
+  const src =
+    stage === 0
+      ? `/images/course/books/${id}.jpg`
+      : `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`;
+
+  if (stage === 2) {
     return (
       <Link
         href={`/discover/${id}`}
-        className="inline-flex items-center gap-1 align-middle mx-1 px-2 py-0.5 rounded-md border border-border bg-muted/50 text-xs no-underline hover:bg-muted transition-colors"
+        className="inline-flex items-center gap-1 align-middle mx-1 px-2 py-1 rounded-md border border-border bg-muted/50 text-xs font-medium no-underline hover:bg-muted transition-colors"
         title={label}
       >
-        Read this book
+        <BookOpen className="h-3 w-3" aria-hidden />
+        {isRTL ? "اقرأ الكتاب" : "Read this book"}
       </Link>
     );
   }
   return (
-    <Link href={`/discover/${id}`} className="inline-block align-middle mx-1.5 my-0.5" title={label}>
+    <Link
+      href={`/discover/${id}`}
+      className="inline-block align-middle mx-1.5 my-1"
+      title={label}
+    >
       <img
-        src={cover}
+        src={src}
         alt={label}
         loading="lazy"
-        onError={() => setFailed(true)}
-        className="inline-block h-12 w-auto rounded-[3px] border border-border shadow-sm hover:opacity-80 transition-opacity"
+        onError={() => setStage((s) => (s + 1) as 0 | 1 | 2)}
+        className="inline-block h-16 w-auto rounded-[4px] border border-border shadow-[0_2px_8px_-2px_rgba(0,0,0,0.25)] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_-4px_rgba(0,0,0,0.3)] transition-all"
       />
     </Link>
   );
