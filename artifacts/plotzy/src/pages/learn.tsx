@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, GraduationCap, Award } from "lucide-react";
+import { ArrowRight, GraduationCap, Award, Library, ChevronRight, ChevronLeft } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
@@ -66,7 +66,7 @@ interface ProgressResponse {
 }
 
 export default function LearnPage() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { user } = useAuth();
   const isAuthed = !!user;
 
@@ -219,6 +219,31 @@ export default function LearnPage() {
             </div>
           )}
         </section>
+
+        {/* The Writer's Library: free downloadable craft books + worksheets */}
+        <Link
+          href="/learn/resources"
+          className="group flex items-center gap-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.06] to-transparent p-5 no-underline transition-all hover:border-primary/40 hover:shadow-[0_10px_28px_-14px_rgba(0,0,0,0.22)]"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/75 text-primary-foreground shadow-sm">
+            <Library className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[0.95rem] font-bold">
+              {isRTL ? "مكتبة الكاتب: موارد مجانية" : "The Writer's Library, free resources"}
+            </span>
+            <span className="mt-0.5 block text-sm text-muted-foreground">
+              {isRTL
+                ? "كتب حرفة الكتابة الكلاسيكية وأوراق العمل القابلة للطباعة, كلها مجانية لك."
+                : "Classic craft books and printable worksheets, all free to download and keep."}
+            </span>
+          </span>
+          {isRTL ? (
+            <ChevronLeft className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:-translate-x-0.5" aria-hidden />
+          ) : (
+            <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+          )}
+        </Link>
 
         {/* Anonymous footer CTA */}
         {!isAuthed && (

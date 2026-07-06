@@ -64,6 +64,7 @@ const LearnModulePage = lazy(() => import("@/pages/learn-module"));
 const LearnLessonPage = lazy(() => import("@/pages/learn-lesson"));
 const LearnQuizPage = lazy(() => import("@/pages/learn-quiz"));
 const LearnFinalProjectPage = lazy(() => import("@/pages/learn-final-project"));
+const LearnResourcesPage = lazy(() => import("@/pages/learn-resources"));
 const CertificateVerifyPage = lazy(() => import("@/pages/certificate-verify"));
 const VisualsPreview = lazy(() => import("@/pages/learn-visuals-preview"));
 const DonateThanks = lazy(() => import("@/pages/donate-thanks"));
@@ -395,6 +396,7 @@ function Router() {
         <Route path="/learn/lesson/:slug" component={ProtectedRoute(LearnLessonPage)} />
         <Route path="/learn/quiz/:id" component={ProtectedRoute(LearnQuizPage)} />
         <Route path="/learn/final-project" component={ProtectedRoute(LearnFinalProjectPage)} />
+        <Route path="/learn/resources" component={ProtectedRoute(LearnResourcesPage)} />
 
         {/* ── Messages ── */}
         <Route path="/messages/:userId" component={ProtectedRoute(Messages)} />
