@@ -1312,6 +1312,21 @@ export const courseCertificates = pgTable("course_certificates", {
 // uuid now land on the UNIQUE index — same B-tree shape, same
 // performance, no functional change.
 
+// ── Live collaboration: Yjs document store ───────────────────────────────
+// One row per chapter that has ever hosted a live co-writing session.
+// `state` is the full encoded Yjs document (encodeStateAsUpdate), written
+// by the Hocuspocus Database extension with its built-in debounce. The
+// chapters.content HTML remains the render source for readers/exports;
+// the client bridge keeps it fresh through the normal save path during a
+// session. Cascade: deleting a chapter deletes its collab doc.
+export const chapterCollabDocs = pgTable("chapter_collab_docs", {
+  chapterId: integer("chapter_id").primaryKey().references(() => chapters.id, { onDelete: "cascade" }),
+  state: bytea("state").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ChapterCollabDoc = typeof chapterCollabDocs.$inferSelect;
+
 export type CourseCertificate = typeof courseCertificates.$inferSelect;
 export type InsertCourseCertificate = typeof courseCertificates.$inferInsert;
 

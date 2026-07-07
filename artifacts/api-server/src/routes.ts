@@ -188,6 +188,11 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  // Live co-writing: /api/collab/token/:chapterId + the /collab
+  // WebSocket upgrade (Hocuspocus). See src/collab/.
+  const { mountCollab } = await import("./collab/mount");
+  mountCollab(httpServer, app);
+
   // Set up multer for memory storage
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
