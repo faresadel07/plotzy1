@@ -384,6 +384,45 @@ function splitAtOverflow(
 }
 
 // ── Props ────────────────────────────────────────────────────────────────────
+// Shared schema for every surface that edits chapter HTML. The live
+// co-writing session (LiveSessionEditor) uses the exact same list so
+// content round-trips between paged and live modes without loss.
+// `collab: true` disables StarterKit's built-in undo/redo, which must
+// be off when the Yjs Collaboration extension owns the undo stack.
+export function buildChapterExtensions(opts: { collab?: boolean } = {}) {
+  return [
+    StarterKit.configure({
+      heading: { levels: [1, 2, 3] },
+      bulletList: { keepMarks: true },
+      orderedList: { keepMarks: true },
+      underline: false,
+      link: false,
+      gapcursor: false,
+      ...(opts.collab ? { undoRedo: false } : {}),
+    } as any),
+    Underline,
+    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    TextStyle,
+    Color,
+    FontFamily,
+    FontSize,
+    Highlight.configure({ multicolor: true }),
+    Link.configure({
+      openOnClick: false,
+      // Force every editor-emitted link to open in a sandboxed tab — without
+      // this, `target="_blank"` paired with no `rel` exposes window.opener
+      // (tabnabbing). The sanitize.ts pipeline guards already-stored HTML;
+      // this guards the live editor output.
+      HTMLAttributes: {
+        class: "tiptap-link",
+        target: "_blank",
+        rel: "noopener noreferrer",
+      },
+    }),
+    ResizableImage,
+  ];
+}
+
 export interface RichEditorRef {
   editor: Editor | null;
 }
@@ -480,36 +519,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   const suppressOverflowRef = useRef(false);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3] },
-        bulletList: { keepMarks: true },
-        orderedList: { keepMarks: true },
-        underline: false,
-        link: false,
-        gapcursor: false,
-      } as any),
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TextStyle,
-      Color,
-      FontFamily,
-      FontSize,
-      Highlight.configure({ multicolor: true }),
-      Link.configure({
-        openOnClick: false,
-        // Force every editor-emitted link to open in a sandboxed tab — without
-        // this, `target="_blank"` paired with no `rel` exposes window.opener
-        // (tabnabbing). The sanitize.ts pipeline guards already-stored HTML;
-        // this guards the live editor output.
-        HTMLAttributes: {
-          class: "tiptap-link",
-          target: "_blank",
-          rel: "noopener noreferrer",
-        },
-      }),
-      ResizableImage,
-    ],
+    extensions: buildChapterExtensions(),
     content: initialContent || "<p></p>",
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();

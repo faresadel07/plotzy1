@@ -31,6 +31,9 @@ import { type BookPreferences } from "@/shared/schema";
 import { PageStylePicker, PAGE_STYLES } from "@/components/page-style-picker";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/auth-context";
+import { LiveSessionEditor } from "@/components/LiveSessionEditor";
 import { saveDraft, loadDraft, clearDraft, type DraftEntry } from "@/lib/offline-drafts";
 import {
   AlertDialog,
@@ -323,6 +326,27 @@ export default function ChapterEditor() {
 
   const { data: chapters, isLoading } = useChapters(bookId);
   const { data: book } = useBook(bookId);
+
+  // ── Live co-writing session ─────────────────────────────────────────
+  // The Live pill shows when the book actually has collaborators (or the
+  // current user IS one). Collaborators land straight in the live
+  // session — being here together is their whole reason to open the
+  // chapter — while the owner keeps the solo paged editor by default.
+  const { user: authUser } = useAuth();
+  const collabQ = useQuery<{ collaborators: Array<{ id: number }> }>({
+    queryKey: [`/api/books/${bookId}/collaborators`],
+    enabled: !!bookId && !!authUser,
+    staleTime: 60_000,
+  });
+  const isCollaboratorHere = !!(book && authUser && (book as any).userId != null && (book as any).userId !== (authUser as any).id);
+  const bookIsShared = (collabQ.data?.collaborators?.length ?? 0) > 0 || isCollaboratorHere;
+  const [liveMode, setLiveMode] = useState(false);
+  const autoEnteredLiveRef = useRef(false);
+  useEffect(() => {
+    if (autoEnteredLiveRef.current || !isCollaboratorHere) return;
+    autoEnteredLiveRef.current = true;
+    setLiveMode(true);
+  }, [isCollaboratorHere]);
   const updateChapter = useUpdateChapter();
   const updateBook = useUpdateBook();
   const { data: versions = [] } = useChapterVersions(chapterId || null);
@@ -2304,6 +2328,28 @@ export default function ChapterEditor() {
               <Search className="w-3.5 h-3.5" />
             </button>
             )}
+            {/* Live co-writing pill: only when the book is shared. */}
+            {bookIsShared && chapterId && (
+              <button
+                className="h-9 px-3.5 rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
+                style={{
+                  background: "rgba(95,207,142,0.10)",
+                  color: "#5fcf8e",
+                  border: "1px solid rgba(95,207,142,0.35)",
+                }}
+                onClick={() => setLiveMode(true)}
+                aria-label={ar ? "جلسة كتابة حية" : "Live co-writing session"}
+                title={ar ? "جلسة كتابة حية" : "Live co-writing session"}
+                data-testid="button-live-session"
+              >
+                <span
+                  className="animate-pulse"
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: "#5fcf8e" }}
+                />
+                {!isPhone && (ar ? "جلسة حية" : "Live")}
+              </button>
+            )}
+
             {/* The Studio pill, on-brand black with the Plotzy Studio
                 mark in white. Opens the multi-model side panel. Lives
                 next to the AI Assistant button so the writer has the
@@ -3865,6 +3911,31 @@ export default function ChapterEditor() {
           isDark={isDark}
           ar={ar}
           onClose={() => setShowPageSetup(false)}
+        />
+      )}
+
+      {/* ── Live co-writing session overlay ─────────────────────────── */}
+      {liveMode && chapterId && (
+        <LiveSessionEditor
+          chapterId={chapterId}
+          chapterTitle={title || (ar ? "فصل" : "Chapter")}
+          initialHtml={richPages.join("")}
+          userName={String((authUser as any)?.displayName || (authUser as any)?.email || "Writer")}
+          ar={ar}
+          onPersist={async (html) => {
+            // Same shape performSave sends; without PAGE_BREAK markers the
+            // load path re-paginates by word count on the next open.
+            await updateChapter.mutateAsync({ id: chapterId, bookId, title, content: html });
+          }}
+          onExit={(finalHtml) => {
+            // Bring the session text back into the paged editor with the
+            // same word-count estimate the loader uses.
+            const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+            const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+            setRichPages(splitHtmlIntoPages(finalHtml, wpp));
+            setIsDirty(true);
+            setLiveMode(false);
+          }}
         />
       )}
 

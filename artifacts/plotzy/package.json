@@ -90,11 +90,14 @@
     "@ai-sdk/react": "^3.0.187",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/lora": "^5.2.8",
+    "@hocuspocus/provider": "4.3.0",
     "@huggingface/transformers": "^4.2.0",
     "@number-flow/react": "^0.6.0",
     "@paypal/react-paypal-js": "^9.1.0",
     "@sentry/react": "^10.49.0",
     "@tiptap/core": "^3.21.0",
+    "@tiptap/extension-collaboration": "^3.27.1",
+    "@tiptap/extension-collaboration-caret": "^3.27.1",
     "@tiptap/extension-color": "^3.21.0",
     "@tiptap/extension-font-family": "^3.21.0",
     "@tiptap/extension-highlight": "^3.21.0",
@@ -108,11 +111,14 @@
     "@tiptap/extension-underline": "^3.21.0",
     "@tiptap/react": "^3.21.0",
     "@tiptap/starter-kit": "^3.21.0",
+    "@tiptap/y-tiptap": "^3.0.6",
     "@types/qrcode": "^1.5.6",
     "ai": "^6.0.185",
     "dompurify": "^3.4.1",
     "nanoid": "^5.1.7",
     "qrcode": "^1.5.4",
-    "react-helmet-async": "^2.0.5"
+    "react-helmet-async": "^2.0.5",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.31"
   }
 }
