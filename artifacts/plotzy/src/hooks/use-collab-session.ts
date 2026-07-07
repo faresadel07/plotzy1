@@ -1,10 +1,14 @@
 // Live co-writing session hook: owns the Yjs document and the
 // Hocuspocus connection for one chapter.
 //
+// - A PRE-FLIGHT token fetch resolves the user's role (owner/editor/
+//   viewer) and turns HTTP failures into clean states before any socket
+//   spins up: 403 → "denied", 503 → "disabled" (kill switch), other
+//   failures → retryable "offline".
 // - Tokens are short-lived (2 min server-side), so the provider gets an
 //   async token FUNCTION: every (re)connect fetches a fresh token with
 //   the user's session. A dropped connection therefore reauthenticates
-//   cleanly even hours later.
+//   cleanly even hours later. The pre-flight token is used exactly once.
 // - The WebSocket goes DIRECTLY to the API host: the SPA's /api rewrite
 //   through Vercel cannot proxy WebSockets.
 // - Peers come from Yjs awareness; each client announces { name, color }
@@ -14,10 +18,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 
+export type CollabRole = "owner" | "editor" | "viewer";
+
 export type CollabStatus =
   | "connecting"
   | "active"
   | "denied"
+  | "disabled"
   | "offline";
 
 export interface CollabPeer {
@@ -46,13 +53,19 @@ function wsUrl(): string {
   return "wss://workspaceapi-server-production-14b0.up.railway.app/collab";
 }
 
-async function fetchToken(chapterId: number): Promise<string> {
+class CollabHttpError extends Error {
+  constructor(public status: number) {
+    super(`collab token: ${status}`);
+  }
+}
+
+async function fetchTokenResponse(chapterId: number): Promise<{ token: string; role: CollabRole }> {
   const res = await fetch(`/api/collab/token/${chapterId}`, {
     credentials: "same-origin",
   });
-  if (!res.ok) throw new Error(`collab token: ${res.status}`);
-  const data = (await res.json()) as { token: string };
-  return data.token;
+  if (!res.ok) throw new CollabHttpError(res.status);
+  const data = (await res.json()) as { token: string; role: CollabRole };
+  return { token: data.token, role: data.role };
 }
 
 export function useCollabSession(opts: {
@@ -62,6 +75,7 @@ export function useCollabSession(opts: {
 }) {
   const { chapterId, enabled, userName } = opts;
   const [status, setStatus] = useState<CollabStatus>("connecting");
+  const [role, setRole] = useState<CollabRole | null>(null);
   const [peers, setPeers] = useState<CollabPeer[]>([]);
   const [synced, setSynced] = useState(false);
 
@@ -75,59 +89,100 @@ export function useCollabSession(opts: {
   useEffect(() => {
     if (!enabled || !chapterId) return;
 
-    const doc = new Y.Doc();
-    docRef.current = doc;
+    let cancelled = false;
+    let provider: HocuspocusProvider | null = null;
+    let doc: Y.Doc | null = null;
+    let readPeers: (() => void) | null = null;
+
     setStatus("connecting");
     setSynced(false);
+    setRole(null);
 
-    const provider = new HocuspocusProvider({
-      url: wsUrl(),
-      name: `chapter:${chapterId}`,
-      document: doc,
-      token: () => fetchToken(chapterId),
-      onAuthenticated() {
-        setStatus("active");
-      },
-      onAuthenticationFailed() {
-        setStatus("denied");
-      },
-      onSynced() {
-        setSynced(true);
-      },
-      onStatus({ status: s }) {
-        if (s === "disconnected") setStatus((cur) => (cur === "denied" ? cur : "offline"));
-      },
-    });
-    providerRef.current = provider;
+    (async () => {
+      // ── Pre-flight: resolve role, surface denied/disabled cleanly ──
+      let firstToken: string;
+      try {
+        const t = await fetchTokenResponse(chapterId);
+        if (cancelled) return;
+        firstToken = t.token;
+        setRole(t.role);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof CollabHttpError && (err.status === 401 || err.status === 403)) {
+          setStatus("denied");
+        } else if (err instanceof CollabHttpError && err.status === 503) {
+          setStatus("disabled");
+        } else {
+          setStatus("offline");
+        }
+        return;
+      }
 
-    provider.setAwarenessField("user", { name: userName || "Writer", color });
+      doc = new Y.Doc();
+      docRef.current = doc;
 
-    const readPeers = () => {
-      const states = provider.awareness?.getStates();
-      if (!states) return;
-      const self = provider.awareness?.clientID;
-      const list: CollabPeer[] = [];
-      states.forEach((state, clientId) => {
-        const u = (state as any)?.user;
-        if (!u) return;
-        list.push({
-          clientId,
-          name: String(u.name || "Writer"),
-          color: String(u.color || CURSOR_COLORS[0]),
-          isSelf: clientId === self,
-        });
+      let usedFirstToken = false;
+      provider = new HocuspocusProvider({
+        url: wsUrl(),
+        name: `chapter:${chapterId}`,
+        document: doc,
+        token: async () => {
+          if (!usedFirstToken) {
+            usedFirstToken = true;
+            return firstToken;
+          }
+          // Reconnects mint a fresh token (2-minute TTL).
+          const t = await fetchTokenResponse(chapterId);
+          return t.token;
+        },
+        onAuthenticated() {
+          if (!cancelled) setStatus("active");
+        },
+        onAuthenticationFailed() {
+          if (!cancelled) setStatus("denied");
+        },
+        onSynced() {
+          if (!cancelled) setSynced(true);
+        },
+        onStatus({ status: s }) {
+          if (cancelled) return;
+          if (s === "disconnected") {
+            setStatus((cur) => (cur === "denied" || cur === "disabled" ? cur : "offline"));
+          }
+        },
       });
-      list.sort((a, b) => (a.isSelf === b.isSelf ? a.clientId - b.clientId : a.isSelf ? -1 : 1));
-      setPeers(list);
-    };
-    provider.awareness?.on("change", readPeers);
-    readPeers();
-    force((n) => n + 1); // expose refs to the consumer after creation
+      providerRef.current = provider;
+
+      provider.setAwarenessField("user", { name: userName || "Writer", color });
+
+      readPeers = () => {
+        const states = provider?.awareness?.getStates();
+        if (!states) return;
+        const self = provider?.awareness?.clientID;
+        const list: CollabPeer[] = [];
+        states.forEach((state, clientId) => {
+          const u = (state as any)?.user;
+          if (!u) return;
+          list.push({
+            clientId,
+            name: String(u.name || "Writer"),
+            color: String(u.color || CURSOR_COLORS[0]),
+            isSelf: clientId === self,
+          });
+        });
+        list.sort((a, b) => (a.isSelf === b.isSelf ? a.clientId - b.clientId : a.isSelf ? -1 : 1));
+        setPeers(list);
+      };
+      provider.awareness?.on("change", readPeers);
+      readPeers();
+      force((n) => n + 1); // expose refs to the consumer after creation
+    })();
 
     return () => {
-      provider.awareness?.off("change", readPeers);
-      try { provider.destroy(); } catch { /* already closed */ }
-      try { doc.destroy(); } catch { /* already destroyed */ }
+      cancelled = true;
+      if (provider && readPeers) provider.awareness?.off("change", readPeers);
+      try { provider?.destroy(); } catch { /* already closed */ }
+      try { doc?.destroy(); } catch { /* already destroyed */ }
       providerRef.current = null;
       docRef.current = null;
     };
@@ -144,6 +199,8 @@ export function useCollabSession(opts: {
     doc: docRef.current,
     provider: providerRef.current,
     status,
+    role,
+    canEdit: role === "owner" || role === "editor",
     synced,
     peers,
     othersCount: peers.filter((p) => !p.isSelf).length,

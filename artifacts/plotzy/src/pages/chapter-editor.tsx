@@ -3927,13 +3927,19 @@ export default function ChapterEditor() {
             // load path re-paginates by word count on the next open.
             await updateChapter.mutateAsync({ id: chapterId, bookId, title, content: html });
           }}
-          onExit={(finalHtml) => {
-            // Bring the session text back into the paged editor with the
-            // same word-count estimate the loader uses.
-            const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
-            const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
-            setRichPages(splitHtmlIntoPages(finalHtml, wpp));
-            setIsDirty(true);
+          onExit={(finalHtml, canEdit) => {
+            if (canEdit) {
+              // Bring the session text back into the paged editor with
+              // the same word-count estimate the loader uses.
+              const fontSize = effectivePrefs.fontSize === "text-sm" ? 14 : effectivePrefs.fontSize === "text-base" ? 16 : effectivePrefs.fontSize === "text-xl" ? 20 : effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+              const wpp = calcWordsPerPage(dynDimsForHook.contentHeight, dynDimsForHook.contentWidth, fontSize);
+              setRichPages(splitHtmlIntoPages(finalHtml, wpp));
+              setIsDirty(true);
+            } else {
+              // Viewers cannot save; refresh the paged view from the
+              // session text locally without arming the autosave.
+              setRichPages(splitHtmlIntoPages(finalHtml, 250));
+            }
             setLiveMode(false);
           }}
         />

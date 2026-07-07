@@ -22,7 +22,7 @@ import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
-import { Loader2, X, Wifi, WifiOff, Bold, Italic, UnderlineIcon } from "lucide-react";
+import { Loader2, X, Wifi, WifiOff, Bold, Italic, UnderlineIcon, Eye } from "lucide-react";
 import { buildChapterExtensions } from "@/components/RichChapterEditor";
 import { useCollabSession, type CollabPeer } from "@/hooks/use-collab-session";
 
@@ -38,8 +38,9 @@ interface LiveSessionEditorProps {
   ar: boolean;
   /** Persist HTML through the normal chapter save path. */
   onPersist: (html: string) => Promise<void>;
-  /** Leave the session; parent re-paginates with this final HTML. */
-  onExit: (finalHtml: string) => void;
+  /** Leave the session; parent re-paginates with this final HTML.
+   *  canEdit=false means a viewer left: nothing to save or re-split. */
+  onExit: (finalHtml: string, canEdit: boolean) => void;
 }
 
 export function LiveSessionEditor({
@@ -52,7 +53,7 @@ export function LiveSessionEditor({
   onExit,
 }: LiveSessionEditorProps) {
   const session = useCollabSession({ chapterId, enabled: true, userName });
-  const { doc, provider, status, synced, peers, othersCount } = session;
+  const { doc, provider, status, synced, peers, othersCount, canEdit, role } = session;
 
   const editor = useEditor(
     {
@@ -66,7 +67,10 @@ export function LiveSessionEditor({
             }),
           ]
         : buildChapterExtensions({ collab: true }),
-      editable: true,
+      // Viewers get a genuinely read-only surface. The server already
+      // drops their writes (readOnly connection); without this the
+      // browser would fake-accept keystrokes that never sync.
+      editable: canEdit,
       // Content comes from the Yjs document; never set initial content
       // here or it would duplicate on every join.
       content: "",
@@ -74,13 +78,19 @@ export function LiveSessionEditor({
     [doc, provider],
   );
 
+  // Role can resolve after the editor mounts; keep editability in step.
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) editor.setEditable(canEdit);
+  }, [editor, canEdit]);
+
   // ── Seeding ─────────────────────────────────────────────────────────
   // After first sync: if the shared doc is empty (or we are alone in the
   // room), start the session from the latest saved chapter HTML. Alone
   // means nobody else can lose work; the latest save is authoritative.
   const seededRef = useRef(false);
   useEffect(() => {
-    if (!editor || !synced || seededRef.current) return;
+    // Only writers seed; a viewer must never inject content.
+    if (!editor || !synced || seededRef.current || !canEdit) return;
     seededRef.current = true;
     const aloneInRoom = othersCount === 0;
     const docLooksEmpty = editor.getText().trim().length === 0;
@@ -103,13 +113,13 @@ export function LiveSessionEditor({
     }, wait);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, synced]);
+  }, [editor, synced, canEdit]);
 
-  // ── Save bridge ─────────────────────────────────────────────────────
+  // ── Save bridge (writers only: a viewer's PUT would just 403) ──────
   const dirtyRef = useRef(false);
   const savingRef = useRef(false);
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !canEdit) return;
     const markDirty = () => { dirtyRef.current = true; };
     editor.on("update", markDirty);
     const timer = setInterval(async () => {
@@ -128,24 +138,38 @@ export function LiveSessionEditor({
       editor.off("update", markDirty);
       clearInterval(timer);
     };
-  }, [editor, onPersist]);
+  }, [editor, onPersist, canEdit]);
+
+  // Closing the tab mid-session with unsaved bridge changes: the Yjs doc
+  // itself is safe on the server, but chapters.content may lag a few
+  // seconds. Warn so the writer leaves through the button when possible.
+  useEffect(() => {
+    const guard = (e: BeforeUnloadEvent) => {
+      if (!dirtyRef.current) return;
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, []);
 
   const leave = useCallback(async () => {
     const html = editor?.getHTML() ?? initialHtml;
-    if (dirtyRef.current && editor) {
+    if (canEdit && dirtyRef.current && editor) {
       try { await onPersist(html); dirtyRef.current = false; } catch { /* parent will save after re-split */ }
     }
-    onExit(html);
-  }, [editor, initialHtml, onPersist, onExit]);
+    onExit(html, canEdit);
+  }, [editor, initialHtml, onPersist, onExit, canEdit]);
 
   const statusLabel =
     status === "denied"
       ? ar ? "لا تملك صلاحية لهذه الجلسة" : "You do not have access to this session"
-      : status === "offline"
-        ? ar ? "انقطع الاتصال، إعادة المحاولة جارية" : "Connection lost, retrying"
-        : !synced
-          ? ar ? "جارٍ الاتصال بالجلسة" : "Joining the session"
-          : null;
+      : status === "disabled"
+        ? ar ? "الجلسات الحية معطلة حالياً" : "Live sessions are currently disabled"
+        : status === "offline"
+          ? ar ? "انقطع الاتصال، إعادة المحاولة جارية. كتابتك محفوظة وستتزامن عند عودة الاتصال" : "Connection lost, retrying. Your writing is kept and will sync when you are back"
+          : !synced
+            ? ar ? "جارٍ الاتصال بالجلسة" : "Joining the session"
+            : null;
 
   return createPortal(
     <div
@@ -208,8 +232,29 @@ export function LiveSessionEditor({
         {/* presence avatars */}
         <PresenceRow peers={peers} ar={ar} />
 
-        {/* light formatting */}
-        {editor && (
+        {/* viewer badge: watching, not writing */}
+        {role === "viewer" && (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "5px 11px",
+              borderRadius: 999,
+              background: "rgba(96,165,250,0.10)",
+              border: "1px solid rgba(96,165,250,0.35)",
+              color: "#60a5fa",
+              fontSize: 11.5,
+              fontWeight: 700,
+            }}
+          >
+            <Eye size={12} />
+            {ar ? "قراءة فقط" : "Read only"}
+          </span>
+        )}
+
+        {/* light formatting (writers only) */}
+        {editor && canEdit && (
           <div style={{ display: "flex", gap: 4 }}>
             {[
               { Icon: Bold, on: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold") },
