@@ -343,10 +343,25 @@ export default function ChapterEditor() {
   const [liveMode, setLiveMode] = useState(false);
   const autoEnteredLiveRef = useRef(false);
   useEffect(() => {
-    if (autoEnteredLiveRef.current || !isCollaboratorHere) return;
+    // Collaborators land in the session automatically; anyone arriving
+    // through an invite link (?live=1) joins too, owner included.
+    if (autoEnteredLiveRef.current) return;
+    const invited = new URLSearchParams(window.location.search).get("live") === "1";
+    if (!isCollaboratorHere && !(invited && bookIsShared)) return;
     autoEnteredLiveRef.current = true;
     setLiveMode(true);
-  }, [isCollaboratorHere]);
+  }, [isCollaboratorHere, bookIsShared]);
+
+  // Presence probe: while the book is shared and the user is NOT in the
+  // session, poll who is inside so the Live pill can whisper "someone is
+  // writing in there". Light: one tiny GET every 30s, shared cache.
+  const presenceQ = useQuery<{ count: number }>({
+    queryKey: [`/api/collab/presence/${chapterId}`],
+    enabled: !!chapterId && bookIsShared && !liveMode && !!authUser,
+    refetchInterval: 30_000,
+    staleTime: 25_000,
+  });
+  const liveCount = presenceQ.data?.count ?? 0;
   const updateChapter = useUpdateChapter();
   const updateBook = useUpdateBook();
   const { data: versions = [] } = useChapterVersions(chapterId || null);
@@ -2343,10 +2358,24 @@ export default function ChapterEditor() {
                 data-testid="button-live-session"
               >
                 <span
-                  className="animate-pulse"
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: "#5fcf8e" }}
+                  className={liveCount > 0 ? "animate-pulse" : undefined}
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: liveCount > 0 ? "#5fcf8e" : "rgba(95,207,142,0.45)" }}
                 />
                 {!isPhone && (ar ? "جلسة حية" : "Live")}
+                {liveCount > 0 && (
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 800,
+                      padding: "1px 7px",
+                      borderRadius: 999,
+                      background: "rgba(95,207,142,0.18)",
+                    }}
+                    title={ar ? "أشخاص في الجلسة الآن" : "People in the session now"}
+                  >
+                    {liveCount}
+                  </span>
+                )}
               </button>
             )}
 
@@ -3922,6 +3951,7 @@ export default function ChapterEditor() {
           initialHtml={richPages.join("")}
           userName={String((authUser as any)?.displayName || (authUser as any)?.email || "Writer")}
           ar={ar}
+          inviteUrl={`${window.location.origin}/books/${bookId}/chapters/${chapterId}?live=1`}
           onPersist={async (html) => {
             // Same shape performSave sends; without PAGE_BREAK markers the
             // load path re-paginates by word count on the next open.

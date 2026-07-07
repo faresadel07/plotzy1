@@ -68,6 +68,34 @@ export function mountCollab(httpServer: HttpServer, app: Express): void {
   const hocuspocus = createCollabServer();
   const wss = new WebSocketServer({ noServer: true });
 
+  // ── Presence probe ─────────────────────────────────────────────────
+  // How many people are in the chapter's live room right now, WITHOUT
+  // joining it. The editor's Live pill polls this so the owner can see
+  // "someone is writing in there" before deciding to join. Only loaded
+  // documents exist in memory; an idle room correctly reports zero.
+  app.get(
+    "/api/collab/presence/:chapterId",
+    requireAuth,
+    generalLimiter,
+    async (req: Request, res: Response) => {
+      try {
+        if (!collabEnabled()) return res.json({ count: 0 });
+        const chapterId = parseInt(String(req.params.chapterId), 10);
+        if (!Number.isSafeInteger(chapterId) || chapterId <= 0) {
+          return res.status(400).json({ message: "Invalid chapter id" });
+        }
+        const user = req.user as any;
+        const role = await resolveChapterRole(chapterId, user.id);
+        if (!role) return res.status(403).json({ message: "No access to this chapter" });
+        const doc = hocuspocus.documents.get(chapterDocName(chapterId));
+        return res.json({ count: doc ? doc.getConnectionsCount() : 0 });
+      } catch (err) {
+        logger.error({ err }, "collab presence probe failed");
+        return res.status(500).json({ message: "Internal error" });
+      }
+    },
+  );
+
   wss.on("connection", (ws, request) => {
     // Hocuspocus v4 takes a fetch-style Request (Headers/URLSearchParams)
     // and, crucially, does NOT subscribe to socket events itself: the

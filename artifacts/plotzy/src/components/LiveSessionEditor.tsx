@@ -17,12 +17,12 @@
 //   transforms, which would break position:fixed (same lesson as the
 //   publisher Track dialog).
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
-import { Loader2, X, Wifi, WifiOff, Bold, Italic, UnderlineIcon, Eye } from "lucide-react";
+import { Loader2, X, Wifi, WifiOff, Bold, Italic, UnderlineIcon, Eye, Link2, Check } from "lucide-react";
 import { buildChapterExtensions } from "@/components/RichChapterEditor";
 import { useCollabSession, type CollabPeer } from "@/hooks/use-collab-session";
 
@@ -36,6 +36,9 @@ interface LiveSessionEditorProps {
   initialHtml: string;
   userName: string;
   ar: boolean;
+  /** Link that opens this chapter straight into the live session.
+   *  Shown to writers only; the invitee must already be a collaborator. */
+  inviteUrl?: string;
   /** Persist HTML through the normal chapter save path. */
   onPersist: (html: string) => Promise<void>;
   /** Leave the session; parent re-paginates with this final HTML.
@@ -49,9 +52,11 @@ export function LiveSessionEditor({
   initialHtml,
   userName,
   ar,
+  inviteUrl,
   onPersist,
   onExit,
 }: LiveSessionEditorProps) {
+  const [inviteCopied, setInviteCopied] = useState(false);
   const session = useCollabSession({ chapterId, enabled: true, userName });
   const { doc, provider, status, synced, peers, othersCount, canEdit, role } = session;
 
@@ -282,6 +287,36 @@ export function LiveSessionEditor({
               </button>
             ))}
           </div>
+        )}
+
+        {/* one-tap invite: copies a link that lands straight in this session */}
+        {canEdit && inviteUrl && (
+          <button
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(inviteUrl);
+                setInviteCopied(true);
+                setTimeout(() => setInviteCopied(false), 2200);
+              } catch { /* clipboard denied: nothing to do */ }
+            }}
+            title={ar ? "انسخ رابط الجلسة لمتعاون على هذا الكتاب" : "Copy the session link for a collaborator on this book"}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "7px 12px",
+              borderRadius: 10,
+              background: inviteCopied ? "rgba(95,207,142,0.15)" : "rgba(255,255,255,0.06)",
+              color: inviteCopied ? "#5fcf8e" : "rgba(255,255,255,0.85)",
+              border: `1px solid ${inviteCopied ? "rgba(95,207,142,0.4)" : "rgba(255,255,255,0.14)"}`,
+              fontSize: 12.5,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {inviteCopied ? <Check size={13} /> : <Link2 size={13} />}
+            {inviteCopied ? (ar ? "انتسخ" : "Copied") : ar ? "دعوة" : "Invite"}
+          </button>
         )}
 
         <button
