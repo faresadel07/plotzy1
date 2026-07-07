@@ -741,7 +741,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             {/* Brand */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
-                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 7, filter: 'invert(1)' }} />
+                <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 7, filter: 'none' }} />
                 <span style={{ fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
               </a>
               <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,0.34)', maxWidth: 240, margin: 0 }}>
