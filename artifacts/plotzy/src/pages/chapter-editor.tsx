@@ -6,7 +6,6 @@ import { useChapters, useUpdateChapter } from "@/hooks/use-chapters";
 import { useBook, useUpdateBook } from "@/hooks/use-books";
 import { SEO } from "@/components/SEO";
 import { useChapterVersions, useSaveVersion, useRestoreVersion, useDeleteVersion } from "@/hooks/use-chapter-versions";
-import { AIAssistant } from "@/components/ai-assistant";
 import { Studio } from "@/components/studio/Studio";
 import { ClaudeIcon } from "@/components/studio/icons";
 import { NiceSelect } from "@/components/ui/nice-select";
@@ -20,7 +19,7 @@ import { RichChapterEditor } from "@/components/RichChapterEditor";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Wand2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash, Sparkles } from "lucide-react";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { PrintPreview } from "@/components/chapter-editor/PrintPreview";
 import { PageSetupModal } from "@/components/chapter-editor/PageSetupModal";
@@ -418,7 +417,6 @@ export default function ChapterEditor() {
   // Once the user has responded to the recovery banner for this chapter
   // (restore OR discard), don't surface it again for the same mount.
   const draftPromptResolvedRef = useRef(false);
-  const [showAI, setShowAI] = useState(false);
   const [showEditorSearch, setShowEditorSearch] = useState(false);
   const [editorSearchQuery, setEditorSearchQuery] = useState("");
   const [editorSearchCount, setEditorSearchCount] = useState(0);
@@ -2329,27 +2327,6 @@ export default function ChapterEditor() {
               Claude
             </button>
 
-            {/* AI Assistant pill. Visible on every viewport now — was
-                hidden on phones (hidden sm:flex), which left the writer
-                without their primary AI surface there. On phones the
-                label collapses to just the wand so the pill still fits
-                next to Save / Search on a narrow header. */}
-            {/* AI Assistant — secondary now, a quiet icon so Claude (the
-                primary AI surface) clearly stands out. Desktop only;
-                phones reach it from the More sheet. */}
-            {!isPhone && (
-            <button
-              className="h-8 w-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
-              style={{ background: "transparent", color: "#f5c518", border: "1px solid rgba(245,197,24,0.35)" }}
-              onClick={() => setShowAI(true)}
-              aria-label={t("aiAssistant")}
-              title={t("aiAssistant")}
-              data-testid="button-ai-assistant"
-            >
-              <Wand2 className="w-4 h-4" />
-            </button>
-            )}
-
             {autoSaving && (
               <span className="h-8 px-2 rounded-lg text-[10px] font-medium flex items-center gap-1 text-muted-foreground opacity-70">
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -2412,7 +2389,6 @@ export default function ChapterEditor() {
                 // Phone-only entries: these live inline on desktop but
                 // fold into the sheet on phones to keep the bar clean.
                 ...(isPhone ? [
-                  { Icon: Wand2,  label: ar ? "المساعد الذكي" : "AI Assistant", action: () => setShowAI(true) },
                   { Icon: Search, label: ar ? "بحث" : "Search",                action: () => setShowEditorSearch(true) },
                   { Icon: EyeOff, label: ar ? "تركيز" : "Focus",               action: () => setIsFocusMode(true) },
                 ] : []),
@@ -3889,15 +3865,6 @@ export default function ChapterEditor() {
           isDark={isDark}
           ar={ar}
           onClose={() => setShowPageSetup(false)}
-        />
-      )}
-
-      {showAI && (
-        <AIAssistant
-          bookId={bookId}
-          currentContent={pages.map(p => getPageText(p)).filter(Boolean).join("\n\n---\n\n")}
-          onApply={(newContent) => { setPages([newContent]); setIsDirty(true); }}
-          onClose={() => setShowAI(false)}
         />
       )}
 
