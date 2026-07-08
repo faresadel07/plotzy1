@@ -27,14 +27,14 @@ import {
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
-const BG = "#0a0a0a";
-const CARD = "rgba(255,255,255,0.04)";
-const CARD_HOVER = "rgba(255,255,255,0.07)";
-const BORDER = "rgba(255,255,255,0.08)";
-const BORDER_STRONG = "rgba(255,255,255,0.16)";
+const BG = "#221b11";
+const CARD = "rgba(244,239,226,0.04)";
+const CARD_HOVER = "rgba(244,239,226,0.07)";
+const BORDER = "rgba(244,239,226,0.08)";
+const BORDER_STRONG = "rgba(244,239,226,0.16)";
 const TEXT = "#f0efe8";
-const MUTED = "rgba(255,255,255,0.55)";
-const MUTED2 = "rgba(255,255,255,0.35)";
+const MUTED = "rgba(244,239,226,0.55)";
+const MUTED2 = "rgba(244,239,226,0.35)";
 const ACCENT = TEXT; // was gold #c9a96e — writer preferred plain white accents on this page
 
 // Category pills — map to backend `category=` parameter which the
@@ -224,7 +224,7 @@ export default function AudiolibraryPage() {
                 style={{
                   fontFamily: SF, width: "100%",
                   padding: isRTL ? "10px 34px 10px 12px" : "10px 12px 10px 34px",
-                  fontSize: 13, color: TEXT, background: "rgba(255,255,255,0.04)",
+                  fontSize: 13, color: TEXT, background: "rgba(244,239,226,0.04)",
                   border: `1px solid ${BORDER}`, borderRadius: 10, outline: "none",
                   boxSizing: "border-box",
                 }}
@@ -432,7 +432,7 @@ function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; o
         e.currentTarget.style.transform = "translateY(0)";
       }}
     >
-      <div style={{ aspectRatio: "1 / 1", background: "#000", position: "relative", overflow: "hidden" }}>
+      <div style={{ aspectRatio: "1 / 1", background: "#221b11", position: "relative", overflow: "hidden" }}>
         {!imgError && book.coverUrl ? (
           <img
             src={book.coverUrl}
@@ -442,8 +442,8 @@ function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; o
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))" }}>
-            <BookAudio size={38} color="rgba(255,255,255,0.35)" />
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(244,239,226,0.06), rgba(244,239,226,0.02))" }}>
+            <BookAudio size={38} color="rgba(244,239,226,0.35)" />
           </div>
         )}
         {book.totalDuration ? (
@@ -453,7 +453,7 @@ function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; o
               display: "inline-flex", alignItems: "center", gap: 4,
               padding: "3px 8px", borderRadius: 999,
               background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)",
-              color: "#fff", fontSize: 10, fontWeight: 600, fontVariantNumeric: "tabular-nums",
+              color: "#f7f2e4", fontSize: 10, fontWeight: 600, fontVariantNumeric: "tabular-nums",
             }}
           >
             <Clock size={9} />
@@ -507,8 +507,8 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
         style={{
           aspectRatio: "1 / 1",
           background: imgError || !book.coverUrl
-            ? "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))"
-            : "#000",
+            ? "linear-gradient(135deg, rgba(244,239,226,0.06), rgba(244,239,226,0.02))"
+            : "#221b11",
           position: "relative",
           overflow: "hidden",
         }}
@@ -524,7 +524,7 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
         )}
         {(imgError || !book.coverUrl) && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <BookAudio size={42} color="rgba(255,255,255,0.35)" />
+            <BookAudio size={42} color="rgba(244,239,226,0.35)" />
           </div>
         )}
         {book.totalDuration ? (
@@ -534,7 +534,7 @@ function BookCard({ book, ar, onOpen }: { book: AudioBook; ar: boolean; onOpen: 
               display: "inline-flex", alignItems: "center", gap: 4,
               padding: "3px 8px", borderRadius: 999,
               background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
-              color: "#fff", fontSize: 10.5, fontWeight: 600, fontVariantNumeric: "tabular-nums",
+              color: "#f7f2e4", fontSize: 10.5, fontWeight: 600, fontVariantNumeric: "tabular-nums",
             }}
           >
             <Clock size={10} />
@@ -592,7 +592,7 @@ function CategoryPills({ value, onChange, options }: {
               fontWeight: 600,
               letterSpacing: "-0.005em",
               background: active ? TEXT : CARD,
-              color: active ? "#000" : MUTED,
+              color: active ? "#221b11" : MUTED,
               border: `1px solid ${active ? TEXT : BORDER}`,
               cursor: "pointer",
               transition: "all 160ms ease",
@@ -633,10 +633,10 @@ function SkeletonGrid() {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 16 }}>
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: "hidden", opacity: 0.5 }}>
-          <div style={{ aspectRatio: "1 / 1", background: "rgba(255,255,255,0.05)" }} />
+          <div style={{ aspectRatio: "1 / 1", background: "rgba(244,239,226,0.05)" }} />
           <div style={{ padding: "12px 14px" }}>
-            <div style={{ height: 12, width: "85%", background: "rgba(255,255,255,0.08)", borderRadius: 4, marginBottom: 8 }} />
-            <div style={{ height: 10, width: "60%", background: "rgba(255,255,255,0.05)", borderRadius: 4 }} />
+            <div style={{ height: 12, width: "85%", background: "rgba(244,239,226,0.08)", borderRadius: 4, marginBottom: 8 }} />
+            <div style={{ height: 10, width: "60%", background: "rgba(244,239,226,0.05)", borderRadius: 4 }} />
           </div>
         </div>
       ))}
@@ -663,7 +663,7 @@ function SelectChip({ icon, value, onChange, options, isRTL }: {
           padding: "10px 12px",
           paddingInlineStart: 30,
           fontSize: 12.5, fontWeight: 500, color: TEXT,
-          background: "rgba(255,255,255,0.04)",
+          background: "rgba(244,239,226,0.04)",
           border: `1px solid ${BORDER}`, borderRadius: 10,
           minWidth: 160, width: "100%", justifyContent: "space-between",
         }}

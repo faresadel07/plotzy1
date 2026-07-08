@@ -54,11 +54,11 @@ const NAV_SPAN_STYLE = (active: boolean, _dark = false): React.CSSProperties => 
   fontFamily: SF,
   fontSize: 13,
   fontWeight: active ? 600 : 400,
-  color: active ? "#000" : "#444",
+  color: active ? "#2f2618" : "#5a5142",
   letterSpacing: "-0.015em",
   cursor: "pointer",
   transition: "color 0.15s, background 0.15s",
-  background: active ? "rgba(0,0,0,0.06)" : "transparent",
+  background: active ? "rgba(66,53,33,0.08)" : "transparent",
   userSelect: "none",
   textDecoration: "none",
 });
@@ -68,8 +68,8 @@ function NavLink({ href, label, active, dark }: { href: string; label: string; a
     <Link href={href} style={{ textDecoration: "none" }}>
       <span
         style={NAV_SPAN_STYLE(active, dark)}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(0,0,0,0.04)"; (e.currentTarget as HTMLSpanElement).style.color = "#000"; } }}
-        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = "#444"; } }}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(66,53,33,0.06)"; (e.currentTarget as HTMLSpanElement).style.color = "#2f2618"; } }}
+        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = "#5a5142"; } }}
       >
         {label}
       </span>
@@ -95,8 +95,8 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
     <a href="/" onClick={handleClick} style={{ textDecoration: "none" }}>
       <span
         style={NAV_SPAN_STYLE(active, dark)}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(0,0,0,0.04)"; (e.currentTarget as HTMLSpanElement).style.color = "#000"; } }}
-        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = "#444"; } }}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "rgba(66,53,33,0.06)"; (e.currentTarget as HTMLSpanElement).style.color = "#2f2618"; } }}
+        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLSpanElement).style.background = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = "#5a5142"; } }}
       >
         {label ?? "Library"}
       </span>
@@ -106,7 +106,7 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
 
 const SF_FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-const FOOTER_LINK_STYLE: React.CSSProperties = { fontSize: 13.5, color: 'rgba(255,255,255,0.48)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4, cursor: 'pointer' };
+const FOOTER_LINK_STYLE: React.CSSProperties = { fontSize: 13.5, color: 'rgba(244,239,226,0.5)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4, cursor: 'pointer' };
 
 /* ── Social media SVG icons (inline, no external deps) ────────── */
 const SocialSvg = {
@@ -133,9 +133,9 @@ function FooterSocialIcons() {
         if (!Icon) return null;
         return (
           <a key={key} href={url} target="_blank" rel="noopener noreferrer"
-            style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", transition: "all 0.2s", textDecoration: "none" }}
-            onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
+            style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(244,239,226,0.3)", transition: "all 0.2s", textDecoration: "none" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#f7f2e4"; e.currentTarget.style.background = "rgba(244,239,226,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(244,239,226,0.3)"; e.currentTarget.style.background = "rgba(244,239,226,0.04)"; e.currentTarget.style.transform = "translateY(0)"; }}
           >
             <Icon style={{ width: 16, height: 16 }} />
           </a>
@@ -359,13 +359,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         height: "calc(44px + env(safe-area-inset-top, 0px))",
         paddingTop: "env(safe-area-inset-top, 0px)",
         background: darkNav
-          ? (scrolled ? "rgba(8,8,8,0.80)" : "rgba(8,8,8,0.97)")
-          : (scrolled ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.97)"),
+          ? (scrolled ? "rgba(34,27,17,0.82)" : "rgba(34,27,17,0.97)")
+          : (scrolled ? "rgba(244,239,226,0.85)" : "rgba(244,239,226,0.97)"),
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
         borderBottom: `1px solid ${darkNav
-          ? (scrolled ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.06)")
-          : (scrolled ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.06)")}`,
+          ? (scrolled ? "rgba(244,239,226,0.12)" : "rgba(244,239,226,0.07)")
+          : (scrolled ? "rgba(66,53,33,0.14)" : "rgba(66,53,33,0.08)")}`,
         transition: "background 0.3s ease, border-color 0.3s ease",
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
@@ -586,10 +586,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             left: 0,
             right: 0,
             bottom: 0,
-            // Above the header (z 100) so the white bar never floats on
-            // top of the black menu.
+            // Above the header (z 100) so the bar never floats on top
+            // of the espresso menu.
             zIndex: 120,
-            background: "rgba(0,0,0,0.94)",
+            background: "rgba(34,27,17,0.96)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             display: "flex",
@@ -616,10 +616,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               position: "absolute",
               top: "calc(env(safe-area-inset-top, 0px) + 10px)",
               right: 16,
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(244,239,226,0.08)",
+              border: "1px solid rgba(244,239,226,0.12)",
               borderRadius: 999,
-              color: "#fff",
+              color: "#f7f2e4",
               cursor: "pointer",
               padding: 8,
               display: "grid",
@@ -643,7 +643,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   fontFamily: SF,
                   fontSize: 20,
                   fontWeight: location === "/" ? 700 : 400,
-                  color: location === "/" ? "#fff" : "rgba(255,255,255,0.7)",
+                  color: location === "/" ? "#f7f2e4" : "rgba(244,239,226,0.7)",
                   textDecoration: "none",
                   padding: "10px 24px",
                   animation: `plotzyMenuItem 320ms cubic-bezier(0.22, 1, 0.36, 1) both`,
@@ -661,7 +661,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                   fontFamily: SF,
                   fontSize: 20,
                   fontWeight: location === href ? 700 : 400,
-                  color: location === href ? "#fff" : "rgba(255,255,255,0.7)",
+                  color: location === href ? "#f7f2e4" : "rgba(244,239,226,0.7)",
                   textDecoration: "none",
                   padding: "10px 24px",
                   animation: `plotzyMenuItem 320ms cubic-bezier(0.22, 1, 0.36, 1) both`,
@@ -674,7 +674,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
           )}
           {/* Language switcher inside the mobile menu too, so phone
               users can reach Arabic without the desktop nav. */}
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "center" }}>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(244,239,226,0.1)", display: "flex", justifyContent: "center" }}>
             <LanguagePicker />
           </div>
         </div>

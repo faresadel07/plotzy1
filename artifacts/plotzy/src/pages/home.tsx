@@ -77,14 +77,14 @@ function StatCounter({ to, suffix = "", label }: { to: number; suffix?: string; 
       <div style={{
         fontFamily: "-apple-system,'SF Pro Display',sans-serif",
         fontSize: "clamp(2.2rem,4vw,3rem)", fontWeight: 800,
-        letterSpacing: "-0.04em", color: "#fff", lineHeight: 1,
+        letterSpacing: "-0.04em", color: "#f7f2e4", lineHeight: 1,
       }}>
         {count.toLocaleString()}{suffix}
       </div>
       <div style={{
         fontFamily: "-apple-system,'SF Pro Display',sans-serif",
         fontSize: "0.78rem", fontWeight: 500,
-        color: "rgba(255,255,255,0.5)", marginTop: 8, letterSpacing: "0.01em",
+        color: "rgba(244,239,226,0.5)", marginTop: 8, letterSpacing: "0.01em",
       }}>
         {label}
       </div>
@@ -703,12 +703,12 @@ export default function Home() {
             // or collapses mid-scroll. Supported in every browser
             // released since 2022.
             minHeight: "100dvh",
-            background: "#000000",
+            background: "#221b11",
             overflow: "hidden",
           }}
         >
           {/* Hero illustration as a full-bleed backdrop. The image's
-              black background is the same #080808 as the page so the
+              black background is the same #221b11 as the page so the
               edges blend without a visible card boundary. object-fit:
               cover scales it to fill the section; object-position
               biases the crop toward the top half so the pen and the
@@ -740,7 +740,7 @@ export default function Home() {
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(to bottom, rgba(8,8,8,0) 0%, rgba(8,8,8,0) 38%, rgba(8,8,8,0.55) 60%, rgba(8,8,8,0.92) 82%, #080808 100%)",
+              background: "linear-gradient(to bottom, rgba(8,8,8,0) 0%, rgba(8,8,8,0) 38%, rgba(8,8,8,0.55) 60%, rgba(8,8,8,0.92) 82%, #221b11 100%)",
               pointerEvents: "none",
               zIndex: 1,
             }}
@@ -765,7 +765,7 @@ export default function Home() {
               fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
               fontSize: 18,
               fontWeight: 400,
-              color: "rgba(255,255,255,0.78)",
+              color: "rgba(244,239,226,0.78)",
               marginBottom: 10,
               letterSpacing: "0.01em",
               textShadow: "0 2px 18px rgba(0,0,0,0.85)",
@@ -788,7 +788,7 @@ export default function Home() {
             <p style={{
               fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
               fontSize: 15,
-              color: "rgba(255,255,255,0.58)",
+              color: "rgba(244,239,226,0.58)",
               maxWidth: 320,
               margin: "0 0 28px",
               lineHeight: 1.5,
@@ -802,7 +802,7 @@ export default function Home() {
                 padding: "14px 36px",
                 borderRadius: 999,
                 background: "#EFEFEF",
-                color: "#111",
+                color: "#332a1b",
                 fontWeight: 700,
                 fontSize: 14,
                 letterSpacing: "0.01em",
@@ -818,7 +818,7 @@ export default function Home() {
         </section>
 
         {/* ===== HERO SECTION — ContainerScroll 3D (>= 700px only) ===== */}
-        <div className="plotzy-desktop-hero bg-[#080808]">
+        <div className="plotzy-desktop-hero bg-[#221b11]">
           <ContainerScroll
             titleComponent={
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
@@ -831,7 +831,7 @@ export default function Home() {
                     fontSize: "clamp(1.5rem, 3vw, 2rem)",
                     fontWeight: 400,
                     letterSpacing: "0.01em",
-                    color: "rgba(255,255,255,0.88)",
+                    color: "rgba(244,239,226,0.88)",
                     margin: 0,
                     textAlign: "center",
                   }}
@@ -871,7 +871,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              style={{ textAlign: "center", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif', fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 400, letterSpacing: "-0.02em", color: "#ffffff", marginBottom: 56, lineHeight: 1.3 }}
+              style={{ textAlign: "center", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif', fontSize: "clamp(1.4rem, 2.4vw, 2rem)", fontWeight: 400, letterSpacing: "-0.02em", color: "#f7f2e4", marginBottom: 56, lineHeight: 1.3 }}
             >
               {t("fldIntro")}
             </motion.p>
@@ -947,10 +947,10 @@ export default function Home() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25 mb-1.5">{t("hmWorkspace")}</p>
                   <h2 className="text-2xl font-bold text-white tracking-tight leading-none">{t("hmYourProjects")}</h2>
                   {books && books.length > 3 && (
-                    <div className="mt-2 flex items-center gap-2 rounded-lg px-3 py-1.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", maxWidth: 240 }}>
-                      <Search className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.25)" }} />
+                    <div className="mt-2 flex items-center gap-2 rounded-lg px-3 py-1.5" style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.06)", maxWidth: 240 }}>
+                      <Search className="w-3.5 h-3.5" style={{ color: "rgba(244,239,226,0.25)" }} />
                       <input value={bookSearch} onChange={e => setBookSearch(e.target.value)} placeholder={t("hmSearchBooks")}
-                        className="bg-transparent border-none outline-none text-xs w-full" style={{ color: "#fff" }} />
+                        className="bg-transparent border-none outline-none text-xs w-full" style={{ color: "#f7f2e4" }} />
                     </div>
                   )}
                 </div>
@@ -963,7 +963,7 @@ export default function Home() {
                   <Link href="/trash">
                     <button
                       className="workspace-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                      style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      style={{ background: 'rgba(244,239,226,0.06)', color: 'rgba(244,239,226,0.45)', border: '1px solid rgba(244,239,226,0.08)' }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       {t("hmTrash")}
@@ -974,7 +974,7 @@ export default function Home() {
                       <button
                         onClick={() => { setShowJoinModal(true); setJoinCode(""); setJoinError(""); }}
                         className="workspace-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        style={{ background: 'rgba(244,239,226,0.06)', color: 'rgba(244,239,226,0.6)', border: '1px solid rgba(244,239,226,0.1)' }}
                       >
                         <Users className="w-3.5 h-3.5" />
                         {t("hmJoinABook")}
@@ -982,7 +982,7 @@ export default function Home() {
                       <button
                         onClick={() => setIsOpen(true)}
                         className="workspace-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-                        style={{ background: '#ffffff', color: '#111111' }}
+                        style={{ background: '#f7f2e4', color: '#332a1b' }}
                       >
                         <Plus className="w-3.5 h-3.5" />
                         {t("hmNewProject")}
@@ -1024,14 +1024,14 @@ export default function Home() {
                     className="flex flex-col items-center justify-center rounded-2xl"
                     style={{
                       height: 360,
-                      border: '1.5px dashed rgba(255,255,255,0.1)',
-                      background: 'rgba(255,255,255,0.015)',
+                      border: '1.5px dashed rgba(244,239,226,0.1)',
+                      background: 'rgba(244,239,226,0.015)',
                       transition: 'border-color 0.25s, background 0.25s, box-shadow 0.25s',
                     }}
                     whileHover={{
-                      borderColor: 'rgba(255,255,255,0.22)',
-                      background: 'rgba(255,255,255,0.04)',
-                      boxShadow: '0 0 40px rgba(255,255,255,0.04)',
+                      borderColor: 'rgba(244,239,226,0.22)',
+                      background: 'rgba(244,239,226,0.04)',
+                      boxShadow: '0 0 40px rgba(244,239,226,0.04)',
                     }}
                   >
                     <motion.div
@@ -1039,9 +1039,9 @@ export default function Home() {
                       style={{
                         width: 40,
                         height: 40,
-                        border: '1.5px solid rgba(255,255,255,0.15)',
+                        border: '1.5px solid rgba(244,239,226,0.15)',
                       }}
-                      whileHover={{ scale: 1.15, borderColor: 'rgba(255,255,255,0.4)' }}
+                      whileHover={{ scale: 1.15, borderColor: 'rgba(244,239,226,0.4)' }}
                       whileTap={{ scale: 0.9 }}
                     >
                       <Plus className="w-4 h-4 text-white/40 group-hover:text-white/70 transition-colors duration-200" />
@@ -1088,9 +1088,9 @@ export default function Home() {
                 >
                   <div
                     className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 border border-dashed transition-all duration-300"
-                    style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.12)' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.25)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                    style={{ aspectRatio: '2/3', background: 'rgba(244,239,226,0.02)', borderColor: 'rgba(244,239,226,0.12)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(244,239,226,0.25)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(244,239,226,0.04)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(244,239,226,0.12)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(244,239,226,0.02)'; }}
                   >
                     <div className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center group-hover:border-white/30 transition-colors">
                       <Plus className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
@@ -1152,7 +1152,7 @@ export default function Home() {
                                   aspectRatio: '2/3',
                                   borderRadius: 10,
                                   background: 'linear-gradient(160deg, #1c1c28 0%, #141420 60%, #0f0f1a 100%)',
-                                  border: '1px solid rgba(255,255,255,0.08)',
+                                  border: '1px solid rgba(244,239,226,0.08)',
                                   boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3)',
                                 }}
                               >
@@ -1165,14 +1165,14 @@ export default function Home() {
                                 )}
                                 <div style={{ position: 'absolute', top: 44, left: 14, right: 14, zIndex: 1 }}>
                                   {[0,1,2,3,4,5].map(i => (
-                                    <div key={i} style={{ height: 1, background: 'rgba(255,255,255,0.045)', marginBottom: 10, borderRadius: 1, width: i === 5 ? '55%' : '100%' }} />
+                                    <div key={i} style={{ height: 1, background: 'rgba(244,239,226,0.045)', marginBottom: 10, borderRadius: 1, width: i === 5 ? '55%' : '100%' }} />
                                   ))}
                                 </div>
                                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: '16px 14px 14px', zIndex: 2 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                                     <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: coverPalette.accent, background: `${coverPalette.accent}22`, border: `1px solid ${coverPalette.accent}55`, borderRadius: 4, padding: '2px 6px' }}>Blog</span>
                                     {langInfo && langInfo.code !== 'en' && (
-                                      <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{langInfo.nativeName.slice(0, 3)}</span>
+                                      <span style={{ fontSize: 8, color: 'rgba(244,239,226,0.3)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{langInfo.nativeName.slice(0, 3)}</span>
                                     )}
                                   </div>
                                   <div style={{ marginBottom: 8 }}>
@@ -1183,13 +1183,13 @@ export default function Home() {
                                       <line x1="16" y1="17" x2="8" y2="17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                                     </svg>
                                   </div>
-                                  <h3 style={{ fontSize: titleFontSize, fontWeight: 700, color: 'rgba(255,255,255,0.9)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", marginBottom: 8, flex: 1 }}>{book.title}</h3>
+                                  <h3 style={{ fontSize: titleFontSize, fontWeight: 700, color: 'rgba(244,239,226,0.9)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", marginBottom: 8, flex: 1 }}>{book.title}</h3>
                                   {book.articleCategory && (
-                                    <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>{book.articleCategory}</div>
+                                    <div style={{ fontSize: 8, color: 'rgba(244,239,226,0.35)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 10 }}>{book.articleCategory}</div>
                                   )}
                                   <div style={{ marginTop: 'auto' }}>
                                     {[100, 88, 72].map((w, i) => (
-                                      <div key={i} style={{ height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 2, marginBottom: 5, width: `${w}%` }} />
+                                      <div key={i} style={{ height: 2, background: 'rgba(244,239,226,0.08)', borderRadius: 2, marginBottom: 5, width: `${w}%` }} />
                                     ))}
                                   </div>
                                 </div>
@@ -1200,8 +1200,8 @@ export default function Home() {
                                 >
                                   {renamingId === book.id ? (
                                     <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
-                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>{t("hmRename")}</span>
-                                      <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
+                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(244,239,226,0.45)', textTransform: 'uppercase' }}>{t("hmRename")}</span>
+                                      <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(244,239,226,0.1)', border: '1px solid rgba(244,239,226,0.2)', color: '#f7f2e4', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
                                       <div style={{ display: 'flex', gap: 6 }}>
                                         <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : t("hmSave")}</button>
                                         <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">{t("hmCancel")}</button>
@@ -1222,10 +1222,10 @@ export default function Home() {
                               <PerspectiveBook spineColor={book.spineColor || coverPalette.accent}>
                                 {!book.coverImage && (<div className="absolute inset-0"><BookCoverShader bookId={book.id} speed={0.5} /></div>)}
                                 {book.coverImage && (<img src={book.coverImage} alt={book.title} className="absolute inset-0 w-full h-full object-cover object-center" />)}
-                                <div className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)' }} />
+                                <div className="absolute top-0 inset-x-0 h-1/2 pointer-events-none z-20" style={{ background: 'linear-gradient(to bottom, rgba(244,239,226,0.04), transparent)' }} />
                                 <div className="absolute bottom-0 inset-x-0 p-3 flex flex-col justify-end z-20" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 55%, transparent 100%)' }}>
                                   <h3 className="text-white font-bold leading-tight line-clamp-2" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif", fontSize: titleFontSize, textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>{book.title}</h3>
-                                  <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '8px', color: 'rgba(255,255,255,0.35)' }}>{book.genre ? book.genre : t("hmBookGenre")}</div>
+                                  <div className="mt-0.5 tracking-[0.18em] uppercase" style={{ fontSize: '8px', color: 'rgba(244,239,226,0.35)' }}>{book.genre ? book.genre : t("hmBookGenre")}</div>
                                 </div>
                                 {langInfo && langInfo.code !== 'en' && (
                                   <div className="absolute top-2 left-2 z-30 text-white/65 rounded-md px-1.5 py-0.5 text-[8px] uppercase tracking-wider font-semibold border border-white/10" style={{ background: 'rgba(0,0,0,0.75)' }}>{langInfo.nativeName.slice(0, 3)}</div>
@@ -1238,8 +1238,8 @@ export default function Home() {
                                 >
                                   {renamingId === book.id ? (
                                     <form onSubmit={(e) => { e.stopPropagation(); commitRename(e, book.id); }} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '0 14px', width: '100%' }}>
-                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>{t("hmRename")}</span>
-                                      <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
+                                      <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(244,239,226,0.45)', textTransform: 'uppercase' }}>{t("hmRename")}</span>
+                                      <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setRenamingId(null); }} style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, textAlign: 'center', background: 'rgba(244,239,226,0.1)', border: '1px solid rgba(244,239,226,0.2)', color: '#f7f2e4', outline: 'none', fontFamily: 'inherit' }} maxLength={120} />
                                       <div style={{ display: 'flex', gap: 6 }}>
                                         <button type="submit" disabled={updateBook.isPending} className="text-white text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40">{updateBook.isPending ? '…' : t("hmSave")}</button>
                                         <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="text-white/50 text-[8px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5 rounded-full border border-white/10 bg-transparent hover:bg-white/10 transition-colors">{t("hmCancel")}</button>
@@ -1290,7 +1290,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">{t("hmSharedWithYou")}</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{t("hmSharedWithYouDesc")}</p>
+                <p className="text-xs" style={{ color: "rgba(244,239,226,0.3)" }}>{t("hmSharedWithYouDesc")}</p>
               </div>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
@@ -1320,7 +1320,7 @@ export default function Home() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{sb.title}</p>
-                    <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    <p className="text-[11px] truncate" style={{ color: "rgba(244,239,226,0.35)" }}>
                       {t("hmBy")} {sb.ownerName || t("hmUnknown")} · {sb.role === "editor" ? t("hmCanEdit") : t("hmViewOnly")}
                     </p>
                   </div>
@@ -1337,12 +1337,12 @@ export default function Home() {
         {user && sharedByMe.length > 0 && (
           <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <UserPlus className="w-4 h-4" style={{ color: "#ffffff" }} />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(244,239,226,0.06)", border: "1px solid rgba(244,239,226,0.12)" }}>
+                <UserPlus className="w-4 h-4" style={{ color: "#f7f2e4" }} />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">{t("hmYouShared")}</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{t("hmYouSharedDesc")}</p>
+                <p className="text-xs" style={{ color: "rgba(244,239,226,0.3)" }}>{t("hmYouSharedDesc")}</p>
               </div>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
@@ -1361,7 +1361,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white truncate">{book.title}</p>
-                      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      <p className="text-[11px]" style={{ color: "rgba(244,239,226,0.35)" }}>
                         {book.collaborators.length} {book.collaborators.length === 1 ? t("hmCollaborator") : t("hmCollaborators")}
                       </p>
                     </div>
@@ -1370,7 +1370,7 @@ export default function Home() {
                   {/* Collaborators list */}
                   <div className="flex flex-col gap-1.5">
                     {book.collaborators.slice(0, 3).map((c) => (
-                      <div key={c.userId} className="flex items-center gap-2 px-2 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.02)" }}>
+                      <div key={c.userId} className="flex items-center gap-2 px-2 py-1 rounded-md" style={{ background: "rgba(244,239,226,0.02)" }}>
                         {c.avatarUrl ? (
                           <img src={c.avatarUrl} alt={c.name || ""} className="w-5 h-5 rounded-full object-cover" />
                         ) : (
@@ -1378,14 +1378,14 @@ export default function Home() {
                             {(c.name || "?")[0]?.toUpperCase()}
                           </div>
                         )}
-                        <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(255,255,255,0.7)" }}>{c.name || t("hmUnknown")}</span>
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.06)", color: c.role === "editor" ? "#a78bfa" : "rgba(255,255,255,0.55)", border: "1px solid", borderColor: c.role === "editor" ? "rgba(167,139,250,0.25)" : "rgba(255,255,255,0.10)" }}>
+                        <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(244,239,226,0.7)" }}>{c.name || t("hmUnknown")}</span>
+                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(167,139,250,0.15)" : "rgba(244,239,226,0.06)", color: c.role === "editor" ? "#a78bfa" : "rgba(244,239,226,0.55)", border: "1px solid", borderColor: c.role === "editor" ? "rgba(167,139,250,0.25)" : "rgba(244,239,226,0.10)" }}>
                           {c.role === "editor" ? t("hmEditor") : t("hmViewer")}
                         </span>
                       </div>
                     ))}
                     {book.collaborators.length > 3 && (
-                      <span className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.3)" }}>+ {book.collaborators.length - 3} {t("hmMore")}</span>
+                      <span className="text-[10px] text-center" style={{ color: "rgba(244,239,226,0.3)" }}>+ {book.collaborators.length - 3} {t("hmMore")}</span>
                     )}
                   </div>
                 </button>
@@ -1414,7 +1414,7 @@ export default function Home() {
               transition={{ duration: 0.7 }}
             >
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#bbb] mb-4">{t("hiwEyebrow")}</p>
-              <h2 className="text-4xl sm:text-5xl font-bold text-[#111] leading-[1.1] mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-[#332a1b] leading-[1.1] mb-4">
                 {t("hiwTitle1")}<br className="hidden sm:block" /> {t("hiwTitle2")}
               </h2>
               <p className="text-lg text-[#666] leading-[1.75] max-w-2xl mx-auto">
@@ -1437,10 +1437,10 @@ export default function Home() {
               >
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">1</div>
+                    <div className="w-6 h-6 rounded-full bg-[#332a1b] flex items-center justify-center text-white text-[10px] font-bold">1</div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwWriteTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwWriteTitle")}</h3>
+                  <h3 className="text-2xl font-bold text-[#332a1b] leading-snug mb-2">{t("hiwWriteTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
                     {t("hiwWriteDesc")}
                   </p>
@@ -1451,8 +1451,8 @@ export default function Home() {
                 <ul className="space-y-2">
                   {[t("hiwWriteLi1"), t("hiwWriteLi2"), t("hiwWriteLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
-                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
-                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-4 h-4 rounded-full bg-[#221b11]/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#332a1b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </li>
@@ -1471,10 +1471,10 @@ export default function Home() {
               >
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">2</div>
+                    <div className="w-6 h-6 rounded-full bg-[#332a1b] flex items-center justify-center text-white text-[10px] font-bold">2</div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwRefineTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwRefineTitle")}</h3>
+                  <h3 className="text-2xl font-bold text-[#332a1b] leading-snug mb-2">{t("hiwRefineTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
                     {t("hiwRefineDesc")}
                   </p>
@@ -1485,8 +1485,8 @@ export default function Home() {
                 <ul className="space-y-2">
                   {[t("hiwRefineLi1"), t("hiwRefineLi2"), t("hiwRefineLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
-                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
-                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-4 h-4 rounded-full bg-[#221b11]/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#332a1b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </li>
@@ -1505,10 +1505,10 @@ export default function Home() {
               >
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">3</div>
+                    <div className="w-6 h-6 rounded-full bg-[#332a1b] flex items-center justify-center text-white text-[10px] font-bold">3</div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwPublishTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwPublishTitle")}</h3>
+                  <h3 className="text-2xl font-bold text-[#332a1b] leading-snug mb-2">{t("hiwPublishTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
                     {t("hiwPublishDesc")}
                   </p>
@@ -1519,8 +1519,8 @@ export default function Home() {
                 <ul className="space-y-2">
                   {[t("hiwPublishLi1"), t("hiwPublishLi2"), t("hiwPublishLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
-                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
-                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-4 h-4 rounded-full bg-[#221b11]/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#332a1b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </li>
@@ -1539,10 +1539,10 @@ export default function Home() {
               >
                 <div>
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-6 h-6 rounded-full bg-[#111] flex items-center justify-center text-white text-[10px] font-bold">4</div>
+                    <div className="w-6 h-6 rounded-full bg-[#332a1b] flex items-center justify-center text-white text-[10px] font-bold">4</div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#aaa]">{t("hiwListenTag")}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-[#111] leading-snug mb-2">{t("hiwListenTitle")}</h3>
+                  <h3 className="text-2xl font-bold text-[#332a1b] leading-snug mb-2">{t("hiwListenTitle")}</h3>
                   <p className="text-sm text-[#666] leading-relaxed">
                     {t("hiwListenDesc")}
                   </p>
@@ -1553,8 +1553,8 @@ export default function Home() {
                 <ul className="space-y-2">
                   {[t("hiwListenLi1"), t("hiwListenLi2"), t("hiwListenLi3")].map(item => (
                     <li key={item} className="flex items-center gap-2.5 text-[#444] text-sm">
-                      <span className="w-4 h-4 rounded-full bg-black/5 border border-black/10 flex items-center justify-center flex-shrink-0">
-                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <span className="w-4 h-4 rounded-full bg-[#221b11]/5 border border-black/10 flex items-center justify-center flex-shrink-0">
+                        <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#332a1b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </span>
                       {item}
                     </li>
@@ -1588,7 +1588,7 @@ export default function Home() {
                 >
                   Your browser does not support video playback.
                 </video>
-                <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-sm text-white text-[11px] font-medium px-3.5 py-1.5 rounded-full ring-1 ring-white/10 flex items-center gap-1.5">
+                <div className="absolute bottom-3 right-3 bg-[#221b11]/85 backdrop-blur-sm text-white text-[11px] font-medium px-3.5 py-1.5 rounded-full ring-1 ring-white/10 flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   <span>{t("madeWithPlotzy")}</span>
                 </div>
@@ -1600,7 +1600,7 @@ export default function Home() {
                 </p>
                 <h2
                   id="course-section-heading"
-                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#111] tracking-[-0.03em] leading-[1.1] mb-5"
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#332a1b] tracking-[-0.03em] leading-[1.1] mb-5"
                 >
                   {t("courseHomeTitle")}
                 </h2>
@@ -1651,7 +1651,7 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="bg-[#111] hover:bg-[#000] text-white px-8 py-6 text-base font-semibold rounded-full shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all"
+                className="bg-[#332a1b] hover:bg-[#221b11] text-white px-8 py-6 text-base font-semibold rounded-full shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all"
               >
                 <Link href="/course" className="flex items-center gap-2">
                   {t("courseHomeCta")}
@@ -1663,19 +1663,19 @@ export default function Home() {
         </section>
 
         {/* ===== CARD STACK FEATURES ===== */}
-        <div id="platform-features" style={{ background: "#080808", padding: "80px 0 100px" }}>
+        <div id="platform-features" style={{ background: "#221b11", padding: "80px 0 100px" }}>
           <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px" }}>
             <div style={{ textAlign: "center", marginBottom: 60 }}>
               <p style={{
                 fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em",
-                color: "rgba(255,255,255,0.3)", textTransform: "uppercase",
+                color: "rgba(244,239,226,0.3)", textTransform: "uppercase",
                 marginBottom: 16, fontFamily: '-apple-system,"SF Pro Display",sans-serif',
               }}>
                 What Plotzy offers
               </p>
               <h2 style={{
                 fontSize: "clamp(2rem,4vw,3.2rem)", fontWeight: 700,
-                color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1,
+                color: "#f7f2e4", letterSpacing: "-0.03em", lineHeight: 1.1,
                 fontFamily: '-apple-system,"SF Pro Display",sans-serif',
               }}>
                 {t("csHeading1")}<br />{t("csHeading2")}
@@ -1696,42 +1696,42 @@ export default function Home() {
                   tag: t("cs1Tag"),
                   title: t("cs1Title"),
                   description: t("cs1Desc"),
-                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                  accent: "linear-gradient(90deg,#f7f2e4 0%,#ccc 100%)",
                 },
                 {
                   id: 2,
                   tag: t("cs2Tag"),
                   title: t("cs2Title"),
                   description: t("cs2Desc"),
-                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                  accent: "linear-gradient(90deg,#f7f2e4 0%,#ccc 100%)",
                 },
                 {
                   id: 3,
                   tag: t("cs3Tag"),
                   title: t("cs3Title"),
                   description: t("cs3Desc"),
-                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                  accent: "linear-gradient(90deg,#f7f2e4 0%,#ccc 100%)",
                 },
                 {
                   id: 4,
                   tag: t("cs4Tag"),
                   title: t("cs4Title"),
                   description: t("cs4Desc"),
-                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                  accent: "linear-gradient(90deg,#f7f2e4 0%,#ccc 100%)",
                 },
                 {
                   id: 5,
                   tag: t("cs5Tag"),
                   title: t("cs5Title"),
                   description: t("cs5Desc"),
-                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                  accent: "linear-gradient(90deg,#f7f2e4 0%,#ccc 100%)",
                 },
                 {
                   id: 6,
                   tag: t("cs6Tag"),
                   title: t("cs6Title"),
                   description: t("cs6Desc"),
-                  accent: "linear-gradient(90deg,#fff 0%,#ccc 100%)",
+                  accent: "linear-gradient(90deg,#f7f2e4 0%,#ccc 100%)",
                 },
               ]}
             />
@@ -1754,7 +1754,7 @@ export default function Home() {
         <TestimonialsDesktop />
 
         {/* ===== WRITER PROTECTION TEASER ===== */}
-        <section className="relative bg-[#080808] py-20 px-6 sm:px-8 overflow-hidden">
+        <section className="relative bg-[#221b11] py-20 px-6 sm:px-8 overflow-hidden">
           <div className="max-w-6xl mx-auto">
 
             {/* Image LEFT + Text RIGHT */}
@@ -1775,7 +1775,7 @@ export default function Home() {
                     height: "auto",
                     display: "block",
                     borderRadius: 16,
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(244,239,226,0.06)",
                   }}
                 />
               </div>
@@ -1787,7 +1787,7 @@ export default function Home() {
                   fontWeight: 600,
                   letterSpacing: "0.18em",
                   textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.4)",
+                  color: "rgba(244,239,226,0.4)",
                   marginBottom: 16,
                 }}>
                   {t("wpEyebrow")}
@@ -1795,7 +1795,7 @@ export default function Home() {
                 <h2 style={{
                   fontSize: "clamp(1.7rem, 3.2vw, 2.6rem)",
                   fontWeight: 800,
-                  color: "#fff",
+                  color: "#f7f2e4",
                   lineHeight: 1.1,
                   letterSpacing: "-0.035em",
                   marginBottom: 16,
@@ -1804,7 +1804,7 @@ export default function Home() {
                 </h2>
                 <p style={{
                   fontSize: 16,
-                  color: "rgba(255,255,255,0.5)",
+                  color: "rgba(244,239,226,0.5)",
                   lineHeight: 1.6,
                   marginBottom: 28,
                 }}>
@@ -1817,21 +1817,21 @@ export default function Home() {
                     gap: 10,
                     padding: "14px 30px",
                     borderRadius: 999,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    color: "#fff",
+                    background: "rgba(244,239,226,0.06)",
+                    border: "1px solid rgba(244,239,226,0.14)",
+                    color: "#f7f2e4",
                     fontWeight: 600,
                     fontSize: 14,
                     textDecoration: "none",
                     transition: "all 0.25s",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                    e.currentTarget.style.background = "rgba(244,239,226,0.12)";
+                    e.currentTarget.style.borderColor = "rgba(244,239,226,0.25)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                    e.currentTarget.style.background = "rgba(244,239,226,0.06)";
+                    e.currentTarget.style.borderColor = "rgba(244,239,226,0.14)";
                   }}
                   >
                     {t("wpCta")}
@@ -1854,8 +1854,8 @@ export default function Home() {
                 { title: t("wpP4T"), desc: t("wpP4D") },
               ].map((item, i) => (
                 <div key={i} style={{
-                  background: "rgba(255,255,255,0.025)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(244,239,226,0.025)",
+                  border: "1px solid rgba(244,239,226,0.07)",
                   borderRadius: 16,
                   padding: "22px 20px",
                   textAlign: "left",
@@ -1863,7 +1863,7 @@ export default function Home() {
                   <h3 style={{
                     fontSize: 15,
                     fontWeight: 700,
-                    color: "#fff",
+                    color: "#f7f2e4",
                     marginBottom: 6,
                     letterSpacing: "-0.005em",
                   }}>
@@ -1871,7 +1871,7 @@ export default function Home() {
                   </h3>
                   <p style={{
                     fontSize: 13,
-                    color: "rgba(255,255,255,0.55)",
+                    color: "rgba(244,239,226,0.55)",
                     lineHeight: 1.55,
                     margin: 0,
                   }}>
@@ -1893,7 +1893,7 @@ export default function Home() {
         </section>
 
         {/* ===== CTA SECTION ===== */}
-        <section className="relative bg-[#080808] text-center py-10 px-6 sm:px-8 overflow-hidden">
+        <section className="relative bg-[#221b11] text-center py-10 px-6 sm:px-8 overflow-hidden">
 
           {/* Corner dots */}
           <div className="absolute top-8 left-8 w-1 h-1 rounded-full bg-white/10" />
@@ -1911,7 +1911,7 @@ export default function Home() {
               {t("lcTitle")}
             </TextShimmer>
 
-            <p className="text-base font-light mb-10 leading-[1.8] max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.42)' }}>
+            <p className="text-base font-light mb-10 leading-[1.8] max-w-xl mx-auto" style={{ color: 'rgba(244,239,226,0.42)' }}>
               {t("lcBody1")}<br />{t("lcBody2")}
             </p>
 
@@ -1919,14 +1919,14 @@ export default function Home() {
               <button
                 onClick={openCreateBook}
                 className="group inline-flex items-center gap-2.5 px-8 py-3 rounded-full font-bold text-sm tracking-wide transition-all duration-300 hover:scale-[1.04] active:scale-[0.97]"
-                style={{ background: '#EFEFEF', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', color: '#111111' }}
+                style={{ background: '#EFEFEF', boxShadow: '0 4px 24px rgba(0,0,0,0.5)', color: '#332a1b' }}
               >
                 {t("lcBeginJourney")}
               </button>
               <button
                 onClick={scrollToFeatures}
                 className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm tracking-wide border transition-all duration-300 hover:border-white/30 hover:bg-white/[0.06] hover:scale-[1.03] active:scale-[0.97]"
-                style={{ color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.03)' }}
+                style={{ color: 'rgba(244,239,226,0.55)', borderColor: 'rgba(244,239,226,0.12)', background: 'rgba(244,239,226,0.03)' }}
               >
                 {t("lcViewFeatures")}
                 <ChevronDown className="w-3.5 h-3.5 opacity-60" />
@@ -1946,22 +1946,22 @@ export default function Home() {
       {showJoinModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.65)" }}
           onClick={e => { if (e.target === e.currentTarget) setShowJoinModal(false); }}>
-          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)" }}
+          <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: "#332a1b", border: "1px solid rgba(244,239,226,0.1)" }}
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "#fff" }}>
+              <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "#f7f2e4" }}>
                 <Users className="w-5 h-5" /> {t("hmJoinABook")}
               </h3>
-              <button onClick={() => setShowJoinModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "rgba(255,255,255,0.4)" }}>✕</button>
+              <button onClick={() => setShowJoinModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "rgba(244,239,226,0.4)" }}>✕</button>
             </div>
-            <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <p className="text-sm mb-4" style={{ color: "rgba(244,239,226,0.4)" }}>
               {t("hmJoinDesc")}
             </p>
             <input
               autoFocus value={joinCode} onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError(""); }}
               placeholder="PLOT-XXXXXX"
               className="w-full text-center text-xl font-mono font-bold tracking-[0.2em] py-3 rounded-xl mb-3 outline-none"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", letterSpacing: "0.15em" }}
+              style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.1)", color: "#f7f2e4", letterSpacing: "0.15em" }}
               onKeyDown={e => { if (e.key === "Enter" && joinCode.trim()) document.getElementById("join-btn")?.click(); }}
             />
             {joinError && <p className="text-xs mb-3" style={{ color: "#f87171" }}>{joinError}</p>}
@@ -1977,7 +1977,7 @@ export default function Home() {
                 finally { setJoinLoading(false); }
               }}
               className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: joinCode.trim() ? "#fff" : "rgba(255,255,255,0.06)", color: joinCode.trim() ? "#000" : "rgba(255,255,255,0.3)", opacity: joinLoading ? 0.5 : 1 }}>
+              style={{ background: joinCode.trim() ? "#f7f2e4" : "rgba(244,239,226,0.06)", color: joinCode.trim() ? "#221b11" : "rgba(244,239,226,0.3)", opacity: joinLoading ? 0.5 : 1 }}>
               {joinLoading ? t("hmJoining") : t("hmJoinBook")}
             </button>
           </div>

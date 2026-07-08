@@ -107,7 +107,7 @@ function makeFallback(el: HTMLElement, title: string) {
   lbl.className = "fb-lbl";
   lbl.style.cssText =
     "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;" +
-    "padding:8px;text-align:center;font-size:9.5px;color:rgba(255,255,255,0.88);" +
+    "padding:8px;text-align:center;font-size:9.5px;color:rgba(244,239,226,0.88);" +
     "font-family:Georgia,serif;font-style:italic;line-height:1.35;";
   lbl.textContent = title;
   el.appendChild(lbl);
@@ -160,7 +160,7 @@ function BookCover({ title, cover }: { title: string; cover: string }) {
           className="absolute inset-x-0 bottom-0 opacity-0 group-hover/book:opacity-100 transition-opacity duration-200"
           style={{ background: "linear-gradient(to top,rgba(0,0,0,0.85),transparent)", padding: "20px 6px 6px" }}
         >
-          <p style={{ fontSize: 8.5, color: "rgba(255,255,255,0.92)", fontFamily: "Georgia,serif", textAlign: "center", lineHeight: 1.3, margin: 0 }}>
+          <p style={{ fontSize: 8.5, color: "rgba(244,239,226,0.92)", fontFamily: "Georgia,serif", textAlign: "center", lineHeight: 1.3, margin: 0 }}>
             {title}
           </p>
         </div>
@@ -217,7 +217,7 @@ export function BookCarousel() {
             textTransform: "uppercase",
             fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif",
             fontWeight: 600,
-            color: "#000",
+            color: "#221b11",
             cursor: "pointer",
             borderBottom: "1.5px solid rgba(0,0,0,0.25)",
             paddingBottom: 2,
@@ -228,7 +228,7 @@ export function BookCarousel() {
               (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.55)";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = "#000";
+              (e.currentTarget as HTMLElement).style.color = "#221b11";
               (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.25)";
             }}
           >
@@ -308,13 +308,13 @@ export function AudioBookCarousel() {
         width: "100%",
         overflow: "hidden",
         padding: "44px 0 40px",
-        background: "linear-gradient(to bottom, #0a0a0a 0%, #050505 100%)",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: "linear-gradient(to bottom, #221b11 0%, #050505 100%)",
+        borderTop: "1px solid rgba(244,239,226,0.06)",
+        borderBottom: "1px solid rgba(244,239,226,0.06)",
         position: "relative",
       }}
     >
-      <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#0a0a0a,transparent)", zIndex: 2, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: "100%", background: "linear-gradient(to right,#221b11,transparent)", zIndex: 2, pointerEvents: "none" }} />
       <div style={{ position: "absolute", top: 0, right: 0, width: 140, height: "100%", background: "linear-gradient(to left,#050505,transparent)", zIndex: 2, pointerEvents: "none" }} />
 
       <div style={{ textAlign: "center", marginBottom: 22 }}>
@@ -325,15 +325,15 @@ export function AudioBookCarousel() {
             gap: 8,
             padding: "5px 12px",
             borderRadius: 999,
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.10)",
+            background: "rgba(244,239,226,0.06)",
+            border: "1px solid rgba(244,239,226,0.10)",
             marginBottom: 12,
           }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(244,239,226,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
           </svg>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(244,239,226,0.7)", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif" }}>
             Public Domain Audio
           </span>
         </div>
@@ -350,17 +350,17 @@ export function AudioBookCarousel() {
               fontWeight: 600,
               color: "#f0efe8",
               cursor: "pointer",
-              borderBottom: "1.5px solid rgba(255,255,255,0.28)",
+              borderBottom: "1.5px solid rgba(244,239,226,0.28)",
               paddingBottom: 2,
               transition: "color 0.2s, border-color 0.2s",
             }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.color = "#fff";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.6)";
+                (e.currentTarget as HTMLElement).style.color = "#f7f2e4";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(244,239,226,0.6)";
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.color = "#f0efe8";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.28)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(244,239,226,0.28)";
               }}
             >
               Explore our free audio library: 19,000+ audiobooks, listen instantly
@@ -415,7 +415,7 @@ function BookCoverDark({ title, cover }: { title: string; cover: string }) {
             height: 135,
             borderRadius: 5,
             boxShadow: "4px 5px 20px rgba(0,0,0,0.55), 1px 1px 5px rgba(0,0,0,0.25)",
-            background: "#1a1a1a",
+            background: "#332a1b",
           }}
         >
           <img
@@ -449,7 +449,7 @@ function BookCoverDark({ title, cover }: { title: string; cover: string }) {
             className="absolute inset-x-0 bottom-0 opacity-0 group-hover/book:opacity-100 transition-opacity duration-200"
             style={{ background: "linear-gradient(to top,rgba(0,0,0,0.92),transparent)", padding: "20px 6px 6px" }}
           >
-            <p style={{ fontSize: 8.5, color: "rgba(255,255,255,0.95)", fontFamily: "Georgia,serif", textAlign: "center", lineHeight: 1.3, margin: 0 }}>
+            <p style={{ fontSize: 8.5, color: "rgba(244,239,226,0.95)", fontFamily: "Georgia,serif", textAlign: "center", lineHeight: 1.3, margin: 0 }}>
               {title}
             </p>
           </div>
@@ -466,7 +466,7 @@ function makeDarkFallback(el: HTMLElement, title: string) {
   lbl.className = "fb-lbl";
   lbl.style.cssText =
     "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;" +
-    "padding:8px;text-align:center;font-size:9.5px;color:rgba(255,255,255,0.88);" +
+    "padding:8px;text-align:center;font-size:9.5px;color:rgba(244,239,226,0.88);" +
     "font-family:Georgia,serif;font-style:italic;line-height:1.35;";
   lbl.textContent = title;
   el.appendChild(lbl);
@@ -499,7 +499,7 @@ export function ArabicBookCarousel() {
             fontSize: 14,
             fontFamily: "-apple-system,'SF Pro Display','SF Pro Text',sans-serif",
             fontWeight: 700,
-            color: "#000",
+            color: "#221b11",
             cursor: "pointer",
             borderBottom: "1.5px solid rgba(0,0,0,0.25)",
             paddingBottom: 2,
@@ -510,7 +510,7 @@ export function ArabicBookCarousel() {
               (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.55)";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = "#000";
+              (e.currentTarget as HTMLElement).style.color = "#221b11";
               (e.currentTarget as HTMLElement).style.borderColor = "rgba(0,0,0,0.25)";
             }}
           >

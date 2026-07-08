@@ -156,10 +156,10 @@ export function CookieBanner() {
         right: 0,
         bottom: 0,
         zIndex: 9998,
-        background: "#000",
-        borderTop: "1px solid rgba(255,255,255,0.10)",
+        background: "#221b11",
+        borderTop: "1px solid rgba(244,239,226,0.10)",
         boxShadow: "0 -8px 28px rgba(0,0,0,0.35)",
-        color: "#fff",
+        color: "#f7f2e4",
         fontFamily: SF,
       }}
     >
@@ -197,7 +197,7 @@ export function CookieBanner() {
                 style={{
                   fontSize: 13.5,
                   lineHeight: 1.6,
-                  color: "rgba(255,255,255,0.62)",
+                  color: "rgba(244,239,226,0.62)",
                   margin: 0,
                 }}
               >
@@ -205,7 +205,7 @@ export function CookieBanner() {
                 <Link
                   href="/privacy"
                   style={{
-                    color: "#fff",
+                    color: "#f7f2e4",
                     textDecoration: "underline",
                     textUnderlineOffset: 2,
                   }}
@@ -313,9 +313,9 @@ export function CookieBanner() {
 const ghostBtn: React.CSSProperties = {
   padding: "10px 16px",
   background: "transparent",
-  border: "1px solid rgba(255,255,255,0.20)",
+  border: "1px solid rgba(244,239,226,0.20)",
   borderRadius: 10,
-  color: "rgba(255,255,255,0.85)",
+  color: "rgba(244,239,226,0.85)",
   fontSize: 13.5,
   fontWeight: 500,
   fontFamily: "inherit",
@@ -325,10 +325,10 @@ const ghostBtn: React.CSSProperties = {
 
 const solidBtn: React.CSSProperties = {
   padding: "10px 18px",
-  background: "#fff",
-  border: "1px solid #fff",
+  background: "#f7f2e4",
+  border: "1px solid #f7f2e4",
   borderRadius: 10,
-  color: "#000",
+  color: "#221b11",
   fontSize: 13.5,
   fontWeight: 600,
   fontFamily: "inherit",
@@ -357,8 +357,8 @@ function CategoryRow({
         alignItems: "flex-start",
         gap: 14,
         padding: "12px 14px",
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(244,239,226,0.04)",
+        border: "1px solid rgba(244,239,226,0.08)",
         borderRadius: 10,
       }}
     >
@@ -368,7 +368,7 @@ function CategoryRow({
             fontSize: 13,
             fontWeight: 600,
             marginBottom: 4,
-            color: "#fff",
+            color: "#f7f2e4",
           }}
         >
           {title}
@@ -377,7 +377,7 @@ function CategoryRow({
           style={{
             fontSize: 11.5,
             lineHeight: 1.55,
-            color: "rgba(255,255,255,0.55)",
+            color: "rgba(244,239,226,0.55)",
           }}
         >
           {body}
@@ -391,9 +391,9 @@ function CategoryRow({
               fontWeight: 600,
               padding: "4px 8px",
               borderRadius: 100,
-              background: "rgba(255,255,255,0.10)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              color: "rgba(255,255,255,0.85)",
+              background: "rgba(244,239,226,0.10)",
+              border: "1px solid rgba(244,239,226,0.18)",
+              color: "rgba(244,239,226,0.85)",
               textTransform: "uppercase",
               letterSpacing: "0.06em",
               whiteSpace: "nowrap",

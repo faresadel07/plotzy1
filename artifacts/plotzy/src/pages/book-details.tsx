@@ -359,7 +359,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       <Button
         disabled
         title={lang === "ar" ? "إنشاء الغلاف بالذكاء الاصطناعي قريباً" : "AI cover generation coming soon"}
-        className="rounded-lg font-semibold text-[#111111] shadow-lg border-0 opacity-60 cursor-not-allowed"
+        className="rounded-lg font-semibold text-[#332a1b] shadow-lg border-0 opacity-60 cursor-not-allowed"
         style={{ background: "#EFEFEF" }}
         size="sm"
         data-testid="button-generate-cover"
@@ -392,15 +392,15 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
       >
 
         {/* ── Left Column ── */}
-        <div className={`lg:col-span-4 flex flex-col gap-4 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10`} style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className={`lg:col-span-4 flex flex-col gap-4 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10`} style={{ borderRight: '1px solid rgba(244,239,226,0.06)' }}>
 
           {/* Cover Card */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(244,239,226,0.06)', border: '1px solid rgba(244,239,226,0.10)' }}>
 
             {/* Cover with hover */}
             <div className="relative group cursor-pointer">
               <BookCoverWrap book={book} />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#221b11]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Link href={`/books/${bookId}/cover-designer`}>
                   <Button size="sm" className="bg-white/95 text-black hover:bg-white font-semibold rounded-xl shadow-xl border-0 backdrop-blur-sm">
                     <Palette className="w-3.5 h-3.5 mr-1.5" />
@@ -411,23 +411,23 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             </div>
 
             {/* Divider */}
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+            <div style={{ height: '1px', background: 'rgba(244,239,226,0.06)' }} />
 
             {/* Book Info */}
             <div className="p-5 space-y-4">
               {/* Title + Author */}
               <div>
-                <h1 className="text-lg font-bold leading-snug" style={{ color: 'rgba(255,255,255,0.92)' }} dir={bookRTL ? "rtl" : "ltr"}>
+                <h1 className="text-lg font-bold leading-snug" style={{ color: 'rgba(244,239,226,0.92)' }} dir={bookRTL ? "rtl" : "ltr"}>
                   {book.title}
                 </h1>
                 {book.authorName && (
-                  <p className="text-sm mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>{book.authorName}</p>
+                  <p className="text-sm mt-0.5 font-medium" style={{ color: 'rgba(244,239,226,0.38)' }}>{book.authorName}</p>
                 )}
               </div>
 
               {/* Summary */}
               {book.summary && (
-                <p className="text-sm leading-relaxed line-clamp-3" style={{ color: 'rgba(255,255,255,0.45)' }} dir={bookRTL ? "rtl" : "ltr"}>
+                <p className="text-sm leading-relaxed line-clamp-3" style={{ color: 'rgba(244,239,226,0.45)' }} dir={bookRTL ? "rtl" : "ltr"}>
                   {book.summary}
                 </p>
               )}
@@ -436,12 +436,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               {(book.genre || book.language) && (
                 <div className="flex flex-wrap gap-1.5">
                   {book.genre && (
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', letterSpacing: '0.02em' }}>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(244,239,226,0.06)', color: 'rgba(244,239,226,0.55)', letterSpacing: '0.02em' }}>
                       {book.genre}
                     </span>
                   )}
                   {book.language && (
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', letterSpacing: '0.05em' }}>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase" style={{ background: 'rgba(244,239,226,0.06)', color: 'rgba(244,239,226,0.55)', letterSpacing: '0.05em' }}>
                       {book.language}
                     </span>
                   )}
@@ -457,11 +457,11 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               <DropdownMenuTrigger asChild>
                 <Button
                   className="w-full rounded-xl h-10 font-semibold border-0 transition-all text-sm"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)' }}
+                  style={{ background: 'rgba(244,239,226,0.08)', color: 'rgba(244,239,226,0.8)' }}
                   disabled={isDownloading}
                   data-testid="button-download-book"
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.12)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.08)')}
                 >
                   {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Download className="w-4 h-4 mr-2" />{lang === "ar" ? "تحميل" : "Download"}</>}
                 </Button>
@@ -490,8 +490,8 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             <Link href={`/books/${bookId}/cover-designer`} className="flex-1">
               <Button
                 className="w-full rounded-xl h-10 font-semibold transition-all text-sm"
-                style={{ background: 'transparent', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                style={{ background: 'transparent', color: 'rgba(244,239,226,0.65)', border: '1px solid rgba(244,239,226,0.12)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.05)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <Palette className="w-4 h-4 mr-2" />
@@ -504,21 +504,21 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           <Link href={`/books/${bookId}/audiobook`} className="block" data-testid="button-audiobook-studio">
             <div
               className="group rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
-              style={{ border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.04)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+              style={{ border: '1px solid rgba(244,239,226,0.09)', background: 'rgba(244,239,226,0.04)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.07)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.04)')}
             >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(244,239,226,0.08)' }}>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <p className="text-sm font-semibold" style={{ color: 'rgba(244,239,226,0.85)' }}>
                   {lang === "ar" ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}
                 </p>
-                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(244,239,226,0.38)' }}>
                   {lang === "ar" ? "تحويل الكتاب إلى ملف صوتي بالذكاء الاصطناعي" : "Export your book as an AI-voiced MP3"}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(255,255,255,0.25)' }} />
+              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(244,239,226,0.25)' }} />
             </div>
           </Link>
 
@@ -526,22 +526,22 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           <Link href={`/books/${bookId}/find-publishers`} className="block" data-testid="button-find-publishers">
             <div
               className="group rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
-              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+              style={{ border: '1px solid rgba(244,239,226,0.07)', background: 'rgba(244,239,226,0.02)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.04)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.02)')}
             >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <Globe className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(244,239,226,0.06)' }}>
+                <Globe className="w-4 h-4" style={{ color: 'rgba(244,239,226,0.5)' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                <p className="text-sm font-semibold" style={{ color: 'rgba(244,239,226,0.75)' }}>
                   {lang === "ar" ? "ابحث عن ناشر" : "Find a Publisher"}
                 </p>
-                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(244,239,226,0.3)' }}>
                   {lang === "ar" ? "توليد رسالة تقديم احترافية بالذكاء الاصطناعي" : "AI-generated submission proposal"}
                 </p>
               </div>
-              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(255,255,255,0.2)' }} />
+              <ChevronDown className="w-4 h-4 flex-shrink-0 -rotate-90 transition-colors" style={{ color: 'rgba(244,239,226,0.2)' }} />
             </div>
           </Link>
           </>}
@@ -552,7 +552,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         <div className={`lg:col-span-8 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10 space-y-5`}>
 
           {/* ── Top bar: underline tabs + action buttons ── */}
-          <div className={isPhone ? "flex flex-col items-stretch gap-2" : "flex items-center justify-between gap-4"} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0' }}>
+          <div className={isPhone ? "flex flex-col items-stretch gap-2" : "flex items-center justify-between gap-4"} style={{ borderBottom: '1px solid rgba(244,239,226,0.08)', paddingBottom: '0' }}>
 
             {/* Underline tabs */}
             <div className={`flex items-center gap-0 -mb-px ${isPhone ? "overflow-x-auto" : ""}`}>
@@ -571,14 +571,14 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     key={key}
                     onClick={() => setActiveTab(key)}
                     className="relative flex items-center gap-1.5 px-3.5 py-3 text-sm font-medium transition-all"
-                    style={{ color: active ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.32)', fontWeight: active ? 600 : 400 }}
-                    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.60)'; }}
-                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.32)'; }}
+                    style={{ color: active ? 'rgba(244,239,226,0.90)' : 'rgba(244,239,226,0.32)', fontWeight: active ? 600 : 400 }}
+                    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.60)'; }}
+                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.32)'; }}
                   >
                     <Icon size={13} />
                     <span className="hidden sm:inline">{label}</span>
                     {active && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full" style={{ background: 'rgba(255,255,255,0.85)' }} />
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full" style={{ background: 'rgba(244,239,226,0.85)' }} />
                     )}
                   </button>
                 );
@@ -589,9 +589,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             <div className={`flex items-center gap-2 pb-2 ${isPhone ? "flex-wrap" : "flex-shrink-0"}`}>
               {isOwner && <button onClick={() => setShowCollabModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
-                onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.80)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.50)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                style={{ color: 'rgba(244,239,226,0.50)', border: '1px solid rgba(244,239,226,0.1)', background: 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'rgba(244,239,226,0.80)'; e.currentTarget.style.borderColor = 'rgba(244,239,226,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(244,239,226,0.50)'; e.currentTarget.style.borderColor = 'rgba(244,239,226,0.1)'; }}
               >
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{lang === "ar" ? "تعاون" : "Collaborate"}</span>
@@ -601,9 +601,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               {false && isOwner && <Link href="/marketplace">
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{ color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.80)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.2)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.50)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  style={{ color: 'rgba(244,239,226,0.50)', border: '1px solid rgba(244,239,226,0.1)', background: 'transparent' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.80)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(244,239,226,0.2)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.50)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(244,239,226,0.1)'; }}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{lang === "ar" ? "مجموعة الذكاء" : "AI Suite"}</span>
@@ -616,23 +616,23 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     <button
                       onClick={() => setIsShareOpen(true)}
                       className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
-                      style={{ background: 'rgba(255,255,255,0.92)', color: '#111', border: 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#fff')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.92)')}
+                      style={{ background: 'rgba(244,239,226,0.92)', color: '#332a1b', border: 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f7f2e4')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.92)')}
                       data-testid="button-share-book"
                     >
                       <Send className="w-3.5 h-3.5" />
                       {lang === "ar" ? "شارك" : "Share"}
                     </button>
                     <Link href={`/read/${bookId}`}>
-                      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all" style={{ color: 'rgba(255,255,255,0.60)', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent' }}>
+                      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all" style={{ color: 'rgba(244,239,226,0.60)', border: '1px solid rgba(244,239,226,0.12)', background: 'transparent' }}>
                         <Eye className="w-3.5 h-3.5" />
                         {lang === "ar" ? "عرض" : "View"}
                       </button>
                     </Link>
                     <button
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                      style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent' }}
+                      style={{ color: 'rgba(244,239,226,0.35)', border: '1px solid rgba(244,239,226,0.08)', background: 'transparent' }}
                       disabled={publishBook.isPending}
                       onClick={() => publishBook.mutate(
                         { id: bookId, publish: false },
@@ -649,11 +649,11 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 ) : (
                   <button
                     className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
-                    style={{ background: 'rgba(255,255,255,0.92)', color: '#111', border: 'none' }}
+                    style={{ background: 'rgba(244,239,226,0.92)', color: '#332a1b', border: 'none' }}
                     data-testid="button-finish-publish"
                     onClick={() => { if (!user) { setIsAuthModalOpen(true); } else { setIsPublishConfirmOpen(true); } }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#fff')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.92)')}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f7f2e4')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.92)')}
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     {lang === "ar" ? "نشر الكتاب" : "Publish"}
@@ -666,7 +666,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           {/* ── Publish Confirmation Dialog ── */}
           {book && (
             <Dialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
-              <DialogContent className="rounded-2xl max-w-sm" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <DialogContent className="rounded-2xl max-w-sm" style={{ background: "#332a1b", border: "1px solid rgba(244,239,226,0.1)" }}>
                 <DialogHeader className="text-center pb-2">
                   <div className="text-5xl mb-3 text-center" aria-hidden="true">✒</div>
                   <DialogTitle className="text-xl font-bold text-center leading-snug text-white">
@@ -681,7 +681,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 <DialogFooter className="flex flex-col gap-2 sm:flex-col mt-2">
                   <Button
                     className="w-full rounded-xl font-bold text-sm shadow-md border-0 transition-all hover:opacity-90"
-                    style={{ background: "#ffffff", color: "#111111" }}
+                    style={{ background: "#f7f2e4", color: "#332a1b" }}
                     disabled={publishBook.isPending}
                     data-testid="button-confirm-publish"
                     onClick={() => {
@@ -745,14 +745,14 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             {activeTab === "chapters" && (
               <section>
                 <div className="flex items-center justify-between mb-5">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.22)' }}>{t("chapters")}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgba(244,239,226,0.22)' }}>{t("chapters")}</p>
                   <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
                     <DialogTrigger asChild>
                       <button
                         className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-                        style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.70)', border: 'none' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                        style={{ background: 'rgba(244,239,226,0.08)', color: 'rgba(244,239,226,0.70)', border: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.13)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.08)')}
                         data-testid="button-new-chapter"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -776,7 +776,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                           />
                         </div>
                         <DialogFooter>
-                          <Button type="submit" disabled={createChapter.isPending || !chapterTitle.trim()} className="w-full rounded-lg font-semibold text-[#111111] border-0" style={{ background: "#EFEFEF" }} data-testid="button-create-chapter">
+                          <Button type="submit" disabled={createChapter.isPending || !chapterTitle.trim()} className="w-full rounded-lg font-semibold text-[#332a1b] border-0" style={{ background: "#EFEFEF" }} data-testid="button-create-chapter">
                             {createChapter.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t("createChapter")}
                           </Button>
                         </DialogFooter>
@@ -786,18 +786,18 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 </div>
 
                 {!sortedChapters.length ? (
-                  <div className="text-center py-16 rounded-2xl" style={{ border: '1px dashed rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.01)' }}>
-                    <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                      <FileText className="w-5 h-5" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                  <div className="text-center py-16 rounded-2xl" style={{ border: '1px dashed rgba(244,239,226,0.08)', background: 'rgba(244,239,226,0.01)' }}>
+                    <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(244,239,226,0.04)' }}>
+                      <FileText className="w-5 h-5" style={{ color: 'rgba(244,239,226,0.2)' }} />
                     </div>
-                    <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>{t("noChaptersYet")}</p>
-                    <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.22)' }}>{t("noChaptersDesc")}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'rgba(244,239,226,0.45)' }}>{t("noChaptersYet")}</p>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(244,239,226,0.22)' }}>{t("noChaptersDesc")}</p>
                   </div>
                 ) : (
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId="chapters-list">
                       {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className="" style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="" style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(244,239,226,0.07)' }}>
                           {sortedChapters.map((chapter, index) => (
                             <Draggable key={chapter.id} draggableId={String(chapter.id)} index={index}>
                               {(provided, snapshot) => (
@@ -807,17 +807,17 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   className="group relative flex items-center gap-0 transition-colors"
                                   style={{
                                     ...provided.draggableProps.style,
-                                    background: snapshot.isDragging ? 'rgba(255,255,255,0.055)' : 'transparent',
-                                    borderBottom: index < sortedChapters.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                                    background: snapshot.isDragging ? 'rgba(244,239,226,0.055)' : 'transparent',
+                                    borderBottom: index < sortedChapters.length - 1 ? '1px solid rgba(244,239,226,0.07)' : 'none',
                                   }}
-                                  onMouseEnter={e => { if (!snapshot.isDragging) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                                  onMouseEnter={e => { if (!snapshot.isDragging) (e.currentTarget as HTMLDivElement).style.background = 'rgba(244,239,226,0.04)'; }}
                                   onMouseLeave={e => { if (!snapshot.isDragging) (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
                                   data-testid={`card-chapter-${chapter.id}`}
                                 >
                                   {/* Large faded chapter number */}
                                   <div
                                     className="flex-shrink-0 flex items-center justify-center select-none"
-                                    style={{ width: 56, color: 'rgba(255,255,255,0.07)', fontSize: 32, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, padding: '18px 0 18px 16px' }}
+                                    style={{ width: 56, color: 'rgba(244,239,226,0.07)', fontSize: 32, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, padding: '18px 0 18px 16px' }}
                                   >
                                     {String(index + 1).padStart(2, '0')}
                                   </div>
@@ -826,7 +826,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   <div
                                     {...provided.dragHandleProps}
                                     className="px-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                                    style={{ color: 'rgba(255,255,255,0.25)' }}
+                                    style={{ color: 'rgba(244,239,226,0.25)' }}
                                   >
                                     <GripVertical className="w-3.5 h-3.5" />
                                   </div>
@@ -845,15 +845,15 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                         }}
                                         onClick={(e) => e.stopPropagation()}
                                         className="font-semibold text-sm rounded-md px-2 py-0.5 w-full outline-none"
-                                        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)' }}
+                                        style={{ background: 'rgba(244,239,226,0.08)', border: '1px solid rgba(244,239,226,0.2)', color: 'rgba(244,239,226,0.9)' }}
                                         dir={isRTL ? "rtl" : "ltr"}
                                       />
                                     ) : (
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`} className="block">
-                                        <h4 className="font-semibold text-[15px] leading-tight line-clamp-1 transition-colors" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                                        <h4 className="font-semibold text-[15px] leading-tight line-clamp-1 transition-colors" style={{ color: 'rgba(244,239,226,0.82)' }}>
                                           {chapter.title}
                                         </h4>
-                                        <p className="text-xs flex items-center gap-1.5 mt-1" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                                        <p className="text-xs flex items-center gap-1.5 mt-1" style={{ color: 'rgba(244,239,226,0.28)' }}>
                                           {chapter.createdAt ? format(new Date(chapter.createdAt), 'MMM d, h:mm a') : ''}
                                           {countChapterWords(chapter.content) > 0 && (
                                             <><span>·</span><span>{countChapterWords(chapter.content).toLocaleString()} {lang === "ar" ? "كلمة" : "words"}</span></>
@@ -873,10 +873,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                       {/* Rename — icon-only on phone, text on >=sm */}
                                       <button
                                         className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg transition-all"
-                                        style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 500 }}
+                                        style={{ color: 'rgba(244,239,226,0.35)', background: 'rgba(244,239,226,0.05)', border: '1px solid rgba(244,239,226,0.08)', fontSize: 11, fontWeight: 500 }}
                                         onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
-                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.09)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.05)'; }}
                                         title={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                         aria-label={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                       >
@@ -888,9 +888,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`}>
                                         <button
                                           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
-                                          style={{ color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', fontSize: 11, fontWeight: 600 }}
-                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.16)'; }}
-                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.10)'; }}
+                                          style={{ color: 'rgba(244,239,226,0.85)', background: 'rgba(244,239,226,0.10)', border: '1px solid rgba(244,239,226,0.14)', fontSize: 11, fontWeight: 600 }}
+                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.16)'; }}
+                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.10)'; }}
                                           title={lang === "ar" ? "فتح المحرر" : "Open Editor"}
                                         >
                                           <span>{lang === "ar" ? "كتابة" : "Write"}</span>
@@ -908,9 +908,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                             type="button"
                                             onClick={(e) => e.stopPropagation()}
                                             className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg transition-all"
-                                            style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 11, fontWeight: 500 }}
-                                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.09)'; }}
-                                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                                            style={{ color: 'rgba(244,239,226,0.35)', background: 'rgba(244,239,226,0.05)', border: '1px solid rgba(244,239,226,0.08)', fontSize: 11, fontWeight: 500 }}
+                                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.75)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.09)'; }}
+                                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.05)'; }}
                                             title={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
                                             aria-label={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
                                           >
@@ -954,9 +954,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                         aria-label={lang === "ar" ? "حذف الفصل" : "Delete chapter"}
                                         title={lang === "ar" ? "حذف الفصل" : "Delete chapter"}
                                         className="flex items-center justify-center w-8 h-8 rounded-lg transition-all"
-                                        style={{ color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                                        style={{ color: 'rgba(244,239,226,0.35)', background: 'rgba(244,239,226,0.05)', border: '1px solid rgba(244,239,226,0.08)' }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#fca5a5'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.30)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.35)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.05)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(244,239,226,0.08)'; }}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -1003,24 +1003,24 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                   const isEditing = editingSection === key;
                   const filled = !!content;
                   return (
-                    <div key={key} className="rounded-2xl overflow-hidden transition-all" style={{ background: "rgba(255,255,255,0.02)", border: filled ? "1px solid rgba(255,255,255,0.1)" : "1px dashed rgba(255,255,255,0.08)" }}>
+                    <div key={key} className="rounded-2xl overflow-hidden transition-all" style={{ background: "rgba(244,239,226,0.02)", border: filled ? "1px solid rgba(244,239,226,0.1)" : "1px dashed rgba(244,239,226,0.08)" }}>
                       <div className="flex items-center justify-between px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="rounded-xl p-2.5" style={{ background: filled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)" }}>
-                            <Icon className="w-4 h-4" style={{ color: filled ? "#fff" : "rgba(255,255,255,0.3)" }} />
+                          <div className="rounded-xl p-2.5" style={{ background: filled ? "rgba(244,239,226,0.08)" : "rgba(244,239,226,0.03)" }}>
+                            <Icon className="w-4 h-4" style={{ color: filled ? "#f7f2e4" : "rgba(244,239,226,0.3)" }} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-[13px]" style={{ color: filled ? "#fff" : "rgba(255,255,255,0.6)" }}>{label}</span>
+                              <span className="font-semibold text-[13px]" style={{ color: filled ? "#f7f2e4" : "rgba(244,239,226,0.6)" }}>{label}</span>
                               {filled && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#4ade80" }} />}
                             </div>
-                            <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{desc}</p>
+                            <p className="text-[11px] mt-0.5" style={{ color: "rgba(244,239,226,0.3)" }}>{desc}</p>
                           </div>
                         </div>
                         {!isEditing && (
                           <button
                             className="text-[12px] font-medium px-4 py-1.5 rounded-lg transition-all"
-                            style={{ background: filled ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)", color: filled ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.08)" }}
+                            style={{ background: filled ? "rgba(244,239,226,0.06)" : "rgba(244,239,226,0.08)", color: filled ? "rgba(244,239,226,0.5)" : "rgba(244,239,226,0.8)", border: "1px solid rgba(244,239,226,0.08)" }}
                             onClick={() => { setEditingSection(key); setSectionDraft(content || placeholder); }}
                           >
                             {filled ? (lang === "ar" ? "تعديل" : "Edit") : (lang === "ar" ? "إضافة" : "Add")}
@@ -1028,7 +1028,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                         )}
                         {isEditing && (
                           <div className="flex items-center gap-2 shrink-0">
-                            <button className="text-[12px] font-semibold px-4 py-1.5 rounded-lg" style={{ background: "#fff", color: "#000" }} onClick={() => {
+                            <button className="text-[12px] font-semibold px-4 py-1.5 rounded-lg" style={{ background: "#f7f2e4", color: "#221b11" }} onClick={() => {
                               const updated = { ...pages, [key]: sectionDraft };
                               updateBook.mutate({ id: bookId, bookPages: updated } as any);
                               setEditingSection(null);
@@ -1036,7 +1036,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                             }}>
                               {lang === "ar" ? "حفظ" : "Save"}
                             </button>
-                            <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "rgba(255,255,255,0.4)" }} onClick={() => setEditingSection(null)}>
+                            <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "rgba(244,239,226,0.4)" }} onClick={() => setEditingSection(null)}>
                               {lang === "ar" ? "إلغاء" : "Cancel"}
                             </button>
                           </div>
@@ -1049,10 +1049,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                           {isEditing ? (
                             <Textarea autoFocus value={sectionDraft} onChange={e => setSectionDraft(e.target.value)}
                               className="min-h-[120px] resize-none text-sm rounded-xl" dir={isRTL ? "rtl" : "ltr"}
-                              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", lineHeight: 1.7 }} />
+                              style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.1)", lineHeight: 1.7 }} />
                           ) : (
-                            <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)" }}>
-                              <p className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Georgia', serif" }}>{content}</p>
+                            <div className="rounded-xl px-4 py-3" style={{ background: "rgba(244,239,226,0.03)" }}>
+                              <p className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(244,239,226,0.5)", fontFamily: "'Georgia', serif" }}>{content}</p>
                             </div>
                           )}
                         </div>
@@ -1065,48 +1065,48 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 <div className="space-y-8 pb-8">
 
                   {/* Completion Summary */}
-                  <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, rgba(244,239,226,0.04) 0%, rgba(244,239,226,0.02) 100%)", border: "1px solid rgba(244,239,226,0.07)" }}>
                     <div className="flex items-center justify-between mb-5">
                       <div>
                         <h3 className="text-base font-bold mb-1">{lang === "ar" ? "جاهزية الكتاب" : "Book Readiness"}</h3>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{lang === "ar" ? "أكمل هذه الأقسام لتحضير كتابك للنشر" : "Complete these sections to prepare your book for publishing"}</p>
+                        <p className="text-xs" style={{ color: "rgba(244,239,226,0.35)" }}>{lang === "ar" ? "أكمل هذه الأقسام لتحضير كتابك للنشر" : "Complete these sections to prepare your book for publishing"}</p>
                       </div>
                       <div className="text-right">
                         <span className="text-2xl font-bold">{completedCount}</span>
-                        <span className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>/4</span>
+                        <span className="text-sm" style={{ color: "rgba(244,239,226,0.3)" }}>/4</span>
                       </div>
                     </div>
                     {/* Mini stats row */}
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(244,239,226,0.03)", border: "1px solid rgba(244,239,226,0.06)" }}>
                         <div className="text-lg font-bold">{chapterCount}</div>
-                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "فصول" : "Chapters"}</div>
+                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(244,239,226,0.3)" }}>{lang === "ar" ? "فصول" : "Chapters"}</div>
                       </div>
-                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(244,239,226,0.03)", border: "1px solid rgba(244,239,226,0.06)" }}>
                         <div className="text-lg font-bold">{totalWords.toLocaleString()}</div>
-                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "كلمات" : "Words"}</div>
+                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(244,239,226,0.3)" }}>{lang === "ar" ? "كلمات" : "Words"}</div>
                       </div>
-                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="rounded-xl p-3 text-center" style={{ background: "rgba(244,239,226,0.03)", border: "1px solid rgba(244,239,226,0.06)" }}>
                         <div className="text-lg font-bold">{completedCount}/4</div>
-                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "أقسام" : "Sections"}</div>
+                        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "rgba(244,239,226,0.3)" }}>{lang === "ar" ? "أقسام" : "Sections"}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Writing Goal */}
-                  <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div className="rounded-2xl p-5" style={{ background: "rgba(244,239,226,0.02)", border: "1px solid rgba(244,239,226,0.07)" }}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.06)" }}>
-                          <Target className="w-4 h-4" style={{ color: "rgba(255,255,255,0.7)" }} />
+                        <div className="rounded-xl p-2.5" style={{ background: "rgba(244,239,226,0.06)" }}>
+                          <Target className="w-4 h-4" style={{ color: "rgba(244,239,226,0.7)" }} />
                         </div>
                         <div>
                           <span className="font-semibold text-[13px] block">{lang === "ar" ? "هدف الكتابة" : "Writing Goal"}</span>
-                          <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "ar" ? "حدد عدد الكلمات" : "Track your word count progress"}</span>
+                          <span className="text-[11px]" style={{ color: "rgba(244,239,226,0.3)" }}>{lang === "ar" ? "حدد عدد الكلمات" : "Track your word count progress"}</span>
                         </div>
                       </div>
                       {!editingGoal && (
-                        <button onClick={() => { setEditingGoal(true); setGoalDraft(String(goal || "")); }} className="text-xs transition-colors rounded-lg p-2" style={{ color: "rgba(255,255,255,0.3)" }}>
+                        <button onClick={() => { setEditingGoal(true); setGoalDraft(String(goal || "")); }} className="text-xs transition-colors rounded-lg p-2" style={{ color: "rgba(244,239,226,0.3)" }}>
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -1114,27 +1114,27 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     {editingGoal ? (
                       <div className="flex items-center gap-2 mt-2">
                         <Input type="number" autoFocus value={goalDraft} onChange={e => setGoalDraft(e.target.value)} placeholder={lang === "ar" ? "مثال: 80000" : "e.g. 80000"} className="h-9 text-sm rounded-xl" />
-                        <button className="h-9 rounded-xl px-4 text-[12px] font-semibold" style={{ background: "#fff", color: "#000" }} onClick={() => { updateBook.mutate({ id: bookId, wordGoal: parseInt(goalDraft) || 0 } as any); setEditingGoal(false); }}>
+                        <button className="h-9 rounded-xl px-4 text-[12px] font-semibold" style={{ background: "#f7f2e4", color: "#221b11" }} onClick={() => { updateBook.mutate({ id: bookId, wordGoal: parseInt(goalDraft) || 0 } as any); setEditingGoal(false); }}>
                           <Check className="w-3.5 h-3.5" />
                         </button>
-                        <button className="h-9 rounded-xl px-3 text-[12px]" style={{ color: "rgba(255,255,255,0.4)" }} onClick={() => setEditingGoal(false)}>✕</button>
+                        <button className="h-9 rounded-xl px-3 text-[12px]" style={{ color: "rgba(244,239,226,0.4)" }} onClick={() => setEditingGoal(false)}>✕</button>
                       </div>
                     ) : goal > 0 ? (
                       <div className="space-y-3 mt-3">
                         <div className="flex items-end justify-between">
                           <div>
                             <span className="text-2xl font-bold">{totalWords.toLocaleString()}</span>
-                            <span className="text-xs ml-1" style={{ color: "rgba(255,255,255,0.3)" }}>/ {goal.toLocaleString()}</span>
+                            <span className="text-xs ml-1" style={{ color: "rgba(244,239,226,0.3)" }}>/ {goal.toLocaleString()}</span>
                           </div>
-                          <span className="text-sm font-semibold" style={{ color: goalPct >= 100 ? "#4ade80" : "rgba(255,255,255,0.5)" }}>{goalPct}%</span>
+                          <span className="text-sm font-semibold" style={{ color: goalPct >= 100 ? "#4ade80" : "rgba(244,239,226,0.5)" }}>{goalPct}%</span>
                         </div>
-                        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${goalPct}%`, background: goalPct >= 100 ? "#4ade80" : "linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.8))" }} />
+                        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(244,239,226,0.06)" }}>
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${goalPct}%`, background: goalPct >= 100 ? "#4ade80" : "linear-gradient(90deg, rgba(244,239,226,0.5), rgba(244,239,226,0.8))" }} />
                         </div>
                         {goalPct >= 100 && <p className="text-xs font-medium" style={{ color: "#4ade80" }}>{lang === "ar" ? "تهانينا! حققت هدفك" : "Congratulations! You've reached your goal"}</p>}
                       </div>
                     ) : (
-                      <button onClick={() => { setEditingGoal(true); setGoalDraft(""); }} className="mt-2 w-full rounded-xl py-3 text-sm border border-dashed transition-all hover:border-foreground/15 text-center" style={{ borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }}>
+                      <button onClick={() => { setEditingGoal(true); setGoalDraft(""); }} className="mt-2 w-full rounded-xl py-3 text-sm border border-dashed transition-all hover:border-foreground/15 text-center" style={{ borderColor: "rgba(244,239,226,0.08)", color: "rgba(244,239,226,0.3)" }}>
                         {lang === "ar" ? "اضغط لتعيين هدف الكلمات" : "Set a word count goal"}
                       </button>
                     )}
@@ -1142,7 +1142,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Book Structure Flow */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3" style={{ color: "rgba(244,239,226,0.25)" }}>
                       {lang === "ar" ? "ترتيب الكتاب" : "Book Structure"}
                     </p>
                     <div className="flex items-center gap-0.5 flex-wrap">
@@ -1156,14 +1156,14 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                       ].map((step, i, arr) => (
                         <div key={step.label} className="flex items-center">
                           <span className="text-[11px] font-medium px-3 py-1.5 rounded-lg" style={{
-                            background: step.done ? "rgba(255,255,255,0.08)" : "transparent",
-                            color: step.done ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.2)",
-                            border: step.done ? "1px solid rgba(255,255,255,0.1)" : "1px dashed rgba(255,255,255,0.08)",
+                            background: step.done ? "rgba(244,239,226,0.08)" : "transparent",
+                            color: step.done ? "rgba(244,239,226,0.8)" : "rgba(244,239,226,0.2)",
+                            border: step.done ? "1px solid rgba(244,239,226,0.1)" : "1px dashed rgba(244,239,226,0.08)",
                           }}>
                             {step.done && <span className="inline-block w-1 h-1 rounded-full mr-1.5" style={{ background: "#4ade80", verticalAlign: "middle" }} />}
                             {step.label}
                           </span>
-                          {i < arr.length - 1 && <span className="mx-1 text-[10px]" style={{ color: "rgba(255,255,255,0.15)" }}>→</span>}
+                          {i < arr.length - 1 && <span className="mx-1 text-[10px]" style={{ color: "rgba(244,239,226,0.15)" }}>→</span>}
                         </div>
                       ))}
                     </div>
@@ -1171,7 +1171,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Front matter */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "rgba(244,239,226,0.25)" }}>
                       {lang === "ar" ? "الصفحات الأمامية" : "Front Matter"}
                     </p>
                     {renderSection(FRONT_MATTER)}
@@ -1179,7 +1179,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Back matter */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "rgba(244,239,226,0.25)" }}>
                       {lang === "ar" ? "الصفحات الخلفية" : "Back Matter"}
                     </p>
                     {renderSection(BACK_MATTER)}
@@ -1204,7 +1204,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 <BookPublishingTools bookId={bookId} bookTitle={book.title} currentIsbn={(book as any).isbn} />
 
                 {/* Divider */}
-                <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+                <div className="h-px" style={{ background: "rgba(244,239,226,0.06)" }} />
 
                 {/* Import */}
                 <LegacyImporter bookId={bookId} />
@@ -1241,12 +1241,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           <div className="bg-background rounded-2xl shadow-2xl w-full max-w-md border border-border p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5" />{lang === "ar" ? "التعاون" : "Collaborate"}</h3>
-              <button onClick={() => setShowCollabModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-foreground/5" style={{ color: "rgba(255,255,255,0.4)" }}><XIcon className="w-4 h-4" /></button>
+              <button onClick={() => setShowCollabModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-foreground/5" style={{ color: "rgba(244,239,226,0.4)" }}><XIcon className="w-4 h-4" /></button>
             </div>
 
             {/* Generate invite code */}
             <div className="space-y-3">
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <p className="text-xs" style={{ color: "rgba(244,239,226,0.4)" }}>
                 {lang === "ar" ? "ابعث هاد الكود لصاحبك عشان يقدر يدخل على كتابك" : "Share this code with someone to give them access to your book"}
               </p>
               <div className="flex gap-2">
@@ -1258,7 +1258,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     { value: "editor", label: lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)" },
                     { value: "viewer", label: lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)" },
                   ]}
-                  triggerStyle={{ background: "#222", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 12, padding: "9px 12px", fontSize: 13 }}
+                  triggerStyle={{ background: "#222", border: "1px solid rgba(244,239,226,0.1)", color: "#f7f2e4", borderRadius: 12, padding: "9px 12px", fontSize: 13 }}
                 />
                 <button onClick={async () => {
                   try {
@@ -1266,16 +1266,16 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     const data = await res.json();
                     if (data.code) setInviteCode(data.code);
                   } catch { toast({ title: lang === "ar" ? "فشل إنشاء الكود" : "Failed to generate code", variant: "destructive" }); }
-                }} className="flex-1 rounded-xl text-sm font-semibold py-2" style={{ background: "#fff", color: "#000" }}>
+                }} className="flex-1 rounded-xl text-sm font-semibold py-2" style={{ background: "#f7f2e4", color: "#221b11" }}>
                   {lang === "ar" ? "إنشاء كود دعوة" : "Generate Invite Code"}
                 </button>
               </div>
 
               {inviteCode && (
-                <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.1)" }}>
                   <span className="text-xl font-mono font-bold flex-1 text-center tracking-widest">{inviteCode}</span>
                   <button onClick={() => { navigator.clipboard.writeText(inviteCode); toast({ title: lang === "ar" ? "تم النسخ!" : "Code copied!" }); }}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+                    className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(244,239,226,0.08)", color: "rgba(244,239,226,0.6)" }}>
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>
@@ -1343,7 +1343,7 @@ function CollaboratorsList({ bookId, lang }: { bookId: number; lang: string }) {
 
   if (collabs.length === 0 && pending.length === 0) {
     return (
-      <div className="text-center py-4" style={{ color: "rgba(255,255,255,0.25)" }}>
+      <div className="text-center py-4" style={{ color: "rgba(244,239,226,0.25)" }}>
         <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
         <p className="text-sm">{ar ? "لا يوجد متعاونين بعد" : "No collaborators yet"}</p>
       </div>
@@ -1352,12 +1352,12 @@ function CollaboratorsList({ bookId, lang }: { bookId: number; lang: string }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>
+      <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(244,239,226,0.25)" }}>
         {ar ? "المتعاونون" : "Collaborators"} ({collabs.length})
       </p>
       {collabs.map((c: any) => (
-        <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+        <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "rgba(244,239,226,0.03)", border: "1px solid rgba(244,239,226,0.06)" }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "rgba(244,239,226,0.08)", color: "rgba(244,239,226,0.6)" }}>
             {(c.displayName || c.email || "?")[0].toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
@@ -1366,17 +1366,17 @@ function CollaboratorsList({ bookId, lang }: { bookId: number; lang: string }) {
               {c.role === "editor" ? (ar ? "محرر" : "Editor") : (ar ? "قارئ" : "Viewer")}
             </span>
           </div>
-          <button onClick={() => removeMut.mutate(c.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ color: "rgba(255,255,255,0.25)" }}
+          <button onClick={() => removeMut.mutate(c.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ color: "rgba(244,239,226,0.25)" }}
             onMouseEnter={e => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.background = "rgba(248,113,113,0.1)"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.25)"; e.currentTarget.style.background = "transparent"; }}>
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(244,239,226,0.25)"; e.currentTarget.style.background = "transparent"; }}>
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       ))}
       {pending.map((p: any) => (
-        <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}>
-          <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.4)" }}>{p.inviteCode}</span>
-          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>{ar ? "بانتظار القبول" : "Pending"}</span>
+        <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "rgba(244,239,226,0.02)", border: "1px dashed rgba(244,239,226,0.08)" }}>
+          <span className="text-xs font-mono" style={{ color: "rgba(244,239,226,0.4)" }}>{p.inviteCode}</span>
+          <span className="text-[10px]" style={{ color: "rgba(244,239,226,0.2)" }}>{ar ? "بانتظار القبول" : "Pending"}</span>
         </div>
       ))}
     </div>

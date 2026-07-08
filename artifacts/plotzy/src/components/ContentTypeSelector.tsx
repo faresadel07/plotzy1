@@ -95,7 +95,7 @@ export function ContentTypeSelector({
   if (!open) return null;
 
   const inputStyle = "rounded-xl bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-0 placeholder:text-white/20";
-  const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 5 };
+  const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(244,239,226,0.4)", marginBottom: 5 };
 
   const modal = (
     <div
@@ -120,46 +120,46 @@ export function ContentTypeSelector({
           maxWidth: 520,
           borderRadius: 24,
           backgroundColor: "#111008",
-          border: "1px solid rgba(255,255,255,0.10)",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.04) inset",
+          border: "1px solid rgba(244,239,226,0.10)",
+          boxShadow: "0 40px 100px rgba(0,0,0,0.95), 0 0 0 1px rgba(244,239,226,0.04) inset",
           overflow: "hidden",
           zIndex: 10000,
         }}
       >
-        <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.15) 40%,rgba(255,255,255,0.15) 60%,transparent)" }} />
+        <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(244,239,226,0.15) 40%,rgba(244,239,226,0.15) 60%,transparent)" }} />
 
         {/* Header */}
         <div style={{ padding: "22px 26px 14px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
             {step === "choose" && (
               <>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>New Project</p>
-                <h2 style={{ fontSize: 21, fontWeight: 800, color: "#fff", margin: 0 }}>What are you creating?</h2>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginTop: 3 }}>Choose a format to get started</p>
+                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(244,239,226,0.45)", marginBottom: 5 }}>New Project</p>
+                <h2 style={{ fontSize: 21, fontWeight: 800, color: "#f7f2e4", margin: 0 }}>What are you creating?</h2>
+                <p style={{ fontSize: 13, color: "rgba(244,239,226,0.38)", marginTop: 3 }}>Choose a format to get started</p>
               </>
             )}
             {step === "book" && (
               <>
-                <button onClick={() => { setStep("choose"); setError(null); }} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 7 }}>
+                <button onClick={() => { setStep("choose"); setError(null); }} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(244,239,226,0.35)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 7 }}>
                   <ArrowLeft size={12} /> Back
                 </button>
-                <h2 style={{ fontSize: 21, fontWeight: 800, color: "#fff", margin: 0 }}>New Book</h2>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginTop: 3 }}>Chapter-based writing project</p>
+                <h2 style={{ fontSize: 21, fontWeight: 800, color: "#f7f2e4", margin: 0 }}>New Book</h2>
+                <p style={{ fontSize: 13, color: "rgba(244,239,226,0.38)", marginTop: 3 }}>Chapter-based writing project</p>
               </>
             )}
             {step === "blog" && (
               <>
-                <button onClick={() => { setStep("choose"); setError(null); }} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 7 }}>
+                <button onClick={() => { setStep("choose"); setError(null); }} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(244,239,226,0.35)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 7 }}>
                   <ArrowLeft size={12} /> Back
                 </button>
-                <h2 style={{ fontSize: 21, fontWeight: 800, color: "#fff", margin: 0 }}>New Blog Post</h2>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginTop: 3 }}>Single-page article with SEO tools</p>
+                <h2 style={{ fontSize: 21, fontWeight: 800, color: "#f7f2e4", margin: 0 }}>New Blog Post</h2>
+                <p style={{ fontSize: 13, color: "rgba(244,239,226,0.38)", marginTop: 3 }}>Single-page article with SEO tools</p>
               </>
             )}
           </div>
           <button
             onClick={handleClose}
-            style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.07)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.5)", flexShrink: 0, marginTop: 2 }}
+            style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(244,239,226,0.07)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(244,239,226,0.5)", flexShrink: 0, marginTop: 2 }}
           >
             <X size={14} />
           </button>
@@ -182,18 +182,18 @@ export function ContentTypeSelector({
                 }
                 setStep("book");
               }}
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)")}
+              style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(244,239,226,0.35)")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(244,239,226,0.09)")}
             >
-              <div style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(244,239,226,0.07)", border: "1px solid rgba(244,239,226,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
                 <BookOpen size={17} color="#EFEFEF" />
               </div>
-              <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, margin: "0 0 9px" }}>Book</p>
+              <p style={{ color: "#f7f2e4", fontWeight: 700, fontSize: 14, margin: "0 0 9px" }}>Book</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
                 {BOOK_FEATURES.map(({ icon: Icon, text }) => (
-                  <li key={text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(255,255,255,0.38)" }}>
-                    <Icon size={10} color="rgba(255,255,255,0.4)" />
+                  <li key={text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(244,239,226,0.38)" }}>
+                    <Icon size={10} color="rgba(244,239,226,0.4)" />
                     {text}
                   </li>
                 ))}
@@ -205,18 +205,18 @@ export function ContentTypeSelector({
 
             <button
               onClick={() => setStep("blog")}
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)")}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)")}
+              style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.09)", borderRadius: 14, padding: "18px 16px", textAlign: "left", cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(244,239,226,0.35)")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(244,239,226,0.09)")}
             >
-              <div style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(244,239,226,0.07)", border: "1px solid rgba(244,239,226,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
                 <PenLine size={17} color="#EFEFEF" />
               </div>
-              <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, margin: "0 0 9px" }}>Blog / Article</p>
+              <p style={{ color: "#f7f2e4", fontWeight: 700, fontSize: 14, margin: "0 0 9px" }}>Blog / Article</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
                 {BLOG_FEATURES.map(({ icon: Icon, text }) => (
-                  <li key={text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(255,255,255,0.38)" }}>
-                    <Icon size={10} color="rgba(255,255,255,0.4)" />
+                  <li key={text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(244,239,226,0.38)" }}>
+                    <Icon size={10} color="rgba(244,239,226,0.4)" />
                     {text}
                   </li>
                 ))}
@@ -277,7 +277,7 @@ export function ContentTypeSelector({
 
             {/* Genre */}
             <div>
-              <label style={labelStyle}>Genre <span style={{ color: "rgba(255,255,255,0.2)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
+              <label style={labelStyle}>Genre <span style={{ color: "rgba(244,239,226,0.2)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span></label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {BOOK_GENRES.map(g => (
                   <button
@@ -290,14 +290,14 @@ export function ContentTypeSelector({
                       fontSize: 11,
                       fontWeight: 600,
                       letterSpacing: "0.03em",
-                      border: genre === g ? "1px solid rgba(255,255,255,0.55)" : "1px solid rgba(255,255,255,0.1)",
-                      background: genre === g ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
-                      color: genre === g ? "#fff" : "rgba(255,255,255,0.38)",
+                      border: genre === g ? "1px solid rgba(244,239,226,0.55)" : "1px solid rgba(244,239,226,0.1)",
+                      background: genre === g ? "rgba(244,239,226,0.12)" : "rgba(244,239,226,0.04)",
+                      color: genre === g ? "#f7f2e4" : "rgba(244,239,226,0.38)",
                       cursor: "pointer",
                       transition: "all 0.15s",
                     }}
-                    onMouseEnter={e => { if (genre !== g) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}}
-                    onMouseLeave={e => { if (genre !== g) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}}
+                    onMouseEnter={e => { if (genre !== g) { e.currentTarget.style.borderColor = "rgba(244,239,226,0.25)"; e.currentTarget.style.color = "rgba(244,239,226,0.7)"; }}}
+                    onMouseLeave={e => { if (genre !== g) { e.currentTarget.style.borderColor = "rgba(244,239,226,0.1)"; e.currentTarget.style.color = "rgba(244,239,226,0.38)"; }}}
                   >
                     {g}
                   </button>
@@ -313,13 +313,13 @@ export function ContentTypeSelector({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent
-                  className="bg-[#1a1a1a] border-white/10 text-white max-h-56 overflow-y-auto"
+                  className="bg-[#332a1b] border-white/10 text-white max-h-56 overflow-y-auto"
                   style={{ zIndex: 99999 }}
                   position="popper"
                 >
                   {BOOK_LANGUAGES.map(l => (
                     <SelectItem key={l.code} value={l.code} className="focus:bg-white/10 text-white">
-                      {l.nativeName} <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>({l.name})</span>
+                      {l.nativeName} <span style={{ color: "rgba(244,239,226,0.35)", fontSize: 11 }}>({l.name})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -330,7 +330,7 @@ export function ContentTypeSelector({
             <button
               type="submit"
               disabled={isCreating || !title.trim()}
-              style={{ padding: "12px 0", borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: isCreating || !title.trim() ? "not-allowed" : "pointer", opacity: isCreating || !title.trim() ? 0.5 : 1, background: "#EFEFEF", color: "#111111", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+              style={{ padding: "12px 0", borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: isCreating || !title.trim() ? "not-allowed" : "pointer", opacity: isCreating || !title.trim() ? 0.5 : 1, background: "#EFEFEF", color: "#332a1b", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
             >
               {isCreating ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : "Create Book"}
             </button>
@@ -345,11 +345,11 @@ export function ContentTypeSelector({
                 {error}
               </div>
             )}
-            <div style={{ padding: "11px 13px", borderRadius: 11, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", gap: 9, alignItems: "flex-start" }}>
+            <div style={{ padding: "11px 13px", borderRadius: 11, background: "rgba(244,239,226,0.05)", border: "1px solid rgba(244,239,226,0.12)", display: "flex", gap: 9, alignItems: "flex-start" }}>
               <ImageIcon size={14} color="#EFEFEF" style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: "#EFEFEF", margin: "0 0 2px" }}>Blog Editor includes</p>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.5 }}>Featured cover · Tags & categories · AI generation · Live preview · Auto-save</p>
+                <p style={{ fontSize: 11, color: "rgba(244,239,226,0.4)", margin: 0, lineHeight: 1.5 }}>Featured cover · Tags & categories · AI generation · Live preview · Auto-save</p>
               </div>
             </div>
             <div>
@@ -381,7 +381,7 @@ export function ContentTypeSelector({
                     <SelectValue placeholder="Pick one" />
                   </SelectTrigger>
                   <SelectContent
-                    className="bg-[#1a1a1a] border-white/10 text-white max-h-48 overflow-y-auto"
+                    className="bg-[#332a1b] border-white/10 text-white max-h-48 overflow-y-auto"
                     style={{ zIndex: 99999 }}
                     position="popper"
                   >
@@ -398,7 +398,7 @@ export function ContentTypeSelector({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent
-                    className="bg-[#1a1a1a] border-white/10 text-white max-h-56 overflow-y-auto"
+                    className="bg-[#332a1b] border-white/10 text-white max-h-56 overflow-y-auto"
                     style={{ zIndex: 99999 }}
                     position="popper"
                   >
@@ -412,14 +412,14 @@ export function ContentTypeSelector({
             <button
               type="submit"
               disabled={isCreating || !title.trim()}
-              style={{ padding: "12px 0", borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: isCreating || !title.trim() ? "not-allowed" : "pointer", opacity: isCreating || !title.trim() ? 0.5 : 1, background: "#EFEFEF", color: "#111111", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+              style={{ padding: "12px 0", borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: isCreating || !title.trim() ? "not-allowed" : "pointer", opacity: isCreating || !title.trim() ? 0.5 : 1, background: "#EFEFEF", color: "#332a1b", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
             >
               {isCreating ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : <><PenLine size={15} /> Create Blog Post</>}
             </button>
           </form>
         )}
 
-        <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.06) 50%,transparent)" }} />
+        <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(244,239,226,0.06) 50%,transparent)" }} />
       </div>
     </div>
   );

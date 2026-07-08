@@ -108,10 +108,10 @@ export default function MobileBlocker() {
             position: "fixed",
             inset: 0,
             zIndex: 2147483647,
-            backgroundColor: "#0a0a08",
+            backgroundColor: "#221b11",
             backgroundImage:
-              "radial-gradient(ellipse 80% 50% at 50% 30%, rgba(255,255,255,0.05) 0%, transparent 70%)",
-            color: "#EFEFEF",
+              "radial-gradient(ellipse 80% 50% at 50% 30%, rgba(244,239,226,0.05) 0%, transparent 70%)",
+            color: "#f7f2e4",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -146,14 +146,14 @@ export default function MobileBlocker() {
               zIndex: 1,
             }}
           >
-            <BookOpen style={{ width: 18, height: 18, color: "#EFEFEF" }} />
+            <BookOpen style={{ width: 18, height: 18, color: "#f7f2e4" }} />
             <span
               style={{
                 fontSize: 13,
                 fontWeight: 600,
                 letterSpacing: "0.22em",
                 textTransform: "uppercase",
-                color: "#EFEFEF",
+                color: "#f7f2e4",
               }}
             >
               {copy.brand}
@@ -193,19 +193,19 @@ export default function MobileBlocker() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(244,239,226,0.03)",
+                  border: "1px solid rgba(244,239,226,0.08)",
                 }}
               >
                 <Smartphone
-                  style={{ width: 22, height: 22, color: "rgba(255,255,255,0.3)" }}
+                  style={{ width: 22, height: 22, color: "rgba(244,239,226,0.3)" }}
                   strokeWidth={1.6}
                 />
               </div>
               <div
                 style={{
                   fontSize: 18,
-                  color: "rgba(255,255,255,0.25)",
+                  color: "rgba(244,239,226,0.25)",
                   letterSpacing: "0.2em",
                 }}
               >
@@ -219,13 +219,13 @@ export default function MobileBlocker() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  boxShadow: "0 0 30px rgba(255,255,255,0.05)",
+                  background: "rgba(244,239,226,0.06)",
+                  border: "1px solid rgba(244,239,226,0.18)",
+                  boxShadow: "0 0 30px rgba(244,239,226,0.05)",
                 }}
               >
                 <Tablet
-                  style={{ width: 22, height: 22, color: "#EFEFEF" }}
+                  style={{ width: 22, height: 22, color: "#f7f2e4" }}
                   strokeWidth={1.6}
                 />
               </div>
@@ -237,13 +237,13 @@ export default function MobileBlocker() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  boxShadow: "0 0 30px rgba(255,255,255,0.05)",
+                  background: "rgba(244,239,226,0.06)",
+                  border: "1px solid rgba(244,239,226,0.18)",
+                  boxShadow: "0 0 30px rgba(244,239,226,0.05)",
                 }}
               >
                 <Laptop
-                  style={{ width: 22, height: 22, color: "#EFEFEF" }}
+                  style={{ width: 22, height: 22, color: "#f7f2e4" }}
                   strokeWidth={1.6}
                 />
               </div>
@@ -261,7 +261,7 @@ export default function MobileBlocker() {
                 lineHeight: 1.15,
                 margin: 0,
                 marginBottom: 14,
-                color: "#EFEFEF",
+                color: "#f7f2e4",
               }}
             >
               {copy.headline}
@@ -276,7 +276,7 @@ export default function MobileBlocker() {
                 fontSize: "clamp(0.95rem, 4vw, 1.05rem)",
                 fontWeight: 400,
                 lineHeight: 1.6,
-                color: "rgba(255,255,255,0.55)",
+                color: "rgba(244,239,226,0.55)",
                 margin: 0,
                 marginBottom: 24,
                 maxWidth: 340,
@@ -295,7 +295,7 @@ export default function MobileBlocker() {
                 fontWeight: 600,
                 letterSpacing: "0.24em",
                 textTransform: "uppercase",
-                color: "rgba(255,255,255,0.35)",
+                color: "rgba(244,239,226,0.35)",
                 margin: 0,
               }}
             >
@@ -323,18 +323,18 @@ export default function MobileBlocker() {
                 gap: 8,
                 padding: "8px 16px",
                 borderRadius: 999,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(244,239,226,0.04)",
+                border: "1px solid rgba(244,239,226,0.08)",
               }}
             >
               <Sparkles
-                style={{ width: 13, height: 13, color: "rgba(255,255,255,0.55)" }}
+                style={{ width: 13, height: 13, color: "rgba(244,239,226,0.55)" }}
                 strokeWidth={1.8}
               />
               <span
                 style={{
                   fontSize: 12,
-                  color: "rgba(255,255,255,0.7)",
+                  color: "rgba(244,239,226,0.7)",
                   fontWeight: 500,
                 }}
               >
@@ -347,7 +347,7 @@ export default function MobileBlocker() {
                 fontWeight: 600,
                 letterSpacing: "0.28em",
                 textTransform: "uppercase",
-                color: "rgba(255,255,255,0.25)",
+                color: "rgba(244,239,226,0.25)",
               }}
             >
               {copy.comingSoon}

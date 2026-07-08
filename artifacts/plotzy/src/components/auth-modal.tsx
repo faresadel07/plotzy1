@@ -17,7 +17,7 @@ const labelStyle: React.CSSProperties = {
   fontFamily: SF,
   fontSize: 13,
   fontWeight: 500,
-  color: "rgba(255,255,255,0.7)",
+  color: "rgba(244,239,226,0.7)",
   letterSpacing: "-0.01em",
   marginBottom: 6,
   display: "block",
@@ -29,7 +29,7 @@ function getInputStyle(): React.CSSProperties {
     background: "transparent",
     border: "none",
     outline: "none",
-    color: "rgba(255,255,255,0.88)",
+    color: "rgba(244,239,226,0.88)",
     fontSize: 14,
     fontFamily: SF,
     letterSpacing: "-0.01em",
@@ -41,11 +41,11 @@ function getWrapStyle(focused: boolean, hasError?: boolean): React.CSSProperties
     display: "flex",
     alignItems: "center",
     gap: 8,
-    border: `1px solid ${hasError ? "#e05555" : focused ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.1)"}`,
+    border: `1px solid ${hasError ? "#e05555" : focused ? "rgba(244,239,226,0.28)" : "rgba(244,239,226,0.1)"}`,
     borderRadius: 10,
     padding: "0 14px",
     height: 46,
-    background: "rgba(255,255,255,0.04)",
+    background: "rgba(244,239,226,0.04)",
     transition: "border-color 0.18s",
   };
 }
@@ -70,7 +70,7 @@ function FieldInput({
     <div style={{ display: "flex", flexDirection: "column" }}>
       <label htmlFor={inputId} style={labelStyle}>{label}</label>
       <div style={getWrapStyle(focused, !!error)}>
-        <Icon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.35)", flexShrink: 0 }} aria-hidden="true" />
+        <Icon style={{ width: 16, height: 16, color: "rgba(244,239,226,0.35)", flexShrink: 0 }} aria-hidden="true" />
         <input
           id={inputId}
           type={type}
@@ -104,10 +104,10 @@ function SocialBtn({ src, alt, label, enabled, href }: { src: string; alt: strin
         width: "100%",
         height: 46,
         display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid rgba(244,239,226,0.1)",
         borderRadius: 10,
-        background: "rgba(255,255,255,0.04)",
-        color: "rgba(255,255,255,0.75)",
+        background: "rgba(244,239,226,0.04)",
+        color: "rgba(244,239,226,0.75)",
         fontFamily: SF,
         fontSize: 13.5, fontWeight: 500,
         cursor: enabled ? "pointer" : "default",
@@ -116,8 +116,8 @@ function SocialBtn({ src, alt, label, enabled, href }: { src: string; alt: strin
         position: "relative",
         letterSpacing: "-0.01em",
       }}
-      onMouseEnter={e => { if (enabled) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; } }}
-      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+      onMouseEnter={e => { if (enabled) { e.currentTarget.style.background = "rgba(244,239,226,0.08)"; e.currentTarget.style.borderColor = "rgba(244,239,226,0.18)"; } }}
+      onMouseLeave={e => { e.currentTarget.style.background = "rgba(244,239,226,0.04)"; e.currentTarget.style.borderColor = "rgba(244,239,226,0.1)"; }}
     >
       <img src={src} alt={alt} style={{ width: 18, height: 18, objectFit: "contain" }} />
       {label}
@@ -125,7 +125,7 @@ function SocialBtn({ src, alt, label, enabled, href }: { src: string; alt: strin
         <span style={{
           position: "absolute", top: 3, right: 5,
           fontSize: 8, fontWeight: 700, fontFamily: SF,
-          color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.06)",
+          color: "rgba(244,239,226,0.35)", background: "rgba(244,239,226,0.06)",
           borderRadius: 3, padding: "1px 5px", letterSpacing: "0.05em",
           textTransform: "uppercase",
         }}>Soon</span>
@@ -219,19 +219,19 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       <div
         style={{
           background: "#0e0e0e",
-          border: "1px solid rgba(255,255,255,0.09)",
+          border: "1px solid rgba(244,239,226,0.09)",
           borderRadius: 22,
           width: "100%",
           maxWidth: 420,
           maxHeight: "94vh",
           overflowY: "auto",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.95), 0 0 0 1px rgba(255,255,255,0.04)",
+          boxShadow: "0 40px 100px rgba(0,0,0,0.95), 0 0 0 1px rgba(244,239,226,0.04)",
           direction: ar ? "rtl" : "ltr",
           fontFamily: SF,
         }}
       >
         {/* Header */}
-        <div style={{ padding: "22px 22px 0", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{ padding: "22px 22px 0", borderBottom: "1px solid rgba(244,239,226,0.07)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <img
@@ -246,13 +246,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               aria-label={ar ? "إغلاق" : "Close sign in"}
               style={{
                 width: 28, height: 28, borderRadius: 7,
-                border: "1px solid rgba(255,255,255,0.09)",
-                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(244,239,226,0.09)",
+                background: "rgba(244,239,226,0.04)",
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(255,255,255,0.4)", transition: "background 0.15s",
+                color: "rgba(244,239,226,0.4)", transition: "background 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.09)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(244,239,226,0.09)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(244,239,226,0.04)")}
             >
               <X style={{ width: 13, height: 13 }} />
             </button>
@@ -273,8 +273,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   fontFamily: SF,
                   fontSize: 13.5,
                   fontWeight: tab === t.id ? 600 : 400,
-                  color: tab === t.id ? "#f5f5f5" : "rgba(255,255,255,0.38)",
-                  borderBottom: `2px solid ${tab === t.id ? "rgba(255,255,255,0.85)" : "transparent"}`,
+                  color: tab === t.id ? "#f5f5f5" : "rgba(244,239,226,0.38)",
+                  borderBottom: `2px solid ${tab === t.id ? "rgba(244,239,226,0.85)" : "transparent"}`,
                   transition: "all 0.18s",
                   marginBottom: -1,
                   letterSpacing: "-0.02em",
@@ -320,7 +320,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 <button type="button" onClick={() => setShowPw(v => !v)}
                   aria-label={showPw ? (ar ? "إخفاء كلمة المرور" : "Hide password") : (ar ? "إظهار كلمة المرور" : "Show password")}
                   aria-pressed={showPw}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0, flexShrink: 0 }}>
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(244,239,226,0.35)", display: "flex", padding: 0, flexShrink: 0 }}>
                   {showPw ? <EyeOff style={{ width: 15, height: 15 }} /> : <Eye style={{ width: 15, height: 15 }} />}
                 </button>
               }
@@ -345,23 +345,23 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     onClick={() => setRememberMe(v => !v)}
                     style={{
                       width: 16, height: 16, borderRadius: 4,
-                      border: `1.5px solid ${rememberMe ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.18)"}`,
-                      background: rememberMe ? "#fff" : "transparent",
+                      border: `1.5px solid ${rememberMe ? "rgba(244,239,226,0.7)" : "rgba(244,239,226,0.18)"}`,
+                      background: rememberMe ? "#f7f2e4" : "transparent",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
                     }}
                   >
-                    {rememberMe && <Check style={{ width: 10, height: 10, color: "#0a0a0a" }} />}
+                    {rememberMe && <Check style={{ width: 10, height: 10, color: "#221b11" }} />}
                   </div>
-                  <span style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.45)" }}>
+                  <span style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(244,239,226,0.45)" }}>
                     {ar ? "تذكّرني" : "Remember me"}
                   </span>
                 </label>
                 <button type="button"
                   onClick={() => { setTab("forgot"); setForgotEmail(email); setForgotSent(false); setGlobalError(""); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.4)", padding: 0 }}
-                  onMouseEnter={e => { e.currentTarget.style.color = "#fff"; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12.5, color: "rgba(244,239,226,0.4)", padding: 0 }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "#f7f2e4"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(244,239,226,0.4)"; }}
                 >
                   {ar ? "نسيت كلمة المرور؟" : "Forgot password?"}
                 </button>
@@ -387,8 +387,8 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               style={{
                 width: "100%", height: 46,
                 borderRadius: 10, border: "none",
-                background: success ? "rgba(52,199,89,0.15)" : "#ffffff",
-                color: success ? "#34c759" : "#0a0a0a",
+                background: success ? "rgba(52,199,89,0.15)" : "#f7f2e4",
+                color: success ? "#34c759" : "#221b11",
                 fontFamily: SF,
                 fontSize: 14.5, fontWeight: 600,
                 cursor: loading || success ? "not-allowed" : "pointer",
@@ -448,13 +448,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
             <div style={{ marginTop: 20 }}>
               {!forgotSent ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: 0 }}>
+                  <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(244,239,226,0.5)", lineHeight: 1.6, margin: 0 }}>
                     {ar ? "أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور" : "Enter your email and we'll send you a link to reset your password"}
                   </p>
                   <label htmlFor="forgot-email" className="sr-only">{ar ? "البريد الإلكتروني" : "Email address"}</label>
                   <input id="forgot-email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder={ar ? "البريد الإلكتروني" : "Email address"} type="email" autoComplete="email"
                     aria-label={ar ? "البريد الإلكتروني" : "Email address"}
-                    style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontFamily: SF, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.1)", color: "#f7f2e4", fontFamily: SF, fontSize: 14, outline: "none", boxSizing: "border-box" }} />
                   <button disabled={forgotLoading || !forgotEmail.includes("@")}
                     onClick={async () => {
                       setForgotLoading(true);
@@ -463,7 +463,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                         setForgotSent(true);
                       } catch {} finally { setForgotLoading(false); }
                     }}
-                    style={{ width: "100%", padding: "12px 0", borderRadius: 10, background: "#fff", color: "#000", fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", opacity: forgotLoading ? 0.5 : 1 }}>
+                    style={{ width: "100%", padding: "12px 0", borderRadius: 10, background: "#f7f2e4", color: "#221b11", fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", opacity: forgotLoading ? 0.5 : 1 }}>
                     {forgotLoading ? (ar ? "جارٍ الإرسال..." : "Sending...") : (ar ? "إرسال رابط إعادة التعيين" : "Send Reset Link")}
                   </button>
                 </div>
@@ -472,10 +472,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(74,222,128,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                     <span style={{ fontSize: 24 }}>✓</span>
                   </div>
-                  <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: "#fff", marginBottom: 8 }}>
+                  <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: "#f7f2e4", marginBottom: 8 }}>
                     {ar ? "تم إرسال الرابط!" : "Reset link sent!"}
                   </p>
-                  <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+                  <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(244,239,226,0.4)", lineHeight: 1.6 }}>
                     {ar ? `تحقق من بريدك ${forgotEmail}` : `Check your inbox at ${forgotEmail}`}
                   </p>
                 </div>
@@ -484,9 +484,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           )}
 
           {/* Switch tab */}
-          <p style={{ fontFamily: SF, fontSize: 12.5, textAlign: "center", color: "rgba(255,255,255,0.35)", margin: "20px 0 0" }}>
+          <p style={{ fontFamily: SF, fontSize: 12.5, textAlign: "center", color: "rgba(244,239,226,0.35)", margin: "20px 0 0" }}>
             {tab === "forgot" ? (
-              <button onClick={() => { setTab("signin"); setGlobalError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0 }}>
+              <button onClick={() => { setTab("signin"); setGlobalError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(244,239,226,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0 }}>
                 {ar ? "← العودة لتسجيل الدخول" : "← Back to sign in"}
               </button>
             ) : (
@@ -494,9 +494,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 {tab === "signin" ? (ar ? "ليس لديك حساب؟ " : "Don't have an account? ") : (ar ? "لديك حساب بالفعل؟ " : "Already have an account? ")}
                 <button
                   onClick={() => { setTab(tab === "signin" ? "signup" : "signin"); setGlobalError(""); setFieldErrors({}); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0, letterSpacing: "-0.01em" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.75)")}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: SF, color: "rgba(244,239,226,0.75)", fontWeight: 600, fontSize: 12.5, padding: 0, letterSpacing: "-0.01em" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#f7f2e4")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(244,239,226,0.75)")}
                 >
                   {tab === "signin" ? (ar ? "أنشئ حساباً" : "Create one") : (ar ? "سجّل الدخول" : "Sign in")}
                 </button>
@@ -505,7 +505,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
           </p>
 
           {/* Legal */}
-          <p style={{ fontFamily: SF, fontSize: 10.5, textAlign: "center", color: "rgba(255,255,255,0.18)", margin: "10px 0 0", lineHeight: 1.6 }}>
+          <p style={{ fontFamily: SF, fontSize: 10.5, textAlign: "center", color: "rgba(244,239,226,0.18)", margin: "10px 0 0", lineHeight: 1.6 }}>
             {ar
               ? "بالمتابعة، توافق على شروط الخدمة وسياسة الخصوصية الخاصة بـ Plotzy."
               : "By continuing, you agree to Plotzy's Terms of Service and Privacy Policy."}

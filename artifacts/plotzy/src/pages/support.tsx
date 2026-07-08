@@ -8,6 +8,7 @@ import { NiceSelect } from "@/components/ui/nice-select";
 import { useLanguage } from "@/contexts/language-context";
 import type { TranslationKey } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AuthModal } from "@/components/auth-modal";
 import {
   ChevronDown, Send, CheckCircle2, Clock,
   MessageSquare, FileText, Sparkles,
@@ -284,11 +285,12 @@ function UserTicketCard({ ticket }: { ticket: any }) {
 export default function SupportPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>("contact");
   const [submitted, setSubmitted] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [form, setForm] = useState({
     name:     (user as any)?.displayName || (user as any)?.username || "",
@@ -486,7 +488,39 @@ export default function SupportPage() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px clamp(14px, 4vw, 24px) 48px" }}>
 
         {/* ========== CONTACT TAB ========== */}
-        {activeTab === "contact" && (
+        {activeTab === "contact" && !user && (
+          /* Guests can now REACH this page (the route used to bounce
+             them home silently); tickets still need an account, so
+             they get a clear sign-in card instead of a failing form. */
+          <div style={{ maxWidth: 560, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
+            <div style={{
+              background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)",
+              borderRadius: 14, padding: "44px 32px", textAlign: "center",
+            }}>
+              <MessageSquare size={36} color="rgba(244,239,226,0.5)" style={{ marginBottom: 14 }} />
+              <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(244,239,226,0.9)", margin: "0 0 8px" }}>
+                {lang === "ar" ? "سجّل دخولك للتواصل مع الدعم" : "Sign in to contact support"}
+              </h3>
+              <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(244,239,226,0.4)", margin: "0 0 24px", lineHeight: 1.65 }}>
+                {lang === "ar"
+                  ? "حتى نربط رسالتك بحسابك ونرد عليك داخل المنصة، تحتاج حساباً مجانياً."
+                  : "A free account lets us attach your message to you and reply inside the platform."}
+              </p>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                style={{
+                  fontFamily: SF, fontSize: 14, fontWeight: 700,
+                  color: "#221b11", background: "#f7f2e4",
+                  border: "none", borderRadius: 10,
+                  padding: "12px 28px", cursor: "pointer",
+                }}
+              >
+                {lang === "ar" ? "تسجيل الدخول" : "Sign in"}
+              </button>
+            </div>
+          </div>
+        )}
+        {activeTab === "contact" && user && (
           <div style={{ maxWidth: 560, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
             {submitted ? (
               <div style={{
@@ -609,7 +643,34 @@ export default function SupportPage() {
         )}
 
         {/* ========== MY TICKETS TAB ========== */}
-        {activeTab === "tickets" && (
+        {activeTab === "tickets" && !user && (
+          <div style={{ maxWidth: 560, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
+            <div style={{
+              background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)",
+              borderRadius: 14, padding: "44px 32px", textAlign: "center",
+            }}>
+              <FileText size={36} color="rgba(244,239,226,0.5)" style={{ marginBottom: 14 }} />
+              <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(244,239,226,0.9)", margin: "0 0 8px" }}>
+                {lang === "ar" ? "تذاكرك تعيش داخل حسابك" : "Your tickets live in your account"}
+              </h3>
+              <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(244,239,226,0.4)", margin: "0 0 24px", lineHeight: 1.65 }}>
+                {lang === "ar" ? "سجّل دخولك لعرض تذاكرك ومتابعة الردود." : "Sign in to view your tickets and follow the replies."}
+              </p>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                style={{
+                  fontFamily: SF, fontSize: 14, fontWeight: 700,
+                  color: "#221b11", background: "#f7f2e4",
+                  border: "none", borderRadius: 10,
+                  padding: "12px 28px", cursor: "pointer",
+                }}
+              >
+                {lang === "ar" ? "تسجيل الدخول" : "Sign in"}
+              </button>
+            </div>
+          </div>
+        )}
+        {activeTab === "tickets" && user && (
           <div style={{ maxWidth: 640, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
             <div style={{ marginBottom: 24 }}>
               <h2 style={{
@@ -703,6 +764,7 @@ export default function SupportPage() {
       </div>
 
       </div>
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </Layout>
   );
 }

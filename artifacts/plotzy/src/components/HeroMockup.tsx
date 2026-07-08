@@ -36,11 +36,11 @@ function N({ to, dur = 900, pre = "", suf = "" }: { to: number; dur?: number; pr
 /* ── Shimmer bar ─────────────────────────────── */
 function Bar({ pct, color, delay = 0, h = 3 }: { pct: number; color: string; delay?: number; h?: number }) {
   return (
-    <div style={{ height: h, background: "rgba(255,255,255,0.04)", borderRadius: 99, overflow: "hidden" }}>
+    <div style={{ height: h, background: "rgba(244,239,226,0.04)", borderRadius: 99, overflow: "hidden" }}>
       <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.9, delay, ease: "easeOut" }}
         style={{ height: "100%", borderRadius: 99, background: `linear-gradient(90deg, ${color}66, ${color})`, position: "relative" }}>
         <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 0.95, repeat: Infinity, delay: delay + 0.2 }}
-          style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)" }} />
+          style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(244,239,226,0.45), transparent)" }} />
       </motion.div>
     </div>
   );
@@ -127,11 +127,11 @@ function WriteScene() {
       style={{ position: "absolute", inset: 0, display: "flex" }}>
 
       {/* LEFT SIDEBAR — chapters */}
-      <div style={{ width: 110, borderRight: "1px solid rgba(255,255,255,0.05)", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+      <div style={{ width: 110, borderRight: "1px solid rgba(244,239,226,0.05)", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
         <div style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em", color: "#232323", marginBottom: 4 }}>Chapters</div>
         {CHAPTERS.map((ch, i) => (
           <motion.div key={ch.n} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06, type: "spring", stiffness: 180 }}
-            style={{ padding: "5px 8px", borderRadius: 6, background: i === 3 ? "rgba(167,139,250,0.1)" : "rgba(255,255,255,0.02)", border: i === 3 ? "1px solid rgba(167,139,250,0.25)" : "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}>
+            style={{ padding: "5px 8px", borderRadius: 6, background: i === 3 ? "rgba(167,139,250,0.1)" : "rgba(244,239,226,0.02)", border: i === 3 ? "1px solid rgba(167,139,250,0.25)" : "1px solid rgba(244,239,226,0.04)", cursor: "pointer" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
               <div style={{ width: 5, height: 5, borderRadius: "50%", background: ch.done ? "#34d399" : i === 3 ? "#a78bfa" : "#2a2a2a", flexShrink: 0 }} />
               <div style={{ fontSize: 8.5, fontWeight: 600, color: i === 3 ? "#c4b5fd" : ch.done ? "#3a3a3a" : "#2a2a2a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ch.n}</div>
@@ -211,7 +211,7 @@ function WriteScene() {
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
           {[0.88, 0.65, 0.44].map((w, i) => (
             <motion.div key={i} animate={{ opacity: [0.04, 0.16, 0.04] }} transition={{ duration: 1.6 + i * 0.3, repeat: Infinity, delay: i * 0.35 }}
-              style={{ height: 1.5, background: "rgba(255,255,255,0.14)", borderRadius: 99, width: `${w * 100}%` }} />
+              style={{ height: 1.5, background: "rgba(244,239,226,0.14)", borderRadius: 99, width: `${w * 100}%` }} />
           ))}
         </div>
 
@@ -282,15 +282,15 @@ function AIScene() {
       {/* LEFT — book cover + stats */}
       <div style={{ width: 108, display: "flex", flexDirection: "column", gap: 10, flexShrink: 0 }}>
         {/* Book cover */}
-        <div style={{ width: "100%", aspectRatio: "2/3", borderRadius: 10, background: "linear-gradient(155deg, #7c1d1d, #1a0a0a)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+        <div style={{ width: "100%", aspectRatio: "2/3", borderRadius: 10, background: "linear-gradient(155deg, #7c1d1d, #1a0a0a)", border: "1px solid rgba(244,239,226,0.08)", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.75))" }} />
           <div style={{ position: "absolute", top: 10, left: 9, right: 9 }}>
-            <div style={{ fontSize: 6.5, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.2em", textTransform: "uppercase" }}>Literary Fiction</div>
+            <div style={{ fontSize: 6.5, fontWeight: 700, color: "rgba(244,239,226,0.25)", letterSpacing: "0.2em", textTransform: "uppercase" }}>Literary Fiction</div>
           </div>
           <div style={{ position: "absolute", bottom: 10, left: 10, right: 10 }}>
-            <div style={{ width: "80%", height: 1.5, background: "rgba(255,255,255,0.4)", marginBottom: 5, borderRadius: 1 }} />
-            <div style={{ fontSize: 10, fontWeight: 800, color: "#fff", lineHeight: 1.2, marginBottom: 3 }}>The Last Letter</div>
-            <div style={{ fontSize: 7, color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Maria Al-Hassan</div>
+            <div style={{ width: "80%", height: 1.5, background: "rgba(244,239,226,0.4)", marginBottom: 5, borderRadius: 1 }} />
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#f7f2e4", lineHeight: 1.2, marginBottom: 3 }}>The Last Letter</div>
+            <div style={{ fontSize: 7, color: "rgba(244,239,226,0.35)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Maria Al-Hassan</div>
           </div>
         </div>
 
@@ -330,7 +330,7 @@ function AIScene() {
             )}
           </AnimatePresence>
           {!showNotif && (
-            <div style={{ position: "absolute", inset: 0, padding: "5px 10px", borderRadius: 7, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", fontSize: 9, color: "#252525", display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ position: "absolute", inset: 0, padding: "5px 10px", borderRadius: 7, background: "rgba(244,239,226,0.02)", border: "1px solid rgba(244,239,226,0.04)", fontSize: 9, color: "#252525", display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#1e1e1e", flexShrink: 0, display: "inline-block" }} />
               Watching for activity…
             </div>
@@ -342,9 +342,9 @@ function AIScene() {
           <motion.div key={reviewIdx}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
-            style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(244,239,226,0.025)", border: "1px solid rgba(244,239,226,0.07)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7 }}>
-              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{review.avatar}</div>
+              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#f7f2e4", flexShrink: 0 }}>{review.avatar}</div>
               <div>
                 <div style={{ fontSize: 9.5, fontWeight: 700, color: "#ccc" }}>{review.name}</div>
                 <div style={{ display: "flex", gap: 1 }}>
@@ -363,8 +363,8 @@ function AIScene() {
         {/* Older reviews faded */}
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {REVIEWS.filter((_, i) => i !== reviewIdx).slice(0, 2).map((r) => (
-            <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)", opacity: 0.4 }}>
-              <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 700, color: "#555", flexShrink: 0 }}>{r.avatar}</div>
+            <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 10px", borderRadius: 8, background: "rgba(244,239,226,0.015)", border: "1px solid rgba(244,239,226,0.04)", opacity: 0.4 }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(244,239,226,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 700, color: "#555", flexShrink: 0 }}>{r.avatar}</div>
               <div style={{ flex: 1, overflow: "hidden" }}>
                 <div style={{ fontSize: 8.5, color: "#333", fontStyle: "italic", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>"{r.text}"</div>
               </div>
@@ -445,13 +445,13 @@ function PublishScene() {
         <div style={{ fontSize: 9, fontWeight: 700, color: "#323232", textTransform: "uppercase", letterSpacing: "0.2em" }}>Publish Your Book</div>
 
         {/* Book preview card */}
-        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(244,239,226,0.02)", border: "1px solid rgba(244,239,226,0.06)" }}>
           {/* mini cover */}
-          <div style={{ width: 48, height: 66, borderRadius: 7, background: "linear-gradient(155deg, #7c1d1d, #1a0a0a)", border: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, position: "relative", overflow: "hidden" }}>
+          <div style={{ width: 48, height: 66, borderRadius: 7, background: "linear-gradient(155deg, #7c1d1d, #1a0a0a)", border: "1px solid rgba(244,239,226,0.08)", flexShrink: 0, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.7))" }} />
             <div style={{ position: "absolute", bottom: 5, left: 4, right: 4 }}>
-              <div style={{ width: "85%", height: 1, background: "rgba(255,255,255,0.4)", marginBottom: 3, borderRadius: 1 }} />
-              <div style={{ fontSize: 5.5, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>The Last Letter</div>
+              <div style={{ width: "85%", height: 1, background: "rgba(244,239,226,0.4)", marginBottom: 3, borderRadius: 1 }} />
+              <div style={{ fontSize: 5.5, fontWeight: 800, color: "#f7f2e4", lineHeight: 1.2 }}>The Last Letter</div>
             </div>
           </div>
           <div style={{ flex: 1 }}>
@@ -476,11 +476,11 @@ function PublishScene() {
             return (
               <motion.div key={item.label}
                 animate={{ opacity: done ? 1 : 0.35 }}
-                style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 8px", borderRadius: 7, background: done ? "rgba(52,211,153,0.05)" : "rgba(255,255,255,0.015)", border: `1px solid ${done ? "rgba(52,211,153,0.18)" : "rgba(255,255,255,0.04)"}` }}>
+                style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 8px", borderRadius: 7, background: done ? "rgba(52,211,153,0.05)" : "rgba(244,239,226,0.015)", border: `1px solid ${done ? "rgba(52,211,153,0.18)" : "rgba(244,239,226,0.04)"}` }}>
                 <motion.div
-                  animate={{ background: done ? "#34d399" : "rgba(255,255,255,0.05)", borderColor: done ? "#34d399" : "rgba(255,255,255,0.1)" }}
+                  animate={{ background: done ? "#34d399" : "rgba(244,239,226,0.05)", borderColor: done ? "#34d399" : "rgba(244,239,226,0.1)" }}
                   style={{ width: 13, height: 13, borderRadius: "50%", border: "1.5px solid", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {done && <Check size={8} strokeWidth={3} color="#000" />}
+                  {done && <Check size={8} strokeWidth={3} color="#221b11" />}
                 </motion.div>
                 <span style={{ fontSize: 9, color: done ? "#aaa" : "#2e2e2e", fontWeight: done ? 400 : 600 }}>{item.label}</span>
               </motion.div>
@@ -510,7 +510,7 @@ function PublishScene() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
           {FORMAT_OPTIONS.map((f, i) => (
             <motion.div key={f.label}
-              animate={{ background: formatIdx === i ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.025)", borderColor: formatIdx === i ? "rgba(167,139,250,0.35)" : "rgba(255,255,255,0.06)" }}
+              animate={{ background: formatIdx === i ? "rgba(167,139,250,0.12)" : "rgba(244,239,226,0.025)", borderColor: formatIdx === i ? "rgba(167,139,250,0.35)" : "rgba(244,239,226,0.06)" }}
               transition={{ duration: 0.25 }}
               style={{ padding: "8px 6px", borderRadius: 9, border: "1px solid", textAlign: "center", cursor: "pointer" }}>
               <div style={{ fontSize: 16, marginBottom: 3 }}>{f.icon}</div>
@@ -541,7 +541,7 @@ function PublishScene() {
           onClick={() => setPublished(p => !p)}
           style={{ padding: "10px", borderRadius: 9, background: published ? "rgba(52,211,153,0.09)" : "linear-gradient(135deg, rgba(167,139,250,0.18), rgba(96,165,250,0.08))", border: `1px solid ${published ? "rgba(52,211,153,0.3)" : "rgba(167,139,250,0.3)"}`, textAlign: "center", cursor: "pointer", position: "relative", overflow: "hidden", marginTop: "auto" }}>
           <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 1.8, repeat: Infinity }}
-            style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", pointerEvents: "none" }} />
+            style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(244,239,226,0.04), transparent)", pointerEvents: "none" }} />
           <span style={{ fontSize: 10, fontWeight: 700, color: published ? "#34d399" : "#c4b5fd" }}>
             {published ? "Published!" : "Publish Now"}
           </span>
@@ -634,7 +634,7 @@ function StatsScene() {
         {/* dual sparklines */}
         <div style={{ display: "flex", gap: 6 }}>
           {[{ data: SPARK_A, max: maxA, label: "Words/Day", c: "#a78bfa" }, { data: SPARK_B, max: maxB, label: "Books Started", c: "#60a5fa" }].map((sp, si) => (
-            <div key={si} style={{ flex: 1, background: "rgba(255,255,255,0.02)", borderRadius: 8, padding: "7px 9px", border: "1px solid rgba(255,255,255,0.04)" }}>
+            <div key={si} style={{ flex: 1, background: "rgba(244,239,226,0.02)", borderRadius: 8, padding: "7px 9px", border: "1px solid rgba(244,239,226,0.04)" }}>
               <div style={{ fontSize: 8, fontWeight: 600, color: "#252525", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>{sp.label}</div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 26 }}>
                 {sp.data.map((v, i) => (
@@ -700,7 +700,7 @@ function StatsScene() {
         ))}
 
         {/* goal rings */}
-        <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(244,239,226,0.02)", border: "1px solid rgba(244,239,226,0.05)" }}>
           <div style={{ fontSize: 8, color: "#252525", marginBottom: 6 }}>Platform Goals</div>
           {[{ l: "Books Published", pct: 78, c: "#a78bfa" }, { l: "Authors Active", pct: 91, c: "#34d399" }, { l: "AI Analyses", pct: 64, c: "#60a5fa" }].map((g, i) => (
             <div key={g.l} style={{ marginBottom: i < 2 ? 5 : 0 }}>
@@ -772,16 +772,16 @@ export function HeroMockup() {
       ))}
 
       {/* header */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 38, borderBottom: "1px solid rgba(255,255,255,0.055)", background: "rgba(6,6,6,0.94)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px", zIndex: 20 }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 38, borderBottom: "1px solid rgba(244,239,226,0.055)", background: "rgba(6,6,6,0.94)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 14px", zIndex: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ fontWeight: 800, fontSize: 12, letterSpacing: "-0.04em", color: "#fff" }}>PLOTZY</div>
-          <div style={{ width: 1, height: 8, background: "rgba(255,255,255,0.09)" }} />
+          <div style={{ fontWeight: 800, fontSize: 12, letterSpacing: "-0.04em", color: "#f7f2e4" }}>PLOTZY</div>
+          <div style={{ width: 1, height: 8, background: "rgba(244,239,226,0.09)" }} />
           <div style={{ fontSize: 8.5, color: "#242424" }}>Writing Platform</div>
         </div>
         <div style={{ display: "flex", gap: 2 }}>
           {SCENES.map(s => (
             <motion.button key={s} onClick={() => setScene(s)}
-              animate={{ background: scene === s ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0)", color: scene === s ? "#fff" : "#2e2e2e" }}
+              animate={{ background: scene === s ? "rgba(244,239,226,0.1)" : "rgba(244,239,226,0)", color: scene === s ? "#f7f2e4" : "#2e2e2e" }}
               transition={{ duration: 0.16 }}
               style={{ padding: "2px 7px", borderRadius: 5, fontSize: 8.5, fontWeight: 600, border: "none", cursor: "pointer" }}>
               {LABELS[s]}
@@ -801,11 +801,11 @@ export function HeroMockup() {
       </div>
 
       {/* footer */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 44, borderTop: "1px solid rgba(255,255,255,0.04)", background: "rgba(6,6,6,0.96)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, zIndex: 20 }}>
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 44, borderTop: "1px solid rgba(244,239,226,0.04)", background: "rgba(6,6,6,0.96)", backdropFilter: "blur(14px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, zIndex: 20 }}>
         <div style={{ display: "flex", gap: 4 }}>
           {SCENES.map(s => (
             <motion.div key={s} onClick={() => setScene(s)}
-              animate={{ width: scene === s ? 18 : 3.5, background: scene === s ? "#a78bfa" : "rgba(255,255,255,0.1)" }}
+              animate={{ width: scene === s ? 18 : 3.5, background: scene === s ? "#a78bfa" : "rgba(244,239,226,0.1)" }}
               transition={{ duration: 0.22 }}
               style={{ height: 3.5, borderRadius: 99, cursor: "pointer" }} />
           ))}

@@ -23,7 +23,7 @@ export default function Trash() {
     return (
       <Layout isFullDark>
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(255,255,255,0.3)" }} />
+          <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(244,239,226,0.3)" }} />
         </div>
       </Layout>
     );
@@ -43,7 +43,7 @@ export default function Trash() {
       />
 
       <Layout isFullDark>
-        <div style={{ minHeight: "100vh", background: "#080808", paddingTop: 72, paddingBottom: 60 }}>
+        <div style={{ minHeight: "100vh", background: "#221b11", paddingTop: 72, paddingBottom: 60 }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 clamp(14px, 4vw, 24px)" }}>
 
             {/* Header */}
@@ -52,22 +52,22 @@ export default function Trash() {
                 onClick={() => navigate("/")}
                 style={{
                   width: 34, height: 34, borderRadius: "50%",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(244,239,226,0.06)",
+                  border: "1px solid rgba(244,239,226,0.08)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   cursor: "pointer", flexShrink: 0,
                   transition: "background 0.2s",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(244,239,226,0.12)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(244,239,226,0.06)")}
               >
-                <ArrowLeft style={{ width: 14, height: 14, color: "rgba(255,255,255,0.6)" }} />
+                <ArrowLeft style={{ width: 14, height: 14, color: "rgba(244,239,226,0.6)" }} />
               </button>
               <div>
-                <p style={{ fontFamily: SF, fontSize: 10, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 2 }}>
+                <p style={{ fontFamily: SF, fontSize: 10, fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(244,239,226,0.25)", marginBottom: 2 }}>
                   {t("hmWorkspace")}
                 </p>
-                <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
+                <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: "#f7f2e4", letterSpacing: "-0.03em", lineHeight: 1 }}>
                   {t("trRecycleBin")}
                 </h1>
               </div>
@@ -82,16 +82,16 @@ export default function Trash() {
                 style={{
                   textAlign: "center",
                   padding: "80px 24px",
-                  border: "1.5px dashed rgba(255,255,255,0.08)",
+                  border: "1.5px dashed rgba(244,239,226,0.08)",
                   borderRadius: 28,
-                  background: "rgba(255,255,255,0.015)",
+                  background: "rgba(244,239,226,0.015)",
                 }}
               >
-                <Trash2 style={{ width: 40, height: 40, margin: "0 auto 16px", color: "rgba(255,255,255,0.12)" }} />
-                <p style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
+                <Trash2 style={{ width: 40, height: 40, margin: "0 auto 16px", color: "rgba(244,239,226,0.12)" }} />
+                <p style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(244,239,226,0.5)", marginBottom: 6 }}>
                   {t("trEmpty")}
                 </p>
-                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(244,239,226,0.25)" }}>
                   {t("trEmptyBody")}
                 </p>
               </motion.div>
@@ -116,9 +116,9 @@ export default function Trash() {
                       borderRadius: 14,
                       overflow: "hidden",
                       position: "relative",
-                      background: "#111",
+                      background: "#332a1b",
                       boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(244,239,226,0.06)",
                     }}>
                       {/* Cover image with gray desaturated filter */}
                       {book.coverImage ? (
@@ -136,10 +136,10 @@ export default function Trash() {
                       ) : (
                         <div style={{
                           width: "100%", height: "100%",
-                          background: "linear-gradient(160deg, #1a1a1a 0%, #0d0d0d 100%)",
+                          background: "linear-gradient(160deg, #332a1b 0%, #292115 100%)",
                           display: "flex", alignItems: "center", justifyContent: "center",
                         }}>
-                          <BookOpen style={{ width: 28, height: 28, color: "rgba(255,255,255,0.1)" }} />
+                          <BookOpen style={{ width: 28, height: 28, color: "rgba(244,239,226,0.1)" }} />
                         </div>
                       )}
 
@@ -176,8 +176,8 @@ export default function Trash() {
                           style={{
                             width: "100%",
                             padding: "8px 0",
-                            background: "#fff",
-                            color: "#111",
+                            background: "#f7f2e4",
+                            color: "#332a1b",
                             border: "none",
                             borderRadius: 30,
                             fontFamily: SF,
@@ -236,7 +236,7 @@ export default function Trash() {
                         fontFamily: SF,
                         fontSize: 12,
                         fontWeight: 600,
-                        color: "rgba(255,255,255,0.55)",
+                        color: "rgba(244,239,226,0.55)",
                         lineHeight: 1.3,
                         marginBottom: 3,
                         overflow: "hidden",
@@ -248,7 +248,7 @@ export default function Trash() {
                       <p style={{
                         fontFamily: SF,
                         fontSize: 10,
-                        color: "rgba(255,255,255,0.22)",
+                        color: "rgba(244,239,226,0.22)",
                       }}>
                         {book.createdAt ? format(new Date(book.createdAt), "MMM d, yyyy") : ""}
                       </p>

@@ -59,7 +59,7 @@ export default function Blog() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF }}>
+    <div style={{ minHeight: "100vh", background: "#221b11", fontFamily: SF }}>
       <SEO
         title={t("avArticles")}
         description={t("blSeoDesc")}
@@ -67,16 +67,16 @@ export default function Blog() {
       <JsonLd data={buildBreadcrumbSchema([{ name: t("avArticles"), path: "/blog" }])} />
 
       {/* Header */}
-      <header style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "48px 20px 40px", textAlign: "center" }}>
+      <header style={{ borderBottom: "1px solid rgba(244,239,226,0.06)", padding: "48px 20px 40px", textAlign: "center" }}>
         <Link href="/">
-          <button style={{ position: "absolute", top: 16, left: 20, display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+          <button style={{ position: "absolute", top: 16, left: 20, display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(244,239,226,0.4)", fontSize: 13 }}>
             <ArrowLeft size={15} /> {t("blHome")}
           </button>
         </Link>
-        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginBottom: 8 }}>
+        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, color: "#f7f2e4", letterSpacing: "-0.03em", marginBottom: 8 }}>
           {t("blBlog")}
         </h1>
-        <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, margin: "0 auto" }}>
+        <p style={{ fontSize: 15, color: "rgba(244,239,226,0.4)", maxWidth: 500, margin: "0 auto" }}>
           {t("blSubtitle")}
         </p>
       </header>
@@ -84,10 +84,10 @@ export default function Blog() {
       {/* Filters */}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 0" }}>
         {/* Search */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, marginBottom: 20 }}>
-          <Search size={15} style={{ color: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "rgba(244,239,226,0.03)", border: "1px solid rgba(244,239,226,0.06)", borderRadius: 10, marginBottom: 20 }}>
+          <Search size={15} style={{ color: "rgba(244,239,226,0.2)", flexShrink: 0 }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("blSearchPlaceholder")}
-            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#fff", fontSize: 14, fontFamily: SF }} />
+            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#f7f2e4", fontSize: 14, fontFamily: SF }} />
         </div>
 
         {/* Categories */}
@@ -96,9 +96,9 @@ export default function Blog() {
             <button key={cat} onClick={() => setCategory(cat)}
               style={{
                 padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: "pointer",
-                background: category === cat ? ACC : "rgba(255,255,255,0.04)",
-                color: category === cat ? "#fff" : "rgba(255,255,255,0.4)",
-                border: category === cat ? "none" : "1px solid rgba(255,255,255,0.06)",
+                background: category === cat ? ACC : "rgba(244,239,226,0.04)",
+                color: category === cat ? "#f7f2e4" : "rgba(244,239,226,0.4)",
+                border: category === cat ? "none" : "1px solid rgba(244,239,226,0.06)",
                 transition: "all 0.15s",
               }}>
               {t(catKey(cat))}
@@ -111,10 +111,10 @@ export default function Blog() {
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 20px 60px" }}>
         {isLoading ? (
           <div style={{ textAlign: "center", padding: 60 }}>
-            <div style={{ width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.6s linear infinite", margin: "0 auto" }} />
+            <div style={{ width: 24, height: 24, border: "2px solid rgba(244,239,226,0.1)", borderTopColor: "#f7f2e4", borderRadius: "50%", animation: "spin 0.6s linear infinite", margin: "0 auto" }} />
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "80px 20px", color: "rgba(255,255,255,0.3)" }}>
+          <div style={{ textAlign: "center", padding: "80px 20px", color: "rgba(244,239,226,0.3)" }}>
             <BookOpen style={{ width: 40, height: 40, margin: "0 auto 12px", opacity: 0.3 }} />
             <p style={{ fontSize: 15 }}>{search ? t("blNoMatch") : t("blNonePublished")}</p>
           </div>
@@ -131,12 +131,12 @@ export default function Blog() {
               return (
                 <Link key={a.id} href={`/blog/${a.id}`}>
                   <div style={{
-                    background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(244,239,226,0.02)", border: "1px solid rgba(244,239,226,0.06)",
                     borderRadius: 14, overflow: "hidden", cursor: "pointer",
                     transition: "border-color 0.2s, transform 0.2s",
                   }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,106,247,0.3)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(244,239,226,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
                   >
                     {/* Image */}
                     {img ? (
@@ -145,7 +145,7 @@ export default function Blog() {
                       </div>
                     ) : (
                       <div style={{ height: 100, background: "linear-gradient(135deg, rgba(124,106,247,0.08), rgba(124,106,247,0.02))", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <BookOpen size={24} style={{ color: "rgba(255,255,255,0.08)" }} />
+                        <BookOpen size={24} style={{ color: "rgba(244,239,226,0.08)" }} />
                       </div>
                     )}
 
@@ -159,12 +159,12 @@ export default function Blog() {
                       )}
 
                       {/* Title */}
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: 1.3, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f7f2e4", lineHeight: 1.3, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {a.title}
                       </h3>
 
                       {/* Excerpt */}
-                      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <p style={{ fontSize: 13, color: "rgba(244,239,226,0.35)", lineHeight: 1.5, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {excerpt}
                       </p>
 
@@ -178,9 +178,9 @@ export default function Blog() {
                               <User size={10} style={{ color: ACC }} />
                             </div>
                           )}
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>{authorName}</span>
+                          <span style={{ fontSize: 11, color: "rgba(244,239,226,0.4)", fontWeight: 500 }}>{authorName}</span>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: "rgba(244,239,226,0.2)" }}>
                           <span>{date}</span>
                           <span>{rt} {t("blMin")}</span>
                         </div>

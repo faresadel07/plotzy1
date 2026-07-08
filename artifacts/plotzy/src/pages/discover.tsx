@@ -106,16 +106,16 @@ function BookCard({ book, size = "normal", source }: { book: GutBook; size?: "no
   return (
     <Link href={href}>
       <div className={`group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] ${sm ? "rounded-xl" : "rounded-2xl"}`}
-        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        style={{ background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.07)" }}>
         <div className={`relative overflow-hidden ${sm ? "aspect-[2/3]" : "aspect-[2/3]"} w-full`}>
           {hasImg ? (
             <img src={book.coverUrl!} alt={book.title} loading="lazy" onError={() => setImgErr(true)}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center p-3"
-              style={{ background: "linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)" }}>
-              <BookOpen className={`${sm ? "w-7 h-7" : "w-10 h-10"} mb-2`} style={{ color: "rgba(255,255,255,0.18)" }} />
-              <p className="text-xs text-center font-medium leading-tight line-clamp-3" style={{ color: "rgba(255,255,255,0.35)" }}>
+              style={{ background: "linear-gradient(145deg, rgba(244,239,226,0.07) 0%, rgba(244,239,226,0.02) 100%)" }}>
+              <BookOpen className={`${sm ? "w-7 h-7" : "w-10 h-10"} mb-2`} style={{ color: "rgba(244,239,226,0.18)" }} />
+              <p className="text-xs text-center font-medium leading-tight line-clamp-3" style={{ color: "rgba(244,239,226,0.35)" }}>
                 {book.title}
               </p>
             </div>
@@ -123,15 +123,15 @@ function BookCard({ book, size = "normal", source }: { book: GutBook; size?: "no
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
             style={{ background: "rgba(0,0,0,0.6)" }}>
             <span className="text-xs font-semibold text-white px-3 py-1.5 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}>
+              style={{ background: "rgba(244,239,226,0.15)", border: "1px solid rgba(244,239,226,0.25)" }}>
               {ar ? "اقرأ الآن" : "Read Now"}
             </span>
           </div>
         </div>
         <div className={`${sm ? "p-2" : "p-3"}`}>
           <p className={`font-semibold leading-tight line-clamp-2 mb-0.5 ${sm ? "text-xs" : "text-sm"}`}
-            style={{ color: "rgba(255,255,255,0.88)" }}>{book.title}</p>
-          <p className="text-xs line-clamp-1" style={{ color: "rgba(255,255,255,0.38)" }}>{author}</p>
+            style={{ color: "rgba(244,239,226,0.88)" }}>{book.title}</p>
+          <p className="text-xs line-clamp-1" style={{ color: "rgba(244,239,226,0.38)" }}>{author}</p>
         </div>
       </div>
     </Link>
@@ -151,19 +151,19 @@ function RecentCard({ book }: { book: RecentBook }) {
     <Link href={`/discover/${book.id}${book.src === "hindawi" ? "?src=hindawi" : ""}`}>
       <div className="group flex-shrink-0 w-28 cursor-pointer transition-all hover:scale-[1.04] duration-300">
         <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden mb-2"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "rgba(244,239,226,0.05)", border: "1px solid rgba(244,239,226,0.08)" }}>
           {hasImg ? (
             <img src={book.coverUrl!} alt={book.title} loading="lazy" onError={() => setImgErr(true)}
               className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center"
-              style={{ background: "linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02))" }}>
-              <BookOpen className="w-7 h-7" style={{ color: "rgba(255,255,255,0.2)" }} />
+              style={{ background: "linear-gradient(145deg, rgba(244,239,226,0.07), rgba(244,239,226,0.02))" }}>
+              <BookOpen className="w-7 h-7" style={{ color: "rgba(244,239,226,0.2)" }} />
             </div>
           )}
           {/* Progress bar */}
           <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "rgba(0,0,0,0.4)" }}>
-            <div className="h-full" style={{ width: `${pct}%`, background: "rgba(255,255,255,0.60)" }} />
+            <div className="h-full" style={{ width: `${pct}%`, background: "rgba(244,239,226,0.60)" }} />
           </div>
           {/* Resume overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
@@ -171,8 +171,8 @@ function RecentCard({ book }: { book: RecentBook }) {
             <span className="text-xs font-medium text-white">{ar ? "متابعة" : "Resume"}</span>
           </div>
         </div>
-        <p className="text-xs leading-tight line-clamp-2 font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>{book.title}</p>
-        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{book.author}</p>
+        <p className="text-xs leading-tight line-clamp-2 font-medium" style={{ color: "rgba(244,239,226,0.75)" }}>{book.title}</p>
+        <p className="text-xs mt-0.5" style={{ color: "rgba(244,239,226,0.35)" }}>{book.author}</p>
       </div>
     </Link>
   );
@@ -185,9 +185,9 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
     <button onClick={onClick}
       className="text-xs px-3 py-1.5 rounded-xl font-medium transition-all whitespace-nowrap"
       style={{
-        background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
-        border: `1px solid ${active ? "rgba(255,255,255,0.30)" : "rgba(255,255,255,0.07)"}`,
-        color: active ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)",
+        background: active ? "rgba(244,239,226,0.12)" : "rgba(244,239,226,0.04)",
+        border: `1px solid ${active ? "rgba(244,239,226,0.30)" : "rgba(244,239,226,0.07)"}`,
+        color: active ? "rgba(244,239,226,0.92)" : "rgba(244,239,226,0.45)",
       }}>
       {children}
     </button>
@@ -223,20 +223,20 @@ function Dropdown({ label, value, options, onChange, ar }: {
       <button onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition-all"
         style={{
-          background: value ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)",
-          border: `1px solid ${value ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
-          color: value ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.55)",
+          background: value ? "rgba(244,239,226,0.10)" : "rgba(244,239,226,0.05)",
+          border: `1px solid ${value ? "rgba(244,239,226,0.22)" : "rgba(244,239,226,0.08)"}`,
+          color: value ? "rgba(244,239,226,0.90)" : "rgba(244,239,226,0.55)",
         }}>
         {current}
         <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="absolute top-full mt-1 left-0 z-50 min-w-max rounded-xl overflow-hidden shadow-2xl py-1"
-          style={{ background: "#1a1917", border: "1px solid rgba(255,255,255,0.1)" }}>
+          style={{ background: "#1a1917", border: "1px solid rgba(244,239,226,0.1)" }}>
           {options.map(o => (
             <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
               className="block w-full text-left px-4 py-2 text-xs transition-all hover:opacity-70"
-              style={{ color: o.value === value ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.65)" }}>
+              style={{ color: o.value === value ? "rgba(244,239,226,0.92)" : "rgba(244,239,226,0.65)" }}>
               {optLabel(o)}
             </button>
           ))}
@@ -327,31 +327,31 @@ export default function DiscoverPage() {
             : "Search and read 60,000+ public-domain books from Project Gutenberg, with Plotzy's reading experience.")}
       />
       <JsonLd data={buildBreadcrumbSchema([{ name: ar ? "اكتشف" : "Discover", path: "/discover" }])} />
-      <div className="min-h-screen" style={{ background: "#080808" }}>
+      <div className="min-h-screen" style={{ background: "#221b11" }}>
 
         {/* ══ HERO ══════════════════════════════════════════════════════════ */}
         <div className="relative pt-10 sm:pt-16 pb-8 sm:pb-12 px-4 sm:px-6 text-center overflow-hidden">
           {/* Glow background */}
           <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255,255,255,0.05) 0%, transparent 65%)" }} />
+            style={{ background: "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(244,239,226,0.05) 0%, transparent 65%)" }} />
 
           {/* Label pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <BookMarked className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.45)" }} />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(255,255,255,0.45)" }}>
+            style={{ background: "rgba(244,239,226,0.06)", border: "1px solid rgba(244,239,226,0.12)" }}>
+            <BookMarked className="w-3.5 h-3.5" style={{ color: "rgba(244,239,226,0.45)" }} />
+            <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(244,239,226,0.45)" }}>
               {isHindawi
                 ? (ar ? "مكتبة هنداوي العربية" : "Hindawi Arabic Library")
                 : (ar ? "مكتبة الأدب العالمي" : "World Literature Library")}
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: "rgba(255,255,255,0.94)" }}>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ color: "rgba(244,239,226,0.94)" }}>
             {isHindawi
               ? (ar ? "اكتشف الكلاسيكيات العربية" : "Discover Arabic Classics")
               : (ar ? "اكتشف الكلاسيكيات" : "Discover Classics")}
           </h1>
-          <p className="text-sm mx-auto mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <p className="text-sm mx-auto mb-6" style={{ color: "rgba(244,239,226,0.35)" }}>
             {isHindawi
               ? (ar ? "كتب عربية من المجال العام من مؤسسة هنداوي، اقرأها مجاناً داخل Plotzy"
                 : "Arabic public-domain books from the Hindawi Foundation, read free inside Plotzy")
@@ -361,7 +361,7 @@ export default function DiscoverPage() {
 
           {/* Source toggle: Project Gutenberg (English) ⇄ Hindawi (Arabic) */}
           <div className="inline-flex flex-wrap justify-center items-center gap-1 p-1 rounded-2xl mb-8 max-w-full"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
+            style={{ background: "rgba(244,239,226,0.05)", border: "1px solid rgba(244,239,226,0.09)" }}>
             {([
               { v: "gutenberg" as BookSource, label: ar ? "الأدب العالمي (إنجليزي)" : "World Literature (English)" },
               { v: "hindawi" as BookSource, label: ar ? "مكتبة هنداوي (عربي)" : "Hindawi (Arabic)" },
@@ -369,15 +369,15 @@ export default function DiscoverPage() {
               <button key={opt.v} onClick={() => setSource(opt.v)}
                 className="text-xs px-3 sm:px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: source === opt.v ? "rgba(255,255,255,0.14)" : "transparent",
-                  color: source === opt.v ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.5)",
+                  background: source === opt.v ? "rgba(244,239,226,0.14)" : "transparent",
+                  color: source === opt.v ? "rgba(244,239,226,0.92)" : "rgba(244,239,226,0.5)",
                 }}>
                 {opt.label}
               </button>
             ))}
           </div>
           {isHindawi && (
-            <p className="text-xs mx-auto mb-8 px-4" style={{ color: "rgba(255,255,255,0.3)", maxWidth: 560 }}>
+            <p className="text-xs mx-auto mb-8 px-4" style={{ color: "rgba(244,239,226,0.3)", maxWidth: 560 }}>
               {ar
                 ? "جميع الكتب من مؤسسة هنداوي، مرخّصة برخصة المشاع الإبداعي: نَسَب المُصنَّف 4.0 (CC BY 4.0)"
                 : "All books courtesy of the Hindawi Foundation, licensed under Creative Commons Attribution 4.0 (CC BY 4.0)"}
@@ -386,7 +386,7 @@ export default function DiscoverPage() {
 
           {/* Search */}
           <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: "rgba(255,255,255,0.28)" }} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: "rgba(244,239,226,0.28)" }} />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -394,17 +394,17 @@ export default function DiscoverPage() {
               className="w-full pl-11 pr-10 h-13 rounded-2xl text-sm outline-none"
               style={{
                 height: 52,
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                color: "rgba(255,255,255,0.90)",
+                background: "rgba(244,239,226,0.05)",
+                border: "1px solid rgba(244,239,226,0.10)",
+                color: "rgba(244,239,226,0.90)",
                 boxShadow: "0 0 0 0 transparent",
               }}
-              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.28)")}
-              onBlur={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)")}
+              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(244,239,226,0.28)")}
+              onBlur={e => (e.currentTarget.style.border = "1px solid rgba(244,239,226,0.10)")}
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-4 top-1/2 -translate-y-1/2"
-                style={{ color: "rgba(255,255,255,0.3)" }}>
+                style={{ color: "rgba(244,239,226,0.3)" }}>
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -417,8 +417,8 @@ export default function DiscoverPage() {
           {recent.length > 0 && !debouncedSearch && !topic && (
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-4">
-                <Clock className="w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
-                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                <Clock className="w-4 h-4" style={{ color: "rgba(244,239,226,0.3)" }} />
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(244,239,226,0.3)" }}>
                   {ar ? "قرأت مؤخراً" : "Continue Reading"}
                 </span>
               </div>
@@ -445,9 +445,9 @@ export default function DiscoverPage() {
                 onClick={() => setShowFilters(v => !v)}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition-all ml-auto shrink-0"
                 style={{
-                  background: showFilters || hasActiveFilters ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)",
-                  border: `1px solid ${showFilters || hasActiveFilters ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
-                  color: showFilters || hasActiveFilters ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.55)",
+                  background: showFilters || hasActiveFilters ? "rgba(244,239,226,0.10)" : "rgba(244,239,226,0.05)",
+                  border: `1px solid ${showFilters || hasActiveFilters ? "rgba(244,239,226,0.22)" : "rgba(244,239,226,0.08)"}`,
+                  color: showFilters || hasActiveFilters ? "rgba(244,239,226,0.90)" : "rgba(244,239,226,0.55)",
                 }}>
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 {ar ? "فلاتر" : "Filters"}
@@ -457,9 +457,9 @@ export default function DiscoverPage() {
 
             {/* More topics (expanded) */}
             {showFilters && (
-              <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="rounded-2xl p-4 mb-3" style={{ background: "rgba(244,239,226,0.03)", border: "1px solid rgba(244,239,226,0.06)" }}>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <p className="w-full text-xs font-semibold mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <p className="w-full text-xs font-semibold mb-1" style={{ color: "rgba(244,239,226,0.3)" }}>
                     {ar ? "المزيد من الأقسام" : "More Genres"}
                   </p>
                   {TOPICS.slice(8).map(t => (
@@ -472,7 +472,7 @@ export default function DiscoverPage() {
                 <div className="flex flex-wrap gap-3">
                   {!isHindawi && (
                     <div className="flex items-center gap-2">
-                      <Globe className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
+                      <Globe className="w-3.5 h-3.5" style={{ color: "rgba(244,239,226,0.3)" }} />
                       <Dropdown
                         label={ar ? "اللغة" : "Language"}
                         value={language}
@@ -483,7 +483,7 @@ export default function DiscoverPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
+                    <TrendingUp className="w-3.5 h-3.5" style={{ color: "rgba(244,239,226,0.3)" }} />
                     <Dropdown
                       label={ar ? "الترتيب" : "Sort by"}
                       value={sort}
@@ -508,7 +508,7 @@ export default function DiscoverPage() {
           {/* Results count */}
           {data && !loading && (
             <div className="flex items-center gap-2 mb-5">
-              <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+              <span className="text-xs" style={{ color: "rgba(244,239,226,0.25)" }}>
                 {data.count.toLocaleString()} {ar ? "كتاب" : "books"}
                 {debouncedSearch && ` ${ar ? "لـ" : "for"} "${debouncedSearch}"`}
               </span>
@@ -518,7 +518,7 @@ export default function DiscoverPage() {
           {/* Loading */}
           {loading && !syncing && (
             <div className="flex items-center justify-center py-28">
-              <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(255,255,255,0.40)" }} />
+              <Loader2 className="w-7 h-7 animate-spin" style={{ color: "rgba(244,239,226,0.40)" }} />
             </div>
           )}
 
@@ -529,10 +529,10 @@ export default function DiscoverPage() {
                 style={{ background: "rgba(124,106,247,0.10)", border: "1px solid rgba(124,106,247,0.25)" }}>
                 <Loader2 className="w-5 h-5 animate-spin shrink-0" style={{ color: "rgba(124,106,247,0.8)" }} />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  <p className="text-sm font-medium" style={{ color: "rgba(244,239,226,0.85)" }}>
                     {ar ? "جارٍ بناء المكتبة…" : "Building your library…"}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(244,239,226,0.35)" }}>
                     {ar ? "يتم استيراد 70,000+ كتاب من الملك العام — دقيقة واحدة فقط"
                       : "Importing 70,000+ public-domain books — just a minute"}
                   </p>
@@ -547,7 +547,7 @@ export default function DiscoverPage() {
               <p className="text-sm mb-4" style={{ color: "rgba(255,100,100,0.7)" }}>{error}</p>
               <button onClick={fetchBooks}
                 className="text-sm px-5 py-2.5 rounded-2xl font-medium transition-all"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
+                style={{ background: "rgba(244,239,226,0.07)", border: "1px solid rgba(244,239,226,0.1)", color: "rgba(244,239,226,0.7)" }}>
                 {ar ? "إعادة المحاولة" : "Retry"}
               </button>
             </div>
@@ -558,13 +558,13 @@ export default function DiscoverPage() {
             <>
               {data.results.filter(b => b.hasText).length === 0 ? (
                 <div className="text-center py-24">
-                  <BookOpen className="w-12 h-12 mx-auto mb-4" style={{ color: "rgba(255,255,255,0.1)" }} />
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <BookOpen className="w-12 h-12 mx-auto mb-4" style={{ color: "rgba(244,239,226,0.1)" }} />
+                  <p className="text-sm" style={{ color: "rgba(244,239,226,0.35)" }}>
                     {ar ? "لا توجد نتائج" : "No results found"}
                   </p>
                   <button onClick={() => { setSearch(""); setTopic(""); }}
                     className="mt-4 text-xs px-4 py-2 rounded-xl transition-all"
-                    style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    style={{ color: "rgba(244,239,226,0.5)", background: "rgba(244,239,226,0.06)", border: "1px solid rgba(244,239,226,0.08)" }}>
                     {ar ? "مسح البحث" : "Clear search"}
                   </button>
                 </div>
@@ -583,18 +583,18 @@ export default function DiscoverPage() {
                     disabled={!data.previous}
                     onClick={() => { setPage(p => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all disabled:opacity-30"
-                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.75)" }}>
+                    style={{ background: "rgba(244,239,226,0.06)", border: "1px solid rgba(244,239,226,0.09)", color: "rgba(244,239,226,0.75)" }}>
                     <ChevronLeft className="w-4 h-4" />
                     {ar ? "السابق" : "Previous"}
                   </button>
-                  <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <span className="text-xs font-mono" style={{ color: "rgba(244,239,226,0.3)" }}>
                     {ar ? `صفحة ${page}` : `Page ${page}`}
                   </span>
                   <button
                     disabled={!data.next}
                     onClick={() => { setPage(p => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all disabled:opacity-30"
-                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.75)" }}>
+                    style={{ background: "rgba(244,239,226,0.06)", border: "1px solid rgba(244,239,226,0.09)", color: "rgba(244,239,226,0.75)" }}>
                     {ar ? "التالي" : "Next"}
                     <ChevronRight className="w-4 h-4" />
                   </button>

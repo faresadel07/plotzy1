@@ -18,18 +18,18 @@ export function TestimonialsDesktop() {
     <section
       id="testimonials"
       dir={ar ? "rtl" : "ltr"}
-      style={{ background: "#080808", padding: "88px 24px 96px", fontFamily: SF, overflow: "hidden", scrollMarginTop: 80 }}
+      style={{ background: "#221b11", padding: "88px 24px 96px", fontFamily: SF, overflow: "hidden", scrollMarginTop: 80 }}
     >
       <div style={{ maxWidth: 1140, margin: "0 auto" }}>
         {/* Heading */}
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>
+          <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(244,239,226,0.4)", marginBottom: 16 }}>
             {ar ? "قالوا عن بلوتزي" : "Loved by writers everywhere"}
           </p>
-          <h2 style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.035em", color: "#fff", lineHeight: 1.1, margin: "0 auto 18px", maxWidth: 760 }}>
+          <h2 style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.8rem)", fontWeight: 800, letterSpacing: "-0.035em", color: "#f7f2e4", lineHeight: 1.1, margin: "0 auto 18px", maxWidth: 760 }}>
             {ar ? "أشخاص حقيقيّون كتبوا كتبهم على بلوتزي" : "Real people who wrote their books on Plotzy"}
           </h2>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 560, margin: "0 auto" }}>
+          <p style={{ fontSize: 16, color: "rgba(244,239,226,0.5)", lineHeight: 1.6, maxWidth: 560, margin: "0 auto" }}>
             {ar
               ? "من طالب يكتب أول فصل، لجدّة توثّق قصّة عائلتها. هدول ناس جرّبوا بلوتزي فعلاً."
               : "From a student drafting a first chapter to a grandmother saving her family story. These are real testers, in their own words."}
@@ -45,8 +45,8 @@ export function TestimonialsDesktop() {
               style={{
                 breakInside: "avoid",
                 marginBottom: 20,
-                background: "linear-gradient(165deg, #151519 0%, #0d0d10 100%)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "linear-gradient(165deg, #151519 0%, #292115 100%)",
+                border: "1px solid rgba(244,239,226,0.08)",
                 borderRadius: 20,
                 padding: "26px 24px",
                 position: "relative",
@@ -57,23 +57,23 @@ export function TestimonialsDesktop() {
                 <div
                   style={{
                     width: 50, height: 50, borderRadius: "50%", flexShrink: 0,
-                    padding: 2, background: `linear-gradient(135deg, ${t.accent}, rgba(255,255,255,0.14))`,
+                    padding: 2, background: `linear-gradient(135deg, ${t.accent}, rgba(244,239,226,0.14))`,
                   }}
                 >
                   <img
                     src={t.photo}
                     alt={ar ? t.nameAr : t.name}
                     loading="lazy"
-                    style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", objectPosition: t.pos, display: "block", border: "2px solid #0d0d10" }}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover", objectPosition: t.pos, display: "block", border: "2px solid #292115" }}
                   />
                 </div>
                 <div style={{ minWidth: 0, textAlign: ar ? "right" : "left" }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 700, color: "#fff" }}>{ar ? t.nameAr : t.name}</div>
-                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.5)", marginTop: 1 }}>{ar ? t.roleAr : t.role}</div>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, color: "#f7f2e4" }}>{ar ? t.nameAr : t.name}</div>
+                  <div style={{ fontSize: 12.5, color: "rgba(244,239,226,0.5)", marginTop: 1 }}>{ar ? t.roleAr : t.role}</div>
                 </div>
               </div>
 
-              <p style={{ fontSize: 15.5, lineHeight: 1.68, color: "rgba(255,255,255,0.9)", margin: 0 }}>
+              <p style={{ fontSize: 15.5, lineHeight: 1.68, color: "rgba(244,239,226,0.9)", margin: 0 }}>
                 {ar ? t.quoteAr : t.quote}
               </p>
             </article>
@@ -91,7 +91,7 @@ export function TestimonialsDesktop() {
         }
         .plotzy-testimonial-card:hover {
           transform: translateY(-4px);
-          border-color: rgba(255,255,255,0.18);
+          border-color: rgba(244,239,226,0.18);
         }
         @media (max-width: 1000px) {
           .plotzy-testimonial-wall { column-count: 2; }

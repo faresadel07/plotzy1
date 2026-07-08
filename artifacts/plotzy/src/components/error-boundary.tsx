@@ -41,18 +41,18 @@ export class ErrorBoundary extends Component<Props, State> {
         <div style={{
           minHeight: "100vh", display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 16,
-          background: "#000", color: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+          background: "#221b11", color: "#f7f2e4", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
           padding: 24, textAlign: "center",
         }}>
           <div style={{ fontSize: 48 }}>:/</div>
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Something went wrong</h1>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", maxWidth: 400, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: "rgba(244,239,226,0.5)", maxWidth: 400, lineHeight: 1.6 }}>
             An unexpected error occurred. Please refresh the page to continue.
           </p>
           <button
             onClick={() => window.location.reload()}
             style={{
-              padding: "10px 24px", borderRadius: 10, background: "#fff", color: "#000",
+              padding: "10px 24px", borderRadius: 10, background: "#f7f2e4", color: "#221b11",
               border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 8,
             }}
           >

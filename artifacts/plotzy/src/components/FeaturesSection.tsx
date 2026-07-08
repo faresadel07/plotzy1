@@ -7,7 +7,7 @@ function Cursor() {
   return (
     <span style={{
       display: "inline-block", width: 2, height: "0.85em",
-      background: "rgba(255,255,255,0.8)", verticalAlign: "text-bottom",
+      background: "rgba(244,239,226,0.8)", verticalAlign: "text-bottom",
       marginLeft: 2, borderRadius: 1, animation: "fBlink 0.9s step-end infinite",
     }} />
   );
@@ -150,7 +150,7 @@ function AICard() {
               className="self-end flex items-center gap-2">
               <span className="text-white/25 text-[10px]" style={{ fontFamily: SF }}>Writing</span>
               <div className="flex gap-1">
-                {[0,1,2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.3)", animation: `fBounce 0.9s ease ${i*0.15}s infinite` }} />)}
+                {[0,1,2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(244,239,226,0.3)", animation: `fBounce 0.9s ease ${i*0.15}s infinite` }} />)}
               </div>
             </motion.div>
           )}
@@ -171,7 +171,7 @@ function AICard() {
       <div className="flex items-center gap-2 bg-white/4 border border-white/8 rounded-xl px-3 py-2">
         <span className="flex-1 text-white/20 text-[11px]" style={{ fontFamily: SF }}>Ask anything about your story…</span>
         <div className="w-5 h-5 rounded-lg bg-white/10 flex items-center justify-center">
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 4.5h7M4.5 1l3.5 3.5L4.5 8" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 4.5h7M4.5 1l3.5 3.5L4.5 8" stroke="rgba(244,239,226,0.35)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
       </div>
     </div>
@@ -244,13 +244,13 @@ function CoverCard() {
             exit={{ opacity: 0, scale: 0.9, rotateY: 12 }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             className="rounded-xl overflow-hidden relative flex-shrink-0"
-            style={{ width: 88, height: 126, background: c.bg, boxShadow: `0 20px 56px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.07)` }}>
+            style={{ width: 88, height: 126, background: c.bg, boxShadow: `0 20px 56px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(244,239,226,0.07)` }}>
             <div className="absolute inset-0 flex flex-col justify-end p-3">
               <div className="w-full h-px mb-2" style={{ background: c.accent, opacity: 0.8 }} />
               <div className="text-white font-bold text-sm leading-tight" style={{ fontFamily: SF }}>{c.title}</div>
               <div className="text-white/40 text-[8px] tracking-[0.2em] uppercase mt-0.5" style={{ fontFamily: SF }}>{c.sub}</div>
             </div>
-            <div className="absolute top-0 inset-x-0 h-1/2" style={{ background: "linear-gradient(to bottom,rgba(255,255,255,0.05),transparent)" }} />
+            <div className="absolute top-0 inset-x-0 h-1/2" style={{ background: "linear-gradient(to bottom,rgba(244,239,226,0.05),transparent)" }} />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -285,7 +285,7 @@ function LibraryCard() {
               <div className="text-white/65 text-xs font-medium truncate" style={{ fontFamily: SF }}>{b.title}</div>
               <div className="text-white/25 text-[10px]" style={{ fontFamily: SF }}>{b.chapters} chapters</div>
             </div>
-            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1l4 4-4 4" stroke="rgba(244,239,226,0.2)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </motion.div>
         ))}
       </div>
@@ -304,9 +304,9 @@ function ArticleCard() {
   return (
     <div ref={ref} className="h-full flex gap-6 items-center">
       <div className="flex-shrink-0 w-[190px]">
-        <div className="bg-[#0d0d0d] rounded-xl border border-white/6 p-4">
+        <div className="bg-[#292115] rounded-xl border border-white/6 p-4">
           <div className="w-full h-14 rounded-lg bg-white/5 border border-white/6 mb-3 flex items-center justify-center">
-            <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><rect x="0.5" y="0.5" width="19" height="13" rx="1.5" stroke="rgba(255,255,255,0.15)"/><circle cx="6" cy="4.5" r="1.5" stroke="rgba(255,255,255,0.2)"/><path d="M0.5 9.5L5 6.5L8.5 9.5L13 7L19.5 10.5" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" strokeLinecap="round"/></svg>
+            <svg width="20" height="14" viewBox="0 0 20 14" fill="none"><rect x="0.5" y="0.5" width="19" height="13" rx="1.5" stroke="rgba(244,239,226,0.15)"/><circle cx="6" cy="4.5" r="1.5" stroke="rgba(244,239,226,0.2)"/><path d="M0.5 9.5L5 6.5L8.5 9.5L13 7L19.5 10.5" stroke="rgba(244,239,226,0.2)" strokeWidth="0.8" strokeLinecap="round"/></svg>
           </div>
           <div className="inline-flex items-center gap-1.5 bg-white/8 rounded-full px-2 py-0.5 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
@@ -381,10 +381,10 @@ function CalendarCard() {
   }, [inView]);
 
   const intensityColor = (v: number) => {
-    if (v === 0) return "rgba(255,255,255,0.05)";
-    if (v === 1) return "rgba(255,255,255,0.18)";
-    if (v === 2) return "rgba(255,255,255,0.45)";
-    return "rgba(255,255,255,0.85)";
+    if (v === 0) return "rgba(244,239,226,0.05)";
+    if (v === 1) return "rgba(244,239,226,0.18)";
+    if (v === 2) return "rgba(244,239,226,0.45)";
+    return "rgba(244,239,226,0.85)";
   };
 
   return (
@@ -659,7 +659,7 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 ════════════════════════════════════════ */
 export function FeaturesSection() {
   return (
-    <section className="bg-[#080808] pt-10 pb-16 px-6 sm:px-8" style={{ fontFamily: SF }}>
+    <section className="bg-[#221b11] pt-10 pb-16 px-6 sm:px-8" style={{ fontFamily: SF }}>
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}

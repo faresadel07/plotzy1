@@ -65,8 +65,8 @@ export default function SeriesView() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: "100vh", background: "#080808", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
+      <div style={{ minHeight: "100vh", background: "#221b11", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 24, height: 24, border: "2px solid rgba(244,239,226,0.1)", borderTopColor: "#f7f2e4", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -74,12 +74,12 @@ export default function SeriesView() {
 
   if (!series) {
     return (
-      <div style={{ minHeight: "100vh", background: "#080808", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: SF }}>
+      <div style={{ minHeight: "100vh", background: "#221b11", color: "#888", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, fontFamily: SF }}>
         <SEO title={t("svNotFound")} noindex />
         <Layers style={{ width: 48, height: 48, opacity: 0.3 }} />
         <p style={{ fontSize: 18, fontWeight: 600 }}>{t("svNotFound")}</p>
         <Link href="/library">
-          <button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>{t("rbBackToLibrary")}</button>
+          <button style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(244,239,226,0.1)", background: "none", color: "#888", cursor: "pointer", fontSize: 13 }}>{t("rbBackToLibrary")}</button>
         </Link>
       </div>
     );
@@ -88,7 +88,7 @@ export default function SeriesView() {
   const publishDate = series.publishedAt ? new Date(series.publishedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080808", fontFamily: SF, color: "#fff" }}>
+    <div style={{ minHeight: "100vh", background: "#221b11", fontFamily: SF, color: "#f7f2e4" }}>
       <SEO
         title={series.name}
         description={series.description || `${series.name}. ${t("svSeoDesc")}`}
@@ -100,16 +100,16 @@ export default function SeriesView() {
       ])} />
 
       {/* Header */}
-      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px", height: 48, display: "flex", alignItems: "center", gap: 12 }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(8,8,8,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(244,239,226,0.06)", padding: "0 20px", height: 48, display: "flex", alignItems: "center", gap: 12 }}>
         <Link href="/library">
-          <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 13, padding: "4px 8px", borderRadius: 6 }}>
+          <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(244,239,226,0.5)", fontSize: 13, padding: "4px 8px", borderRadius: 6 }}>
             <ArrowLeft size={15} /> {t("rbLibrary")}
           </button>
         </Link>
-        <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ width: 1, height: 14, background: "rgba(244,239,226,0.08)" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <Layers size={12} color="rgba(255,255,255,0.3)" />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>{t("ssBookSeries")}</span>
+          <Layers size={12} color="rgba(244,239,226,0.3)" />
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(244,239,226,0.3)" }}>{t("ssBookSeries")}</span>
         </div>
       </header>
 
@@ -124,7 +124,7 @@ export default function SeriesView() {
         </h1>
 
         {series.description && (
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, maxWidth: 620, margin: "0 auto 24px" }}>
+          <p style={{ fontSize: 16, color: "rgba(244,239,226,0.55)", lineHeight: 1.65, maxWidth: 620, margin: "0 auto 24px" }}>
             {series.description}
           </p>
         )}
@@ -140,17 +140,17 @@ export default function SeriesView() {
                   <User size={12} style={{ color: ACC }} />
                 </div>
               )}
-              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{series.ownerName}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(244,239,226,0.8)" }}>{series.ownerName}</span>
             </div>
           )}
-          <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+          <span style={{ color: "rgba(244,239,226,0.15)" }}>·</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(244,239,226,0.4)" }}>
             <BookOpen size={12} /> {series.books.length} {series.books.length === 1 ? t("ssBookWord") : t("ssBooksWord")}
           </div>
           {publishDate && (
             <>
-              <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+              <span style={{ color: "rgba(244,239,226,0.15)" }}>·</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(244,239,226,0.4)" }}>
                 <Calendar size={12} /> {publishDate}
               </div>
             </>
@@ -161,7 +161,7 @@ export default function SeriesView() {
       {/* Books grid */}
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px 48px" }}>
         {series.books.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.4)" }}>
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(244,239,226,0.4)" }}>
             <BookOpen style={{ width: 36, height: 36, margin: "0 auto 12px", opacity: 0.3 }} />
             <p style={{ fontSize: 14 }}>{t("svNoBooks")}</p>
           </div>
@@ -170,15 +170,15 @@ export default function SeriesView() {
             {series.books.map((book, i) => (
               <Link key={book.id} href={book.contentType === "article" ? `/blog/${book.id}` : `/read/${book.id}`}>
                 <div style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(244,239,226,0.02)",
+                  border: "1px solid rgba(244,239,226,0.06)",
                   borderRadius: 14,
                   overflow: "hidden",
                   cursor: "pointer",
                   transition: "border-color 0.2s, transform 0.2s",
                 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,106,247,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(244,239,226,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
                 >
                   {/* Cover */}
                   <div style={{ position: "relative", aspectRatio: "2/3", overflow: "hidden", background: book.spineColor || "rgba(124,106,247,0.08)" }}>
@@ -186,32 +186,32 @@ export default function SeriesView() {
                       <img src={book.coverImage} alt={book.title || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
                       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <BookOpen style={{ width: 32, height: 32, color: "rgba(255,255,255,0.15)" }} />
+                        <BookOpen style={{ width: 32, height: 32, color: "rgba(244,239,226,0.15)" }} />
                       </div>
                     )}
                     {/* Volume badge */}
-                    <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: "0.05em" }}>
+                    <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "#f7f2e4", letterSpacing: "0.05em" }}>
                       {t("svVol")} {i + 1}
                     </div>
                   </div>
 
                   {/* Info */}
                   <div style={{ padding: "14px 16px" }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.3, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "#f7f2e4", lineHeight: 1.3, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
                       {book.title}
                     </h3>
                     {book.summary && (
-                      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
+                      <p style={{ fontSize: 12, color: "rgba(244,239,226,0.35)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
                         {book.summary}
                       </p>
                     )}
                     <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       {book.genre && (
-                        <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 4, background: "rgba(244,239,226,0.04)", color: "rgba(244,239,226,0.4)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                           {book.genre}
                         </span>
                       )}
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
+                      <span style={{ fontSize: 10, color: "rgba(244,239,226,0.25)", marginLeft: "auto" }}>
                         {book.viewCount.toLocaleString()} {t("svViews")}
                       </span>
                     </div>
@@ -225,17 +225,17 @@ export default function SeriesView() {
 
       {/* Share section */}
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 20px 48px" }}>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, textAlign: "center" }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>{t("svShareSeries")}</p>
+        <div style={{ borderTop: "1px solid rgba(244,239,226,0.06)", paddingTop: 24, textAlign: "center" }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(244,239,226,0.3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>{t("svShareSeries")}</p>
 
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={handleCopyLink}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 12, color: copied ? "#34d399" : "rgba(255,255,255,0.6)", transition: "all 0.15s" }}>
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, background: "rgba(244,239,226,0.05)", border: "1px solid rgba(244,239,226,0.08)", cursor: "pointer", fontSize: 12, color: copied ? "#34d399" : "rgba(244,239,226,0.6)", transition: "all 0.15s" }}>
               {copied ? <><Check size={13} /> {t("svCopied")}</> : <><Copy size={13} /> {t("svCopyLink")}</>}
             </button>
 
             <button onClick={shareX}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 12, color: "rgba(255,255,255,0.6)" }}>
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, background: "rgba(244,239,226,0.05)", border: "1px solid rgba(244,239,226,0.08)", cursor: "pointer", fontSize: 12, color: "rgba(244,239,226,0.6)" }}>
               𝕏 {t("svPostX")}
             </button>
 

@@ -390,7 +390,11 @@ function Router() {
         <Route path="/checkout" component={ProtectedRoute(Checkout)} />
         <Route path="/account/subscription" component={ProtectedRoute(AccountSubscription)} />
         <Route path="/account/settings" component={ProtectedRoute(AccountSettings)} />
-        <Route path="/support" component={ProtectedRoute(SupportPage)} />
+        {/* Public: guests can read the help center and system status;
+            the page gates ticket submission behind sign-in itself.
+            (ProtectedRoute used to bounce signed-out visitors home
+            with no explanation — "support does not open".) */}
+        <Route path="/support" component={SupportPage} />
         <Route path="/learn" component={ProtectedRoute(LearnPage)} />
         <Route path="/learn/module/:slug" component={ProtectedRoute(LearnModulePage)} />
         <Route path="/learn/lesson/:slug" component={ProtectedRoute(LearnLessonPage)} />

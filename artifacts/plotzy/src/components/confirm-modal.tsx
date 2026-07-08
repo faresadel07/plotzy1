@@ -26,22 +26,22 @@ export function ConfirmModal({
   const icon = isDanger ? (
     <Trash2 className="w-6 h-6" style={{ color: "#ef4444" }} />
   ) : (
-    <AlertTriangle className="w-6 h-6" style={{ color: "rgba(255,255,255,0.80)" }} />
+    <AlertTriangle className="w-6 h-6" style={{ color: "rgba(244,239,226,0.80)" }} />
   );
 
   const iconRing = isDanger
     ? "rgba(239,68,68,0.15)"
-    : "rgba(255,255,255,0.06)";
+    : "rgba(244,239,226,0.06)";
 
   const iconBorder = isDanger
     ? "rgba(239,68,68,0.30)"
-    : "rgba(255,255,255,0.12)";
+    : "rgba(244,239,226,0.12)";
 
   const confirmBg = isDanger
     ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
-    : "#111111";
+    : "#332a1b";
 
-  const confirmBorder = isDanger ? "#ef4444" : "rgba(255,255,255,0.20)";
+  const confirmBorder = isDanger ? "#ef4444" : "rgba(244,239,226,0.20)";
   const confirmColor = isDanger ? "#fca5a5" : "#EFEFEF";
   const confirmHoverShadow = isDanger
     ? "0 6px 30px rgba(239,68,68,0.40)"
@@ -90,11 +90,11 @@ export function ConfirmModal({
             <div
               style={{
                 background: "#0e0e0e",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid rgba(244,239,226,0.08)",
                 borderRadius: 20,
                 width: "100%",
                 maxWidth: 420,
-                boxShadow: "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)",
+                boxShadow: "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(244,239,226,0.04)",
                 overflow: "hidden",
                 pointerEvents: "auto",
               }}
@@ -105,7 +105,7 @@ export function ConfirmModal({
                   height: 2,
                   background: isDanger
                     ? "linear-gradient(90deg, transparent, #ef4444, transparent)"
-                    : "linear-gradient(90deg, transparent, rgba(255,255,255,0.30), transparent)",
+                    : "linear-gradient(90deg, transparent, rgba(244,239,226,0.30), transparent)",
                 }}
               />
 
@@ -136,7 +136,7 @@ export function ConfirmModal({
                         margin: 0,
                         fontSize: 17,
                         fontWeight: 700,
-                        color: "#ffffff",
+                        color: "#f7f2e4",
                         lineHeight: 1.3,
                         letterSpacing: "-0.01em",
                       }}
@@ -147,7 +147,7 @@ export function ConfirmModal({
                       style={{
                         margin: "8px 0 0",
                         fontSize: 14,
-                        color: "rgba(255,255,255,0.50)",
+                        color: "rgba(244,239,226,0.50)",
                         lineHeight: 1.55,
                       }}
                     >
@@ -163,22 +163,22 @@ export function ConfirmModal({
                       width: 30,
                       height: 30,
                       borderRadius: 8,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: "rgba(244,239,226,0.05)",
+                      border: "1px solid rgba(244,239,226,0.08)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
-                      color: "rgba(255,255,255,0.40)",
+                      color: "rgba(244,239,226,0.40)",
                       transition: "background 0.15s, color 0.15s",
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
-                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.80)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,239,226,0.10)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(244,239,226,0.80)";
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.40)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,239,226,0.05)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(244,239,226,0.40)";
                     }}
                   >
                     <X className="w-3.5 h-3.5" />
@@ -189,7 +189,7 @@ export function ConfirmModal({
                 <div
                   style={{
                     height: 1,
-                    background: "rgba(255,255,255,0.06)",
+                    background: "rgba(244,239,226,0.06)",
                     marginBottom: 20,
                   }}
                 />
@@ -203,21 +203,21 @@ export function ConfirmModal({
                       flex: 1,
                       padding: "11px 20px",
                       borderRadius: 12,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      color: "rgba(255,255,255,0.65)",
+                      background: "rgba(244,239,226,0.05)",
+                      border: "1px solid rgba(244,239,226,0.10)",
+                      color: "rgba(244,239,226,0.65)",
                       fontSize: 14,
                       fontWeight: 600,
                       cursor: "pointer",
                       transition: "background 0.15s, color 0.15s",
                     }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.09)";
-                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.90)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,239,226,0.09)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(244,239,226,0.90)";
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(244,239,226,0.05)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(244,239,226,0.65)";
                     }}
                   >
                     Cancel

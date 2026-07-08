@@ -89,8 +89,8 @@ export default function DonateThanks() {
         dir={isRTL ? "rtl" : "ltr"}
         style={{
           minHeight: "100vh",
-          background: "#000",
-          color: "#fff",
+          background: "#221b11",
+          color: "#f7f2e4",
           fontFamily: SF,
           display: "flex",
           alignItems: "center",
@@ -113,9 +113,9 @@ export default function DonateThanks() {
             }}
           >
             {state.kind === "loading" ? (
-              <Loader2 size={28} color="#fff" className="animate-spin" />
+              <Loader2 size={28} color="#f7f2e4" className="animate-spin" />
             ) : (
-              <Heart size={28} color="#fff" />
+              <Heart size={28} color="#f7f2e4" />
             )}
           </div>
 
@@ -132,7 +132,7 @@ export default function DonateThanks() {
               >
                 {ar ? "نتحقّق من تبرّعك..." : "Finalising your donation..."}
               </h1>
-              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15.5, margin: 0 }}>
+              <p style={{ color: "rgba(244,239,226,0.55)", fontSize: 15.5, margin: 0 }}>
                 {ar
                   ? "أمهلنا لحظه واحده."
                   : "One moment, this only takes a second."}
@@ -155,7 +155,7 @@ export default function DonateThanks() {
               </h1>
               <p
                 style={{
-                  color: "rgba(255,255,255,0.7)",
+                  color: "rgba(244,239,226,0.7)",
                   fontSize: 17,
                   lineHeight: 1.6,
                   margin: 0,
@@ -168,7 +168,7 @@ export default function DonateThanks() {
               </p>
               <p
                 style={{
-                  color: "rgba(255,255,255,0.45)",
+                  color: "rgba(244,239,226,0.45)",
                   fontSize: 14,
                   margin: 0,
                   marginTop: 8,
@@ -195,8 +195,8 @@ export default function DonateThanks() {
                     gap: 8,
                     padding: "12px 22px",
                     borderRadius: 12,
-                    background: "#fff",
-                    color: "#000",
+                    background: "#f7f2e4",
+                    color: "#221b11",
                     fontFamily: "inherit",
                     fontSize: 14.5,
                     fontWeight: 600,
@@ -214,9 +214,9 @@ export default function DonateThanks() {
                     alignItems: "center",
                     padding: "12px 22px",
                     borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: "#fff",
+                    border: "1px solid rgba(244,239,226,0.12)",
+                    background: "rgba(244,239,226,0.03)",
+                    color: "#f7f2e4",
                     fontFamily: "inherit",
                     fontSize: 14.5,
                     fontWeight: 500,
@@ -245,7 +245,7 @@ export default function DonateThanks() {
               </h1>
               <p
                 style={{
-                  color: "rgba(255,255,255,0.6)",
+                  color: "rgba(244,239,226,0.6)",
                   fontSize: 15,
                   lineHeight: 1.6,
                   margin: 0,
@@ -255,7 +255,7 @@ export default function DonateThanks() {
                 {ar
                   ? "إذا تمّ خصم المبلغ من حسابك, راسلنا في الدعم ونردّه إليك مباشره. التفاصيل: "
                   : "If your account was charged, contact support and we will refund it right away. Details: "}
-                <span style={{ color: "rgba(255,255,255,0.4)" }}>{state.message}</span>
+                <span style={{ color: "rgba(244,239,226,0.4)" }}>{state.message}</span>
               </p>
               <Link
                 href="/pricing"
@@ -263,9 +263,9 @@ export default function DonateThanks() {
                   display: "inline-flex",
                   padding: "12px 22px",
                   borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  background: "rgba(255,255,255,0.03)",
-                  color: "#fff",
+                  border: "1px solid rgba(244,239,226,0.12)",
+                  background: "rgba(244,239,226,0.03)",
+                  color: "#f7f2e4",
                   fontFamily: "inherit",
                   fontSize: 14.5,
                   fontWeight: 500,

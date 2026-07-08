@@ -40,7 +40,7 @@ export default function Protection() {
         description={t("ptSeoDesc")}
       />
 
-      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#fff", fontFamily: SF }}>
+      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#f7f2e4", fontFamily: SF }}>
 
         {/* ===== BACK BUTTON (fixed, top-left) ===== */}
         <button
@@ -63,8 +63,8 @@ export default function Protection() {
             background: "rgba(20,20,20,0.85)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.85)",
+            border: "1px solid rgba(244,239,226,0.1)",
+            color: "rgba(244,239,226,0.85)",
             fontWeight: 600,
             fontSize: 13,
             cursor: "pointer",
@@ -73,11 +73,11 @@ export default function Protection() {
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "rgba(35,35,35,0.95)";
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+            e.currentTarget.style.borderColor = "rgba(244,239,226,0.2)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "rgba(20,20,20,0.85)";
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+            e.currentTarget.style.borderColor = "rgba(244,239,226,0.1)";
           }}
         >
           <ArrowLeft style={{ width: 14, height: 14 }} />
@@ -91,7 +91,7 @@ export default function Protection() {
             fontWeight: 600,
             letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.45)",
+            color: "rgba(244,239,226,0.45)",
             marginBottom: 20,
           }}>
             {t("ptEyebrow")}
@@ -101,7 +101,7 @@ export default function Protection() {
             fontWeight: 800,
             lineHeight: 1.05,
             letterSpacing: "-0.04em",
-            color: "#fff",
+            color: "#f7f2e4",
             marginBottom: 24,
           }}>
             {t("ptHeroTitle")}
@@ -110,7 +110,7 @@ export default function Protection() {
             fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
             fontWeight: 400,
             lineHeight: 1.6,
-            color: "rgba(255,255,255,0.55)",
+            color: "rgba(244,239,226,0.55)",
             maxWidth: 620,
             margin: "0 auto",
           }}>
@@ -130,27 +130,27 @@ export default function Protection() {
               <div key={i} style={{
                 flex: "1 1 280px",
                 maxWidth: 360,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(244,239,226,0.03)",
+                border: "1px solid rgba(244,239,226,0.08)",
                 borderRadius: 20,
                 padding: "28px 24px",
                 transition: "all 0.3s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
+                e.currentTarget.style.background = "rgba(244,239,226,0.05)";
+                e.currentTarget.style.borderColor = "rgba(244,239,226,0.14)";
                 e.currentTarget.style.transform = "translateY(-2px)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                e.currentTarget.style.background = "rgba(244,239,226,0.03)";
+                e.currentTarget.style.borderColor = "rgba(244,239,226,0.08)";
                 e.currentTarget.style.transform = "translateY(0)";
               }}
               >
                 <h3 style={{
                   fontSize: 17,
                   fontWeight: 700,
-                  color: "#fff",
+                  color: "#f7f2e4",
                   marginBottom: 10,
                   letterSpacing: "-0.01em",
                   lineHeight: 1.3,
@@ -160,7 +160,7 @@ export default function Protection() {
                 <p style={{
                   fontSize: 14,
                   fontWeight: 400,
-                  color: "rgba(255,255,255,0.55)",
+                  color: "rgba(244,239,226,0.55)",
                   lineHeight: 1.6,
                   margin: 0,
                 }}>
@@ -191,7 +191,7 @@ export default function Protection() {
               <h2 style={{
                 fontSize: "clamp(2rem, 4vw, 3rem)",
                 fontWeight: 800,
-                color: "#fff",
+                color: "#f7f2e4",
                 letterSpacing: "-0.03em",
                 lineHeight: 1.1,
                 marginBottom: 16,
@@ -200,7 +200,7 @@ export default function Protection() {
               </h2>
               <p style={{
                 fontSize: 16,
-                color: "rgba(255,255,255,0.5)",
+                color: "rgba(244,239,226,0.5)",
                 lineHeight: 1.6,
                 maxWidth: 520,
                 margin: "0 auto",
@@ -216,7 +216,7 @@ export default function Protection() {
                   alignItems: "flex-start",
                   gap: 14,
                   padding: "16px 20px",
-                  background: "rgba(255,255,255,0.02)",
+                  background: "rgba(244,239,226,0.02)",
                   border: "1px solid rgba(255,80,80,0.12)",
                   borderRadius: 14,
                 }}>
@@ -230,7 +230,7 @@ export default function Protection() {
                   }} />
                   <p style={{
                     fontSize: 15,
-                    color: "rgba(255,255,255,0.78)",
+                    color: "rgba(244,239,226,0.78)",
                     lineHeight: 1.55,
                     margin: 0,
                     fontWeight: 400,
@@ -259,7 +259,7 @@ export default function Protection() {
             <h2 style={{
               fontSize: "clamp(2rem, 4vw, 3rem)",
               fontWeight: 800,
-              color: "#fff",
+              color: "#f7f2e4",
               letterSpacing: "-0.03em",
               lineHeight: 1.1,
               marginBottom: 16,
@@ -268,7 +268,7 @@ export default function Protection() {
             </h2>
             <p style={{
               fontSize: 16,
-              color: "rgba(255,255,255,0.5)",
+              color: "rgba(244,239,226,0.5)",
               lineHeight: 1.6,
               maxWidth: 520,
               margin: "0 auto",
@@ -293,7 +293,7 @@ export default function Protection() {
             <h2 style={{
               fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
               fontWeight: 800,
-              color: "#fff",
+              color: "#f7f2e4",
               letterSpacing: "-0.03em",
               lineHeight: 1.15,
               marginBottom: 16,
@@ -302,7 +302,7 @@ export default function Protection() {
             </h2>
             <p style={{
               fontSize: 16,
-              color: "rgba(255,255,255,0.55)",
+              color: "rgba(244,239,226,0.55)",
               lineHeight: 1.65,
               marginBottom: 28,
             }}>
@@ -316,8 +316,8 @@ export default function Protection() {
                 gap: 10,
                 padding: "14px 28px",
                 borderRadius: 999,
-                background: "#fff",
-                color: "#000",
+                background: "#f7f2e4",
+                color: "#221b11",
                 fontWeight: 700,
                 fontSize: 14,
                 textDecoration: "none",
@@ -336,7 +336,7 @@ export default function Protection() {
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
             fontWeight: 800,
-            color: "#fff",
+            color: "#f7f2e4",
             letterSpacing: "-0.03em",
             lineHeight: 1.15,
             marginBottom: 16,
@@ -345,7 +345,7 @@ export default function Protection() {
           </h2>
           <p style={{
             fontSize: 16,
-            color: "rgba(255,255,255,0.55)",
+            color: "rgba(244,239,226,0.55)",
             lineHeight: 1.65,
             marginBottom: 24,
           }}>
@@ -358,8 +358,8 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "#fff",
-              color: "#000",
+              background: "#f7f2e4",
+              color: "#221b11",
               fontWeight: 700,
               fontSize: 14,
               textDecoration: "none",
@@ -372,9 +372,9 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
+              background: "rgba(244,239,226,0.05)",
+              border: "1px solid rgba(244,239,226,0.12)",
+              color: "rgba(244,239,226,0.85)",
               fontWeight: 600,
               fontSize: 14,
               textDecoration: "none",
@@ -387,9 +387,9 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
+              background: "rgba(244,239,226,0.05)",
+              border: "1px solid rgba(244,239,226,0.12)",
+              color: "rgba(244,239,226,0.85)",
               fontWeight: 600,
               fontSize: 14,
               textDecoration: "none",
@@ -408,14 +408,14 @@ function TechBlock({ title, text }: { title: string; text: string }) {
   return (
     <div style={{
       padding: "24px 24px",
-      background: "rgba(255,255,255,0.02)",
-      border: "1px solid rgba(255,255,255,0.07)",
+      background: "rgba(244,239,226,0.02)",
+      border: "1px solid rgba(244,239,226,0.07)",
       borderRadius: 16,
     }}>
       <h3 style={{
         fontSize: 17,
         fontWeight: 700,
-        color: "#fff",
+        color: "#f7f2e4",
         marginBottom: 8,
         letterSpacing: "-0.01em",
       }}>
@@ -423,7 +423,7 @@ function TechBlock({ title, text }: { title: string; text: string }) {
       </h3>
       <p style={{
         fontSize: 14.5,
-        color: "rgba(255,255,255,0.6)",
+        color: "rgba(244,239,226,0.6)",
         lineHeight: 1.65,
         margin: 0,
       }}>

@@ -27,21 +27,21 @@ import {
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
-const BG = "#0a0a0a";
-const CARD = "rgba(255,255,255,0.04)";
-const CARD_HOVER = "rgba(255,255,255,0.07)";
-const BORDER = "rgba(255,255,255,0.08)";
-const BORDER_STRONG = "rgba(255,255,255,0.18)";
+const BG = "#221b11";
+const CARD = "rgba(244,239,226,0.04)";
+const CARD_HOVER = "rgba(244,239,226,0.07)";
+const BORDER = "rgba(244,239,226,0.08)";
+const BORDER_STRONG = "rgba(244,239,226,0.18)";
 const TEXT = "#f0efe8";
-const MUTED = "rgba(255,255,255,0.55)";
-const MUTED2 = "rgba(255,255,255,0.35)";
-const ACCENT = "#ffffff";
+const MUTED = "rgba(244,239,226,0.55)";
+const MUTED2 = "rgba(244,239,226,0.35)";
+const ACCENT = "#f7f2e4";
 // Soft tinted washes derived from ACCENT — kept as vars so we don't
-// scatter the same `rgba(255,255,255,...)` literals across the file.
-const ACCENT_WASH_STRONG = "rgba(255,255,255,0.12)";
-const ACCENT_WASH_MEDIUM = "rgba(255,255,255,0.08)";
-const ACCENT_WASH_SOFT   = "rgba(255,255,255,0.06)";
-const ACCENT_WASH_FAINT  = "rgba(255,255,255,0.04)";
+// scatter the same `rgba(244,239,226,...)` literals across the file.
+const ACCENT_WASH_STRONG = "rgba(244,239,226,0.12)";
+const ACCENT_WASH_MEDIUM = "rgba(244,239,226,0.08)";
+const ACCENT_WASH_SOFT   = "rgba(244,239,226,0.06)";
+const ACCENT_WASH_FAINT  = "rgba(244,239,226,0.04)";
 
 interface Chapter {
   title: string;
@@ -502,7 +502,7 @@ export default function AudiolibraryPlayerPage() {
                 aspectRatio: "1 / 1",
                 borderRadius: 16,
                 overflow: "hidden",
-                background: "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
+                background: "linear-gradient(135deg, rgba(244,239,226,0.08), rgba(244,239,226,0.03))",
                 boxShadow: "0 18px 60px rgba(0,0,0,0.55)",
                 border: `1px solid ${BORDER}`,
                 position: "relative",
@@ -517,7 +517,7 @@ export default function AudiolibraryPlayerPage() {
                 />
               ) : (
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <BookAudio size={64} color="rgba(255,255,255,0.4)" />
+                  <BookAudio size={64} color="rgba(244,239,226,0.4)" />
                 </div>
               )}
             </div>
@@ -610,7 +610,7 @@ export default function AudiolibraryPlayerPage() {
                     width: "100%",
                     height: 6,
                     appearance: "none",
-                    background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${progressPct}%, rgba(255,255,255,0.10) ${progressPct}%, rgba(255,255,255,0.10) 100%)`,
+                    background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${progressPct}%, rgba(244,239,226,0.10) ${progressPct}%, rgba(244,239,226,0.10) 100%)`,
                     borderRadius: 999,
                     cursor: "pointer",
                     outline: "none",
@@ -783,7 +783,7 @@ export default function AudiolibraryPlayerPage() {
                   minWidth: 180,
                   padding: "8px 12px",
                   borderRadius: 10,
-                  background: "rgba(255,255,255,0.05)",
+                  background: "rgba(244,239,226,0.05)",
                   border: `1px solid ${BORDER}`,
                   color: TEXT,
                   fontSize: 13,
@@ -809,7 +809,7 @@ export default function AudiolibraryPlayerPage() {
                 }}
                 style={{
                   fontFamily: SF, padding: "8px 18px", borderRadius: 10,
-                  background: TEXT, color: "#000", border: "none",
+                  background: TEXT, color: "#221b11", border: "none",
                   fontSize: 12.5, fontWeight: 700, cursor: "pointer",
                 }}
               >
@@ -1199,7 +1199,7 @@ export default function AudiolibraryPlayerPage() {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                       {Array.from({ length: 5 }).map((_, s) => (
-                        <Star key={s} size={11} color={s < r.stars ? "#f5c76b" : "rgba(255,255,255,0.15)"} fill={s < r.stars ? "#f5c76b" : "transparent"} />
+                        <Star key={s} size={11} color={s < r.stars ? "#f5c76b" : "rgba(244,239,226,0.15)"} fill={s < r.stars ? "#f5c76b" : "transparent"} />
                       ))}
                     </div>
                     {r.title && (
@@ -1230,12 +1230,12 @@ export default function AudiolibraryPlayerPage() {
             -webkit-appearance: none;
             appearance: none;
             width: 14px; height: 14px; border-radius: 50%;
-            background: #fff; cursor: pointer;
+            background: #f7f2e4; cursor: pointer;
             box-shadow: 0 1px 3px rgba(0,0,0,0.35);
           }
           input[type="range"]::-moz-range-thumb {
             width: 14px; height: 14px; border-radius: 50%;
-            background: #fff; cursor: pointer; border: none;
+            background: #f7f2e4; cursor: pointer; border: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.35);
           }
         `}</style>
@@ -1281,16 +1281,16 @@ function PlayBtn({ onClick, isPlaying }: { onClick: () => void; isPlaying: boole
         width: 50, height: 50, borderRadius: "50%",
         background: TEXT,
         border: "none",
-        color: "#000",
+        color: "#221b11",
         cursor: "pointer",
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 18px rgba(255,255,255,0.18)",
+        boxShadow: "0 4px 18px rgba(244,239,226,0.18)",
         transition: "transform 140ms",
       }}
       onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
       onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
     >
-      {isPlaying ? <Pause size={20} fill="#000" /> : <Play size={20} fill="#000" style={{ marginInlineStart: 2 }} />}
+      {isPlaying ? <Pause size={20} fill="#221b11" /> : <Play size={20} fill="#221b11" style={{ marginInlineStart: 2 }} />}
     </button>
   );
 }
@@ -1335,14 +1335,14 @@ function MenuItem({ active, onClick, label }: { active: boolean; onClick: () => 
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         width: "100%", padding: "8px 12px",
-        background: active ? "rgba(255,255,255,0.06)" : "transparent",
+        background: active ? "rgba(244,239,226,0.06)" : "transparent",
         border: "none", borderRadius: 6,
         color: TEXT,
         cursor: "pointer", fontFamily: SF, fontSize: 12.5, fontWeight: 600,
         fontVariantNumeric: "tabular-nums",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-      onMouseLeave={(e) => (e.currentTarget.style.background = active ? "rgba(255,255,255,0.06)" : "transparent")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(244,239,226,0.08)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = active ? "rgba(244,239,226,0.06)" : "transparent")}
     >
       {label}
     </button>
@@ -1383,7 +1383,7 @@ function ActionChip({
         padding: "9px 14px",
         borderRadius: 999,
         background: active ? ACCENT_WASH_STRONG : CARD,
-        border: `1px solid ${active ? "rgba(255,255,255,0.32)" : BORDER}`,
+        border: `1px solid ${active ? "rgba(244,239,226,0.32)" : BORDER}`,
         color: active ? ACCENT : TEXT,
         fontFamily: SF,
         fontSize: 12.5,
@@ -1477,7 +1477,7 @@ function ExtraLink({ href, icon, title, sub }: { href: string; icon: React.React
       <div
         style={{
           width: 32, height: 32, borderRadius: 8,
-          background: "rgba(255,255,255,0.05)",
+          background: "rgba(244,239,226,0.05)",
           display: "grid", placeItems: "center",
           flexShrink: 0,
         }}
