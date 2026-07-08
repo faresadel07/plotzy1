@@ -18,6 +18,7 @@ import html2canvas from "html2canvas";
 import { nanoid } from "nanoid";
 import { LayoutTemplate } from "lucide-react";
 import { TemplateGallery } from "@/components/cover/TemplateGallery";
+import PerspectiveBook from "@/components/ui/perspective-book";
 import { type BuiltTemplateDesign } from "@/lib/cover-templates";
 import { COVER_FONTS, ensureCoverFontsLoaded, waitForCoverFonts, isArabicText } from "@/lib/cover-fonts";
 
@@ -341,6 +342,7 @@ export default function CoverDesigner() {
       setHistory([saved.elements]);
       if (saved.settings) setCoverSettings({ ...saved.settings, spineSync: saved.settings.spineSync ?? true });
       if (saved.spineWidth) setSpineWidth(saved.spineWidth);
+      autosaveReadyRef.current = true;
       return;
     }
 
@@ -376,6 +378,7 @@ export default function CoverDesigner() {
     ];
     setElements(initialEls);
     setHistory([initialEls]);
+    autosaveReadyRef.current = true;
 
     // Fresh design (nothing saved yet): open with the template gallery
     // once per book visit instead of a blank canvas.
@@ -769,6 +772,26 @@ export default function CoverDesigner() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedId, editingId, elements, undo, redo, duplicateSelected, deleteSelected, pushHistory]);
 
+  /* ─── Autosave ───
+     Debounced silent save of the design JSON (no thumbnail capture,
+     that stays on manual Save). Armed only after the initial design is
+     applied so loading a book never writes back what it just read. */
+  const autosaveReadyRef = useRef(false);
+  useEffect(() => {
+    if (!autosaveReadyRef.current || !bookId) return;
+    const timer = setTimeout(() => {
+      if (dragRef.current || resizeRef.current) return; // mid-gesture, next change will save
+      updateBook.mutateAsync({
+        id: bookId,
+        coverData: { elements, settings: coverSettings, spineWidth },
+      } as any).catch(() => { /* silent: manual Save surfaces errors */ });
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [elements, coverSettings, spineWidth, bookId]);
+
+  /* ─── 3D mockup moment (after save) ─── */
+  const [mockupUrl, setMockupUrl] = useState<string | null>(null);
+
   /* ─── Phone: pinch zoom, fit-to-width, bottom sheets ─── */
   const [mobileSheet, setMobileSheet] = useState<null | "panel" | "props">(null);
   const isNarrowRef = useRef(typeof window !== "undefined" && window.innerWidth < 768);
@@ -905,6 +928,8 @@ export default function CoverDesigner() {
         ...(coverImage ? { coverImage } : {}),
       } as any);
       toast({ title: t("cdSaved") });
+      // The reveal: the freshly saved front cover on a 3D book.
+      if (coverImage) setMockupUrl(coverImage);
     } catch {
       toast({ title: t("cdSaveFailed"), variant: "destructive" });
     } finally {
@@ -1974,6 +1999,36 @@ export default function CoverDesigner() {
       )}
 
     </div>
+
+    {/* ── 3D mockup moment (after save) ── */}
+    {mockupUrl && (
+      <div
+        className="fixed inset-0 z-[140] flex flex-col items-center justify-center gap-8 p-6"
+        style={{ background: "rgba(8,8,10,0.94)", backdropFilter: "blur(16px)" }}
+        onClick={() => setMockupUrl(null)}
+        dir={ar ? "rtl" : "ltr"}
+      >
+        <div className="text-center">
+          <p className="text-lg font-bold text-white" style={{ letterSpacing: "-0.01em" }}>
+            {ar ? "غلافك جاهز" : "Your cover is ready"}
+          </p>
+          <p className="text-xs text-white/45 mt-1.5">
+            {ar ? "مرر فوق الكتاب لتراه من زاوية حقيقية" : "Hover the book to see it from a real angle"}
+          </p>
+        </div>
+        <div className="w-56 sm:w-64" onClick={(e) => e.stopPropagation()}>
+          <PerspectiveBook spineColor={coverSettings.spine.background.startsWith("#") ? coverSettings.spine.background : "#1a1a2e"}>
+            <img src={mockupUrl} alt="" className="w-full h-full object-cover" />
+          </PerspectiveBook>
+        </div>
+        <button
+          onClick={() => setMockupUrl(null)}
+          className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
+        >
+          {ar ? "متابعة التصميم" : "Keep designing"}
+        </button>
+      </div>
+    )}
 
     {/* ── Template gallery ── */}
     {showGallery && (
