@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { nanoid } from "nanoid";
+import { LayoutTemplate } from "lucide-react";
+import { TemplateGallery } from "@/components/cover/TemplateGallery";
+import { type BuiltTemplateDesign } from "@/lib/cover-templates";
+import { COVER_FONTS, ensureCoverFontsLoaded, waitForCoverFonts, isArabicText } from "@/lib/cover-fonts";
 
 /* ─── Types ─────────────────────────────────── */
 type Face = "front" | "back" | "spine";
@@ -62,7 +66,13 @@ interface CoverSettings {
   spineSync: boolean; // auto-sync spine color with front/back
 }
 
-const FONTS = ["Inter", "Playfair Display", "Merriweather", "Oswald", "Lato", "Montserrat", "Georgia", "Times New Roman", "Courier New", "Impact"];
+// Fonts come from the cover registry (lib/cover-fonts): every family
+// listed there is genuinely loaded on this page and grouped for the
+// picker (Arabic first). The old hardcoded list included Google
+// families that were never loaded and silently fell back to system
+// fonts (Oswald, Lato, Montserrat, Merriweather).
+const ARABIC_FONTS = COVER_FONTS.filter((f) => f.script !== "latin");
+const LATIN_FONTS = COVER_FONTS.filter((f) => f.script !== "arabic");
 
 const SPINE_MIN = 32;
 const SPINE_MAX = 72;
@@ -124,7 +134,7 @@ export default function CoverDesigner() {
   const { data: book, isLoading } = useBook(bookId);
   const updateBook = useUpdateBook();
 
-  useEffect(() => { loadEditorFonts(); }, []);
+  useEffect(() => { loadEditorFonts(); ensureCoverFontsLoaded(); }, []);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<HTMLDivElement>(null);
@@ -154,6 +164,22 @@ export default function CoverDesigner() {
   const [saving, setSaving] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [history, setHistory] = useState<CoverElement[][]>([[]]);
+
+  // ── Template gallery ─────────────────────────────────────────────
+  // Opens automatically the first time a book with no saved cover
+  // design lands here (template-first entry, like every world-class
+  // cover tool); reopenable any time from the header button.
+  const [showGallery, setShowGallery] = useState(false);
+  const galleryAutoOpenedRef = useRef<number | null>(null);
+
+  const applyTemplate = useCallback((design: BuiltTemplateDesign) => {
+    const els = design.elements as unknown as CoverElement[];
+    setElements(els);
+    setHistory([els]);
+    setCoverSettings((prev) => ({ ...prev, ...design.settings }));
+    setSelectedId(null);
+    setShowGallery(false);
+  }, []);
   const [historyIdx, setHistoryIdx] = useState(0);
   const [aiCoverPrompt, setAiCoverPrompt] = useState("");
   const [aiCoverSide, setAiCoverSide] = useState<"front" | "back">("front");
@@ -253,6 +279,13 @@ export default function CoverDesigner() {
     ];
     setElements(initialEls);
     setHistory([initialEls]);
+
+    // Fresh design (nothing saved yet): open with the template gallery
+    // once per book visit instead of a blank canvas.
+    if (galleryAutoOpenedRef.current !== book.id) {
+      galleryAutoOpenedRef.current = book.id;
+      setShowGallery(true);
+    }
   // re-run when book ID, saved data status, or AI-generated images change
   }, [book?.id, !!(book as any)?.coverData, (book as any)?.coverImage, (book as any)?.backCoverImage]);
 
@@ -500,6 +533,10 @@ export default function CoverDesigner() {
     const prevSelected = selectedId;
     setSelectedId(null); // hide selection outlines before capture
     setExporting(true);
+    // html2canvas rasterizes whatever is painted: make sure every font
+    // used in the design is actually loaded, or titles export in a
+    // fallback face (worst for Arabic display fonts).
+    await waitForCoverFonts(elements.map((el) => el.fontFamily || "").filter(Boolean));
     // Wait one frame for React to remove outlines
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
@@ -1124,9 +1161,38 @@ export default function CoverDesigner() {
             <div>
               <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Font</p>
               <select className="w-full bg-white/5 text-white/80 text-xs rounded-lg px-3 py-2 border border-white/10 outline-none mb-2"
+                style={{ fontFamily: selected.fontFamily ? `"${selected.fontFamily}", sans-serif` : undefined }}
                 value={selected.fontFamily} onChange={(e) => commitUpdate(selected.id, { fontFamily: e.target.value })}>
-                {FONTS.map((f) => <option key={f} value={f} style={{ background: "#1a1a2e" }}>{f}</option>)}
+                <optgroup label={ar ? "خطوط عربية" : "Arabic fonts"}>
+                  {ARABIC_FONTS.map((f) => (
+                    <option key={f.family} value={f.family} style={{ background: "#1a1a2e", fontFamily: `"${f.family}"` }}>
+                      {ar ? f.labelAr : f.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={ar ? "خطوط لاتينية" : "Latin fonts"}>
+                  {LATIN_FONTS.map((f) => (
+                    <option key={f.family} value={f.family} style={{ background: "#1a1a2e", fontFamily: `"${f.family}"` }}>
+                      {f.label}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
+              {/* live preview of the chosen font with the element's text */}
+              <div
+                dir="auto"
+                className="mb-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white/85 truncate"
+                style={{ fontFamily: `"${selected.fontFamily}", sans-serif`, fontSize: 17 }}
+              >
+                {selected.content || (ar ? "معاينة الخط" : "Font preview")}
+              </div>
+              {isArabicText(selected.content) && (selected.letterSpacing ?? 0) !== 0 && (
+                <p className="text-[10px] leading-relaxed text-amber-400/90 mb-2">
+                  {ar
+                    ? "تباعد الأحرف يفصل الحروف العربية عن بعضها، أعده إلى صفر لنص عربي سليم"
+                    : "Letter spacing disconnects Arabic letters; set it to zero for correct Arabic"}
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-1.5">
                   <span className="text-xs text-white/30">Sz</span>
@@ -1284,6 +1350,14 @@ export default function CoverDesigner() {
         </div>
 
         <div className="h-4 w-px bg-white/10" />
+        <button
+          onClick={() => setShowGallery(true)}
+          className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
+          title={ar ? "معرض القوالب" : "Template gallery"}
+        >
+          <LayoutTemplate className="w-3.5 h-3.5" />
+          {ar ? "قوالب" : "Templates"}
+        </button>
         <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors">
           {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           Export PNG
@@ -1364,6 +1438,18 @@ export default function CoverDesigner() {
       {/* keyboard shortcut: Delete */}
       <input type="text" className="sr-only" onKeyDown={(e) => { if (e.key === "Delete" || e.key === "Backspace") deleteSelected(); }} />
     </div>
+
+    {/* ── Template gallery ── */}
+    {showGallery && (
+      <TemplateGallery
+        bookTitle={(book as any)?.title || ""}
+        bookAuthor={(book as any)?.authorName || ""}
+        ar={ar}
+        onPick={applyTemplate}
+        onStartBlank={() => setShowGallery(false)}
+        onClose={() => setShowGallery(false)}
+      />
+    )}
     </>
   );
 }
