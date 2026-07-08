@@ -1,12 +1,68 @@
-// Phone-only course promo: instead of a text banner, the free course
-// is presented as its own book cover ("The Basics of Writing 101"),
-// floated on a soft glow with a clear call to action. Tapping anywhere
-// opens the course. Sits below the testimonials on the mobile home.
+// Phone-only course promo: a crumpled typewriter note that talks like
+// a person (the Sudowrite letter moment), with a hand-drawn circle
+// around the phrase that matters and a handwritten margin note, then
+// the two course covers and the call to action. Tapping the covers or
+// the button opens the course.
 
 import { useLocation } from "wouter";
 import { ArrowRight, ArrowLeft } from "lucide-react";
+import { HAND_EN, HAND_AR } from "./fonts";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
+
+/* A phrase with a hand-drawn ellipse around it. */
+function Circled({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{ position: "relative", display: "inline-block", padding: "0 4px" }}>
+      {children}
+      <svg aria-hidden viewBox="0 0 120 44" preserveAspectRatio="none" style={{ position: "absolute", inset: "-9px -12px", width: "calc(100% + 24px)", height: "calc(100% + 18px)", pointerEvents: "none" }}>
+        <ellipse cx="60" cy="22" rx="55" ry="17" fill="none" stroke="#5c5142" strokeWidth="2.2" strokeLinecap="round" transform="rotate(-2 60 22)" style={{ strokeDasharray: "260 40" }} />
+      </svg>
+    </span>
+  );
+}
+
+/* The crumpled note: soft fold shadows + paper grain over warm paper. */
+function CourseNote({ ar }: { ar: boolean }) {
+  return (
+    <div
+      dir={ar ? "rtl" : "ltr"}
+      style={{
+        position: "relative",
+        background:
+          "linear-gradient(112deg, rgba(66,53,33,0.05) 0%, transparent 24%)," +
+          "linear-gradient(248deg, rgba(66,53,33,0.06) 0%, transparent 30%)," +
+          "linear-gradient(8deg, rgba(66,53,33,0.045) 0%, transparent 22%)," +
+          `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),` +
+          "#faf5e8",
+        border: "1px solid rgba(66,53,33,0.16)",
+        borderRadius: 4,
+        boxShadow: "0 16px 34px -14px rgba(41,33,21,0.35)",
+        padding: "26px 22px 22px",
+        transform: "rotate(-1.2deg)",
+        textAlign: ar ? "right" : "left",
+        marginBottom: 30,
+      }}
+    >
+      <p style={{ fontFamily: ar ? "'Amiri', serif" : "'Courier New', monospace", fontSize: ar ? 15.5 : 14, lineHeight: ar ? 1.95 : 1.9, color: "#3a3020", margin: "0 0 16px" }}>
+        {ar
+          ? "بقدر أعلّمك تكتب كتابك الأول: من الفكرة، للحبكة، لمسودة كاملة ما بتنهار من نصّها."
+          : "I can teach you to write your first book: from the idea, to the plot, to a full draft that does not collapse in the middle."}
+      </p>
+      <p style={{ fontFamily: ar ? "'Amiri', serif" : "'Courier New', monospace", fontSize: ar ? 15.5 : 14, lineHeight: ar ? 1.95 : 1.9, color: "#3a3020", margin: "0 0 16px" }}>
+        {ar
+          ? <>32 درساً. 6 وحدات. تمارين حقيقية. وشهادة بالآخر. والأهم: <Circled>مجاني بالكامل</Circled>.</>
+          : <>32 lessons. 6 modules. Real exercises. A certificate at the end. And the part that matters: <Circled>completely free</Circled>.</>}
+      </p>
+      <p style={{ fontFamily: ar ? "'Amiri', serif" : "'Courier New', monospace", fontSize: ar ? 15 : 13.5, lineHeight: 1.9, color: "#b3402e", margin: 0 }}>
+        {ar ? "هذا ليس عرضاً مؤقتاً. رح يضل مجاني." : "This is not a limited offer. It stays free."}
+      </p>
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 19, color: "#8a8070", textAlign: ar ? "left" : "right", marginTop: 10, transform: "rotate(-1deg)" }}>
+        {ar ? "(ليش؟ لأنه حدا لازم يعلّم)" : "(why? because someone has to teach)"}
+      </div>
+    </div>
+  );
+}
 
 export function CourseCoverMobile({ ar }: { ar: boolean }) {
   const [, navigate] = useLocation();
@@ -14,6 +70,12 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
 
   return (
     <section style={{ padding: "8px 16px 36px", fontFamily: SF }} dir={ar ? "rtl" : "ltr"}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7b7366", marginBottom: 18, textAlign: "center" }}>
+        {ar ? "دورة الكتابة المجّانيّة" : "Free Writing Course"}
+      </div>
+
+      <CourseNote ar={ar} />
+
       <button
         onClick={() => navigate("/course")}
         style={{
@@ -21,9 +83,6 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
           border: "none", padding: 0, cursor: "pointer", textAlign: "center",
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7b7366", marginBottom: 20 }}>
-          {ar ? "دورة الكتابة المجّانيّة" : "Free Writing Course"}
-        </div>
 
         {/* Two course covers side by side on a soft warm glow so they
             lift off the paper. Order is fixed (not RTL-mirrored): the

@@ -27,6 +27,10 @@ import { TestimonialsMobile } from "@/components/testimonials/TestimonialsMobile
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
 import { COMICS, comicCover } from "@/lib/comics";
 import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette";
+import { LibraryShowcase } from "./LibraryShowcase";
+import { SnippetsFan } from "./SnippetsFan";
+import { ensureHomeFonts } from "./fonts";
+import { useEffect } from "react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -42,6 +46,8 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
   // Long-press action sheet for the writer's own books (Continue
   // Writing row): continue / duplicate / rename / delete — the same
   // actions the desktop shelf shows on hover.
+  useEffect(() => { ensureHomeFonts(); }, []);
+
   const [bookSheet, setBookSheet] = useState<{ id: number; title: string } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState("");
@@ -117,49 +123,75 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           />
         )}
 
-        <ContentRow
-          title={ar ? "كتب صوتيّة مميّزة" : "Featured Audiobooks"}
-          books={AUDIO_BOOKS}
+        {/* ── Library showcases, Sudowrite-plugins style: tilted cover
+            fans + serif headline + green CTA, alternating espresso and
+            deep paper for rhythm. ── */}
+        <LibraryShowcase
           ar={ar}
-          ranked
-          onSeeAll={() => navigate("/audiolibrary")}
+          dark
+          kicker="Audio Library"
+          kickerAr="المكتبة الصوتية"
+          title="19,000 audiobooks, free"
+          titleAr="19 ألف كتاب مسموع، ببلاش"
+          sub="Novels and classics read aloud by real voices from LibriVox. Listen while you walk, drive, or close your eyes."
+          subAr="روايات وكلاسيكيات مقروءة بأصوات حقيقية من LibriVox. اسمع وأنت ماشي، سايق، أو مغمّض عينيك."
+          cta="Open the audio library"
+          ctaAr="افتح المكتبة الصوتية"
+          href="/audiolibrary"
+          covers={[AUDIO_BOOKS[1].cover, AUDIO_BOOKS[0].cover, AUDIO_BOOKS[3].cover]}
         />
 
-        <ContentRow
-          title={ar ? "كلاسيكيّات إنجليزيّة" : "English Classics"}
-          books={ENGLISH_BOOKS}
+        <LibraryShowcase
           ar={ar}
-          onSeeAll={() => navigate("/discover")}
+          kicker="English Classics"
+          kickerAr="كلاسيكيات إنجليزية"
+          title="Every classic you postponed"
+          titleAr="كل كلاسيكية أجّلت قراءتها"
+          sub="Pride and Prejudice, Frankenstein, Dracula and more. Complete, free, and in a reader that is easy on the eyes."
+          subAr="كبرياء وهوى، فرانكنشتاين، دراكولا وغيرها. كاملة ومجانية وبقارئ مريح للعين."
+          cta="Browse the classics"
+          ctaAr="تصفح الكلاسيكيات"
+          href="/discover"
+          covers={[ENGLISH_BOOKS[2].cover, ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[3].cover]}
         />
 
-        {/* Classic comics teaser shelf — clearly labelled as comics. */}
-        {COMICS.length > 0 && (
-          <ContentRow
-            title={ar ? "كوميكس كلاسيكيّة" : "Classic Comics"}
-            books={COMICS.slice(0, 12).map((c): MobileBook => ({
-              title: c.title,
-              author: c.series,
-              cover: comicCover(c.id),
-              href: `/comics/${c.id}`,
-              genre: ar ? "كوميكس" : "Comics",
-              genreAr: "كوميكس",
-            }))}
+        {COMICS.length > 2 && (
+          <LibraryShowcase
             ar={ar}
-            cardWidth={108}
-            onSeeAll={() => navigate("/comics")}
+            dark
+            kicker="Classic Comics"
+            kickerAr="كوميكس كلاسيكية"
+            title="1,300 comics from the golden age"
+            titleAr="1300 كوميكس من العصر الذهبي"
+            sub="Adventure, sci-fi, and heroes from the fifties, in full color pages, page by page."
+            subAr="مغامرات وخيال علمي وأبطال من الخمسينات، بصفحات ملونة كاملة، صفحة صفحة."
+            cta="Open the comics"
+            ctaAr="افتح الكوميكس"
+            href="/comics"
+            covers={[comicCover(COMICS[1].id), comicCover(COMICS[0].id), comicCover(COMICS[2].id)]}
           />
         )}
 
-        <ContentRow
-          title={ar ? "المكتبة العربيّة" : "Arabic Library"}
-          books={ARABIC_BOOKS}
+        <LibraryShowcase
           ar={ar}
-          onSeeAll={() => navigate("/discover?src=hindawi")}
+          kicker="Arabic Library"
+          kickerAr="المكتبة العربية"
+          title="A full Arabic heritage library"
+          titleAr="تراث عربي كامل، بين إيديك"
+          sub="Taha Hussein, Jurji Zaydan, al-Maalouf and more. The full Hindawi library inside Plotzy."
+          subAr="طه حسين، جرجي زيدان، والمعلوف وغيرهم. مكتبة هنداوي كاملة داخل بلوتزي."
+          cta="Open the Arabic library"
+          ctaAr="افتح المكتبة العربية"
+          href="/discover?src=hindawi"
+          covers={[ARABIC_BOOKS[1].cover, ARABIC_BOOKS[0].cover, ARABIC_BOOKS[4].cover]}
         />
 
         {/* AI writing studio banner with official model logos —
             opens the book-creation wizard directly. */}
         <AiWriteBanner ar={ar} onStart={onStartWriting} />
+
+        {/* Proof: scattered prose slips Claude actually helped write */}
+        <SnippetsFan ar={ar} />
 
         {/* Everything your book needs — voice, publish, audiobook,
             co-writing, plus the Writer Protection trust line. */}
