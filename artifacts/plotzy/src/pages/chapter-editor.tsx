@@ -557,6 +557,18 @@ export default function ChapterEditor() {
   const mainRef = useRef<HTMLElement>(null);
   const autoZoomApplied = useRef(false);
 
+  // ── Phone: continuous writing mode ─────────────────────────────────
+  // Phones edit the chapter as ONE full-width comfortable editor (no
+  // paper boxes squeezed into a 390px screen). The latest HTML lives in
+  // this ref; on save it is re-split into real pages by the book's trim
+  // size word budget, so pagination stays true to the printed book.
+  const phoneHtmlRef = useRef<string | null>(null);
+  const [phoneStats, setPhoneStats] = useState<{ words: number; pages: number } | null>(null);
+  useEffect(() => {
+    phoneHtmlRef.current = null;
+    setPhoneStats(null);
+  }, [chapterId]);
+
   // ── Chapter-wide edit mode ──────────────────────────────────────────────
   // When ON, every toolbar action (font, size, bold, italic, colour,
   // alignment, lists, headings, etc.) fans out across every mounted page
@@ -585,31 +597,15 @@ export default function ChapterEditor() {
   // Uses effectivePrefs.paperSize as dep (pageDims is derived from it, but declared later).
   const paperSizeForZoom = effectivePrefs.paperSize || "trade";
 
-  // ── Phone: fill the screen width ──────────────────────────────────────────
-  // On a phone we do NOT shrink the whole paper to fit (that produced a tiny
-  // strip floating in black). Instead the page fills the viewport width and
-  // the writer scrolls vertically — a real mobile writing surface. Re-fits on
-  // rotation / viewport change.
+  // ── Phone: continuous mode never scales ────────────────────────────
+  // The old approach shrank the paper to fit the screen, which rendered
+  // the text unreadably small. Phones now use the full-width continuous
+  // editor below, so zoom is pinned at 100.
   useEffect(() => {
     if (!isPhone) return;
-    const PAPER_W: Record<string, number> = { a5: 559, pocket: 416, trade: 576, a4: 794 };
-    const pageW = PAPER_W[paperSizeForZoom] ?? 576;
-    const fit = () => {
-      // Leave room for the px-4 page wrappers (32) plus a little breathing
-      // space so the page never triggers a horizontal scroll.
-      const availW = window.innerWidth - 44;
-      const pct = Math.max(20, Math.min(100, Math.round((availW / pageW) * 100)));
-      setZoom(pct);
-      autoZoomApplied.current = true; // prevents the desktop auto-fit firing
-    };
-    fit();
-    window.addEventListener("resize", fit);
-    window.addEventListener("orientationchange", fit);
-    return () => {
-      window.removeEventListener("resize", fit);
-      window.removeEventListener("orientationchange", fit);
-    };
-  }, [isPhone, paperSizeForZoom]);
+    setZoom(100);
+    autoZoomApplied.current = true; // prevents the desktop auto-fit firing
+  }, [isPhone]);
 
   useEffect(() => {
     if (isPhone) return;
@@ -1496,12 +1492,25 @@ export default function ChapterEditor() {
     if (!options.silent) setAutoSaving(false);
     else setAutoSaving(true);
     try {
+      // Phone continuous mode: the single editor's HTML is re-split into
+      // real pages by the book's trim-size word budget, so what desktop
+      // and print see matches the chosen paper size exactly.
+      let pagesToPersist = richPages;
+      if (isPhone && phoneHtmlRef.current !== null) {
+        const d = getPageDimensions(effectivePrefs);
+        const fs =
+          effectivePrefs.fontSize === "text-sm" ? 14 :
+          effectivePrefs.fontSize === "text-base" ? 16 :
+          effectivePrefs.fontSize === "text-xl" ? 20 :
+          effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+        pagesToPersist = splitHtmlIntoPages(phoneHtmlRef.current, calcWordsPerPage(d.contentHeight, d.contentWidth, fs));
+      }
       // Join all rich pages with explicit page-break markers so the load
       // path can restore the exact same pagination the user authored.
       // Without these markers, save loses page boundaries and load has to
       // guess them via a word-count estimate, which inflates the page
       // count (a typed 37-page chapter would re-load as 51).
-      const htmlContent = richPages.join('\n<!-- PAGE_BREAK -->\n') || richHtml;
+      const htmlContent = pagesToPersist.join('\n<!-- PAGE_BREAK -->\n') || richHtml;
       // v2 format: includes floating images
       const currentContent = JSON.stringify({
         v: 2,
@@ -1515,7 +1524,7 @@ export default function ChapterEditor() {
       const previousText = previousPages.map(p => typeof p === 'string' ? p : p.type === 'text' ? p.content : '').join(" ").trim();
       const previousWords = previousText ? previousText.split(/\s+/).length : 0;
 
-      const newText = richPages.join('').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      const newText = pagesToPersist.join('').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       const newWords = newText ? newText.split(/\s+/).filter(Boolean).length : 0;
 
       const wordsAdded = newWords - previousWords;
@@ -1573,7 +1582,7 @@ export default function ChapterEditor() {
       autoSaveInFlightRef.current = false;
       setAutoSaving(false);
     }
-  }, [richPages, richHtml, floatingImages, chapter, chapterId, bookId, title, ar, updateChapter, saveVersion, toast]);
+  }, [richPages, richHtml, floatingImages, chapter, chapterId, bookId, title, ar, updateChapter, saveVersion, toast, isPhone, effectivePrefs]);
 
   // ── Offline draft persistence ─────────────────────────────────────────
   // While the chapter is dirty (unsaved local changes), write the current
@@ -1585,8 +1594,12 @@ export default function ChapterEditor() {
     if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
     draftSaveTimerRef.current = setTimeout(() => {
       // Build the same v2 JSON shape we persist server-side so a restore
-      // round-trips without any lossy transform.
-      const htmlContent = richPages.join('\n<!-- PAGE_BREAK -->\n');
+      // round-trips without any lossy transform. Phone continuous mode
+      // stores its single HTML; the load path re-splits markerless
+      // content by word count, so the round-trip stays lossless.
+      const htmlContent = (isPhone && phoneHtmlRef.current !== null)
+        ? phoneHtmlRef.current
+        : richPages.join('\n<!-- PAGE_BREAK -->\n');
       const content = JSON.stringify({ v: 2, pages: htmlContent, floatingImages });
       saveDraft({
         chapterId,
@@ -1602,7 +1615,7 @@ export default function ChapterEditor() {
     return () => {
       if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
     };
-  }, [isDirty, chapterId, bookId, title, richPages, floatingImages]);
+  }, [isDirty, chapterId, bookId, title, richPages, floatingImages, isPhone, phoneStats]);
 
   // Restore a locally-saved draft into editor state, then dismiss the banner.
   const handleRestoreDraft = useCallback(() => {
@@ -2730,14 +2743,14 @@ export default function ChapterEditor() {
             so we give it the scaled width + auto margins and scale from the
             top-left. Desktop/iPad keep the original top-center transform. */}
         <div
-          style={{
-            transform: `scale(${clampedZoom})`,
-            transformOrigin: isPhone ? "top left" : "top center",
-            transition: "transform 0.2s ease",
-            ...(isPhone
-              ? { width: dynPageW * clampedZoom, marginLeft: "auto", marginRight: "auto" }
-              : {}),
-          }}
+          style={isPhone
+            // Continuous mode: no scaling games, the surface owns the width.
+            ? { width: "100%" }
+            : {
+                transform: `scale(${clampedZoom})`,
+                transformOrigin: "top center",
+                transition: "transform 0.2s ease",
+              }}
         >
 
         {/* Chapter Title — above all pages */}
@@ -2774,8 +2787,9 @@ export default function ChapterEditor() {
           style={isDraggingOver ? { outline: '2px dashed #7c6af7', outlineOffset: '-4px', borderRadius: 8 } : undefined}
         >
 
-          {/* ── Page dimension badge ── */}
-          {(() => {
+          {/* ── Page dimension badge (desktop; phones show the live
+              page-count chip inside the continuous surface instead) ── */}
+          {!isPhone && (() => {
             const ps = PAPER_SIZES[effectivePrefs.paperSize || "trade"];
             if (!ps) return null;
             return (
@@ -2800,7 +2814,89 @@ export default function ChapterEditor() {
             );
           })()}
 
-          {richPages.map((pageHtml, index) => {
+          {/* ── Phone: continuous writing surface ──
+              One full-width comfortable editor instead of paper boxes
+              squeezed into a 390px screen. Display size is tuned for
+              reading on glass; pagination is still computed from the
+              book's real trim size (see performSave), and the chip
+              above the surface shows the live printed-page estimate. */}
+          {isPhone && (() => {
+            const fsNum =
+              effectivePrefs.fontSize === "text-sm" ? 14 :
+              effectivePrefs.fontSize === "text-base" ? 16 :
+              effectivePrefs.fontSize === "text-xl" ? 20 :
+              effectivePrefs.fontSize === "text-2xl" ? 24 : 16;
+            const wpp = calcWordsPerPage(dynContentH, dynContentW, fsNum);
+            const initialHtml = richPages.join('\n');
+            const surfaceBg = isFocusMode
+              ? "rgba(26,21,14,0.97)"
+              : resolvedBgColor || (isDark ? "#2b2317" : "#fdfcf7");
+            const stats = phoneStats ?? (() => {
+              const w = initialHtml.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
+              return { words: w, pages: Math.max(1, Math.ceil(w / wpp)) };
+            })();
+            const ps = PAPER_SIZES[effectivePrefs.paperSize || "trade"];
+            return (
+              <div className="w-full">
+                <div className="flex items-center justify-center mb-3 select-none" dir={ar ? "rtl" : "ltr"}>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600,
+                    color: isDark ? "rgba(244,239,226,0.5)" : "rgba(66,53,33,0.6)",
+                    background: isDark ? "rgba(244,239,226,0.06)" : "rgba(66,53,33,0.06)",
+                    border: `1px solid ${isDark ? "rgba(244,239,226,0.1)" : "rgba(66,53,33,0.12)"}`,
+                    borderRadius: 999, padding: "4px 12px", letterSpacing: "0.02em",
+                  }}>
+                    {ar
+                      ? `${stats.words} كلمة · ≈ ${stats.pages} صفحة بمقاس ${ps ? ps.labelAr : "كتابك"}`
+                      : `${stats.words} words · ≈ ${stats.pages} pages as ${ps ? ps.label : "your book"}`}
+                  </span>
+                </div>
+                <div style={{
+                  background: surfaceBg,
+                  borderRadius: 16,
+                  border: `1px solid ${isDark ? "rgba(244,239,226,0.1)" : "rgba(66,53,33,0.12)"}`,
+                  boxShadow: "0 10px 30px -14px rgba(20,16,10,0.35)",
+                  overflow: "hidden",
+                  width: "100%",
+                }}>
+                  <RichChapterEditor
+                    key={`${chapterId}-phone`}
+                    initialContent={initialHtml}
+                    onUpdate={(html) => {
+                      phoneHtmlRef.current = html;
+                      setIsDirty(true);
+                      const w = html.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
+                      setPhoneStats({ words: w, pages: Math.max(1, Math.ceil(w / wpp)) });
+                    }}
+                    onEditorReady={(editor) => {
+                      pageEditorRefs.current[0] = editor;
+                      tiptapEditorRef.current = editor;
+                      setTiptapReady(true);
+                      setActiveToolbarEditor(editor);
+                    }}
+                    onFocus={(editor) => {
+                      tiptapEditorRef.current = editor;
+                      setActiveToolbarEditor(editor);
+                      lastFocusedPageIdxRef.current = 0;
+                    }}
+                    fontFamily={effectivePrefs.fontFamily || 'eb-garamond'}
+                    fontSize={Math.max(17, fsNum + 2)}
+                    lineHeight={"1.7"}
+                    textColor={isFocusMode ? '#e9e2d0' : resolvedTextColor || undefined}
+                    bgColor="transparent"
+                    textAlign={(effectivePrefs.textAlign as string) || (textDir === "rtl" ? "right" : "left")}
+                    direction={textDir}
+                    placeholder={ar ? "ابدأ بكتابة فصلك هنا..." : "Start writing your chapter here..."}
+                    minHeight={Math.round((typeof window !== "undefined" ? window.innerHeight : 800) * 0.55)}
+                    padding="22px 18px"
+                    zoom={100}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+
+          {!isPhone && richPages.map((pageHtml, index) => {
             const pageCardBg = isFocusMode
               ? "rgba(18,18,22,0.96)"
               : resolvedBgColor || (isDark ? "#1e1e22" : "#faf9f6");

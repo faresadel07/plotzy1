@@ -446,6 +446,9 @@ interface RichChapterEditorProps {
   fixedHeight?: number;
   zoom?: number;
   checkOverflowOnMount?: boolean;
+  /** Editor inner padding. The 48/72 default matches the printed page;
+      the phone's continuous mode passes a tighter value. */
+  padding?: string;
 }
 
 const FONT_FAMILY_MAP: Record<string, string> = {
@@ -487,6 +490,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   fixedHeight,
   zoom = 100,
   checkOverflowOnMount = false,
+  padding = "48px 72px",
 }, ref) => {
   // The two Arabic fonts (Cairo, Amiri) are bundled on the server so the
   // PDF embeds whichever the user picks and renders identically here.
@@ -688,7 +692,7 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
             ? `height: ${fixedHeight}px; overflow: hidden;`
             : `min-height: ${minHeight}px;`
           }
-          padding: 48px 72px;
+          padding: ${padding};
           outline: none;
           caret-color: currentColor;
           box-sizing: border-box;
