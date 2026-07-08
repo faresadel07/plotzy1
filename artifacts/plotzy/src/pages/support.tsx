@@ -127,7 +127,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
 
   return (
     <div style={{
-      background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+      background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)",
       borderRadius: 10, padding: "16px 20px",
     }}>
       <div
@@ -135,7 +135,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
         onClick={() => setExpanded(e => !e)}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-          <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", flex: 1 }}>
+          <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: "rgba(244,239,226,0.88)", flex: 1 }}>
             {ticket.subject}
           </span>
           <span style={{
@@ -150,7 +150,7 @@ function UserTicketCard({ ticket }: { ticket: any }) {
           <ChevronDown
             size={14}
             style={{
-              color: "rgba(255,255,255,0.3)",
+              color: "rgba(244,239,226,0.3)",
               transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
               transition: "transform 0.2s ease",
             }}
@@ -158,20 +158,20 @@ function UserTicketCard({ ticket }: { ticket: any }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           {ticket.category && (
-            <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+            <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(244,239,226,0.35)" }}>
               {ticket.category}
             </span>
           )}
           {ticket.priority && (
             <span style={{
               fontFamily: SF, fontSize: 11, fontWeight: 500,
-              color: PRIORITY_COLORS[ticket.priority] || "rgba(255,255,255,0.35)",
+              color: PRIORITY_COLORS[ticket.priority] || "rgba(244,239,226,0.35)",
             }}>
               {ticket.priority} {t("spPriorityWord")}
             </span>
           )}
           {ticket.createdAt && (
-            <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+            <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(244,239,226,0.2)" }}>
               {new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </span>
           )}
@@ -179,23 +179,23 @@ function UserTicketCard({ ticket }: { ticket: any }) {
       </div>
 
       {expanded && (
-        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(244,239,226,0.06)" }}>
           {/* Original message */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>
+            <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(244,239,226,0.3)", marginBottom: 6 }}>
               {t("spYou")}  ·  {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : ""}
             </div>
-            <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.65, color: "rgba(255,255,255,0.75)", whiteSpace: "pre-wrap", margin: 0 }}>
+            <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.65, color: "rgba(244,239,226,0.75)", whiteSpace: "pre-wrap", margin: 0 }}>
               {ticket.message}
             </p>
           </div>
 
           {/* Replies thread */}
           {thread.isLoading && (
-            <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.3)", padding: "4px 0" }}>{t("spLoadingConvo")}</div>
+            <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(244,239,226,0.3)", padding: "4px 0" }}>{t("spLoadingConvo")}</div>
           )}
           {thread.data && thread.data.replies.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(244,239,226,0.05)" }}>
               {thread.data.replies.map(r => {
                 const isYou = r.senderType === "user";
                 return (
@@ -204,16 +204,16 @@ function UserTicketCard({ ticket }: { ticket: any }) {
                     style={{
                       alignSelf: isYou ? "flex-end" : "flex-start",
                       maxWidth: "90%",
-                      background: isYou ? "rgba(255,255,255,0.05)" : "rgba(74,158,255,0.1)",
-                      border: `1px solid ${isYou ? "rgba(255,255,255,0.08)" : "rgba(74,158,255,0.22)"}`,
+                      background: isYou ? "rgba(244,239,226,0.05)" : "rgba(74,158,255,0.1)",
+                      border: `1px solid ${isYou ? "rgba(244,239,226,0.08)" : "rgba(74,158,255,0.22)"}`,
                       borderRadius: 12,
                       padding: "10px 14px",
                     }}
                   >
-                    <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: isYou ? "rgba(255,255,255,0.45)" : "#7db5ff", marginBottom: 4 }}>
+                    <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: isYou ? "rgba(244,239,226,0.45)" : "#7db5ff", marginBottom: 4 }}>
                       {isYou ? t("spYou") : r.senderName || t("spPlotzySupport")}  ·  {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
                     </div>
-                    <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap", margin: 0 }}>
+                    <p style={{ fontFamily: SF, fontSize: 13, lineHeight: 1.6, color: "rgba(244,239,226,0.85)", whiteSpace: "pre-wrap", margin: 0 }}>
                       {r.body}
                     </p>
                   </div>
@@ -224,11 +224,11 @@ function UserTicketCard({ ticket }: { ticket: any }) {
 
           {/* Reply composer */}
           {isClosed ? (
-            <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginTop: 14, marginBottom: 0 }}>
+            <p style={{ fontFamily: SF, fontSize: 12, color: "rgba(244,239,226,0.35)", fontStyle: "italic", marginTop: 14, marginBottom: 0 }}>
               {t("spTicketClosed")}
             </p>
           ) : (
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(244,239,226,0.05)" }}>
               <textarea
                 value={replyBody}
                 onChange={e => setReplyBody(e.target.value)}
@@ -236,11 +236,11 @@ function UserTicketCard({ ticket }: { ticket: any }) {
                 rows={3}
                 style={{
                   width: "100%",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(244,239,226,0.04)",
+                  border: "1px solid rgba(244,239,226,0.1)",
                   borderRadius: 10,
                   padding: "10px 12px",
-                  color: "#fff",
+                  color: "#f7f2e4",
                   fontFamily: SF,
                   fontSize: 13,
                   lineHeight: 1.6,
@@ -263,8 +263,8 @@ function UserTicketCard({ ticket }: { ticket: any }) {
                     fontWeight: 600,
                     padding: "8px 20px",
                     borderRadius: 8,
-                    background: replyBody.trim() && !send.isPending ? "#fff" : "rgba(255,255,255,0.1)",
-                    color: replyBody.trim() && !send.isPending ? "#000" : "rgba(255,255,255,0.4)",
+                    background: replyBody.trim() && !send.isPending ? "#f7f2e4" : "rgba(244,239,226,0.1)",
+                    color: replyBody.trim() && !send.isPending ? "#221b11" : "rgba(244,239,226,0.4)",
                     border: "none",
                     cursor: replyBody.trim() && !send.isPending ? "pointer" : "not-allowed",
                   }}
@@ -355,53 +355,53 @@ export default function SupportPage() {
   return (
     <Layout isLanding darkNav>
       <SEO title={t("spSeo")} noindex />
-      <div style={{ background: "#000", minHeight: "100vh" }}>
+      <div style={{ background: "#221b11", minHeight: "100vh" }}>
       <style>{`
         @keyframes fadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
         @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
         @keyframes spin { to { transform:rotate(360deg); } }
         .s-input {
-          width:100%; font-family:${SF}; font-size:14px; color:rgba(255,255,255,0.88);
-          background:#111; border:1px solid rgba(255,255,255,0.07); border-radius:8px;
+          width:100%; font-family:${SF}; font-size:14px; color:rgba(244,239,226,0.88);
+          background:#332a1b; border:1px solid rgba(244,239,226,0.07); border-radius:8px;
           padding:10px 14px; outline:none; transition:border-color 0.15s; box-sizing:border-box;
         }
-        .s-input::placeholder { color:rgba(255,255,255,0.25); }
-        .s-input:focus { border-color:rgba(255,255,255,0.25); }
+        .s-input::placeholder { color:rgba(244,239,226,0.25); }
+        .s-input:focus { border-color:rgba(244,239,226,0.25); }
         .s-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px !important; cursor:pointer; }
-        .s-select option { background:#111; color:rgba(255,255,255,0.88); }
+        .s-select option { background:#332a1b; color:rgba(244,239,226,0.88); }
         .cat-pill { transition:all 0.15s ease; cursor:pointer; border:none; outline:none; }
-        .cat-pill:hover { background:rgba(255,255,255,0.08) !important; }
+        .cat-pill:hover { background:rgba(244,239,226,0.08) !important; }
         .tab-btn { transition:all 0.15s ease; cursor:pointer; border:none; outline:none; }
-        .tab-btn:hover { color:rgba(255,255,255,0.8) !important; }
+        .tab-btn:hover { color:rgba(244,239,226,0.8) !important; }
       `}</style>
 
       {/* ── Compact Hero ── */}
       <div style={{
-        background: "#000",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        background: "#221b11",
+        borderBottom: "1px solid rgba(244,239,226,0.07)",
         padding: "48px 24px 40px",
         textAlign: "center",
       }}>
         {/* Status badge */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(244,239,226,0.04)", border: "1px solid rgba(244,239,226,0.07)",
           borderRadius: 20, padding: "4px 12px", marginBottom: 20,
         }}>
           <Circle size={5} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
-          <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
+          <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: "rgba(244,239,226,0.45)", letterSpacing: "0.02em" }}>
             {allOperational ? t("spAllOperational") : t("spPartialOutage")}
           </span>
         </div>
 
         <h1 style={{
-          fontFamily: SF, fontSize: 40, fontWeight: 700, color: "#fff",
+          fontFamily: SF, fontSize: 40, fontWeight: 700, color: "#f7f2e4",
           margin: "0 0 10px", letterSpacing: "-0.03em", lineHeight: 1.1,
         }}>
           {t("spHelpCenter")}
         </h1>
         <p style={{
-          fontFamily: SF, fontSize: 15, color: "rgba(255,255,255,0.35)",
+          fontFamily: SF, fontSize: 15, color: "rgba(244,239,226,0.35)",
           margin: "0 auto 28px", maxWidth: 460, lineHeight: 1.6,
         }}>
           {t("spHeroSub")}
@@ -411,7 +411,7 @@ export default function SupportPage() {
       {/* ── See-FAQ banner — visible on every tab so product
           questions get directed to the FAQ source of truth before
           the user composes a ticket. ── */}
-      <div style={{ background: "#000", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+      <div style={{ background: "#221b11", borderBottom: "1px solid rgba(244,239,226,0.07)" }}>
         <div style={{
           maxWidth: 900, margin: "0 auto", padding: "16px 24px",
           display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
@@ -425,10 +425,10 @@ export default function SupportPage() {
             <Sparkles size={16} style={{ color: "#a99ef7" }} />
           </div>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontFamily: SF, fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.9)", marginBottom: 2 }}>
+            <div style={{ fontFamily: SF, fontSize: 13.5, fontWeight: 600, color: "rgba(244,239,226,0.9)", marginBottom: 2 }}>
               {t("spLookingAnswers")}
             </div>
-            <div style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
+            <div style={{ fontFamily: SF, fontSize: 12.5, color: "rgba(244,239,226,0.45)", lineHeight: 1.5 }}>
               {t("spFaqBannerBody")}
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function SupportPage() {
               display: "inline-flex", alignItems: "center", gap: 6,
               fontFamily: SF, fontSize: 13, fontWeight: 600,
               padding: "8px 14px", borderRadius: 8,
-              background: "#fff", color: "#000",
+              background: "#f7f2e4", color: "#221b11",
               textDecoration: "none", whiteSpace: "nowrap",
             }}
           >
@@ -450,8 +450,8 @@ export default function SupportPage() {
 
       {/* ── Tab Navigation ── */}
       <div style={{
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
-        background: "#000",
+        borderBottom: "1px solid rgba(244,239,226,0.07)",
+        background: "#221b11",
       }}>
         <div style={{
           maxWidth: 900, margin: "0 auto", padding: "0 24px",
@@ -466,10 +466,10 @@ export default function SupportPage() {
                 onClick={() => setActiveTab(tab.id)}
                 style={{
                   fontFamily: SF, fontSize: 13, fontWeight: 500,
-                  color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)",
+                  color: active ? "rgba(244,239,226,0.9)" : "rgba(244,239,226,0.35)",
                   background: "transparent",
                   padding: "14px 20px",
-                  borderBottom: active ? "2px solid #fff" : "2px solid transparent",
+                  borderBottom: active ? "2px solid #f7f2e4" : "2px solid transparent",
                   display: "flex", alignItems: "center", gap: 7,
                   marginBottom: -1,
                 }}
@@ -490,23 +490,23 @@ export default function SupportPage() {
           <div style={{ maxWidth: 560, margin: "0 auto", animation: "fadeIn 0.2s ease" }}>
             {submitted ? (
               <div style={{
-                background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+                background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)",
                 borderRadius: 14, padding: "48px 36px", textAlign: "center",
                 animation: "slideUp 0.3s ease",
               }}>
                 <CheckCircle2 size={40} color="#4ade80" style={{ marginBottom: 14 }} />
-                <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.9)", margin: "0 0 8px" }}>
+                <h3 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: "rgba(244,239,226,0.9)", margin: "0 0 8px" }}>
                   {t("spMessageSent")}
                 </h3>
-                <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(255,255,255,0.4)", margin: "0 0 24px", lineHeight: 1.65 }}>
+                <p style={{ fontFamily: SF, fontSize: 13.5, color: "rgba(244,239,226,0.4)", margin: "0 0 24px", lineHeight: 1.65 }}>
                   {t("spMessageSentBody")}
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
                   style={{
                     fontFamily: SF, fontSize: 13, fontWeight: 500,
-                    color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8,
+                    color: "rgba(244,239,226,0.55)", background: "rgba(244,239,226,0.06)",
+                    border: "1px solid rgba(244,239,226,0.07)", borderRadius: 8,
                     padding: "8px 18px", cursor: "pointer",
                   }}
                 >
@@ -518,12 +518,12 @@ export default function SupportPage() {
                 <div style={{ marginBottom: 24 }}>
                   <h2 style={{
                     fontFamily: SF, fontSize: 22, fontWeight: 700,
-                    color: "rgba(255,255,255,0.9)", margin: "0 0 6px",
+                    color: "rgba(244,239,226,0.9)", margin: "0 0 6px",
                     letterSpacing: "-0.02em",
                   }}>
                     {t("spContactSupport")}
                   </h2>
-                  <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
+                  <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(244,239,226,0.35)", margin: 0, lineHeight: 1.6 }}>
                     {t("spContactSub")}
                   </p>
                 </div>
@@ -531,42 +531,42 @@ export default function SupportPage() {
                 <form ref={formRef} onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div className="support-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spName")}</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(244,239,226,0.4)", display: "block", marginBottom: 6 }}>{t("spName")}</label>
                       <input className="s-input" type="text" placeholder={t("spNamePlaceholder")} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
                     </div>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spEmail")}</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(244,239,226,0.4)", display: "block", marginBottom: 6 }}>{t("spEmail")}</label>
                       <input className="s-input" type="email" placeholder="you@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spSubject")}</label>
+                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(244,239,226,0.4)", display: "block", marginBottom: 6 }}>{t("spSubject")}</label>
                     <input className="s-input" type="text" placeholder={t("spSubjectPlaceholder")} value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} required />
                   </div>
                   <div className="support-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spCategory")}</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(244,239,226,0.4)", display: "block", marginBottom: 6 }}>{t("spCategory")}</label>
                       <NiceSelect
                         value={form.category}
                         onChange={(v) => setForm(f => ({ ...f, category: v }))}
                         menuWidth={240}
                         options={CONTACT_CATEGORIES.map(c => ({ value: c.value, label: t(c.labelKey) }))}
-                        triggerStyle={{ width: "100%", justifyContent: "space-between", fontFamily: SF, fontSize: 14, fontWeight: 450, color: "rgba(255,255,255,0.88)", background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "10px 14px" }}
+                        triggerStyle={{ width: "100%", justifyContent: "space-between", fontFamily: SF, fontSize: 14, fontWeight: 450, color: "rgba(244,239,226,0.88)", background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)", borderRadius: 8, padding: "10px 14px" }}
                       />
                     </div>
                     <div>
-                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spPriority")}</label>
+                      <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(244,239,226,0.4)", display: "block", marginBottom: 6 }}>{t("spPriority")}</label>
                       <NiceSelect
                         value={form.priority}
                         onChange={(v) => setForm(f => ({ ...f, priority: v }))}
                         menuWidth={260}
                         options={CONTACT_PRIORITIES.map(p => ({ value: p.value, label: `${t(p.labelKey)}: ${t(p.descKey)}` }))}
-                        triggerStyle={{ width: "100%", justifyContent: "space-between", fontFamily: SF, fontSize: 14, fontWeight: 450, color: "rgba(255,255,255,0.88)", background: "#111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "10px 14px" }}
+                        triggerStyle={{ width: "100%", justifyContent: "space-between", fontFamily: SF, fontSize: 14, fontWeight: 450, color: "rgba(244,239,226,0.88)", background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)", borderRadius: 8, padding: "10px 14px" }}
                       />
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>{t("spMessageLabel")}</label>
+                    <label style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: "rgba(244,239,226,0.4)", display: "block", marginBottom: 6 }}>{t("spMessageLabel")}</label>
                     <textarea
                       className="s-input"
                       placeholder={t("spMessagePlaceholder")}
@@ -578,7 +578,7 @@ export default function SupportPage() {
                     />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 4 }}>
-                    <p style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.2)", margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                    <p style={{ fontFamily: SF, fontSize: 11, color: "rgba(244,239,226,0.2)", margin: 0, display: "flex", alignItems: "center", gap: 5 }}>
                       <Lock size={10} />
                       {t("spEncrypted")}
                     </p>
@@ -587,8 +587,8 @@ export default function SupportPage() {
                       disabled={submitMutation.isPending}
                       style={{
                         fontFamily: SF, fontSize: 13, fontWeight: 600,
-                        color: submitMutation.isPending ? "rgba(255,255,255,0.4)" : "#000",
-                        background: submitMutation.isPending ? "rgba(255,255,255,0.08)" : "#fff",
+                        color: submitMutation.isPending ? "rgba(244,239,226,0.4)" : "#221b11",
+                        background: submitMutation.isPending ? "rgba(244,239,226,0.08)" : "#f7f2e4",
                         border: "none", borderRadius: 8, padding: "10px 22px",
                         cursor: submitMutation.isPending ? "not-allowed" : "pointer",
                         display: "flex", alignItems: "center", gap: 7,
@@ -596,7 +596,7 @@ export default function SupportPage() {
                       }}
                     >
                       {submitMutation.isPending ? (
-                        <><div style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "rgba(255,255,255,0.6)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> {t("spSending")}</>
+                        <><div style={{ width: 12, height: 12, border: "2px solid rgba(244,239,226,0.2)", borderTopColor: "rgba(244,239,226,0.6)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} /> {t("spSending")}</>
                       ) : (
                         <><Send size={12} /> {t("spSendMessage")}</>
                       )}
@@ -614,12 +614,12 @@ export default function SupportPage() {
             <div style={{ marginBottom: 24 }}>
               <h2 style={{
                 fontFamily: SF, fontSize: 22, fontWeight: 700,
-                color: "rgba(255,255,255,0.9)", margin: "0 0 6px",
+                color: "rgba(244,239,226,0.9)", margin: "0 0 6px",
                 letterSpacing: "-0.02em",
               }}>
                 {t("spMyTickets")}
               </h2>
-              <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontFamily: SF, fontSize: 14, color: "rgba(244,239,226,0.35)", margin: 0, lineHeight: 1.6 }}>
                 {t("spTrackRequests")}
               </p>
             </div>
@@ -628,33 +628,33 @@ export default function SupportPage() {
               <div style={{ textAlign: "center", padding: "48px 0" }}>
                 <div style={{
                   width: 20, height: 20,
-                  border: "2px solid rgba(255,255,255,0.1)",
-                  borderTopColor: "rgba(255,255,255,0.4)",
+                  border: "2px solid rgba(244,239,226,0.1)",
+                  borderTopColor: "rgba(244,239,226,0.4)",
                   borderRadius: "50%", animation: "spin 0.6s linear infinite",
                   margin: "0 auto 12px",
                 }} />
-                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{t("spLoadingTickets")}</p>
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(244,239,226,0.3)" }}>{t("spLoadingTickets")}</p>
               </div>
             )}
 
             {ticketsQuery.isError || (ticketsQuery.data && ticketsQuery.data.length === 0) ? (
               <div style={{
-                background: "#111", border: "1px solid rgba(255,255,255,0.07)",
+                background: "#332a1b", border: "1px solid rgba(244,239,226,0.07)",
                 borderRadius: 12, padding: "48px 24px", textAlign: "center",
               }}>
-                <MessageSquare size={28} style={{ color: "rgba(255,255,255,0.12)", marginBottom: 12 }} />
-                <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.45)", margin: "0 0 6px" }}>
+                <MessageSquare size={28} style={{ color: "rgba(244,239,226,0.12)", marginBottom: 12 }} />
+                <p style={{ fontFamily: SF, fontSize: 15, fontWeight: 500, color: "rgba(244,239,226,0.45)", margin: "0 0 6px" }}>
                   {t("spNoTickets")}
                 </p>
-                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(255,255,255,0.25)", margin: "0 0 20px" }}>
+                <p style={{ fontFamily: SF, fontSize: 13, color: "rgba(244,239,226,0.25)", margin: "0 0 20px" }}>
                   {t("spNoTicketsBody")}
                 </p>
                 <button
                   onClick={() => setActiveTab("contact")}
                   style={{
                     fontFamily: SF, fontSize: 13, fontWeight: 500,
-                    color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8,
+                    color: "rgba(244,239,226,0.7)", background: "rgba(244,239,226,0.06)",
+                    border: "1px solid rgba(244,239,226,0.07)", borderRadius: 8,
                     padding: "8px 18px", cursor: "pointer",
                   }}
                 >
@@ -676,8 +676,8 @@ export default function SupportPage() {
 
       {/* ── Compact System Status Bar ── */}
       <div style={{
-        borderTop: "1px solid rgba(255,255,255,0.07)",
-        background: "#000",
+        borderTop: "1px solid rgba(244,239,226,0.07)",
+        background: "#221b11",
         padding: "16px 24px",
       }}>
         <div style={{
@@ -686,15 +686,15 @@ export default function SupportPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <Circle size={5} fill={allOperational ? "#4ade80" : "#fb923c"} color="transparent" />
-            <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>
+            <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(244,239,226,0.4)" }}>
               {allOperational ? t("spAllOperational") : t("spPartialOutage")}
             </span>
           </div>
-          <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.07)" }} />
+          <div style={{ width: 1, height: 14, background: "rgba(244,239,226,0.07)" }} />
           {SYSTEM_COMPONENTS.map(comp => (
             <div key={comp.nameKey} style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <Circle size={4} fill={comp.status === "operational" ? "#4ade80" : "#fb923c"} color="transparent" />
-              <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+              <span style={{ fontFamily: SF, fontSize: 11, color: "rgba(244,239,226,0.3)" }}>
                 {t(comp.nameKey)}
               </span>
             </div>

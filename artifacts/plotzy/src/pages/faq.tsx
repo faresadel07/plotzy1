@@ -18,13 +18,13 @@ import { useLanguage } from "@/contexts/language-context";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-const BG = "#000";
-const C2 = "#0a0a0a";
-const C3 = "#111";
-const B = "rgba(255,255,255,0.07)";
-const T = "rgba(255,255,255,0.92)";
-const TS = "rgba(255,255,255,0.55)";
-const TD = "rgba(255,255,255,0.30)";
+const BG = "#221b11";
+const C2 = "#221b11";
+const C3 = "#332a1b";
+const B = "rgba(244,239,226,0.07)";
+const T = "rgba(244,239,226,0.92)";
+const TS = "rgba(244,239,226,0.55)";
+const TD = "rgba(244,239,226,0.30)";
 
 type IconCmp = typeof BookOpen;
 
@@ -109,7 +109,7 @@ export default function FaqPage() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "#1a1a1a";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                      e.currentTarget.style.borderColor = "rgba(244,239,226,0.12)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = C3;
@@ -150,8 +150,8 @@ export default function FaqPage() {
                 gap: 8,
                 padding: "12px 22px",
                 borderRadius: 10,
-                background: "#fff",
-                color: "#000",
+                background: "#f7f2e4",
+                color: "#221b11",
                 fontSize: 13,
                 fontWeight: 600,
                 textDecoration: "none",
@@ -178,7 +178,7 @@ function CategorySection({ category }: { category: FaqCategory }) {
             width: 32,
             height: 32,
             borderRadius: 8,
-            background: "rgba(255,255,255,0.04)",
+            background: "rgba(244,239,226,0.04)",
             border: `1px solid ${B}`,
             display: "flex",
             alignItems: "center",

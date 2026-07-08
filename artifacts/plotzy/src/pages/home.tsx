@@ -625,9 +625,9 @@ export default function Home() {
     return (
       <>
         <SEO titleOverride="Plotzy" />
-        {/* darkNav: the hero collage at the top is still a dark surface,
-            so the chrome stays dark over it. */}
-        <Layout isLanding darkNav>
+        {/* Light nav: the hero is now a paper surface, so the chrome
+            stays light and blends with it. */}
+        <Layout isLanding>
           <MobileHome onStartWriting={startWriting} />
         </Layout>
         <BookCreationWizard open={showWizard} onClose={() => setShowWizard(false)} onCreate={handleCreateFromWizard} />

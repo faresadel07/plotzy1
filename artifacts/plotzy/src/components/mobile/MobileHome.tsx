@@ -14,7 +14,7 @@
 //   8. Donate banner
 //   9. bottom spacer so the floating tab bar never covers content
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { PenLine, Copy, Pencil, Trash2, X } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
@@ -48,17 +48,6 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const closeSheet = () => { setBookSheet(null); setRenaming(false); setConfirmDelete(false); };
 
-  // Hero height captured ONCE in pixels. Using px (not vh) means the
-  // mobile address bar showing/hiding never resizes the hero mid-scroll
-  // — the root cause of the black gap / jumps. Only re-measure on a
-  // real orientation change, never on scroll-driven viewport changes.
-  const [heroH, setHeroH] = useState(() => (typeof window !== "undefined" ? window.innerHeight : 800));
-  useEffect(() => {
-    const onOrient = () => setHeroH(window.innerHeight);
-    window.addEventListener("orientationchange", onOrient);
-    return () => window.removeEventListener("orientationchange", onOrient);
-  }, []);
-
   // The writer's own books → "Continue Writing" row.
   const myBooks: MobileBook[] = (books ?? [])
     .slice(0, 12)
@@ -78,20 +67,39 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         minHeight: "100vh",
         fontFamily: SF,
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
+        ...SPECKLE,
       }}
     >
-      {/* Hero wrapper — fixed PX height (never vh) = the sticky pin
-          range. The MobileHero inside pins and collapses (fade + scale)
-          as you scroll, while the content below slides up over it. */}
-      <div style={{ position: "relative", height: heroH, zIndex: 1 }}>
-        <MobileHero ar={ar} onStartWriting={onStartWriting} heroHeight={heroH} />
+      {/* Tidy paper hero: headline, actions, contained collage card,
+          stats. No pinning, no scroll choreography. */}
+      <MobileHero ar={ar} onStartWriting={onStartWriting} onOpenCourse={() => navigate("/course")} />
+
+      {/* Quick destinations — app-style chips under the hero */}
+      <div
+        dir={ar ? "rtl" : "ltr"}
+        style={{ display: "flex", gap: 8, overflowX: "auto", padding: "16px 16px 4px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+      >
+        {(ar
+          ? [["الكورس المجاني", "/course"], ["كتب صوتية", "/audiolibrary"], ["كوميكس", "/comics"], ["المكتبة العربية", "/discover?src=hindawi"], ["مكتبة المجتمع", "/library"]]
+          : [["Free course", "/course"], ["Audiobooks", "/audiolibrary"], ["Comics", "/comics"], ["Arabic library", "/discover?src=hindawi"], ["Community", "/library"]]
+        ).map(([label, href]) => (
+          <button
+            key={href}
+            onClick={() => navigate(href)}
+            style={{
+              flex: "0 0 auto", padding: "9px 16px", borderRadius: 999,
+              background: "#fffdf7", border: "1px solid rgba(66,53,33,0.18)",
+              color: "#423521", fontSize: 12.5, fontWeight: 600, fontFamily: SF,
+              cursor: "pointer", boxShadow: "0 1px 2px rgba(66,53,33,0.05)",
+            }}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* Content rows — SOLID paper background + higher z-index. Starts
-          immediately after the hero (no gap) and slides up to fully
-          cover the pinned hero (no bleed-through, no overlap, correct
-          stacking). Speckle gives the ink-dust paper texture. */}
-      <div style={{ position: "relative", zIndex: 2, background: PAPER, paddingTop: 16, ...SPECKLE }}>
+      {/* Content rows on the same paper surface */}
+      <div style={{ position: "relative", paddingTop: 18 }}>
         {myBooks.length > 0 && (
           <ContentRow
             title={ar ? "تابع الكتابة" : "Continue Writing"}

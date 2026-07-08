@@ -1,4 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Cairo:wght@200..900&family=Noto+Naskh+Arabic:wght@400..700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+/* Plus Jakarta Sans intentionally NOT loaded here: it is a writer-facing
+   book font, and load-editor-fonts.ts already loads it lazily on editor
+   pages. Keeping it out of the global import saves every visitor the
+   download. */
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Cairo:wght@200..900&family=Noto+Naskh+Arabic:wght@400..700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300..700&family=Noto+Sans+JP:wght@300..700&family=Noto+Sans+KR:wght@300..700&family=Noto+Sans+Devanagari:wght@300..700&family=Noto+Sans:wght@300..700&display=swap');
 
 @import "tailwindcss";
@@ -42,67 +46,70 @@
     --font-cyrillic: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     --font-hebrew: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
 
-    /* ── LIGHT MODE: Parchment & Charcoal ── */
-    --background: 60 100% 99%;          /* #FFFFF8 warm parchment */
-    --foreground: 0 0% 7%;             /* #111111 charcoal */
+    /* ── LIGHT MODE: Warm Paper & Ink ──
+       The literary identity: aged-paper surfaces and espresso ink,
+       matched to the mobile palette (components/mobile/palette.ts). */
+    --background: 43 45% 92%;          /* #f4efe2 warm paper */
+    --foreground: 37 32% 14%;          /* #2f2618 ink */
 
-    --card: 60 50% 98%;
-    --card-foreground: 0 0% 7%;
+    --card: 45 100% 98%;               /* #fffdf7 raised paper */
+    --card-foreground: 37 32% 14%;
 
-    --popover: 60 100% 99%;
-    --popover-foreground: 0 0% 7%;
+    --popover: 45 100% 98%;
+    --popover-foreground: 37 32% 14%;
 
-    --primary: 0 0% 7%;                /* #111111 charcoal — primary actions */
-    --primary-foreground: 60 100% 99%; /* #FFFFF8 parchment on charcoal buttons */
+    --primary: 36 32% 12%;             /* #292115 espresso — primary actions */
+    --primary-foreground: 44 54% 93%;  /* #f7f2e4 paper on espresso buttons */
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 7%;
+    --secondary: 42 38% 89%;
+    --secondary-foreground: 37 32% 14%;
 
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 42 36% 86%;
+    --accent-foreground: 37 32% 14%;
 
-    --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 42 34% 89%;
+    --muted-foreground: 37 9% 42%;     /* #756d5f warm gray */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 92%;
-    --ring: 0 0% 7%;
+    --border: 39 25% 80%;
+    --input: 41 30% 86%;
+    --ring: 36 32% 12%;
 
     --radius: 0.625rem;
   }
 
   .dark {
-    /* ── DARK MODE: Near-Black & Off-White ── */
-    --background: 0 0% 4%;             /* #0A0A0A near-black */
-    --foreground: 0 0% 94%;            /* #EFEFEF off-white */
+    /* ── DARK MODE: Espresso & Paper ──
+       Deep warm brown instead of near-black; text in paper tones. */
+    --background: 36 32% 10%;          /* #221b11 deep espresso */
+    --foreground: 44 54% 93%;          /* #f7f2e4 paper */
 
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 94%;
+    --card: 36 28% 14%;                /* lifted espresso */
+    --card-foreground: 44 54% 93%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 94%;
+    --popover: 36 28% 13%;
+    --popover-foreground: 44 54% 93%;
 
-    --primary: 0 0% 94%;               /* #EFEFEF — primary on dark = off-white */
-    --primary-foreground: 0 0% 4%;     /* #0A0A0A on light buttons */
+    --primary: 44 54% 93%;             /* paper — primary on dark */
+    --primary-foreground: 36 32% 10%;  /* espresso on paper buttons */
 
-    --secondary: 0 0% 9%;
-    --secondary-foreground: 0 0% 94%;
+    --secondary: 36 26% 17%;
+    --secondary-foreground: 44 54% 93%;
 
-    --muted: 0 0% 9%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 36 26% 17%;
+    --muted-foreground: 40 14% 62%;
 
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 94%;
+    --accent: 36 24% 20%;
+    --accent-foreground: 44 54% 93%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 14%;
-    --input: 0 0% 12%;
-    --ring: 0 0% 94%;
+    --border: 36 22% 22%;
+    --input: 36 24% 19%;
+    --ring: 44 54% 93%;
   }
 }
 
@@ -253,10 +260,6 @@
 
   .glass-panel {
     @apply bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-sm;
-  }
-
-  .gradient-text {
-    @apply bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent;
   }
 
   .glow {
@@ -506,7 +509,7 @@
   position: relative;
   z-index: 1;
   transition:
-    transform 0.45s cubic-bezier(0.2, 1.3, 0.4, 1),
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.45s ease,
     filter 0.45s ease;
   transform-origin: center bottom;

@@ -221,29 +221,36 @@ export function ContentRow({
   const Chevron = ar ? ChevronLeft : ChevronRight;
   return (
     <section style={{ marginBottom: 26 }}>
-      {/* Header */}
-      <button
-        onClick={onSeeAll}
-        disabled={!onSeeAll}
+      {/* Header: title on the reading side, a quiet "see all" on the
+          other, like a well-set section head */}
+      <div
+        dir={ar ? "rtl" : "ltr"}
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: 4,
-          background: "transparent",
-          border: "none",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 10,
           padding: "0 16px",
           marginBottom: 12,
-          cursor: onSeeAll ? "pointer" : "default",
           fontFamily: SF,
-          color: "#2f2618",
-          width: "100%",
-          justifyContent: ar ? "flex-end" : "flex-start",
-          flexDirection: ar ? "row-reverse" : "row",
         }}
       >
-        <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em" }}>{title}</span>
-        {onSeeAll && <Chevron size={20} strokeWidth={2.5} style={{ opacity: 0.7 }} />}
-      </button>
+        <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em", color: "#2f2618" }}>{title}</span>
+        {onSeeAll && (
+          <button
+            onClick={onSeeAll}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 2,
+              background: "transparent", border: "none", padding: 0,
+              cursor: "pointer", fontFamily: SF,
+              fontSize: 12.5, fontWeight: 600, color: "#7b7366",
+            }}
+          >
+            {ar ? "عرض الكل" : "See all"}
+            <Chevron size={14} strokeWidth={2.5} style={{ opacity: 0.8 }} />
+          </button>
+        )}
+      </div>
 
       {/* Scroll strip */}
       <div

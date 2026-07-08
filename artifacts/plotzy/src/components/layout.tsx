@@ -336,7 +336,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className={`${noScroll ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col${isFullDark ? " dark bg-background text-foreground" : " bg-background text-foreground"}`}
-      style={darkNav ? { background: "#080808" } : undefined}>
+      style={darkNav ? { background: "#221b11" } : undefined}>
 
       {/* Skip-to-content link — first focusable element so keyboard
           users can bypass the navbar. Visually offscreen by default,
@@ -726,13 +726,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
       </main>
 
       {!noScroll && (
-      <footer style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #030303 100%)', fontFamily: SF_FONT, position: 'relative', overflow: 'hidden' }}>
+      <footer style={{ background: 'linear-gradient(180deg, #292115 0%, #1c1610 100%)', fontFamily: SF_FONT, position: 'relative', overflow: 'hidden' }}>
 
         {/* Accent top border */}
-        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.12) 70%, transparent 100%)' }} />
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(244,239,226,0.12) 30%, rgba(244,239,226,0.12) 70%, transparent 100%)' }} />
 
         {/* Subtle radial glow */}
-        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 320, background: 'radial-gradient(ellipse at center top, rgba(255,255,255,0.022) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 320, background: 'radial-gradient(ellipse at center top, rgba(244,239,226,0.022) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         {/* Main content */}
         <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 32px 48px', position: 'relative' }}>
@@ -742,12 +742,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
                 <img src={`${import.meta.env.BASE_URL}plotzy-logo.png`} alt="Plotzy" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 7, filter: 'none' }} />
-                <span style={{ fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.05em', color: '#fff' }}>PLOTZY</span>
+                <span style={{ fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.05em', color: '#f7f2e4' }}>PLOTZY</span>
               </a>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,0.34)', maxWidth: 240, margin: 0 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(244,239,226,0.34)', maxWidth: 240, margin: 0 }}>
                 The modern platform for writers. Write, publish, and share your stories with the world.
               </p>
-              <p style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(255,255,255,0.15)', margin: 0, paddingTop: 2, borderLeft: '2px solid rgba(255,255,255,0.08)', paddingLeft: 10 }}>
+              <p style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(244,239,226,0.15)', margin: 0, paddingTop: 2, borderLeft: '2px solid rgba(244,239,226,0.08)', paddingLeft: 10 }}>
                 "Every great story begins with a blank page."
               </p>
               <FooterSocialIcons />
@@ -809,12 +809,12 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
         </div>
 
         {/* Bottom bar */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ borderTop: '1px solid rgba(244,239,226,0.05)' }}>
           <div style={{ maxWidth: 1152, margin: '0 auto', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+            <p style={{ fontSize: 11.5, color: 'rgba(244,239,226,0.2)', margin: 0 }}>
               &copy; {new Date().getFullYear()} Plotzy, Inc. All rights reserved.
             </p>
-            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.15)', margin: 0 }}>
+            <p style={{ fontSize: 11.5, color: 'rgba(244,239,226,0.15)', margin: 0 }}>
               Made for writers worldwide.
             </p>
           </div>
