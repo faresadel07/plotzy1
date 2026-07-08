@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { useBook, useUpdateBook, useCoverVariants } from "@/hooks/use-books";
+import { useChapters } from "@/hooks/use-chapters";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ type Face = "front" | "back" | "spine";
 type ElementType = "text" | "image" | "shape";
 type ShapeType = "rect" | "circle" | "triangle" | "star" | "line";
 type Align = "left" | "center" | "right";
+type TextEffect = "none" | "shadow" | "lift" | "hollow" | "neon" | "background";
 
 interface CoverElement {
   id: string;
@@ -47,6 +49,11 @@ interface CoverElement {
   textAlign?: Align;
   lineHeight?: number;
   letterSpacing?: number;
+  // Text effect (Canva taxonomy, Arabic-shaping-aware)
+  effect?: TextEffect;
+  effectColor?: string;
+  effectIntensity?: number; // 0..100
+  curve?: number; // -100..100, Latin text only (per-letter arc breaks Arabic joining)
   // Image
   src?: string;
   objectFit?: "cover" | "contain" | "fill";
@@ -108,6 +115,81 @@ function darkenColor(css: string, factor: number): string {
   return `#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${b.toString(16).padStart(2,"0")}`;
 }
 
+/* ─── Text effects (Canva taxonomy, all export-safe via html-to-image) ─── */
+/** Outer style for a text element's effect. Hollow uses text-stroke, so
+    it applies alongside; background is handled by an inner span. */
+function textEffectStyle(el: CoverElement): React.CSSProperties {
+  const i = el.effectIntensity ?? 50;
+  const c = el.effectColor || "#000000";
+  switch (el.effect) {
+    case "shadow": {
+      const o = 1 + (i / 100) * 5;
+      const blur = (i / 100) * 10;
+      return { textShadow: `${o}px ${o}px ${blur}px ${c}` };
+    }
+    case "lift":
+      // Soft ambient drop regardless of color — the "float off the page" look
+      return { textShadow: `0 ${1 + i * 0.05}px ${4 + i * 0.2}px rgba(0,0,0,${0.3 + i * 0.005})` };
+    case "hollow":
+      return { WebkitTextStroke: `${Math.max(0.5, 0.5 + i * 0.03)}px ${c}`, color: "transparent" };
+    case "neon":
+      return {
+        textShadow: `0 0 ${1 + i * 0.05}px ${c}, 0 0 ${4 + i * 0.15}px ${c}, 0 0 ${10 + i * 0.35}px ${c}`,
+      };
+    default:
+      return {};
+  }
+}
+
+/** Inner-span style for the "background" (highlight) effect. */
+function textEffectSpanStyle(el: CoverElement): React.CSSProperties {
+  if (el.effect !== "background") return {};
+  const i = el.effectIntensity ?? 50;
+  return {
+    background: el.effectColor || "#000000",
+    padding: `${2 + i * 0.06}px ${6 + i * 0.1}px`,
+    borderRadius: 4,
+    boxDecorationBreak: "clone",
+    WebkitBoxDecorationBreak: "clone",
+  } as React.CSSProperties;
+}
+
+/** Per-character arc for Latin text. Arabic joining would break, so the
+    control is hidden for Arabic content and this is never called for it. */
+function renderCurvedText(el: CoverElement): React.ReactNode {
+  const text = el.content || "";
+  const curve = el.curve || 0;
+  const chars = [...text];
+  const n = chars.length;
+  if (n < 2 || !curve) return text;
+  // Map curve (-100..100) to a total arc sweep up to ~110 degrees.
+  const sweep = (curve / 100) * 110;
+  const fontSize = el.fontSize || 24;
+  // Radius from sweep: wider sweep = tighter circle.
+  const radius = Math.abs(sweep) > 1 ? (180 * (n * fontSize * 0.6)) / (Math.PI * Math.abs(sweep)) : 0;
+  return (
+    <span style={{ display: "inline-flex", verticalAlign: "middle" }}>
+      {chars.map((ch, idx) => {
+        const t = n === 1 ? 0 : idx / (n - 1) - 0.5; // -0.5..0.5
+        const angle = t * sweep;
+        const lift = radius ? (1 - Math.cos((angle * Math.PI) / 180)) * radius : 0;
+        return (
+          <span
+            key={idx}
+            style={{
+              display: "inline-block",
+              transform: `translateY(${curve > 0 ? lift : -lift}px) rotate(${curve > 0 ? angle : -angle}deg)`,
+              whiteSpace: "pre",
+            }}
+          >
+            {ch}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 const GRADIENTS = [
   "linear-gradient(135deg,#0f0c29,#302b63,#24243e)",
   "linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)",
@@ -120,6 +202,20 @@ const GRADIENTS = [
 ];
 
 const SHAPE_COLORS = ["#ffffff","#000000","#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6","#1abc9c","#e67e22","#34495e"];
+
+/* ─── One-tap style shuffle (Adobe Express pattern) ───
+   Curated font + color pairings; each has an Arabic twin so shuffling
+   a bilingual design keeps every script in a face designed for it. */
+const STYLE_COMBOS = [
+  { name: "Literary",  title: "Playfair Display",   titleAr: "Amiri",            body: "Inter",              bodyAr: "Cairo",   titleColor: "#ffffff", bodyColor: "rgba(255,255,255,0.75)" },
+  { name: "Impact",    title: "Bebas Neue",         titleAr: "Lalezar",          body: "Montserrat",         bodyAr: "Tajawal", titleColor: "#f9c80e", bodyColor: "#ffffff" },
+  { name: "Epic",      title: "Cinzel",             titleAr: "Aref Ruqaa",       body: "Cormorant Garamond", bodyAr: "Amiri",   titleColor: "#e9d8a6", bodyColor: "rgba(233,216,166,0.8)" },
+  { name: "Tech",      title: "Space Grotesk",      titleAr: "Noto Kufi Arabic", body: "Inter",              bodyAr: "Cairo",   titleColor: "#e6fbff", bodyColor: "#7dd3fc" },
+  { name: "Dramatic",  title: "Abril Fatface",      titleAr: "Katibeh",          body: "Montserrat",         bodyAr: "Tajawal", titleColor: "#fbeadf", bodyColor: "rgba(251,234,223,0.75)" },
+  { name: "Classic",   title: "Cormorant Garamond", titleAr: "Markazi Text",     body: "Inter",              bodyAr: "Cairo",   titleColor: "#f4efe6", bodyColor: "rgba(244,239,230,0.7)" },
+  { name: "Bold",      title: "Oswald",             titleAr: "Reem Kufi",        body: "Inter",              bodyAr: "Tajawal", titleColor: "#ffffff", bodyColor: "#fca5a5" },
+  { name: "Playful",   title: "Baloo Bhaijaan 2",   titleAr: "Baloo Bhaijaan 2", body: "Baloo Bhaijaan 2",   bodyAr: "Baloo Bhaijaan 2", titleColor: "#ffffff", bodyColor: "rgba(255,255,255,0.85)" },
+];
 
 /* ─── Drag state ────────────────────────────── */
 type DragState = { id: string; startMX: number; startMY: number; origX: number; origY: number } | null;
@@ -290,6 +386,45 @@ export default function CoverDesigner() {
   // re-run when book ID, saved data status, or AI-generated images change
   }, [book?.id, !!(book as any)?.coverData, (book as any)?.coverImage, (book as any)?.backCoverImage]);
 
+  /* ─── Snap guides (constrained freedom: Canva-style alignment) ───
+     While dragging, the element magnetizes to the face center, face
+     edges, and the edges/centers of every sibling on the same face.
+     Active snap lines render as thin blue guides on the face. */
+  const SNAP = 5;
+  const [snapGuides, setSnapGuides] = useState<{ face: Face; xs: number[]; ys: number[] } | null>(null);
+
+  const applySnap = useCallback((el: CoverElement, nx: number, ny: number, all: CoverElement[]) => {
+    const faceW = FACE_W[el.face];
+    // Candidate target lines on this face
+    const xTargets = [0, faceW / 2, faceW];
+    const yTargets = [0, FACE_H / 2, FACE_H];
+    for (const o of all) {
+      if (o.id === el.id || o.face !== el.face || !o.visible) continue;
+      xTargets.push(o.x, o.x + o.width / 2, o.x + o.width);
+      yTargets.push(o.y, o.y + o.height / 2, o.y + o.height);
+    }
+    let bestX: { d: number; nx: number; line: number } | null = null;
+    let bestY: { d: number; ny: number; line: number } | null = null;
+    // The dragged element's own snap points: left/center/right, top/middle/bottom
+    for (const [own, offset] of [[nx, 0], [nx + el.width / 2, el.width / 2], [nx + el.width, el.width]] as [number, number][]) {
+      for (const target of xTargets) {
+        const d = Math.abs(own - target);
+        if (d < SNAP && (!bestX || d < bestX.d)) bestX = { d, nx: target - offset, line: target };
+      }
+    }
+    for (const [own, offset] of [[ny, 0], [ny + el.height / 2, el.height / 2], [ny + el.height, el.height]] as [number, number][]) {
+      for (const target of yTargets) {
+        const d = Math.abs(own - target);
+        if (d < SNAP && (!bestY || d < bestY.d)) bestY = { d, ny: target - offset, line: target };
+      }
+    }
+    return {
+      x: bestX ? bestX.nx : nx,
+      y: bestY ? bestY.ny : ny,
+      guides: { face: el.face, xs: bestX ? [bestX.line] : [], ys: bestY ? [bestY.line] : [] },
+    };
+  }, [spineWidth]);
+
   /* ─── Mouse handlers for drag/resize ─── */
   const getRelativePos = (e: React.MouseEvent, face: Face): { x: number; y: number } => {
     const bookEl = bookRef.current;
@@ -307,15 +442,20 @@ export default function CoverDesigner() {
       const { id, startMX, startMY, origX, origY } = dragRef.current;
       const dx = (e.clientX - startMX) / zoom;
       const dy = (e.clientY - startMY) / zoom;
-      setElements((els) =>
-        els.map((el) => {
+      setElements((els) => {
+        let guides: { face: Face; xs: number[]; ys: number[] } | null = null;
+        const next = els.map((el) => {
           if (el.id !== id) return el;
           const faceW = FACE_W[el.face];
-          const newX = Math.max(-el.width / 2, Math.min(faceW - el.width / 2, origX + dx));
-          const newY = Math.max(-el.height / 2, Math.min(FACE_H - el.height / 2, origY + dy));
-          return { ...el, x: newX, y: newY };
-        })
-      );
+          const rawX = Math.max(-el.width / 2, Math.min(faceW - el.width / 2, origX + dx));
+          const rawY = Math.max(-el.height / 2, Math.min(FACE_H - el.height / 2, origY + dy));
+          const snapped = applySnap(el, rawX, rawY, els);
+          guides = snapped.guides.xs.length || snapped.guides.ys.length ? snapped.guides : null;
+          return { ...el, x: snapped.x, y: snapped.y };
+        });
+        setSnapGuides(guides);
+        return next;
+      });
     }
     // Resize
     if (resizeRef.current) {
@@ -335,12 +475,13 @@ export default function CoverDesigner() {
         })
       );
     }
-  }, [zoom]);
+  }, [zoom, applySnap]);
 
   const onMouseUp = useCallback(() => {
     if (dragRef.current || resizeRef.current) {
       dragRef.current = null;
       resizeRef.current = null;
+      setSnapGuides(null);
       setElements((els) => {
         pushHistory(els);
         return els;
@@ -400,6 +541,67 @@ export default function CoverDesigner() {
 
   const commitUpdate = (id: string, patch: Partial<CoverElement>) => {
     updateElements(elements.map((e) => e.id === id ? { ...e, ...patch } : e));
+  };
+
+  /* ─── One-tap style shuffle ─── */
+  const styleIdxRef = useRef(0);
+  const shuffleStyles = () => {
+    const texts = elements.filter((e) => e.type === "text");
+    if (!texts.length) return;
+    const combo = STYLE_COMBOS[styleIdxRef.current % STYLE_COMBOS.length];
+    styleIdxRef.current += 1;
+    // Largest front-face text = the title; spine follows the title look.
+    const titleEl = [...texts].filter((e) => e.face === "front").sort((a, b) => (b.fontSize || 0) - (a.fontSize || 0))[0] || texts[0];
+    updateElements(elements.map((e) => {
+      if (e.type !== "text") return e;
+      const arText = isArabicText(e.content);
+      const isTitle = e.id === titleEl.id || e.face === "spine";
+      return {
+        ...e,
+        fontFamily: isTitle ? (arText ? combo.titleAr : combo.title) : (arText ? combo.bodyAr : combo.body),
+        color: isTitle ? combo.titleColor : combo.bodyColor,
+        letterSpacing: arText ? 0 : e.letterSpacing,
+      };
+    }));
+    toast({ title: (ar ? "ستايل " : "Style: ") + combo.name });
+  };
+
+  /* ─── Spine width auto-calc from the real manuscript ───
+     KDP's #1 cover rejection cause is a wrong spine width. We have the
+     manuscript, so: words -> pages (275 words/page paperback estimate)
+     -> KDP white-paper formula (pages x 0.002252 in). The canvas is
+     50 px/inch (300 px face = 6 in), so px = inches x 50. */
+  const { data: spineChapters } = useChapters(bookId);
+  const spineCalc = (() => {
+    if (!spineChapters?.length) return null;
+    const words = spineChapters.reduce((sum: number, c: any) => {
+      const text = typeof c.content === "string" ? c.content.replace(/<[^>]+>/g, " ") : "";
+      const n = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+      return sum + n;
+    }, 0);
+    if (words < 100) return null;
+    const pages = Math.max(24, Math.ceil(words / 275));
+    const inches = pages * 0.002252;
+    return { words, pages, inches, px: Math.max(SPINE_MIN, Math.min(SPINE_MAX, Math.round(inches * 50))) };
+  })();
+
+  /* ─── Layer drag-reorder (layers panel) ─── */
+  const layerDragIdRef = useRef<string | null>(null);
+  const [layerDropId, setLayerDropId] = useState<string | null>(null);
+
+  /** Move dragged layer to the dropped row's position, then reassign
+      zIndexes from the new visual order (top row = highest z). */
+  const reorderLayer = (fromId: string | null, toId: string) => {
+    if (!fromId || fromId === toId) return;
+    const displayOrder = [...elements].sort((a, b) => b.zIndex - a.zIndex);
+    const fromIdx = displayOrder.findIndex((e) => e.id === fromId);
+    const toIdx = displayOrder.findIndex((e) => e.id === toId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const [moved] = displayOrder.splice(fromIdx, 1);
+    displayOrder.splice(toIdx, 0, moved);
+    const n = displayOrder.length;
+    const withZ = new Map(displayOrder.map((e, i) => [e.id, n - i]));
+    updateElements(elements.map((e) => ({ ...e, zIndex: withZ.get(e.id) ?? e.zIndex })));
   };
 
   const moveLayer = (id: string, dir: "up" | "down") => {
@@ -516,6 +718,53 @@ export default function CoverDesigner() {
   /* ─── Inline text editing ─── */
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  /* ─── Keyboard shortcuts ───
+     Delete removes, arrows nudge 1px (Shift = 10px), Ctrl+D duplicates,
+     Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) undo/redo, Escape deselects.
+     All skipped while typing in any input/textarea/select. */
+  const nudgeCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
+      if (typing || editingId) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+        if (selectedId) { e.preventDefault(); duplicateSelected(); }
+        return;
+      }
+      if (e.key === "Escape") { setSelectedId(null); return; }
+      if (!selectedId) return;
+      const sel = elements.find((el) => el.id === selectedId);
+      if (!sel || sel.locked) return;
+
+      if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); deleteSelected(); return; }
+
+      const step = e.shiftKey ? 10 : 1;
+      let dx = 0, dy = 0;
+      if (e.key === "ArrowLeft") dx = -step;
+      else if (e.key === "ArrowRight") dx = step;
+      else if (e.key === "ArrowUp") dy = -step;
+      else if (e.key === "ArrowDown") dy = step;
+      else return;
+      e.preventDefault();
+      setElements((els) => els.map((el) => el.id === selectedId ? { ...el, x: el.x + dx, y: el.y + dy } : el));
+      // Batch rapid nudges into one history entry
+      if (nudgeCommitTimer.current) clearTimeout(nudgeCommitTimer.current);
+      nudgeCommitTimer.current = setTimeout(() => {
+        setElements((els) => { pushHistory(els); return els; });
+      }, 450);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, editingId, elements, undo, redo, duplicateSelected, deleteSelected, pushHistory]);
+
   /* ─── Lock body scroll when designer is open ─── */
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -528,29 +777,43 @@ export default function CoverDesigner() {
     };
   }, []);
 
-  /* ─── Export ─── */
-  const handleExport = async () => {
-    if (!bookRef.current) return;
+  /* ─── Export ───
+     Rasterizes with html-to-image (SVG foreignObject: the browser's own
+     text engine paints, so Arabic shaping, text effects, and curves all
+     export exactly as seen — html2canvas mangles all three; it remains
+     only as a fallback). While `exporting` is true the canvas hides all
+     non-design chrome (labels, active border, edge shadows, guides). */
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const PRINT_RATIO = 1600 / 300; // 300px face -> 1600px wide (KDP print quality)
+
+  const doExport = async (preset: "screen" | "print-front" | "print-wrap") => {
+    setExportMenuOpen(false);
+    const node = preset === "print-front"
+      ? (bookRef.current?.querySelector('[data-face="front"]') as HTMLElement | null)
+      : bookRef.current;
+    if (!node) return;
     const prevSelected = selectedId;
     setSelectedId(null); // hide selection outlines before capture
     setExporting(true);
-    // html2canvas rasterizes whatever is painted: make sure every font
-    // used in the design is actually loaded, or titles export in a
-    // fallback face (worst for Arabic display fonts).
+    // Make sure every font used in the design is actually loaded, or
+    // titles rasterize in a fallback face (worst for Arabic display fonts).
     await waitForCoverFonts(elements.map((el) => el.fontFamily || "").filter(Boolean));
-    // Wait one frame for React to remove outlines
+    // Wait two frames for React to remove outlines and export chrome
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const pixelRatio = preset === "screen" ? 3 : PRINT_RATIO;
+    const suffix = preset === "screen" ? "design" : preset === "print-front" ? "front-print" : "wrap-print";
     try {
-      const canvas = await html2canvas(bookRef.current, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-      });
-      const url = canvas.toDataURL("image/png");
+      let url: string;
+      try {
+        const { toPng } = await import("html-to-image");
+        url = await toPng(node, { pixelRatio, cacheBust: true });
+      } catch {
+        const canvas = await html2canvas(node, { scale: pixelRatio, useCORS: true, allowTaint: true, backgroundColor: null });
+        url = canvas.toDataURL("image/png");
+      }
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${book?.title || "cover"}-design.png`;
+      a.download = `${book?.title || "cover"}-${suffix}.png`;
       a.click();
       toast({ title: t("cdExportedPng") });
     } catch {
@@ -566,6 +829,8 @@ export default function CoverDesigner() {
     const prevSelected = selectedId;
     setSelectedId(null); // hide selection outlines before thumbnail capture
     setSaving(true);
+    setExporting(true); // hides canvas chrome (labels, borders) from the thumbnail
+    await waitForCoverFonts(elements.map((el) => el.fontFamily || "").filter(Boolean));
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
       // Capture front face thumbnail by data attribute (safe, no magic index)
@@ -573,9 +838,14 @@ export default function CoverDesigner() {
       const frontEl = bookRef.current?.querySelector('[data-face="front"]') as HTMLElement | undefined;
       if (frontEl) {
         try {
-          const thumbCanvas = await html2canvas(frontEl, { scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: null });
-          coverImage = thumbCanvas.toDataURL("image/jpeg", 0.85);
-        } catch { /* thumbnail failure is non-fatal */ }
+          const { toJpeg } = await import("html-to-image");
+          coverImage = await toJpeg(frontEl, { pixelRatio: 1.5, quality: 0.85, cacheBust: true });
+        } catch {
+          try {
+            const thumbCanvas = await html2canvas(frontEl, { scale: 1.5, useCORS: true, allowTaint: true, backgroundColor: null });
+            coverImage = thumbCanvas.toDataURL("image/jpeg", 0.85);
+          } catch { /* thumbnail failure is non-fatal */ }
+        }
       }
 
       await updateBook.mutateAsync({
@@ -589,6 +859,7 @@ export default function CoverDesigner() {
       toast({ title: t("cdSaveFailed"), variant: "destructive" });
     } finally {
       setSaving(false);
+      setExporting(false);
       setSelectedId(prevSelected);
     }
   };
@@ -718,8 +989,10 @@ export default function CoverDesigner() {
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <div style={{ width: "100%", height: "100%", color: el.color, fontSize: el.fontSize, fontFamily: el.fontFamily, fontWeight: el.fontWeight, fontStyle: el.fontStyle, textAlign: el.textAlign, lineHeight: el.lineHeight, letterSpacing: `${el.letterSpacing}px`, overflow: "hidden", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
-              {el.content}
+            <div style={{ width: "100%", height: "100%", color: el.color, fontSize: el.fontSize, fontFamily: el.fontFamily, fontWeight: el.fontWeight, fontStyle: el.fontStyle, textAlign: el.textAlign, lineHeight: el.lineHeight, letterSpacing: `${el.letterSpacing}px`, overflow: "hidden", wordBreak: "break-word", whiteSpace: "pre-wrap", ...textEffectStyle(el) }}>
+              {el.effect === "background"
+                ? <span style={textEffectSpanStyle(el)}>{el.content}</span>
+                : (el.curve && !isArabicText(el.content) ? renderCurvedText(el) : el.content)}
             </div>
           )
         )}
@@ -775,8 +1048,9 @@ export default function CoverDesigner() {
         style={{ position: "relative", width: w, height: FACE_H, background: bg, overflow: "hidden", flexShrink: 0 }}
         onClick={() => { setActiveFace(face); setSelectedId(null); }}
       >
-        {/* Spine blend overlays — subtle gradient edges to connect with front/back */}
-        {isSpine && (
+        {/* Spine blend overlays — subtle gradient edges to connect with
+            front/back (screen-only lighting, hidden from print exports) */}
+        {!exporting && isSpine && (
           <>
             <div style={{ position: "absolute", inset: 0, background: spineEdgeLeft, pointerEvents: "none", zIndex: 0 }} />
             <div style={{ position: "absolute", inset: 0, background: spineEdgeRight, pointerEvents: "none", zIndex: 0 }} />
@@ -784,11 +1058,12 @@ export default function CoverDesigner() {
             <div style={{ position: "absolute", inset: 0, boxShadow: "inset 2px 0 6px rgba(0,0,0,0.3), inset -2px 0 6px rgba(0,0,0,0.3)", pointerEvents: "none", zIndex: 1 }} />
           </>
         )}
-        {/* Edge shadow on cover sides adjacent to spine */}
-        {face === "back" && (
+        {/* Edge shadow on cover sides adjacent to spine (screen-only:
+            hidden while exporting so print files stay clean) */}
+        {!exporting && face === "back" && (
           <div style={{ position: "absolute", top: 0, right: 0, width: 12, height: "100%", background: "linear-gradient(to left, rgba(0,0,0,0.25), transparent)", pointerEvents: "none", zIndex: 9990 }} />
         )}
-        {face === "front" && (
+        {!exporting && face === "front" && (
           <div style={{ position: "absolute", top: 0, left: 0, width: 12, height: "100%", background: "linear-gradient(to right, rgba(0,0,0,0.25), transparent)", pointerEvents: "none", zIndex: 9990 }} />
         )}
 
@@ -802,21 +1077,34 @@ export default function CoverDesigner() {
               onClick={(e) => e.stopPropagation()}
             >
               {el.type === "text" && (
-                <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", color: el.color, fontSize: el.fontSize, fontFamily: el.fontFamily, fontWeight: el.fontWeight, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", letterSpacing: `${el.letterSpacing || 0}px` }}>
+                <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", color: el.color, fontSize: el.fontSize, fontFamily: el.fontFamily, fontWeight: el.fontWeight, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", letterSpacing: `${el.letterSpacing || 0}px`, ...textEffectStyle(el) }}>
                   {el.content}
                 </div>
               )}
             </div>
           ) : renderElement(el)
         )}
+        {/* Snap guides while dragging */}
+        {snapGuides && snapGuides.face === face && (
+          <>
+            {snapGuides.xs.map((gx) => (
+              <div key={`gx${gx}`} style={{ position: "absolute", left: gx, top: 0, width: 1, height: "100%", background: "#38bdf8", pointerEvents: "none", zIndex: 9997 }} />
+            ))}
+            {snapGuides.ys.map((gy) => (
+              <div key={`gy${gy}`} style={{ position: "absolute", top: gy, left: 0, height: 1, width: "100%", background: "#38bdf8", pointerEvents: "none", zIndex: 9997 }} />
+            ))}
+          </>
+        )}
         {/* Active face indicator */}
-        {activeFace === face && (
+        {!exporting && activeFace === face && (
           <div style={{ position: "absolute", inset: 0, border: "2px solid rgba(59,130,246,0.5)", pointerEvents: "none", zIndex: 9998 }} />
         )}
         {/* Label */}
-        <div style={{ position: "absolute", top: 6, ...(isSpine ? { left: "50%", transform: "translateX(-50%)" } : { left: 8 }), fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", fontFamily: "Inter", pointerEvents: "none", zIndex: 9999, writingMode: isSpine ? "vertical-rl" : "horizontal-tb" }}>
-          {face}
-        </div>
+        {!exporting && (
+          <div style={{ position: "absolute", top: 6, ...(isSpine ? { left: "50%", transform: "translateX(-50%)" } : { left: 8 }), fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", fontFamily: "Inter", pointerEvents: "none", zIndex: 9999, writingMode: isSpine ? "vertical-rl" : "horizontal-tb" }}>
+            {face}
+          </div>
+        )}
       </div>
     );
   };
@@ -829,6 +1117,14 @@ export default function CoverDesigner() {
           <p className="text-xs text-white/40 uppercase tracking-widest font-semibold">Add Text</p>
           <button onClick={addText} className="w-full flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors">
             <Plus className="w-4 h-4" /> Add Text Block
+          </button>
+          <button
+            onClick={shuffleStyles}
+            disabled={!elements.some((e) => e.type === "text")}
+            title={ar ? "يبدّل خطوط وألوان كل النصوص دفعة واحدة" : "Swaps every text's font and color in one tap"}
+            className="w-full flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 disabled:opacity-40 text-white text-sm font-medium rounded-xl px-4 py-2.5 transition-colors"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" /> {ar ? "بدّل الستايل" : "Shuffle style"}
           </button>
           <div className="space-y-1.5">
             {[{ labelKey: "cdPresetLargeTitle" as const, size: 40, weight: "bold", family: "Playfair Display" }, { labelKey: "cdPresetSubtitle" as const, size: 20, weight: "600", family: "Merriweather" }, { labelKey: "cdPresetAuthor" as const, size: 14, weight: "normal", family: "Inter" }, { labelKey: "cdPresetBody" as const, size: 12, weight: "normal", family: "Inter" }].map((preset) => (
@@ -876,9 +1172,17 @@ export default function CoverDesigner() {
 
       case "layers": return (
         <div className="p-4 space-y-2">
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-3">Layers</p>
-          {[...elements].reverse().map((el) => (
-            <div key={el.id} onClick={() => setSelectedId(el.id)} className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${selectedId === el.id ? "bg-blue-600/30 border border-blue-500/40" : "bg-white/5 hover:bg-white/10"}`}>
+          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-1">Layers</p>
+          <p className="text-[10px] text-white/25 mb-2">{ar ? "اسحب لإعادة الترتيب" : "Drag to reorder"}</p>
+          {[...elements].sort((a, b) => b.zIndex - a.zIndex).map((el) => (
+            <div key={el.id} onClick={() => setSelectedId(el.id)}
+              draggable
+              onDragStart={(e) => { layerDragIdRef.current = el.id; e.dataTransfer.effectAllowed = "move"; }}
+              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setLayerDropId(el.id); }}
+              onDragLeave={() => setLayerDropId((cur) => (cur === el.id ? null : cur))}
+              onDrop={(e) => { e.preventDefault(); reorderLayer(layerDragIdRef.current, el.id); layerDragIdRef.current = null; setLayerDropId(null); }}
+              onDragEnd={() => { layerDragIdRef.current = null; setLayerDropId(null); }}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${selectedId === el.id ? "bg-blue-600/30 border border-blue-500/40" : "bg-white/5 hover:bg-white/10"} ${layerDropId === el.id ? "ring-1 ring-blue-400/70" : ""}`}>
               <span className="text-xs text-white/30 w-5 flex-shrink-0">{el.type === "text" ? "T" : el.type === "image" ? "I" : "S"}</span>
               <span className="text-xs text-white/70 flex-1 truncate">{el.type === "text" ? (el.content?.slice(0, 20) || "Text") : el.type === "image" ? "Image" : el.shapeType || "Shape"}</span>
               <span className="text-xs text-white/30 flex-shrink-0">{el.face[0].toUpperCase()}</span>
@@ -931,7 +1235,17 @@ export default function CoverDesigner() {
             </div>
             <input type="range" min={SPINE_MIN} max={SPINE_MAX} value={spineWidth} className="w-full accent-blue-500"
               onChange={(e) => setSpineWidth(parseInt(e.target.value))} />
-            <p className="text-[10px] text-white/20 mt-1">Adjust based on page count — thin for novellas, wide for thick novels</p>
+            {spineCalc ? (
+              <button
+                onClick={() => { setSpineWidth(spineCalc.px); toast({ title: ar ? `عرض الكعب ضُبط على ${spineCalc.pages} صفحة` : `Spine set for ${spineCalc.pages} pages` }); }}
+                className="mt-2 w-full flex items-center justify-between bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 rounded-xl px-3 py-2 transition-colors text-left"
+              >
+                <span className="text-[11px] text-emerald-300 font-semibold">{ar ? "احسب من كتابك" : "Calculate from your book"}</span>
+                <span className="text-[10px] text-white/45 font-mono">{spineCalc.pages}p · {spineCalc.inches.toFixed(2)}in</span>
+              </button>
+            ) : (
+              <p className="text-[10px] text-white/20 mt-1">{ar ? "اضبطه حسب عدد الصفحات، رفيع للقصير وعريض للطويل" : "Adjust by page count, thin for novellas and wide for thick novels"}</p>
+            )}
           </div>
 
           <div className="border-t border-white/8" />
@@ -1252,6 +1566,81 @@ export default function CoverDesigner() {
                 ))}
               </div>
             </div>
+
+            {/* Text effects: preset row, then contextual sliders (the
+               Kittl pattern: pick a look, refine with controls) */}
+            <div>
+              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">{ar ? "تأثيرات" : "Effects"}</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {([
+                  ["none", ar ? "بدون" : "None"],
+                  ["shadow", ar ? "ظل" : "Shadow"],
+                  ["lift", ar ? "رفع" : "Lift"],
+                  ["hollow", ar ? "مفرغ" : "Hollow"],
+                  ["neon", ar ? "نيون" : "Neon"],
+                  ["background", ar ? "خلفية" : "Highlight"],
+                ] as [TextEffect, string][]).map(([fx, label]) => {
+                  const active = (selected.effect || "none") === fx;
+                  const previewEl: CoverElement = { ...selected, effect: fx, effectIntensity: 60, effectColor: fx === "hollow" || fx === "neon" ? (selected.effectColor || "#3b82f6") : (selected.effectColor || "#000000"), fontSize: 15 };
+                  return (
+                    <button
+                      key={fx}
+                      onClick={() => commitUpdate(selected.id, fx === "none"
+                        ? { effect: "none" }
+                        : { effect: fx, effectIntensity: selected.effectIntensity ?? 50, effectColor: selected.effectColor || (fx === "neon" ? "#38bdf8" : fx === "hollow" ? "#ffffff" : "#000000") })}
+                      className={`flex flex-col items-center gap-1 py-2 rounded-lg border transition-colors ${active ? "bg-blue-600/25 border-blue-500/60" : "bg-white/5 border-white/8 hover:bg-white/10"}`}
+                    >
+                      <span style={{ fontSize: 15, fontWeight: 700, color: fx === "hollow" ? "transparent" : "#fff", lineHeight: 1, ...textEffectStyle(previewEl) }}>
+                        {fx === "background" ? <span style={{ ...textEffectSpanStyle(previewEl), padding: "1px 5px" }}>Ag</span> : "Ag"}
+                      </span>
+                      <span className="text-[9px] text-white/50">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {selected.effect && selected.effect !== "none" && (
+                <div className="mt-2 space-y-2">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-white/40">{ar ? "الشدة" : "Intensity"}</span>
+                      <span className="text-[10px] text-white/50 font-mono">{selected.effectIntensity ?? 50}</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={selected.effectIntensity ?? 50} className="w-full accent-blue-500"
+                      onChange={(e) => updateElement(selected.id, { effectIntensity: parseInt(e.target.value) })}
+                      onMouseUp={() => commitUpdate(selected.id, {})} />
+                  </div>
+                  {selected.effect !== "lift" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-white/40 flex-shrink-0">{ar ? "لون التأثير" : "Effect color"}</span>
+                      <input type="color" className="flex-1 h-7 rounded-lg border-0 cursor-pointer bg-transparent"
+                        value={selected.effectColor || "#000000"}
+                        onChange={(e) => commitUpdate(selected.id, { effectColor: e.target.value })} />
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Curve: per-letter arc, Latin only (breaks Arabic joining) */}
+              {!isArabicText(selected.content) ? (
+                <div className="mt-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-white/40">{ar ? "انحناء" : "Curve"}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-white/50 font-mono">{selected.curve || 0}</span>
+                      {(selected.curve || 0) !== 0 && (
+                        <button onClick={() => commitUpdate(selected.id, { curve: 0 })} className="text-[9px] text-white/40 hover:text-white underline">{ar ? "صفر" : "reset"}</button>
+                      )}
+                    </div>
+                  </div>
+                  <input type="range" min="-100" max="100" value={selected.curve || 0} className="w-full accent-blue-500"
+                    onChange={(e) => updateElement(selected.id, { curve: parseInt(e.target.value) })}
+                    onMouseUp={() => commitUpdate(selected.id, {})} />
+                </div>
+              ) : (
+                <p className="text-[10px] text-white/25 mt-2 leading-relaxed">
+                  {ar ? "الانحناء غير متاح للنص العربي حفاظاً على اتصال الحروف" : "Curve is unavailable for Arabic text to keep letters joined"}
+                </p>
+              )}
+            </div>
           </>
         )}
 
@@ -1380,10 +1769,31 @@ export default function CoverDesigner() {
           <LayoutTemplate className="w-3.5 h-3.5" />
           {ar ? "قوالب" : "Templates"}
         </button>
-        <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors">
-          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-          Export PNG
-        </button>
+        <div className="relative">
+          <button onClick={() => setExportMenuOpen((v) => !v)} disabled={exporting} className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors">
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            {ar ? "تصدير" : "Export"}
+            <ChevronDown className="w-3 h-3 opacity-60" />
+          </button>
+          {exportMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-[120]" onClick={() => setExportMenuOpen(false)} />
+              <div className="absolute top-full mt-1.5 right-0 z-[121] w-60 bg-[#1e1e22] border border-white/12 rounded-xl shadow-2xl overflow-hidden py-1" dir={ar ? "rtl" : "ltr"}>
+                {([
+                  ["screen", ar ? "غلاف كامل للشاشة" : "Full wrap for screen", ar ? "PNG بدقة العرض" : "Screen-resolution PNG"],
+                  ["print-front", ar ? "الوجه الأمامي للطباعة" : "Front cover for print", "1600 × 2400"],
+                  ["print-wrap", ar ? "غلاف كامل للطباعة" : "Full wrap for print", ar ? "دقة KDP كاملة" : "Full KDP resolution"],
+                ] as ["screen" | "print-front" | "print-wrap", string, string][]).map(([preset, label, note]) => (
+                  <button key={preset} onClick={() => doExport(preset)}
+                    className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-white/8 transition-colors text-start">
+                    <span className="text-xs text-white/85 font-medium">{label}</span>
+                    <span className="text-[10px] text-white/35 font-mono flex-shrink-0">{note}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg px-3 py-1.5 transition-colors">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
           Save
@@ -1457,8 +1867,6 @@ export default function CoverDesigner() {
         </div>
       </div>
 
-      {/* keyboard shortcut: Delete */}
-      <input type="text" className="sr-only" onKeyDown={(e) => { if (e.key === "Delete" || e.key === "Backspace") deleteSelected(); }} />
     </div>
 
     {/* ── Template gallery ── */}
