@@ -2046,7 +2046,7 @@ export default function ChapterEditor() {
   return (
     <div
       className="flex flex-col h-screen overflow-hidden transition-all duration-700"
-      style={{ backgroundColor: "#000" }}
+      style={{ backgroundColor: "#221b11" }}
     >
       <SEO title={chapter.title || "Chapter Editor"} noindex />
       {/* ── Draft-recovery banner — shown only when a local IndexedDB
@@ -2059,7 +2059,7 @@ export default function ChapterEditor() {
             position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)",
             zIndex: 60, maxWidth: "min(560px, 92vw)", padding: "10px 14px",
             display: "flex", alignItems: "center", gap: 12,
-            background: "#1c1c24", color: "#f4f4f5",
+            background: "#332a1b", color: "#f4f4f5",
             border: "1px solid rgba(234, 179, 8, 0.35)", borderRadius: 10,
             boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
             fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
@@ -2080,7 +2080,7 @@ export default function ChapterEditor() {
             onClick={handleRestoreDraft}
             style={{
               padding: "6px 12px", borderRadius: 6, border: "none",
-              background: "#fff", color: "#111", cursor: "pointer",
+              background: "#f7f2e4", color: "#221b11", cursor: "pointer",
               fontSize: 12, fontWeight: 600,
             }}
           >
@@ -2122,7 +2122,7 @@ export default function ChapterEditor() {
 
       {/* Editor Header */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-black/40 border-transparent" : ""}`}
+        className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-[#221b11]/50 border-transparent" : ""}`}
         style={{ backgroundColor: isFocusMode ? undefined : "#2a2a2a" }}
       >
         <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between relative z-10 gap-2">
@@ -2388,7 +2388,7 @@ export default function ChapterEditor() {
             <button
               className="h-9 px-4 rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
               style={{
-                background: aiChatOpen ? "rgba(255,255,255,0.16)" : "#000",
+                background: aiChatOpen ? "rgba(255,255,255,0.16)" : "#221b11",
                 color: "#fff",
                 border: "1px solid rgba(255,255,255,0.22)",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.55)",
@@ -2416,7 +2416,7 @@ export default function ChapterEditor() {
                     ? "cursor-wait"
                     : "hover:-translate-y-px"
               }`}
-              style={{ background: justSaved ? undefined : "#fff", color: justSaved ? "#fff" : "#000" }}
+              style={{ background: justSaved ? undefined : "#f7f2e4", color: justSaved ? "#f7f2e4" : "#221b11" }}
               onClick={updateChapter.isPending || justSaved ? undefined : handleSave}
               disabled={updateChapter.isPending}
               data-testid="button-save"
@@ -2443,7 +2443,7 @@ export default function ChapterEditor() {
           <div
             className="absolute left-0 right-0 bottom-0 rounded-t-3xl"
             style={{
-              background: "#1b1b20", color: "#fff",
+              background: "#332a1b", color: "#fff",
               maxHeight: "82vh", overflowY: "auto",
               padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
               boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
@@ -3262,7 +3262,7 @@ export default function ChapterEditor() {
                                 {isSelected && (
                                   <div
                                     className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-xl z-10 whitespace-nowrap"
-                                    style={{ background: '#1a1a1d', border: '1px solid rgba(255,255,255,0.12)' }}
+                                    style={{ background: '#332a1b', border: '1px solid rgba(255,255,255,0.12)' }}
                                     onMouseDown={e => e.stopPropagation()}
                                   >
                                     {([
@@ -3343,7 +3343,7 @@ export default function ChapterEditor() {
                               {isSelected && (
                                 <div
                                   className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-xl z-10 whitespace-nowrap"
-                                  style={{ background: '#1a1a1d', border: '1px solid rgba(255,255,255,0.12)' }}
+                                  style={{ background: '#332a1b', border: '1px solid rgba(255,255,255,0.12)' }}
                                   onMouseDown={e => e.stopPropagation()}
                                 >
                                   {/* Alignment */}
@@ -4158,7 +4158,7 @@ export default function ChapterEditor() {
           height: 62,
           padding: 0,
           borderRadius: "50%",
-          background: "#000",
+          background: "#221b11",
           color: "#fff",
           border: "1px solid rgba(255,255,255,0.16)",
           boxShadow:

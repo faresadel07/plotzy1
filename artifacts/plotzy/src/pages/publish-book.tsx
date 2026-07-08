@@ -1128,7 +1128,7 @@ export default function PublishBook() {
             style={{
               width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto",
               background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 18,
-              boxShadow: "0 24px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08)",
+              boxShadow: "0 24px 80px rgba(20,16,10,0.9), 0 0 0 1px rgba(255,255,255,0.08)",
               fontFamily: SF, padding: "24px 22px", boxSizing: "border-box",
               animation: "popIn 0.2s ease",
             }}
@@ -1244,7 +1244,7 @@ export default function PublishBook() {
               data-testid="button-generate-proposal"
               style={{
                 fontFamily: SF, width: "100%", padding: "13px 0", borderRadius: 12, fontSize: 14, fontWeight: 700,
-                background: "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)",
+                background: "linear-gradient(135deg, #332a1b 0%, #2a2a2a 100%)",
                 color: isGenerating ? MUTED : TEXT, border: `1px solid rgba(255,255,255,0.15)`,
                 cursor: isGenerating ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 boxShadow: "0 4px 16px rgba(0,0,0,0.4)",

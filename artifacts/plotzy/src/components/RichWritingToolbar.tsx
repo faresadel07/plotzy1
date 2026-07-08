@@ -198,11 +198,11 @@ export function RichWritingToolbar({
       ? "rgba(26,26,31,0.97)"
       : "rgba(255,255,255,0.98)";
   const fg  = isDark || isFocusMode ? "#d4d4d8" : "#3f3f46";
-  const fgStrong = isDark || isFocusMode ? "#ffffff" : "#111111";
+  const fgStrong = isDark || isFocusMode ? "#f7f2e4" : "#221b11";
   const dividerColor = isDark || isFocusMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
   const hoverBg = isDark || isFocusMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
   const activeBg = isDark || isFocusMode ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)";
-  const dropBg = isDark || isFocusMode ? "#1c1c24" : "#ffffff";
+  const dropBg = isDark || isFocusMode ? "#332a1b" : "#fffdf7";
   const dropBorder = isDark || isFocusMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
 
   // ── Current state queries ──
@@ -321,12 +321,12 @@ export function RichWritingToolbar({
   // bottom sheet, ordered most-to-least used. Desktop untouched below.
   // ─────────────────────────────────────────────────────────────
   if (isPhone) {
-    const sheetBg = isDark || isFocusMode ? "#17171c" : "#ffffff";
+    const sheetBg = isDark || isFocusMode ? "#332a1b" : "#fffdf7";
     const sheetText = fgStrong;
     const sheetSub = isDark || isFocusMode ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
     const chipIdle = isDark || isFocusMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
-    const chipActiveBg = isDark || isFocusMode ? "#ffffff" : "#18181b";
-    const chipActiveFg = isDark || isFocusMode ? "#000000" : "#ffffff";
+    const chipActiveBg = isDark || isFocusMode ? "#f7f2e4" : "#221b11";
+    const chipActiveFg = isDark || isFocusMode ? "#221b11" : "#f7f2e4";
 
     const mBtn = (active?: boolean): React.CSSProperties => ({
       display: "flex", alignItems: "center", justifyContent: "center",
@@ -1029,7 +1029,7 @@ export function RichWritingToolbar({
                   ...dropItemStyle,
                   fontWeight: s.value.startsWith("h") || s.value === "title" ? 700 : 400,
                   fontSize: s.value === "h1" ? 20 : s.value === "h2" ? 16 : s.value === "title" ? 22 : 13,
-                  color: isDark || isFocusMode ? "#e4e4e7" : "#18181b",
+                  color: isDark || isFocusMode ? "#e9e2d0" : "#221b11",
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -1045,7 +1045,7 @@ export function RichWritingToolbar({
         const filtered = q ? FONT_OPTIONS.filter(f => f.label.toLowerCase().includes(q)) : FONT_OPTIONS;
         const categories = q ? ["Results"] : ["Serif", "Sans-serif", "Display", "Handwriting", "Monospace", "Arabic"];
         const getGroup = (cat: string) => cat === "Results" ? filtered : filtered.filter(f => f.category === cat);
-        const textCol = isDark || isFocusMode ? "#e4e4e7" : "#18181b";
+        const textCol = isDark || isFocusMode ? "#e9e2d0" : "#221b11";
         const catCol  = isDark || isFocusMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)";
         const activeBgFont = isDark || isFocusMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
         return (

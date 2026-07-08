@@ -322,7 +322,7 @@ export function PageStylePicker({ currentStyle, isDark, onSelect, onClose }: Pag
                     <div
                       className="w-full h-[60px] overflow-hidden relative"
                       style={{
-                        backgroundColor: (previewCSS as any).backgroundColor || (isDark ? "#1a1a1a" : "#ffffff"),
+                        backgroundColor: (previewCSS as any).backgroundColor || (isDark ? "#332a1b" : "#ffffff"),
                         backgroundImage: (previewCSS as any).backgroundImage,
                         backgroundSize: (previewCSS as any).backgroundSize,
                       }}

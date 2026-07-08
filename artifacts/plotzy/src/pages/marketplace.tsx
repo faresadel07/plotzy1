@@ -22,7 +22,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 /* ─── Design tokens ──────────────────────────────────────── */
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#000"; const C2 = "#111"; const C3 = "#1a1a1a";
+const BG = "#000"; const C2 = "#111"; const C3 = "#332a1b";
 const B = "rgba(255,255,255,0.07)";
 const T = "#fff"; const TS = "rgba(255,255,255,0.55)"; const TD = "rgba(255,255,255,0.25)";
 
@@ -567,7 +567,7 @@ function LaunchModal({
           display: "flex",
           flexDirection: "column",
           maxHeight: "92vh",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.8)",
+          boxShadow: "0 40px 100px rgba(20,16,10,0.8)",
           fontFamily: SF,
         }}
         onClick={e => e.stopPropagation()}

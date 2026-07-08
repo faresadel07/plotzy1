@@ -147,7 +147,7 @@ function ResultsGrid({ issues, ar, columns }: { issues: ComicIssue[]; ar: boolea
           onClick={() => navigate(`/comics/${c.id}`)}
           style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "start", fontFamily: SF }}
         >
-          <div style={{ width: "100%", aspectRatio: "2 / 3", borderRadius: 9, overflow: "hidden", background: "#141416", boxShadow: "0 6px 18px rgba(0,0,0,0.45)" }}>
+          <div style={{ width: "100%", aspectRatio: "2 / 3", borderRadius: 9, overflow: "hidden", background: "#332a1b", boxShadow: "0 6px 18px rgba(0,0,0,0.45)" }}>
             <ComicCoverImg id={c.id} alt={c.title} />
           </div>
           <div style={{ marginTop: 7, fontSize: 12, fontWeight: 600, color: "#f0efe8", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>
@@ -287,7 +287,7 @@ function DesktopWall({ ar }: { ar: boolean }) {
           >
             <div style={{
               width: "100%", aspectRatio: "2 / 3", borderRadius: 10, overflow: "hidden",
-              background: "#141416", boxShadow: "0 8px 26px rgba(0,0,0,0.5)",
+              background: "#332a1b", boxShadow: "0 8px 26px rgba(0,0,0,0.5)",
               transition: "transform 200ms cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 200ms ease",
               position: "relative",
             }} className="comic-cover">

@@ -21,7 +21,7 @@ const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans
 const BG = "#221b11";
 const C1 = "#221b11";
 const C2 = "#332a1b";
-const C3 = "#1a1a1a";
+const C3 = "#332a1b";
 const B = "rgba(244,239,226,0.07)";
 const T = "#f7f2e4";
 const TS = "rgba(244,239,226,0.55)";
@@ -125,7 +125,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           {/* Hover overlay with stats */}
           <div style={{
             position: "absolute", inset: 0,
-            background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)",
+            background: "linear-gradient(to top, rgba(20,16,10,0.8) 0%, transparent 50%)",
             opacity: hover ? 1 : 0,
             transition: "opacity 0.25s",
             display: "flex", flexDirection: "column", justifyContent: "flex-end",

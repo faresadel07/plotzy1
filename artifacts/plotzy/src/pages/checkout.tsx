@@ -22,7 +22,7 @@ import { useLanguage } from "@/contexts/language-context";
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
 const BG = "#000";
 const C2 = "#111";
-const C3 = "#1a1a1a";
+const C3 = "#332a1b";
 const B = "rgba(255,255,255,0.07)";
 const T = "#fff";
 const TS = "rgba(255,255,255,0.55)";
@@ -468,7 +468,7 @@ function PaymentFormPanel({
                 </p>
                 <div
                   style={{
-                    background: "linear-gradient(180deg, #1a1a1a 0%, #161616 100%)",
+                    background: "linear-gradient(180deg, #332a1b 0%, #161616 100%)",
                     border: `1px solid ${B}`,
                     borderRadius: 16,
                     padding: 24,

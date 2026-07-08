@@ -108,7 +108,7 @@ export default function FaqPage() {
                       transition: "background 0.15s, border-color 0.15s",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#1a1a1a";
+                      e.currentTarget.style.background = "#332a1b";
                       e.currentTarget.style.borderColor = "rgba(244,239,226,0.12)";
                     }}
                     onMouseLeave={(e) => {

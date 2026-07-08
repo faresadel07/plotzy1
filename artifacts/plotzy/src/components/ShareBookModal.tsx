@@ -231,7 +231,7 @@ export function ShareBookModal({ open, onClose, bookId, title, author, coverImag
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: 560, maxHeight: "88vh", overflow: "auto",
-          background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.08)",
+          background: "#292115", border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 20, color: "#f0efe8",
           boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
         }}

@@ -20,7 +20,7 @@ const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans
 const BG = "#000";
 const C1 = "#0a0a0a";
 const C2 = "#111";
-const C3 = "#1a1a1a";
+const C3 = "#332a1b";
 const B = "rgba(255,255,255,0.08)";
 const T = "#fff";
 const TS = "rgba(255,255,255,0.55)";
@@ -568,7 +568,7 @@ export default function AuthorProfile() {
           ) : (
             <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #0a0a0a 0%, #111 50%, #1a1a2e 100%)" }} />
           )}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(20,16,10,0.8) 0%, transparent 60%)" }} />
           {/* Back button on banner */}
           <button onClick={() => navigate("/")}
             style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "6px 14px", borderRadius: 8, fontWeight: 500 }}>

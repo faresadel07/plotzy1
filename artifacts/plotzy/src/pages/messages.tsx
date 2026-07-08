@@ -28,7 +28,7 @@ const TS = "rgba(255,255,255,0.55)";
 const TD = "rgba(255,255,255,0.25)";
 const SENT_BG = "#fff";
 const SENT_TEXT = "#000";
-const RECV_BG = "#1a1a1a";
+const RECV_BG = "#332a1b";
 const RECV_TEXT = "rgba(255,255,255,0.88)";
 
 /* ── Time helpers ─────────────────────────────────────────── */

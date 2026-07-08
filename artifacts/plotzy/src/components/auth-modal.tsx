@@ -209,7 +209,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 99999,
-        background: "rgba(0,0,0,0.75)",
+        background: "rgba(20,16,10,0.78)",
         backdropFilter: "blur(14px)",
         WebkitBackdropFilter: "blur(14px)",
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -218,7 +218,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     >
       <div
         style={{
-          background: "#0e0e0e",
+          background: "#292115",
           border: "1px solid rgba(244,239,226,0.09)",
           borderRadius: 22,
           width: "100%",

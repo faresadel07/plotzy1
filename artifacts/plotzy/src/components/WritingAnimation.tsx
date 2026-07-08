@@ -45,7 +45,7 @@ function AISuggestion({ visible }: { visible: boolean }) {
           <div
             className="rounded-xl px-3 py-2 text-[9px] leading-relaxed"
             style={{
-              background: "#1a1a1a",
+              background: "#332a1b",
               border: "1px solid rgba(255,255,255,0.12)",
               color: "rgba(255,255,255,0.55)",
               boxShadow: "0 8px 24px rgba(0,0,0,0.4)",

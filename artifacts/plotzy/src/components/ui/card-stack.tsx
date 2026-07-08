@@ -246,7 +246,7 @@ function DefaultCard({ item, active }: { item: CardStackItem; active: boolean })
       className="relative h-full w-full flex flex-col justify-between p-8"
       style={{
         background: active
-          ? "linear-gradient(135deg, #1a1a1a 0%, #111 100%)"
+          ? "linear-gradient(135deg, #332a1b 0%, #111 100%)"
           : "linear-gradient(135deg, #141414 0%, #0d0d0d 100%)",
         border: active ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(255,255,255,0.06)",
         borderRadius: 16,

@@ -473,7 +473,7 @@ function ActionButton({ icon, label, onClick }: {
         transition: "background 0.2s, border-color 0.2s",
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.background = "#1a1a1a";
+        e.currentTarget.style.background = "#332a1b";
         e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
       }}
       onMouseLeave={e => {

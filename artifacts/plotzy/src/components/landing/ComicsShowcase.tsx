@@ -107,7 +107,7 @@ function ComicTrack({ comics, onOpen, reverse }: {
               style={{
                 width: 90, height: 135, borderRadius: 5,
                 boxShadow: "4px 5px 16px rgba(0,0,0,0.45), 1px 1px 4px rgba(0,0,0,0.25)",
-                background: "#141416",
+                background: "#332a1b",
               }}
             >
               <ShowcaseCover id={c.id} alt={c.title} />
@@ -116,7 +116,7 @@ function ComicTrack({ comics, onOpen, reverse }: {
               {/* Hover title */}
               <div
                 className="absolute inset-x-0 bottom-0 opacity-0 group-hover/comic:opacity-100 transition-opacity duration-200"
-                style={{ background: "linear-gradient(to top,rgba(0,0,0,0.85),transparent)", padding: "20px 6px 6px" }}
+                style={{ background: "linear-gradient(to top,rgba(20,16,10,0.85),transparent)", padding: "20px 6px 6px" }}
               >
                 <p style={{ fontSize: 8.5, color: "rgba(255,255,255,0.92)", textAlign: "center", lineHeight: 1.3, margin: 0, fontFamily: SF }}>
                   {c.title}

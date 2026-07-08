@@ -683,7 +683,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
       {/* ── Site-wide Banner ── */}
       {banner?.message && !bannerDismissed && (() => {
         const BG: Record<string, string> = {
-          default: "#1a1a1a", info: "#1e40af", success: "#166534", warning: "#92400e", danger: "#991b1b",
+          default: "#332a1b", info: "#1e40af", success: "#166534", warning: "#92400e", danger: "#991b1b",
         };
         const FG: Record<string, string> = {
           default: "#fff", info: "#fff", success: "#fff", warning: "#fef08a", danger: "#fff",

@@ -62,7 +62,7 @@ export function ConfirmModal({
             style={{
               position: "fixed",
               inset: 0,
-              background: "rgba(0,0,0,0.75)",
+              background: "rgba(20,16,10,0.78)",
               backdropFilter: "blur(4px)",
               WebkitBackdropFilter: "blur(4px)",
               zIndex: 99990,
@@ -89,12 +89,12 @@ export function ConfirmModal({
           >
             <div
               style={{
-                background: "#0e0e0e",
+                background: "#292115",
                 border: "1px solid rgba(244,239,226,0.08)",
                 borderRadius: 20,
                 width: "100%",
                 maxWidth: 420,
-                boxShadow: "0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(244,239,226,0.04)",
+                boxShadow: "0 40px 80px rgba(20,16,10,0.8), 0 0 0 1px rgba(244,239,226,0.04)",
                 overflow: "hidden",
                 pointerEvents: "auto",
               }}
