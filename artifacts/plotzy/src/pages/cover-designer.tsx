@@ -12,7 +12,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, Bold, Italic,
   Move, Loader2, Eye, EyeOff, Lock, Unlock, RotateCcw,
   Circle, Triangle, Star, Minus, Copy, Check, Sparkles,
-  Wand2, FileText, Monitor,
+  Wand2, FileText,
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { nanoid } from "nanoid";
@@ -490,11 +490,15 @@ export default function CoverDesigner() {
   }, [pushHistory]);
 
   useEffect(() => {
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    // Pointer events cover mouse AND touch: the same drag/resize logic
+    // drives desktop and phone.
+    window.addEventListener("pointermove", onMouseMove);
+    window.addEventListener("pointerup", onMouseUp);
+    window.addEventListener("pointercancel", onMouseUp);
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onMouseMove);
+      window.removeEventListener("pointerup", onMouseUp);
+      window.removeEventListener("pointercancel", onMouseUp);
     };
   }, [onMouseMove, onMouseUp]);
 
@@ -765,6 +769,52 @@ export default function CoverDesigner() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedId, editingId, elements, undo, redo, duplicateSelected, deleteSelected, pushHistory]);
 
+  /* ─── Phone: pinch zoom, fit-to-width, bottom sheets ─── */
+  const [mobileSheet, setMobileSheet] = useState<null | "panel" | "props">(null);
+  const isNarrowRef = useRef(typeof window !== "undefined" && window.innerWidth < 768);
+  const zoomRef = useRef(zoom);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+
+  // Fit the whole wrap to the phone width once on mount.
+  useEffect(() => {
+    if (isNarrowRef.current) {
+      setZoom(Math.max(0.3, Math.min(1, (window.innerWidth - 24) / (300 + SPINE_DEFAULT + 300))));
+    }
+  }, []);
+
+  // Two-finger pinch on the canvas adjusts zoom (native listeners so we
+  // can preventDefault browser page-zoom).
+  useEffect(() => {
+    const node = canvasRef.current;
+    if (!node) return;
+    let startDist = 0;
+    let startZoom = 1;
+    const dist = (e: TouchEvent) => Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) { startDist = dist(e); startZoom = zoomRef.current; }
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && startDist > 0) {
+        e.preventDefault();
+        setZoom(Math.max(0.3, Math.min(2.5, startZoom * (dist(e) / startDist))));
+      }
+    };
+    const onTouchEnd = () => { startDist = 0; };
+    node.addEventListener("touchstart", onTouchStart, { passive: true });
+    node.addEventListener("touchmove", onTouchMove, { passive: false });
+    node.addEventListener("touchend", onTouchEnd, { passive: true });
+    node.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      node.removeEventListener("touchstart", onTouchStart);
+      node.removeEventListener("touchmove", onTouchMove);
+      node.removeEventListener("touchend", onTouchEnd);
+      node.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, []);
+
   /* ─── Lock body scroll when designer is open ─── */
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -937,9 +987,9 @@ export default function CoverDesigner() {
     const isSelected = el.id === selectedId;
     const isEditing = el.id === editingId;
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handlePointerDown = (e: React.PointerEvent) => {
       if (el.locked) return;
-      // While this text element is being edited, a mousedown is the user
+      // While this text element is being edited, a pointerdown is the user
       // clicking inside the textarea (to place the caret or select text).
       // Do NOT exit edit mode or start a drag — just keep the event from
       // bubbling to the face/canvas handlers.
@@ -971,8 +1021,9 @@ export default function CoverDesigner() {
           boxSizing: "border-box",
           outline: isSelected ? "2px solid #3b82f6" : "none",
           outlineOffset: "1px",
+          touchAction: isEditing ? "auto" : "none", // touch drags must not scroll the page
         }}
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
         onDoubleClick={handleDoubleClick}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1012,13 +1063,13 @@ export default function CoverDesigner() {
         {/* Resize handles */}
         {isSelected && !el.locked && (
           HANDLES.map((h) => {
-            const top = h.includes("n") ? -4 : h.includes("s") ? "calc(100% - 4px)" : "calc(50% - 4px)";
-            const left = h.includes("w") ? -4 : h.includes("e") ? "calc(100% - 4px)" : "calc(50% - 4px)";
+            const top = h.includes("n") ? -6 : h.includes("s") ? "calc(100% - 6px)" : "calc(50% - 6px)";
+            const left = h.includes("w") ? -6 : h.includes("e") ? "calc(100% - 6px)" : "calc(50% - 6px)";
             return (
               <div
                 key={h}
-                style={{ position: "absolute", top, left, width: 8, height: 8, background: "#3b82f6", border: "1.5px solid white", borderRadius: 2, cursor: handleCursor[h], zIndex: 9999 }}
-                onMouseDown={(e) => {
+                style={{ position: "absolute", top, left, width: 12, height: 12, background: "#3b82f6", border: "1.5px solid white", borderRadius: 3, cursor: handleCursor[h], zIndex: 9999, touchAction: "none" }}
+                onPointerDown={(e) => {
                   e.stopPropagation();
                   resizeRef.current = { id: el.id, handle: h, startMX: e.clientX, startMY: e.clientY, origX: el.x, origY: el.y, origW: el.width, origH: el.height };
                   dragRef.current = null;
@@ -1073,7 +1124,7 @@ export default function CoverDesigner() {
             <div
               key={el.id}
               style={{ position: "absolute", left: el.x, top: el.y, width: el.width, height: el.height, zIndex: el.zIndex + 2, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", outline: selectedId === el.id ? "2px solid #3b82f6" : "none", outlineOffset: 1, boxSizing: "border-box" }}
-              onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); }}
+              onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); }}
               onClick={(e) => e.stopPropagation()}
             >
               {el.type === "text" && (
@@ -1712,20 +1763,7 @@ export default function CoverDesigner() {
   return (
     <>
     <SEO title={t("cdSeo")} noindex />
-    {/* Mobile warning — cover designer needs desktop */}
-    <div className="md:hidden flex flex-col items-center justify-center h-screen p-8 text-center bg-[#111] text-white" style={{ fontFamily: "Inter, sans-serif" }}>
-      <Monitor style={{ width: 44, height: 44, marginBottom: 16, color: "rgba(255,255,255,0.4)" }} />
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{t("cdDesktopRequired")}</h2>
-      <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 320 }}>
-        {t("cdDesktopBody")}
-      </p>
-      <Link href={`/books/${bookId}`}>
-        <button style={{ marginTop: 24, padding: "10px 20px", borderRadius: 10, background: "#fff", color: "#000", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-          {t("cdBackToBook")}
-        </button>
-      </Link>
-    </div>
-    <div className="hidden md:flex flex-col h-screen bg-[#111] text-white overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className="flex flex-col h-[100dvh] md:h-screen bg-[#111] text-white overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
 
       {/* ── Top Bar ── */}
       <div className="flex items-center gap-3 px-4 h-12 bg-[#1a1a1a] border-b border-white/8 flex-shrink-0 z-50">
@@ -1738,8 +1776,8 @@ export default function CoverDesigner() {
         <div className="h-4 w-px bg-white/10" />
         <h1 className="text-sm font-semibold text-white/80 flex-1 truncate">{book?.title || t("cdTitleFallback")}</h1>
 
-        {/* Face selector */}
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+        {/* Face selector (desktop; phones get the chips row below) */}
+        <div className="hidden md:flex gap-1 bg-white/5 rounded-lg p-1">
           {(["front","back","spine"] as Face[]).map((f) => (
             <button key={f} onClick={() => setActiveFace(f)} className={`text-xs px-3 py-1 rounded-md font-medium transition-colors ${activeFace === f ? "bg-white/20 text-white" : "text-white/40 hover:text-white"}`}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -1747,32 +1785,32 @@ export default function CoverDesigner() {
           ))}
         </div>
 
-        <div className="h-4 w-px bg-white/10" />
+        <div className="hidden md:block h-4 w-px bg-white/10" />
 
         {/* Undo/Redo */}
         <button onClick={undo} disabled={historyIdx <= 0} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors" title="Undo" aria-label="Undo"><RotateCcw className="w-4 h-4" /></button>
         <button onClick={redo} disabled={historyIdx >= history.length - 1} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors rotate-180" title="Redo" aria-label="Redo"><RotateCcw className="w-4 h-4" /></button>
 
-        {/* Zoom */}
-        <div className="flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1">
+        {/* Zoom (desktop; phones pinch) */}
+        <div className="hidden md:flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1">
           <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))} aria-label="Zoom out" className="text-white/40 hover:text-white text-sm w-4 text-center">−</button>
           <span className="text-xs text-white/60 w-10 text-center">{Math.round(zoom * 100)}%</span>
           <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))} aria-label="Zoom in" className="text-white/40 hover:text-white text-sm w-4 text-center">+</button>
         </div>
 
-        <div className="h-4 w-px bg-white/10" />
+        <div className="hidden md:block h-4 w-px bg-white/10" />
         <button
           onClick={() => setShowGallery(true)}
           className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
           title={ar ? "معرض القوالب" : "Template gallery"}
         >
           <LayoutTemplate className="w-3.5 h-3.5" />
-          {ar ? "قوالب" : "Templates"}
+          <span className="hidden md:inline">{ar ? "قوالب" : "Templates"}</span>
         </button>
         <div className="relative">
           <button onClick={() => setExportMenuOpen((v) => !v)} disabled={exporting} className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors">
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            {ar ? "تصدير" : "Export"}
+            <span className="hidden md:inline">{ar ? "تصدير" : "Export"}</span>
             <ChevronDown className="w-3 h-3 opacity-60" />
           </button>
           {exportMenuOpen && (
@@ -1796,15 +1834,25 @@ export default function CoverDesigner() {
         </div>
         <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg px-3 py-1.5 transition-colors">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-          Save
+          <span className="hidden md:inline">Save</span>
         </button>
+      </div>
+
+      {/* ── Mobile face chips ── */}
+      <div className="md:hidden flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] border-b border-white/8 flex-shrink-0">
+        {(["front","spine","back"] as Face[]).map((f) => (
+          <button key={f} onClick={() => setActiveFace(f)}
+            className={`flex-1 max-w-[110px] text-xs py-2.5 rounded-lg font-semibold transition-colors ${activeFace === f ? "bg-white/20 text-white" : "bg-white/5 text-white/40"}`}>
+            {ar ? (f === "front" ? "أمامي" : f === "spine" ? "كعب" : "خلفي") : f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* ── Main Layout ── */}
       <div className="flex flex-1 overflow-hidden min-h-0">
 
         {/* ── Left Panel ── */}
-        <div className="w-[260px] bg-[#161616] border-r border-white/8 flex flex-col flex-shrink-0 overflow-hidden">
+        <div className="w-[260px] bg-[#161616] border-r border-white/8 hidden md:flex flex-col flex-shrink-0 overflow-hidden">
           {/* Panel tabs */}
           <div className="flex border-b border-white/8 flex-shrink-0">
             {([["text","T", Type],["images","I", ImageIcon],["shapes","S", Square],["layers","L", Layers],["background","B", Palette],["ai","AI", Sparkles]] as [typeof activePanel, string, any][]).map(([panel, short, Icon]) => (
@@ -1824,7 +1872,7 @@ export default function CoverDesigner() {
         {/* ── Canvas (drop zone) ── */}
         <div
           ref={canvasRef}
-          className="flex-1 overflow-auto flex items-center justify-center bg-[#111] relative"
+          className="flex-1 overflow-auto flex bg-[#111] relative p-3 md:p-6"
           style={{ backgroundImage: "radial-gradient(circle, #1e1e1e 1px, transparent 1px)", backgroundSize: "24px 24px" }}
           onClick={() => setSelectedId(null)}
           onDragEnter={handleDragEnter}
@@ -1842,30 +1890,88 @@ export default function CoverDesigner() {
               </div>
             </div>
           )}
-          {/* Book */}
-          <div style={{ transform: `scale(${zoom})`, transformOrigin: "center center", transition: "transform 0.15s ease" }}>
-            <div
-              ref={bookRef}
-              style={{ display: "flex", width: TOTAL_BOOK_W, height: FACE_H, boxShadow: "0 30px 80px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5)", borderRadius: 4, overflow: "hidden", cursor: "default" }}
-            >
-              {/* Back */}
-              <FaceCanvas face="back" />
-              {/* Spine */}
-              <FaceCanvas face="spine" />
-              {/* Front */}
-              <FaceCanvas face="front" />
+          {/* Book. The sizing wrapper reserves the SCALED footprint so
+              the scroll container's bounds follow the zoom (a bare CSS
+              transform never affects scroll size — zoomed-in edges were
+              unreachable before). margin:auto centers when it fits. */}
+          <div style={{ width: scaledW, height: scaledH, margin: "auto", flexShrink: 0, padding: 0 }}>
+            <div style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s ease" }}>
+              <div
+                ref={bookRef}
+                style={{ display: "flex", width: TOTAL_BOOK_W, height: FACE_H, boxShadow: "0 30px 80px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5)", borderRadius: 4, overflow: "hidden", cursor: "default" }}
+              >
+                {/* Back */}
+                <FaceCanvas face="back" />
+                {/* Spine */}
+                <FaceCanvas face="spine" />
+                {/* Front */}
+                <FaceCanvas face="front" />
+              </div>
             </div>
           </div>
         </div>
 
         {/* ── Right Properties Panel ── */}
-        <div className="w-[220px] bg-[#161616] border-l border-white/8 flex flex-col flex-shrink-0 overflow-hidden min-h-0">
+        <div className="w-[220px] bg-[#161616] border-l border-white/8 hidden md:flex flex-col flex-shrink-0 overflow-hidden min-h-0">
           <div className="px-4 py-3 border-b border-white/8 flex-shrink-0">
             <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Properties</p>
           </div>
           {renderProperties()}
         </div>
       </div>
+
+      {/* ── Mobile: selection context bar ── */}
+      {selected && !mobileSheet && (
+        <div className="md:hidden flex items-center gap-1 px-2 py-1.5 bg-[#161616] border-t border-white/8 flex-shrink-0" dir={ar ? "rtl" : "ltr"}>
+          {selected.type === "text" && (
+            <button onClick={() => setEditingId(selected.id)} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-white/8 text-xs font-semibold text-white/85">
+              <Type className="w-4 h-4" /> {ar ? "تحرير" : "Edit"}
+            </button>
+          )}
+          <button onClick={() => setMobileSheet("props")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-white/8 text-xs font-semibold text-white/85">
+            <Palette className="w-4 h-4" /> {ar ? "خصائص" : "Style"}
+          </button>
+          <div className="flex-1" />
+          <button onClick={duplicateSelected} aria-label="Duplicate" className="p-2.5 rounded-lg text-white/60"><Copy className="w-[18px] h-[18px]" /></button>
+          <button onClick={() => moveLayer(selected.id, "up")} aria-label="Layer up" className="p-2.5 rounded-lg text-white/60"><ChevronUp className="w-[18px] h-[18px]" /></button>
+          <button onClick={() => moveLayer(selected.id, "down")} aria-label="Layer down" className="p-2.5 rounded-lg text-white/60"><ChevronDown className="w-[18px] h-[18px]" /></button>
+          <button onClick={deleteSelected} aria-label="Delete" className="p-2.5 rounded-lg text-red-400/90"><Trash2 className="w-[18px] h-[18px]" /></button>
+        </div>
+      )}
+
+      {/* ── Mobile: bottom panel tabs ── */}
+      <div className="md:hidden flex bg-[#161616] border-t border-white/8 flex-shrink-0" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        {([["text", Type],["images", ImageIcon],["shapes", Square],["layers", Layers],["background", Palette],["ai", Sparkles]] as [typeof activePanel, any][]).map(([panel, Icon]) => (
+          <button key={panel} onClick={() => { setActivePanel(panel); setMobileSheet("panel"); }}
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 min-h-[52px] transition-colors ${mobileSheet === "panel" && activePanel === panel ? (panel === "ai" ? "text-violet-400" : "text-blue-400") : "text-white/35"}`}>
+            <Icon className="w-5 h-5" />
+            <span className="text-[9px] capitalize">{panel === "background" ? (ar ? "خلفية" : "BG") : panel}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── Mobile: bottom sheet (panels + properties) ── */}
+      {mobileSheet && (
+        <div className="md:hidden fixed inset-0 z-[110]" onClick={() => setMobileSheet(null)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            className="absolute bottom-0 left-0 right-0 max-h-[62dvh] bg-[#181818] rounded-t-2xl border-t border-white/12 flex flex-col shadow-2xl"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center pt-2"><div className="w-9 h-1 rounded-full bg-white/20" /></div>
+            <div className="flex items-center justify-between px-4 pt-1 pb-1" dir={ar ? "rtl" : "ltr"}>
+              <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">
+                {mobileSheet === "props" ? (ar ? "خصائص العنصر" : "Properties") : activePanel}
+              </p>
+              <button onClick={() => setMobileSheet(null)} aria-label={ar ? "إغلاق" : "Close"} className="p-2 -m-1 text-white/50 text-base leading-none">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+              {mobileSheet === "props" ? renderProperties() : renderPanel()}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
 
