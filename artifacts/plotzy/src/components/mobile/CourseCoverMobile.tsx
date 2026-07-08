@@ -21,12 +21,12 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
           border: "none", padding: 0, cursor: "pointer", textAlign: "center",
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7b7366", marginBottom: 20 }}>
           {ar ? "دورة الكتابة المجّانيّة" : "Free Writing Course"}
         </div>
 
-        {/* Two course covers side by side on a soft purple glow so they
-            lift off the black. Order is fixed (not RTL-mirrored): the
+        {/* Two course covers side by side on a soft warm glow so they
+            lift off the paper. Order is fixed (not RTL-mirrored): the
             newer "Learning Writing 101" sits to the right of the
             original "Basics of Writing 101". */}
         <div style={{ position: "relative" }}>
@@ -34,7 +34,7 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
             aria-hidden
             style={{
               position: "absolute", inset: "-8% -6%",
-              background: "radial-gradient(ellipse at center, rgba(124,92,196,0.5), transparent 70%)",
+              background: "radial-gradient(ellipse at center, rgba(124,92,196,0.32), transparent 70%)",
               filter: "blur(30px)", zIndex: 0,
             }}
           />
@@ -43,13 +43,13 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
               src="/course-book-cover.jpg"
               alt={ar ? "أساسيّات الكتابة ١٠١" : "The Basics of Writing 101"}
               loading="lazy"
-              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px rgba(0,0,0,0.65)" }}
+              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px -10px rgba(41,33,21,0.5)" }}
             />
             <img
               src="/course-book-cover-2.jpg"
               alt={ar ? "تعلّم الكتابة ١٠١" : "Learning Writing 101"}
               loading="lazy"
-              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px rgba(0,0,0,0.65)" }}
+              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px -10px rgba(41,33,21,0.5)" }}
             />
           </div>
         </div>
@@ -58,10 +58,10 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
           style={{
             marginTop: 24,
             display: "inline-flex", alignItems: "center", gap: 8,
-            background: "#fff", color: "#000", borderRadius: 999,
+            background: "#292115", color: "#f7f2e4", borderRadius: 999,
             padding: "13px 30px", fontSize: 14.5, fontWeight: 700,
             flexDirection: ar ? "row-reverse" : "row",
-            boxShadow: "0 6px 24px rgba(0,0,0,0.4)",
+            boxShadow: "0 10px 26px -8px rgba(41,33,21,0.5)",
           }}
         >
           {ar ? "ابدأ الدورة" : "Start the course"} <Arrow size={16} />

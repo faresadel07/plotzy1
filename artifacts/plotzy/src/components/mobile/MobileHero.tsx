@@ -3,17 +3,17 @@
 // ARCHITECTURE (this is what fixes the bleed-through / overlap bugs):
 //   - The hero is `position: sticky` inside a tall wrapper (in
 //     MobileHome). It PINS at the top of the viewport while you scroll.
-//   - The content rows live in a SEPARATE container with a solid black
+//   - The content rows live in a SEPARATE container with a solid paper
 //     background and a higher z-index, so as you scroll they slide UP
 //     and cover the pinned hero completely. No transparency, no
 //     bleed-through, no z-index confusion.
 //
 // COLLAPSE (scroll-linked, eased, reverses on scroll up):
-//   - Backdrop zooms in and dims as you descend, sinking away.
-//   - The headline / subtitle / CTA / dots stay FULLY WHITE (no fade,
-//     no colour change) and disappear purely by motion: they slide up
-//     with the scroll and are then cleanly covered by the solid-black
-//     content layer rising over them. No two titles on screen at once.
+//   - Backdrop zooms in and dissolves into a paper wash as you descend.
+//   - The ink headline / subtitle / CTA / dots never change colour;
+//     they disappear purely by motion: they slide up with the scroll
+//     and are then cleanly covered by the solid-paper content layer
+//     rising over them. No two titles on screen at once.
 //
 // PERFORMANCE: reads window.scrollY (never getBoundingClientRect —
 // that forces a reflow every frame), animates only transform + opacity
@@ -112,17 +112,20 @@ export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; on
         ))}
       </div>
 
-      {/* Static base gradient for legibility + fade to black at the bottom */}
+      {/* Static base gradient for legibility + fade to PAPER at the
+          bottom: the collage sinks into the warm page instead of into
+          black, and the ink headline sits on the cream zone. */}
       <div
         aria-hidden
         style={{
           position: "absolute", inset: 0, zIndex: 1,
-          background: "linear-gradient(180deg, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.05) 35%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.95) 92%, #000 100%)",
+          background: "linear-gradient(180deg, rgba(41,33,21,0.30) 0%, rgba(41,33,21,0.06) 32%, rgba(244,239,226,0.55) 60%, rgba(244,239,226,0.93) 82%, #f4efe2 100%)",
         }}
       />
 
-      {/* Dynamic dim layer — deepens as the hero collapses */}
-      <div ref={dimRef} aria-hidden style={{ position: "absolute", inset: 0, zIndex: 1, background: "#000", opacity: 0.22, willChange: "opacity" }} />
+      {/* Dynamic dim layer — a paper wash that deepens as the hero
+          collapses, so the collage dissolves into the page. */}
+      <div ref={dimRef} aria-hidden style={{ position: "absolute", inset: 0, zIndex: 1, background: "#f4efe2", opacity: 0.22, willChange: "opacity" }} />
 
       {/* Foreground — stays white, slides up and is covered on scroll */}
       <div
@@ -135,21 +138,21 @@ export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; on
           willChange: "transform",
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.72)", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#7b7366", marginBottom: 10 }}>
           {ar ? slide.eyebrowAr : slide.eyebrow}
         </div>
-        <h1 style={{ fontSize: 31, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08, color: "#fff", margin: "0 0 12px", maxWidth: 340, textShadow: "0 2px 20px rgba(0,0,0,0.6)" }}>
+        <h1 style={{ fontSize: 31, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08, color: "#2f2618", margin: "0 0 12px", maxWidth: 340, textShadow: "0 1px 16px rgba(244,239,226,0.85)" }}>
           {ar ? slide.titleAr : slide.title}
         </h1>
-        <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "rgba(255,255,255,0.85)", margin: "0 0 22px", maxWidth: 320, textShadow: "0 1px 12px rgba(0,0,0,0.6)" }}>
+        <p style={{ fontSize: 14.5, lineHeight: 1.5, color: "#423521", margin: "0 0 22px", maxWidth: 320, textShadow: "0 1px 10px rgba(244,239,226,0.8)" }}>
           {ar ? slide.subtitleAr : slide.subtitle}
         </p>
         <button
           onClick={onStartWriting}
           style={{
-            background: "#fff", color: "#000", border: "none", borderRadius: 999,
+            background: "#292115", color: "#f7f2e4", border: "none", borderRadius: 999,
             padding: "14px 34px", fontSize: 15, fontWeight: 700, fontFamily: SF,
-            cursor: "pointer", boxShadow: "0 6px 24px rgba(0,0,0,0.45)",
+            cursor: "pointer", boxShadow: "0 10px 26px -8px rgba(41,33,21,0.55)",
           }}
         >
           {ar ? slide.ctaAr : slide.cta}
@@ -164,7 +167,7 @@ export function MobileHero({ ar, onStartWriting, heroHeight }: { ar: boolean; on
               style={{
                 width: i === index ? 22 : 7, height: 7, borderRadius: 999,
                 border: "none", padding: 0,
-                background: i === index ? "#fff" : "rgba(255,255,255,0.4)",
+                background: i === index ? "#2f2618" : "rgba(66,53,33,0.35)",
                 transition: "all 240ms ease", cursor: "pointer",
               }}
             />

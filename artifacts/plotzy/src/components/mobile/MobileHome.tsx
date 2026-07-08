@@ -26,6 +26,7 @@ import { CourseCoverMobile } from "./CourseCoverMobile";
 import { TestimonialsMobile } from "@/components/testimonials/TestimonialsMobile";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mobile-content";
 import { COMICS, comicCover } from "@/lib/comics";
+import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -73,7 +74,7 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
   return (
     <div
       style={{
-        background: "#000",
+        background: PAPER,
         minHeight: "100vh",
         fontFamily: SF,
         paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
@@ -86,11 +87,11 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         <MobileHero ar={ar} onStartWriting={onStartWriting} heroHeight={heroH} />
       </div>
 
-      {/* Content rows — SOLID black background + higher z-index. Starts
-          immediately after the hero (no empty black gap) and slides up
-          to fully cover the pinned hero (no bleed-through, no overlap,
-          correct stacking). */}
-      <div style={{ position: "relative", zIndex: 2, background: "#000", paddingTop: 16 }}>
+      {/* Content rows — SOLID paper background + higher z-index. Starts
+          immediately after the hero (no gap) and slides up to fully
+          cover the pinned hero (no bleed-through, no overlap, correct
+          stacking). Speckle gives the ink-dust paper texture. */}
+      <div style={{ position: "relative", zIndex: 2, background: PAPER, paddingTop: 16, ...SPECKLE }}>
         {myBooks.length > 0 && (
           <ContentRow
             title={ar ? "تابع الكتابة" : "Continue Writing"}
@@ -181,19 +182,19 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           <div onClick={closeSheet} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} />
           <div style={{
             position: "absolute", left: 0, right: 0, bottom: 0,
-            background: "#17171c", borderRadius: "24px 24px 0 0",
+            background: ESPRESSO, borderRadius: "24px 24px 0 0",
             padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 22px)",
-            boxShadow: "0 -20px 60px rgba(0,0,0,0.55)", fontFamily: SF,
+            boxShadow: "0 -20px 60px rgba(41,33,21,0.55)", fontFamily: SF,
           }}>
             <div style={{ display: "flex", justifyContent: "center", padding: "4px 0 12px" }}>
-              <div style={{ width: 40, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.16)" }} />
+              <div style={{ width: 40, height: 5, borderRadius: 999, background: "rgba(244,239,226,0.18)" }} />
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <span style={{ flex: 1, fontSize: 16, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ flex: 1, fontSize: 16, fontWeight: 800, color: PAPER_ON_DARK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {bookSheet.title}
               </span>
-              <button onClick={closeSheet} aria-label={ar ? "إغلاق" : "Close"} style={{ width: 30, height: 30, borderRadius: 999, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.08)", color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <button onClick={closeSheet} aria-label={ar ? "إغلاق" : "Close"} style={{ width: 30, height: 30, borderRadius: 999, border: "none", cursor: "pointer", background: "rgba(244,239,226,0.1)", color: PAPER_ON_DARK, display: "grid", placeItems: "center", flexShrink: 0 }}>
                 <X size={15} />
               </button>
             </div>
@@ -206,7 +207,7 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
                   onChange={(e) => setRenameValue(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") setRenaming(false); }}
                   placeholder={ar ? "اسم الكتاب" : "Book title"}
-                  style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 12, padding: "12px 14px", color: "#fff", fontSize: 14.5, outline: "none", fontFamily: SF }}
+                  style={{ flex: 1, minWidth: 0, background: "rgba(244,239,226,0.07)", border: `1px solid ${BORDER_PAPER}`, borderRadius: 12, padding: "12px 14px", color: PAPER_ON_DARK, fontSize: 14.5, outline: "none", fontFamily: SF }}
                 />
                 <button
                   onClick={() => {
@@ -214,7 +215,7 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
                     if (!v) { setRenaming(false); return; }
                     updateBook.mutate({ id: bookSheet.id, title: v }, { onSettled: closeSheet });
                   }}
-                  style={{ flexShrink: 0, background: "#fff", color: "#000", border: "none", borderRadius: 12, padding: "0 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+                  style={{ flexShrink: 0, background: PAPER, color: "#2f2618", border: "none", borderRadius: 12, padding: "0 18px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
                 >
                   {ar ? "حفظ" : "Save"}
                 </button>
@@ -253,10 +254,10 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
                     onClick={item.onTap}
                     style={{
                       width: "100%", display: "flex", alignItems: "center", gap: 12,
-                      background: item.primary ? "#fff" : item.danger ? "rgba(239,68,68,0.10)" : "rgba(255,255,255,0.05)",
-                      border: `1px solid ${item.danger ? "rgba(239,68,68,0.30)" : "rgba(255,255,255,0.07)"}`,
+                      background: item.primary ? PAPER : item.danger ? "rgba(239,68,68,0.10)" : "rgba(244,239,226,0.06)",
+                      border: `1px solid ${item.danger ? "rgba(239,68,68,0.30)" : BORDER_PAPER}`,
                       borderRadius: 14, padding: "14px 16px", marginBottom: 8,
-                      color: item.primary ? "#000" : item.danger ? "#f87171" : "#eee",
+                      color: item.primary ? "#2f2618" : item.danger ? "#f8a4a4" : PAPER_ON_DARK,
                       fontSize: 14.5, fontWeight: item.primary ? 700 : 600, cursor: "pointer", fontFamily: SF,
                     }}
                   >

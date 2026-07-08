@@ -108,10 +108,10 @@ export function PosterCard({
             fontSize: 48,
             fontWeight: 800,
             lineHeight: 1,
-            color: "rgba(255,255,255,0.92)",
+            color: "rgba(47,38,24,0.9)",
             fontFamily: SF,
             letterSpacing: "-0.04em",
-            textShadow: "0 2px 12px rgba(0,0,0,0.6)",
+            textShadow: "0 2px 12px rgba(244,239,226,0.9)",
             zIndex: 2,
             pointerEvents: "none",
           }}
@@ -127,8 +127,9 @@ export function PosterCard({
           aspectRatio: "2 / 3",
           borderRadius: 12,
           overflow: "hidden",
-          background: "#111",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.45)",
+          background: "#e7dfcc",
+          boxShadow: "0 10px 24px -8px rgba(41,33,21,0.35)",
+          border: "1px solid rgba(66,53,33,0.12)",
           position: "relative",
         }}
       >
@@ -176,7 +177,7 @@ export function PosterCard({
           style={{
             fontSize: 12.5,
             fontWeight: 600,
-            color: "#f0efe8",
+            color: "#2f2618",
             lineHeight: 1.3,
             display: "-webkit-box",
             WebkitLineClamp: 1,
@@ -189,7 +190,7 @@ export function PosterCard({
         <div
           style={{
             fontSize: 11,
-            color: "rgba(255,255,255,0.45)",
+            color: "#7b7366",
             marginTop: 1,
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -234,7 +235,7 @@ export function ContentRow({
           marginBottom: 12,
           cursor: onSeeAll ? "pointer" : "default",
           fontFamily: SF,
-          color: "#fff",
+          color: "#2f2618",
           width: "100%",
           justifyContent: ar ? "flex-end" : "flex-start",
           flexDirection: ar ? "row-reverse" : "row",
