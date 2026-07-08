@@ -41,6 +41,7 @@ import { MobileHome } from "@/components/mobile/MobileHome";
 import { BOOK_LANGUAGES } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { LandingCanvas } from "@/components/landing/LandingCanvas";
+import { MobileLanding } from "@/components/mobile/MobileLanding";
 import { DevicesShowcase } from "@/components/landing/DevicesShowcase";
 import { ComicsShowcase } from "@/components/landing/ComicsShowcase";
 import { TestimonialsDesktop } from "@/components/testimonials/TestimonialsDesktop";
@@ -622,6 +623,19 @@ export default function Home() {
       if (!user) { setShowAuthModal(true); return; }
       setShowWizard(true);
     };
+    // Visitors get the warm literary landing (the pitch); signed-in
+    // writers get the shelves (the product). Two different jobs.
+    if (!user) {
+      return (
+        <>
+          <SEO titleOverride="Plotzy" />
+          <Layout isLanding>
+            <MobileLanding onStartWriting={startWriting} />
+          </Layout>
+          <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        </>
+      );
+    }
     return (
       <>
         <SEO titleOverride="Plotzy" />

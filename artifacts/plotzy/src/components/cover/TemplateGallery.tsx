@@ -254,7 +254,12 @@ function TemplateCard({
               transform: "scale(var(--tpl-scale, 0.5))",
               transformOrigin: "top left",
               background: design.settings.front.background,
-              position: "relative",
+              // Absolute left:0 pins the oversized face physically;
+              // in RTL a static block starts from the right and the
+              // scaled content lands outside the card.
+              position: "absolute",
+              left: 0,
+              top: 0,
               // Scale to fit whatever width the card gets.
             }}
             ref={(node) => {
