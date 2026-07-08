@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRoute, Link } from "wouter";
-import { useBook, useUpdateBook, useGenerateCover } from "@/hooks/use-books";
+import { useBook, useUpdateBook, useCoverVariants } from "@/hooks/use-books";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
@@ -184,9 +184,10 @@ export default function CoverDesigner() {
   const [aiCoverPrompt, setAiCoverPrompt] = useState("");
   const [aiCoverSide, setAiCoverSide] = useState<"front" | "back">("front");
   const [aiCoverLoading, setAiCoverLoading] = useState(false);
+  const [aiVariants, setAiVariants] = useState<string[]>([]);
   const [backCoverText, setBackCoverText] = useState("");
 
-  const generateCover = useGenerateCover();
+  const coverVariants = useCoverVariants();
 
   const selected = elements.find((e) => e.id === selectedId) ?? null;
 
@@ -592,43 +593,40 @@ export default function CoverDesigner() {
     }
   };
 
-  /* ─── AI: Generate Cover Image ─── */
-  const handleAiGenerateCover = async () => {
+  /* ─── AI: Generate 4 textless artwork variants ─── */
+  const handleAiVariants = async () => {
     if (!aiCoverPrompt.trim()) {
       toast({ title: t("cdEnterDesc"), variant: "destructive" });
       return;
     }
+    setAiVariants([]);
     setAiCoverLoading(true);
     try {
-      const result = await generateCover.mutateAsync({ id: bookId, prompt: aiCoverPrompt, side: aiCoverSide });
-      const imgUrl = (result as any).url;
-      if (imgUrl) {
-        const el: CoverElement = {
-          id: nanoid(), type: "image", face: aiCoverSide,
-          x: 0, y: 0, width: FACE_W[aiCoverSide], height: FACE_H,
-          zIndex: 1, visible: true, locked: false,
-          src: imgUrl, objectFit: "cover", opacity: 1, borderRadius: 0,
-        };
-        const newEls = [...elements, el];
-        updateElements(newEls);
-        setSelectedId(el.id);
-        setActiveFace(aiCoverSide);
-        // Auto-save coverData so the design persists on next open
-        try {
-          await updateBook.mutateAsync({
-            id: bookId,
-            coverData: { elements: newEls, settings: coverSettings, spineWidth },
-          } as any);
-        } catch { /* auto-save failure is non-fatal */ }
-        toast({ title: aiCoverSide === "front" ? t("cdFrontGen") : t("cdBackGen") });
-      } else {
-        toast({ title: t("cdGenerated") });
-      }
+      const result = await coverVariants.mutateAsync({ id: bookId, prompt: aiCoverPrompt, side: aiCoverSide, count: 4 });
+      if (!result.images.length) throw new Error("empty");
+      setAiVariants(result.images);
     } catch {
       toast({ title: t("cdGenFailed"), variant: "destructive" });
     } finally {
       setAiCoverLoading(false);
     }
+  };
+
+  /* Place a picked variant as a full-bleed image element on the active
+     AI side. Nothing was saved server-side; the artwork persists with
+     the design when the cover saves. */
+  const applyAiVariant = (src: string) => {
+    const el: CoverElement = {
+      id: nanoid(), type: "image", face: aiCoverSide,
+      x: 0, y: 0, width: FACE_W[aiCoverSide], height: FACE_H,
+      zIndex: 1, visible: true, locked: false,
+      src, objectFit: "cover", opacity: 1, borderRadius: 0,
+    };
+    const newEls = [...elements, el];
+    updateElements(newEls);
+    setSelectedId(el.id);
+    setActiveFace(aiCoverSide);
+    toast({ title: aiCoverSide === "front" ? t("cdFrontGen") : t("cdBackGen") });
   };
 
   /* ─── AI: Generate Blurb (back cover summary) ─── */
@@ -972,84 +970,108 @@ export default function CoverDesigner() {
 
       case "ai": return (
         <div className="p-4 space-y-5">
-          {/* AI Cover Image — temporarily disabled. The underlying API
-             (gpt-image-1) is paid and the credits aren't provisioned
-             pre-launch. Whole sub-section dimmed and click-blocked,
-             with a "Coming Soon" overlay on top. Re-enable by removing
-             the wrapper + overlay below once image-API credits land. */}
-          <div className="relative">
-            <div className="space-y-3 opacity-40 pointer-events-none select-none" aria-hidden>
-              <div className="flex items-center gap-2">
-                <Wand2 className="w-4 h-4 text-violet-400" />
-                <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">Generate Cover Image</p>
-              </div>
-              <p className="text-xs text-white/35 leading-relaxed">Describe the cover you want and AI will generate a professional image for it.</p>
+          {/* AI Cover Artwork: FLUX schnell (Replicate) with Gemini
+             fallback on the server. Always generates TEXTLESS art;
+             the title/author stay real, editable text elements. */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Wand2 className="w-4 h-4 text-violet-400" />
+              <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">
+                {ar ? "توليد لوحة الغلاف" : "Generate Cover Artwork"}
+              </p>
+            </div>
+            <p className="text-xs text-white/35 leading-relaxed">
+              {ar
+                ? "صف الأجواء والألوان وسنولّد لك 4 لوحات فنية بدون أي نصوص. العنوان واسم المؤلف يبقيان نصاً حقيقياً فوق اللوحة."
+                : "Describe the mood and colors and we will generate 4 textless artwork options. Title and author stay real text on top."}
+            </p>
 
-              {/* Side selector */}
-              <div className="flex gap-1.5 bg-white/5 rounded-xl p-1">
-                <button tabIndex={-1} className={`flex-1 text-xs py-1.5 rounded-lg font-semibold ${aiCoverSide === "front" ? "bg-violet-600 text-white" : "text-white/40"}`}>
-                  Front Cover
-                </button>
-                <button tabIndex={-1} className={`flex-1 text-xs py-1.5 rounded-lg font-semibold ${aiCoverSide === "back" ? "bg-violet-600 text-white" : "text-white/40"}`}>
-                  Back Cover
-                </button>
-              </div>
-
-              {/* Prompt input */}
-              <textarea
-                rows={4}
-                value={aiCoverPrompt}
-                readOnly
-                tabIndex={-1}
-                placeholder={aiCoverSide === "front"
-                  ? "e.g. Sci-fi cover with a glowing city under a starry sky, dark purple and blue tones..."
-                  : "e.g. Soft geometric patterns on a dark gradient background, minimal and elegant..."}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/80 placeholder:text-white/25 resize-none outline-none leading-relaxed"
-              />
-
-              {/* Quick prompt suggestions */}
-              <div className="space-y-1">
-                <p className="text-xs text-white/25">Quick suggestions:</p>
-                <div className="flex flex-wrap gap-1">
-                  {[
-                    "Sci-fi futuristic",
-                    "Warm romance",
-                    "Mystery & thriller",
-                    "Classic literature",
-                    "Action adventure",
-                  ].map((s) => (
-                    <span key={s} className="text-xs px-2 py-1 bg-white/5 border border-white/8 rounded-lg text-white/50">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
+            {/* Side selector */}
+            <div className="flex gap-1.5 bg-white/5 rounded-xl p-1">
               <button
-                tabIndex={-1}
-                disabled
-                className="w-full flex items-center justify-center gap-2 bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5"
-              >
-                <Sparkles className="w-4 h-4" /> Generate Cover with AI
+                onClick={() => setAiCoverSide("front")}
+                className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "front" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white/70"}`}>
+                {ar ? "الوجه الأمامي" : "Front Cover"}
+              </button>
+              <button
+                onClick={() => setAiCoverSide("back")}
+                className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "back" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white/70"}`}>
+                {ar ? "الوجه الخلفي" : "Back Cover"}
               </button>
             </div>
 
-            {/* Coming Soon overlay */}
-            <div
-              role="status"
-              aria-label={t("cdComingSoon")}
-              className="absolute inset-0 flex items-start justify-center pt-12 pointer-events-none"
-            >
-              <div className="pointer-events-auto bg-black/80 border border-violet-500/40 rounded-xl px-4 py-3 max-w-xs text-center backdrop-blur-sm shadow-xl">
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-600/20 border border-violet-500/40 text-violet-300 text-[10px] font-semibold uppercase tracking-widest mb-2">
-                  <Sparkles className="w-3 h-3" />
-                  {t("featureComingSoon")}
-                </div>
-                <p className="text-xs text-white/80 leading-relaxed">
-                  {t("aiCoverComingSoon")}
-                </p>
+            {/* Prompt input */}
+            <textarea
+              rows={4}
+              value={aiCoverPrompt}
+              onChange={(e) => setAiCoverPrompt(e.target.value)}
+              dir="auto"
+              placeholder={aiCoverSide === "front"
+                ? (ar ? "مثلاً: مدينة متوهجة تحت سماء مليئة بالنجوم، درجات بنفسجي وأزرق داكنة..." : "e.g. A glowing city under a starry sky, dark purple and blue tones...")
+                : (ar ? "مثلاً: تدرج داكن هادئ بأنماط هندسية ناعمة، بسيط وأنيق..." : "e.g. Soft geometric patterns on a dark gradient background, minimal and elegant...")}
+              className="w-full bg-white/5 border border-white/10 focus:border-violet-500/50 rounded-xl px-3 py-2.5 text-xs text-white/80 placeholder:text-white/25 resize-none outline-none leading-relaxed"
+            />
+
+            {/* Quick prompt suggestions (English prompts: image models
+               follow English direction far more reliably) */}
+            <div className="space-y-1">
+              <p className="text-xs text-white/25">{ar ? "اقتراحات سريعة:" : "Quick suggestions:"}</p>
+              <div className="flex flex-wrap gap-1">
+                {([
+                  [ar ? "خيال علمي" : "Sci-fi futuristic", "Futuristic sci-fi scene, glowing structures, deep space palette"],
+                  [ar ? "رومانسي دافئ" : "Warm romance", "Warm romantic scene, golden hour light, soft dreamy atmosphere"],
+                  [ar ? "غموض وإثارة" : "Mystery thriller", "Dark moody thriller scene, fog, dramatic shadows, high contrast"],
+                  [ar ? "أدب كلاسيكي" : "Classic literature", "Elegant painterly scene, muted classic tones, timeless literary mood"],
+                  [ar ? "مغامرة" : "Action adventure", "Epic adventure landscape, dramatic sky, cinematic scale"],
+                ] as [string, string][]).map(([label, promptText]) => (
+                  <button
+                    key={label}
+                    onClick={() => setAiCoverPrompt(promptText)}
+                    className="text-xs px-2 py-1 bg-white/5 hover:bg-white/12 border border-white/8 rounded-lg text-white/50 hover:text-white/80 transition-colors"
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
+
+            <button
+              onClick={handleAiVariants}
+              disabled={aiCoverLoading || !aiCoverPrompt.trim()}
+              className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
+            >
+              {aiCoverLoading
+                ? (<><Loader2 className="w-4 h-4 animate-spin" /> {ar ? "جاري التوليد..." : "Generating..."}</>)
+                : (<><Sparkles className="w-4 h-4" /> {ar ? "ولّد 4 خيارات" : "Generate 4 options"}</>)}
+            </button>
+
+            {/* Variants grid */}
+            {(aiCoverLoading || aiVariants.length > 0) && (
+              <div className="grid grid-cols-2 gap-2">
+                {aiCoverLoading
+                  ? Array.from({ length: 4 }, (_, i) => (
+                      <div key={i} className="aspect-[2/3] rounded-xl bg-white/5 border border-white/10 animate-pulse" />
+                    ))
+                  : aiVariants.map((src, i) => (
+                      <button
+                        key={i}
+                        onClick={() => applyAiVariant(src)}
+                        title={ar ? "استخدم هذه اللوحة" : "Use this artwork"}
+                        className="group relative aspect-[2/3] rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/70 transition-colors"
+                      >
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                        <span className="absolute inset-0 flex items-end justify-center pb-2 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity text-[11px] font-semibold text-white">
+                          {ar ? "استخدم هذه" : "Use this"}
+                        </span>
+                      </button>
+                    ))}
+              </div>
+            )}
+            {aiVariants.length > 0 && !aiCoverLoading && (
+              <p className="text-[11px] text-white/30 leading-relaxed">
+                {ar ? "اضغط على لوحة لوضعها على الغلاف. تقدر تعيد التوليد بوصف مختلف في أي وقت." : "Tap an artwork to place it on the cover. Regenerate with a different description anytime."}
+              </p>
+            )}
           </div>
 
           {/* Divider */}

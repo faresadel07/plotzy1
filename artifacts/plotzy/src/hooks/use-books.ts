@@ -275,6 +275,23 @@ export function useGenerateCover() {
   });
 }
 
+export function useCoverVariants() {
+  return useMutation({
+    mutationFn: async ({ id, prompt, side = "front", count = 4 }: { id: number; prompt: string; side?: "front" | "back"; count?: number }) => {
+      const url = buildUrl(api.books.coverVariants.path, { id });
+      const res = await fetch(url, {
+        method: api.books.coverVariants.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, side, count }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to generate cover variants");
+      const data = await res.json();
+      return parseWithLogging(api.books.coverVariants.responses?.[200], data, "books.coverVariants");
+    },
+  });
+}
+
 export function useGenerateBlurb() {
   const queryClient = useQueryClient();
   return useMutation({

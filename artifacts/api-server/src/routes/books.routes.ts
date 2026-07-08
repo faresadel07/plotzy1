@@ -30,6 +30,7 @@ import {
 import { cache } from "../lib/cache";
 
 import { logRouteError } from "../lib/log-route-error";
+import { buildCoverImagePrompt, generateCoverImages, hasCoverImageProvider } from "../lib/cover-image";
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -426,12 +427,9 @@ router.post(
       const bookId = Number(req.params.id);
       const book = req.ownerBook!;
 
-      const coverPrompt =
-        side === "back"
-          ? `A professional book back cover background image for a book titled "${book.title || "Novel"}". ${prompt}. Portrait orientation, simple and elegant, designed to sit behind text. Subtle, not too busy. No text overlaid on the image.`
-          : `A stunning, professional book front cover for a book titled "${book.title || "Novel"}". ${prompt}. Portrait orientation, publication-quality artwork, cinematic and visually striking. The design should feel like a real published novel cover. No text or title overlaid on the image.`;
+      const coverPrompt = buildCoverImagePrompt({ title: book.title, userPrompt: prompt, side });
 
-      if (isMockOpenAI) {
+      if (!hasCoverImageProvider()) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const dummyUrl =
           "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1024&auto=format&fit=crop";
@@ -444,17 +442,8 @@ router.post(
         return res.json({ url: dummyUrl });
       }
 
-      const response = await openai.images.generate({
-        model: "gpt-image-1",
-        prompt: coverPrompt,
-        size: "1024x1536",
-      });
-
-      const b64 = response?.data?.[0]?.b64_json;
-      if (!b64)
-        return res.status(500).json({ message: "No image data returned" });
-
-      const dataUri = `data:image/png;base64,${b64}`;
+      const { images } = await generateCoverImages(coverPrompt, 1);
+      const dataUri = images[0];
       if (side === "back") {
         await storage.updateBook(bookId, { backCoverImage: dataUri });
       } else {

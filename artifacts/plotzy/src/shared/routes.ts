@@ -5,6 +5,7 @@ import {
   ChapterSchema,
   ChapterWithAchievementsSchema,
   GenerateCoverResponseSchema,
+  CoverVariantsResponseSchema,
   GenerateBlurbResponseSchema,
   ContinueTextResponseSchema,
   TranslateTextResponseSchema,
@@ -52,6 +53,11 @@ export const api = {
       method: 'POST' as const,
       path: '/api/books/:id/cover' as const,
       responses: { 200: GenerateCoverResponseSchema },
+    },
+    coverVariants: {
+      method: 'POST' as const,
+      path: '/api/books/:id/cover-variants' as const,
+      responses: { 200: CoverVariantsResponseSchema },
     },
     generateBlurb: {
       method: 'POST' as const,

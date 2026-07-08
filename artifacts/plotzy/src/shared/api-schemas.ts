@@ -104,6 +104,11 @@ export const GenerateCoverResponseSchema = z.object({
   url: z.string(),
 });
 
+export const CoverVariantsResponseSchema = z.object({
+  images: z.array(z.string()),
+  provider: z.string(),
+});
+
 export const GenerateBlurbResponseSchema = z.object({
   blurb: z.string(),
 });

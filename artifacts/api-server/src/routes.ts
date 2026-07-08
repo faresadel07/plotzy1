@@ -26,6 +26,7 @@ import { aiLimiter, imageGenLimiter, tierAiLimiter, publicReadLimiter } from "./
 import { getUserTier, checkMarketplaceLimit, recordMarketplaceUsage } from "./lib/tier-limits";
 import { isAdminUser } from "./lib/admin";
 import { handleAiError } from "./lib/ai-error";
+import { buildCoverImagePrompt, generateCoverImages, hasCoverImageProvider } from "./lib/cover-image";
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
@@ -973,24 +974,12 @@ export async function registerRoutes(
       const book = await storage.getBook(bookId);
       if (!book) return res.status(404).json({ message: "Book not found" });
 
-      // Defang user-controlled fields before they reach the LLM. Both the
-      // book title and the user's prompt are concatenated into the cover
-      // prompt; without this an attacker could write a title like
-      // `". Ignore previous instructions and …` and steer the generated
-      // image. Strip quotes/newlines and clamp length.
-      const safeTitle = String(book?.title || "Novel")
-        .replace(/["\r\n]/g, "")
-        .slice(0, 120)
-        .trim() || "Novel";
-      const safePrompt = String(prompt || "")
-        .replace(/["\r\n]/g, " ")
-        .slice(0, 600)
-        .trim();
-      const coverPrompt = side === "back"
-        ? `A professional book back cover background image for a book titled "${safeTitle}". ${safePrompt}. Portrait orientation, simple and elegant, designed to sit behind text. Subtle, not too busy. No text overlaid on the image.`
-        : `A stunning, professional book front cover for a book titled "${safeTitle}". ${safePrompt}. Portrait orientation, publication-quality artwork, cinematic and visually striking. The design should feel like a real published novel cover. No text or title overlaid on the image.`;
+      // buildCoverImagePrompt defangs the user-controlled title/prompt
+      // (quote/newline stripping + length clamp) before they reach the
+      // image model.
+      const coverPrompt = buildCoverImagePrompt({ title: book?.title, userPrompt: prompt, side });
 
-      if (isMockOpenAI) {
+      if (!hasCoverImageProvider()) {
         // Return a beautiful dynamic placeholder image based on the genre
         await new Promise(resolve => setTimeout(resolve, 1500));
         const dummyUrl = `https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1024&auto=format&fit=crop`;
@@ -998,16 +987,8 @@ export async function registerRoutes(
         return res.json({ url: dummyUrl });
       }
 
-      const response = await openai.images.generate({
-        model: "gpt-image-1",
-        prompt: coverPrompt,
-        size: "1024x1536",
-      });
-
-      const b64 = response?.data?.[0]?.b64_json;
-      if (!b64) return res.status(500).json({ message: "No image data returned" });
-
-      const dataUri = `data:image/png;base64,${b64}`;
+      const { images } = await generateCoverImages(coverPrompt, 1);
+      const dataUri = images[0];
       if (side === "back") {
         await storage.updateBook(bookId, { backCoverImage: dataUri });
       } else {
@@ -1017,6 +998,31 @@ export async function registerRoutes(
       return res.json({ url: dataUri });
     } catch (err) {
       logger.error({ err }, "Route error");
+      return res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // ─── Cover Variants (designer AI panel) ─────────────────────────────────────
+  //
+  // Generates up to 4 textless artwork options in one shot and returns
+  // them WITHOUT saving anything to the book: the designer shows the
+  // grid, the writer picks one, and the pick lands on the canvas as an
+  // editable image element (saved only when the design saves).
+  // requireBookOwner still gates it because generation costs money.
+  app.post(api.books.coverVariants.path, requireBookOwner, imageGenLimiter, tierAiLimiter, async (req, res) => {
+    try {
+      const { prompt, side, count } = api.books.coverVariants.input.parse(req.body);
+      const book = req.ownerBook!;
+
+      if (!hasCoverImageProvider()) {
+        return res.status(503).json({ message: "Image generation is not configured" });
+      }
+
+      const coverPrompt = buildCoverImagePrompt({ title: book?.title, userPrompt: prompt, side });
+      const result = await generateCoverImages(coverPrompt, count);
+      return res.json(result);
+    } catch (err) {
+      logger.error({ err }, "Cover variants route error");
       return res.status(500).json({ message: "Internal error" });
     }
   });

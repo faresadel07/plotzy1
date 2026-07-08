@@ -81,6 +81,19 @@ export const api = {
         404: errorSchemas.notFound,
       }
     },
+    coverVariants: {
+      method: 'POST' as const,
+      path: '/api/books/:id/cover-variants' as const,
+      input: z.object({
+        prompt: z.string(),
+        side: z.enum(['front', 'back']).default('front'),
+        count: z.number().int().min(1).max(4).default(4),
+      }).strict(),
+      responses: {
+        200: z.object({ images: z.array(z.string()), provider: z.string() }),
+        404: errorSchemas.notFound,
+      }
+    },
     generateBlurb: {
       method: 'POST' as const,
       path: '/api/books/:id/generate-blurb' as const,
