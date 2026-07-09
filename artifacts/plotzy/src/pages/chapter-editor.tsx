@@ -142,6 +142,41 @@ function serializePages(pages: PageBlock[]): string {
   return JSON.stringify(pages);
 }
 
+// ── Reference Mode text extraction ──────────────────────────────────
+// Chapter content arrives in one of three shapes:
+//   1. v2 rich format: {"v":2,"pages":"<p>html…<!-- PAGE_BREAK -->…","floatingImages":…}
+//   2. legacy array of strings / {type:'text',content} blocks (content may be HTML)
+//   3. plain text
+// The reference panel must always show clean prose, never raw JSON or tags.
+function htmlToPlainText(html: string): string {
+  const withBreaks = html
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, "\n\n");
+  const el = document.createElement("div");
+  el.innerHTML = withBreaks;
+  const text = el.textContent || "";
+  return text.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function extractRefPages(raw: string): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && parsed.v === 2 && typeof parsed.pages === "string") {
+      return parsed.pages
+        .split(/<!--\s*PAGE_BREAK\s*-->/g)
+        .map((page: string) => htmlToPlainText(page));
+    }
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => {
+        const content = typeof item === "string" ? item : item && item.type === "text" ? item.content : "";
+        return htmlToPlainText(String(content ?? ""));
+      });
+    }
+  } catch { }
+  return [htmlToPlainText(raw)];
+}
+
 // ── Paper Size Definitions ────────────────────────────────────────────────────
 // All sizes in CSS pixels at 96 dpi (1 inch = 96 px; 1 cm = 37.795 px)
 const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
@@ -2017,11 +2052,8 @@ export default function ChapterEditor() {
   /* ── Reference Panel ── */
   const otherChapters = chapters?.filter(c => c.id !== chapterId) ?? [];
   const refChapter = otherChapters.find(c => c.id === refChapterId) ?? null;
-  const refParsedPages = refChapter ? parsePages(refChapter.content) : [];
-  const refFullText = refParsedPages
-    .map(p => (typeof p === 'string' ? p : p.type === 'text' ? p.content : ''))
-    .filter(p => p.trim())
-    .join('\n\n');
+  const refParsedPages = refChapter ? extractRefPages(refChapter.content).filter(p => p.trim()) : [];
+  const refFullText = refParsedPages.join('\n\n');
   const refWordCount = refFullText.split(/\s+/).filter(Boolean).length;
 
   const renderPageContent = (html: string, isFirstPage: boolean) => {
@@ -2306,7 +2338,7 @@ export default function ChapterEditor() {
 
             <AmbientSoundscape />
 
-            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showRefPanel ? "text-sky-500 bg-sky-500/10" : "text-muted-foreground hover:bg-sky-500/10 hover:text-sky-500"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"} aria-label={ar ? "عرض مرجعي" : "Reference Mode"}>
+            <Button variant="ghost" size="icon" className={`w-8 h-8 rounded-lg transition-colors ${showRefPanel ? "text-[#a06a2f] bg-[#7b5e3b]/15" : "text-muted-foreground hover:bg-[#7b5e3b]/15 hover:text-[#a06a2f]"}`} onClick={() => { setShowRefPanel(v => !v); if (!refChapterId && otherChapters.length > 0) setRefChapterId(otherChapters[0].id); }} title={ar ? "عرض مرجعي" : "Reference Mode"} aria-label={ar ? "عرض مرجعي" : "Reference Mode"}>
               <PanelRight className="w-4 h-4" />
             </Button>
 
@@ -3869,12 +3901,12 @@ export default function ChapterEditor() {
         <div style={{ padding: '14px 16px', borderBottom: '1px solid hsl(var(--border)/30%)', background: 'hsl(var(--muted)/30%)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookMarked style={{ width: '15px', height: '15px', color: 'hsl(var(--sky-500, 14 165 233))' }} className="text-sky-500" />
+              <BookMarked style={{ width: '15px', height: '15px' }} className="text-[#a06a2f]" />
               <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
                 {ar ? 'وضع المرجع' : 'Reference Mode'}
               </span>
-              <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '100px', background: 'hsl(var(--sky-500/10%))', color: 'hsl(var(--sky-500, 14 165 233))' }} className="bg-sky-500/10 text-sky-500">
-                {ar ? 'قراءة فقط' : 'Read-Only'}
+              <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '100px' }} className="bg-[#7b5e3b]/12 text-[#a06a2f]">
+                {ar ? 'قراءة فقط' : 'Read only'}
               </span>
             </div>
             <button
@@ -3891,7 +3923,7 @@ export default function ChapterEditor() {
             <button
               onClick={() => setRefDropdownOpen(v => !v)}
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: '8px', border: '1px solid hsl(var(--border)/50%)', background: 'hsl(var(--background))', cursor: 'pointer', fontSize: '13px', color: 'hsl(var(--foreground))' }}
-              className="hover:border-sky-400/50 transition-colors"
+              className="hover:border-[#7b5e3b]/50 transition-colors"
             >
               <span style={{ fontWeight: 500 }}>
                 {refChapter
@@ -3938,8 +3970,8 @@ export default function ChapterEditor() {
           {!refChapter ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', gap: '12px', color: 'hsl(var(--muted-foreground))' }}>
               <BookMarked style={{ width: '32px', height: '32px', opacity: 0.3 }} />
-              <p style={{ fontSize: '13px', textAlign: 'center', opacity: 0.6 }}>
-                {ar ? 'اختر فصلاً لعرضه هنا كمرجع' : 'Choose a chapter to view as reference'}
+              <p style={{ fontSize: ar ? '15px' : '18px', textAlign: 'center', opacity: 0.75, fontFamily: "'Caveat', 'Aref Ruqaa', cursive", transform: 'rotate(-1deg)' }}>
+                {ar ? '(اختر فصلاً من فوق وخليه قدامك وأنت بتكتب)' : '(pick a chapter above and keep it beside you as you write)'}
               </p>
             </div>
           ) : !refFullText ? (
@@ -3952,7 +3984,7 @@ export default function ChapterEditor() {
             <>
               {/* Chapter title + stats */}
               <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid hsl(var(--border)/30%)' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'hsl(var(--foreground))', marginBottom: '4px', ...fontStyle }}>
+                <h2 style={{ fontSize: '19px', fontWeight: 700, color: 'hsl(var(--foreground))', marginBottom: '4px', fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>
                   {refChapter.title || (ar ? `فصل ${refChapter.order}` : `Chapter ${refChapter.order}`)}
                 </h2>
                 <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', letterSpacing: '0.05em' }}>
@@ -3965,9 +3997,9 @@ export default function ChapterEditor() {
               {/* Content */}
               <div
                 style={{
-                  fontSize: '14px',
-                  lineHeight: '1.45',
-                  color: 'hsl(var(--foreground)/85%)',
+                  fontSize: '14.5px',
+                  lineHeight: '1.7',
+                  color: 'hsl(var(--foreground)/88%)',
                   userSelect: 'text',
                   cursor: 'text',
                   ...fontStyle,
@@ -3987,8 +4019,8 @@ export default function ChapterEditor() {
 
         {/* Panel Footer */}
         <div style={{ padding: '10px 16px', borderTop: '1px solid hsl(var(--border)/20%)', background: 'hsl(var(--muted)/20%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))', letterSpacing: '0.08em', opacity: 0.7 }}>
-            {ar ? 'وضع القراءة فقط — لا يمكن التعديل' : 'Read-only — no edits possible'}
+          <span style={{ fontSize: ar ? '13px' : '15px', color: 'hsl(var(--muted-foreground))', opacity: 0.85, fontFamily: "'Caveat', 'Aref Ruqaa', cursive", transform: 'rotate(-0.5deg)', display: 'inline-block' }}>
+            {ar ? '(للقراءة فقط، التعديل من الفصل نفسه)' : '(read only, edit from the chapter itself)'}
           </span>
         </div>
       </div>
