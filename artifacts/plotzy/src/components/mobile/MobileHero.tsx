@@ -7,6 +7,7 @@ import { INK, INK_SOFT, MUTED, ESPRESSO, PAPER_ON_DARK, BORDER_INK } from "./pal
 import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR } from "./fonts";
 import { PaperBall } from "./PaperBall";
 import { Mark } from "./Marker";
+import { StickyNote } from "./StickyNote";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -60,6 +61,8 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
       {/* ── The papers stack: a messy desk of tilted drafts, with the
           synopsis card sitting perfectly straight on top of the chaos ── */}
       <div style={{ position: "relative", height: 470, margin: "0 -6px" }}>
+        {/* The bragging sticky, pinned at the very top corner */}
+        <StickyNote ar={ar} size={84} rot={7} text={ar ? "رقم 1 بالسوق، مضمون" : "number 1 on the market, guaranteed"} style={{ position: "absolute", top: -36, right: -6, zIndex: 5 }} />
         {/* Hand-drawn ink dashes around the pile */}
         <svg aria-hidden width="42" height="26" viewBox="0 0 42 26" style={{ position: "absolute", top: 2, insetInlineStart: 2, opacity: 0.5 }}>
           <path d="M2 20 Q 12 4 26 8" fill="none" stroke="#5c5142" strokeWidth="2.4" strokeLinecap="round" />

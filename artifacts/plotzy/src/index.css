@@ -21,6 +21,16 @@
    size bump would break the layout. */
 .plotzy-hand, .plotzy-hand :is(p, span, button, a, div) { font-family: 'Caveat', 'Segoe Script', cursive; }
 .plotzy-hand.is-ar, .plotzy-hand.is-ar :is(p, span, button, a, div) { font-family: 'Aref Ruqaa', 'Amiri', serif; }
+
+/* Course pages: a mix of faces (Faris's ask). Serif headings, the
+   handwriting pair on the overview quote, typewriter on small labels;
+   body stays in the system face for reading comfort. */
+/* Latin faces first, Arabic siblings as fallback: Lora and Caveat have
+   no Arabic glyphs, so Arabic text falls through to Amiri and Aref
+   Ruqaa automatically without dir-scoped rules. */
+.course-apple :is(h1, h2, h3) { font-family: 'Lora', 'Amiri', Georgia, serif; }
+.course-apple p.border-s-2 { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive; font-size: 1.3rem !important; line-height: 1.7 !important; }
+.course-apple :is(.text-xs, .text-\[11px\]) { font-family: 'Courier New', 'Noto Naskh Arabic', ui-monospace, monospace; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300..700&family=Noto+Sans+JP:wght@300..700&family=Noto+Sans+KR:wght@300..700&family=Noto+Sans+Devanagari:wght@300..700&family=Noto+Sans:wght@300..700&display=swap');
 
 @import "tailwindcss";

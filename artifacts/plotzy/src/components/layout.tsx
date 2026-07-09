@@ -388,12 +388,13 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
             }}
           />
           <span style={{
-            fontFamily: SF,
+            fontFamily: "'Caveat', 'Segoe Script', cursive",
             fontWeight: 700,
-            fontSize: 14,
-            letterSpacing: "-0.04em",
+            fontSize: 21,
+            letterSpacing: "0.01em",
+            lineHeight: 1,
             color: darkNav ? "#fff" : "#111",
-          }}>PLOTZY</span>
+          }}>Plotzy</span>
         </Link>
 
         {/* ── Center: Nav links (desktop) ── */}

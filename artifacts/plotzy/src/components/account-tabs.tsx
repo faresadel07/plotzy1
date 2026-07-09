@@ -8,9 +8,9 @@ import { useLanguage } from "@/contexts/language-context";
 // The active tab gets a 2px underline in the brand white; the
 // inactive tab is muted and brightens on hover. Wouter's Link
 // preserves SPA navigation so React Query caches survive the hop.
-const T = "#fff";
-const TS = "rgba(255,255,255,0.55)";
-const B = "rgba(255,255,255,0.07)";
+const T = "#2f2618";
+const TS = "#7b7366";
+const B = "rgba(66,53,33,0.15)";
 
 type Tab = "subscription" | "settings";
 

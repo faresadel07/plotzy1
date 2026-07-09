@@ -20,15 +20,15 @@ import { AccountTabs } from "@/components/account-tabs";
 // Theme tokens — kept identical to /account/subscription so the two
 // pages feel like siblings of the same surface.
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#000";
-const B = "rgba(255,255,255,0.07)";
-const T = "#fff";
-const TS = "rgba(255,255,255,0.55)";
-const TD = "rgba(255,255,255,0.25)";
+const BG = "#f4efe2";
+const B = "rgba(66,53,33,0.13)";
+const T = "#2f2618";
+const TS = "#6d6354";
+const TD = "#9a9181";
 
 export default function AccountSettings() {
   const [, navigate] = useLocation();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <Layout darkNav>
@@ -47,7 +47,8 @@ export default function AccountSettings() {
             {t("asBackHome")}
           </button>
 
-          <h1 className="text-3xl font-bold leading-tight mb-2">{t("acctTitle")}</h1>
+          <h1 className="text-3xl font-bold leading-tight mb-1" style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>{t("acctTitle")}</h1>
+          <p className="mb-1" style={{ fontFamily: lang === "ar" ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: lang === "ar" ? 15 : 19, color: "#8a8070", transform: "rotate(-1deg)", display: "inline-block" }}>{lang === "ar" ? "(كل شي بمكانه، متل مكتبك)" : "(everything in its place, like your desk)"}</p>
           <p className="text-sm mb-6" style={{ color: TS }}>
             {t("acctBlurb")}
           </p>
@@ -55,6 +56,7 @@ export default function AccountSettings() {
           <AccountTabs current="settings" />
 
           <ChangeEmailSection />
+          <LanguageSection />
           <NotificationPrefsSection />
           <ChangePasswordSection />
           <YourDataSection />
@@ -126,7 +128,7 @@ function ChangeEmailSection() {
     return (
       <div
         className="mt-12 p-6 rounded-2xl"
-        style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+        style={{ background: "#fffdf7", border: `1px solid ${B}` }}
       >
         <h3 className="text-sm font-bold mb-2" style={{ color: T }}>
           {t("changeEmailTitle")}
@@ -146,7 +148,7 @@ function ChangeEmailSection() {
     width: "100%",
     padding: "10px 12px",
     borderRadius: 8,
-    background: "rgba(255,255,255,0.04)",
+    background: "rgba(66,53,33,0.05)",
     border: `1px solid ${B}`,
     color: T,
     fontSize: 14,
@@ -163,7 +165,7 @@ function ChangeEmailSection() {
   return (
     <div
       className="mt-12 p-6 rounded-2xl"
-      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+      style={{ background: "#fffdf7", border: `1px solid ${B}` }}
     >
       <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
         {t("changeEmailTitle")}
@@ -235,9 +237,9 @@ function ChangeEmailSection() {
           style={{
             padding: "10px 20px",
             borderRadius: 10,
-            background: !submitting && newEmail && password ? "#fff" : "rgba(255,255,255,0.06)",
-            color: !submitting && newEmail && password ? "#000" : "rgba(255,255,255,0.3)",
-            border: "1px solid rgba(255,255,255,0.18)",
+            background: !submitting && newEmail && password ? "#292115" : "rgba(66,53,33,0.08)",
+            color: !submitting && newEmail && password ? "#f7f2e4" : "#9a9181",
+            border: "1px solid rgba(66,53,33,0.24)",
             fontSize: 13,
             fontWeight: 600,
             cursor: submitting || !newEmail || !password ? "not-allowed" : "pointer",
@@ -305,7 +307,7 @@ function NotificationPrefsSection() {
   return (
     <div
       className="mt-12 p-6 rounded-2xl"
-      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+      style={{ background: "#fffdf7", border: `1px solid ${B}` }}
     >
       <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
         {t("notifyPrefsTitle")}
@@ -406,7 +408,7 @@ function ChangePasswordSection() {
     return (
       <div
         className="mt-12 p-6 rounded-2xl"
-        style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+        style={{ background: "#fffdf7", border: `1px solid ${B}` }}
       >
         <h3 className="text-sm font-bold mb-2" style={{ color: T }}>
           {t("changePasswordTitle")}
@@ -422,7 +424,7 @@ function ChangePasswordSection() {
     width: "100%",
     padding: "10px 12px",
     borderRadius: 8,
-    background: "rgba(255,255,255,0.04)",
+    background: "rgba(66,53,33,0.05)",
     border: `1px solid ${B}`,
     color: T,
     fontSize: 14,
@@ -439,7 +441,7 @@ function ChangePasswordSection() {
   return (
     <div
       className="mt-12 p-6 rounded-2xl"
-      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+      style={{ background: "#fffdf7", border: `1px solid ${B}` }}
     >
       <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
         {t("changePasswordTitle")}
@@ -503,13 +505,13 @@ function ChangePasswordSection() {
             borderRadius: 10,
             background:
               !submitting && current && next.length >= 8 && next === confirm
-                ? "#fff"
-                : "rgba(255,255,255,0.06)",
+                ? "#292115"
+                : "rgba(66,53,33,0.08)",
             color:
               !submitting && current && next.length >= 8 && next === confirm
-                ? "#000"
-                : "rgba(255,255,255,0.3)",
-            border: "1px solid rgba(255,255,255,0.18)",
+                ? "#f7f2e4"
+                : "#9a9181",
+            border: "1px solid rgba(66,53,33,0.24)",
             fontSize: 13,
             fontWeight: 600,
             cursor: submitting || !current || next.length < 8 || next !== confirm
@@ -587,7 +589,7 @@ function YourDataSection() {
   return (
     <div
       className="mt-12 p-6 rounded-2xl"
-      style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${B}` }}
+      style={{ background: "#fffdf7", border: `1px solid ${B}` }}
     >
       <h3 className="text-sm font-bold mb-1" style={{ color: T }}>
         {t("yourDataTitle")}
@@ -647,8 +649,8 @@ function DataExportCard({
         textAlign: "left",
         padding: "16px 18px",
         borderRadius: 12,
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.10)",
+        background: "#fffdf7",
+        border: "1px solid rgba(66,53,33,0.14)",
         color: T,
         cursor: disabled ? (loading ? "wait" : "not-allowed") : "pointer",
         opacity: disabled && !loading ? 0.5 : 1,
@@ -659,12 +661,12 @@ function DataExportCard({
       }}
       onMouseEnter={(e) => {
         if (disabled) return;
-        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+        e.currentTarget.style.background = "rgba(66,53,33,0.08)";
+        e.currentTarget.style.borderColor = "rgba(66,53,33,0.24)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
+        e.currentTarget.style.background = "#fffdf7";
+        e.currentTarget.style.borderColor = "rgba(66,53,33,0.14)";
       }}
     >
       <div className="flex items-center gap-2" style={{ fontSize: 13, fontWeight: 600 }}>
@@ -675,6 +677,38 @@ function DataExportCard({
         {subtext}
       </p>
     </button>
+  );
+}
+
+
+// ── Interface language (mirrors the nav picker so writers can switch
+// without hunting for the globe icon) ─────────────────────────────
+function LanguageSection() {
+  const { t, lang, setLang } = useLanguage();
+  return (
+    <div className="mt-6 p-6 rounded-2xl" style={{ background: "#fffdf7", border: `1px solid ${B}` }}>
+      <h3 className="text-sm font-bold mb-1" style={{ color: T }}>{lang === "ar" ? "لغة المنصة" : "Interface language"}</h3>
+      <p className="text-sm mb-4" style={{ color: TS, lineHeight: 1.6 }}>
+        {lang === "ar" ? "بتقدر تكتب كتبك بأي لغة بغض النظر عن لغة الواجهة." : "You can write your books in any language regardless of the interface language."}
+      </p>
+      <div style={{ display: "flex", gap: 8 }}>
+        {([["en", "English"], ["ar", "العربية"]] as const).map(([code, label]) => (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLang(code)}
+            style={{
+              padding: "9px 22px", borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+              background: lang === code ? "#292115" : "transparent",
+              color: lang === code ? "#f7f2e4" : TS,
+              border: lang === code ? "1px solid #292115" : `1px solid ${B}`,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -746,8 +780,8 @@ function DangerZoneSection() {
       style={{ background: "rgba(220, 38, 38, 0.04)", border: "1px solid rgba(220, 38, 38, 0.18)" }}
     >
       <div className="flex items-center gap-2 mb-2">
-        <AlertCircle className="w-4 h-4" style={{ color: "#f87171" }} />
-        <h3 className="text-sm font-bold" style={{ color: "#f87171" }}>
+        <AlertCircle className="w-4 h-4" style={{ color: "#b3402e" }} />
+        <h3 className="text-sm font-bold" style={{ color: "#b3402e" }}>
           {t("accountDeleteSectionTitle")}
         </h3>
       </div>
@@ -762,7 +796,7 @@ function DangerZoneSection() {
           borderRadius: 10,
           background: "transparent",
           border: "1px solid rgba(220, 38, 38, 0.5)",
-          color: "#f87171",
+          color: "#b3402e",
           fontSize: 13,
           fontWeight: 600,
           cursor: "pointer",
@@ -778,12 +812,12 @@ function DangerZoneSection() {
             <DialogDescription>{t("accountDeleteDialogIntro")}</DialogDescription>
           </DialogHeader>
 
-          <ul className="text-sm space-y-2 mb-3" style={{ color: "rgba(255,255,255,0.7)", paddingLeft: 18, listStyleType: "disc" }}>
+          <ul className="text-sm space-y-2 mb-3" style={{ color: "#4a4132", paddingLeft: 18, listStyleType: "disc" }}>
             <li>{t("accountDeleteWarn1")}</li>
             <li>{t("accountDeleteWarn2")}</li>
             <li>{t("accountDeleteWarn3")}</li>
             <li>{t("accountDeleteWarn4")}</li>
-            <li style={{ color: "#f87171", fontWeight: 600 }}>{t("accountDeleteWarn5")}</li>
+            <li style={{ color: "#b3402e", fontWeight: 600 }}>{t("accountDeleteWarn5")}</li>
           </ul>
 
           {isPasswordUser ? (
@@ -801,8 +835,8 @@ function DangerZoneSection() {
                   width: "100%",
                   padding: "10px 12px",
                   borderRadius: 8,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(66,53,33,0.05)",
+                  border: "1px solid rgba(66,53,33,0.14)",
                   color: T,
                   fontSize: 14,
                   outline: "none",
@@ -824,8 +858,8 @@ function DangerZoneSection() {
                   width: "100%",
                   padding: "10px 12px",
                   borderRadius: 8,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(66,53,33,0.05)",
+                  border: "1px solid rgba(66,53,33,0.14)",
                   color: T,
                   fontSize: 14,
                   fontFamily: "monospace",
@@ -844,7 +878,7 @@ function DangerZoneSection() {
                 padding: "10px 18px",
                 borderRadius: 10,
                 background: "transparent",
-                border: "1px solid rgba(255,255,255,0.18)",
+                border: "1px solid rgba(66,53,33,0.24)",
                 color: TS,
                 fontSize: 13,
                 fontWeight: 500,

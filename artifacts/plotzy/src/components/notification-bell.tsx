@@ -3,15 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Bell, Heart, UserPlus, MessageSquare, BookOpen, Star, Check, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#0e0e12";
-const B = "rgba(255,255,255,0.07)";
-const T = "rgba(255,255,255,0.88)";
-const TS = "rgba(255,255,255,0.45)";
-const TD = "rgba(255,255,255,0.20)";
-const ACC = "#7c6af7";
+const BG = "#fffdf7";
+const B = "rgba(66,53,33,0.13)";
+const T = "#2f2618";
+const TS = "#7b7366";
+const TD = "#9a9181";
+const ACC = "#7b5e3b";
 
 function timeAgo(date: string) {
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -42,11 +43,13 @@ const ICON_MAP: Record<string, typeof Heart> = {
 
 function NotificationIcon({ type }: { type: string }) {
   const Icon = ICON_MAP[type] || Bell;
-  return <Icon style={{ width: 16, height: 16, color: "#fff", flexShrink: 0 }} />;
+  return <Icon style={{ width: 16, height: 16, color: "#5a4a33", flexShrink: 0 }} />;
 }
 
 export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
   const { user } = useAuth();
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"notifications" | "messages">("notifications");
   const ref = useRef<HTMLDivElement>(null);
@@ -190,7 +193,13 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
           }
         }}
       >
-        <Bell style={{ width: 17, height: 17, color: darkNav ? "#fff" : "#111" }} />
+        <img
+          src="/images/bell-sketch.png"
+          alt=""
+          aria-hidden
+          draggable={false}
+          style={{ width: 21, height: 21, display: "block", pointerEvents: "none", userSelect: "none", filter: darkNav ? "invert(1) brightness(1.7)" : "none" }}
+        />
         {totalUnread > 0 && (
           <span style={{
             position: "absolute",
@@ -209,7 +218,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
             justifyContent: "center",
             padding: "0 4px",
             lineHeight: 1,
-            border: "2px solid #080808",
+            border: "2px solid #f4efe2",
           }}>
             {totalUnread > 99 ? "99+" : totalUnread}
           </span>
@@ -218,21 +227,33 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
 
       {/* Dropdown */}
       {open && (
-        <div style={{
+        <div className="notif-panel" dir={ar ? "rtl" : "ltr"} style={{
           position: "absolute",
           top: "calc(100% + 8px)",
-          right: 0,
+          insetInlineEnd: 0,
           width: "min(360px, calc(100vw - 24px))",
           maxHeight: 480,
           background: BG,
           border: `1px solid ${B}`,
-          borderRadius: 12,
-          boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+          borderRadius: 14,
+          boxShadow: "0 18px 44px -12px rgba(41,33,21,0.35)",
           zIndex: 200,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
         }}>
+          <style>{`
+            @media (max-width: 699px) {
+              .notif-panel {
+                position: fixed !important;
+                top: calc(env(safe-area-inset-top, 0px) + 58px) !important;
+                left: 10px !important;
+                right: 10px !important;
+                width: auto !important;
+                max-height: 65vh !important;
+              }
+            }
+          `}</style>
           {/* Tabs */}
           <div style={{
             display: "flex",
@@ -252,7 +273,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                   color: tab === t ? T : TS,
                   background: "transparent",
                   border: "none",
-                  borderBottom: tab === t ? `2px solid #fff` : "2px solid transparent",
+                  borderBottom: tab === t ? `2px solid #2f2618` : "2px solid transparent",
                   cursor: "pointer",
                   transition: "color 0.15s",
                   display: "flex",
@@ -261,7 +282,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                   gap: 6,
                 }}
               >
-                {t === "notifications" ? "Notifications" : "Messages"}
+                {t === "notifications" ? (ar ? "الإشعارات" : "Notifications") : (ar ? "الرسائل" : "Messages")}
                 {t === "notifications" && (notifCount?.count || 0) > 0 && (
                   <span style={{
                     minWidth: 16, height: 16, borderRadius: 8,
@@ -318,11 +339,11 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                         borderRadius: 4,
                         transition: "background 0.15s",
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(124,106,247,0.1)"}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(122,94,59,0.1)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
                       <Check style={{ width: 12, height: 12 }} />
-                      Mark all read
+                      {ar ? "تحديد الكل كمقروء" : "Mark all read"}
                     </button>
                   </div>
                 )}
@@ -336,8 +357,8 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                     fontSize: 13,
                     color: TS,
                   }}>
-                    <Bell style={{ width: 28, height: 28, color: TD, margin: "0 auto 12px" }} />
-                    <div>No notifications yet</div>
+                    <img src="/images/bell-sketch.png" alt="" aria-hidden draggable={false} style={{ width: 46, height: 46, display: "block", margin: "0 auto 10px", opacity: 0.85, pointerEvents: "none", userSelect: "none" }} />
+                    <div style={{ fontFamily: ar ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: ar ? 14.5 : 17, color: "#8a8070" }}>{ar ? "(ما في إشعارات بعد، اكتب شوي)" : "(no notifications yet, go write)"}</div>
                   </div>
                 ) : (
                   notifications.map(n => (
@@ -350,19 +371,19 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                         gap: 10,
                         padding: "10px 14px",
                         width: "100%",
-                        textAlign: "left",
-                        background: n.isRead ? "transparent" : "rgba(124,106,247,0.05)",
+                        textAlign: "start",
+                        background: n.isRead ? "transparent" : "rgba(122,94,59,0.08)",
                         border: "none",
                         borderBottom: `1px solid ${B}`,
                         cursor: "pointer",
                         transition: "background 0.15s",
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
-                      onMouseLeave={e => e.currentTarget.style.background = n.isRead ? "transparent" : "rgba(124,106,247,0.05)"}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(66,53,33,0.05)"}
+                      onMouseLeave={e => e.currentTarget.style.background = n.isRead ? "transparent" : "rgba(122,94,59,0.08)"}
                     >
                       <div style={{
                         width: 32, height: 32, borderRadius: 8,
-                        background: "rgba(124,106,247,0.12)",
+                        background: "rgba(122,94,59,0.12)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0, marginTop: 2,
                       }}>
@@ -404,7 +425,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                       {!n.isRead && (
                         <div style={{
                           width: 7, height: 7, borderRadius: "50%",
-                          background: "#fff", flexShrink: 0, marginTop: 6,
+                          background: "#7b5e3b", flexShrink: 0, marginTop: 6,
                         }} />
                       )}
                     </button>
@@ -443,11 +464,11 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                         transition: "background 0.15s",
                         opacity: markAllMessagesMut.isPending ? 0.5 : 1,
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(124,106,247,0.1)"}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(122,94,59,0.1)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
                       <Check style={{ width: 12, height: 12 }} />
-                      Mark all read
+                      {ar ? "تحديد الكل كمقروء" : "Mark all read"}
                     </button>
                   </div>
                 )}
@@ -459,11 +480,13 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                   <Mail style={{ width: 28, height: 28, color: TD, margin: "0 auto 12px" }} />
                   {(msgCount?.count || 0) > 0 ? (
                     <div style={{ fontSize: 13, color: T, marginBottom: 4 }}>
-                      You have <span style={{ fontWeight: 700, color: "#fff" }}>{msgCount!.count}</span> unread message{msgCount!.count !== 1 ? "s" : ""}
+                      {ar
+                        ? <>عندك <span style={{ fontWeight: 700 }}>{msgCount!.count}</span> {msgCount!.count === 1 ? "رسالة غير مقروءة" : "رسائل غير مقروءة"}</>
+                        : <>You have <span style={{ fontWeight: 700 }}>{msgCount!.count}</span> unread message{msgCount!.count !== 1 ? "s" : ""}</>}
                     </div>
                   ) : (
                     <div style={{ fontSize: 13, color: TS, marginBottom: 4 }}>
-                      No unread messages
+                      {ar ? "ما في رسائل غير مقروءة" : "No unread messages"}
                     </div>
                   )}
                   <button
@@ -472,8 +495,8 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                       marginTop: 12,
                       padding: "8px 20px",
                       borderRadius: 8,
-                      background: "#fff",
-                      color: "#000",
+                      background: "#292115",
+                      color: "#f7f2e4",
                       fontFamily: SF,
                       fontSize: 12.5,
                       fontWeight: 600,
@@ -484,7 +507,7 @@ export function NotificationBell({ darkNav = false }: { darkNav?: boolean }) {
                     onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
                     onMouseLeave={e => e.currentTarget.style.opacity = "1"}
                   >
-                    View Messages
+                    {ar ? "عرض الرسائل" : "View Messages"}
                   </button>
                 </div>
               </>

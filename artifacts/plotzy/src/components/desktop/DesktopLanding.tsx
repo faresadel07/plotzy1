@@ -128,6 +128,8 @@ export function DesktopHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean;
         {/* The papers stack: a messy desk of tilted drafts, with the
             synopsis card sitting perfectly straight on top of the chaos */}
         <div style={{ flex: "1.05 1 0", position: "relative", height: 560, minWidth: 0 }}>
+          {/* The bragging sticky, pinned at the hero top corner */}
+          <StickyNote ar={ar} size={98} rot={7} text={ar ? "رقم 1 بالسوق، مضمون" : "number 1 on the market, guaranteed"} style={{ position: "absolute", top: -34, right: -18, zIndex: 5 }} />
           <svg aria-hidden width="52" height="32" viewBox="0 0 42 26" style={{ position: "absolute", top: 4, insetInlineStart: 8, opacity: 0.5 }}>
             <path d="M2 20 Q 12 4 26 8" fill="none" stroke="#5c5142" strokeWidth="2.4" strokeLinecap="round" />
             <path d="M30 22 Q 36 16 40 18" fill="none" stroke="#5c5142" strokeWidth="2.2" strokeLinecap="round" />

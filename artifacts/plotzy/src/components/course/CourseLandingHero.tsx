@@ -17,13 +17,13 @@ import { useLanguage } from "@/contexts/language-context";
  * unobstructed.
  */
 export function CourseLandingHero() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <header
       className="course-hero-frame relative isolate overflow-hidden rounded-2xl"
       style={{
-        background: "linear-gradient(135deg, #1A294F 0%, #0F1A33 100%)",
+        background: "linear-gradient(135deg, #e9dcc0 0%, #d9c69d 100%)",
         // Match the source image's natural aspect so nothing is cropped
         // on iPad / laptop. On phones the panoramic 2.6:1 frame is too
         // thin to read the title comfortably, so the responsive CSS
@@ -65,20 +65,21 @@ export function CourseLandingHero() {
 
       {/* Desktop / iPad panoramic illustration */}
       <img
-        src="/course-hero.png"
+        src="/course-cover-art.jpg"
         alt=""
         role="presentation"
         aria-hidden="true"
         loading="eager"
         decoding="async"
         className="course-hero-image-desktop absolute inset-0 h-full w-full object-cover"
+        style={{ objectPosition: "center 30%" }}
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = "none";
         }}
       />
       {/* Phone portrait illustration */}
       <img
-        src="/course-hero-mobile.jpg"
+        src="/course-cover-art.jpg"
         alt=""
         role="presentation"
         aria-hidden="true"
@@ -98,7 +99,7 @@ export function CourseLandingHero() {
         className="course-hero-scrim-desktop absolute inset-0"
         style={{
           background:
-            "linear-gradient(110deg, rgba(15,26,51,0.78) 0%, rgba(15,26,51,0.55) 40%, rgba(15,26,51,0.10) 70%, rgba(15,26,51,0) 100%)",
+            "linear-gradient(110deg, rgba(238,226,198,0.85) 0%, rgba(238,226,198,0.6) 40%, rgba(238,226,198,0.08) 70%, rgba(238,226,198,0) 100%)",
         }}
       />
       {/* Phone scrim — a soft veil across the top sky so the centred
@@ -108,23 +109,29 @@ export function CourseLandingHero() {
         className="course-hero-scrim-mobile absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(10,14,30,0.88) 0%, rgba(10,14,30,0.66) 24%, rgba(10,14,30,0.28) 44%, rgba(10,14,30,0.05) 58%, rgba(10,14,30,0) 70%)",
+            "linear-gradient(180deg, rgba(238,226,198,0.82) 0%, rgba(238,226,198,0.55) 24%, rgba(238,226,198,0.2) 44%, rgba(238,226,198,0.04) 58%, rgba(238,226,198,0) 70%)",
         }}
       />
 
       <div className="course-hero-content relative z-10 h-full flex items-end px-6 sm:px-10 py-8 sm:py-10">
-        <div className="course-hero-textblock max-w-2xl text-white">
+        <div className="course-hero-textblock max-w-2xl" style={{ color: "#3a2c14" }}>
           <h1
-            className="font-sans text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-tight"
-            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.45)" }}
+            className="text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-tight font-bold"
+            style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif", textShadow: "0 1px 10px rgba(238,226,198,0.8)" }}
           >
             {t("courseLandingTitle")}
           </h1>
           <p
-            className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-white/90 max-w-xl"
-            style={{ textShadow: "0 1px 8px rgba(0,0,0,0.5)" }}
+            className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg max-w-xl font-semibold"
+            style={{ color: "#54401f", textShadow: "0 1px 8px rgba(238,226,198,0.8)" }}
           >
             {t("courseLandingHeroSubtitle")}
+          </p>
+          <p
+            className="mt-2 text-base sm:text-lg"
+            style={{ fontFamily: "'Caveat', 'Aref Ruqaa', cursive", color: "#6b5426", transform: "rotate(-1deg)" }}
+          >
+            {lang === "ar" ? "(مجاني، ورح يضل مجاني)" : "(free, and it stays free)"}
           </p>
         </div>
       </div>
