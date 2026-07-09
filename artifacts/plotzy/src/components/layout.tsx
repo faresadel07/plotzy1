@@ -114,8 +114,18 @@ const SocialSvg = {
   linkedin: (p: any) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>,
   youtube: (p: any) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>,
   twitter: (p: any) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+  telegram: (p: any) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M21.94 3.24a1.5 1.5 0 00-1.53-.26L2.6 9.94c-.7.27-.7 1.26.01 1.52l4.53 1.68 1.74 5.58c.21.68 1.07.88 1.56.37l2.51-2.58 4.68 3.45c.6.44 1.46.11 1.61-.62l3-14.5a1.5 1.5 0 00-.3-1.6zM9.05 13.6l8.44-6.32c.29-.22.6.18.36.44l-6.79 7.03-.29 2.95z"/></svg>,
   tiktok: (p: any) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.89a8.23 8.23 0 004.77 1.52V7a4.85 4.85 0 01-1-.31z"/></svg>,
 };
+
+// Community homes that must always be reachable from the footer, even
+// before the admin fills /api/social-links. Fetched values win so the
+// admin can still change them without a deploy.
+const SOCIAL_DEFAULTS: Record<string, string> = {
+  telegram: "https://t.me/plotzy_community",
+  youtube: "https://www.youtube.com/@Plotzynews",
+};
+const SOCIAL_ORDER = ["instagram", "linkedin", "youtube", "telegram", "twitter", "tiktok"];
 
 function FooterSocialIcons() {
   const { data: links } = useQuery<Record<string, string>>({
@@ -123,8 +133,13 @@ function FooterSocialIcons() {
     queryFn: () => fetch("/api/social-links").then(r => r.ok ? r.json() : {}),
     staleTime: 5 * 60 * 1000,
   });
-  if (!links || Object.keys(links).length === 0) return null;
-  const entries = Object.entries(links).filter(([, url]) => !!url);
+  const merged: Record<string, string> = { ...SOCIAL_DEFAULTS, ...(links || {}) };
+  const entries = Object.entries(merged)
+    .filter(([, url]) => !!url)
+    .sort(([a], [b]) => {
+      const ia = SOCIAL_ORDER.indexOf(a), ib = SOCIAL_ORDER.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
   if (entries.length === 0) return null;
   return (
     <div style={{ display: "flex", gap: 10, marginTop: 14 }}>

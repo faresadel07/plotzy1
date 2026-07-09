@@ -30,11 +30,7 @@
    Ruqaa automatically without dir-scoped rules. Four faces total on
    course pages: system body, serif headings, handwriting asides and
    quotes, typewriter small labels. */
-.course-apple :is(h1, h2, h3) { font-family: 'Lora', 'Amiri', Georgia, serif; }
-.course-apple :is(h4, figcaption, blockquote, em, .italic) { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive; }
-.course-apple blockquote { font-size: 1.25em; line-height: 1.6; }
-.course-apple p.border-s-2 { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive; font-size: 1.3rem !important; line-height: 1.7 !important; }
-.course-apple :is(.text-xs, .text-\[11px\], .uppercase) { font-family: 'Courier New', 'Noto Naskh Arabic', ui-monospace, monospace; }
+.course-apple p.border-s-2 { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive !important; font-size: 1.3rem !important; line-height: 1.7 !important; }
 
 /* The writing guide mixes the same four faces on its light surface. */
 .plotzy-guide :is(h1, h2) { font-family: 'Lora', 'Amiri', Georgia, serif; }
@@ -872,16 +868,27 @@ html, body {
   }
 }
 
-/* ── Writing Course: Apple system typeface everywhere ──────────────────
-   The course is designed to read like a premium Apple-keynote
-   experience. Scope an !important font-family to the course subtree so
-   it beats Tailwind's font-serif headings and the markdown body alike,
-   without editing every component. Applied via the `course-apple` class
-   on each course page's top-level container. */
-.course-apple,
-.course-apple * {
+/* ── Writing Course: four typefaces, enforced ──────────────────────────
+   This block used to force the Apple face on EVERY descendant with
+   !important, which silently killed every font-mix attempt inside the
+   course. Now the same !important weight enforces the four-face system
+   Faris asked for: Apple body, serif headings, handwriting for quotes
+   and italics, typewriter for small labels and code. */
+.course-apple {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif !important;
+}
+.course-apple :is(h1, h2, h3),
+.course-apple :is(h1, h2, h3) :is(span, strong, a) {
+  font-family: 'Lora', 'Amiri', Georgia, serif !important;
+}
+.course-apple :is(h4, figcaption, blockquote, blockquote p, em, i, .italic, q) {
+  font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive !important;
+}
+.course-apple :is(em, i, .italic) { font-size: 1.12em; }
+.course-apple blockquote { font-size: 1.22em !important; line-height: 1.65 !important; }
+.course-apple :is(.text-xs, .text-\[11px\], .uppercase, code, kbd) {
+  font-family: 'Courier New', 'Noto Naskh Arabic', ui-monospace, monospace !important;
 }
 
 /* The old plotzy-page-pure-black body hack lived here: it forced every
