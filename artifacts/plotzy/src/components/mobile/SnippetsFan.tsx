@@ -4,6 +4,7 @@
 // right below the AI studio banner as its proof moment.
 
 import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR } from "./fonts";
+import { PaperBall } from "./PaperBall";
 
 const SNIPPETS_AR = [
   "طفت شظايا الذاكرة على سطح ذهنه كما يطفو الحطام: صوت جدّه، ورائحة المطر على إسفلت عمّان، وباب خشبيّ لم يفتحه أحد منذ عشرين سنة.",
@@ -61,6 +62,9 @@ export function SnippetsFan({ ar }: { ar: boolean }) {
         {slip(snippets[0], { top: 4, insetInlineStart: -34, width: 300, transform: `rotate(${ar ? 7 : -7}deg)` })}
         {slip(snippets[1], { top: 96, insetInlineStart: 46, width: 320, transform: `rotate(${ar ? -4 : 4}deg)`, zIndex: 2 })}
         {slip(snippets[2], { top: 212, insetInlineEnd: -40, width: 290, transform: `rotate(${ar ? 3 : -3}deg)` })}
+        {/* The drafts that did not make it */}
+        <PaperBall size={40} rot={30} style={{ position: "absolute", top: 26, insetInlineEnd: 16, zIndex: 3 }} />
+        <PaperBall size={28} rot={-15} style={{ position: "absolute", bottom: 4, insetInlineStart: 24, zIndex: 3 }} />
       </div>
     </section>
   );

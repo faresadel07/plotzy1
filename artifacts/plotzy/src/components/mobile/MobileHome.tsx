@@ -29,7 +29,7 @@ import { COMICS, comicCover } from "@/lib/comics";
 import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette";
 import { LibraryShowcase } from "./LibraryShowcase";
 import { SnippetsFan } from "./SnippetsFan";
-import { PaperPile } from "./PaperPile";
+import { PaperBall } from "./PaperBall";
 import { ensureHomeFonts } from "./fonts";
 import { useEffect } from "react";
 
@@ -77,11 +77,7 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         ...SPECKLE,
       }}
     >
-      {/* First-open ritual: the draggable paper pile (once, then never) */}
-      <PaperPile ar={ar} />
-
-      {/* Tidy paper hero: headline, actions, contained collage card,
-          stats. No pinning, no scroll choreography. */}
+      {/* Tidy paper hero: headline, actions, the papers stack, stats. */}
       <MobileHero ar={ar} onStartWriting={onStartWriting} onOpenCourse={() => navigate("/course")} />
 
       {/* Quick destinations — app-style chips under the hero */}
@@ -218,11 +214,22 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           onSeeAll={() => navigate("/library")}
         />
 
+        {/* A stray draft ball before the feedback wall */}
+        <div style={{ position: "relative", height: 0, zIndex: 3 }}>
+          <PaperBall size={46} rot={-18} style={{ position: "absolute", top: -10, insetInlineStart: 14 }} />
+        </div>
+
         {/* Social proof — real early testers, in their own words */}
         <TestimonialsMobile ar={ar} />
 
         {/* Free writing course, presented as its own book cover */}
         <CourseCoverMobile ar={ar} />
+
+        {/* Two draft balls resting before the closing dark section */}
+        <div style={{ position: "relative", height: 0, zIndex: 3 }}>
+          <PaperBall size={38} rot={24} style={{ position: "absolute", top: -34, insetInlineEnd: 22 }} />
+          <PaperBall size={26} rot={-40} style={{ position: "absolute", top: -18, insetInlineEnd: 66 }} />
+        </div>
 
         {/* Closing showcase — write anywhere (iPad + laptop) */}
         <DevicesBanner ar={ar} />

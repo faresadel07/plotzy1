@@ -7,6 +7,7 @@
 import { useLocation } from "wouter";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { HAND_EN, HAND_AR } from "./fonts";
+import { PaperBall } from "./PaperBall";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -58,6 +59,8 @@ function CourseNote({ ar }: { ar: boolean }) {
       <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 19, color: "#8a8070", textAlign: ar ? "left" : "right", marginTop: 10, transform: "rotate(-1deg)" }}>
         {ar ? "(ليش؟ لأنه حدا لازم يعلّم)" : "(why? because someone has to teach)"}
       </div>
+      {/* A discarded draft resting on the note's corner */}
+      <PaperBall size={44} rot={20} style={{ position: "absolute", top: -20, insetInlineEnd: -10 }} />
     </div>
   );
 }
