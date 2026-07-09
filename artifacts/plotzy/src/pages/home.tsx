@@ -7,8 +7,8 @@ import { useBooks, useCreateBook, useGenerateCover, useTrashBook, useDuplicateBo
 import { SeriesSection } from "@/components/SeriesSection";
 import { BookCreationWizard, type WizardAnswers } from "@/components/BookCreationWizard";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
-import { BookOpen, Plus, Trash2, Users, UserPlus, Search } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { BookOpen, Plus, Trash2, Users, UserPlus, Search, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/language-context";
@@ -206,6 +206,36 @@ export default function Home() {
   const openCreateBook = () => {
     if (!user) { setShowAuthModal(true); return; }
     setIsOpen(true);
+  };
+
+  // ── Revoke a collaborator's access (You shared section) ──────────
+  // Two-tap confirm; the shared-by-me payload has no collaborator row
+  // id, so we resolve it from the owner-only collaborators list first.
+  const [confirmRemove, setConfirmRemove] = useState<{ bookId: number; userId: number } | null>(null);
+  const [removingCollab, setRemovingCollab] = useState(false);
+  const qcHome = useQueryClient();
+  const handleRemoveCollaborator = async (sharedBookId: number, collabUserId: number) => {
+    if (!confirmRemove || confirmRemove.bookId !== sharedBookId || confirmRemove.userId !== collabUserId) {
+      setConfirmRemove({ bookId: sharedBookId, userId: collabUserId });
+      return;
+    }
+    setRemovingCollab(true);
+    try {
+      const listRes = await fetch(`/api/books/${sharedBookId}/collaborators`, { credentials: "include" });
+      if (!listRes.ok) throw new Error();
+      const data = await listRes.json();
+      const row = (data.collaborators || []).find((c: any) => c.userId === collabUserId);
+      if (!row) throw new Error();
+      const delRes = await fetch(`/api/books/${sharedBookId}/collaborators/${row.id}`, { method: "DELETE", credentials: "include" });
+      if (!delRes.ok) throw new Error();
+      qcHome.invalidateQueries({ queryKey: ["/api/books/shared-by-me"] });
+      toast({ title: lang === "ar" ? "تمت إزالة المتعاون" : "Collaborator removed" });
+    } catch {
+      toast({ title: lang === "ar" ? "تعذّرت الإزالة، حاول مجدداً" : "Could not remove, try again", variant: "destructive" });
+    } finally {
+      setRemovingCollab(false);
+      setConfirmRemove(null);
+    }
   };
 
   const shelfRows = books ? Array.from({ length: Math.ceil(books.length / BOOKS_PER_SHELF) }, (_, i) => books.slice(i * BOOKS_PER_SHELF, (i + 1) * BOOKS_PER_SHELF)) : [];
@@ -674,22 +704,22 @@ export default function Home() {
 
 
 
-        {/* ===== SHARED SECTIONS WRAPPER (dark bg matches Your Projects above) ===== */}
-        <div className="bg-[#221b11]">
+        {/* ===== SHARED SECTIONS (warm paper, with collaborator control) ===== */}
+        <div>
 
         {/* ===== SHARED WITH ME ===== */}
         {user && sharedBooks.length > 0 && (
-          <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
-                <Users className="w-4 h-4" style={{ color: "#60a5fa" }} />
+          <section className="max-w-7xl mx-auto px-6 pt-10 pb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(122,94,59,0.1)", border: "1px solid rgba(122,94,59,0.25)" }}>
+                <Users className="w-4 h-4" style={{ color: "#7b5e3b" }} />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">{t("hmSharedWithYou")}</h3>
-                <p className="text-xs" style={{ color: "rgba(244,239,226,0.3)" }}>{t("hmSharedWithYouDesc")}</p>
-              </div>
+              <h3 className="text-xl font-bold" style={{ color: "#2f2618", fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>{t("hmSharedWithYou")}</h3>
             </div>
-            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+            <p className="mb-5" style={{ color: "#8a8070", fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: lang === "ar" ? 14.5 : 17, transform: "rotate(-0.6deg)", display: "inline-block" }}>
+              ({t("hmSharedWithYouDesc")})
+            </p>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
               {sharedBooks.map(sb => (
                 <button key={sb.id} type="button" onClick={async () => {
                   // Go directly to first chapter (writing page)
@@ -704,23 +734,23 @@ export default function Home() {
                     }
                   } catch { setLocation(`/books/${sb.id}`); }
                 }}
-                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] text-left bg-transparent border-0 w-full"
-                  style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.1)" }}>
+                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] text-start border-0 w-full"
+                  style={{ background: "#fffdf7", border: "1px solid rgba(66,53,33,0.13)", boxShadow: "0 4px 14px -8px rgba(41,33,21,0.2)" }}>
                   {/* Mini cover */}
-                  <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ background: "rgba(96,165,250,0.08)" }}>
+                  <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ background: "rgba(122,94,59,0.08)" }}>
                     {sb.coverImage ? (
                       <img src={sb.coverImage} alt={sb.title || ""} className="w-full h-full object-cover rounded-lg" />
                     ) : (
-                      <BookOpen className="w-4 h-4" style={{ color: "rgba(96,165,250,0.5)" }} />
+                      <BookOpen className="w-4 h-4" style={{ color: "#a08a6a" }} />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{sb.title}</p>
-                    <p className="text-[11px] truncate" style={{ color: "rgba(244,239,226,0.35)" }}>
+                    <p className="text-sm font-semibold truncate" style={{ color: "#2f2618" }}>{sb.title}</p>
+                    <p className="text-[11px] truncate" style={{ color: "#8a8070" }}>
                       {t("hmBy")} {sb.ownerName || t("hmUnknown")} · {sb.role === "editor" ? t("hmCanEdit") : t("hmViewOnly")}
                     </p>
                   </div>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: sb.role === "editor" ? "rgba(74,222,128,0.12)" : "rgba(96,165,250,0.12)", color: sb.role === "editor" ? "#4ade80" : "#60a5fa" }}>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: sb.role === "editor" ? "rgba(122,94,59,0.14)" : "rgba(66,53,33,0.07)", color: sb.role === "editor" ? "#7b5e3b" : "#7b7366" }}>
                     {sb.role === "editor" ? t("hmEditor") : t("hmViewer")}
                   </span>
                 </button>
@@ -731,60 +761,73 @@ export default function Home() {
 
         {/* ===== SHARED BY ME ===== */}
         {user && sharedByMe.length > 0 && (
-          <section className="max-w-7xl mx-auto px-6 pt-8 pb-4">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(244,239,226,0.06)", border: "1px solid rgba(244,239,226,0.12)" }}>
-                <UserPlus className="w-4 h-4" style={{ color: "#f7f2e4" }} />
+          <section className="max-w-7xl mx-auto px-6 pt-10 pb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(122,94,59,0.1)", border: "1px solid rgba(122,94,59,0.25)" }}>
+                <UserPlus className="w-4 h-4" style={{ color: "#7b5e3b" }} />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">{t("hmYouShared")}</h3>
-                <p className="text-xs" style={{ color: "rgba(244,239,226,0.3)" }}>{t("hmYouSharedDesc")}</p>
-              </div>
+              <h3 className="text-xl font-bold" style={{ color: "#2f2618", fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>{t("hmYouShared")}</h3>
             </div>
-            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+            <p className="mb-5" style={{ color: "#8a8070", fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: lang === "ar" ? 14.5 : 17, transform: "rotate(-0.6deg)", display: "inline-block" }}>
+              ({t("hmYouSharedDesc")})
+            </p>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
               {sharedByMe.map(book => (
-                <button key={book.id} type="button" onClick={() => setLocation(`/books/${book.id}`)}
-                  className="p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] text-left bg-transparent border-0 w-full"
-                  style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.1)" }}>
-                  {/* Book header */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ background: "rgba(167,139,250,0.08)" }}>
+                <div key={book.id} className="p-3 rounded-xl transition-all w-full"
+                  style={{ background: "#fffdf7", border: "1px solid rgba(66,53,33,0.13)", boxShadow: "0 4px 14px -8px rgba(41,33,21,0.2)" }}>
+                  {/* Book header (click opens the book) */}
+                  <button type="button" onClick={() => setLocation(`/books/${book.id}`)} className="flex items-center gap-3 mb-3 w-full text-start cursor-pointer bg-transparent border-0 p-0">
+                    <div className="w-10 h-14 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ background: "rgba(122,94,59,0.08)" }}>
                       {book.coverImage ? (
                         <img src={book.coverImage} alt={book.title || ""} className="w-full h-full object-cover" />
                       ) : (
-                        <BookOpen className="w-4 h-4" style={{ color: "rgba(167,139,250,0.5)" }} />
+                        <BookOpen className="w-4 h-4" style={{ color: "#a08a6a" }} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{book.title}</p>
-                      <p className="text-[11px]" style={{ color: "rgba(244,239,226,0.35)" }}>
+                      <p className="text-sm font-semibold truncate" style={{ color: "#2f2618" }}>{book.title}</p>
+                      <p className="text-[11px]" style={{ color: "#8a8070" }}>
                         {book.collaborators.length} {book.collaborators.length === 1 ? t("hmCollaborator") : t("hmCollaborators")}
                       </p>
                     </div>
-                  </div>
+                  </button>
 
-                  {/* Collaborators list */}
+                  {/* Every collaborator, with a revoke control */}
                   <div className="flex flex-col gap-1.5">
-                    {book.collaborators.slice(0, 3).map((c) => (
-                      <div key={c.userId} className="flex items-center gap-2 px-2 py-1 rounded-md" style={{ background: "rgba(244,239,226,0.02)" }}>
-                        {c.avatarUrl ? (
-                          <img src={c.avatarUrl} alt={c.name || ""} className="w-5 h-5 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
-                            {(c.name || "?")[0]?.toUpperCase()}
-                          </div>
-                        )}
-                        <span className="text-[11px] flex-1 truncate" style={{ color: "rgba(244,239,226,0.7)" }}>{c.name || t("hmUnknown")}</span>
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(167,139,250,0.15)" : "rgba(244,239,226,0.06)", color: c.role === "editor" ? "#a78bfa" : "rgba(244,239,226,0.55)", border: "1px solid", borderColor: c.role === "editor" ? "rgba(167,139,250,0.25)" : "rgba(244,239,226,0.10)" }}>
-                          {c.role === "editor" ? t("hmEditor") : t("hmViewer")}
-                        </span>
-                      </div>
-                    ))}
-                    {book.collaborators.length > 3 && (
-                      <span className="text-[10px] text-center" style={{ color: "rgba(244,239,226,0.3)" }}>+ {book.collaborators.length - 3} {t("hmMore")}</span>
-                    )}
+                    {book.collaborators.map((c) => {
+                      const isConfirming = confirmRemove?.bookId === book.id && confirmRemove?.userId === c.userId;
+                      return (
+                        <div key={c.userId} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(66,53,33,0.04)", border: "1px solid rgba(66,53,33,0.07)" }}>
+                          {c.avatarUrl ? (
+                            <img src={c.avatarUrl} alt={c.name || ""} className="w-6 h-6 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: "rgba(122,94,59,0.15)", color: "#7b5e3b" }}>
+                              {(c.name || "?")[0]?.toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-[12px] flex-1 truncate font-medium" style={{ color: "#423521" }}>{c.name || t("hmUnknown")}</span>
+                          <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: c.role === "editor" ? "rgba(122,94,59,0.14)" : "rgba(66,53,33,0.06)", color: c.role === "editor" ? "#7b5e3b" : "#7b7366", border: "1px solid", borderColor: c.role === "editor" ? "rgba(122,94,59,0.3)" : "rgba(66,53,33,0.12)" }}>
+                            {c.role === "editor" ? t("hmEditor") : t("hmViewer")}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={removingCollab && isConfirming}
+                            onClick={(e) => { e.stopPropagation(); handleRemoveCollaborator(book.id, c.userId); }}
+                            onMouseLeave={() => { if (isConfirming && !removingCollab) setConfirmRemove(null); }}
+                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold transition-all flex-shrink-0"
+                            style={isConfirming
+                              ? { background: "rgba(179,64,46,0.12)", color: "#b3402e", border: "1px solid rgba(179,64,46,0.35)" }
+                              : { background: "transparent", color: "#9a9181", border: "1px solid transparent" }}
+                            title={lang === "ar" ? "إزالة المتعاون" : "Remove collaborator"}
+                          >
+                            <X className="w-3 h-3" />
+                            {isConfirming && (removingCollab ? (lang === "ar" ? "يزيل..." : "Removing...") : (lang === "ar" ? "تأكيد الإزالة؟" : "Confirm remove?"))}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </section>
