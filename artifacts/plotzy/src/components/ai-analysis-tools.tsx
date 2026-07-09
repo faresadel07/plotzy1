@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
+import { Mark } from "@/components/mobile/Marker";
 import {
   Search, MessageSquare, Activity, Users,
   Loader2, ChevronDown, ChevronUp, AlertTriangle,
@@ -242,9 +243,9 @@ export function AIAnalysisTools({ bookId }: { bookId: number }) {
   return (
     <div className="space-y-3">
       <div className="mb-4">
-        <h3 className="font-bold text-base flex items-center gap-2">
+        <h3 className="font-bold text-base flex items-center gap-2" style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>
           <Sparkles className="w-4 h-4 text-primary" />
-          {ar ? "أدوات التحليل الذكي" : "AI Analysis Tools"}
+          {ar ? <>أدوات <Mark ar={ar}>التحليل الذكي</Mark></> : <>AI <Mark ar={ar}>Analysis Tools</Mark></>}
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           {ar ? "ذكاء اصطناعي يحلل روايتك بعمق ويقدم تقريراً شاملاً" : "Deep AI analysis of your manuscript with detailed reports"}

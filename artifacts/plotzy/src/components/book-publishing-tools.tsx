@@ -21,8 +21,8 @@ const STATUS_MAP = {
   declined: { label: "Declined", color: "text-red-400 bg-red-950/30 border-red-800/50" },
 };
 
-const ICON_BG = "rgba(255,255,255,0.04)";
-const ICON_COLOR = "rgba(255,255,255,0.5)";
+const ICON_BG = "rgba(66,53,33,0.05)";
+const ICON_COLOR = "#6d6354";
 const CARD = "border border-border/20 rounded-2xl overflow-hidden";
 
 // ─── ISBN ─────────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
   });
 
   return (
-    <div className={CARD} style={{ background: "rgba(255,255,255,0.02)" }}>
+    <div className={CARD} style={{ background: "rgba(66,53,33,0.03)" }}>
       <div className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: ICON_BG }}>
@@ -50,28 +50,28 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm">{ar ? "رقم ISBN" : "ISBN Number"}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "معرف دولي فريد لكتابك" : "Unique international book identifier"}</p>
+            <p className="text-[11px]" style={{ color: "#8a8070" }}>{ar ? "معرف دولي فريد لكتابك" : "Unique international book identifier"}</p>
           </div>
         </div>
 
         {!editing ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="flex-1 px-3 py-2 rounded-xl min-h-[36px]" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex-1 px-3 py-2 rounded-xl min-h-[36px]" style={{ background: "rgba(66,53,33,0.04)", border: "1px solid rgba(66,53,33,0.08)" }}>
                 {isbn ? (
                   <span className="text-sm font-mono font-medium">{isbn}</span>
                 ) : (
-                  <span className="text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>{ar ? "لم يُحدَّد بعد" : "Not set yet"}</span>
+                  <span className="text-sm" style={{ color: "#9a9181" }}>{ar ? "لم يُحدَّد بعد" : "Not set yet"}</span>
                 )}
               </div>
-              <button onClick={() => setEditing(true)} className="text-[12px] font-medium px-4 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <button onClick={() => setEditing(true)} className="text-[12px] font-medium px-4 py-1.5 rounded-lg" style={{ background: "rgba(66,53,33,0.08)", color: "#5c5142", border: "1px solid rgba(66,53,33,0.11)" }}>
                 {ar ? "تعديل" : "Edit"}
               </button>
             </div>
 
             {/* Barcode preview + download */}
             {isbn && isbn.replace(/[-\s]/g, "").length === 13 && /^\d{13}$/.test(isbn.replace(/[-\s]/g, "")) && (
-              <div className="rounded-xl p-4 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="rounded-xl p-4 text-center" style={{ background: "rgba(66,53,33,0.04)", border: "1px solid rgba(66,53,33,0.08)" }}>
                 <img src={`/api/isbn/barcode/${isbn.replace(/[-\s]/g, "")}`} alt="ISBN Barcode"
                   style={{ margin: "0 auto", maxHeight: 90, borderRadius: 6, background: "#fff", padding: 12 }}
                   onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -82,7 +82,7 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
                     ↓ {ar ? "تحميل الباركود" : "Download Barcode SVG"}
                   </a>
                 </div>
-                <p className="text-[10px] mt-2" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <p className="text-[10px] mt-2" style={{ color: "#9a9181" }}>
                   {ar ? "استخدم هذا الباركود على ظهر غلاف كتابك" : "Use this barcode on the back of your book cover"}
                 </p>
               </div>
@@ -96,11 +96,11 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
             )}
 
             {/* How to get ISBN — always visible */}
-            <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.06)" }}>
-              <p className="text-[11px] font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <div className="rounded-xl p-3" style={{ background: "rgba(66,53,33,0.03)", border: "1px dashed rgba(66,53,33,0.08)" }}>
+              <p className="text-[11px] font-semibold mb-1.5" style={{ color: "#7b7366" }}>
                 {ar ? "كيف تحصل على رقم ISBN؟" : "How to get an ISBN?"}
               </p>
-              <p className="text-[10px] leading-relaxed" style={{ color: "rgba(255,255,255,0.25)" }}>
+              <p className="text-[10px] leading-relaxed" style={{ color: "#9a9181" }}>
                 {ar
                   ? "رقم ISBN هو معرّف دولي فريد لكتابك. يُطلب عند البيع في المكتبات وAmazon. يمكنك الحصول عليه من وكالة ISBN في بلدك أو شراؤه من:"
                   : "An ISBN is a unique identifier required for selling on Amazon, bookstores, and libraries. Get one from your country's ISBN agency or purchase from:"}
@@ -108,16 +108,16 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
               <div className="flex flex-wrap gap-2 mt-2">
                 <a href="https://www.isbn.org" target="_blank" rel="noopener noreferrer"
                   className="text-[10px] font-medium px-2 py-1 rounded"
-                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.06)", textDecoration: "none" }}>
+                  style={{ background: "rgba(66,53,33,0.05)", color: "#7b7366", border: "1px solid rgba(66,53,33,0.08)", textDecoration: "none" }}>
                   isbn.org →
                 </a>
                 <a href="https://www.myidentifiers.com" target="_blank" rel="noopener noreferrer"
                   className="text-[10px] font-medium px-2 py-1 rounded"
-                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.06)", textDecoration: "none" }}>
+                  style={{ background: "rgba(66,53,33,0.05)", color: "#7b7366", border: "1px solid rgba(66,53,33,0.08)", textDecoration: "none" }}>
                   myidentifiers.com →
                 </a>
               </div>
-              <p className="text-[9px] mt-2" style={{ color: "rgba(255,255,255,0.15)" }}>
+              <p className="text-[9px] mt-2" style={{ color: "rgba(66,53,33,0.2)" }}>
                 {ar
                   ? "ملاحظة: Amazon KDP يوفر رقم ISBN مجاني إذا نشرت عبرهم حصرياً."
                   : "Note: Amazon KDP provides a free ISBN if you publish exclusively through them."}
@@ -131,7 +131,7 @@ function ISBNSection({ bookId, currentIsbn }: { bookId: number; currentIsbn?: st
               <button className="text-[12px] font-semibold px-4 py-1.5 rounded-lg" style={{ background: "#fff", color: "#000" }} onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "..." : (ar ? "حفظ" : "Save")}
               </button>
-              <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "rgba(255,255,255,0.4)" }} onClick={() => { setEditing(false); setIsbn(currentIsbn || ""); }}>
+              <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "#7b7366" }} onClick={() => { setEditing(false); setIsbn(currentIsbn || ""); }}>
                 {ar ? "إلغاء" : "Cancel"}
               </button>
             </div>
@@ -174,7 +174,7 @@ function ARCSection({ bookId }: { bookId: number }) {
   });
 
   return (
-    <div className={CARD} style={{ background: "rgba(255,255,255,0.02)" }}>
+    <div className={CARD} style={{ background: "rgba(66,53,33,0.03)" }}>
       <div className="p-4">
         <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-3 w-full text-left">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: ICON_BG }}>
@@ -182,18 +182,18 @@ function ARCSection({ bookId }: { bookId: number }) {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm">{ar ? "توزيع نسخ ARC" : "ARC Distribution"}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "نسخ مبكرة للمراجعين" : "Send advance copies to reviewers"}</p>
+            <p className="text-[11px]" style={{ color: "#8a8070" }}>{ar ? "نسخ مبكرة للمراجعين" : "Send advance copies to reviewers"}</p>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }}>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(66,53,33,0.08)", color: "#6d6354" }}>
             {recipients.length}
           </span>
-          {expanded ? <ChevronUp className="w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />}
+          {expanded ? <ChevronUp className="w-4 h-4" style={{ color: "#8a8070" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "#8a8070" }} />}
         </button>
 
         {expanded && (
           <div className="mt-4 space-y-3">
             {addOpen ? (
-              <div className="p-3 rounded-xl space-y-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="p-3 rounded-xl space-y-2" style={{ background: "rgba(66,53,33,0.04)", border: "1px solid rgba(66,53,33,0.08)" }}>
                 <div className="grid grid-cols-2 gap-2">
                   <Input placeholder={ar ? "الاسم" : "Name"} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="text-sm" />
                   <Input placeholder={ar ? "البريد" : "Email"} type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} className="text-sm" />
@@ -203,33 +203,33 @@ function ARCSection({ bookId }: { bookId: number }) {
                   <button className="text-[12px] font-semibold px-4 py-1.5 rounded-lg" style={{ background: "#fff", color: "#000" }} onClick={() => addMutation.mutate()} disabled={!form.name || !form.email}>
                     {addMutation.isPending ? "..." : (ar ? "إضافة" : "Add")}
                   </button>
-                  <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "rgba(255,255,255,0.4)" }} onClick={() => setAddOpen(false)}>
+                  <button className="text-[12px] px-3 py-1.5 rounded-lg" style={{ color: "#7b7366" }} onClick={() => setAddOpen(false)}>
                     {ar ? "إلغاء" : "Cancel"}
                   </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setAddOpen(true)} className="w-full rounded-xl py-2.5 text-[12px] font-medium border border-dashed transition-all" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>
+              <button onClick={() => setAddOpen(true)} className="w-full rounded-xl py-2.5 text-[12px] font-medium border border-dashed transition-all" style={{ borderColor: "rgba(66,53,33,0.13)", color: "#7b7366" }}>
                 + {ar ? "إضافة مراجع" : "Add Recipient"}
               </button>
             )}
 
             {recipients.length === 0 && !addOpen ? (
-              <p className="text-center py-4 text-[12px]" style={{ color: "rgba(255,255,255,0.25)" }}>{ar ? "لا مراجعون بعد" : "No recipients yet"}</p>
+              <p className="text-center py-4 text-[12px]" style={{ color: "#9a9181" }}>{ar ? "لا مراجعون بعد" : "No recipients yet"}</p>
             ) : (
               recipients.map(r => {
                 const s = STATUS_MAP[r.status as keyof typeof STATUS_MAP] || STATUS_MAP.sent;
                 return (
-                  <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-xl group" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+                  <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-xl group" style={{ background: "rgba(66,53,33,0.03)", border: "1px solid rgba(66,53,33,0.06)" }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: "rgba(66,53,33,0.11)", color: "#5c5142" }}>
                       {r.name[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-[12px] font-semibold">{r.name}</span>
                       <span className={`ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${s.color}`}>{s.label}</span>
-                      <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.3)" }}>{r.email}</p>
+                      <p className="text-[11px] truncate" style={{ color: "#8a8070" }}>{r.email}</p>
                     </div>
-                    <button onClick={() => deleteMutation.mutate(r.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <button onClick={() => deleteMutation.mutate(r.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded" style={{ color: "#8a8070" }}>
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
@@ -256,7 +256,7 @@ function KDPSection({ bookId, bookTitle }: { bookId: number; bookTitle: string }
     : ["Complete all chapters and proofread", "Design book cover (6×9 inches)", "Choose the right BISAC category", "Prepare the About the Author page", "Set your price (35% or 70% royalty)", "Download PDF and upload to KDP"];
 
   return (
-    <div className={CARD} style={{ background: "rgba(255,255,255,0.02)" }}>
+    <div className={CARD} style={{ background: "rgba(66,53,33,0.03)" }}>
       <div className="p-4">
         <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-3 w-full text-left">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: ICON_BG }}>
@@ -264,17 +264,17 @@ function KDPSection({ bookId, bookTitle }: { bookId: number; bookTitle: string }
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm">{ar ? "النشر على Amazon KDP" : "Publish on Amazon KDP"}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "دليل النشر المستقل" : "Self-publishing checklist"}</p>
+            <p className="text-[11px]" style={{ color: "#8a8070" }}>{ar ? "دليل النشر المستقل" : "Self-publishing checklist"}</p>
           </div>
-          {expanded ? <ChevronUp className="w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />}
+          {expanded ? <ChevronUp className="w-4 h-4" style={{ color: "#8a8070" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "#8a8070" }} />}
         </button>
 
         {expanded && (
           <div className="mt-4 space-y-3">
             {steps.map((step, i) => (
               <div key={i} className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)" }}>{i + 1}</span>
-                <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>{step}</p>
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: "rgba(66,53,33,0.08)", color: "#7b7366" }}>{i + 1}</span>
+                <p className="text-[12px]" style={{ color: "#7b7366" }}>{step}</p>
               </div>
             ))}
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -295,7 +295,7 @@ function KDPSection({ bookId, bookTitle }: { bookId: number; bookTitle: string }
                   window.open(`/api/books/${bookId}/download?format=pdf`, "_blank");
                 }}
                 className="w-full text-[12px] font-medium py-2 rounded-lg"
-                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{ background: "rgba(66,53,33,0.08)", color: "#5c5142", border: "1px solid rgba(66,53,33,0.11)" }}
               >
                 {ar ? "تحميل PDF" : "Download PDF"}
               </button>
@@ -316,14 +316,14 @@ export function BookPublishingTools({ bookId, bookTitle, currentIsbn }: { bookId
   return (
     <div className="space-y-3">
       {/* Print Preview */}
-      <div className={CARD} style={{ background: "rgba(255,255,255,0.02)" }}>
+      <div className={CARD} style={{ background: "rgba(66,53,33,0.03)" }}>
         <div className="p-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: ICON_BG }}>
             <Printer className="w-4 h-4" style={{ color: ICON_COLOR }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">{ar ? "معاينة الطباعة" : "Print Layout Preview"}</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "كيف يبدو كتابك بتنسيق PDF" : "See how your book looks in PDF format"}</p>
+            <p className="text-[11px]" style={{ color: "#8a8070" }}>{ar ? "كيف يبدو كتابك بتنسيق PDF" : "See how your book looks in PDF format"}</p>
           </div>
           <PrintPreviewButton bookId={bookId} bookTitle={bookTitle} />
         </div>

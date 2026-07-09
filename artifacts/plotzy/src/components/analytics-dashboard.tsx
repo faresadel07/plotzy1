@@ -4,18 +4,25 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DailyProgress } from "@/shared/schema";
 import { TrendingUp, PenTool, Flame } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
+import { Mark } from "@/components/mobile/Marker";
+
+const HAND = "'Caveat', 'Aref Ruqaa', cursive";
+const SERIF = "'Lora', 'Amiri', Georgia, serif";
 
 interface AnalyticsDashboardProps {
     bookId: number;
 }
 
 export default function AnalyticsDashboard({ bookId }: AnalyticsDashboardProps) {
+    const { lang } = useLanguage();
+    const ar = lang === "ar";
     const { data: progress = [], isLoading } = useQuery<DailyProgress[]>({
         queryKey: [`/api/books/${bookId}/progress`],
     });
 
     if (isLoading) {
-        return <div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse">Loading analytics...</div>;
+        return <div className="h-64 flex items-center justify-center text-muted-foreground animate-pulse">{ar ? "جارٍ تحميل الإحصائيات..." : "Loading analytics..."}</div>;
     }
 
     // Calculate stats
@@ -76,46 +83,50 @@ export default function AnalyticsDashboard({ bookId }: AnalyticsDashboardProps) 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Total Words Tracked</CardTitle>
+                        <CardTitle className="text-sm font-medium">{ar ? "مجموع الكلمات المسجلة" : "Total Words Tracked"}</CardTitle>
                         <PenTool className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-primary">{totalWords.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground mt-1">In this manuscript</p>
+                        <p className="text-muted-foreground mt-1" style={{ fontFamily: HAND, fontSize: ar ? 12.5 : 14.5 }}>{ar ? "(في هذه المخطوطة)" : "(in this manuscript)"}</p>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Writing Streak</CardTitle>
-                        <Flame className={`h-4 w-4 ${streak > 0 ? "text-black dark:text-white" : "text-muted-foreground"}`} />
+                        <CardTitle className="text-sm font-medium">{ar ? "سلسلة الكتابة" : "Writing Streak"}</CardTitle>
+                        <Flame className={`h-4 w-4 ${streak > 0 ? "text-[#a06a2f]" : "text-muted-foreground"}`} />
                     </CardHeader>
                     <CardContent>
-                        <div className={`text-3xl font-bold ${streak > 0 ? "text-black dark:text-white" : "text-foreground"}`}>
-                            {streak} {streak === 1 ? 'Day' : 'Days'}
+                        <div className={`text-3xl font-bold ${streak > 0 ? "text-[#a06a2f]" : "text-foreground"}`}>
+                            {ar ? `${streak} ${streak === 1 ? "يوم" : "أيام"}` : `${streak} ${streak === 1 ? "Day" : "Days"}`}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Keep the momentum going!</p>
+                        <p className="text-muted-foreground mt-1" style={{ fontFamily: HAND, fontSize: ar ? 12.5 : 14.5 }}>{ar ? "(خلي الحماس مستمر)" : "(keep the momentum going)"}</p>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">14-Day Average</CardTitle>
+                        <CardTitle className="text-sm font-medium">{ar ? "معدل آخر 14 يوماً" : "14-Day Average"}</CardTitle>
                         <TrendingUp className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-primary">
                             {Math.round(totalWords / 14).toLocaleString()}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Words per day</p>
+                        <p className="text-muted-foreground mt-1" style={{ fontFamily: HAND, fontSize: ar ? 12.5 : 14.5 }}>{ar ? "(كلمة باليوم)" : "(words per day)"}</p>
                     </CardContent>
                 </Card>
             </div>
 
             <Card className="border-border/50">
                 <CardHeader>
-                    <CardTitle className="text-xl">Writing Consistency</CardTitle>
-                    <CardDescription>Your daily word count over the last two weeks</CardDescription>
+                    <CardTitle className="text-xl" style={{ fontFamily: SERIF }}>
+                        {ar ? <>انتظام <Mark ar={ar}>الكتابة</Mark></> : <>Writing <Mark ar={ar}>Consistency</Mark></>}
+                    </CardTitle>
+                    <CardDescription style={{ fontFamily: HAND, fontSize: ar ? 13.5 : 16 }}>
+                        {ar ? "(كلماتك اليومية في آخر أسبوعين)" : "(your daily words over the last two weeks)"}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useResearchItems, useCreateResearchItem, useDeleteResearchItem, useUpdateResearchItem, fetchUrlPreview } from "@/hooks/use-research";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/language-context";
+import { Mark } from "@/components/mobile/Marker";
 import { Link2, StickyNote, Image, Plus, Trash2, X, Loader2, ExternalLink, Pencil, Check, Search, Upload, GripVertical } from "lucide-react";
 import type { ResearchItem } from "@/shared/schema";
 
@@ -249,12 +250,14 @@ export function ResearchBoard({ bookId }: { bookId: number }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-bold text-lg">{ar ? "لوحة البحث" : "Research Board"}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {ar ? "احفظ روابط وملاحظات وصور مرتبطة بكتابك" : "Save links, notes & images related to your book"}
+          <h2 className="font-bold text-lg" style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>
+            {ar ? <>لوحة <Mark ar={ar}>البحث</Mark></> : <>Research <Mark ar={ar}>Board</Mark></>}
+          </h2>
+          <p className="text-muted-foreground mt-0.5" style={{ fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: ar ? 13.5 : 16, transform: "rotate(-0.5deg)", display: "inline-block" }}>
+            {ar ? "(روابط وملاحظات وصور، كلها جنب كتابك)" : "(links, notes and images, all beside your book)"}
           </p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="rounded-xl gap-2 bg-white text-black hover:bg-white/90 transition-all" size="sm">
+        <Button onClick={() => setShowAdd(true)} className="rounded-xl gap-2 bg-[#292115] text-[#f7f2e4] hover:bg-[#292115]/90 transition-all" size="sm">
           <Plus className="w-4 h-4" />{ar ? "إضافة" : "Add"}
         </Button>
       </div>
@@ -298,8 +301,8 @@ export function ResearchBoard({ bookId }: { bookId: number }) {
       {/* Empty State */}
       {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-white/8 flex items-center justify-center">
-            {search ? <Search className="w-8 h-8 text-white/40" /> : <StickyNote className="w-8 h-8 text-white/40" />}
+          <div className="w-16 h-16 rounded-2xl bg-[#292115]/8 flex items-center justify-center">
+            {search ? <Search className="w-8 h-8 text-[#9a9181]" /> : <StickyNote className="w-8 h-8 text-[#9a9181]" />}
           </div>
           <div>
             <p className="font-semibold text-foreground/70">
