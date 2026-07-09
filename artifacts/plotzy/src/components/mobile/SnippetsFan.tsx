@@ -43,7 +43,7 @@ export function SnippetsFan({ ar }: { ar: boolean }) {
   );
 
   return (
-    <section style={{ marginBottom: 30, overflow: "hidden" }}>
+    <section style={{ marginBottom: 24, overflow: "hidden" }}>
       {/* Handwritten aside + a small hand-drawn smile */}
       <div style={{ textAlign: "center", padding: "0 24px", marginBottom: 6, position: "relative" }}>
         <span style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 17 : 21, color: "#8a8070", display: "inline-block", transform: "rotate(-1.5deg)" }}>
@@ -57,10 +57,10 @@ export function SnippetsFan({ ar }: { ar: boolean }) {
       </div>
 
       {/* The scattered slips, edges cut by the screen like real clippings */}
-      <div style={{ position: "relative", height: 332 }}>
-        {slip(snippets[0], { top: 8, insetInlineStart: -34, width: 300, transform: `rotate(${ar ? 7 : -7}deg)` })}
-        {slip(snippets[1], { top: 108, insetInlineStart: 46, width: 320, transform: `rotate(${ar ? -4 : 4}deg)`, zIndex: 2 })}
-        {slip(snippets[2], { top: 236, insetInlineEnd: -40, width: 290, transform: `rotate(${ar ? 3 : -3}deg)` })}
+      <div style={{ position: "relative", height: 306 }}>
+        {slip(snippets[0], { top: 4, insetInlineStart: -34, width: 300, transform: `rotate(${ar ? 7 : -7}deg)` })}
+        {slip(snippets[1], { top: 96, insetInlineStart: 46, width: 320, transform: `rotate(${ar ? -4 : 4}deg)`, zIndex: 2 })}
+        {slip(snippets[2], { top: 212, insetInlineEnd: -40, width: 290, transform: `rotate(${ar ? 3 : -3}deg)` })}
       </div>
     </section>
   );

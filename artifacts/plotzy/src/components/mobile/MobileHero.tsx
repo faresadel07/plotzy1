@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import { HERO_SLIDES } from "./mobile-content";
 import { PAPER, INK, INK_SOFT, MUTED, ESPRESSO, PAPER_ON_DARK, BORDER_INK } from "./palette";
+import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR } from "./fonts";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -26,33 +27,19 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
   const go = (dir: number) => setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
 
   return (
-    <section dir={ar ? "rtl" : "ltr"} style={{ fontFamily: SF, padding: "26px 18px 4px", textAlign: "center" }}>
-      {/* Eyebrow chip */}
-      <div
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 7,
-          background: "#fbf8ef", border: `1px solid ${BORDER_INK}`,
-          borderRadius: 999, padding: "6px 14px", marginBottom: 18,
-          fontSize: 11.5, fontWeight: 700, letterSpacing: "0.06em", color: INK_SOFT,
-          boxShadow: "0 1px 2px rgba(66,53,33,0.06)",
-        }}
-      >
-        <span aria-hidden style={{ width: 6, height: 6, borderRadius: 999, background: "#26ad5f" }} />
-        {ar ? "منصة الكتّاب المجانية" : "The free writer's platform"}
-      </div>
-
+    <section dir={ar ? "rtl" : "ltr"} style={{ fontFamily: SF, padding: "20px 18px 4px", textAlign: "center" }}>
       {/* Headline + support */}
-      <h1 style={{ fontSize: 33, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.12, color: INK, margin: "0 0 10px" }}>
+      <h1 style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 34 : 38, fontWeight: 700, letterSpacing: ar ? 0 : "-0.015em", lineHeight: ar ? 1.4 : 1.12, color: INK, margin: "0 0 8px" }}>
         {ar ? "اكتب كتابك الأول" : "Write your first book"}
       </h1>
-      <p style={{ fontSize: 14.5, lineHeight: 1.55, color: MUTED, maxWidth: 320, margin: "0 auto 20px" }}>
+      <p style={{ fontSize: 14.5, lineHeight: 1.55, color: MUTED, maxWidth: 320, margin: "0 auto 16px" }}>
         {ar
           ? "استوديو كتابة كامل مع مساعد ذكاء اصطناعي، مصمم أغلفة، ومكتبات كاملة. كل شيء في مكان واحد."
           : "A full writing studio with an AI partner, a cover designer, and complete libraries. All in one place."}
       </p>
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 22 }}>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 8 }}>
         <button
           onClick={onStartWriting}
           style={{
@@ -75,6 +62,11 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
         </button>
       </div>
 
+      {/* Handwritten aside instead of the old badge */}
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14 : 17, color: "#8a8070", marginBottom: 14, transform: "rotate(-1.2deg)" }}>
+        {ar ? "(مجاني، بدون بطاقة، بدون حدود)" : "(free, no card, no limits)"}
+      </div>
+
       {/* Contained collage card (swipeable, crossfading) */}
       <div
         onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
@@ -85,7 +77,7 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           touchStartX.current = null;
         }}
         style={{
-          position: "relative", height: 330, borderRadius: 24, overflow: "hidden",
+          position: "relative", height: 300, borderRadius: 24, overflow: "hidden",
           border: "1px solid rgba(66,53,33,0.2)",
           boxShadow: "0 24px 50px -20px rgba(41,33,21,0.55)",
         }}
@@ -133,7 +125,7 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
       </div>
 
       {/* Quiet stats strip */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: 18, marginBottom: 6 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: 14, marginBottom: 2 }}>
         {(ar
           ? [["19,000+", "كتاب صوتي"], ["32", "درس كتابة مجاني"], ["2", "لغة كتابة"]]
           : [["19,000+", "audiobooks"], ["32", "free lessons"], ["2", "writing languages"]]

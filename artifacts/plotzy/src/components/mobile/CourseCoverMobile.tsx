@@ -22,19 +22,16 @@ function Circled({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* The crumpled note: soft fold shadows + paper grain over warm paper. */
+/* The crumpled note: a real faceted-crease paper texture behind the ink. */
 function CourseNote({ ar }: { ar: boolean }) {
   return (
     <div
       dir={ar ? "rtl" : "ltr"}
       style={{
         position: "relative",
-        background:
-          "linear-gradient(112deg, rgba(66,53,33,0.05) 0%, transparent 24%)," +
-          "linear-gradient(248deg, rgba(66,53,33,0.06) 0%, transparent 30%)," +
-          "linear-gradient(8deg, rgba(66,53,33,0.045) 0%, transparent 22%)," +
-          `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),` +
-          "#faf5e8",
+        backgroundImage: "url(/images/crumpled-paper.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         border: "1px solid rgba(66,53,33,0.16)",
         borderRadius: 4,
         boxShadow: "0 16px 34px -14px rgba(41,33,21,0.35)",

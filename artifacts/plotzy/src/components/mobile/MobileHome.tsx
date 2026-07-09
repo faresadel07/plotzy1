@@ -29,6 +29,7 @@ import { COMICS, comicCover } from "@/lib/comics";
 import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette";
 import { LibraryShowcase } from "./LibraryShowcase";
 import { SnippetsFan } from "./SnippetsFan";
+import { PaperPile } from "./PaperPile";
 import { ensureHomeFonts } from "./fonts";
 import { useEffect } from "react";
 
@@ -76,6 +77,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         ...SPECKLE,
       }}
     >
+      {/* First-open ritual: the draggable paper pile (once, then never) */}
+      <PaperPile ar={ar} />
+
       {/* Tidy paper hero: headline, actions, contained collage card,
           stats. No pinning, no scroll choreography. */}
       <MobileHero ar={ar} onStartWriting={onStartWriting} onOpenCourse={() => navigate("/course")} />
@@ -138,7 +142,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           cta="Open the audio library"
           ctaAr="افتح المكتبة الصوتية"
           href="/audiolibrary"
-          covers={[AUDIO_BOOKS[1].cover, AUDIO_BOOKS[0].cover, AUDIO_BOOKS[3].cover]}
+          note="(listen while you drive)"
+          noteAr="(اسمع وانت سايق)"
+          covers={[AUDIO_BOOKS[0].cover, AUDIO_BOOKS[1].cover, AUDIO_BOOKS[3].cover]}
         />
 
         <LibraryShowcase
@@ -152,7 +158,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           cta="Browse the classics"
           ctaAr="تصفح الكلاسيكيات"
           href="/discover"
-          covers={[ENGLISH_BOOKS[2].cover, ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[3].cover]}
+          note="(all of it free)"
+          noteAr="(كلها ببلاش)"
+          covers={[ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[1].cover, ENGLISH_BOOKS[3].cover]}
         />
 
         {COMICS.length > 2 && (
@@ -168,7 +176,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
             cta="Open the comics"
             ctaAr="افتح الكوميكس"
             href="/comics"
-            covers={[comicCover(COMICS[1].id), comicCover(COMICS[0].id), comicCover(COMICS[2].id)]}
+            note="(from the fifties!)"
+            noteAr="(من الخمسينات!)"
+            covers={[comicCover(COMICS[2].id), comicCover(COMICS[0].id), comicCover(COMICS[3].id)]}
           />
         )}
 
@@ -183,7 +193,9 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           cta="Open the Arabic library"
           ctaAr="افتح المكتبة العربية"
           href="/discover?src=hindawi"
-          covers={[ARABIC_BOOKS[1].cover, ARABIC_BOOKS[0].cover, ARABIC_BOOKS[4].cover]}
+          note="(heritage that keeps breathing)"
+          noteAr="(تراث لسا بيتنفس)"
+          covers={[ARABIC_BOOKS[2].cover, ARABIC_BOOKS[4].cover, ARABIC_BOOKS[5].cover]}
         />
 
         {/* AI writing studio banner with official model logos —
