@@ -9,6 +9,7 @@ import { CourseLearningPoints } from "@/components/course/CourseLearningPoints";
 import { CourseModulesPreview } from "@/components/course/CourseModulesPreview";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 interface ModuleSummary {
   id: number;
@@ -97,6 +98,7 @@ export default function CourseLandingPage() {
       />
 
       <main className="course-apple container mx-auto max-w-6xl px-4 py-8 sm:py-12 space-y-12">
+        <CourseSticky text="start with module one" textAr="ابدأ من الوحدة الأولى" rot={6} />
         <CourseLandingHero />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">

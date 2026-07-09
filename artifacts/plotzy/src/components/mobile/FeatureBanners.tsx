@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { HAND_EN, HAND_AR, SERIF_EN, SERIF_AR } from "./fonts";
 import { Mark } from "./Marker";
+import { StickyNote } from "./StickyNote";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -42,6 +43,8 @@ export function AiWriteBanner({ ar, onStart }: { ar: boolean; onStart: () => voi
           overflow: "hidden",
         }}
       >
+        {/* The model on duty, on a tiny sticky */}
+        <StickyNote ar={ar} size={64} rot={8} text={ar ? "كلود سونيت" : "Claude Sonnet"} style={{ position: "absolute", top: 8, insetInlineEnd: 10, zIndex: 2 }} />
         {/* Claude leads: mark + name + role */}
         <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16, flexDirection: ar ? "row-reverse" : "row" }}>
           <div style={{ ...badgeStyle, width: 40, height: 40, borderRadius: 12, background: "rgba(217,119,87,0.14)", border: "1px solid rgba(217,119,87,0.30)" }}>

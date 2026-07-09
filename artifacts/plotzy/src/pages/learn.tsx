@@ -13,6 +13,7 @@ import { IssueCertButton } from "@/components/course/IssueCertButton";
 import { FinalExamCard } from "@/components/course/FinalExamCard";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 interface ModuleSummary {
   id: number;
@@ -117,6 +118,7 @@ export default function LearnPage() {
       <JsonLd data={buildBreadcrumbSchema([{ name: "Course", path: "/learn" }])} />
 
       <main className="course-apple container mx-auto max-w-6xl px-4 py-10 sm:py-14 space-y-10">
+        <CourseSticky text="one lesson a day is enough" textAr="درس واحد باليوم بكفي" rot={-5} />
         {/* Hero */}
         <section className="space-y-4 text-center sm:text-start">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-secondary text-xs text-muted-foreground">

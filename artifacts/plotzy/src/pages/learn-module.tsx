@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { APPLE_FONT, arField, moduleImage } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 interface ModuleResponse {
   id: number;
@@ -103,6 +104,7 @@ export default function LearnModulePage() {
         className="course-apple container mx-auto max-w-4xl px-4 py-8 sm:py-10 space-y-8"
         style={{ fontFamily: APPLE_FONT }}
       >
+        <CourseSticky text="finish the module, take a break" textAr="خلص الوحدة وخذ استراحة" rot={7} />
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },

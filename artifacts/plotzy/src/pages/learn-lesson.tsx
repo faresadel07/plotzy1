@@ -18,6 +18,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/queryClient";
 import { APPLE_FONT, arField } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 interface LessonResponse {
   id: number;
@@ -137,6 +138,7 @@ export default function LearnLessonPage() {
         className="course-apple container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6"
         style={{ fontFamily: APPLE_FONT }}
       >
+        <CourseSticky text="take notes as you read" textAr="دوّن وأنت بتقرأ" rot={-6} />
         {lessonQ.data && (
           <CourseBreadcrumb
             items={[

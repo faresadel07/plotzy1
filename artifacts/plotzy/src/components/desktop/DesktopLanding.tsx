@@ -468,6 +468,9 @@ function AiWriteBannerDesktop({ ar, onStart }: { ar: boolean; onStart: () => voi
 
         {/* Claude tile + the models that come next */}
         <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+          <div style={{ position: "relative", width: 0, height: 0, alignSelf: "flex-end" }}>
+            <StickyNote ar={ar} size={72} rot={9} text={ar ? "كلود سونيت" : "Claude Sonnet"} style={{ position: "absolute", top: -34, insetInlineStart: -30 }} />
+          </div>
           <div style={{ width: 132, height: 132, borderRadius: 32, background: "rgba(217,119,87,0.14)", border: "1px solid rgba(217,119,87,0.30)", display: "grid", placeItems: "center" }}>
             <ClaudeIcon size={68} />
           </div>

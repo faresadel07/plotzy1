@@ -6,6 +6,7 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { useLanguage } from "@/contexts/language-context";
 import { APPLE_FONT } from "@/lib/course-ui";
 import { LIBRARY, type LibraryBook } from "@/lib/course-library";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 // The course library: a shelf of free, legally shareable craft books
 // (public domain classics and CC BY texts) plus a pointer to the
@@ -29,6 +30,7 @@ export default function LearnResourcesPage() {
         className="course-apple container mx-auto max-w-5xl px-4 py-8 sm:py-10 space-y-8"
         style={{ fontFamily: APPLE_FONT }}
       >
+        <CourseSticky text="save this page" textAr="احفظ هاي الصفحة" rot={-7} />
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },

@@ -17,6 +17,7 @@ import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
 import { FeedbackPanel, type CourseFeedback } from "@/components/course/FeedbackPanel";
 import { useLanguage } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/queryClient";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 interface BookListItem {
   id: number;
@@ -125,6 +126,7 @@ export default function LearnFinalProjectPage() {
       <SEO title="Final Project — Plotzy Writing Course" noindex />
 
       <main className="course-apple container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-8">
+        <CourseSticky text="this is the fun part" textAr="هاي اللحظة الحلوة" rot={6} />
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },

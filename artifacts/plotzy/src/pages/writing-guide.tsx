@@ -5,6 +5,7 @@ import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { useLanguage } from "@/contexts/language-context";
+import { StickyNote } from "@/components/mobile/StickyNote";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   BookOpen, Layers, Map, AlignLeft, Lightbulb,
@@ -34,7 +35,7 @@ const fadeUp: Variants = {
 
 const genres = [
   {
-    icon: Heart, name: "Romance", accent: "#e05c7e",
+    icon: Heart, name: "Romance", accent: "#8a5a3a",
     nameAr: "الرومانسية",
     description: "Stories driven by love, longing, and emotional connection. The central promise: two people will find happiness together, even if the journey is painful.",
     descriptionAr: "قصص يحرّكها الحب والشوق والرابطة العاطفية. الوعد المحوري: شخصان سيجدان السعادة معاً، حتى لو كان الطريق مؤلماً.",
@@ -47,7 +48,7 @@ const genres = [
     examples: ["Pride and Prejudice", "The Notebook", "Outlander"],
   },
   {
-    icon: Search, name: "Mystery / Thriller", accent: "#7c8cff",
+    icon: Search, name: "Mystery / Thriller", accent: "#6b5637",
     nameAr: "الغموض / الإثارة",
     description: "Suspenseful stories built around a crime, hidden truth, or race against time. Readers are hooked by unanswered questions and the promise of resolution.",
     descriptionAr: "قصص مشوّقة مبنية حول جريمة أو حقيقة خفية أو سباق مع الزمن. يَعلَق القرّاء بالأسئلة المعلّقة ووعد الحلّ.",
@@ -60,7 +61,7 @@ const genres = [
     examples: ["Gone Girl", "The Girl with the Dragon Tattoo", "Big Little Lies"],
   },
   {
-    icon: Wand2, name: "Fantasy", accent: "#a78bfa",
+    icon: Wand2, name: "Fantasy", accent: "#7b5e3b",
     nameAr: "الفانتازيا",
     description: "Worlds beyond reality filled with magic, mythical creatures, and epic struggles. Fantasy asks 'what if' and then builds an entire universe around the answer.",
     descriptionAr: "عوالم تتجاوز الواقع مليئة بالسحر والمخلوقات الأسطورية والصراعات الملحمية. تسأل الفانتازيا «ماذا لو» ثم تبني كوناً كاملاً حول الجواب.",
@@ -73,7 +74,7 @@ const genres = [
     examples: ["Harry Potter", "The Lord of the Rings", "A Song of Ice and Fire"],
   },
   {
-    icon: Globe, name: "Science Fiction", accent: "#38bdf8",
+    icon: Globe, name: "Science Fiction", accent: "#93552f",
     nameAr: "الخيال العلمي",
     description: "Speculative stories exploring future technology, space, AI, and the human condition in a changed world. The best sci-fi uses technology to illuminate human nature.",
     descriptionAr: "قصص تأمّلية تستكشف تقنيات المستقبل والفضاء والذكاء الاصطناعي والحالة الإنسانية في عالم متغيّر. أفضل الخيال العلمي يستخدم التقنية لإضاءة الطبيعة البشرية.",
@@ -86,7 +87,7 @@ const genres = [
     examples: ["Dune", "The Martian", "Ender's Game"],
   },
   {
-    icon: Ghost, name: "Horror", accent: "#f87171",
+    icon: Ghost, name: "Horror", accent: "#5a4a33",
     nameAr: "الرعب",
     description: "Stories designed to frighten and unsettle. Horror explores our deepest fears, from supernatural threats to the terror of losing one's mind.",
     descriptionAr: "قصص مصمّمة لتُخيف وتُقلق. يستكشف الرعب أعمق مخاوفنا، من التهديدات الخارقة إلى رعب فقدان العقل.",
@@ -99,7 +100,7 @@ const genres = [
     examples: ["It", "The Shining", "Dracula"],
   },
   {
-    icon: Zap, name: "Action / Adventure", accent: "#fbbf24",
+    icon: Zap, name: "Action / Adventure", accent: "#a06a2f",
     nameAr: "الأكشن / المغامرة",
     description: "Fast-paced stories where heroes face physical danger, impossible odds, and exciting quests. Every page should feel like it's moving.",
     descriptionAr: "قصص سريعة الإيقاع يواجه فيها الأبطال خطراً جسدياً واحتمالات مستحيلة ومهام مثيرة. ينبغي أن تشعر كل صفحة وكأنها تتحرّك.",
@@ -112,7 +113,7 @@ const genres = [
     examples: ["Indiana Jones", "The Hunger Games", "Robinson Crusoe"],
   },
   {
-    icon: Drama, name: "Literary / Drama", accent: "#34d399",
+    icon: Drama, name: "Literary / Drama", accent: "#4a3a26",
     nameAr: "الأدبي / الدراما",
     description: "Character-driven stories exploring the full range of human experience. Less about plot events, more about inner lives, relationships, and what it means to be human.",
     descriptionAr: "قصص تحرّكها الشخصيات وتستكشف المدى الكامل للتجربة الإنسانية. أقلّ اهتماماً بأحداث الحبكة، وأكثر بالحياة الداخلية والعلاقات ومعنى أن تكون إنساناً.",
@@ -125,7 +126,7 @@ const genres = [
     examples: ["The Kite Runner", "A Little Life", "Normal People"],
   },
   {
-    icon: Clock, name: "Historical Fiction", accent: "#fb923c",
+    icon: Clock, name: "Historical Fiction", accent: "#8a6a3a",
     nameAr: "الخيال التاريخي",
     description: "Stories set in real historical periods, blending fictional characters with authentic settings, events, and atmosphere. The past becomes a living world.",
     descriptionAr: "قصص تدور في حقب تاريخية حقيقية، تمزج شخصيات خيالية بأماكن وأحداث وأجواء أصيلة. يصبح الماضي عالماً حيّاً.",
@@ -146,8 +147,8 @@ const structures = [
     icon: Triangle,
     tag: "Most Universal",
     tagAr: "الأكثر شمولاً",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10 border-blue-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "The oldest and most widely used story framework. Every successful Hollywood film and the majority of published novels follow some version of this structure. It divides your story into three distinct acts with clear turning points.",
     descriptionAr: "أقدم أطر القصة وأوسعها استخداماً. كل فيلم هوليودي ناجح وأغلب الروايات المنشورة يتبع نسخة ما من هذه البنية. تقسّم قصتك إلى ثلاثة فصول متمايزة بنقاط تحوّل واضحة.",
     acts: [
@@ -177,8 +178,8 @@ const structures = [
     icon: Circle,
     tag: "Myth & Epic",
     tagAr: "الأسطورة والملحمة",
-    color: "text-purple-400",
-    bg: "bg-purple-500/10 border-purple-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "Identified by Joseph Campbell across myths from every culture, the Hero's Journey is a 12-stage circular story structure. It's particularly powerful for fantasy, adventure, and coming-of-age stories.",
     descriptionAr: "حدّدها جوزيف كامبل عبر أساطير كل الثقافات، ورحلة البطل بنية قصصية دائرية من 12 مرحلة. وهي قوية بوجه خاص لقصص الفانتازيا والمغامرة والنضج.",
     acts: [
@@ -208,8 +209,8 @@ const structures = [
     icon: Square,
     tag: "Most Detailed",
     tagAr: "الأكثر تفصيلاً",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10 border-emerald-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "Created by screenwriter Blake Snyder, this 15-beat framework gives you a precise structural map. It's highly prescriptive: ideal for beginners who want exact targets for when things should happen.",
     descriptionAr: "ابتكره كاتب السيناريو بليك سنايدر، وهذا الإطار المؤلَّف من 15 مطبّاً يمنحك خريطة بنيوية دقيقة. وهو إرشادي بشدّة: مثالي للمبتدئين الذين يريدون أهدافاً محدّدة لتوقيت وقوع الأحداث.",
     acts: [
@@ -240,8 +241,8 @@ const characterPillars = [
     icon: Target,
     title: "The Goal (Want)",
     titleAr: "الهدف (الرغبة)",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10 border-blue-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "What does your character consciously want? This is their external goal: the thing they're actively chasing throughout the story.",
     descriptionAr: "ماذا تريد شخصيتك بوعيٍ منها؟ هذا هدفها الخارجي: الشيء الذي تطارده بنشاط طوال القصة.",
     examples: ["Solve the murder", "Win the championship", "Get home safely", "Find true love"],
@@ -251,8 +252,8 @@ const characterPillars = [
     icon: Heart,
     title: "The Need",
     titleAr: "الحاجة",
-    color: "text-rose-400",
-    bg: "bg-rose-500/10 border-rose-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "What does your character actually need: the internal truth they must accept to grow? The tension between want and need is what creates a character arc.",
     descriptionAr: "ماذا تحتاج شخصيتك فعلاً: الحقيقة الداخلية التي عليها قبولها لتنمو؟ التوتر بين الرغبة والحاجة هو ما يصنع قوس الشخصية.",
     examples: ["Learn to trust others", "Accept their past", "Forgive themselves", "Choose love over ambition"],
@@ -262,8 +263,8 @@ const characterPillars = [
     icon: Ghost,
     title: "The Wound",
     titleAr: "الجرح",
-    color: "text-purple-400",
-    bg: "bg-purple-500/10 border-purple-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "A defining trauma or formative experience from the past. The wound explains why the character behaves the way they do: and creates the gap between want and need.",
     descriptionAr: "صدمة فارقة أو تجربة مكوِّنة من الماضي. يفسّر الجرح لماذا تتصرّف الشخصية كما تتصرّف، ويخلق الفجوة بين الرغبة والحاجة.",
     examples: ["Abandoned as a child", "Failed publicly and catastrophically", "Lost someone they loved", "Betrayed by someone they trusted"],
@@ -273,8 +274,8 @@ const characterPillars = [
     icon: Mountain,
     title: "The Flaw",
     titleAr: "العيب",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10 border-amber-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "A genuine weakness that creates problems. Not a 'cute' flaw: a real one that costs them something. The flaw is how the wound manifests in behavior.",
     descriptionAr: "ضعف حقيقي يخلق مشكلات. ليس عيباً «لطيفاً»، بل عيباً فعلياً يكلّفها شيئاً. العيب هو كيف يتجلّى الجرح في السلوك.",
     examples: ["Arrogance that alienates allies", "Fear of vulnerability", "Obsessive need for control", "Inability to ask for help"],
@@ -284,8 +285,8 @@ const characterPillars = [
     icon: Sparkles,
     title: "The Strength",
     titleAr: "القوة",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10 border-emerald-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "What makes readers root for your character? They need genuine qualities worth admiring: courage, wit, loyalty, compassion. This is what lets them ultimately overcome.",
     descriptionAr: "ما الذي يجعل القرّاء يؤيّدون شخصيتك؟ تحتاج إلى صفات حقيقية تستحق الإعجاب: الشجاعة، والفطنة، والوفاء، والرحمة. هذا ما يمكّنها من الانتصار في النهاية.",
     examples: ["Unstoppable resilience", "Brilliant problem-solving", "Deep empathy for others", "Fierce protective instinct"],
@@ -295,8 +296,8 @@ const characterPillars = [
     icon: Eye,
     title: "The Voice",
     titleAr: "الصوت",
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10 border-cyan-500/20",
+    color: "text-[#7b5e3b]",
+    bg: "bg-[#7b5e3b]/10 border-[#7b5e3b]/20",
     description: "How your character speaks, thinks, and sees the world. Voice is the fingerprint that makes one character immediately distinguishable from another.",
     descriptionAr: "كيف تتكلّم شخصيتك وتفكّر وترى العالم. الصوت هو البصمة التي تجعل شخصيةً متميّزة فوراً عن أخرى.",
     examples: ["Darkly humorous observations", "Precise technical thinking", "Naive wonder at everything", "Cynical deflection with wit"],
@@ -311,7 +312,7 @@ const arcTypes = [
     description: "The character starts with a flawed worldview (the Lie) and, through the story's events, overcomes it to embrace the Truth. The most common arc in fiction.",
     descriptionAr: "تبدأ الشخصية برؤية معيبة للعالم (الكذبة)، وعبر أحداث القصة تتجاوزها لتعتنق الحقيقة. وهو أكثر الأقواس شيوعاً في الأدب.",
     icon: TrendingUp,
-    color: "text-emerald-400",
+    color: "text-[#7b5e3b]",
     example: "Ebenezer Scrooge (A Christmas Carol): goes from miserly and bitter to generous and joyful.",
     exampleAr: "إبنيزر سكروج (في «أنشودة عيد الميلاد»): ينتقل من البخل والمرارة إلى الكرم والبهجة.",
   },
@@ -321,7 +322,7 @@ const arcTypes = [
     description: "The character starts with potential for growth but ultimately fails to overcome their flaw, descending into corruption, tragedy, or death.",
     descriptionAr: "تبدأ الشخصية وفيها إمكان للنمو لكنها تفشل في النهاية في تجاوز عيبها، فتنحدر إلى الفساد أو المأساة أو الموت.",
     icon: Mountain,
-    color: "text-rose-400",
+    color: "text-[#7b5e3b]",
     example: "Walter White (Breaking Bad): starts as sympathetic, ends as villain. Macbeth. Anakin Skywalker.",
     exampleAr: "والتر وايت (في «بريكينغ باد»): يبدأ مثيراً للتعاطف وينتهي شريراً. وكذلك ماكبث وأناكين سكايووكر.",
   },
@@ -331,7 +332,7 @@ const arcTypes = [
     description: "The character doesn't change: they already hold the Truth, and they use it to change the world around them. Common in action/adventure and thrillers.",
     descriptionAr: "لا تتغيّر الشخصية: فهي تحمل الحقيقة أصلاً، وتستخدمها لتغيير العالم من حولها. شائع في الأكشن والمغامرة والإثارة.",
     icon: ArrowRight,
-    color: "text-blue-400",
+    color: "text-[#7b5e3b]",
     example: "James Bond, Sherlock Holmes, Atticus Finch: their unshakeable principles reshape everyone around them.",
     exampleAr: "جيمس بوند، وشرلوك هولمز، وأتيكوس فينش: مبادئهم التي لا تتزعزع تعيد تشكيل كل من حولهم.",
   },
@@ -390,9 +391,9 @@ const writingProcess = [
     icon: Lightbulb,
     title: "The Idea & Development Phase",
     titleAr: "مرحلة الفكرة والتطوير",
-    color: "text-amber-400",
-    border: "border-amber-500/30",
-    bg: "bg-amber-500/5",
+    color: "text-[#7b5e3b]",
+    border: "border-[#7b5e3b]/30",
+    bg: "bg-[#7b5e3b]/5",
     description: "Before you write a word of your actual book, spend time developing the core idea. Most abandoned books die here: not from lack of talent, but from starting before the idea was strong enough.",
     descriptionAr: "قبل أن تكتب كلمة من كتابك الفعلي، اقضِ وقتاً في تطوير الفكرة الجوهرية. أغلب الكتب المهجورة تموت هنا: لا من قلّة الموهبة، بل من البدء قبل أن تكون الفكرة قوية بما يكفي.",
     actions: [
@@ -415,9 +416,9 @@ const writingProcess = [
     icon: Map,
     title: "Planning & Outlining",
     titleAr: "التخطيط ووضع المخطّط",
-    color: "text-blue-400",
-    border: "border-blue-500/30",
-    bg: "bg-blue-500/5",
+    color: "text-[#7b5e3b]",
+    border: "border-[#7b5e3b]/30",
+    bg: "bg-[#7b5e3b]/5",
     description: "You don't need a detailed outline: but you need something. Even a rough roadmap of major turning points will prevent the most common cause of stalled manuscripts: not knowing what happens next.",
     descriptionAr: "لست بحاجة إلى مخطّط مفصّل، لكنك بحاجة إلى شيء ما. حتى خريطة طريق تقريبية لنقاط التحوّل الكبرى ستمنع أشيع أسباب تعثّر المخطوطات: عدم معرفة ما سيحدث تالياً.",
     actions: [
@@ -440,9 +441,9 @@ const writingProcess = [
     icon: Feather,
     title: "The First Draft",
     titleAr: "المسودّة الأولى",
-    color: "text-purple-400",
-    border: "border-purple-500/30",
-    bg: "bg-purple-500/5",
+    color: "text-[#7b5e3b]",
+    border: "border-[#7b5e3b]/30",
+    bg: "bg-[#7b5e3b]/5",
     description: "The first draft's only job is to exist. It will be messy, inconsistent, and full of placeholder scenes. That's not a failure: that's exactly how first drafts are supposed to work.",
     descriptionAr: "وظيفة المسودّة الأولى الوحيدة هي أن توجد. ستكون فوضوية وغير متّسقة ومليئة بمشاهد مؤقّتة. هذا ليس فشلاً: هكذا تماماً يُفترض أن تعمل المسودّات الأولى.",
     actions: [
@@ -465,9 +466,9 @@ const writingProcess = [
     icon: RefreshCw,
     title: "Revision & Editing",
     titleAr: "المراجعة والتحرير",
-    color: "text-emerald-400",
-    border: "border-emerald-500/30",
-    bg: "bg-emerald-500/5",
+    color: "text-[#7b5e3b]",
+    border: "border-[#7b5e3b]/30",
+    bg: "bg-[#7b5e3b]/5",
     description: "Writing is rewriting. Most published authors do 3-7 full revision passes before a manuscript is ready. Each pass focuses on a different layer of the story.",
     descriptionAr: "الكتابة إعادة كتابة. أغلب المؤلّفين المنشورين يجرون من 3 إلى 7 جولات مراجعة كاملة قبل أن تصبح المخطوطة جاهزة. وكل جولة تركّز على طبقة مختلفة من القصة.",
     actions: [
@@ -490,9 +491,9 @@ const writingProcess = [
     icon: Eye,
     title: "Beta Readers & Feedback",
     titleAr: "القرّاء التجريبيون والملاحظات",
-    color: "text-cyan-400",
-    border: "border-cyan-500/30",
-    bg: "bg-cyan-500/5",
+    color: "text-[#7b5e3b]",
+    border: "border-[#7b5e3b]/30",
+    bg: "bg-[#7b5e3b]/5",
     description: "You cannot objectively read your own work. You know what you intended: not what you actually wrote. Beta readers reveal the gap between your intention and the reader's experience.",
     descriptionAr: "لا تستطيع قراءة عملك بموضوعية. أنت تعرف ما قصدته، لا ما كتبته فعلاً. القرّاء التجريبيون يكشفون الفجوة بين قصدك وتجربة القارئ.",
     actions: [
@@ -515,9 +516,9 @@ const writingProcess = [
     icon: Send,
     title: "Publishing & Sharing",
     titleAr: "النشر والمشاركة",
-    color: "text-rose-400",
-    border: "border-rose-500/30",
-    bg: "bg-rose-500/5",
+    color: "text-[#7b5e3b]",
+    border: "border-[#7b5e3b]/30",
+    bg: "bg-[#7b5e3b]/5",
     description: "Once your manuscript is polished, you have two main publishing paths. Each has real advantages: and neither is the 'wrong' choice.",
     descriptionAr: "بعد صقل مخطوطتك، أمامك مساران رئيسيان للنشر. لكلٍّ مزايا حقيقية، وليس أيّهما الخيار «الخاطئ».",
     actions: [
@@ -538,10 +539,10 @@ const writingProcess = [
 ];
 
 const selfEditingChecklist = [
-  { category: "Structure", categoryAr: "البنية", icon: Layers, color: "text-blue-400", items: ["Every scene has a clear beginning, middle, and end", "Each scene changes something: status, knowledge, or relationship", "The three-act turning points land at approximately the right story positions", "The midpoint raises stakes or changes direction meaningfully", "The climax is the largest, most emotionally charged event"], itemsAr: ["لكل مشهد بداية ووسط ونهاية واضحة", "كل مشهد يغيّر شيئاً: الحالة أو المعرفة أو العلاقة", "نقاط تحوّل الفصول الثلاثة تقع تقريباً في المواضع الصحيحة من القصة", "منتصف القصة يرفع الرهانات أو يغيّر الاتجاه بشكل ذي معنى", "الذروة هي أكبر الأحداث وأشدّها شحناً عاطفياً"] },
-  { category: "Characters", categoryAr: "الشخصيات", icon: Users, color: "text-purple-400", items: ["The protagonist has a clear goal, flaw, and arc", "The antagonist has understandable (even if wrong) motivations", "Supporting characters each have a distinct voice and purpose", "Characters behave consistently with their established traits", "Reactions to events feel emotionally true"], itemsAr: ["للبطل هدف وعيب وقوس واضحة", "للخصم دوافع مفهومة (وإن كانت خاطئة)", "لكل شخصية مساندة صوت مميّز وغرض", "تتصرّف الشخصيات باتّساق مع سماتها المرسومة", "ردود الفعل على الأحداث تبدو صادقة عاطفياً"] },
-  { category: "Prose", categoryAr: "النثر", icon: Feather, color: "text-emerald-400", items: ["Sentences vary in length and rhythm: not monotonous", "Show the character's experience, not just the facts", "Cut words that add length without adding meaning", "Use active verbs rather than passive constructions", "Sensory details anchor the reader in each scene"], itemsAr: ["تتنوّع الجمل طولاً وإيقاعاً: ليست رتيبة", "أظهِر تجربة الشخصية، لا الوقائع وحدها", "احذف الكلمات التي تزيد الطول دون المعنى", "استخدم أفعالاً مبنية للمعلوم بدل المبني للمجهول", "تفاصيل حسّية ترسّخ القارئ في كل مشهد"] },
-  { category: "Pacing", categoryAr: "الإيقاع", icon: Zap, color: "text-amber-400", items: ["Action/tension scenes use shorter sentences and paragraphs", "Reflective moments use longer, slower prose", "No scene drags: every paragraph earns its place", "Chapter endings create enough momentum to turn the page", "The story never stops moving for more than necessary"], itemsAr: ["مشاهد الأكشن والتوتر تستخدم جملاً وفقرات أقصر", "اللحظات التأمّلية تستخدم نثراً أطول وأبطأ", "لا مشهد يتثاقل: كل فقرة تستحقّ مكانها", "نهايات الفصول تخلق زخماً كافياً لتقليب الصفحة", "لا تتوقّف القصة عن الحركة أكثر مما يلزم"] },
+  { category: "Structure", categoryAr: "البنية", icon: Layers, color: "text-[#7b5e3b]", items: ["Every scene has a clear beginning, middle, and end", "Each scene changes something: status, knowledge, or relationship", "The three-act turning points land at approximately the right story positions", "The midpoint raises stakes or changes direction meaningfully", "The climax is the largest, most emotionally charged event"], itemsAr: ["لكل مشهد بداية ووسط ونهاية واضحة", "كل مشهد يغيّر شيئاً: الحالة أو المعرفة أو العلاقة", "نقاط تحوّل الفصول الثلاثة تقع تقريباً في المواضع الصحيحة من القصة", "منتصف القصة يرفع الرهانات أو يغيّر الاتجاه بشكل ذي معنى", "الذروة هي أكبر الأحداث وأشدّها شحناً عاطفياً"] },
+  { category: "Characters", categoryAr: "الشخصيات", icon: Users, color: "text-[#7b5e3b]", items: ["The protagonist has a clear goal, flaw, and arc", "The antagonist has understandable (even if wrong) motivations", "Supporting characters each have a distinct voice and purpose", "Characters behave consistently with their established traits", "Reactions to events feel emotionally true"], itemsAr: ["للبطل هدف وعيب وقوس واضحة", "للخصم دوافع مفهومة (وإن كانت خاطئة)", "لكل شخصية مساندة صوت مميّز وغرض", "تتصرّف الشخصيات باتّساق مع سماتها المرسومة", "ردود الفعل على الأحداث تبدو صادقة عاطفياً"] },
+  { category: "Prose", categoryAr: "النثر", icon: Feather, color: "text-[#7b5e3b]", items: ["Sentences vary in length and rhythm: not monotonous", "Show the character's experience, not just the facts", "Cut words that add length without adding meaning", "Use active verbs rather than passive constructions", "Sensory details anchor the reader in each scene"], itemsAr: ["تتنوّع الجمل طولاً وإيقاعاً: ليست رتيبة", "أظهِر تجربة الشخصية، لا الوقائع وحدها", "احذف الكلمات التي تزيد الطول دون المعنى", "استخدم أفعالاً مبنية للمعلوم بدل المبني للمجهول", "تفاصيل حسّية ترسّخ القارئ في كل مشهد"] },
+  { category: "Pacing", categoryAr: "الإيقاع", icon: Zap, color: "text-[#7b5e3b]", items: ["Action/tension scenes use shorter sentences and paragraphs", "Reflective moments use longer, slower prose", "No scene drags: every paragraph earns its place", "Chapter endings create enough momentum to turn the page", "The story never stops moving for more than necessary"], itemsAr: ["مشاهد الأكشن والتوتر تستخدم جملاً وفقرات أقصر", "اللحظات التأمّلية تستخدم نثراً أطول وأبطأ", "لا مشهد يتثاقل: كل فقرة تستحقّ مكانها", "نهايات الفصول تخلق زخماً كافياً لتقليب الصفحة", "لا تتوقّف القصة عن الحركة أكثر مما يلزم"] },
 ];
 
 const beginnerMistakes = [
@@ -826,7 +827,7 @@ export default function WritingGuide() {
   };
 
   return (
-    <Layout isFullDark lightNav>
+    <Layout lightNav>
       <SEO
         title={ar ? "دليل الكتابة" : "Writing Guide"}
         description={ar
@@ -837,10 +838,10 @@ export default function WritingGuide() {
       {/* ── Progress Bar ── */}
       <div style={{
         position: "fixed", top: 0, left: 0, width: `${scrollProgress}%`, height: 3,
-        background: "#fff", zIndex: 50, transition: "width 0.1s linear",
+        background: "#7b5e3b", zIndex: 50, transition: "width 0.1s linear",
       }} />
 
-      <div className="dark px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="plotzy-guide px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* ── Hero ── */}
       <motion.header
         initial="hidden" animate="visible" variants={fadeUp}
@@ -912,7 +913,7 @@ export default function WritingGuide() {
                 >
                   <span
                     className={`text-[11px] font-medium whitespace-nowrap transition-all duration-200 opacity-0 group-hover/toc:opacity-100 translate-x-2 group-hover/toc:translate-x-0 ${
-                      isActive ? "text-white" : "text-muted-foreground"
+                      isActive ? "text-[#2f2618] font-semibold" : "text-muted-foreground"
                     }`}
                   >
                     {String(i + 1).padStart(2, "0")}  ·  {sec.label}
@@ -920,10 +921,10 @@ export default function WritingGuide() {
                   <span
                     className={`block rounded-full transition-all duration-200 ${
                       isActive
-                        ? "w-2 h-2 bg-white"
+                        ? "w-2 h-2 bg-[#2f2618]"
                         : isRead
-                        ? "w-1.5 h-1.5 bg-white/50"
-                        : "w-1.5 h-1.5 bg-white/20 hover:bg-white/40"
+                        ? "w-1.5 h-1.5 bg-[#2f2618]/60"
+                        : "w-1.5 h-1.5 bg-[#2f2618]/20 hover:bg-[#2f2618]/40"
                     }`}
                   />
                 </button>
@@ -940,6 +941,10 @@ export default function WritingGuide() {
       {/* ══════════════════════════════════════════════ */}
       {/* SECTION 1: GENRES */}
       {/* ══════════════════════════════════════════════ */}
+      {/* one sticky for the whole guide, pinned on the section seam */}
+      <div aria-hidden style={{ display: "flex", justifyContent: "flex-end", height: 0, overflow: "visible", position: "relative", zIndex: 5 }}>
+        <StickyNote ar={ar} size={82} rot={6} text={ar ? "خلي هالصفحة مرجعك" : "keep this page as your reference"} style={{ transform: "translateY(-46px) rotate(6deg)" }} />
+      </div>
       <section id="genres" className="scroll-mt-20">
         <SectionHeader
           icon={BookOpen} label={ar ? "01. الأنواع" : "01. Genres"}
@@ -1237,12 +1242,12 @@ export default function WritingGuide() {
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3 sm:p-4">
-                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-400 mb-2">{ar ? "ضعيف" : "Weak"}</p>
+                    <div className="rounded-xl border border-[#7b5e3b]/20 bg-[#7b5e3b]/5 p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#7b5e3b] mb-2">{ar ? "ضعيف" : "Weak"}</p>
                       <p className="text-[12px] sm:text-sm text-foreground/70 font-mono leading-relaxed whitespace-pre-line break-words">{principle.bad}</p>
                     </div>
-                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 sm:p-4">
-                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">{ar ? "قوي" : "Strong"}</p>
+                    <div className="rounded-xl border border-[#7b5e3b]/20 bg-[#7b5e3b]/5 p-3 sm:p-4">
+                      <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#7b5e3b] mb-2">{ar ? "قوي" : "Strong"}</p>
                       <p className="text-[12px] sm:text-sm text-foreground/70 font-mono leading-relaxed whitespace-pre-line break-words">{principle.good}</p>
                     </div>
                   </div>
@@ -1410,7 +1415,7 @@ export default function WritingGuide() {
                 work: "Harvard Commencement Speech, 2008",
                 tip: "Embrace failure as part of the creative process. Every rejected manuscript, every abandoned draft, is a step toward your finished book.",
                 tipAr: "تقبّل الفشل كجزء من العملية الإبداعية. كل مخطوطة مرفوضة، وكل مسودّة مهجورة، خطوة نحو كتابك المكتمل.",
-                accent: "#a78bfa",
+                accent: "#75502c",
                 initials: "JKR",
               },
               {
@@ -1420,7 +1425,7 @@ export default function WritingGuide() {
                 work: "On Writing: A Memoir of the Craft",
                 tip: "Read voraciously in your genre and outside it. Every book you read is a masterclass in how story, voice, and structure work.",
                 tipAr: "اقرأ بنهم في نوعك وخارجه. كل كتاب تقرؤه درس متقَن في كيفية عمل القصة والصوت والبنية.",
-                accent: "#f87171",
+                accent: "#63472a",
                 initials: "SK",
               },
               {
@@ -1430,7 +1435,7 @@ export default function WritingGuide() {
                 work: "The Crack-Up, 1936",
                 tip: "Before you begin, ask yourself: what is the one thing this story must say? That core truth will guide every scene you write.",
                 tipAr: "قبل أن تبدأ، اسأل نفسك: ما الشيء الوحيد الذي يجب أن تقوله هذه القصة؟ تلك الحقيقة الجوهرية ستوجّه كل مشهد تكتبه.",
-                accent: "#38bdf8",
+                accent: "#9c6b3d",
                 initials: "FSF",
               },
               {
@@ -1440,7 +1445,7 @@ export default function WritingGuide() {
                 work: "I Know Why the Caged Bird Sings",
                 tip: "The story already exists inside you. Your job as a writer is not to invent it: it is to find the courage to tell it honestly.",
                 tipAr: "القصة موجودة فيك أصلاً. مهمّتك ككاتب ليست أن تخترعها، بل أن تجد الشجاعة لروايتها بصدق.",
-                accent: "#fb923c",
+                accent: "#554128",
                 initials: "MA",
               },
               {
@@ -1450,7 +1455,7 @@ export default function WritingGuide() {
                 work: "A Dance with Dragons",
                 tip: "Remember why stories matter: they expand empathy. Write characters so real that readers feel they have truly lived inside another life.",
                 tipAr: "تذكّر لماذا تهمّ القصص: إنها توسّع التعاطف. اكتب شخصيات حقيقية إلى حدّ يشعر فيه القرّاء أنهم عاشوا فعلاً داخل حياة أخرى.",
-                accent: "#4ade80",
+                accent: "#8a5a3a",
                 initials: "GRRM",
               },
               {
@@ -1460,7 +1465,7 @@ export default function WritingGuide() {
                 work: "Advice on Writing",
                 tip: "Give yourself permission to write badly at first. The magic of writing happens in revision: but only if there is a first draft to revise.",
                 tipAr: "امنح نفسك إذناً بأن تكتب بشكل سيّئ في البداية. سحر الكتابة يحدث في المراجعة، لكن فقط إذا كانت هناك مسودّة أولى لمراجعتها.",
-                accent: "#facc15",
+                accent: "#6b5637",
                 initials: "TP",
               },
             ].map((item, i) => (

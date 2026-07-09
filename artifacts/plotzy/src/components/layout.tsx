@@ -106,7 +106,7 @@ function LibraryNavLink({ active, navigate, label, dark }: { active: boolean; na
 
 const SF_FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-const FOOTER_LINK_STYLE: React.CSSProperties = { fontSize: 13.5, color: 'rgba(244,239,226,0.5)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: SF_FONT, lineHeight: 1.4, cursor: 'pointer' };
+const FOOTER_LINK_STYLE: React.CSSProperties = { fontSize: 17, color: 'rgba(244,239,226,0.55)', textDecoration: 'none', transition: 'color 0.15s', fontFamily: "'Caveat', 'Aref Ruqaa', 'Segoe Script', cursive", lineHeight: 1.35, cursor: 'pointer' };
 
 /* ── Social media SVG icons (inline, no external deps) ────────── */
 const SocialSvg = {
@@ -751,7 +751,7 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
       </main>
 
       {!noScroll && (
-      <footer style={{ background: 'linear-gradient(180deg, #292115 0%, #1c1610 100%)', fontFamily: SF_FONT, position: 'relative', overflow: 'hidden' }}>
+      <footer style={{ background: 'linear-gradient(180deg, #292115 0%, #1c1610 100%)', fontFamily: "'Caveat', 'Aref Ruqaa', 'Segoe Script', cursive", position: 'relative', overflow: 'hidden' }}>
 
         {/* Accent top border */}
         <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(244,239,226,0.12) 30%, rgba(244,239,226,0.12) 70%, transparent 100%)' }} />

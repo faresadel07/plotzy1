@@ -27,10 +27,20 @@
    body stays in the system face for reading comfort. */
 /* Latin faces first, Arabic siblings as fallback: Lora and Caveat have
    no Arabic glyphs, so Arabic text falls through to Amiri and Aref
-   Ruqaa automatically without dir-scoped rules. */
+   Ruqaa automatically without dir-scoped rules. Four faces total on
+   course pages: system body, serif headings, handwriting asides and
+   quotes, typewriter small labels. */
 .course-apple :is(h1, h2, h3) { font-family: 'Lora', 'Amiri', Georgia, serif; }
+.course-apple :is(h4, figcaption, blockquote, em, .italic) { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive; }
+.course-apple blockquote { font-size: 1.25em; line-height: 1.6; }
 .course-apple p.border-s-2 { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive; font-size: 1.3rem !important; line-height: 1.7 !important; }
-.course-apple :is(.text-xs, .text-\[11px\]) { font-family: 'Courier New', 'Noto Naskh Arabic', ui-monospace, monospace; }
+.course-apple :is(.text-xs, .text-\[11px\], .uppercase) { font-family: 'Courier New', 'Noto Naskh Arabic', ui-monospace, monospace; }
+
+/* The writing guide mixes the same four faces on its light surface. */
+.plotzy-guide :is(h1, h2) { font-family: 'Lora', 'Amiri', Georgia, serif; }
+.plotzy-guide :is(h3, blockquote, em, .italic, figcaption) { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', cursive; }
+.plotzy-guide h3 { font-size: 1.35em; }
+.plotzy-guide :is(.text-xs, .text-\[10px\], .text-\[11px\], .uppercase) { font-family: 'Courier New', 'Noto Naskh Arabic', ui-monospace, monospace; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300..700&family=Noto+Sans+JP:wght@300..700&family=Noto+Sans+KR:wght@300..700&family=Noto+Sans+Devanagari:wght@300..700&family=Noto+Sans:wght@300..700&display=swap');
 
 @import "tailwindcss";

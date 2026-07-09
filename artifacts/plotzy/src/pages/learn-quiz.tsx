@@ -16,6 +16,7 @@ import { QuizTimer } from "@/components/course/QuizTimer";
 import { useLanguage } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
+import { CourseSticky } from "@/components/course/CourseSticky";
 
 type Option = "a" | "b" | "c" | "d";
 
@@ -158,6 +159,7 @@ export default function LearnQuizPage() {
       />
 
       <main className="course-apple container mx-auto max-w-3xl px-4 py-8 sm:py-10 space-y-6">
+        <CourseSticky text="not a test, a review" textAr="مش امتحان، مراجعة" rot={5} />
         <CourseBreadcrumb
           items={[
             { label: t("courseHome"), href: "/" },

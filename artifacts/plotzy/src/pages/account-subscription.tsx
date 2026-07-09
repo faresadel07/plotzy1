@@ -29,12 +29,12 @@ import type { TranslationKey } from "@/lib/i18n";
 
 // Theme tokens — mirror /checkout for visual consistency.
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#000";
+const BG = "#f4efe2";
 const C2 = "#111";
-const B = "rgba(255,255,255,0.07)";
-const T = "#fff";
-const TS = "rgba(255,255,255,0.55)";
-const TD = "rgba(255,255,255,0.25)";
+const B = "rgba(66,53,33,0.13)";
+const T = "#2f2618";
+const TS = "#6d6354";
+const TD = "#9a9181";
 const SUCCESS = "#10B981";
 const WARNING = "#F59E0B";
 
@@ -341,7 +341,7 @@ function CancelDialog({
             style={{
               background: "rgba(239,68,68,0.10)",
               border: "1px solid rgba(239,68,68,0.35)",
-              color: "rgba(255,255,255,0.92)",
+              color: "#8a2f22",
             }}
           >
             <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: "#EF4444" }} />
@@ -355,7 +355,7 @@ function CancelDialog({
             onClick={() => onOpenChange(false)}
             disabled={isPending}
             className="px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: T, color: "#000" }}
+            style={{ background: T, color: "#f7f2e4" }}
           >
             {t("asKeepSub")}
           </button>
@@ -400,7 +400,7 @@ function FreePlanCard() {
       <button
         onClick={() => navigate("/pricing")}
         className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm"
-        style={{ background: T, color: "#000" }}
+        style={{ background: T, color: "#f7f2e4" }}
       >
         {t("asViewPlans")}
         <ArrowRight className="w-4 h-4" />
@@ -427,11 +427,11 @@ function FeaturesCard({ plan }: { plan: PlanDetails }) {
           <li key={f} className="flex items-start gap-3 text-sm">
             <span
               className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-              style={{ background: "rgba(255,255,255,0.06)" }}
+              style={{ background: "rgba(66,53,33,0.08)" }}
             >
               <Check className="w-3 h-3" style={{ color: T }} />
             </span>
-            <span style={{ color: "rgba(255,255,255,0.85)" }}>{f}</span>
+            <span style={{ color: "#4a4132" }}>{f}</span>
           </li>
         ))}
       </ul>
@@ -469,7 +469,7 @@ function PaymentHistorySection({
           style={{
             background: "rgba(239,68,68,0.10)",
             border: "1px solid rgba(239,68,68,0.35)",
-            color: "rgba(255,255,255,0.92)",
+            color: "#8a2f22",
           }}
         >
           <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#EF4444" }} />
@@ -610,7 +610,7 @@ function getStatusDisplay(
         icon: <X className="w-3 h-3" style={{ color: TD }} />,
         label: t("asStatusExpired"),
         color: TD,
-        bg: "rgba(255,255,255,0.06)",
+        bg: "rgba(66,53,33,0.08)",
       };
     case "free_trial":
     default:
@@ -618,7 +618,7 @@ function getStatusDisplay(
         icon: <span style={{ width: 6, height: 6, borderRadius: "50%", background: TD, display: "inline-block" }} />,
         label: t("asStatusFreePlan"),
         color: TS,
-        bg: "rgba(255,255,255,0.06)",
+        bg: "rgba(66,53,33,0.08)",
       };
   }
 }
@@ -644,8 +644,8 @@ function Spinner() {
       style={{
         width: 18,
         height: 18,
-        border: "2px solid rgba(255,255,255,0.1)",
-        borderTopColor: "rgba(255,255,255,0.5)",
+        border: "2px solid rgba(66,53,33,0.15)",
+        borderTopColor: "#6d6354",
       }}
     />
   );

@@ -18,6 +18,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/language-context";
+import { StickyNote } from "@/components/mobile/StickyNote";
 import {
   ArrowLeft, ArrowRight, Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Moon, ChevronUp, ChevronDown, BookAudio,
@@ -27,21 +28,21 @@ import {
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
-const BG = "#221b11";
-const CARD = "rgba(244,239,226,0.04)";
-const CARD_HOVER = "rgba(244,239,226,0.07)";
-const BORDER = "rgba(244,239,226,0.08)";
-const BORDER_STRONG = "rgba(244,239,226,0.18)";
-const TEXT = "#f0efe8";
-const MUTED = "rgba(244,239,226,0.55)";
+const BG = "#f4efe2";
+const CARD = "#fffdf7";
+const CARD_HOVER = "#f6f0e1";
+const BORDER = "rgba(66,53,33,0.13)";
+const BORDER_STRONG = "rgba(66,53,33,0.3)";
+const TEXT = "#2f2618";
+const MUTED = "#7b7366";
 const MUTED2 = "rgba(244,239,226,0.35)";
-const ACCENT = "#f7f2e4";
+const ACCENT = "#292115";
 // Soft tinted washes derived from ACCENT — kept as vars so we don't
 // scatter the same `rgba(244,239,226,...)` literals across the file.
-const ACCENT_WASH_STRONG = "rgba(244,239,226,0.12)";
-const ACCENT_WASH_MEDIUM = "rgba(244,239,226,0.08)";
-const ACCENT_WASH_SOFT   = "rgba(244,239,226,0.06)";
-const ACCENT_WASH_FAINT  = "rgba(244,239,226,0.04)";
+const ACCENT_WASH_STRONG = "rgba(66,53,33,0.14)";
+const ACCENT_WASH_MEDIUM = "rgba(66,53,33,0.09)";
+const ACCENT_WASH_SOFT   = "rgba(66,53,33,0.07)";
+const ACCENT_WASH_FAINT  = "rgba(66,53,33,0.05)";
 
 interface Chapter {
   title: string;
@@ -452,24 +453,15 @@ export default function AudiolibraryPlayerPage() {
               doesn't collide with the back link, and wraps cleanly on
               narrow phones. Subtle CARD/BORDER treatment reads as a
               helpful footnote instead of an urgent banner. */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 22 }}>
-            <div
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 10,
-                padding: "8px 14px", borderRadius: 999,
-                background: CARD, border: `1px solid ${BORDER}`,
-                color: MUTED, fontSize: 12,
-                textAlign: "center", lineHeight: 1.4,
-                maxWidth: "100%",
-              }}
-            >
-              <Smartphone size={13} color={MUTED} style={{ flexShrink: 0 }} />
-              <span>
-                {ar
-                  ? "بتقدر تقفل تلفونك أو تخفّض الشاشة والصوت بيضلّ شغّال. تحكّم بالتشغيل من شاشة القفل."
-                  : "You can lock your phone while listening. Playback controls stay on your lock screen."}
-              </span>
-            </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4, marginTop: -8 }}>
+            <StickyNote
+              ar={ar}
+              size={104}
+              rot={5}
+              text={ar
+                ? "اقفل تلفونك، الصوت بيضل شغال من شاشة القفل"
+                : "lock your phone, playback stays on your lock screen"}
+            />
           </div>
 
           {/* ── Top: cover + meta + transport ── */}
@@ -503,7 +495,7 @@ export default function AudiolibraryPlayerPage() {
                 borderRadius: 16,
                 overflow: "hidden",
                 background: "linear-gradient(135deg, rgba(244,239,226,0.08), rgba(244,239,226,0.03))",
-                boxShadow: "0 18px 60px rgba(0,0,0,0.55)",
+                boxShadow: "0 18px 50px -14px rgba(41,33,21,0.4)",
                 border: `1px solid ${BORDER}`,
                 position: "relative",
               }}
@@ -1319,7 +1311,7 @@ function Menu({ children, onClose }: { children: React.ReactNode; onClose: () =>
           borderRadius: 10,
           padding: 4,
           zIndex: 50,
-          boxShadow: "0 16px 40px rgba(0,0,0,0.55)",
+          boxShadow: "0 16px 36px -12px rgba(41,33,21,0.4)",
         }}
       >
         {children}
