@@ -30,6 +30,7 @@ import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette
 import { LibraryShowcase } from "./LibraryShowcase";
 import { SnippetsFan } from "./SnippetsFan";
 import { PaperBall } from "./PaperBall";
+import { StickyNote } from "./StickyNote";
 import { ensureHomeFonts } from "./fonts";
 import { useEffect } from "react";
 
@@ -163,6 +164,7 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         <div style={{ position: "relative", height: 0, zIndex: 3 }}>
           <PaperBall size={42} rot={18} style={{ position: "absolute", top: -18, insetInlineEnd: 20 }} />
           <PaperBall size={26} rot={-30} style={{ position: "absolute", top: -8, insetInlineStart: 30 }} />
+          <StickyNote ar={ar} size={90} rot={-5} text={ar ? "اكتب كل يوم شوي" : "write a little every day"} style={{ position: "absolute", top: -60, insetInlineStart: -10 }} />
         </div>
 
         {COMICS.length > 2 && (
@@ -223,6 +225,7 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         {/* A stray draft ball before the feedback wall */}
         <div style={{ position: "relative", height: 0, zIndex: 3 }}>
           <PaperBall size={46} rot={-18} style={{ position: "absolute", top: -10, insetInlineStart: 14 }} />
+          <StickyNote ar={ar} size={86} rot={4} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: -6, insetInlineEnd: -10 }} />
         </div>
 
         {/* Social proof — real early testers, in their own words */}
@@ -231,10 +234,11 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         {/* Free writing course, presented as its own book cover */}
         <CourseCoverMobile ar={ar} />
 
-        {/* Two draft balls resting before the closing dark section */}
+        {/* Two draft balls and a sticky before the closing section */}
         <div style={{ position: "relative", height: 0, zIndex: 3 }}>
           <PaperBall size={38} rot={24} style={{ position: "absolute", top: -34, insetInlineEnd: 22 }} />
           <PaperBall size={26} rot={-40} style={{ position: "absolute", top: -18, insetInlineEnd: 66 }} />
+          <StickyNote ar={ar} size={84} rot={-4} text={ar ? "الكورس مجاني" : "the course is free"} style={{ position: "absolute", top: -104, insetInlineStart: -12 }} />
         </div>
 
         {/* Closing showcase — write anywhere (iPad + laptop) */}

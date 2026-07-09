@@ -18,6 +18,7 @@ import { INK, INK_SOFT, MUTED, ESPRESSO, PAPER_ON_DARK } from "@/components/mobi
 import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR, ensureHomeFonts } from "@/components/mobile/fonts";
 import { Mark } from "@/components/mobile/Marker";
 import { PaperBall } from "@/components/mobile/PaperBall";
+import { StickyNote } from "@/components/mobile/StickyNote";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "@/components/mobile/mobile-content";
 import { COMICS, comicCover } from "@/lib/comics";
 import { TESTIMONIALS } from "@/components/testimonials/testimonials-data";
@@ -635,6 +636,7 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
             cursor: "pointer",
             fontFamily: SF,
             display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+            WebkitTapHighlightColor: "transparent",
           }}
         >
           <img
@@ -642,7 +644,8 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
             alt=""
             aria-hidden
             loading="lazy"
-            style={{ width: 148, height: "auto", mixBlendMode: "multiply", opacity: 0.9, display: "block", marginBottom: 6 }}
+            draggable={false}
+            style={{ width: 148, height: "auto", opacity: 0.92, display: "block", marginBottom: 6, pointerEvents: "none", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
           />
           <span style={{ display: "block", fontSize: 17, fontWeight: 800, color: "#2f2618", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
             {title}
@@ -921,7 +924,8 @@ function CourseDesktop({ ar }: { ar: boolean }) {
             alt=""
             aria-hidden
             loading="lazy"
-            style={{ width: 280, height: "auto", mixBlendMode: "multiply", opacity: 0.92, display: "block", margin: "0 auto 12px" }}
+            draggable={false}
+            style={{ width: 280, height: "auto", opacity: 0.92, display: "block", margin: "0 auto 12px", pointerEvents: "none", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
           />
           <div dir={ar ? "rtl" : "ltr"} style={{ maxWidth: 380, margin: "0 auto" }}>
             <p style={{ margin: "0 0 5px", fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", color: "#2f2618", fontFamily: SF }}>
@@ -960,27 +964,36 @@ function CourseDesktop({ ar }: { ar: boolean }) {
   );
 }
 
-/* ── 9. Write anywhere (closing espresso beat) ─────────────────────── */
+/* ── 9. Write anywhere: his devices sketch closes the page ─────────── */
 
 function DevicesDesktop({ ar }: { ar: boolean }) {
   return (
-    <div style={{ background: "#292115", padding: "68px 40px 56px" }}>
-      <div style={{ textAlign: "center", marginBottom: 30 }}>
-        <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-0.02em", color: "#f7f2e4", lineHeight: 1.2, marginBottom: 12, fontFamily: SF }}>
-          {ar ? "اكتب من أي مكان. قصّتك معك دائماً." : "Write anywhere. Your story comes with you."}
-        </div>
-        <div style={{ fontSize: 16, color: "rgba(244,239,226,0.62)", lineHeight: 1.6, maxWidth: 560, margin: "0 auto", fontFamily: SF }}>
-          {ar
-            ? "على مكتبك أو على جهازك اللوحي أو تلفونك، بلوتزي يتبعك. مزامنة سحابيّة وحفظ لحظي، وكل فصل بستناك مكان ما تركته."
-            : "At your desk, on your iPad, or on your phone, Plotzy follows you. Cloud sync and instant saving, with every chapter waiting exactly where you left it."}
-        </div>
+    <div dir={ar ? "rtl" : "ltr"} style={{ padding: "56px 40px 64px", textAlign: "center", fontFamily: SF }}>
+      <div style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 38 : 42, fontWeight: 700, letterSpacing: ar ? 0 : "-0.015em", color: "#2f2618", lineHeight: ar ? 1.4 : 1.2, marginBottom: 12 }}>
+        {ar ? "اكتب من أي مكان. قصّتك معك دائماً." : "Write anywhere. Your story comes with you."}
+      </div>
+      <div style={{ fontSize: 16.5, color: "#7b7366", lineHeight: 1.7, maxWidth: 600, margin: "0 auto 4px" }}>
+        {ar
+          ? "على مكتبك، على جهازك اللوحي، أو على تلفونك بالباص، بلوتزي يتبعك. تفتح نفس الفصل من أي جهاز وتلاقي المؤشر واقف بالضبط مكان ما تركته، وكل تعديل صغير محفوظ."
+          : "At your desk, on your iPad, or on your phone on the bus, Plotzy follows you. Open the same chapter on any device and the cursor is waiting exactly where you left it, with every small edit already saved."}
+      </div>
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 16 : 20, color: "#8a8070", marginBottom: 8, transform: "rotate(-1deg)", display: "inline-block" }}>
+        {ar ? "(نفس الصفحة، على كل جهاز)" : "(the same page, on every device)"}
       </div>
       <img
-        src="/images/devices-showcase-dark.jpg"
-        alt={ar ? "بلوتزي على الآيباد والحاسوب" : "Plotzy on iPad and laptop"}
+        src="/images/devices-sketch.png"
+        alt={ar ? "بلوتزي على الآيباد واللابتوب والتلفون" : "Plotzy on iPad, laptop and phone"}
         loading="lazy"
-        style={{ width: "100%", maxWidth: 980, height: "auto", display: "block", margin: "0 auto", borderRadius: 22, border: "1px solid rgba(244,239,226,0.12)" }}
+        draggable={false}
+        style={{ width: "100%", maxWidth: 880, height: "auto", display: "block", margin: "0 auto", pointerEvents: "none", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
       />
+      <div style={{ fontSize: 13.5, color: "#8a8070", display: "flex", gap: 18, justifyContent: "center", flexWrap: "wrap", marginTop: 10 }}>
+        <span>{ar ? "مزامنة لحظية" : "Instant sync"}</span>
+        <span aria-hidden>·</span>
+        <span>{ar ? "حفظ تلقائي مع كل ضغطة" : "Autosave on every keystroke"}</span>
+        <span aria-hidden>·</span>
+        <span>{ar ? "بالعربي والإنجليزي" : "Arabic and English"}</span>
+      </div>
     </div>
   );
 }
@@ -1049,6 +1062,7 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
         <PaperBall size={50} rot={18} style={{ position: "absolute", top: -24, insetInlineEnd: 26 }} />
         <PaperBall size={30} rot={-30} style={{ position: "absolute", top: -12, insetInlineStart: 40 }} />
+        <StickyNote ar={ar} size={108} rot={-4} text={ar ? "اكتب كل يوم شوي" : "write a little every day"} style={{ position: "absolute", top: -66, insetInlineStart: -16 }} />
       </div>
 
       <ShowcaseDesktop
@@ -1072,6 +1086,7 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
         <PaperBall size={40} rot={-22} style={{ position: "absolute", top: -26, insetInlineStart: 18 }} />
         <PaperBall size={26} rot={35} style={{ position: "absolute", top: -12, insetInlineStart: 66 }} />
+        <StickyNote ar={ar} size={104} rot={5} text={ar ? "فصل واحد بكفي اليوم" : "one chapter is enough today"} style={{ position: "absolute", top: -70, insetInlineEnd: -14 }} />
       </div>
 
       <AiWriteBannerDesktop ar={ar} onStart={onStartWriting} />
@@ -1090,16 +1105,18 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
       {/* A stray draft ball before the feedback wall */}
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1150, margin: "0 auto" }}>
         <PaperBall size={54} rot={-18} style={{ position: "absolute", top: -14, insetInlineStart: 30 }} />
+        <StickyNote ar={ar} size={106} rot={-6} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: -58, insetInlineEnd: -18 }} />
       </div>
 
       <FeedbackWallDesktop ar={ar} />
 
       <CourseDesktop ar={ar} />
 
-      {/* Two draft balls resting before the closing dark section */}
+      {/* Two draft balls and a last sticky before the closing section */}
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
         <PaperBall size={44} rot={24} style={{ position: "absolute", top: -40, insetInlineEnd: 70 }} />
         <PaperBall size={30} rot={-40} style={{ position: "absolute", top: -20, insetInlineEnd: 130 }} />
+        <StickyNote ar={ar} size={104} rot={4} text={ar ? "الكورس مجاني" : "the course is free"} style={{ position: "absolute", top: -64, insetInlineStart: -12 }} />
       </div>
 
       <DevicesDesktop ar={ar} />

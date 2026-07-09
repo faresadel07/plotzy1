@@ -176,31 +176,37 @@ export function CourseBanner({ ar }: { ar: boolean }) {
   );
 }
 
-// "Write anywhere" showcase — the same iPad + laptop image the desktop
-// landing uses, framed for the phone. Purely visual (no CTA); it sits
-// near the bottom of the mobile home as a closing beat.
+// "Write anywhere" closing beat — Faris's hand-drawn iPad + MacBook +
+// iPhone sketch (keyed to transparent ink) sitting directly on the
+// paper, with the story around it. No CTA; the drawing is the point.
 export function DevicesBanner({ ar }: { ar: boolean }) {
   return (
-    <div style={{ background: "#292115", padding: "34px 16px 26px", marginBottom: 8 }}>
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 23, fontWeight: 800, letterSpacing: "-0.02em", color: "#f7f2e4", lineHeight: 1.2, marginBottom: 8 }}>
-          {ar ? "اكتب من أي مكان. قصّتك معك دائماً." : "Write anywhere. Your story comes with you."}
-        </div>
-        <div style={{ fontSize: 13.5, color: "rgba(244,239,226,0.62)", lineHeight: 1.5, maxWidth: 340, margin: "0 auto" }}>
-          {ar
-            ? "على مكتبك أو على جهازك اللوحي، بلوتزي يتبعك. مزامنة سحابيّة وحفظ لحظي."
-            : "At your desk or on your iPad, Plotzy follows you. Cloud sync and instant saving."}
-        </div>
+    <div dir={ar ? "rtl" : "ltr"} style={{ padding: "30px 16px 34px", marginBottom: 8, textAlign: "center" }}>
+      <div style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 25 : 27, fontWeight: 700, letterSpacing: ar ? 0 : "-0.01em", color: "#2f2618", lineHeight: ar ? 1.45 : 1.25, marginBottom: 8 }}>
+        {ar ? "اكتب من أي مكان. قصّتك معك دائماً." : "Write anywhere. Your story comes with you."}
       </div>
-      {/* The shot has a black background, so it gets its own rounded
-          dark card inside the espresso section instead of pretending to
-          be full-bleed. */}
+      <div style={{ fontSize: 13.5, color: "#7b7366", lineHeight: 1.55, maxWidth: 340, margin: "0 auto 4px" }}>
+        {ar
+          ? "على مكتبك، على جهازك اللوحي، أو على تلفونك، بلوتزي يتبعك. تفتح نفس الفصل وتلاقي المؤشر واقف مكان ما تركته."
+          : "At your desk, on your iPad, or on your phone, Plotzy follows you. Open the same chapter and the cursor is waiting where you left it."}
+      </div>
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14.5 : 18, color: "#8a8070", marginBottom: 6, transform: "rotate(-1deg)", display: "inline-block" }}>
+        {ar ? "(نفس الصفحة، على كل جهاز)" : "(the same page, on every device)"}
+      </div>
       <img
-        src="/images/devices-showcase-dark.jpg"
-        alt={ar ? "بلوتزي على الآيباد والحاسوب" : "Plotzy on iPad and laptop"}
+        src="/images/devices-sketch.png"
+        alt={ar ? "بلوتزي على الآيباد واللابتوب والتلفون" : "Plotzy on iPad, laptop and phone"}
         loading="lazy"
-        style={{ width: "100%", height: "auto", display: "block", borderRadius: 18, border: "1px solid rgba(244,239,226,0.12)" }}
+        draggable={false}
+        style={{ width: "100%", maxWidth: 420, height: "auto", display: "block", margin: "0 auto", pointerEvents: "none", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
       />
+      <div style={{ fontSize: 12, color: "#8a8070", display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", marginTop: 6 }}>
+        <span>{ar ? "مزامنة لحظية" : "Instant sync"}</span>
+        <span aria-hidden>·</span>
+        <span>{ar ? "حفظ تلقائي" : "Autosave"}</span>
+        <span aria-hidden>·</span>
+        <span>{ar ? "بالعربي والإنجليزي" : "Arabic and English"}</span>
+      </div>
     </div>
   );
 }
@@ -309,6 +315,7 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
             cursor: "pointer",
             fontFamily: SF,
             display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+            WebkitTapHighlightColor: "transparent",
             // An odd count leaves the last sketch alone: let it sit
             // centered across both columns instead of half-empty.
             gridColumn: items.length % 2 === 1 && i === items.length - 1 ? "1 / -1" : undefined,
@@ -319,7 +326,8 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
             alt=""
             aria-hidden
             loading="lazy"
-            style={{ width: 116, height: "auto", mixBlendMode: "multiply", opacity: 0.9, display: "block", marginBottom: 4 }}
+            draggable={false}
+            style={{ width: 116, height: "auto", opacity: 0.92, display: "block", marginBottom: 4, pointerEvents: "none", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
           />
           <span style={{ display: "block", fontSize: 14.5, fontWeight: 800, color: "#2f2618", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
             {title}

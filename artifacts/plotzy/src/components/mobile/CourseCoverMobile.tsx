@@ -83,6 +83,7 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
         style={{
           display: "block", width: "100%", background: "transparent",
           border: "none", padding: 0, cursor: "pointer", textAlign: "center",
+          WebkitTapHighlightColor: "transparent",
         }}
       >
 
@@ -94,7 +95,8 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
           alt=""
           aria-hidden
           loading="lazy"
-          style={{ width: 230, height: "auto", mixBlendMode: "multiply", opacity: 0.92, display: "block", margin: "0 auto 10px" }}
+          draggable={false}
+          style={{ width: 230, height: "auto", opacity: 0.92, display: "block", margin: "0 auto 10px", pointerEvents: "none", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
         />
         <div dir={ar ? "rtl" : "ltr"} style={{ textAlign: "center", maxWidth: 320, margin: "0 auto" }}>
           <p style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 800, letterSpacing: "-0.01em", color: "#2f2618", fontFamily: SF }}>
