@@ -131,8 +131,8 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           dark
           kicker="Audio Library"
           kickerAr="المكتبة الصوتية"
-          title="19,000 audiobooks, free"
-          titleAr="19 ألف كتاب مسموع، ببلاش"
+          title="19,000 audiobooks, one library"
+          titleAr="19 ألف كتاب مسموع، بمكتبة وحدة"
           sub="Novels and classics read aloud by real voices from LibriVox. Listen while you walk, drive, or close your eyes."
           subAr="روايات وكلاسيكيات مقروءة بأصوات حقيقية من LibriVox. اسمع وأنت ماشي، سايق، أو مغمّض عينيك."
           cta="Open the audio library"
@@ -149,13 +149,13 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           kickerAr="كلاسيكيات إنجليزية"
           title="Every classic you postponed"
           titleAr="كل كلاسيكية أجّلت قراءتها"
-          sub="Pride and Prejudice, Frankenstein, Dracula and more. Complete, free, and in a reader that is easy on the eyes."
-          subAr="كبرياء وهوى، فرانكنشتاين، دراكولا وغيرها. كاملة ومجانية وبقارئ مريح للعين."
+          sub="Pride and Prejudice, Frankenstein, Dracula and more. Complete, and in a reader that is easy on the eyes."
+          subAr="كبرياء وهوى، فرانكنشتاين، دراكولا وغيرها. كاملة وبقارئ مريح للعين."
           cta="Browse the classics"
           ctaAr="تصفح الكلاسيكيات"
           href="/discover"
-          note="(all of it free)"
-          noteAr="(كلها ببلاش)"
+          note="(pick one and sink in)"
+          noteAr="(اختار وحدة وغطس فيها)"
           covers={[ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[1].cover, ENGLISH_BOOKS[3].cover]}
         />
 

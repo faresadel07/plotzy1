@@ -54,35 +54,6 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           : "A full writing studio with an AI partner, a cover designer, and complete libraries. All in one place."}
       </p>
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 8 }}>
-        <button
-          onClick={onStartWriting}
-          style={{
-            background: ESPRESSO, color: PAPER_ON_DARK, border: "none", borderRadius: 999,
-            padding: "13px 26px", fontSize: 14.5, fontWeight: 700, fontFamily: SF, cursor: "pointer",
-            boxShadow: "0 10px 24px -8px rgba(41,33,21,0.5)",
-          }}
-        >
-          {ar ? "ابدأ الكتابة" : "Start writing"}
-        </button>
-        <button
-          onClick={onOpenCourse}
-          style={{
-            background: "#fffdf7", color: INK_SOFT, border: `1px solid rgba(66,53,33,0.22)`, borderRadius: 999,
-            padding: "13px 22px", fontSize: 14.5, fontWeight: 600, fontFamily: SF, cursor: "pointer",
-            boxShadow: "0 1px 2px rgba(66,53,33,0.06)",
-          }}
-        >
-          {ar ? "الكورس المجاني" : "Free course"}
-        </button>
-      </div>
-
-      {/* Handwritten aside */}
-      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14 : 17, color: "#8a8070", marginBottom: 10, transform: "rotate(-1.2deg)" }}>
-        {ar ? "(مجاني، بدون بطاقة، بدون حدود)" : "(free, no card, no limits)"}
-      </div>
-
       {/* ── The papers stack: a messy desk of tilted drafts, with the
           synopsis card sitting perfectly straight on top of the chaos ── */}
       <div style={{ position: "relative", height: 440, margin: "0 -6px" }}>
@@ -115,8 +86,8 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           style={{ top: 78, insetInlineEnd: -20, width: "82%", height: 150, transform: "rotate(5.5deg)", zIndex: 2 }}
         >
           {ar
-            ? "19 ألف كتاب مسموع من LibriVox، كلاسيكيات إنجليزية كاملة، 1300 كوميكس من العصر الذهبي، ومكتبة هنداوي العربية بأكملها. كلها للقراءة والسماع مجاناً."
-            : "19,000 audiobooks from LibriVox, complete English classics, 1,300 golden age comics, and the full Hindawi Arabic library. All free to read and hear."}
+            ? "19 ألف كتاب مسموع من LibriVox، كلاسيكيات إنجليزية كاملة، 1300 كوميكس من العصر الذهبي، ومكتبة هنداوي العربية بأكملها. كلها جوّا بلوتزي."
+            : "19,000 audiobooks from LibriVox, complete English classics, 1,300 golden age comics, and the full Hindawi Arabic library. All inside Plotzy."}
         </StackCard>
 
         {/* Course card, tilted the other way */}
@@ -133,24 +104,32 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           {ar ? "فصل 7: الباب الذي لم يفتحه أحد منذ عشرين سنة..." : "Chapter 7: the door no one had opened in twenty years..."}
         </StackCard>
 
-        {/* The main synopsis card: the ONLY straight one, facing you */}
+        {/* The main synopsis card: the ONLY straight one, facing you.
+            Five typefaces share the page like a real writer's desk:
+            serif, system, typewriter, handwriting, and old-style serif. */}
         <StackCard
           ar={ar}
           header={ar ? "لمحة" : "Synopsis"}
           style={{ top: 92, insetInlineStart: "5%", width: "90%", transform: "rotate(0deg)", zIndex: 3, padding: "18px 20px", boxShadow: "0 20px 44px -14px rgba(41,33,21,0.45)" }}
         >
-          <p style={{ margin: "0 0 10px" }}>
-            {ar
-              ? "بلوتزي استوديو كتابة كامل: محرر بصفحات كتاب حقيقية، مساعد ذكاء اصطناعي يخطط ويسوّد ويراجع جنبك، مصمم أغلفة يليق بقصتك، ونشر بضغطة واحدة."
-              : "Plotzy is a full writing studio: an editor with real book pages, an AI partner that plots, drafts and reviews beside you, a cover designer worthy of your story, and one-tap publishing."}
+          <p style={{ margin: "0 0 8px", fontFamily: ar ? "'Amiri', serif" : "'Lora', Georgia, serif", fontSize: ar ? 16.5 : 16, fontWeight: 700, color: INK, lineHeight: 1.6 }}>
+            {ar ? "بلوتزي استوديو كتابة كامل:" : "Plotzy is a full writing studio:"}
           </p>
-          <p style={{ margin: "0 0 10px" }}>
+          <p style={{ margin: "0 0 8px", fontWeight: 600, fontSize: 13.5, lineHeight: 1.7 }}>
             {ar
-              ? "بتكتب بالعربي أو بالإنجليزي، من تلفونك أو لابتوبك، وكل كلمة بتضل محفوظة ومتزامنة."
-              : "Write in Arabic or English, from your phone or laptop, with every word saved and in sync."}
+              ? "محرر بصفحات كتاب حقيقية، ومساعد ذكاء اصطناعي يخطط ويسوّد ويراجع جنبك."
+              : "An editor with real book pages, and an AI partner that plots, drafts and reviews beside you."}
           </p>
-          <p style={{ margin: 0, fontWeight: 700, color: INK }}>
-            {ar ? "والأهم: كل هذا مجاني." : "And the part that matters: all of it is free."}
+          <p style={{ margin: "0 0 8px", fontFamily: ar ? "'Noto Naskh Arabic', serif" : "'Courier New', monospace", fontWeight: 600, fontSize: ar ? 14 : 13, lineHeight: 1.7 }}>
+            {ar ? "مصمم أغلفة يليق بقصتك،" : "A cover designer worthy of your story,"}
+          </p>
+          <p style={{ margin: "0 0 10px", fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 16 : 19, color: "#5c5142", lineHeight: 1.5 }}>
+            {ar ? "ونشر بضغطة واحدة." : "and one-tap publishing."}
+          </p>
+          <p style={{ margin: 0, fontFamily: ar ? "'Amiri', serif" : "Georgia, serif", fontStyle: "italic", fontWeight: 600, fontSize: ar ? 15 : 14, color: INK, lineHeight: 1.65 }}>
+            {ar
+              ? "بتكتب بالعربي أو بالإنجليزي، من تلفونك أو لابتوبك، وكل كلمة محفوظة ومتزامنة."
+              : "Write in Arabic or English, from your phone or laptop, every word saved and in sync."}
           </p>
         </StackCard>
 
@@ -160,17 +139,31 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
         <PaperBall size={24} rot={40} style={{ position: "absolute", bottom: 34, insetInlineStart: 40, zIndex: 4 }} />
       </div>
 
-      {/* Quiet stats strip */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: 14, marginBottom: 2 }}>
-        {(ar
-          ? [["19,000+", "كتاب صوتي"], ["32", "درس كتابة مجاني"], ["2", "لغة كتابة"]]
-          : [["19,000+", "audiobooks"], ["32", "free lessons"], ["2", "writing languages"]]
-        ).map(([n, label], i) => (
-          <div key={label} style={{ padding: "0 16px", borderInlineStart: i ? `1px solid ${BORDER_INK}` : "none", textAlign: "center" }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: INK, letterSpacing: "-0.02em" }}>{n}</div>
-            <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>{label}</div>
-          </div>
-        ))}
+      {/* Actions, below the papers as asked */}
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 18, marginBottom: 8 }}>
+        <button
+          onClick={onStartWriting}
+          style={{
+            background: ESPRESSO, color: PAPER_ON_DARK, border: "none", borderRadius: 999,
+            padding: "13px 26px", fontSize: 14.5, fontWeight: 700, fontFamily: SF, cursor: "pointer",
+            boxShadow: "0 10px 24px -8px rgba(41,33,21,0.5)",
+          }}
+        >
+          {ar ? "ابدأ الكتابة" : "Start writing"}
+        </button>
+        <button
+          onClick={onOpenCourse}
+          style={{
+            background: "#fffdf7", color: INK_SOFT, border: `1px solid rgba(66,53,33,0.22)`, borderRadius: 999,
+            padding: "13px 22px", fontSize: 14.5, fontWeight: 600, fontFamily: SF, cursor: "pointer",
+            boxShadow: "0 1px 2px rgba(66,53,33,0.06)",
+          }}
+        >
+          {ar ? "الكورس المجاني" : "Free course"}
+        </button>
+      </div>
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14 : 17, color: "#8a8070", marginBottom: 4, transform: "rotate(-1.2deg)" }}>
+        {ar ? "(من تلفونك أو لابتوبك، هلأ)" : "(from your phone or laptop, right now)"}
       </div>
     </section>
   );

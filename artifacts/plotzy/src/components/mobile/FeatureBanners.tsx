@@ -222,121 +222,112 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
   const [, navigate] = useLocation();
   const Chevron = ar ? ChevronLeft : ChevronRight;
 
-  type Card = { Icon: typeof Mic; title: string; sub: string; onTap: () => void };
+  type Item = { img: string; title: string; sub: string; onTap: () => void };
 
-  // Two chapters of the writer's journey, browns only, no tints.
-  const whileWriting: Card[] = [
+  // Two chapters of the writer's journey. Each item is one of Faris's
+  // pencil sketches (inverted to ink so it sits on the paper via
+  // multiply blending) with the title in the system face and the line
+  // under it in the handwriting face. No boxes.
+  const whileWriting: Item[] = [
     {
-      Icon: Sparkles,
+      img: "ai-partner",
       title: ar ? "مساعد ذكاء اصطناعي" : "An AI partner",
-      sub: ar ? "يخطط ويسوّد ويراجع جنبك" : "Plots, drafts, and reviews beside you",
+      sub: ar ? "يخطط ويسوّد ويراجع جنبك" : "plots, drafts, and reviews beside you",
       onTap: onStartWriting,
     },
     {
-      Icon: Mic,
+      img: "voice",
       title: ar ? "اكتب بصوتك" : "Write with your voice",
-      sub: ar ? "احكِ وبلوتزي يكتب عنك" : "Talk and Plotzy types for you",
+      sub: ar ? "احكِ وبلوتزي يكتب عنك" : "talk and Plotzy types for you",
       onTap: onStartWriting,
     },
     {
-      Icon: BookOpen,
+      img: "pages",
       title: ar ? "صفحات كتاب حقيقية" : "Real book pages",
       sub: ar ? "4 مقاسات طباعة والصفحات تنقسم لحالها" : "4 trim sizes, pages that split themselves",
       onTap: onStartWriting,
     },
     {
-      Icon: Users,
+      img: "partner",
       title: ar ? "اكتب مع شريك" : "Write with a partner",
-      sub: ar ? "جلسات مباشرة مع محرر أو مؤلف" : "Live sessions with an editor or co-author",
+      sub: ar ? "جلسات مباشرة مع محرر أو مؤلف" : "live sessions with an editor or co-author",
       onTap: () => navigate("/dashboard"),
     },
     {
-      Icon: History,
+      img: "saves",
       title: ar ? "ولا كلمة بتضيع" : "Not a word gets lost",
-      sub: ar ? "حفظ لحظي، إصدارات، ونسخ طوارئ" : "Instant saves, versions, crash drafts",
+      sub: ar ? "حفظ لحظي، إصدارات، ونسخ طوارئ" : "instant saves, versions, crash drafts",
       onTap: onStartWriting,
     },
     {
-      Icon: GraduationCap,
+      img: "course",
       title: ar ? "كورس يعلّمك الصنعة" : "A course that teaches the craft",
       sub: ar ? "32 درساً وشهادة، مجاناً" : "32 lessons and a certificate, free",
       onTap: () => navigate("/course"),
     },
   ];
 
-  const afterWriting: Card[] = [
+  const afterWriting: Item[] = [
     {
-      Icon: Palette,
+      img: "cover",
       title: ar ? "غلاف يليق بقصتك" : "A cover worthy of it",
-      sub: ar ? "قوالب بخطوط عربية ولوحات AI" : "Templates, Arabic type, AI artwork",
+      sub: ar ? "قوالب بخطوط عربية ولوحات AI" : "templates, Arabic type, AI artwork",
       onTap: () => navigate("/dashboard"),
     },
     {
-      Icon: BookUp,
+      img: "publish",
       title: ar ? "انشر بضغطة" : "Publish in one tap",
-      sub: ar ? "للقراء والناشرين، وصدّر PDF وDOCX" : "Readers, publishers, PDF and DOCX export",
+      sub: ar ? "للقراء والناشرين، وصدّر PDF وDOCX" : "readers, publishers, PDF and DOCX",
       onTap: () => navigate("/dashboard"),
     },
     {
-      Icon: Headphones,
+      img: "audiobook",
       title: ar ? "حوّله لكتاب صوتي" : "Make it an audiobook",
-      sub: ar ? "فصولك مسموعة بضغطة" : "Your chapters, narrated",
+      sub: ar ? "فصولك مسموعة بضغطة" : "your chapters, narrated",
       onTap: () => navigate("/dashboard"),
     },
     {
-      Icon: MessageSquare,
+      img: "readers",
       title: ar ? "قرّاء حقيقيون" : "Real readers",
-      sub: ar ? "تقييمات وتعليقات من المجتمع" : "Ratings and comments from the community",
+      sub: ar ? "تقييمات وتعليقات من المجتمع" : "ratings and comments from the community",
       onTap: () => navigate("/library"),
     },
     {
-      Icon: Trophy,
+      img: "inkwell",
       title: ar ? "تقدّمك محسوب" : "Progress that counts",
-      sub: ar ? "كلمات اليوم، سلاسل، وإنجازات" : "Daily words, streaks, achievements",
+      sub: ar ? "كلمات اليوم، سلاسل، وإنجازات" : "daily words, streaks, achievements",
       onTap: () => navigate("/dashboard"),
-    },
-    {
-      Icon: Heart,
-      title: ar ? "كله ببلاش" : "All of it free",
-      sub: ar ? "بدون بطاقة وبدون حدود" : "No card and no limits",
-      onTap: () => navigate("/pricing"),
     },
   ];
 
-  const renderCards = (cards: Card[]) => (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-      {cards.map(({ Icon, title, sub, onTap }, i) => (
+  const renderItems = (items: Item[]) => (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "26px 14px" }}>
+      {items.map(({ img, title, sub, onTap }, i) => (
         <button
           key={i}
           onClick={onTap}
           style={{
-            textAlign: ar ? "right" : "left",
-            background: "#fffdf7",
-            border: "1px solid rgba(66,53,33,0.15)",
-            borderRadius: 16,
-            padding: "15px 14px 14px",
+            textAlign: "center",
+            background: "transparent",
+            border: "none",
+            padding: 0,
             cursor: "pointer",
             fontFamily: SF,
-            boxShadow: "0 6px 16px -8px rgba(41,33,21,0.18)",
-            display: "flex", flexDirection: "column", alignItems: ar ? "flex-end" : "flex-start", gap: 10,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
           }}
         >
-          <span
-            style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: "#292115",
-              display: "grid", placeItems: "center", color: "#f7f2e4",
-            }}
-          >
-            <Icon size={16} />
+          <img
+            src={`/images/sketches/${img}.png`}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            style={{ width: 116, height: "auto", mixBlendMode: "multiply", opacity: 0.9, display: "block", marginBottom: 4 }}
+          />
+          <span style={{ display: "block", fontSize: 14.5, fontWeight: 800, color: "#2f2618", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+            {title}
           </span>
-          <span>
-            <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: "#2f2618", letterSpacing: "-0.01em", lineHeight: 1.3, marginBottom: 3 }}>
-              {title}
-            </span>
-            <span style={{ display: "block", fontSize: 11.5, color: "#7b7366", lineHeight: 1.45 }}>
-              {sub}
-            </span>
+          <span style={{ display: "block", fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 13 : 15.5, color: "#6d6354", lineHeight: 1.5, maxWidth: 170 }}>
+            {sub}
           </span>
         </button>
       ))}
@@ -364,13 +355,13 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
       <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 18, color: "#5c5142", margin: "0 0 8px", textAlign: ar ? "right" : "left" }}>
         {ar ? "وأنت تكتب:" : "while you write:"}
       </div>
-      {renderCards(whileWriting)}
+      {renderItems(whileWriting)}
 
       {/* Chapter two: after the last page */}
       <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 18, color: "#5c5142", margin: "16px 0 8px", textAlign: ar ? "right" : "left" }}>
         {ar ? "وبعد ما تخلص:" : "and after the last page:"}
       </div>
-      {renderCards(afterWriting)}
+      {renderItems(afterWriting)}
 
       {/* Trust footnote — Writer Protection */}
       <button
