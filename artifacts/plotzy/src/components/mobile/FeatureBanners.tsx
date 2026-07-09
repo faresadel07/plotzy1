@@ -8,7 +8,12 @@
 
 import { useLocation } from "wouter";
 import { ClaudeIcon, GPTIcon, GeminiIcon, LlamaIcon } from "@/components/studio/icons";
-import { Heart, ArrowRight, ArrowLeft, GraduationCap, Mic, BookUp, Headphones, Users, ShieldCheck, ChevronRight, ChevronLeft } from "lucide-react";
+import {
+  Heart, ArrowRight, ArrowLeft, GraduationCap, Mic, BookUp, Headphones, Users,
+  ShieldCheck, ChevronRight, ChevronLeft, Sparkles, BookOpen, Palette, History,
+  MessageSquare, Trophy,
+} from "lucide-react";
+import { HAND_EN, HAND_AR, SERIF_EN, SERIF_AR } from "./fonts";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -217,89 +222,155 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
   const [, navigate] = useLocation();
   const Chevron = ar ? ChevronLeft : ChevronRight;
 
-  const cards: Array<{
-    Icon: typeof Mic;
-    tint: string;
-    title: string;
-    sub: string;
-    onTap: () => void;
-  }> = [
+  type Card = { Icon: typeof Mic; title: string; sub: string; onTap: () => void };
+
+  // Two chapters of the writer's journey, browns only, no tints.
+  const whileWriting: Card[] = [
     {
-      Icon: Mic, tint: "#fb7185",
+      Icon: Sparkles,
+      title: ar ? "مساعد ذكاء اصطناعي" : "An AI partner",
+      sub: ar ? "يخطط ويسوّد ويراجع جنبك" : "Plots, drafts, and reviews beside you",
+      onTap: onStartWriting,
+    },
+    {
+      Icon: Mic,
       title: ar ? "اكتب بصوتك" : "Write with your voice",
       sub: ar ? "احكِ وبلوتزي يكتب عنك" : "Talk and Plotzy types for you",
       onTap: onStartWriting,
     },
     {
-      Icon: BookUp, tint: "#5eb3ff",
-      title: ar ? "انشر كتابك" : "Publish it",
-      sub: ar ? "أوصله للقرّاء والناشرين" : "Reach readers and publishers",
+      Icon: BookOpen,
+      title: ar ? "صفحات كتاب حقيقية" : "Real book pages",
+      sub: ar ? "4 مقاسات طباعة والصفحات تنقسم لحالها" : "4 trim sizes, pages that split themselves",
+      onTap: onStartWriting,
+    },
+    {
+      Icon: Users,
+      title: ar ? "اكتب مع شريك" : "Write with a partner",
+      sub: ar ? "جلسات مباشرة مع محرر أو مؤلف" : "Live sessions with an editor or co-author",
       onTap: () => navigate("/dashboard"),
     },
     {
-      Icon: Headphones, tint: "#5fcf8e",
+      Icon: History,
+      title: ar ? "ولا كلمة بتضيع" : "Not a word gets lost",
+      sub: ar ? "حفظ لحظي، إصدارات، ونسخ طوارئ" : "Instant saves, versions, crash drafts",
+      onTap: onStartWriting,
+    },
+    {
+      Icon: GraduationCap,
+      title: ar ? "كورس يعلّمك الصنعة" : "A course that teaches the craft",
+      sub: ar ? "32 درساً وشهادة، مجاناً" : "32 lessons and a certificate, free",
+      onTap: () => navigate("/course"),
+    },
+  ];
+
+  const afterWriting: Card[] = [
+    {
+      Icon: Palette,
+      title: ar ? "غلاف يليق بقصتك" : "A cover worthy of it",
+      sub: ar ? "قوالب بخطوط عربية ولوحات AI" : "Templates, Arabic type, AI artwork",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      Icon: BookUp,
+      title: ar ? "انشر بضغطة" : "Publish in one tap",
+      sub: ar ? "للقراء والناشرين، وصدّر PDF وDOCX" : "Readers, publishers, PDF and DOCX export",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      Icon: Headphones,
       title: ar ? "حوّله لكتاب صوتي" : "Make it an audiobook",
       sub: ar ? "فصولك مسموعة بضغطة" : "Your chapters, narrated",
       onTap: () => navigate("/dashboard"),
     },
     {
-      Icon: Users, tint: "#c4a1ff",
-      title: ar ? "اكتب مع شريك" : "Write with a partner",
-      sub: ar ? "ادعُ محرّراً أو مؤلّفاً معك" : "Invite an editor or co-author",
+      Icon: MessageSquare,
+      title: ar ? "قرّاء حقيقيون" : "Real readers",
+      sub: ar ? "تقييمات وتعليقات من المجتمع" : "Ratings and comments from the community",
+      onTap: () => navigate("/library"),
+    },
+    {
+      Icon: Trophy,
+      title: ar ? "تقدّمك محسوب" : "Progress that counts",
+      sub: ar ? "كلمات اليوم، سلاسل، وإنجازات" : "Daily words, streaks, achievements",
       onTap: () => navigate("/dashboard"),
     },
+    {
+      Icon: Heart,
+      title: ar ? "كله ببلاش" : "All of it free",
+      sub: ar ? "بدون بطاقة وبدون حدود" : "No card and no limits",
+      onTap: () => navigate("/pricing"),
+    },
   ];
+
+  const renderCards = (cards: Card[]) => (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      {cards.map(({ Icon, title, sub, onTap }, i) => (
+        <button
+          key={i}
+          onClick={onTap}
+          style={{
+            textAlign: ar ? "right" : "left",
+            background: "#fffdf7",
+            border: "1px solid rgba(66,53,33,0.15)",
+            borderRadius: 16,
+            padding: "15px 14px 14px",
+            cursor: "pointer",
+            fontFamily: SF,
+            boxShadow: "0 6px 16px -8px rgba(41,33,21,0.18)",
+            display: "flex", flexDirection: "column", alignItems: ar ? "flex-end" : "flex-start", gap: 10,
+          }}
+        >
+          <span
+            style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: "#292115",
+              display: "grid", placeItems: "center", color: "#f7f2e4",
+            }}
+          >
+            <Icon size={16} />
+          </span>
+          <span>
+            <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: "#2f2618", letterSpacing: "-0.01em", lineHeight: 1.3, marginBottom: 3 }}>
+              {title}
+            </span>
+            <span style={{ display: "block", fontSize: 11.5, color: "#7b7366", lineHeight: 1.45 }}>
+              {sub}
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <section dir={ar ? "rtl" : "ltr"} style={{ padding: "0 16px", marginBottom: 26, fontFamily: SF }}>
       {/* Heading */}
-      <div style={{ textAlign: ar ? "right" : "left", marginBottom: 14 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#7b7366", marginBottom: 6 }}>
+      <div style={{ textAlign: "center", marginBottom: 6 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#7b7366", marginBottom: 8 }}>
           {ar ? "أكثر من محرّر" : "More than an editor"}
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "#2f2618" }}>
+        <div style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 26 : 28, fontWeight: 700, lineHeight: ar ? 1.45 : 1.15, color: "#2f2618" }}>
           {ar ? "كل ما يحتاجه كتابك" : "Everything your book needs"}
         </div>
       </div>
-
-      {/* 2x2 feature grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {cards.map(({ Icon, tint, title, sub, onTap }, i) => (
-          <button
-            key={i}
-            onClick={onTap}
-            style={{
-              textAlign: ar ? "right" : "left",
-              background: `radial-gradient(140% 100% at ${ar ? "100%" : "0%"} 0%, ${tint}24, transparent 55%), #292115`,
-              border: "1px solid rgba(66,53,33,0.3)",
-              borderRadius: 18,
-              padding: "16px 14px 15px",
-              cursor: "pointer",
-              fontFamily: SF,
-              boxShadow: "0 12px 26px -12px rgba(41,33,21,0.4)",
-              display: "flex", flexDirection: "column", alignItems: ar ? "flex-end" : "flex-start", gap: 10,
-            }}
-          >
-            <span
-              style={{
-                width: 36, height: 36, borderRadius: 11,
-                background: `${tint}22`, border: `1px solid ${tint}45`,
-                display: "grid", placeItems: "center", color: tint,
-              }}
-            >
-              <Icon size={17} />
-            </span>
-            <span>
-              <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: "#f7f2e4", letterSpacing: "-0.01em", lineHeight: 1.25, marginBottom: 3 }}>
-                {title}
-              </span>
-              <span style={{ display: "block", fontSize: 11.5, color: "rgba(244,239,226,0.58)", lineHeight: 1.4 }}>
-                {sub}
-              </span>
-            </span>
-          </button>
-        ))}
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <span style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14 : 17, color: "#8a8070", display: "inline-block", transform: "rotate(-1.2deg)" }}>
+          {ar ? "(كل شي بمكان واحد، بجد)" : "(everything in one place, really)"}
+        </span>
       </div>
+
+      {/* Chapter one: while you write */}
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 18, color: "#5c5142", margin: "0 0 8px", textAlign: ar ? "right" : "left" }}>
+        {ar ? "وأنت تكتب:" : "while you write:"}
+      </div>
+      {renderCards(whileWriting)}
+
+      {/* Chapter two: after the last page */}
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 18, color: "#5c5142", margin: "16px 0 8px", textAlign: ar ? "right" : "left" }}>
+        {ar ? "وبعد ما تخلص:" : "and after the last page:"}
+      </div>
+      {renderCards(afterWriting)}
 
       {/* Trust footnote — Writer Protection */}
       <button

@@ -17,14 +17,14 @@ import { useToast } from "@/hooks/use-toast";
 
 /* ── Design tokens (monochromatic black/white) ─────────────────────── */
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#000";
-const C1 = "#0a0a0a";
-const C2 = "#111";
-const C3 = "#332a1b";
-const B = "rgba(255,255,255,0.08)";
-const T = "#fff";
-const TS = "rgba(255,255,255,0.55)";
-const TD = "rgba(255,255,255,0.25)";
+const BG = "#f4efe2";
+const C1 = "#fffdf7";
+const C2 = "#faf5ea";
+const C3 = "#ece5d2";
+const B = "rgba(66,53,33,0.15)";
+const T = "#2f2618";
+const TS = "rgba(66,53,33,0.62)";
+const TD = "rgba(66,53,33,0.4)";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface AuthorBook {
@@ -354,7 +354,7 @@ function EditProfileModal({
             {ar ? "إلغاء" : "Cancel"}
           </button>
           <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
-            style={{ padding: "9px 24px", borderRadius: 10, background: "#fff", border: "none", fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#000", cursor: "pointer", opacity: saveMutation.isPending ? 0.5 : 1 }}>
+            style={{ padding: "9px 24px", borderRadius: 10, background: "#292115", border: "none", fontFamily: SF, fontSize: 13, fontWeight: 600, color: "#f7f2e4", cursor: "pointer", opacity: saveMutation.isPending ? 0.5 : 1 }}>
             {saveMutation.isPending
               ? (ar ? "جارٍ الحفظ..." : "Saving...")
               : (ar ? "حفظ التغييرات" : "Save Changes")}
@@ -571,7 +571,7 @@ export default function AuthorProfile() {
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(20,16,10,0.8) 0%, transparent 60%)" }} />
           {/* Back button on banner */}
           <button onClick={() => navigate("/")}
-            style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "6px 14px", borderRadius: 8, fontWeight: 500 }}>
+            style={{ position: "absolute", top: 16, left: 16, display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(66,53,33,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "6px 14px", borderRadius: 8, fontWeight: 500 }}>
             <ArrowLeft size={13} /> {ar ? "الرئيسية" : "Home"}
           </button>
           {/* Banner action cluster — all primary profile actions live up
@@ -581,7 +581,7 @@ export default function AuthorProfile() {
           <div style={{ position: "absolute", bottom: 16, right: 16, display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", maxWidth: "calc(100% - 32px)" }}>
             <button
               onClick={handleShareProfile}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(66,53,33,0.16)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}
               title={ar ? "مشاركة الملف" : "Share profile"}
             >
               <Share2 size={13} /> {ar ? "مشاركة" : "Share"}
@@ -589,11 +589,11 @@ export default function AuthorProfile() {
             {isOwnProfile && (
               <>
                 <button onClick={() => setEditOpen(true)}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#000", padding: "7px 14px", borderRadius: 8, fontWeight: 700 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "#292115", border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#f7f2e4", padding: "7px 14px", borderRadius: 8, fontWeight: 700 }}>
                   <Edit3 size={13} /> {ar ? "تعديل الملف" : "Edit Profile"}
                 </button>
                 <button onClick={() => setEditOpen(true)}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}>
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(66,53,33,0.16)", cursor: "pointer", fontFamily: SF, fontSize: 12, color: "#fff", padding: "7px 14px", borderRadius: 8, fontWeight: 600 }}>
                   <Camera size={13} /> {profile.bannerUrl
                     ? (ar ? "تغيير الغلاف" : "Change Cover")
                     : (ar ? "إضافة غلاف" : "Add Cover")}
@@ -685,10 +685,10 @@ export default function AuthorProfile() {
                       fontSize: 13, color: TS, lineHeight: 1.6, margin: "0 0 14px",
                       cursor: "pointer", fontStyle: "italic",
                       padding: "8px 14px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.04)",
+                      background: "rgba(66,53,33,0.04)",
                       border: `1px dashed ${B}`,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(66,53,33,0.25)"; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
                   >
                     <Edit3 size={13} />
@@ -769,7 +769,7 @@ export default function AuthorProfile() {
                             background: "transparent", color: TS,
                             border: `1px solid ${B}`, transition: "all 0.15s",
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = T; }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(66,53,33,0.26)"; e.currentTarget.style.color = T; }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.color = TS; }}
                         >
                           <MessageCircle size={13} /> {ar ? "رسالة" : "Message"}
@@ -804,7 +804,7 @@ export default function AuthorProfile() {
                     background: "transparent", border: `1px solid ${B}`,
                     fontFamily: SF, fontSize: 11, fontWeight: 500, color: TS,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(66,53,33,0.26)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = B; }}
                 >
                   {bookSort === "newest" ? (ar ? "الأحدث" : "Newest")
@@ -830,7 +830,7 @@ export default function AuthorProfile() {
                           style={{
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             width: "100%", padding: "8px 12px", borderRadius: 6,
-                            background: bookSort === key ? "rgba(255,255,255,0.06)" : "transparent",
+                            background: bookSort === key ? "rgba(66,53,33,0.06)" : "transparent",
                             border: "none", cursor: "pointer", fontFamily: SF, fontSize: 12,
                             color: bookSort === key ? T : TS, textAlign: ar ? "right" : "left",
                           }}
@@ -868,7 +868,7 @@ export default function AuthorProfile() {
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 7,
                       padding: "9px 20px", borderRadius: 20, cursor: "pointer",
-                      background: "#fff", color: "#000", border: "none",
+                      background: "#292115", color: "#f7f2e4", border: "none",
                       fontFamily: SF, fontSize: 13, fontWeight: 600,
                     }}
                   >

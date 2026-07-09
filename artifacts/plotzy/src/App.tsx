@@ -421,7 +421,9 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="dark" attribute="class">
+          {/* Light (warm paper) is the site's face now; dark espresso
+              stays available for anyone who explicitly picked it. */}
+          <ThemeProvider defaultTheme="light" attribute="class">
             <LanguageProvider>
               <AuthProvider>
                 <TooltipProvider>

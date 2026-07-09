@@ -159,6 +159,12 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           covers={[ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[1].cover, ENGLISH_BOOKS[3].cover]}
         />
 
+        {/* stray drafts between the shelves */}
+        <div style={{ position: "relative", height: 0, zIndex: 3 }}>
+          <PaperBall size={42} rot={18} style={{ position: "absolute", top: -18, insetInlineEnd: 20 }} />
+          <PaperBall size={26} rot={-30} style={{ position: "absolute", top: -8, insetInlineStart: 30 }} />
+        </div>
+
         {COMICS.length > 2 && (
           <LibraryShowcase
             ar={ar}

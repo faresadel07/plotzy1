@@ -9,19 +9,19 @@ import { SEO } from "@/components/SEO";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import {
   BookOpen, Bell, Mail, PenTool, Send, Library, Plus, Users,
-  FileText, Loader2, Clock,
+  FileText, Loader2, Clock, Settings as SettingsIcon, User as UserIcon,
 } from "lucide-react";
 import type { Book } from "@/shared/schema";
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#000";
-const C1 = "#0a0a0a";
-const C2 = "#111";
-const B = "rgba(255,255,255,0.07)";
-const T = "#fff";
-const TS = "rgba(255,255,255,0.55)";
-const TD = "rgba(255,255,255,0.25)";
+const BG = "#f4efe2";
+const C1 = "#fffdf7";
+const C2 = "#faf5ea";
+const B = "rgba(66,53,33,0.15)";
+const T = "#2f2618";
+const TS = "rgba(66,53,33,0.62)";
+const TD = "rgba(66,53,33,0.4)";
 
 /* ── Helpers ───────────────────────────────────────────────── */
 function formatDate(d: string | Date | null | undefined): string {
@@ -152,7 +152,7 @@ export default function DashboardDemo() {
                 fontWeight: 700,
                 letterSpacing: "0.06em",
                 textTransform: "uppercase",
-                background: subLabel === "Free" ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg, #f59e0b, #f97316)",
+                background: subLabel === "Free" ? "rgba(66,53,33,0.08)" : "linear-gradient(135deg, #6b5637, #443624)",
                 color: subLabel === "Free" ? TS : "#fff",
                 borderRadius: 6,
                 padding: "3px 8px",
@@ -162,6 +162,37 @@ export default function DashboardDemo() {
               </span>
             </div>
             <p style={{ fontSize: 14, color: TS, marginTop: 4 }}>{today}</p>
+
+            {/* Account shortcuts: settings + public profile, right under
+                the account info as Faris asked. */}
+            <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+              <Link
+                href="/account/settings"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  background: C1, border: `1px solid ${B}`, borderRadius: 10,
+                  padding: "9px 15px", fontSize: 13, fontWeight: 600, color: T,
+                  textDecoration: "none",
+                }}
+              >
+                <SettingsIcon style={{ width: 15, height: 15, color: TS }} />
+                {ar ? "الإعدادات" : "Settings"}
+              </Link>
+              {user?.id && (
+                <Link
+                  href={`/authors/${user.id}`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 7,
+                    background: C1, border: `1px solid ${B}`, borderRadius: 10,
+                    padding: "9px 15px", fontSize: 13, fontWeight: 600, color: T,
+                    textDecoration: "none",
+                  }}
+                >
+                  <UserIcon style={{ width: 15, height: 15, color: TS }} />
+                  {ar ? "ملفي الشخصي" : "My profile"}
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* ── Quick Stats Row ─────────────────────────────── */}
@@ -175,26 +206,26 @@ export default function DashboardDemo() {
               icon={<BookOpen style={{ width: 18, height: 18 }} />}
               label="Total Books"
               value={booksLoading ? "..." : formatNumber(totalBooks)}
-              color="#8b5cf6"
+              color="#5a4a33"
             />
             <StatCard
               icon={<FileText style={{ width: 18, height: 18 }} />}
               label="Total Words Written"
               value={booksLoading ? "..." : formatNumber(totalWords)}
-              color="#3b82f6"
+              color="#7b5e3b"
             />
             <StatCard
               icon={<Bell style={{ width: 18, height: 18 }} />}
               label="Unread Notifications"
               value={formatNumber(unreadNotifs)}
-              color="#f59e0b"
+              color="#8a6a3a"
               highlight={unreadNotifs > 0}
             />
             <StatCard
               icon={<Mail style={{ width: 18, height: 18 }} />}
               label="Unread Messages"
               value={formatNumber(unreadMsgs)}
-              color="#10b981"
+              color="#4a5d3a"
               highlight={unreadMsgs > 0}
             />
           </div>
@@ -243,7 +274,7 @@ export default function DashboardDemo() {
                     transition: "border-color 0.2s, background 0.2s",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                    e.currentTarget.style.borderColor = "rgba(66,53,33,0.28)";
                     e.currentTarget.style.background = C2;
                   }}
                   onMouseLeave={e => {
@@ -255,7 +286,7 @@ export default function DashboardDemo() {
                     width: 48,
                     height: 48,
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.06)",
+                    background: "rgba(66,53,33,0.06)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -283,10 +314,10 @@ export default function DashboardDemo() {
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                     minHeight: isPhone ? 188 : 240, cursor: "pointer", transition: "border-color 0.2s, background 0.2s",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.background = C2; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(66,53,33,0.28)"; e.currentTarget.style.background = C2; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = C1; }}
                 >
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(66,53,33,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
                     <Users style={{ width: 22, height: 22, color: TS }} />
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 600, color: TS }}>Join a Book</span>
@@ -402,7 +433,7 @@ function BookCard({ book }: { book: Book }) {
           transition: "border-color 0.2s, transform 0.15s",
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+          e.currentTarget.style.borderColor = "rgba(66,53,33,0.22)";
           e.currentTarget.style.transform = "translateY(-2px)";
         }}
         onMouseLeave={e => {
@@ -416,13 +447,13 @@ function BookCard({ book }: { book: Book }) {
           height: 160,
           background: book.coverImage
             ? `url(${book.coverImage}) center/cover no-repeat`
-            : `linear-gradient(135deg, ${book.spineColor || "#333"}, #111)`,
+            : `linear-gradient(135deg, ${book.spineColor || "#5a4a33"}, #332a1b)`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}>
           {!book.coverImage && (
-            <BookOpen style={{ width: 32, height: 32, color: "rgba(255,255,255,0.2)" }} />
+            <BookOpen style={{ width: 32, height: 32, color: "rgba(244,239,226,0.45)" }} />
           )}
         </div>
 
@@ -474,7 +505,7 @@ function ActionButton({ icon, label, onClick }: {
       }}
       onMouseEnter={e => {
         e.currentTarget.style.background = "#332a1b";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+        e.currentTarget.style.borderColor = "rgba(66,53,33,0.22)";
       }}
       onMouseLeave={e => {
         e.currentTarget.style.background = C2;

@@ -152,20 +152,6 @@ export default function Pricing() {
     };
   }, []);
 
-  // Force every layer under this page to pure black for as long as
-  // the page is mounted. The page itself paints #221b11 inside its
-  // wrapper, but the Layout component renders `bg-background` (which
-  // resolves to #221b11 in dark mode) above the body, and that
-  // shows through as a slightly lighter band wherever this page's
-  // wrapper does not paint. Adding a body class lets us reach the
-  // Layout chain via a CSS override scoped to this page only.
-  useEffect(() => {
-    document.body.classList.add("plotzy-page-pure-black");
-    return () => {
-      document.body.classList.remove("plotzy-page-pure-black");
-    };
-  }, []);
-
   // PayPal cancel flow used to redirect back to /pricing with
   // ?donation=cancelled. The SDK button flow stays on-page, but
   // older redirect-flow links may still hit us. Keep the toast.
@@ -190,8 +176,8 @@ export default function Pricing() {
         dir={isRTL ? "rtl" : "ltr"}
         style={{
           minHeight: "100vh",
-          background: "#221b11",
-          color: "#f7f2e4",
+          color: "#2f2618",
+          
           fontFamily: SF,
           padding: "28px 24px 120px",
         }}
@@ -201,12 +187,13 @@ export default function Pricing() {
           <section
             aria-labelledby="donate-heading"
             style={{
-              border: "1px solid rgba(244,239,226,0.12)",
+              border: "1px solid rgba(66,53,33,0.3)",
               borderRadius: 18,
               padding: "36px clamp(20px, 4vw, 44px) 32px",
               // Match the page background exactly so the card frame is
               // the only visual seam between the card and the page.
               background: "#221b11",
+              boxShadow: "0 18px 40px -18px rgba(41,33,21,0.45)",
             }}
           >
             <h1
@@ -457,7 +444,7 @@ export default function Pricing() {
                 letterSpacing: "-0.02em",
                 margin: 0,
                 marginBottom: 12,
-                color: "#f7f2e4",
+                color: "#2f2618",
               }}
             >
               {t.introHeading}
@@ -467,7 +454,7 @@ export default function Pricing() {
                 margin: 0,
                 fontSize: 16.5,
                 lineHeight: 1.7,
-                color: "rgba(244,239,226,0.72)",
+                color: "rgba(66,53,33,0.72)",
               }}
             >
               {t.introBody}
@@ -487,7 +474,7 @@ export default function Pricing() {
                 fontSize: 14,
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
-                color: "rgba(244,239,226,0.55)",
+                color: "rgba(66,53,33,0.55)",
                 fontWeight: 600,
                 margin: 0,
                 marginBottom: 18,
@@ -501,7 +488,7 @@ export default function Pricing() {
                   key={item.title}
                   style={{
                     padding: "16px 0",
-                    borderTop: "1px solid rgba(244,239,226,0.10)",
+                    borderTop: "1px solid rgba(66,53,33,0.10)",
                   }}
                 >
                   <div
@@ -510,7 +497,7 @@ export default function Pricing() {
                       fontWeight: 600,
                       letterSpacing: "-0.01em",
                       marginBottom: 4,
-                      color: "#f7f2e4",
+                      color: "#2f2618",
                     }}
                   >
                     {item.title}
@@ -519,14 +506,14 @@ export default function Pricing() {
                     style={{
                       fontSize: 14.5,
                       lineHeight: 1.65,
-                      color: "rgba(244,239,226,0.68)",
+                      color: "rgba(66,53,33,0.68)",
                     }}
                   >
                     {item.body}
                   </div>
                 </li>
               ))}
-              <li style={{ borderTop: "1px solid rgba(244,239,226,0.10)" }} />
+              <li style={{ borderTop: "1px solid rgba(66,53,33,0.10)" }} />
             </ul>
           </section>
 
@@ -584,7 +571,7 @@ export default function Pricing() {
                 letterSpacing: "-0.02em",
                 margin: 0,
                 marginBottom: 12,
-                color: "#f7f2e4",
+                color: "#2f2618",
               }}
             >
               {t.closingHeading}
@@ -594,7 +581,7 @@ export default function Pricing() {
                 margin: 0,
                 fontSize: 15,
                 lineHeight: 1.7,
-                color: "rgba(244,239,226,0.65)",
+                color: "rgba(66,53,33,0.65)",
               }}
             >
               {t.closingBody}

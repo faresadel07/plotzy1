@@ -83,8 +83,9 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
         {ar ? "(مجاني، بدون بطاقة، بدون حدود)" : "(free, no card, no limits)"}
       </div>
 
-      {/* ── The papers stack ── */}
-      <div style={{ position: "relative", height: 392, margin: "0 -6px" }}>
+      {/* ── The papers stack: a messy desk of tilted drafts, with the
+          synopsis card sitting perfectly straight on top of the chaos ── */}
+      <div style={{ position: "relative", height: 440, margin: "0 -6px" }}>
         {/* Hand-drawn ink dashes around the pile */}
         <svg aria-hidden width="42" height="26" viewBox="0 0 42 26" style={{ position: "absolute", top: 2, insetInlineStart: 2, opacity: 0.5 }}>
           <path d="M2 20 Q 12 4 26 8" fill="none" stroke="#5c5142" strokeWidth="2.4" strokeLinecap="round" />
@@ -94,40 +95,49 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           <path d="M2 16 Q 12 2 24 8" fill="none" stroke="#5c5142" strokeWidth="2.4" strokeLinecap="round" />
         </svg>
 
-        {/* Back sliver, top end */}
-        <StackCard ar={ar} style={{ top: 4, insetInlineEnd: -26, width: "62%", height: 96, transform: "rotate(5deg)", zIndex: 1, opacity: 0.9 }}>
+        {/* Deep scraps: manuscript fragments, badly stacked on purpose */}
+        <StackCard ar={ar} style={{ top: 0, insetInlineStart: -30, width: "58%", height: 84, transform: "rotate(-9deg)", zIndex: 1, opacity: 0.85 }}>
+          {ar ? "مسودة أولى: في الصباح الذي بدأ فيه كل شيء..." : "First draft: on the morning it all began..."}
+        </StackCard>
+        <StackCard ar={ar} style={{ top: 6, insetInlineEnd: -34, width: "60%", height: 92, transform: "rotate(8deg)", zIndex: 1, opacity: 0.9 }}>
           {ar
             ? "قصص من المجتمع، تقييمات حقيقية، وقرّاء بينتظروا كتابك الجاي..."
             : "Community stories, real ratings, and readers waiting for your next book..."}
         </StackCard>
+        <StackCard ar={ar} style={{ top: 96, insetInlineStart: -14, width: "52%", height: 88, transform: "rotate(6deg)", zIndex: 1, opacity: 0.85 }}>
+          {ar ? "ملاحظة: البطل ما بيعرف إنه البيت مسكون بذكرياته هو..." : "Note: the hero does not know the house is haunted by his own memories..."}
+        </StackCard>
 
-        {/* Libraries card, behind on the end side */}
+        {/* Libraries card, messier angle */}
         <StackCard
           ar={ar}
           header={ar ? "المكتبات" : "The Libraries"}
-          style={{ top: 64, insetInlineEnd: -14, width: "80%", height: 150, transform: "rotate(3.4deg)", zIndex: 2 }}
+          style={{ top: 78, insetInlineEnd: -20, width: "82%", height: 150, transform: "rotate(5.5deg)", zIndex: 2 }}
         >
           {ar
             ? "19 ألف كتاب مسموع من LibriVox، كلاسيكيات إنجليزية كاملة، 1300 كوميكس من العصر الذهبي، ومكتبة هنداوي العربية بأكملها. كلها للقراءة والسماع مجاناً."
             : "19,000 audiobooks from LibriVox, complete English classics, 1,300 golden age comics, and the full Hindawi Arabic library. All free to read and hear."}
         </StackCard>
 
-        {/* Course card, behind on the start side */}
+        {/* Course card, tilted the other way */}
         <StackCard
           ar={ar}
           header={ar ? "الكورس" : "The Course"}
-          style={{ bottom: 6, insetInlineStart: -18, width: "78%", height: 132, transform: "rotate(-3.6deg)", zIndex: 2 }}
+          style={{ bottom: 26, insetInlineStart: -22, width: "78%", height: 132, transform: "rotate(-6.5deg)", zIndex: 2 }}
         >
           {ar
             ? "32 درساً في صنعة الكتابة، من الفكرة الأولى حتى النشر، بتمارين حقيقية وشهادة إتمام. مجاني ولن يصبح مدفوعاً."
             : "32 lessons on the craft, from first idea to publishing, with real exercises and a certificate. Free, and it stays free."}
         </StackCard>
+        <StackCard ar={ar} style={{ bottom: 0, insetInlineEnd: -26, width: "56%", height: 80, transform: "rotate(-7deg)", zIndex: 1, opacity: 0.85 }}>
+          {ar ? "فصل 7: الباب الذي لم يفتحه أحد منذ عشرين سنة..." : "Chapter 7: the door no one had opened in twenty years..."}
+        </StackCard>
 
-        {/* The main synopsis card, front */}
+        {/* The main synopsis card: the ONLY straight one, facing you */}
         <StackCard
           ar={ar}
           header={ar ? "لمحة" : "Synopsis"}
-          style={{ top: 78, insetInlineStart: "4%", width: "88%", transform: "rotate(-1.6deg)", zIndex: 3, padding: "18px 20px" }}
+          style={{ top: 92, insetInlineStart: "5%", width: "90%", transform: "rotate(0deg)", zIndex: 3, padding: "18px 20px", boxShadow: "0 20px 44px -14px rgba(41,33,21,0.45)" }}
         >
           <p style={{ margin: "0 0 10px" }}>
             {ar
@@ -144,8 +154,10 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           </p>
         </StackCard>
 
-        {/* The crumpled ball resting against the pile */}
+        {/* Crumpled balls resting against the pile */}
         <PaperBall size={62} rot={12} style={{ position: "absolute", bottom: -6, insetInlineEnd: 8, zIndex: 4 }} />
+        <PaperBall size={34} rot={-25} style={{ position: "absolute", top: 66, insetInlineStart: 4, zIndex: 4 }} />
+        <PaperBall size={24} rot={40} style={{ position: "absolute", bottom: 34, insetInlineStart: 40, zIndex: 4 }} />
       </div>
 
       {/* Quiet stats strip */}
