@@ -7,6 +7,7 @@
 
 import { TESTIMONIALS } from "./testimonials-data";
 import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR } from "@/components/mobile/fonts";
+import { Mark } from "@/components/mobile/Marker";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 const INK = "#2f2618";
@@ -24,7 +25,9 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
           {ar ? "لا تاخذ الكلام مننا" : "Don't take our word for it"}
         </div>
         <h2 style={{ fontFamily: serif, fontSize: ar ? 30 : 34, fontWeight: 700, lineHeight: ar ? 1.45 : 1.15, color: INK, margin: "0 0 12px" }}>
-          {ar ? "قاعة مشاهير الفيدباك" : "Feedback hall of fame"}
+          {ar
+            ? <>قاعة <Mark ar={ar}>مشاهير</Mark> الفيدباك</>
+            : <>Feedback <Mark ar={ar}>hall of fame</Mark></>}
         </h2>
         <p style={{ fontFamily: serif, fontSize: ar ? 15 : 17, lineHeight: 1.6, color: MUTED, maxWidth: 320, margin: "0 auto" }}>
           {ar ? "شوية حكي حلو قاله ناس بيستخدموا بلوتزي فعلاً" : "These are some nice things people who use Plotzy have said"}

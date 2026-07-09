@@ -6,6 +6,7 @@
 import { INK, INK_SOFT, MUTED, ESPRESSO, PAPER_ON_DARK, BORDER_INK } from "./palette";
 import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR } from "./fonts";
 import { PaperBall } from "./PaperBall";
+import { Mark } from "./Marker";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -46,17 +47,19 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
     <section dir={ar ? "rtl" : "ltr"} style={{ fontFamily: SF, padding: "20px 18px 4px", textAlign: "center" }}>
       {/* Headline + support */}
       <h1 style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 34 : 38, fontWeight: 700, letterSpacing: ar ? 0 : "-0.015em", lineHeight: ar ? 1.4 : 1.12, color: INK, margin: "0 0 8px" }}>
-        {ar ? "اكتب كتابك الأول" : "Write your first book"}
+        {ar
+          ? <>اكتب <Mark ar={ar} delay={350}>كتابك الأول</Mark></>
+          : <>Write your <Mark ar={ar} delay={350}>first book</Mark></>}
       </h1>
       <p style={{ fontSize: 14.5, lineHeight: 1.55, color: MUTED, maxWidth: 320, margin: "0 auto 16px" }}>
         {ar
-          ? "استوديو كتابة كامل مع مساعد ذكاء اصطناعي، مصمم أغلفة، ومكتبات كاملة. كل شيء في مكان واحد."
-          : "A full writing studio with an AI partner, a cover designer, and complete libraries. All in one place."}
+          ? <>استوديو كتابة كامل مع مساعد ذكاء اصطناعي، مصمم أغلفة، ومكتبات كاملة. <Mark ar={ar} delay={900}>كل شيء في مكان واحد.</Mark></>
+          : <>A full writing studio with an AI partner, a cover designer, and complete libraries. <Mark ar={ar} delay={900}>All in one place.</Mark></>}
       </p>
 
       {/* ── The papers stack: a messy desk of tilted drafts, with the
           synopsis card sitting perfectly straight on top of the chaos ── */}
-      <div style={{ position: "relative", height: 440, margin: "0 -6px" }}>
+      <div style={{ position: "relative", height: 470, margin: "0 -6px" }}>
         {/* Hand-drawn ink dashes around the pile */}
         <svg aria-hidden width="42" height="26" viewBox="0 0 42 26" style={{ position: "absolute", top: 2, insetInlineStart: 2, opacity: 0.5 }}>
           <path d="M2 20 Q 12 4 26 8" fill="none" stroke="#5c5142" strokeWidth="2.4" strokeLinecap="round" />
@@ -66,17 +69,23 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
           <path d="M2 16 Q 12 2 24 8" fill="none" stroke="#5c5142" strokeWidth="2.4" strokeLinecap="round" />
         </svg>
 
-        {/* Deep scraps: manuscript fragments, badly stacked on purpose */}
-        <StackCard ar={ar} style={{ top: 0, insetInlineStart: -30, width: "58%", height: 84, transform: "rotate(-9deg)", zIndex: 1, opacity: 0.85 }}>
-          {ar ? "مسودة أولى: في الصباح الذي بدأ فيه كل شيء..." : "First draft: on the morning it all began..."}
-        </StackCard>
-        <StackCard ar={ar} style={{ top: 6, insetInlineEnd: -34, width: "60%", height: 92, transform: "rotate(8deg)", zIndex: 1, opacity: 0.9 }}>
+        {/* Deep scraps: manuscript fragments, badly stacked on purpose.
+            They run long on purpose too; whatever slides under the
+            synopsis card just reads as buried pages. */}
+        <StackCard ar={ar} style={{ top: 0, insetInlineStart: -34, width: "74%", height: 118, transform: "rotate(-9deg)", zIndex: 1, opacity: 0.85 }}>
           {ar
-            ? "قصص من المجتمع، تقييمات حقيقية، وقرّاء بينتظروا كتابك الجاي..."
-            : "Community stories, real ratings, and readers waiting for your next book..."}
+            ? "مسودة أولى: في الصباح الذي بدأ فيه كل شيء، كانت المدينة لسا نايمة، وصوت المطر على الشباك بيكتب أول سطر عني. حطيت القهوة جنب الدفتر وقلت لنفسي: اليوم بلش..."
+            : "First draft: on the morning it all began, the city was still asleep, and the rain on the window was writing the first line for me. I set the coffee beside the notebook and told myself: today it starts..."}
         </StackCard>
-        <StackCard ar={ar} style={{ top: 96, insetInlineStart: -14, width: "52%", height: 88, transform: "rotate(6deg)", zIndex: 1, opacity: 0.85 }}>
-          {ar ? "ملاحظة: البطل ما بيعرف إنه البيت مسكون بذكرياته هو..." : "Note: the hero does not know the house is haunted by his own memories..."}
+        <StackCard ar={ar} style={{ top: 10, insetInlineEnd: -38, width: "74%", height: 124, transform: "rotate(8deg)", zIndex: 1, opacity: 0.9 }}>
+          {ar
+            ? "قصص من المجتمع، تقييمات حقيقية بالنجوم، تعليقات على كل فصل، وقرّاء بينتظروا كتابك الجاي. حدا بيقرأ اللي بتكتبه فعلاً، وبيرد عليك..."
+            : "Community stories, real star ratings, comments on every chapter, and readers waiting for your next book. Someone actually reads what you write, and writes back..."}
+        </StackCard>
+        <StackCard ar={ar} style={{ top: 128, insetInlineStart: -18, width: "68%", height: 116, transform: "rotate(6deg)", zIndex: 1, opacity: 0.85 }}>
+          {ar
+            ? "ملاحظة: البطل ما بيعرف إنه البيت مسكون بذكرياته هو، بس القارئ لازم يحس من أول مشهد. رجّع وصف المدخل، وخلي الصور المعلقة عالحيط مايلة شوي..."
+            : "Note: the hero does not know the house is haunted by his own memories, but the reader must feel it from the first scene. Rewrite the hallway, and let the photos on the wall hang slightly crooked..."}
         </StackCard>
 
         {/* Libraries card, messier angle */}
@@ -100,8 +109,10 @@ export function MobileHero({ ar, onStartWriting, onOpenCourse }: { ar: boolean; 
             ? "32 درساً في صنعة الكتابة، من الفكرة الأولى حتى النشر، بتمارين حقيقية وشهادة إتمام. مجاني ولن يصبح مدفوعاً."
             : "32 lessons on the craft, from first idea to publishing, with real exercises and a certificate. Free, and it stays free."}
         </StackCard>
-        <StackCard ar={ar} style={{ bottom: 0, insetInlineEnd: -26, width: "56%", height: 80, transform: "rotate(-7deg)", zIndex: 1, opacity: 0.85 }}>
-          {ar ? "فصل 7: الباب الذي لم يفتحه أحد منذ عشرين سنة..." : "Chapter 7: the door no one had opened in twenty years..."}
+        <StackCard ar={ar} style={{ bottom: 0, insetInlineEnd: -30, width: "70%", height: 108, transform: "rotate(-7deg)", zIndex: 1, opacity: 0.85 }}>
+          {ar
+            ? "فصل 7: الباب الذي لم يفتحه أحد منذ عشرين سنة كان اليوم مفتوحاً على آخره، والغبار على العتبة عليه أثر خطوات صغيرة..."
+            : "Chapter 7: the door no one had opened in twenty years stood wide open today, and the dust on the threshold held a trail of small footsteps..."}
         </StackCard>
 
         {/* The main synopsis card: the ONLY straight one, facing you.

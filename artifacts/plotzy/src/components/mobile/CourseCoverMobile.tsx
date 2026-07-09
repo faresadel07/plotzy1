@@ -1,13 +1,14 @@
 // Phone-only course promo: a crumpled typewriter note that talks like
 // a person (the Sudowrite letter moment), with a hand-drawn circle
 // around the phrase that matters and a handwritten margin note, then
-// the two course covers and the call to action. Tapping the covers or
-// the button opens the course.
+// Faris's course sketch with five lines about the course and the call
+// to action. Tapping the sketch block or the button opens the course.
 
 import { useLocation } from "wouter";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { HAND_EN, HAND_AR } from "./fonts";
 import { PaperBall } from "./PaperBall";
+import { Mark } from "./Marker";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -85,33 +86,34 @@ export function CourseCoverMobile({ ar }: { ar: boolean }) {
         }}
       >
 
-        {/* Two course covers side by side on a soft warm glow so they
-            lift off the paper. Order is fixed (not RTL-mirrored): the
-            newer "Learning Writing 101" sits to the right of the
-            original "Basics of Writing 101". */}
-        <div style={{ position: "relative" }}>
-          <div
-            aria-hidden
-            style={{
-              position: "absolute", inset: "-8% -6%",
-              background: "radial-gradient(ellipse at center, rgba(124,92,196,0.32), transparent 70%)",
-              filter: "blur(30px)", zIndex: 0,
-            }}
-          />
-          <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 16 }}>
-            <img
-              src="/course-book-cover.jpg"
-              alt={ar ? "أساسيّات الكتابة ١٠١" : "The Basics of Writing 101"}
-              loading="lazy"
-              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px -10px rgba(41,33,21,0.5)" }}
-            />
-            <img
-              src="/course-book-cover-2.jpg"
-              alt={ar ? "تعلّم الكتابة ١٠١" : "Learning Writing 101"}
-              loading="lazy"
-              style={{ width: "46%", maxWidth: 185, height: "auto", display: "block", borderRadius: 7, boxShadow: "0 22px 50px -10px rgba(41,33,21,0.5)" }}
-            />
-          </div>
+        {/* Faris's course sketch, larger than in the grid, sitting on
+            the paper via multiply blending, with five lines about the
+            course alternating between the system face and handwriting. */}
+        <img
+          src="/images/sketches/course.png"
+          alt=""
+          aria-hidden
+          loading="lazy"
+          style={{ width: 230, height: "auto", mixBlendMode: "multiply", opacity: 0.92, display: "block", margin: "0 auto 10px" }}
+        />
+        <div dir={ar ? "rtl" : "ltr"} style={{ textAlign: "center", maxWidth: 320, margin: "0 auto" }}>
+          <p style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 800, letterSpacing: "-0.01em", color: "#2f2618", fontFamily: SF }}>
+            {ar ? "كورس صناعة الكتابة من بلوتزي" : "The Plotzy writing course"}
+          </p>
+          <p style={{ margin: "0 0 6px", fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14.5 : 18, color: "#5c5142", lineHeight: 1.5 }}>
+            {ar ? "من الفكرة الأولى لآخر صفحة" : "from the first idea to the last page"}
+          </p>
+          <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: "#423521", lineHeight: 1.6, fontFamily: SF }}>
+            {ar ? "32 درساً على 6 وحدات، بتمارين حقيقية." : "32 lessons across 6 modules, with real exercises."}
+          </p>
+          <p style={{ margin: "0 0 6px", fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14.5 : 18, color: "#5c5142", lineHeight: 1.5, transform: "rotate(-1deg)" }}>
+            {ar ? "بمشي معك خطوة خطوة" : "it walks with you step by step"}
+          </p>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#423521", lineHeight: 1.6, fontFamily: SF }}>
+            {ar
+              ? <>وبنهايته <Mark ar={ar}>شهادة إتمام باسمك</Mark>.</>
+              : <>and at the end, <Mark ar={ar}>a certificate with your name</Mark>.</>}
+          </p>
         </div>
 
         <div

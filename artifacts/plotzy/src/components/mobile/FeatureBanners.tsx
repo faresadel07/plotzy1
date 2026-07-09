@@ -14,6 +14,7 @@ import {
   MessageSquare, Trophy,
 } from "lucide-react";
 import { HAND_EN, HAND_AR, SERIF_EN, SERIF_AR } from "./fonts";
+import { Mark } from "./Marker";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -259,12 +260,6 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
       sub: ar ? "حفظ لحظي، إصدارات، ونسخ طوارئ" : "instant saves, versions, crash drafts",
       onTap: onStartWriting,
     },
-    {
-      img: "course",
-      title: ar ? "كورس يعلّمك الصنعة" : "A course that teaches the craft",
-      sub: ar ? "32 درساً وشهادة، مجاناً" : "32 lessons and a certificate, free",
-      onTap: () => navigate("/course"),
-    },
   ];
 
   const afterWriting: Item[] = [
@@ -314,6 +309,9 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
             cursor: "pointer",
             fontFamily: SF,
             display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+            // An odd count leaves the last sketch alone: let it sit
+            // centered across both columns instead of half-empty.
+            gridColumn: items.length % 2 === 1 && i === items.length - 1 ? "1 / -1" : undefined,
           }}
         >
           <img
@@ -342,7 +340,9 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
           {ar ? "أكثر من محرّر" : "More than an editor"}
         </div>
         <div style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 26 : 28, fontWeight: 700, lineHeight: ar ? 1.45 : 1.15, color: "#2f2618" }}>
-          {ar ? "كل ما يحتاجه كتابك" : "Everything your book needs"}
+          {ar
+            ? <>كل ما يحتاجه <Mark ar={ar}>كتابك</Mark></>
+            : <>Everything <Mark ar={ar}>your book</Mark> needs</>}
         </div>
       </div>
       <div style={{ textAlign: "center", marginBottom: 16 }}>
