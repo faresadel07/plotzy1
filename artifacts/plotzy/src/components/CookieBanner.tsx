@@ -150,6 +150,7 @@ export function CookieBanner() {
       aria-modal="false"
       aria-labelledby="cookie-banner-title"
       dir={ar ? "rtl" : "ltr"}
+      className={"plotzy-hand" + (ar ? " is-ar" : "")}
       style={{
         position: "fixed",
         left: 0,
@@ -160,7 +161,6 @@ export function CookieBanner() {
         borderTop: "1px solid rgba(244,239,226,0.10)",
         boxShadow: "0 -8px 28px rgba(0,0,0,0.35)",
         color: "#f7f2e4",
-        fontFamily: SF,
       }}
     >
       <div

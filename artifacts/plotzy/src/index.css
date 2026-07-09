@@ -3,6 +3,24 @@
    pages. Keeping it out of the global import saves every visitor the
    download. */
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Cairo:wght@200..900&family=Noto+Naskh+Arabic:wght@400..700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+/* The handwriting pair (Caveat EN / Aref Ruqaa AR) is now used across
+   most pages (handwritten asides, legal pages), so it loads globally. */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Aref+Ruqaa:wght@400;700&display=swap');
+
+/* Legal pages (privacy, terms, about, cookie settings) read like a
+   handwritten letter: body in the handwriting pair, headings in the
+   serif pair. Inline font sizes are bumped for Caveat's small x-height. */
+.plotzy-legal { font-family: 'Caveat', 'Segoe Script', cursive; }
+.plotzy-legal.is-ar { font-family: 'Aref Ruqaa', 'Amiri', serif; }
+.plotzy-legal :is(p, li, td, a, button, span, div) { font-family: inherit; }
+.plotzy-legal :is(h1, h2, h3, h4) { font-family: 'Lora', Georgia, serif; }
+.plotzy-legal.is-ar :is(h1, h2, h3, h4) { font-family: 'Amiri', 'Noto Naskh Arabic', serif; }
+.plotzy-legal :is(p, li) { font-size: 18.5px !important; line-height: 1.75 !important; }
+.plotzy-legal.is-ar :is(p, li) { font-size: 16px !important; line-height: 2 !important; }
+/* Family-only variant for compact surfaces (cookie banner) where the
+   size bump would break the layout. */
+.plotzy-hand, .plotzy-hand :is(p, span, button, a, div) { font-family: 'Caveat', 'Segoe Script', cursive; }
+.plotzy-hand.is-ar, .plotzy-hand.is-ar :is(p, span, button, a, div) { font-family: 'Aref Ruqaa', 'Amiri', serif; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300..700&family=Noto+Sans+JP:wght@300..700&family=Noto+Sans+KR:wght@300..700&family=Noto+Sans+Devanagari:wght@300..700&family=Noto+Sans:wght@300..700&display=swap');
 
 @import "tailwindcss";

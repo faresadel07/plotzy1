@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, CreditCard, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings, Settings2, Menu, X } from "lucide-react";
+import { BookOpen, CreditCard, LogOut, User, Camera, GraduationCap, Zap, Store, Library, Globe, Settings, Settings2, Menu, X, LayoutDashboard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/language-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -512,6 +512,10 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")} className="gap-2 cursor-pointer">
+                    <LayoutDashboard className="w-4 h-4" />
+                    {t("navDashboard")}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate(`/authors/${user.id}`)} className="gap-2 cursor-pointer">
                     <User className="w-4 h-4" />
                     {t("myProfile")}
@@ -671,6 +675,26 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
                 {t(key)}
               </Link>
             )
+          )}
+          {/* Signed-in writers get their dashboard here too (the phone
+              nav has no room for it in the top bar). */}
+          {user && (
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                fontFamily: SF,
+                fontSize: 20,
+                fontWeight: location === "/dashboard" ? 700 : 400,
+                color: location === "/dashboard" ? "#f7f2e4" : "rgba(244,239,226,0.7)",
+                textDecoration: "none",
+                padding: "10px 24px",
+                animation: `plotzyMenuItem 320ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+                animationDelay: `${60 + NAV_ITEMS.length * 28}ms`,
+              }}
+            >
+              {t("navDashboard")}
+            </Link>
           )}
           {/* Language switcher inside the mobile menu too, so phone
               users can reach Arabic without the desktop nav. */}

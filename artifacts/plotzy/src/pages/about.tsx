@@ -19,7 +19,8 @@ const PILLAR_KEYS: { title: TranslationKey; desc: TranslationKey }[] = [
 ];
 
 export default function About() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const ar = lang === "ar";
   return (
     <Layout>
       <SEO
@@ -27,7 +28,7 @@ export default function About() {
         description={t("abSeoDesc")}
       />
 
-      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#f7f2e4", fontFamily: SF }}>
+      <div className={"plotzy-legal" + (ar ? " is-ar" : "")} style={{ minHeight: "100vh", background: "#f4efe2", color: "#2f2618" }}>
 
         {/* ===== BACK BUTTON (fixed, top-left) ===== */}
         <button
@@ -47,11 +48,11 @@ export default function About() {
             gap: 8,
             padding: "10px 16px",
             borderRadius: 999,
-            background: "rgba(20,20,20,0.85)",
+            background: "rgba(255,253,247,0.9)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid rgba(244,239,226,0.1)",
-            color: "rgba(244,239,226,0.85)",
+            border: "1px solid rgba(66,53,33,0.15)",
+            color: "#423521",
             fontWeight: 600,
             fontSize: 13,
             cursor: "pointer",
@@ -59,12 +60,12 @@ export default function About() {
             fontFamily: SF,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(35,35,35,0.95)";
-            e.currentTarget.style.borderColor = "rgba(244,239,226,0.2)";
+            e.currentTarget.style.background = "rgba(246,240,225,0.98)";
+            e.currentTarget.style.borderColor = "rgba(66,53,33,0.3)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(20,20,20,0.85)";
-            e.currentTarget.style.borderColor = "rgba(244,239,226,0.1)";
+            e.currentTarget.style.background = "rgba(255,253,247,0.9)";
+            e.currentTarget.style.borderColor = "rgba(66,53,33,0.15)";
           }}
         >
           <ArrowLeft style={{ width: 14, height: 14 }} />
@@ -78,7 +79,7 @@ export default function About() {
             fontWeight: 600,
             letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: "rgba(244,239,226,0.45)",
+            color: "#7b7366",
             marginBottom: 20,
           }}>
             {t("abEyebrow")}
@@ -88,7 +89,7 @@ export default function About() {
             fontWeight: 800,
             lineHeight: 1.05,
             letterSpacing: "-0.04em",
-            color: "#f7f2e4",
+            color: "#2f2618",
             marginBottom: 24,
           }}>
             {t("abHeroTitle")}
@@ -97,7 +98,7 @@ export default function About() {
             fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
             fontWeight: 400,
             lineHeight: 1.6,
-            color: "rgba(244,239,226,0.55)",
+            color: "#6d6354",
             maxWidth: 640,
             margin: "0 auto",
           }}>
@@ -112,7 +113,7 @@ export default function About() {
             fontWeight: 600,
             letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: "rgba(244,239,226,0.4)",
+            color: "#8a8070",
             marginBottom: 16,
             textAlign: "center",
           }}>
@@ -121,7 +122,7 @@ export default function About() {
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
             fontWeight: 800,
-            color: "#f7f2e4",
+            color: "#2f2618",
             letterSpacing: "-0.03em",
             lineHeight: 1.15,
             marginBottom: 28,
@@ -130,20 +131,20 @@ export default function About() {
             {t("abStoryTitle")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abStory1")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abStory2")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abStory3")}
             </p>
           </div>
         </section>
 
         {/* ===== WHAT MAKES PLOTZY DIFFERENT ===== */}
-        <section style={{ padding: "60px 24px", background: "#0A0A0A" }}>
+        <section style={{ padding: "60px 24px", background: "#f4efe2" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
               <p style={{
@@ -151,7 +152,7 @@ export default function About() {
                 fontWeight: 600,
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: "rgba(244,239,226,0.4)",
+                color: "#8a8070",
                 marginBottom: 16,
               }}>
                 {t("abDiffEyebrow")}
@@ -159,7 +160,7 @@ export default function About() {
               <h2 style={{
                 fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
                 fontWeight: 800,
-                color: "#f7f2e4",
+                color: "#2f2618",
                 letterSpacing: "-0.03em",
                 lineHeight: 1.15,
                 marginBottom: 16,
@@ -168,7 +169,7 @@ export default function About() {
               </h2>
               <p style={{
                 fontSize: 16,
-                color: "rgba(244,239,226,0.5)",
+                color: "#7b7366",
                 lineHeight: 1.6,
                 maxWidth: 560,
                 margin: "0 auto",
@@ -187,27 +188,27 @@ export default function About() {
                 <div key={i} style={{
                   flex: "1 1 280px",
                   maxWidth: 360,
-                  background: "rgba(244,239,226,0.03)",
-                  border: "1px solid rgba(244,239,226,0.08)",
+                  background: "#fffdf7",
+                  border: "1px solid rgba(66,53,33,0.13)",
                   borderRadius: 20,
                   padding: "28px 24px",
                   transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(244,239,226,0.05)";
-                  e.currentTarget.style.borderColor = "rgba(244,239,226,0.14)";
+                  e.currentTarget.style.background = "#f6f0e1";
+                  e.currentTarget.style.borderColor = "rgba(66,53,33,0.22)";
                   e.currentTarget.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(244,239,226,0.03)";
-                  e.currentTarget.style.borderColor = "rgba(244,239,226,0.08)";
+                  e.currentTarget.style.background = "#fffdf7";
+                  e.currentTarget.style.borderColor = "rgba(66,53,33,0.13)";
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
                 >
                   <h3 style={{
                     fontSize: 17,
                     fontWeight: 700,
-                    color: "#f7f2e4",
+                    color: "#2f2618",
                     marginBottom: 10,
                     letterSpacing: "-0.01em",
                     lineHeight: 1.3,
@@ -217,7 +218,7 @@ export default function About() {
                   <p style={{
                     fontSize: 14,
                     fontWeight: 400,
-                    color: "rgba(244,239,226,0.55)",
+                    color: "#6d6354",
                     lineHeight: 1.6,
                     margin: 0,
                   }}>
@@ -236,7 +237,7 @@ export default function About() {
             fontWeight: 600,
             letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: "rgba(140,180,255,0.6)",
+            color: "#7b5e3b",
             marginBottom: 16,
             textAlign: "center",
           }}>
@@ -245,7 +246,7 @@ export default function About() {
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
             fontWeight: 800,
-            color: "#f7f2e4",
+            color: "#2f2618",
             letterSpacing: "-0.03em",
             lineHeight: 1.15,
             marginBottom: 28,
@@ -254,27 +255,27 @@ export default function About() {
             {t("abVisionTitle")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abVision1")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abVision2")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abVision3")}
             </p>
           </div>
         </section>
 
         {/* ===== THE FOUNDER ===== */}
-        <section style={{ padding: "60px 24px", background: "#0A0A0A" }}>
+        <section style={{ padding: "60px 24px", background: "#f4efe2" }}>
           <div style={{ maxWidth: 760, margin: "0 auto" }}>
             <p style={{
               fontSize: 12,
               fontWeight: 600,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "rgba(244,239,226,0.4)",
+              color: "#8a8070",
               marginBottom: 16,
               textAlign: "center",
             }}>
@@ -283,7 +284,7 @@ export default function About() {
             <h2 style={{
               fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
               fontWeight: 800,
-              color: "#f7f2e4",
+              color: "#2f2618",
               letterSpacing: "-0.03em",
               lineHeight: 1.15,
               marginBottom: 28,
@@ -292,12 +293,12 @@ export default function About() {
               {t("abFounderName")}
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
                 {t("abFounder1")}
               </p>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
                 {t("abFounder2a")} {" "}
-                <a href="mailto:hello@plotzy.co" style={{ color: "#f7f2e4", textDecoration: "underline", textDecorationColor: "rgba(244,239,226,0.3)", textUnderlineOffset: 4 }}>
+                <a href="mailto:hello@plotzy.co" style={{ color: "#2f2618", textDecoration: "underline", textDecorationColor: "rgba(66,53,33,0.35)", textUnderlineOffset: 4 }}>
                   hello@plotzy.co
                 </a>
                 {t("abFounder2b")}
@@ -313,7 +314,7 @@ export default function About() {
             fontWeight: 600,
             letterSpacing: "0.18em",
             textTransform: "uppercase",
-            color: "rgba(244,239,226,0.4)",
+            color: "#8a8070",
             marginBottom: 16,
             textAlign: "center",
           }}>
@@ -322,7 +323,7 @@ export default function About() {
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)",
             fontWeight: 800,
-            color: "#f7f2e4",
+            color: "#2f2618",
             letterSpacing: "-0.03em",
             lineHeight: 1.15,
             marginBottom: 28,
@@ -331,19 +332,19 @@ export default function About() {
             {t("abLogoTitle")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abLogo1")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abLogo2")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abLogo3")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0 }}>
               {t("abLogo4")}
             </p>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: "rgba(244,239,226,0.7)", margin: 0, fontStyle: "italic" }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#4a4132", margin: 0, fontStyle: "italic" }}>
               {t("abLogo5")}
             </p>
           </div>
@@ -354,7 +355,7 @@ export default function About() {
           <h2 style={{
             fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
             fontWeight: 800,
-            color: "#f7f2e4",
+            color: "#2f2618",
             letterSpacing: "-0.03em",
             lineHeight: 1.15,
             marginBottom: 16,
@@ -363,7 +364,7 @@ export default function About() {
           </h2>
           <p style={{
             fontSize: 16,
-            color: "rgba(244,239,226,0.55)",
+            color: "#6d6354",
             lineHeight: 1.65,
             marginBottom: 28,
           }}>
@@ -376,8 +377,8 @@ export default function About() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "#f7f2e4",
-              color: "#221b11",
+              background: "#292115",
+              color: "#f7f2e4",
               fontWeight: 700,
               fontSize: 14,
               textDecoration: "none",
@@ -390,9 +391,9 @@ export default function About() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "rgba(244,239,226,0.05)",
-              border: "1px solid rgba(244,239,226,0.12)",
-              color: "rgba(244,239,226,0.85)",
+              background: "#f6f0e1",
+              border: "1px solid rgba(66,53,33,0.2)",
+              color: "#423521",
               fontWeight: 600,
               fontSize: 14,
               textDecoration: "none",

@@ -225,6 +225,9 @@ export default function Pricing() {
             >
               {t.titleSub}
             </p>
+            <p style={{ fontFamily: lang === "ar" ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: lang === "ar" ? 15 : 19, color: "rgba(244,239,226,0.55)", margin: "-12px 0 22px", transform: "rotate(-1deg)", display: "inline-block" }}>
+              {lang === "ar" ? "(شكراً إنك بتفكر فينا أصلاً)" : "(thank you for even thinking of us)"}
+            </p>
 
             <div
               role="group"

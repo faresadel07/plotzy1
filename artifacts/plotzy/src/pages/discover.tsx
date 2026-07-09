@@ -358,6 +358,9 @@ export default function DiscoverPage() {
               : (ar ? "أكثر من 70,000 كتاب من المجال العام — اقرأها مجاناً داخل Plotzy"
                 : "Over 70,000 public-domain books — read them free, right inside Plotzy")}
           </p>
+          <p style={{ fontFamily: ar ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: ar ? 15 : 19, color: "rgba(244,239,226,0.5)", margin: "0 0 6px", transform: "rotate(-1deg)", display: "inline-block" }}>
+            {ar ? "(قهوتك، وكلاسيكية، وهدوء)" : "(a coffee, a classic, and quiet)"}
+          </p>
 
           {/* Source toggle: Project Gutenberg (English) ⇄ Hindawi (Arabic) */}
           <div className="inline-flex flex-wrap justify-center items-center gap-1 p-1 rounded-2xl mb-8 max-w-full"

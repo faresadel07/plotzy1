@@ -408,6 +408,13 @@ export default function SupportPage() {
         }}>
           {t("spHeroSub")}
         </p>
+        <p style={{
+          fontFamily: lang === "ar" ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive",
+          fontSize: lang === "ar" ? 15 : 19, color: "rgba(244,239,226,0.5)",
+          margin: "-16px auto 24px", transform: "rotate(-1deg)",
+        }}>
+          {lang === "ar" ? "(احكيلنا، بنرد فعلاً)" : "(talk to us, we actually reply)"}
+        </p>
       </div>
 
       {/* ── See-FAQ banner — visible on every tab so product

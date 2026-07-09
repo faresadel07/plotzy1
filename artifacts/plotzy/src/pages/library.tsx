@@ -18,14 +18,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 /* ── Design tokens ─────────────────────────────────────────── */
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#221b11";
-const C1 = "#221b11";
-const C2 = "#332a1b";
-const C3 = "#332a1b";
-const B = "rgba(244,239,226,0.07)";
-const T = "#f7f2e4";
-const TS = "rgba(244,239,226,0.55)";
-const TD = "rgba(244,239,226,0.25)";
+const BG = "#f4efe2";
+const C1 = "#fffdf7";
+const C2 = "#f0e9d8";
+const C3 = "#f0e9d8";
+const B = "rgba(66,53,33,0.13)";
+const T = "#2f2618";
+const TS = "#6d6354";
+const TD = "#9a9181";
 
 /* ── Like Button ───────────────────────────────────────────── */
 function LikeButton({ bookId }: { bookId: number }) {
@@ -117,8 +117,8 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
                 ? `linear-gradient(160deg, ${book.spineColor}44 0%, ${book.spineColor}11 100%)`
                 : `linear-gradient(160deg, ${C3} 0%, ${C2} 100%)`,
             }}>
-              <BookOpen style={{ width: 28, height: 28, color: "rgba(244,239,226,0.3)", marginBottom: 12 }} />
-              <p style={{ fontFamily: "'Georgia', serif", fontSize: 13, fontWeight: 600, color: "rgba(244,239,226,0.7)", textAlign: "center", lineHeight: 1.5 }}>{book.title}</p>
+              <BookOpen style={{ width: 28, height: 28, color: "#8a8070", marginBottom: 12 }} />
+              <p style={{ fontFamily: "'Georgia', serif", fontSize: 13, fontWeight: 600, color: "#4a4132", textAlign: "center", lineHeight: 1.5 }}>{book.title}</p>
             </div>
           )}
 
@@ -132,7 +132,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
             padding: 14,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: SF, color: "rgba(244,239,226,0.7)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: SF, color: "#4a4132" }}>
                 <Eye style={{ width: 12, height: 12 }} />
                 {book.viewCount.toLocaleString()}
               </div>
@@ -157,7 +157,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
             <div style={{
               position: "absolute", top: 8, right: 8,
               background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
-              color: "rgba(244,239,226,0.8)", borderRadius: 6,
+              color: "#3a3020", borderRadius: 6,
               padding: "3px 8px", fontSize: 10, fontWeight: 600, fontFamily: SF,
             }}>
               {t(genreKey(book.genre))}
@@ -194,8 +194,8 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
               padding: "2px 6px", borderRadius: 4, fontFamily: SF,
-              background: book.contentType === "article" ? "rgba(124,106,247,0.15)" : "rgba(244,239,226,0.06)",
-              color: book.contentType === "article" ? "#a78bfa" : "rgba(244,239,226,0.35)",
+              background: book.contentType === "article" ? "rgba(124,106,247,0.15)" : "rgba(66,53,33,0.06)",
+              color: book.contentType === "article" ? "#a78bfa" : "#8a8070",
             }}>
               {book.contentType === "article" ? t("libArticle") : t("libContentBook")}
             </span>
@@ -241,10 +241,10 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           {(book.genre || (book.language && book.language !== "en")) && (
             <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
               {book.genre && (
-                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(244,239,226,0.05)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px" }}>{t(genreKey(book.genre))}</span>
+                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px" }}>{t(genreKey(book.genre))}</span>
               )}
               {book.language && book.language !== "en" && (
-                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(244,239,226,0.05)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px", textTransform: "uppercase" }}>{book.language}</span>
+                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px", textTransform: "uppercase" }}>{book.language}</span>
               )}
             </div>
           )}
@@ -273,7 +273,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
           position: "absolute", inset: 0,
           background: book.spineColor
             ? `linear-gradient(135deg, ${book.spineColor}22 0%, transparent 60%)`
-            : "linear-gradient(135deg, rgba(244,239,226,0.03) 0%, transparent 60%)",
+            : "linear-gradient(135deg, rgba(66,53,33,0.04) 0%, transparent 60%)",
         }} />
 
         <div className="featured-banner-inner" style={{ position: "relative", display: "flex", gap: 28, padding: "28px 32px", alignItems: "center", width: "100%" }}>
@@ -286,7 +286,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
               <img src={book.coverImage} alt={book.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
               <div style={{ width: "100%", height: "100%", background: book.spineColor || C3, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <BookOpen style={{ width: 28, height: 28, color: "rgba(244,239,226,0.5)" }} />
+                <BookOpen style={{ width: 28, height: 28, color: "#6d6354" }} />
               </div>
             )}
           </div>
@@ -297,7 +297,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, fontFamily: SF, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 <Trophy style={{ width: 12, height: 12 }} /> {t("libFeatured")}
               </span>
-              {book.genre && <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(244,239,226,0.06)", padding: "2px 8px", borderRadius: 4 }}>{t(genreKey(book.genre))}</span>}
+              {book.genre && <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", padding: "2px 8px", borderRadius: 4 }}>{t(genreKey(book.genre))}</span>}
             </div>
             <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 22, fontWeight: 700, color: T, margin: "0 0 6px", lineHeight: 1.3 }}>{book.title}</h2>
             <p style={{ fontFamily: SF, fontSize: 13, color: TS, margin: "0 0 10px" }}>
@@ -305,7 +305,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
               {book.userId ? (
                 <Link href={`/authors/${book.userId}`} onClick={e => e.stopPropagation()}>
                   <span
-                    style={{ cursor: "pointer", color: TS, textDecoration: "underline", textDecorationColor: "rgba(244,239,226,0.2)", textUnderlineOffset: 2, transition: "color 0.15s" }}
+                    style={{ cursor: "pointer", color: TS, textDecoration: "underline", textDecorationColor: "rgba(66,53,33,0.25)", textUnderlineOffset: 2, transition: "color 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.color = T; }}
                     onMouseLeave={e => { e.currentTarget.style.color = TS; }}
                   >{authorName}</span>
@@ -330,7 +330,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
 
           {/* Read button */}
           <div className="featured-banner-read-btn" style={{
-            padding: "10px 24px", borderRadius: 10, background: "#f7f2e4", color: "#221b11",
+            padding: "10px 24px", borderRadius: 10, background: "#292115", color: "#f7f2e4",
             fontFamily: SF, fontSize: 14, fontWeight: 600, flexShrink: 0,
           }}>
             {t("libReadNow")}
@@ -363,7 +363,7 @@ type PublicSeries = {
 };
 
 export default function Library() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { data: books, isLoading } = usePublishedBooks();
   const { data: publicSeries = [] } = useQuery<PublicSeries[]>({
     queryKey: ["/api/public/series"],
@@ -419,7 +419,7 @@ export default function Library() {
   const isEmpty = !isLoading && (!filtered || filtered.length === 0);
 
   return (
-    <Layout isLanding darkNav>
+    <Layout isLanding>
       <SEO
         title={t("libSeoTitle")}
         description={t("libSeoDesc")}
@@ -435,6 +435,9 @@ export default function Library() {
             </h1>
             <p style={{ fontSize: 14, color: TD, margin: 0 }}>
               {t("libSubtitle")}
+            </p>
+            <p style={{ fontFamily: lang === "ar" ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: 16, color: "#8a8070", margin: "6px 0 0", transform: "rotate(-1deg)", display: "inline-block" }}>
+              {lang === "ar" ? "(كتب كتبها ناس متلك)" : "(books written by people like you)"}
             </p>
           </div>
 
@@ -483,7 +486,7 @@ export default function Library() {
                             background: b.coverImage ? "transparent" : "rgba(124,106,247,0.15)",
                             boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
                             overflow: "hidden",
-                            border: "1px solid rgba(244,239,226,0.06)",
+                            border: "1px solid rgba(66,53,33,0.06)",
                           }}>
                             {b.coverImage ? (
                               <img src={b.coverImage} alt={b.title || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -539,8 +542,8 @@ export default function Library() {
                   style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500,
                     fontFamily: SF, cursor: "pointer", transition: "all 0.15s",
-                    background: genre === g ? "#f7f2e4" : "transparent",
-                    color: genre === g ? "#221b11" : TD,
+                    background: genre === g ? "#292115" : "transparent",
+                    color: genre === g ? "#f7f2e4" : TD,
                     border: genre === g ? "none" : `1px solid ${B}`,
                   }}
                 >{t(genreKey(g))}</button>
@@ -586,10 +589,10 @@ export default function Library() {
             }}>
               <div style={{
                 width: 64, height: 64, borderRadius: 16, margin: "0 auto 20px",
-                background: "rgba(244,239,226,0.04)", border: `1px solid ${B}`,
+                background: "#fffdf7", border: `1px solid ${B}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <BookOpen style={{ width: 28, height: 28, color: "rgba(244,239,226,0.3)" }} />
+                <BookOpen style={{ width: 28, height: 28, color: "#8a8070" }} />
               </div>
               <h3 style={{ fontFamily: SF, fontSize: 20, fontWeight: 700, color: T, margin: "0 0 8px" }}>
                 {t("libSignInTitle")}
@@ -602,7 +605,7 @@ export default function Library() {
                   window.dispatchEvent(new CustomEvent("open-auth-modal"));
                 }}
                 style={{
-                  padding: "12px 36px", borderRadius: 10, background: "#f7f2e4", color: "#221b11",
+                  padding: "12px 36px", borderRadius: 10, background: "#292115", color: "#f7f2e4",
                   fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer",
                   transition: "opacity 0.15s",
                 }}

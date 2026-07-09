@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
   };
 
   return (
-    <div dir={ar ? "rtl" : "ltr"} style={{ minHeight: "100vh", background: "var(--background)", color: "var(--foreground)" }}>
+    <div dir={ar ? "rtl" : "ltr"} className={"plotzy-legal" + (ar ? " is-ar" : "")} style={{ minHeight: "100vh", background: "var(--background)", color: "var(--foreground)" }}>
       <SEO
         title={ar ? "سياسة الخصوصية" : "Privacy Policy"}
         description={ar ? "كيف تتعامل بلوتزي مع بياناتك وخياراتك المتعلّقة بالخصوصية." : "How Plotzy handles your data and your privacy choices."}

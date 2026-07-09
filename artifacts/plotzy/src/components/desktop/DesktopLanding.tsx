@@ -250,6 +250,8 @@ interface ShowcaseProps {
   ar: boolean;
   dark?: boolean;
   flip?: boolean;
+  /** Compact vertical card for the three-in-a-row libraries strip. */
+  compact?: boolean;
   kicker: string; kickerAr: string;
   title: string; titleAr: string;
   sub: string; subAr: string;
@@ -259,7 +261,7 @@ interface ShowcaseProps {
   note?: string; noteAr?: string;
 }
 
-function ShowcaseDesktop({ ar, dark = false, flip = false, kicker, kickerAr, title, titleAr, sub, subAr, cta, ctaAr, href, covers, note, noteAr }: ShowcaseProps) {
+function ShowcaseDesktop({ ar, dark = false, flip = false, compact = false, kicker, kickerAr, title, titleAr, sub, subAr, cta, ctaAr, href, covers, note, noteAr }: ShowcaseProps) {
   const [, navigate] = useLocation();
   const serif = ar ? SERIF_AR : SERIF_EN;
 
@@ -267,9 +269,9 @@ function ShowcaseDesktop({ ar, dark = false, flip = false, kicker, kickerAr, tit
     <div
       style={{
         position: "absolute",
-        width: 180,
+        width: compact ? 118 : 180,
         aspectRatio: "2 / 3",
-        borderRadius: 12,
+        borderRadius: compact ? 10 : 12,
         overflow: "hidden",
         boxShadow: dark ? "0 20px 44px -12px rgba(0,0,0,0.6)" : "0 20px 44px -12px rgba(41,33,21,0.4)",
         border: dark ? "1px solid rgba(244,239,226,0.14)" : "1px solid rgba(66,53,33,0.16)",
@@ -281,6 +283,69 @@ function ShowcaseDesktop({ ar, dark = false, flip = false, kicker, kickerAr, tit
       {dim && <div aria-hidden style={{ position: "absolute", inset: 0, background: dark ? "rgba(41,33,21,0.35)" : "rgba(244,239,226,0.28)" }} />}
     </div>
   );
+
+  if (compact) {
+    // Vertical card: fan on top, story under it, like the phone
+    // showcase but one third of the row.
+    return (
+      <div
+        dir={ar ? "rtl" : "ltr"}
+        style={{
+          background: dark ? "#292115" : "#ece5d2",
+          border: dark ? "1px solid rgba(66,53,33,0.35)" : "1px solid rgba(66,53,33,0.14)",
+          borderRadius: 28,
+          padding: "34px 26px 26px",
+          textAlign: "center",
+          overflow: "hidden",
+          boxShadow: dark ? "0 18px 40px -18px rgba(20,16,10,0.5)" : "0 10px 26px -14px rgba(41,33,21,0.2)",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: SF,
+        }}
+      >
+        <div style={{ position: "relative", height: 232, marginBottom: 20 }}>
+          {coverCard(covers[0], { top: 28, left: "50%", marginLeft: -152, transform: "rotate(-10deg)" }, true)}
+          {coverCard(covers[2], { top: 28, left: "50%", marginLeft: 36, transform: "rotate(10deg)" }, true)}
+          {coverCard(covers[1], { top: 0, left: "50%", marginLeft: -70, width: 140, zIndex: 2, borderRadius: 12 })}
+        </div>
+        <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: dark ? "rgba(244,239,226,0.5)" : "#7b7366", marginBottom: 10 }}>
+          {ar ? kickerAr : kicker}
+        </div>
+        <h2 style={{ fontFamily: serif, fontSize: ar ? 25 : 27, fontWeight: 700, lineHeight: ar ? 1.5 : 1.2, letterSpacing: ar ? 0 : "-0.01em", color: dark ? "#f7f2e4" : "#2f2618", margin: "0 0 10px" }}>
+          {ar ? titleAr : title}
+        </h2>
+        <p style={{ fontSize: ar ? 13.5 : 14.5, lineHeight: 1.7, color: dark ? "rgba(244,239,226,0.6)" : "#7b7366", maxWidth: 300, margin: `0 auto ${note ? 8 : 18}px` }}>
+          {ar ? subAr : sub}
+        </p>
+        {note && (
+          <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 13.5 : 17, color: dark ? "rgba(244,239,226,0.5)" : "#8a8070", marginBottom: 14, transform: "rotate(-1deg)" }}>
+            {ar ? (noteAr || note) : note}
+          </div>
+        )}
+        <button
+          onClick={() => navigate(href)}
+          style={{
+            marginTop: "auto",
+            width: "100%",
+            background: dark ? "#f7f2e4" : "#292115",
+            color: dark ? "#221b11" : "#f7f2e4",
+            border: "none",
+            borderRadius: 12,
+            padding: "14px 20px",
+            fontSize: 14.5,
+            fontWeight: 700,
+            fontFamily: SF,
+            cursor: "pointer",
+            boxShadow: dark
+              ? "0 10px 24px -8px rgba(20,16,10,0.6), inset 0 1px 0 rgba(255,255,255,0.35)"
+              : "0 10px 24px -8px rgba(41,33,21,0.5), inset 0 1px 0 rgba(255,255,255,0.12)",
+          }}
+        >
+          {ar ? ctaAr : cta}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, marginBottom: 36, fontFamily: SF }}>
@@ -497,20 +562,62 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
 
   type Item = { img: string; title: string; sub: string; onTap: () => void };
 
+  // Laptop screens have room, so every line under a sketch tells the
+  // fuller story instead of the phone's short hint.
   const whileWriting: Item[] = [
-    { img: "ai-partner", title: ar ? "مساعد ذكاء اصطناعي" : "An AI partner", sub: ar ? "يخطط ويسوّد ويراجع جنبك" : "plots, drafts, and reviews beside you", onTap: onStartWriting },
-    { img: "voice", title: ar ? "اكتب بصوتك" : "Write with your voice", sub: ar ? "احكِ وبلوتزي يكتب عنك" : "talk and Plotzy types for you", onTap: onStartWriting },
-    { img: "pages", title: ar ? "صفحات كتاب حقيقية" : "Real book pages", sub: ar ? "4 مقاسات طباعة والصفحات تنقسم لحالها" : "4 trim sizes, pages that split themselves", onTap: onStartWriting },
-    { img: "partner", title: ar ? "اكتب مع شريك" : "Write with a partner", sub: ar ? "جلسات مباشرة مع محرر أو مؤلف" : "live sessions with an editor or co-author", onTap: () => navigate("/dashboard") },
-    { img: "saves", title: ar ? "ولا كلمة بتضيع" : "Not a word gets lost", sub: ar ? "حفظ لحظي، إصدارات، ونسخ طوارئ" : "instant saves, versions, crash drafts", onTap: onStartWriting },
+    {
+      img: "ai-partner", title: ar ? "مساعد ذكاء اصطناعي" : "An AI partner",
+      sub: ar ? "يخطط الحبكة معك، يسوّد المشاهد الصعبة، ويراجع فصولك سطراً سطراً وهو فاهم قصتك كلها" : "plots with you, drafts the hard scenes, and reviews your chapters line by line while knowing your whole story",
+      onTap: onStartWriting,
+    },
+    {
+      img: "voice", title: ar ? "اكتب بصوتك" : "Write with your voice",
+      sub: ar ? "احكِ أفكارك وأنت ماشي أو سايق، وبلوتزي يحوّل كلامك لنص مرتب جاهز للتحرير" : "talk your ideas out while you walk or drive, and Plotzy turns your words into clean text ready for editing",
+      onTap: onStartWriting,
+    },
+    {
+      img: "pages", title: ar ? "صفحات كتاب حقيقية" : "Real book pages",
+      sub: ar ? "اختار من 4 مقاسات طباعة حقيقية، والصفحات بتنقسم لحالها بنفس سعة الكتاب المطبوع" : "choose from 4 real print trim sizes, and the pages split themselves at the exact capacity of the printed book",
+      onTap: onStartWriting,
+    },
+    {
+      img: "partner", title: ar ? "اكتب مع شريك" : "Write with a partner",
+      sub: ar ? "ادعُ محرراً أو مؤلفاً مشاركاً لجلسات كتابة مباشرة، كل واحد بيشوف كتابة الثاني لحظة بلحظة" : "invite an editor or co-author to live writing sessions where each of you sees the other typing in real time",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      img: "saves", title: ar ? "ولا كلمة بتضيع" : "Not a word gets lost",
+      sub: ar ? "حفظ لحظي مع كل ضغطة، سجل إصدارات كامل ترجع له وقت ما بدك، ونسخ طوارئ لو انقطع النت" : "instant saves on every keystroke, a full version history you can roll back to, and crash drafts if the connection drops",
+      onTap: onStartWriting,
+    },
   ];
 
   const afterWriting: Item[] = [
-    { img: "cover", title: ar ? "غلاف يليق بقصتك" : "A cover worthy of it", sub: ar ? "قوالب بخطوط عربية ولوحات AI" : "templates, Arabic type, AI artwork", onTap: () => navigate("/dashboard") },
-    { img: "publish", title: ar ? "انشر بضغطة" : "Publish in one tap", sub: ar ? "للقراء والناشرين، وصدّر PDF وDOCX" : "readers, publishers, PDF and DOCX", onTap: () => navigate("/dashboard") },
-    { img: "audiobook", title: ar ? "حوّله لكتاب صوتي" : "Make it an audiobook", sub: ar ? "فصولك مسموعة بضغطة" : "your chapters, narrated", onTap: () => navigate("/dashboard") },
-    { img: "readers", title: ar ? "قرّاء حقيقيون" : "Real readers", sub: ar ? "تقييمات وتعليقات من المجتمع" : "ratings and comments from the community", onTap: () => navigate("/library") },
-    { img: "inkwell", title: ar ? "تقدّمك محسوب" : "Progress that counts", sub: ar ? "كلمات اليوم، سلاسل، وإنجازات" : "daily words, streaks, achievements", onTap: () => navigate("/dashboard") },
+    {
+      img: "cover", title: ar ? "غلاف يليق بقصتك" : "A cover worthy of it",
+      sub: ar ? "قوالب جاهزة بخطوط عربية وإنجليزية فاخرة، ولوحات مرسومة بالذكاء الاصطناعي على مزاج قصتك" : "ready templates with fine Arabic and English type, and AI artwork painted to match the mood of your story",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      img: "publish", title: ar ? "انشر بضغطة" : "Publish in one tap",
+      sub: ar ? "انشر للقراء بمكتبة المجتمع أو ابعته للناشرين، وصدّر نسخ PDF وDOCX جاهزة للطباعة" : "publish to readers in the community library or send it to publishers, and export print-ready PDF and DOCX copies",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      img: "audiobook", title: ar ? "حوّله لكتاب صوتي" : "Make it an audiobook",
+      sub: ar ? "حوّل فصولك لكتاب مسموع بأصوات طبيعية، فصلاً فصلاً، وقرّاؤك بيسمعوه من نفس الصفحة" : "turn your chapters into a narrated audiobook with natural voices, chapter by chapter, right on the book page",
+      onTap: () => navigate("/dashboard"),
+    },
+    {
+      img: "readers", title: ar ? "قرّاء حقيقيون" : "Real readers",
+      sub: ar ? "تقييمات بالنجوم وتعليقات على كل فصل من مجتمع بيقرأ فعلاً، وبيستنى كتابك الجاي" : "star ratings and comments on every chapter from a community that actually reads, and waits for your next book",
+      onTap: () => navigate("/library"),
+    },
+    {
+      img: "inkwell", title: ar ? "تقدّمك محسوب" : "Progress that counts",
+      sub: ar ? "كلمات اليوم، سلاسل الكتابة اليومية، وإنجازات بتفتحها كل ما كبر كتابك ومشوارك" : "daily word counts, writing streaks, and achievements that unlock as your book and your craft grow",
+      onTap: () => navigate("/dashboard"),
+    },
   ];
 
   const renderItems = (items: Item[]) => (
@@ -520,7 +627,7 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
           key={i}
           onClick={onTap}
           style={{
-            width: 204,
+            width: 236,
             textAlign: "center",
             background: "transparent",
             border: "none",
@@ -540,7 +647,7 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
           <span style={{ display: "block", fontSize: 17, fontWeight: 800, color: "#2f2618", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
             {title}
           </span>
-          <span style={{ display: "block", fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14.5 : 17, color: "#6d6354", lineHeight: 1.5, maxWidth: 200 }}>
+          <span style={{ display: "block", fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 14 : 16.5, color: "#6d6354", lineHeight: 1.55, maxWidth: 236 }}>
             {sub}
           </span>
         </button>
@@ -603,7 +710,7 @@ function CommunityStripDesktop({ ar }: { ar: boolean }) {
   const books: MobileBook[] = [...ARABIC_BOOKS.slice(4), ...ENGLISH_BOOKS.slice(4)].slice(0, 8);
   return (
     <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, marginBottom: 44, fontFamily: SF }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
         <h2 style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 28 : 30, fontWeight: 700, color: "#2f2618", margin: 0 }}>
           {ar ? "من المجتمع" : "From the Community"}
         </h2>
@@ -613,6 +720,9 @@ function CommunityStripDesktop({ ar }: { ar: boolean }) {
         >
           {ar ? "عرض الكل ‹" : "See all ›"}
         </button>
+      </div>
+      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 18, color: "#8a8070", marginBottom: 18, transform: "rotate(-0.8deg)", display: "inline-block" }}>
+        {ar ? "(كتب كتبها ناس متلك، من جوّا بلوتزي)" : "(books written by people like you, inside Plotzy)"}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 16 }}>
         {books.map((b, i) => (
@@ -880,64 +990,66 @@ function DevicesDesktop({ ar }: { ar: boolean }) {
 export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
   return (
     <div style={{ paddingTop: 34 }}>
-      <ShowcaseDesktop
-        ar={ar}
-        dark
-        kicker="Audio Library"
-        kickerAr="المكتبة الصوتية"
-        title="19,000 audiobooks, one library"
-        titleAr="19 ألف كتاب مسموع، بمكتبة وحدة"
-        sub="Novels and classics read aloud by real voices from LibriVox. Listen while you walk, drive, or close your eyes, and pick up on any device exactly where the last sentence left you."
-        subAr="روايات وكلاسيكيات مقروءة بأصوات حقيقية من LibriVox. اسمع وأنت ماشي، سايق، أو مغمّض عينيك، وكمّل من أي جهاز من نفس الجملة اللي وقفت عندها."
-        cta="Open the audio library"
-        ctaAr="افتح المكتبة الصوتية"
-        href="/audiolibrary"
-        note="(listen while you drive)"
-        noteAr="(اسمع وانت سايق)"
-        covers={[AUDIO_BOOKS[0].cover, AUDIO_BOOKS[1].cover, AUDIO_BOOKS[3].cover]}
-      />
-
-      <ShowcaseDesktop
-        ar={ar}
-        flip
-        kicker="English Classics"
-        kickerAr="كلاسيكيات إنجليزية"
-        title="Every classic you postponed"
-        titleAr="كل كلاسيكية أجّلت قراءتها"
-        sub="Pride and Prejudice, Frankenstein, Dracula, Sherlock Holmes and hundreds more. Complete, beautifully typeset, and in a reader that is easy on the eyes at two in the morning."
-        subAr="كبرياء وهوى، فرانكنشتاين، دراكولا، شيرلوك هولمز ومئات غيرها. كاملة، بتنسيق مريح، وبقارئ ما بيتعب عينيك حتى الساعة وحدة بالليل."
-        cta="Browse the classics"
-        ctaAr="تصفح الكلاسيكيات"
-        href="/discover"
-        note="(pick one and sink in)"
-        noteAr="(اختار وحدة وغطس فيها)"
-        covers={[ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[1].cover, ENGLISH_BOOKS[3].cover]}
-      />
+      {/* The three libraries share one row, all on light paper, so the
+          page reads as one warm surface instead of stacked slabs. */}
+      <div style={{ ...WRAP, marginBottom: 36, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, alignItems: "stretch" }}>
+        <ShowcaseDesktop
+          ar={ar}
+          compact
+          kicker="Audio Library"
+          kickerAr="المكتبة الصوتية"
+          title="19,000 audiobooks"
+          titleAr="19 ألف كتاب مسموع"
+          sub="Novels and classics read aloud by real voices from LibriVox. Listen while you walk or drive, and pick up on any device exactly where the last sentence left you."
+          subAr="روايات وكلاسيكيات بأصوات حقيقية من LibriVox. اسمع وأنت ماشي أو سايق، وكمّل من أي جهاز من نفس الجملة اللي وقفت عندها."
+          cta="Open the audio library"
+          ctaAr="افتح المكتبة الصوتية"
+          href="/audiolibrary"
+          note="(listen while you drive)"
+          noteAr="(اسمع وانت سايق)"
+          covers={[AUDIO_BOOKS[0].cover, AUDIO_BOOKS[1].cover, AUDIO_BOOKS[3].cover]}
+        />
+        <ShowcaseDesktop
+          ar={ar}
+          compact
+          kicker="English Classics"
+          kickerAr="كلاسيكيات إنجليزية"
+          title="Every classic you postponed"
+          titleAr="كل كلاسيكية أجّلتها"
+          sub="Pride and Prejudice, Frankenstein, Dracula, Sherlock Holmes and hundreds more. Complete, beautifully typeset, and easy on the eyes at two in the morning."
+          subAr="كبرياء وهوى، فرانكنشتاين، دراكولا، شيرلوك هولمز ومئات غيرها. كاملة، بتنسيق مريح، وما بتتعب عينيك حتى بالليل."
+          cta="Browse the classics"
+          ctaAr="تصفح الكلاسيكيات"
+          href="/discover"
+          note="(pick one and sink in)"
+          noteAr="(اختار وحدة وغطس فيها)"
+          covers={[ENGLISH_BOOKS[0].cover, ENGLISH_BOOKS[1].cover, ENGLISH_BOOKS[3].cover]}
+        />
+        {COMICS.length > 2 && (
+          <ShowcaseDesktop
+            ar={ar}
+            compact
+            kicker="Classic Comics"
+            kickerAr="كوميكس كلاسيكية"
+            title="1,300 golden age comics"
+            titleAr="1300 كوميكس من العصر الذهبي"
+            sub="Adventure, sci-fi, and heroes from the fifties, in full color pages, exactly as they were printed. A whole era of stories waiting in your browser."
+            subAr="مغامرات وخيال علمي وأبطال من الخمسينات، بصفحات ملونة كاملة متل ما انطبعت. حقبة كاملة من القصص مستنياك."
+            cta="Open the comics"
+            ctaAr="افتح الكوميكس"
+            href="/comics"
+            note="(from the fifties!)"
+            noteAr="(من الخمسينات!)"
+            covers={[comicCover(COMICS[2].id), comicCover(COMICS[0].id), comicCover(COMICS[3].id)]}
+          />
+        )}
+      </div>
 
       {/* stray drafts between the shelves */}
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
-        <PaperBall size={50} rot={18} style={{ position: "absolute", top: -22, insetInlineEnd: 60 }} />
-        <PaperBall size={30} rot={-30} style={{ position: "absolute", top: -10, insetInlineStart: 80 }} />
+        <PaperBall size={50} rot={18} style={{ position: "absolute", top: -24, insetInlineEnd: 26 }} />
+        <PaperBall size={30} rot={-30} style={{ position: "absolute", top: -12, insetInlineStart: 40 }} />
       </div>
-
-      {COMICS.length > 2 && (
-        <ShowcaseDesktop
-          ar={ar}
-          dark
-          kicker="Classic Comics"
-          kickerAr="كوميكس كلاسيكية"
-          title="1,300 comics from the golden age"
-          titleAr="1300 كوميكس من العصر الذهبي"
-          sub="Adventure, sci-fi, and heroes from the fifties, in full color pages, page by page, exactly as they were printed. A whole era of stories waiting in your browser."
-          subAr="مغامرات وخيال علمي وأبطال من الخمسينات، بصفحات ملونة كاملة، صفحة صفحة، متل ما انطبعت بالضبط. حقبة كاملة من القصص مستنياك بمتصفحك."
-          cta="Open the comics"
-          ctaAr="افتح الكوميكس"
-          href="/comics"
-          note="(from the fifties!)"
-          noteAr="(من الخمسينات!)"
-          covers={[comicCover(COMICS[2].id), comicCover(COMICS[0].id), comicCover(COMICS[3].id)]}
-        />
-      )}
 
       <ShowcaseDesktop
         ar={ar}
@@ -956,11 +1068,22 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
         covers={[ARABIC_BOOKS[2].cover, ARABIC_BOOKS[4].cover, ARABIC_BOOKS[5].cover]}
       />
 
+      {/* drafts tossed beside the Arabic shelf */}
+      <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
+        <PaperBall size={40} rot={-22} style={{ position: "absolute", top: -26, insetInlineStart: 18 }} />
+        <PaperBall size={26} rot={35} style={{ position: "absolute", top: -12, insetInlineStart: 66 }} />
+      </div>
+
       <AiWriteBannerDesktop ar={ar} onStart={onStartWriting} />
 
       <SnippetsFanDesktop ar={ar} />
 
       <JourneyDesktop ar={ar} onStartWriting={onStartWriting} />
+
+      {/* a couple of failed drafts before the community shelf */}
+      <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
+        <PaperBall size={48} rot={14} style={{ position: "absolute", top: -18, insetInlineEnd: 24 }} />
+      </div>
 
       <CommunityStripDesktop ar={ar} />
 

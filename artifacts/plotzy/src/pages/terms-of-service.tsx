@@ -194,6 +194,7 @@ export default function TermsOfService() {
   return (
     <div
       dir={ar ? "rtl" : "ltr"}
+      className={"plotzy-legal" + (ar ? " is-ar" : "")}
       style={{
         minHeight: "100vh",
         background: "var(--background)",

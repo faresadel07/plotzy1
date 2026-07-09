@@ -27,14 +27,16 @@ import {
 } from "lucide-react";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
-const BG = "#221b11";
-const CARD = "rgba(244,239,226,0.04)";
-const CARD_HOVER = "rgba(244,239,226,0.07)";
-const BORDER = "rgba(244,239,226,0.08)";
-const BORDER_STRONG = "rgba(244,239,226,0.16)";
-const TEXT = "#f0efe8";
-const MUTED = "rgba(244,239,226,0.55)";
-const MUTED2 = "rgba(244,239,226,0.35)";
+const HAND_EN = "'Caveat', 'Segoe Script', cursive";
+const HAND_AR = "'Aref Ruqaa', 'Amiri', serif";
+const BG = "#f4efe2";
+const CARD = "#fffdf7";
+const CARD_HOVER = "#f6f0e1";
+const BORDER = "rgba(66,53,33,0.13)";
+const BORDER_STRONG = "rgba(66,53,33,0.28)";
+const TEXT = "#2f2618";
+const MUTED = "#7b7366";
+const MUTED2 = "#9a9181";
 const ACCENT = TEXT; // was gold #c9a96e — writer preferred plain white accents on this page
 
 // Category pills — map to backend `category=` parameter which the
@@ -174,6 +176,9 @@ export default function AudiolibraryPage() {
                 ? "أكثر من تسعة عشر ألف كتاب صوتي بالإنجليزيّة، مصدرها LibriVox. كل التسجيلات قانونيّة لأنّ نصوصها الأصليّة قد دخلت الملك العامّ."
                 : "More than 19,000 English audiobooks from LibriVox. Every recording is fully legal because the underlying texts have entered the public domain."}
             </p>
+            <p style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 19, color: "#8a8070", margin: 0, transform: "rotate(-1deg)", display: "inline-block" }}>
+              {ar ? "(سكّر عينيك واسمع)" : "(close your eyes and listen)"}
+            </p>
           </section>
 
           {/* ── Featured strip ── */}
@@ -224,7 +229,7 @@ export default function AudiolibraryPage() {
                 style={{
                   fontFamily: SF, width: "100%",
                   padding: isRTL ? "10px 34px 10px 12px" : "10px 12px 10px 34px",
-                  fontSize: 13, color: TEXT, background: "rgba(244,239,226,0.04)",
+                  fontSize: 13, color: TEXT, background: "#fffdf7",
                   border: `1px solid ${BORDER}`, borderRadius: 10, outline: "none",
                   boxSizing: "border-box",
                 }}
@@ -349,7 +354,7 @@ function FeaturedStrip({ books, loading, ar, onOpen }: {
         style={{
           position: "absolute", insetInlineStart: -4, top: "50%", transform: "translateY(-50%)",
           width: 34, height: 34, borderRadius: 999,
-          background: "rgba(20,20,20,0.85)", backdropFilter: "blur(8px)",
+          background: "rgba(255,253,247,0.92)", backdropFilter: "blur(8px)",
           border: `1px solid ${BORDER_STRONG}`, color: TEXT,
           display: "grid", placeItems: "center", cursor: "pointer",
           zIndex: 2, boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
@@ -363,7 +368,7 @@ function FeaturedStrip({ books, loading, ar, onOpen }: {
         style={{
           position: "absolute", insetInlineEnd: -4, top: "50%", transform: "translateY(-50%)",
           width: 34, height: 34, borderRadius: 999,
-          background: "rgba(20,20,20,0.85)", backdropFilter: "blur(8px)",
+          background: "rgba(255,253,247,0.92)", backdropFilter: "blur(8px)",
           border: `1px solid ${BORDER_STRONG}`, color: TEXT,
           display: "grid", placeItems: "center", cursor: "pointer",
           zIndex: 2, boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
@@ -432,7 +437,7 @@ function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; o
         e.currentTarget.style.transform = "translateY(0)";
       }}
     >
-      <div style={{ aspectRatio: "1 / 1", background: "#221b11", position: "relative", overflow: "hidden" }}>
+      <div style={{ aspectRatio: "1 / 1", background: "#e7dfcc", position: "relative", overflow: "hidden" }}>
         {!imgError && book.coverUrl ? (
           <img
             src={book.coverUrl}
@@ -442,7 +447,7 @@ function BookCardCompact({ book, ar, onOpen }: { book: AudioBook; ar: boolean; o
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(244,239,226,0.06), rgba(244,239,226,0.02))" }}>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "linear-gradient(135deg, rgba(66,53,33,0.06), rgba(66,53,33,0.02))" }}>
             <BookAudio size={38} color="rgba(244,239,226,0.35)" />
           </div>
         )}
@@ -592,7 +597,7 @@ function CategoryPills({ value, onChange, options }: {
               fontWeight: 600,
               letterSpacing: "-0.005em",
               background: active ? TEXT : CARD,
-              color: active ? "#221b11" : MUTED,
+              color: active ? "#f7f2e4" : MUTED,
               border: `1px solid ${active ? TEXT : BORDER}`,
               cursor: "pointer",
               transition: "all 160ms ease",
@@ -663,7 +668,7 @@ function SelectChip({ icon, value, onChange, options, isRTL }: {
           padding: "10px 12px",
           paddingInlineStart: 30,
           fontSize: 12.5, fontWeight: 500, color: TEXT,
-          background: "rgba(244,239,226,0.04)",
+          background: "#fffdf7",
           border: `1px solid ${BORDER}`, borderRadius: 10,
           minWidth: 160, width: "100%", justifyContent: "space-between",
         }}

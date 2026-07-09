@@ -147,6 +147,9 @@ export default function DashboardDemo() {
               <h1 style={{ fontSize: isPhone ? 22 : 28, fontWeight: 700, letterSpacing: "-0.03em", margin: 0 }}>
                 Welcome back, {user?.displayName || user?.email?.split("@")[0] || "Writer"}
               </h1>
+              <span style={{ fontFamily: lang === "ar" ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: lang === "ar" ? 14 : 17, color: "#8a8070", transform: "rotate(-1deg)", display: "inline-block" }}>
+                {lang === "ar" ? "(مكتبك الصغير)" : "(your little desk)"}
+              </span>
               <span style={{
                 fontSize: 10,
                 fontWeight: 700,
