@@ -119,11 +119,14 @@ const SocialSvg = {
 };
 
 // Community homes that must always be reachable from the footer, even
-// before the admin fills /api/social-links. Fetched values win so the
-// admin can still change them without a deploy.
+// when the admin has not filled /api/social-links. A NON-EMPTY value
+// from the admin overrides the default; an empty/missing one falls back
+// here, so the icons never silently disappear.
 const SOCIAL_DEFAULTS: Record<string, string> = {
-  telegram: "https://t.me/plotzy_community",
+  instagram: "https://www.instagram.com/plotzyapp",
+  linkedin: "https://www.linkedin.com/company/plotzy-co/",
   youtube: "https://www.youtube.com/@Plotzynews",
+  telegram: "https://t.me/plotzy_community",
 };
 const SOCIAL_ORDER = ["instagram", "linkedin", "youtube", "telegram", "twitter", "tiktok"];
 
@@ -133,7 +136,11 @@ function FooterSocialIcons() {
     queryFn: () => fetch("/api/social-links").then(r => r.ok ? r.json() : {}),
     staleTime: 5 * 60 * 1000,
   });
-  const merged: Record<string, string> = { ...SOCIAL_DEFAULTS, ...(links || {}) };
+  // Start from the defaults, then let any non-empty admin value win.
+  const merged: Record<string, string> = { ...SOCIAL_DEFAULTS };
+  for (const [key, url] of Object.entries(links || {})) {
+    if (url && url.trim()) merged[key] = url;
+  }
   const entries = Object.entries(merged)
     .filter(([, url]) => !!url)
     .sort(([a], [b]) => {
