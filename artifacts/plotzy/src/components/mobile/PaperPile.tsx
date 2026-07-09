@@ -142,7 +142,9 @@ export function PaperPile({ ar }: { ar: boolean }) {
               width: `${s.w}%`,
               maxWidth: 360,
               padding: "20px 22px",
-              background: s.texture ? "url(/images/crumpled-paper.jpg) center / cover" : "#fffdf7",
+              background: s.texture
+                ? "linear-gradient(rgba(246,240,226,0.4), rgba(246,240,226,0.4)), url(/images/crumpled-paper.jpg) center / cover"
+                : "#fffdf7",
               border: "1px solid rgba(66,53,33,0.16)",
               borderRadius: 6,
               boxShadow: "0 18px 40px -12px rgba(41,33,21,0.45)",

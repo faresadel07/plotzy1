@@ -22,14 +22,15 @@ function Circled({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* The crumpled note: a real faceted-crease paper texture behind the ink. */
+/* The crumpled note: Faris's real crumpled-paper photo behind the ink,
+   with a warm paper wash so it sits in the site's palette. */
 function CourseNote({ ar }: { ar: boolean }) {
   return (
     <div
       dir={ar ? "rtl" : "ltr"}
       style={{
         position: "relative",
-        backgroundImage: "url(/images/crumpled-paper.jpg)",
+        backgroundImage: "linear-gradient(rgba(246,240,226,0.4), rgba(246,240,226,0.4)), url(/images/crumpled-paper.jpg)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         border: "1px solid rgba(66,53,33,0.16)",
