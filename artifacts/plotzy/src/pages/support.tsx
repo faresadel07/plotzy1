@@ -425,19 +425,12 @@ export default function SupportPage() {
           maxWidth: 900, margin: "0 auto", padding: "16px 24px",
           display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
         }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-            background: "rgba(124,106,247,0.10)",
-            border: "1px solid rgba(124,106,247,0.18)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <Sparkles size={16} style={{ color: "#a99ef7" }} />
-          </div>
+          <img src="/images/paper-ball.png" alt="" aria-hidden style={{ width: 34, flexShrink: 0, transform: "rotate(-14deg)", filter: "drop-shadow(0 4px 7px rgba(41,33,21,0.25))" }} />
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontFamily: SF, fontSize: 13.5, fontWeight: 600, color: "#2f2618", marginBottom: 2 }}>
+            <div style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif", fontSize: 14.5, fontWeight: 700, color: "#2f2618", marginBottom: 2 }}>
               {t("spLookingAnswers")}
             </div>
-            <div style={{ fontFamily: SF, fontSize: 12.5, color: "#6d6354", lineHeight: 1.5 }}>
+            <div style={{ fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: 15.5, color: "#6d6354", lineHeight: 1.45, transform: "rotate(-0.4deg)", transformOrigin: "0 50%" }}>
               {t("spFaqBannerBody")}
             </div>
           </div>

@@ -408,9 +408,23 @@ export default function Library() {
     return s;
   };
 
+  // Search that forgives how Arabic is actually typed: hamza variants,
+  // taa marbuta, alef maqsura, diacritics and tatweel all collapse to
+  // one form, and every word of the query may match the title OR the
+  // author independently ("فارس الباب" finds فارس حمدان's الباب الذي لم يكن).
+  const normalize = (v: string) =>
+    v.toLowerCase()
+      .replace(/[ً-ْـ]/g, "")
+      .replace(/[أإآ]/g, "ا")
+      .replace(/ة/g, "ه")
+      .replace(/ى/g, "ي")
+      .replace(/[ؤ]/g, "و")
+      .replace(/[ئ]/g, "ي")
+      .trim();
+  const queryWords = normalize(search).split(/s+/).filter(Boolean);
   const filtered = books?.filter(b => {
-    const q = search.toLowerCase().trim();
-    const matchSearch = !q || b.title.toLowerCase().includes(q) || (b.authorName || b.authorDisplayName || "").toLowerCase().includes(q);
+    const haystack = normalize(b.title + " " + (b.authorName || b.authorDisplayName || ""));
+    const matchSearch = queryWords.length === 0 || queryWords.every(w => haystack.includes(w));
     const matchGenre = genre === "All" || b.genre === genre;
     return matchSearch && matchGenre;
   }).sort((a, b) => {
