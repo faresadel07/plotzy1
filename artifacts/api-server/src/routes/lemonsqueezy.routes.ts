@@ -41,13 +41,21 @@ async function lsFetch(path: string, init?: RequestInit) {
 }
 
 // Public config: lets the frontend know whether to render the
-// subscribe button at all (and whether we're in test mode).
-router.get("/api/billing/config", (_req, res) => {
-  return res.json({
-    enabled: lsConfigured(),
-    priceCents: 1099,
-    testMode: (process.env.LEMONSQUEEZY_API_KEY || "").length > 0 && process.env.LEMONSQUEEZY_TEST_MODE === "true",
-  });
+// subscribe button at all (and whether we're in test mode). While the
+// store runs on TEST keys, only admins see billing as enabled — real
+// visitors on prod must never meet a checkout that cannot take money.
+router.get("/api/billing/config", async (req, res) => {
+  const testMode = process.env.LEMONSQUEEZY_TEST_MODE === "true";
+  let enabled = lsConfigured();
+  if (enabled && testMode) {
+    let isAdmin = false;
+    if (req.isAuthenticated() && req.user) {
+      const u = await storage.getUserById((req.user as any).id);
+      isAdmin = (u as any)?.role === "admin";
+    }
+    enabled = isAdmin;
+  }
+  return res.json({ enabled, priceCents: 1099, testMode });
 });
 
 // Create a checkout for the signed-in user and hand its URL to the
