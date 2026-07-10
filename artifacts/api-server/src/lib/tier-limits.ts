@@ -98,7 +98,23 @@ const LIMITS: Record<Tier, TierLimits> = {
   },
 };
 
+// When Lemon Squeezy billing goes live (BILLING_ENABLED=true on
+// Railway), the free tier keeps ALL of the writing product (unlimited
+// books, chapters, words, publishing, the course stays free forever)
+// but the features that burn real API money move behind Plotzy Pro:
+// a small daily AI taste remains so writers can feel the tools.
+// With the flag off (the default), nothing changes for anyone.
+const GATED_FREE: TierLimits = {
+  ...LIMITS.free,
+  maxAiCallsPerDay: 5,
+  maxImagesPerDay: 1,
+  maxAudiobookExportsPerMonth: 0,
+  canUseAudiobook: false,
+  canUseAdvancedAI: false,
+};
+
 export function getTierLimits(tier: Tier): TierLimits {
+  if (tier === "free" && process.env.BILLING_ENABLED === "true") return GATED_FREE;
   return LIMITS[tier] || LIMITS.free;
 }
 

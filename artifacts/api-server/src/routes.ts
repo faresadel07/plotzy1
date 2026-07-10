@@ -30,6 +30,7 @@ import { buildCoverImagePrompt, generateCoverImages, hasCoverImageProvider } fro
 import socialRouter from "./routes/social.routes";
 import authRouter from "./routes/auth.routes";
 import paymentsRouter from "./routes/payments.routes";
+import lemonSqueezyRouter from "./routes/lemonsqueezy.routes";
 import gutenbergRouter, { syncGutenbergCatalog, precacheTopBooks } from "./routes/gutenberg.routes";
 import hindawiRouter, { syncHindawiCatalog, precacheHindawiTopBooks } from "./routes/hindawi.routes";
 import adminRouter from "./routes/admin.routes";
@@ -2923,6 +2924,7 @@ Write the query letter specifically tailored to this publisher, mentioning why t
 
   // ─── Payments & Subscription routes (extracted to ./routes/payments.routes.ts) ──
   app.use(paymentsRouter);
+  app.use(lemonSqueezyRouter);
   app.use(adminRouter);
 
   // ─── Audiobook Studio ───────────────────────────────────────────────────────

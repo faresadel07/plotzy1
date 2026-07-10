@@ -86,6 +86,10 @@ export default function AccountSubscription() {
   });
   const isSandbox = !!paypalConfig?.sandbox;
 
+  const { data: billingConfig } = useQuery<{ enabled: boolean; priceCents: number; testMode: boolean }>({
+    queryKey: ["/api/billing/config"],
+  });
+
   const planId = user?.subscriptionPlan ?? null;
   const plan = getPlanDetails(planId);
   const status = user?.subscriptionStatus ?? "free_trial";
@@ -118,6 +122,7 @@ export default function AccountSubscription() {
 
           <AccountTabs current="subscription" />
 
+          {isFree && billingConfig?.enabled && <ProUpsellCard testMode={billingConfig.testMode} />}
           {isFree ? (
             <FreePlanCard />
           ) : (
@@ -239,9 +244,10 @@ function CurrentSubscriptionCard({
 
       {(canCancel || canResubscribe) && (
         <div
-          className="mt-6 pt-5 flex justify-end"
+          className="mt-6 pt-5 flex justify-end items-center gap-4"
           style={{ borderTop: `1px solid ${B}` }}
         >
+          {canCancel && <ManageBillingButton />}
           {canCancel ? (
             <button
               type="button"
@@ -674,4 +680,140 @@ function formatDate(iso: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+
+// ─── Plotzy Pro via Lemon Squeezy ───────────────────────────────────────────
+// The checkout opens in a Lemon.js overlay on top of the page (cards,
+// Apple Pay, Google Pay, PayPal), so the writer never leaves Plotzy.
+
+let lemonJsLoading: Promise<void> | null = null;
+function ensureLemonJs(): Promise<void> {
+  if ((window as any).LemonSqueezy) return Promise.resolve();
+  if (!lemonJsLoading) {
+    lemonJsLoading = new Promise((resolve, reject) => {
+      const el = document.createElement("script");
+      el.src = "https://assets.lemonsqueezy.com/lemon.js";
+      el.defer = true;
+      el.onload = () => { try { (window as any).createLemonSqueezy?.(); } catch { /* older lemon.js self-initializes */ } resolve(); };
+      el.onerror = () => reject(new Error("lemon.js failed"));
+      document.head.appendChild(el);
+    });
+  }
+  return lemonJsLoading;
+}
+
+async function openLemonCheckout(url: string) {
+  try {
+    await ensureLemonJs();
+    const LS = (window as any).LemonSqueezy;
+    if (LS?.Url?.Open) { LS.Url.Open(url); return; }
+  } catch { /* fall through to a plain tab */ }
+  window.open(url, "_blank", "noopener");
+}
+
+function ManageBillingButton() {
+  const { lang } = useLanguage();
+  const [hasPortal, setHasPortal] = useState(true);
+  const [busy, setBusy] = useState(false);
+  if (!hasPortal) return null;
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const r = await fetch("/api/billing/portal", { credentials: "include" });
+          if (!r.ok) { setHasPortal(false); return; }
+          const { url } = await r.json();
+          if (url) window.open(url, "_blank", "noopener");
+        } catch { setHasPortal(false); }
+        finally { setBusy(false); }
+      }}
+      className="text-xs font-medium transition-colors"
+      style={{ color: TS }}
+      onMouseEnter={(e) => (e.currentTarget.style.color = T)}
+      onMouseLeave={(e) => (e.currentTarget.style.color = TS)}
+    >
+      {busy ? "..." : (lang === "ar" ? "إدارة الدفع والفواتير" : "Manage billing")}
+    </button>
+  );
+}
+
+function ProUpsellCard({ testMode }: { testMode: boolean }) {
+  const { lang } = useLanguage();
+  const ar = lang === "ar";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const FEATURES: { en: string; ar: string }[] = [
+    { en: "Claude writing assistant with a big daily allowance", ar: "مساعد الكتابة Claude بحصة يومية كبيرة" },
+    { en: "AI analysis tools for your manuscript", ar: "أدوات التحليل الذكي لمخطوطتك" },
+    { en: "Audiobook Studio exports", ar: "استوديو الكتاب الصوتي" },
+    { en: "AI cover art generation", ar: "توليد أغلفة بالذكاء الاصطناعي" },
+    { en: "Live co-writing sessions", ar: "جلسات الكتابة الحية المشتركة" },
+  ];
+
+  const subscribe = async () => {
+    setBusy(true); setError(null);
+    try {
+      const r = await fetch("/api/billing/checkout", { method: "POST", credentials: "include" });
+      if (!r.ok) throw new Error();
+      const { url } = await r.json();
+      if (!url) throw new Error();
+      await openLemonCheckout(url);
+    } catch {
+      setError(ar ? "تعذر فتح صفحة الدفع، حاول مجدداً" : "Could not open checkout, try again");
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <section className="rounded-2xl p-7 md:p-8 mb-6" style={{ background: C2, border: `1px solid ${B}`, boxShadow: "0 12px 34px -20px rgba(41,33,21,0.35)" }}>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="text-xs font-bold uppercase" style={{ letterSpacing: "0.22em", color: "#7b5e3b", fontFamily: "'Courier New', 'Noto Naskh Arabic', monospace" }}>
+          Plotzy Pro
+        </p>
+        {testMode && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(179,64,46,0.1)", color: "#b3402e", border: "1px solid rgba(179,64,46,0.3)" }}>
+            {ar ? "وضع التجربة" : "TEST MODE"}
+          </span>
+        )}
+      </div>
+      <h2 className="text-2xl md:text-3xl font-bold leading-tight mt-1" style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>
+        {ar ? "أطلق كل قوة بلوتزي" : "Unlock all of Plotzy"}
+      </h2>
+      <p className="mt-1" style={{ color: TS }}>
+        <span className="text-2xl font-bold" style={{ color: T }}>$10.99</span> {ar ? "شهرياً" : "per month"}
+      </p>
+      <p style={{ fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: ar ? 14 : 16.5, color: TS, transform: "rotate(-0.5deg)", display: "inline-block" }}>
+        {ar ? "(الكتابة والمكتبات والكورس بتضل مجانية للجميع، للأبد)" : "(writing, the libraries and the course stay free for everyone, forever)"}
+      </p>
+
+      <ul className="mt-5 space-y-2.5">
+        {FEATURES.map((f, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm">
+            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#7b5e3b" }} />
+            <span>{ar ? f.ar : f.en}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-6 flex items-center gap-4 flex-wrap">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={subscribe}
+          className="rounded-xl px-6 py-3 text-sm font-bold transition-all hover:-translate-y-px disabled:opacity-60"
+          style={{ background: "#292115", color: "#f4efe2", boxShadow: "0 6px 18px -8px rgba(41,33,21,0.5)" }}
+        >
+          {busy ? (ar ? "لحظة..." : "One moment...") : (ar ? "اشترك الآن" : "Subscribe now")}
+        </button>
+        <span className="text-xs" style={{ color: TS }}>
+          {ar ? "أبل باي، جوجل باي، البطاقات، وباي بال. الإلغاء بأي وقت." : "Apple Pay, Google Pay, cards and PayPal. Cancel anytime."}
+        </span>
+      </div>
+      {error && <p className="mt-3 text-xs" style={{ color: "#b3402e" }}>{error}</p>}
+    </section>
+  );
 }

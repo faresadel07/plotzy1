@@ -73,6 +73,9 @@ export const users = pgTable("users", {
   // route handlers in social.routes.ts and routes.ts.
   emailEngagementNotifications: boolean("email_engagement_notifications").default(true).notNull(),
   stripeCustomerId: text("stripe_customer_id"),
+  // Lemon Squeezy (merchant of record; the live billing processor)
+  lsCustomerId: text("ls_customer_id"),
+  lsSubscriptionId: text("ls_subscription_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   suspended: boolean("suspended").default(false),
   role: text("role").default("user").notNull(), // user | admin | moderator
@@ -1583,13 +1586,13 @@ export const FREE_MAX_IMAGES_PER_DAY = 25;
 export const FREE_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 10;
 
 // ── Pro Tier Limits ──
-export const PRO_MAX_BOOKS = 50;
-export const PRO_MAX_CHAPTERS_PER_BOOK = 100;
-export const PRO_MAX_WORDS = 500000;
-export const PRO_MAX_AI_CALLS_PER_DAY = 100;
-export const PRO_MAX_PUBLISHED_BOOKS = 20;
-export const PRO_MAX_IMAGES_PER_DAY = 10;
-export const PRO_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 3;
+export const PRO_MAX_BOOKS = 9999;
+export const PRO_MAX_CHAPTERS_PER_BOOK = 9999;
+export const PRO_MAX_WORDS = 99999999;
+export const PRO_MAX_AI_CALLS_PER_DAY = 500;
+export const PRO_MAX_PUBLISHED_BOOKS = 9999;
+export const PRO_MAX_IMAGES_PER_DAY = 50;
+export const PRO_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 30;
 
 // ── Premium Tier Limits ──
 export const PREMIUM_MAX_BOOKS = 9999;
@@ -1610,7 +1613,7 @@ export const PREMIUM_MAX_AUDIOBOOK_EXPORTS_PER_MONTH = 10;
 // numbers are marketing visuals and do not exist in the backend.
 // Yearly prices reflect a 15% discount on the founders monthly
 // rates.
-export const PRO_MONTHLY_CENTS = 499;            // $4.99/month  (founders price)
+export const PRO_MONTHLY_CENTS = 1099;           // $10.99/month (Plotzy Pro, single paid plan)
 export const PRO_YEARLY_CENTS = 5099;            // $50.99/year  (15% off $4.99 x 12)
 export const PREMIUM_MONTHLY_CENTS = 899;        // $8.99/month  (founders price)
 export const PREMIUM_YEARLY_CENTS = 9199;        // $91.99/year  (15% off $8.99 x 12)
