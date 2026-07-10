@@ -19,17 +19,21 @@ function useIsMobile(bp = 768) {
 
 /* ── Design tokens ────────────────────────────────────────── */
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#000";
-const SIDEBAR = "#0a0a0a";
-const CARD = "#111";
-const B = "rgba(255,255,255,0.06)";
-const T = "#fff";
-const TS = "rgba(255,255,255,0.55)";
-const TD = "rgba(255,255,255,0.25)";
-const SENT_BG = "#fff";
-const SENT_TEXT = "#000";
-const RECV_BG = "#332a1b";
-const RECV_TEXT = "rgba(255,255,255,0.88)";
+const BG = "#f4efe2";
+const SIDEBAR = "#faf6ea";
+const CARD = "#fffdf7";
+const B = "rgba(66,53,33,0.12)";
+const T = "#2f2618";
+const TS = "#5c5142";
+const TD = "#8a8070";
+const SERIF = "'Lora', 'Amiri', Georgia, serif";
+const HAND = "'Caveat', 'Aref Ruqaa', cursive";
+// Instagram grammar on paper: my bubbles are espresso, theirs are a
+// soft ink wash on the page.
+const SENT_BG = "#292115";
+const SENT_TEXT = "#f4efe2";
+const RECV_BG = "rgba(66,53,33,0.08)";
+const RECV_TEXT = "#2f2618";
 
 /* ── Time helpers ─────────────────────────────────────────── */
 function formatTime(d: string) { return new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
@@ -67,7 +71,7 @@ function Avatar({ url, name, size = 40 }: { url: string | null; name: string | n
   const initial = (name || "?")[0].toUpperCase();
   if (url) return <img src={url} alt={name || ""} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
   return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(135deg, #333 0%, #222 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)", fontFamily: SF, fontSize: size * 0.38, fontWeight: 600, flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", background: "linear-gradient(135deg, #e9dfc6 0%, #d9cdb0 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#5a4a33", fontFamily: SF, fontSize: size * 0.38, fontWeight: 600, flexShrink: 0 }}>
       {initial}
     </div>
   );
@@ -103,7 +107,7 @@ function BubbleContent({ content, isMine }: { content: string; isMine: boolean }
             w.document.title = parsed.name || "Image";
           }}
         />
-        <div style={{ fontSize: 10.5, color: isMine ? "rgba(0,0,0,0.4)" : TD, marginTop: 4 }}>{parsed.name}</div>
+        <div style={{ fontSize: 10.5, color: isMine ? "rgba(244,239,226,0.65)" : TD, marginTop: 4 }}>{parsed.name}</div>
       </div>
     );
   }
@@ -116,14 +120,14 @@ function BubbleContent({ content, isMine }: { content: string; isMine: boolean }
     };
     return (
       <button type="button" onClick={downloadFile} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "4px 0", background: "none", border: "none", textAlign: "left", width: "100%", color: "inherit", font: "inherit" }}>
-        <div style={{ width: 40, height: 40, borderRadius: 8, background: isMine ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <FileText style={{ width: 20, height: 20, color: isMine ? "rgba(0,0,0,0.5)" : TS }} />
+        <div style={{ width: 40, height: 40, borderRadius: 8, background: isMine ? "rgba(244,239,226,0.16)" : "rgba(66,53,33,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <FileText style={{ width: 20, height: 20, color: isMine ? "rgba(244,239,226,0.8)" : TS }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12.5, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{parsed.name}</div>
-          <div style={{ fontSize: 10.5, color: isMine ? "rgba(0,0,0,0.35)" : TD, marginTop: 1 }}>{t("msTapDownload")}</div>
+          <div style={{ fontSize: 10.5, color: isMine ? "rgba(244,239,226,0.6)" : TD, marginTop: 1 }}>{t("msTapDownload")}</div>
         </div>
-        <Download style={{ width: 16, height: 16, color: isMine ? "rgba(0,0,0,0.3)" : TD, flexShrink: 0 }} />
+        <Download style={{ width: 16, height: 16, color: isMine ? "rgba(244,239,226,0.6)" : TD, flexShrink: 0 }} />
       </button>
     );
   }
@@ -225,14 +229,20 @@ export default function Messages() {
   };
 
   return (
-    <Layout isFullDark darkNav noScroll>
+    <Layout noScroll>
       <SEO title={t("msSeo")} noindex />
       <div style={{ display: "flex", height: "calc(100vh - 44px)", fontFamily: SF, background: BG }}>
 
         {/* ═══ SIDEBAR ═══════════════════════════════════ */}
         <div style={{ width: isMobile ? "100%" : 340, borderRight: isMobile ? "none" : `1px solid ${B}`, display: isMobile && selectedUserId ? "none" : "flex", flexDirection: "column", background: SIDEBAR, flexShrink: 0 }}>
           <div style={{ padding: "20px 20px 16px" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: T, margin: "0 0 14px", letterSpacing: "-0.02em" }}>{t("msTitle")}</h2>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", margin: "0 0 4px" }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.01em", fontFamily: SERIF }}>{t("msTitle")}</h2>
+              <img src="/images/paper-ball.png" alt="" aria-hidden style={{ width: 24, transform: "rotate(-16deg)", filter: "drop-shadow(0 3px 6px rgba(41,33,21,0.22))", pointerEvents: "none" }} />
+            </div>
+            <p style={{ fontFamily: HAND, fontSize: 14.5, color: TD, margin: "0 0 12px", transform: "rotate(-0.6deg)", display: "inline-block" }}>
+              {t("msTitle") === "Messages" ? "(talk shop with writers like you)" : "(سولف مع كتّاب متلك)"}
+            </p>
             <div style={{ display: "flex", alignItems: "center", gap: 8, background: CARD, borderRadius: 10, padding: "8px 12px", border: `1px solid ${B}` }}>
               <Search style={{ width: 14, height: 14, color: TD, flexShrink: 0 }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("msSearchPlaceholder")} style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: T, fontFamily: SF, fontSize: 13 }} />
@@ -250,8 +260,8 @@ export default function Messages() {
               const active = selectedUserId === convo.partnerId;
               return (
                 <button key={convo.partnerId} onClick={() => navigate(`/messages/${convo.partnerId}`)}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", width: "100%", textAlign: "left", background: active ? "rgba(255,255,255,0.04)" : "transparent", border: "none", borderLeft: active ? "2px solid #fff" : "2px solid transparent", cursor: "pointer", transition: "all 0.15s" }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", width: "100%", textAlign: "left", background: active ? "rgba(122,94,59,0.1)" : "transparent", border: "none", borderLeft: "2px solid transparent", cursor: "pointer", transition: "all 0.15s" }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(66,53,33,0.05)"; }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
                 >
                   <Avatar url={convo.partnerAvatarUrl} name={convo.partnerDisplayName} size={44} />
@@ -263,7 +273,7 @@ export default function Messages() {
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
                       <span style={{ fontSize: 12.5, color: convo.unreadCount > 0 ? TS : TD, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{lastMsgPreview(convo)}</span>
                       {convo.unreadCount > 0 && (
-                        <span style={{ minWidth: 20, height: 20, borderRadius: 10, background: "#fff", color: "#000", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 6px", flexShrink: 0 }}>{convo.unreadCount > 99 ? "99+" : convo.unreadCount}</span>
+                        <span style={{ minWidth: 20, height: 20, borderRadius: 10, background: "#292115", color: "#f4efe2", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 6px", flexShrink: 0 }}>{convo.unreadCount > 99 ? "99+" : convo.unreadCount}</span>
                       )}
                     </div>
                   </div>
@@ -277,11 +287,12 @@ export default function Messages() {
         <div style={{ flex: 1, display: isMobile && !selectedUserId ? "none" : "flex", flexDirection: "column", background: BG, minWidth: 0 }}>
           {!selectedUserId ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 40 }}>
-              <div style={{ width: 80, height: 80, borderRadius: 20, background: "rgba(255,255,255,0.03)", border: `1px solid ${B}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <MessageCircle style={{ width: 36, height: 36, color: "rgba(255,255,255,0.15)" }} />
+              <div style={{ width: 80, height: 80, borderRadius: 20, background: CARD, border: `1px solid ${B}`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 24px -16px rgba(41,33,21,0.35)" }}>
+                <MessageCircle style={{ width: 36, height: 36, color: "#c9bb9c" }} />
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.02em" }}>{t("msWelcome")}</h3>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: T, margin: 0, letterSpacing: "-0.01em", fontFamily: SERIF }}>{t("msWelcome")}</h3>
               <p style={{ fontSize: 14, color: TD, margin: 0, textAlign: "center", maxWidth: 360, lineHeight: 1.6 }}>{t("msWelcomeBody")}</p>
+              <img src="/images/paper-ball.png" alt="" aria-hidden style={{ width: 30, transform: "rotate(20deg)", filter: "drop-shadow(0 4px 7px rgba(41,33,21,0.25))", pointerEvents: "none" }} />
             </div>
           ) : (
             <>
@@ -293,8 +304,11 @@ export default function Messages() {
                   </button>
                 )}
                 <Avatar url={selectedConvo?.partnerAvatarUrl ?? null} name={selectedConvo?.partnerDisplayName ?? null} size={36} />
-                <Link href={`/authors/${selectedUserId}`} style={{ fontSize: 14, fontWeight: 600, color: T, textDecoration: "none" }}>
-                  {selectedConvo?.partnerDisplayName || t("msUser")}
+                <Link href={`/authors/${selectedUserId}`} style={{ fontSize: 14.5, fontWeight: 700, color: T, textDecoration: "none", fontFamily: SERIF, display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedConvo?.partnerDisplayName || t("msUser")}</span>
+                  <span style={{ fontFamily: HAND, fontSize: 13, color: "#a08a6a", whiteSpace: "nowrap", fontWeight: 400 }}>
+                    {t("msTitle") === "Messages" ? "(view profile)" : "(شوف ملفه)"}
+                  </span>
                 </Link>
               </div>
 
@@ -303,14 +317,14 @@ export default function Messages() {
                 {messages.length === 0 ? (
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, height: "100%" }}>
                     <div style={{ fontSize: 13, color: TS }}>{t("msNoMessages")}</div>
-                    <div style={{ fontSize: 12, color: TD }}>{t("msSayHello")}</div>
+                    <div style={{ fontFamily: HAND, fontSize: 17, color: TD, transform: "rotate(-1deg)" }}>{t("msSayHello")}</div>
                   </div>
                 ) : grouped.map((group, gi) => (
                   <div key={gi}>
                     {/* Date separator */}
                     <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0", padding: "0 20px" }}>
                       <div style={{ flex: 1, height: 1, background: B }} />
-                      <span style={{ fontSize: 11, color: TD, fontWeight: 500 }}>{formatDate(group.msgs[0].createdAt, t)}</span>
+                      <span style={{ fontFamily: HAND, fontSize: 14, color: TD, fontWeight: 600 }}>{formatDate(group.msgs[0].createdAt, t)}</span>
                       <div style={{ flex: 1, height: 1, background: B }} />
                     </div>
                     {group.msgs.map((msg, mi) => {
@@ -324,11 +338,12 @@ export default function Messages() {
                             borderBottomRightRadius: isMine ? 4 : 16, borderBottomLeftRadius: isMine ? 16 : 4,
                             background: isMine ? SENT_BG : RECV_BG, color: isMine ? SENT_TEXT : RECV_TEXT,
                             fontSize: 14, lineHeight: 1.55, fontFamily: SF,
+                            boxShadow: isMine ? "0 4px 12px -6px rgba(41,33,21,0.45)" : "none",
                           }}>
                             <BubbleContent content={msg.content} isMine={isMine} />
                             <div style={{ display: "flex", alignItems: "center", justifyContent: isMine ? "flex-end" : "flex-start", gap: 4, marginTop: 4 }}>
-                              <span style={{ fontSize: 10, color: isMine ? "rgba(0,0,0,0.4)" : TD }}>{formatTime(msg.createdAt)}</span>
-                              {isMine && (msg.read ? <CheckCheck style={{ width: 14, height: 14, color: "#60a5fa" }} /> : <Check style={{ width: 14, height: 14, color: "rgba(0,0,0,0.35)" }} />)}
+                              <span style={{ fontSize: 10, color: isMine ? "rgba(244,239,226,0.65)" : TD }}>{formatTime(msg.createdAt)}</span>
+                              {isMine && (msg.read ? <CheckCheck style={{ width: 14, height: 14, color: "#e9c46a" }} /> : <Check style={{ width: 14, height: 14, color: "rgba(244,239,226,0.55)" }} />)}
                             </div>
                           </div>
                         </div>
@@ -345,7 +360,7 @@ export default function Messages() {
                   {previewFile.url ? (
                     <img src={previewFile.url} alt={t("msAttachmentPreview")} style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }} />
                   ) : (
-                    <div style={{ width: 48, height: 48, borderRadius: 8, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 8, background: "rgba(66,53,33,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <FileText style={{ width: 22, height: 22, color: TS }} />
                     </div>
                   )}
@@ -353,7 +368,7 @@ export default function Messages() {
                     <div style={{ fontSize: 12.5, color: T, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{previewFile.file.name}</div>
                     <div style={{ fontSize: 11, color: TD }}>{(previewFile.file.size / 1024).toFixed(0)} KB</div>
                   </div>
-                  <button onClick={() => { if (previewFile?.url) URL.revokeObjectURL(previewFile.url); setPreviewFile(null); }} style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "rgba(255,255,255,0.06)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TS }}>
+                  <button onClick={() => { if (previewFile?.url) URL.revokeObjectURL(previewFile.url); setPreviewFile(null); }} style={{ width: 28, height: 28, borderRadius: 6, border: "none", background: "rgba(66,53,33,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: TS }}>
                     <X style={{ width: 14, height: 14 }} />
                   </button>
                 </div>
@@ -374,8 +389,8 @@ export default function Messages() {
                     style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: T, fontFamily: SF, fontSize: 14, resize: "none", lineHeight: 1.45, maxHeight: 100, padding: "6px 0", minHeight: 24 }}
                   />
                   <button onClick={handleSend} disabled={(!input.trim() && !previewFile) || sendMut.isPending || uploadMut.isPending}
-                    style={{ width: 36, height: 36, borderRadius: 10, background: (input.trim() || previewFile) ? "#fff" : "rgba(255,255,255,0.06)", border: "none", cursor: (input.trim() || previewFile) ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", opacity: (input.trim() || previewFile) ? 1 : 0.3, flexShrink: 0 }}>
-                    <Send style={{ width: 16, height: 16, color: (input.trim() || previewFile) ? "#000" : "#fff" }} />
+                    style={{ width: 36, height: 36, borderRadius: 10, background: (input.trim() || previewFile) ? "#292115" : "rgba(66,53,33,0.08)", border: "none", cursor: (input.trim() || previewFile) ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", opacity: (input.trim() || previewFile) ? 1 : 0.3, flexShrink: 0 }}>
+                    <Send style={{ width: 16, height: 16, color: (input.trim() || previewFile) ? "#f4efe2" : "#8a8070" }} />
                   </button>
                 </div>
               </div>
