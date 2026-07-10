@@ -82,6 +82,12 @@ router.post("/api/billing/checkout", async (req, res) => {
           product_options: {
             redirect_url: `${origin}/account/subscription?checkout=success`,
           },
+          // Brand the LS checkout as far as their MoR layout allows:
+          // the fields themselves (email, card, billing country) are
+          // fixed by Lemon Squeezy for tax reasons.
+          checkout_options: {
+            button_color: "#292115",
+          },
         },
         relationships: {
           store: { data: { type: "stores", id: String(process.env.LEMONSQUEEZY_STORE_ID) } },
