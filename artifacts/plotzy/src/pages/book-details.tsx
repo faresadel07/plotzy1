@@ -412,7 +412,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
         <div className={`lg:col-span-4 flex flex-col gap-4 ${isPhone ? "" : "h-full overflow-y-auto"} px-4 sm:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10`} style={{ borderRight: '1px solid rgba(66,53,33,0.08)' }}>
 
           {/* Cover Card */}
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(66,53,33,0.08)', border: '1px solid rgba(244,239,226,0.10)' }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(66,53,33,0.08)', border: '1px solid rgba(66,53,33,0.12)' }}>
 
             {/* Cover with hover */}
             <div className="relative group cursor-pointer">
@@ -438,7 +438,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                   {book.title}
                 </h1>
                 {book.authorName && (
-                  <p className="text-sm mt-0.5 font-medium" style={{ color: 'rgba(244,239,226,0.38)' }}>{book.authorName}</p>
+                  <p className="text-sm mt-0.5 font-medium" style={{ color: '#6d6354' }}>{book.authorName}</p>
                 )}
               </div>
 
@@ -521,7 +521,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
           <Link href={`/books/${bookId}/audiobook`} className="block" data-testid="button-audiobook-studio">
             <div
               className="group rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
-              style={{ border: '1px solid rgba(244,239,226,0.09)', background: '#fffdf7' }}
+              style={{ border: '1px solid rgba(66,53,33,0.12)', background: '#fffdf7' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(66,53,33,0.09)')}
               onMouseLeave={e => (e.currentTarget.style.background = '#fffdf7')}
             >
@@ -531,7 +531,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 <p className="text-sm font-semibold" style={{ color: '#3a3020' }}>
                   {lang === "ar" ? "استوديو الكتاب الصوتي" : "Audiobook Studio"}
                 </p>
-                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(244,239,226,0.38)' }}>
+                <p className="text-xs mt-0.5 line-clamp-1" style={{ color: '#6d6354' }}>
                   {lang === "ar" ? "تحويل الكتاب إلى ملف صوتي بالذكاء الاصطناعي" : "Export your book as an AI-voiced MP3"}
                 </p>
               </div>
@@ -588,9 +588,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     key={key}
                     onClick={() => setActiveTab(key)}
                     className="relative flex items-center gap-1.5 px-3.5 py-3 text-sm font-medium transition-all"
-                    style={{ color: active ? '#2f2618' : '#9a9181', fontWeight: active ? 600 : 400 }}
+                    style={{ color: active ? '#2f2618' : '#5c5142', fontWeight: active ? 600 : 500 }}
                     onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#5c5142'; }}
-                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#9a9181'; }}
+                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#5c5142'; }}
                   >
                     <Icon size={13} />
                     <span className="hidden sm:inline">{label}</span>
@@ -606,9 +606,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             <div className={`flex items-center gap-2 pb-2 ${isPhone ? "flex-wrap" : "flex-shrink-0"}`}>
               {isOwner && <button onClick={() => setShowCollabModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ color: 'rgba(244,239,226,0.50)', border: '1px solid rgba(66,53,33,0.13)', background: 'transparent' }}
-                onMouseEnter={e => { e.currentTarget.style.color = 'rgba(244,239,226,0.80)'; e.currentTarget.style.borderColor = '#9a9181'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(244,239,226,0.50)'; e.currentTarget.style.borderColor = 'rgba(66,53,33,0.13)'; }}
+                style={{ color: '#4a4132', border: '1px solid rgba(66,53,33,0.2)', background: 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#2f2618'; e.currentTarget.style.borderColor = '#7b5e3b'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#4a4132'; e.currentTarget.style.borderColor = 'rgba(66,53,33,0.2)'; }}
               >
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{lang === "ar" ? "تعاون" : "Collaborate"}</span>
@@ -618,9 +618,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
               {false && isOwner && <Link href="/marketplace">
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{ color: 'rgba(244,239,226,0.50)', border: '1px solid rgba(66,53,33,0.13)', background: 'transparent' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.80)'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#9a9181'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(244,239,226,0.50)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(66,53,33,0.13)'; }}
+                  style={{ color: '#4a4132', border: '1px solid rgba(66,53,33,0.2)', background: 'transparent' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#2f2618'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#7b5e3b'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#4a4132'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(66,53,33,0.2)'; }}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{lang === "ar" ? "مجموعة الذكاء" : "AI Suite"}</span>
@@ -762,13 +762,13 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
             {activeTab === "chapters" && (
               <section>
                 <div className="flex items-center justify-between mb-5">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgba(244,239,226,0.22)' }}>{t("chapters")}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: '#7b7366' }}>{t("chapters")}</p>
                   <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
                     <DialogTrigger asChild>
                       <button
                         className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-                        style={{ background: 'rgba(66,53,33,0.11)', color: 'rgba(244,239,226,0.70)', border: 'none' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(244,239,226,0.13)')}
+                        style={{ background: '#292115', color: '#f7f2e4', border: 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#423521')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'rgba(66,53,33,0.11)')}
                         data-testid="button-new-chapter"
                       >
@@ -803,12 +803,12 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                 </div>
 
                 {!sortedChapters.length ? (
-                  <div className="text-center py-16 rounded-2xl" style={{ border: '1px dashed rgba(66,53,33,0.11)', background: 'rgba(244,239,226,0.01)' }}>
+                  <div className="text-center py-16 rounded-2xl" style={{ border: '1px dashed rgba(66,53,33,0.11)', background: 'rgba(66,53,33,0.02)' }}>
                     <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: '#fffdf7' }}>
                       <FileText className="w-5 h-5" style={{ color: '#9a9181' }} />
                     </div>
                     <p className="text-sm font-semibold" style={{ color: '#7b7366' }}>{t("noChaptersYet")}</p>
-                    <p className="text-xs mt-1" style={{ color: 'rgba(244,239,226,0.22)' }}>{t("noChaptersDesc")}</p>
+                    <p className="text-xs mt-1" style={{ color: '#7b7366' }}>{t("noChaptersDesc")}</p>
                   </div>
                 ) : (
                   <DragDropContext onDragEnd={handleDragEnd}>
@@ -824,7 +824,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   className="group relative flex items-center gap-0 transition-colors"
                                   style={{
                                     ...provided.draggableProps.style,
-                                    background: snapshot.isDragging ? 'rgba(244,239,226,0.055)' : 'transparent',
+                                    background: snapshot.isDragging ? 'rgba(66,53,33,0.06)' : 'transparent',
                                     borderBottom: index < sortedChapters.length - 1 ? '1px solid rgba(66,53,33,0.09)' : 'none',
                                   }}
                                   onMouseEnter={e => { if (!snapshot.isDragging) (e.currentTarget as HTMLDivElement).style.background = '#fffdf7'; }}
@@ -834,7 +834,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                   {/* Large faded chapter number */}
                                   <div
                                     className="flex-shrink-0 flex items-center justify-center select-none"
-                                    style={{ width: 56, color: 'rgba(66,53,33,0.09)', fontSize: 32, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, padding: '18px 0 18px 16px' }}
+                                    style={{ width: 56, color: '#5a4a33', fontSize: 32, fontWeight: 900, fontVariantNumeric: 'tabular-nums', lineHeight: 1, padding: '18px 0 18px 16px' }}
                                   >
                                     {String(index + 1).padStart(2, '0')}
                                   </div>
@@ -867,10 +867,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                       />
                                     ) : (
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`} className="block">
-                                        <h4 className="font-semibold text-[15px] leading-tight line-clamp-1 transition-colors" style={{ color: 'rgba(244,239,226,0.82)' }}>
+                                        <h4 className="font-semibold text-[15px] leading-tight line-clamp-1 transition-colors" style={{ color: '#2f2618' }}>
                                           {chapter.title}
                                         </h4>
-                                        <p className="text-xs flex items-center gap-1.5 mt-1" style={{ color: 'rgba(244,239,226,0.28)' }}>
+                                        <p className="text-xs flex items-center gap-1.5 mt-1" style={{ color: '#6d6354' }}>
                                           {chapter.createdAt ? format(new Date(chapter.createdAt), 'MMM d, h:mm a') : ''}
                                           {countChapterWords(chapter.content) > 0 && (
                                             <><span>·</span><span>{countChapterWords(chapter.content).toLocaleString()} {lang === "ar" ? "كلمة" : "words"}</span></>
@@ -890,10 +890,10 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                       {/* Rename — icon-only on phone, text on >=sm */}
                                       <button
                                         className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg transition-all"
-                                        style={{ color: '#8a8070', background: 'rgba(66,53,33,0.06)', border: '1px solid rgba(66,53,33,0.11)', fontSize: 11, fontWeight: 500 }}
+                                        style={{ color: '#423521', background: 'rgba(66,53,33,0.07)', border: '1px solid rgba(66,53,33,0.18)', fontSize: 11, fontWeight: 600 }}
                                         onClick={(e) => handleStartRename(e, chapter.id, chapter.title)}
-                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.09)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#8a8070'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.06)'; }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.08)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.07)'; }}
                                         title={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                         aria-label={lang === "ar" ? "إعادة التسمية" : "Rename"}
                                       >
@@ -905,9 +905,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                       <Link href={`/books/${bookId}/chapters/${chapter.id}`}>
                                         <button
                                           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all"
-                                          style={{ color: '#3a3020', background: 'rgba(244,239,226,0.10)', border: '1px solid rgba(244,239,226,0.14)', fontSize: 11, fontWeight: 600 }}
-                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.16)'; }}
-                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.10)'; }}
+                                          style={{ color: '#3a3020', background: 'rgba(66,53,33,0.08)', border: '1px solid rgba(66,53,33,0.16)', fontSize: 11, fontWeight: 600 }}
+                                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.12)'; }}
+                                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.08)'; }}
                                           title={lang === "ar" ? "فتح المحرر" : "Open Editor"}
                                         >
                                           <span>{lang === "ar" ? "كتابة" : "Write"}</span>
@@ -925,9 +925,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                             type="button"
                                             onClick={(e) => e.stopPropagation()}
                                             className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg transition-all"
-                                            style={{ color: '#8a8070', background: 'rgba(66,53,33,0.06)', border: '1px solid rgba(66,53,33,0.11)', fontSize: 11, fontWeight: 500 }}
-                                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(244,239,226,0.09)'; }}
-                                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#8a8070'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.06)'; }}
+                                            style={{ color: '#423521', background: 'rgba(66,53,33,0.07)', border: '1px solid rgba(66,53,33,0.18)', fontSize: 11, fontWeight: 600 }}
+                                            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.08)'; }}
+                                            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.07)'; }}
                                             title={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
                                             aria-label={lang === "ar" ? "تنزيل الفصل" : "Download chapter"}
                                           >
@@ -971,9 +971,9 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                                         aria-label={lang === "ar" ? "حذف الفصل" : "Delete chapter"}
                                         title={lang === "ar" ? "حذف الفصل" : "Delete chapter"}
                                         className="flex items-center justify-center w-8 h-8 rounded-lg transition-all"
-                                        style={{ color: '#8a8070', background: 'rgba(66,53,33,0.06)', border: '1px solid rgba(66,53,33,0.11)' }}
+                                        style={{ color: '#423521', background: 'rgba(66,53,33,0.07)', border: '1px solid rgba(66,53,33,0.18)' }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#fca5a5'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.30)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#8a8070'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.06)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(66,53,33,0.11)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#423521'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(66,53,33,0.07)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(66,53,33,0.11)'; }}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -1023,8 +1023,8 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     <div key={key} className="rounded-2xl overflow-hidden transition-all" style={{ background: "rgba(66,53,33,0.03)", border: filled ? "1px solid rgba(66,53,33,0.13)" : "1px dashed rgba(66,53,33,0.11)" }}>
                       <div className="flex items-center justify-between px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="rounded-xl p-2.5" style={{ background: filled ? "rgba(66,53,33,0.11)" : "rgba(66,53,33,0.04)" }}>
-                            <Icon className="w-4 h-4" style={{ color: filled ? "#f7f2e4" : "#8a8070" }} />
+                          <div className="rounded-xl p-2.5" style={{ background: filled ? "#292115" : "rgba(66,53,33,0.06)" }}>
+                            <Icon className="w-4 h-4" style={{ color: filled ? "#f7f2e4" : "#6d6354" }} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -1160,7 +1160,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Book Structure Flow */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3" style={{ color: "#9a9181" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3" style={{ color: "#7b7366" }}>
                       {lang === "ar" ? "ترتيب الكتاب" : "Book Structure"}
                     </p>
                     <div className="flex items-center gap-0.5 flex-wrap">
@@ -1189,7 +1189,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Front matter */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#9a9181" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#7b7366" }}>
                       {lang === "ar" ? "الصفحات الأمامية" : "Front Matter"}
                     </p>
                     {renderSection(FRONT_MATTER)}
@@ -1197,7 +1197,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
 
                   {/* Back matter */}
                   <div className="space-y-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#9a9181" }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#7b7366" }}>
                       {lang === "ar" ? "الصفحات الخلفية" : "Back Matter"}
                     </p>
                     {renderSection(BACK_MATTER)}
@@ -1281,7 +1281,7 @@ export default function BookDetails({ params: propParams }: { params?: { id: str
                     { value: "editor", label: lang === "ar" ? "محرر (بيقدر يعدل)" : "Editor (can edit)" },
                     { value: "viewer", label: lang === "ar" ? "قارئ (بس يقرأ)" : "Viewer (read only)" },
                   ]}
-                  triggerStyle={{ background: "#222", border: "1px solid rgba(66,53,33,0.13)", color: "#f7f2e4", borderRadius: 12, padding: "9px 12px", fontSize: 13 }}
+                  triggerStyle={{ background: "#292115", border: "1px solid rgba(66,53,33,0.13)", color: "#f7f2e4", borderRadius: 12, padding: "9px 12px", fontSize: 13 }}
                 />
                 <button onClick={async () => {
                   try {

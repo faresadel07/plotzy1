@@ -2161,8 +2161,8 @@ export default function ChapterEditor() {
 
       {/* Editor Header */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl border-b border-border/30 transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-[#221b11]/50 border-transparent" : ""}`}
-        style={{ backgroundColor: isFocusMode ? undefined : "#2a2a2a" }}
+        className={`sticky top-0 z-50 backdrop-blur-xl transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-[#f4efe2]/70 border-transparent" : ""}`}
+        style={{ backgroundColor: isFocusMode ? undefined : "rgba(244,239,226,0.94)", borderBottom: "1px solid rgba(66,53,33,0.14)" }}
       >
         <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between relative z-10 gap-2">
 
@@ -2248,7 +2248,7 @@ export default function ChapterEditor() {
                     height: 28, padding: "0 8px", borderRadius: 8,
                     background: "transparent", border: "1px solid transparent",
                     fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
-                    color: "rgba(255,255,255,0.45)",
+                    color: "#6d6354",
                   }}
                 />
               </>
@@ -2272,7 +2272,7 @@ export default function ChapterEditor() {
             <button
               onClick={() => setMoreToolsOpen(true)}
               className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold shrink-0"
-              style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.14)", cursor: "pointer" }}
+              style={{ background: "rgba(66,53,33,0.08)", color: "#2f2618", border: "1px solid rgba(66,53,33,0.16)", cursor: "pointer" }}
               aria-label={ar ? "المزيد من الأدوات" : "More tools"}
             >
               <LayoutGrid className="w-3.5 h-3.5" /> {ar ? "المزيد" : "More"}
@@ -2370,7 +2370,7 @@ export default function ChapterEditor() {
             {!isPhone && (
             <button
               className="h-8 px-2.5 rounded-lg text-xs flex items-center gap-1 transition-all"
-              style={{ background: showEditorSearch ? "rgba(250,204,21,0.15)" : "transparent", color: showEditorSearch ? "#fbbf24" : "rgba(255,255,255,0.4)", border: showEditorSearch ? "1px solid rgba(250,204,21,0.3)" : "1px solid transparent" }}
+              style={{ background: showEditorSearch ? "rgba(243,212,87,0.35)" : "transparent", color: showEditorSearch ? "#5f4d1c" : "#6d6354", border: showEditorSearch ? "1px solid rgba(243,212,87,0.6)" : "1px solid transparent" }}
               onClick={() => {
                 if (showEditorSearch) {
                   setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0);
@@ -2387,9 +2387,9 @@ export default function ChapterEditor() {
               <button
                 className="h-9 px-3.5 rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
                 style={{
-                  background: "rgba(95,207,142,0.10)",
-                  color: "#5fcf8e",
-                  border: "1px solid rgba(95,207,142,0.35)",
+                  background: "rgba(122,94,59,0.1)",
+                  color: "#7b5e3b",
+                  border: "1px solid rgba(122,94,59,0.35)",
                 }}
                 onClick={() => setLiveMode(true)}
                 aria-label={ar ? "جلسة كتابة حية" : "Live co-writing session"}
@@ -2398,7 +2398,7 @@ export default function ChapterEditor() {
               >
                 <span
                   className={liveCount > 0 ? "animate-pulse" : undefined}
-                  style={{ width: 7, height: 7, borderRadius: "50%", background: liveCount > 0 ? "#5fcf8e" : "rgba(95,207,142,0.45)" }}
+                  style={{ width: 7, height: 7, borderRadius: "50%", background: liveCount > 0 ? "#7b5e3b" : "rgba(122,94,59,0.45)" }}
                 />
                 {!isPhone && (ar ? "جلسة حية" : "Live")}
                 {liveCount > 0 && (
@@ -2408,7 +2408,7 @@ export default function ChapterEditor() {
                       fontWeight: 800,
                       padding: "1px 7px",
                       borderRadius: 999,
-                      background: "rgba(95,207,142,0.18)",
+                      background: "rgba(122,94,59,0.18)",
                     }}
                     title={ar ? "أشخاص في الجلسة الآن" : "People in the session now"}
                   >
@@ -2427,10 +2427,10 @@ export default function ChapterEditor() {
             <button
               className="h-9 px-4 rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
               style={{
-                background: aiChatOpen ? "rgba(255,255,255,0.16)" : "#221b11",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.22)",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.55)",
+                background: aiChatOpen ? "#423521" : "#221b11",
+                color: "#f7f2e4",
+                border: "none",
+                boxShadow: "0 4px 14px rgba(41,33,21,0.35)",
               }}
               onClick={() => setAiChatOpen(true)}
               aria-label="Claude"
@@ -2450,12 +2450,12 @@ export default function ChapterEditor() {
             <button
               className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 justSaved
-                  ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 cursor-default"
+                  ? "cursor-default"
                   : updateChapter.isPending
                     ? "cursor-wait"
                     : "hover:-translate-y-px"
               }`}
-              style={{ background: justSaved ? undefined : "#f7f2e4", color: justSaved ? "#f7f2e4" : "#221b11" }}
+              style={{ background: justSaved ? "#3a3020" : "#292115", color: "#f4efe2", boxShadow: "0 3px 10px rgba(41,33,21,0.3)" }}
               onClick={updateChapter.isPending || justSaved ? undefined : handleSave}
               disabled={updateChapter.isPending}
               data-testid="button-save"

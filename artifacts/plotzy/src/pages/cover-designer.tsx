@@ -21,6 +21,8 @@ import { TemplateGallery } from "@/components/cover/TemplateGallery";
 import PerspectiveBook from "@/components/ui/perspective-book";
 import { type BuiltTemplateDesign } from "@/lib/cover-templates";
 import { COVER_FONTS, ensureCoverFontsLoaded, waitForCoverFonts, isArabicText } from "@/lib/cover-fonts";
+import { StickyNote } from "@/components/mobile/StickyNote";
+import { PaperBall } from "@/components/mobile/PaperBall";
 
 /* ─── Types ─────────────────────────────────── */
 type Face = "front" | "back" | "spine";
@@ -1000,8 +1002,8 @@ export default function CoverDesigner() {
   };
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#111]">
-      <Loader2 className="w-8 h-8 animate-spin text-white/40" />
+    <div className="min-h-screen flex items-center justify-center bg-[#f4efe2]">
+      <Loader2 className="w-8 h-8 animate-spin text-[#7b7366]" />
     </div>
   );
 
@@ -1177,7 +1179,7 @@ export default function CoverDesigner() {
         )}
         {/* Label */}
         {!exporting && (
-          <div style={{ position: "absolute", top: 6, ...(isSpine ? { left: "50%", transform: "translateX(-50%)" } : { left: 8 }), fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", fontFamily: "Inter", pointerEvents: "none", zIndex: 9999, writingMode: isSpine ? "vertical-rl" : "horizontal-tb" }}>
+          <div style={{ position: "absolute", top: 6, ...(isSpine ? { left: "50%", transform: "translateX(-50%)" } : { left: 8 }), fontSize: 9, color: "rgba(255,255,255,0.5)", textShadow: "0 1px 2px rgba(0,0,0,0.45)", letterSpacing: 2, textTransform: "uppercase", fontFamily: "Inter", pointerEvents: "none", zIndex: 9999, writingMode: isSpine ? "vertical-rl" : "horizontal-tb" }}>
             {face}
           </div>
         )}
@@ -1190,24 +1192,24 @@ export default function CoverDesigner() {
     switch (activePanel) {
       case "text": return (
         <div className="p-4 space-y-3">
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold">Add Text</p>
-          <button onClick={addText} className="w-full flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors">
-            <Plus className="w-4 h-4" /> Add Text Block
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold">{ar ? "إضافة نص" : "Add Text"}</p>
+          <button onClick={addText} className="w-full flex items-center gap-2 bg-[#292115] hover:bg-[#423521] text-[#f7f2e4] text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors">
+            <Plus className="w-4 h-4" /> {ar ? "أضف مربع نص" : "Add Text Block"}
           </button>
           <button
             onClick={shuffleStyles}
             disabled={!elements.some((e) => e.type === "text")}
             title={ar ? "يبدّل خطوط وألوان كل النصوص دفعة واحدة" : "Swaps every text's font and color in one tap"}
-            className="w-full flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 disabled:opacity-40 text-white text-sm font-medium rounded-xl px-4 py-2.5 transition-colors"
+            className="w-full flex items-center gap-2 bg-[#423521]/8 hover:bg-[#423521]/15 border border-[#423521]/15 disabled:opacity-40 text-[#2f2618] text-sm font-medium rounded-xl px-4 py-2.5 transition-colors"
           >
-            <Sparkles className="w-4 h-4 text-amber-300" /> {ar ? "بدّل الستايل" : "Shuffle style"}
+            <Sparkles className="w-4 h-4 text-[#a06a2f]" /> {ar ? "بدّل الستايل" : "Shuffle style"}
           </button>
           <div className="space-y-1.5">
             {[{ labelKey: "cdPresetLargeTitle" as const, size: 40, weight: "bold", family: "Playfair Display" }, { labelKey: "cdPresetSubtitle" as const, size: 20, weight: "600", family: "Merriweather" }, { labelKey: "cdPresetAuthor" as const, size: 14, weight: "normal", family: "Inter" }, { labelKey: "cdPresetBody" as const, size: 12, weight: "normal", family: "Inter" }].map((preset) => (
               <button key={preset.labelKey} onClick={() => {
                 const el: CoverElement = { id: nanoid(), type: "text", face: activeFace, x: 20, y: 180, width: FACE_W[activeFace] - 40, height: 80, zIndex: elements.length + 1, visible: true, locked: false, content: t(preset.labelKey), fontSize: preset.size, fontFamily: preset.family, fontWeight: preset.weight, color: "#ffffff", textAlign: "center", lineHeight: 1.2, letterSpacing: 0 };
                 updateElements([...elements, el]); setSelectedId(el.id);
-              }} className="w-full text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm text-white/80" style={{ fontFamily: preset.family, fontWeight: preset.weight, fontSize: 13 }}>
+              }} className="w-full text-left px-3 py-2 rounded-xl bg-[#423521]/6 hover:bg-[#423521]/10 transition-colors text-sm text-[#2f2618]" style={{ fontFamily: preset.family, fontWeight: preset.weight, fontSize: 13 }}>
                 {t(preset.labelKey)}
               </button>
             ))}
@@ -1217,30 +1219,30 @@ export default function CoverDesigner() {
 
       case "images": return (
         <div className="p-4 space-y-3">
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold">Upload Image</p>
-          <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-medium rounded-xl px-4 py-2.5 transition-colors">
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold">{ar ? "رفع صورة" : "Upload Image"}</p>
+          <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-2 bg-[#423521]/8 hover:bg-[#423521]/15 border border-[#423521]/15 text-[#2f2618] text-sm font-medium rounded-xl px-4 py-2.5 transition-colors">
             <ImageIcon className="w-4 h-4" /> Upload from device
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-          <p className="text-xs text-white/30 mt-2">Images will be placed on the <span className="text-blue-400 font-semibold">{activeFace}</span> cover face. Drag to reposition.</p>
+          <p className="text-xs text-[#7b7366] mt-2">{ar ? <>ستوضع الصور على وجه <span className="text-[#a06a2f] font-semibold">{activeFace === "front" ? "الأمامي" : activeFace === "back" ? "الخلفي" : "الكعب"}</span>. اسحبها لتحريكها.</> : <>Images will be placed on the <span className="text-[#a06a2f] font-semibold">{activeFace}</span> cover face. Drag to reposition.</>}</p>
         </div>
       );
 
       case "shapes": return (
         <div className="p-4 space-y-3">
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold">Shapes & Graphics</p>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold">{ar ? "أشكال ورسومات" : "Shapes & Graphics"}</p>
           <div className="grid grid-cols-3 gap-2">
             {([["rect","Rectangle",Square],["circle","Circle",Circle],["triangle","Triangle",Triangle],["star","Star",Star],["line","Line",Minus]] as [ShapeType, string, any][]).map(([type, label, Icon]) => (
-              <button key={type} onClick={() => addShape(type)} className="flex flex-col items-center gap-1.5 p-3 bg-white/5 hover:bg-white/12 rounded-xl transition-colors">
-                <Icon className="w-5 h-5 text-white/70" />
-                <span className="text-xs text-white/50">{label}</span>
+              <button key={type} onClick={() => addShape(type)} className="flex flex-col items-center gap-1.5 p-3 bg-[#423521]/6 hover:bg-[#423521]/12 rounded-xl transition-colors">
+                <Icon className="w-5 h-5 text-[#423521]" />
+                <span className="text-xs text-[#5c5142]">{label}</span>
               </button>
             ))}
           </div>
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mt-3">Colors</p>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mt-3">{ar ? "ألوان" : "Colors"}</p>
           <div className="flex flex-wrap gap-2">
             {SHAPE_COLORS.map((c) => (
-              <button key={c} style={{ background: c }} className="w-7 h-7 rounded-lg border border-white/10 hover:scale-110 transition-transform" onClick={() => { if (selected?.type === "shape") commitUpdate(selected.id, { fill: c }); }} aria-label={`Set shape color to ${c}`} />
+              <button key={c} style={{ background: c }} className="w-7 h-7 rounded-lg border border-[#423521]/15 hover:scale-110 transition-transform" onClick={() => { if (selected?.type === "shape") commitUpdate(selected.id, { fill: c }); }} aria-label={`Set shape color to ${c}`} />
             ))}
           </div>
         </div>
@@ -1248,8 +1250,8 @@ export default function CoverDesigner() {
 
       case "layers": return (
         <div className="p-4 space-y-2">
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-1">Layers</p>
-          <p className="text-[10px] text-white/25 mb-2">{ar ? "اسحب لإعادة الترتيب" : "Drag to reorder"}</p>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-1">{ar ? "الطبقات" : "Layers"}</p>
+          <p className="text-[10px] text-[#8a8070] mb-2">{ar ? "اسحب لإعادة الترتيب" : "Drag to reorder"}</p>
           {[...elements].sort((a, b) => b.zIndex - a.zIndex).map((el) => (
             <div key={el.id} onClick={() => setSelectedId(el.id)}
               draggable
@@ -1258,46 +1260,40 @@ export default function CoverDesigner() {
               onDragLeave={() => setLayerDropId((cur) => (cur === el.id ? null : cur))}
               onDrop={(e) => { e.preventDefault(); reorderLayer(layerDragIdRef.current, el.id); layerDragIdRef.current = null; setLayerDropId(null); }}
               onDragEnd={() => { layerDragIdRef.current = null; setLayerDropId(null); }}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${selectedId === el.id ? "bg-blue-600/30 border border-blue-500/40" : "bg-white/5 hover:bg-white/10"} ${layerDropId === el.id ? "ring-1 ring-blue-400/70" : ""}`}>
-              <span className="text-xs text-white/30 w-5 flex-shrink-0">{el.type === "text" ? "T" : el.type === "image" ? "I" : "S"}</span>
-              <span className="text-xs text-white/70 flex-1 truncate">{el.type === "text" ? (el.content?.slice(0, 20) || "Text") : el.type === "image" ? "Image" : el.shapeType || "Shape"}</span>
-              <span className="text-xs text-white/30 flex-shrink-0">{el.face[0].toUpperCase()}</span>
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors ${selectedId === el.id ? "bg-[#7b5e3b]/15 border border-[#7b5e3b]/45" : "bg-[#423521]/5 hover:bg-[#423521]/10"} ${layerDropId === el.id ? "ring-1 ring-[#a06a2f]/70" : ""}`}>
+              <span className="text-xs text-[#7b7366] w-5 flex-shrink-0">{el.type === "text" ? "T" : el.type === "image" ? "I" : "S"}</span>
+              <span className="text-xs text-[#423521] flex-1 truncate">{el.type === "text" ? (el.content?.slice(0, 20) || "Text") : el.type === "image" ? "Image" : el.shapeType || "Shape"}</span>
+              <span className="text-xs text-[#7b7366] flex-shrink-0">{el.face[0].toUpperCase()}</span>
               <button onClick={(e) => { e.stopPropagation(); updateElement(el.id, { visible: !el.visible }); }} aria-label={el.visible ? "Hide layer" : "Show layer"} className="flex-shrink-0 opacity-60 hover:opacity-100">
-                {el.visible ? <Eye className="w-3.5 h-3.5 text-white/60" /> : <EyeOff className="w-3.5 h-3.5 text-white/30" />}
+                {el.visible ? <Eye className="w-3.5 h-3.5 text-[#4a4132]" /> : <EyeOff className="w-3.5 h-3.5 text-[#7b7366]" />}
               </button>
               <button onClick={(e) => { e.stopPropagation(); updateElement(el.id, { locked: !el.locked }); }} aria-label={el.locked ? "Unlock layer" : "Lock layer"} className="flex-shrink-0 opacity-60 hover:opacity-100">
-                {el.locked ? <Lock className="w-3.5 h-3.5 text-amber-400/70" /> : <Unlock className="w-3.5 h-3.5 text-white/30" />}
+                {el.locked ? <Lock className="w-3.5 h-3.5 text-[#a06a2f]" /> : <Unlock className="w-3.5 h-3.5 text-[#7b7366]" />}
               </button>
               <div className="flex flex-col gap-0.5">
-                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "up"); }} aria-label="Move layer up"><ChevronUp className="w-3 h-3 text-white/40 hover:text-white" /></button>
-                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "down"); }} aria-label="Move layer down"><ChevronDown className="w-3 h-3 text-white/40 hover:text-white" /></button>
+                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "up"); }} aria-label="Move layer up"><ChevronUp className="w-3 h-3 text-[#6d6354] hover:text-[#2f2618]" /></button>
+                <button onClick={(e) => { e.stopPropagation(); moveLayer(el.id, "down"); }} aria-label="Move layer down"><ChevronDown className="w-3 h-3 text-[#6d6354] hover:text-[#2f2618]" /></button>
               </div>
             </div>
           ))}
-          {elements.length === 0 && <p className="text-xs text-white/25 text-center py-8">No elements yet.<br />Add text, images, or shapes.</p>}
+          {elements.length === 0 && <p className="text-xs text-[#8a8070] text-center py-8">{ar ? <>لا عناصر بعد.<br />أضف نصاً أو صوراً أو أشكالاً.</> : <>No elements yet.<br />Add text, images, or shapes.</>}</p>}
         </div>
       );
 
       case "background": return (
         <div className="p-4 space-y-4">
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold">Background</p>
-          <div className="flex gap-2 mb-2">
-            {(["front","back","spine"] as Face[]).map((f) => (
-              <button key={f} onClick={() => setActiveFace(f)} className={`flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors ${activeFace === f ? "bg-blue-600 text-white" : "bg-white/8 text-white/50 hover:text-white"}`}>
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
-          </div>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold">{ar ? "الخلفية" : "Background"}</p>
+          <p className="text-[10px] text-[#8a8070] -mt-2">{ar ? "بتعدّل على وجه: " : "Editing face: "}<span className="font-semibold text-[#7b5e3b] capitalize">{activeFace}</span></p>
 
           {/* Spine sync toggle */}
-          <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5 border border-white/8">
+          <div className="flex items-center justify-between bg-[#423521]/6 rounded-xl px-3 py-2.5 border border-[#423521]/14">
             <div>
-              <p className="text-xs text-white/70 font-medium">Auto-sync spine</p>
-              <p className="text-[10px] text-white/30 mt-0.5">Blend front & back colors</p>
+              <p className="text-xs text-[#423521] font-medium">{ar ? "مزامنة الكعب تلقائياً" : "Auto-sync spine"}</p>
+              <p className="text-[10px] text-[#7b7366] mt-0.5">{ar ? "يمزج لوني الوجهين" : "Blend front & back colors"}</p>
             </div>
             <button
               onClick={() => setCoverSettings((s) => ({ ...s, spineSync: !s.spineSync }))}
-              className={`relative w-9 h-5 rounded-full transition-colors ${coverSettings.spineSync ? "bg-blue-600" : "bg-white/15"}`}
+              className={`relative w-9 h-5 rounded-full transition-colors ${coverSettings.spineSync ? "bg-[#292115]" : "bg-[#423521]/20"}`}
             >
               <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${coverSettings.spineSync ? "left-[18px]" : "left-0.5"}`} />
             </button>
@@ -1306,27 +1302,27 @@ export default function CoverDesigner() {
           {/* Spine width slider */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs text-white/30">Spine Width</p>
-              <span className="text-xs text-white/50 font-mono">{spineWidth}px</span>
+              <p className="text-xs text-[#7b7366]">{ar ? "عرض الكعب" : "Spine Width"}</p>
+              <span className="text-xs text-[#5c5142] font-mono">{spineWidth}px</span>
             </div>
-            <input type="range" min={SPINE_MIN} max={SPINE_MAX} value={spineWidth} className="w-full accent-blue-500"
+            <input type="range" min={SPINE_MIN} max={SPINE_MAX} value={spineWidth} className="w-full accent-[#7b5e3b]"
               onChange={(e) => setSpineWidth(parseInt(e.target.value))} />
             {spineCalc ? (
               <button
                 onClick={() => { setSpineWidth(spineCalc.px); toast({ title: ar ? `عرض الكعب ضُبط على ${spineCalc.pages} صفحة` : `Spine set for ${spineCalc.pages} pages` }); }}
-                className="mt-2 w-full flex items-center justify-between bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 rounded-xl px-3 py-2 transition-colors text-left"
+                className="mt-2 w-full flex items-center justify-between bg-[#7b5e3b]/10 hover:bg-[#7b5e3b]/18 border border-[#7b5e3b]/35 rounded-xl px-3 py-2 transition-colors text-left"
               >
-                <span className="text-[11px] text-emerald-300 font-semibold">{ar ? "احسب من كتابك" : "Calculate from your book"}</span>
-                <span className="text-[10px] text-white/45 font-mono">{spineCalc.pages}p · {spineCalc.inches.toFixed(2)}in</span>
+                <span className="text-[11px] text-[#7b5e3b] font-semibold">{ar ? "احسب من كتابك" : "Calculate from your book"}</span>
+                <span className="text-[10px] text-[#6d6354] font-mono">{spineCalc.pages}p · {spineCalc.inches.toFixed(2)}in</span>
               </button>
             ) : (
-              <p className="text-[10px] text-white/20 mt-1">{ar ? "اضبطه حسب عدد الصفحات، رفيع للقصير وعريض للطويل" : "Adjust by page count, thin for novellas and wide for thick novels"}</p>
+              <p className="text-[10px] text-[#8a8070] mt-1">{ar ? "اضبطه حسب عدد الصفحات، رفيع للقصير وعريض للطويل" : "Adjust by page count, thin for novellas and wide for thick novels"}</p>
             )}
           </div>
 
-          <div className="border-t border-white/8" />
+          <div className="border-t border-[#423521]/14" />
 
-          <p className="text-xs text-white/30">Solid Color</p>
+          <p className="text-xs text-[#7b7366]">{ar ? "لون واحد" : "Solid Color"}</p>
           <input type="color" className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
             value={coverSettings[activeFace].background.startsWith("#") ? coverSettings[activeFace].background : "#1a1a2e"}
             onChange={(e) => {
@@ -1335,10 +1331,10 @@ export default function CoverDesigner() {
               if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
             }}
           />
-          <p className="text-xs text-white/30 mt-2">Gradient Presets</p>
+          <p className="text-xs text-[#7b7366] mt-2">{ar ? "تدرجات جاهزة" : "Gradient Presets"}</p>
           <div className="grid grid-cols-2 gap-2">
             {GRADIENTS.map((g, i) => (
-              <button key={i} style={{ background: g }} className="h-12 rounded-xl border border-white/10 hover:scale-105 transition-transform"
+              <button key={i} style={{ background: g }} className="h-12 rounded-xl border border-[#423521]/15 hover:scale-105 transition-transform"
                 onClick={() => {
                   setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: g } }));
                   if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
@@ -1350,7 +1346,7 @@ export default function CoverDesigner() {
           {!coverSettings.spineSync && activeFace === "spine" && (
             <button
               onClick={() => setCoverSettings((s) => ({ ...s, spineSync: true }))}
-              className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white/70 text-xs font-medium rounded-xl px-3 py-2.5 transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-[#423521]/8 hover:bg-[#423521]/15 border border-[#423521]/15 text-[#423521] text-xs font-medium rounded-xl px-3 py-2.5 transition-colors"
             >
               <Palette className="w-3.5 h-3.5" /> Match spine to covers
             </button>
@@ -1365,27 +1361,27 @@ export default function CoverDesigner() {
              the title/author stay real, editable text elements. */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Wand2 className="w-4 h-4 text-violet-400" />
-              <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">
+              <Wand2 className="w-4 h-4 text-[#a06a2f]" />
+              <p className="text-xs text-[#423521] font-semibold uppercase tracking-widest">
                 {ar ? "توليد لوحة الغلاف" : "Generate Cover Artwork"}
               </p>
             </div>
-            <p className="text-xs text-white/35 leading-relaxed">
+            <p className="text-xs text-[#6d6354] leading-relaxed">
               {ar
                 ? "صف الأجواء والألوان وسنولّد لك 4 لوحات فنية بدون أي نصوص. العنوان واسم المؤلف يبقيان نصاً حقيقياً فوق اللوحة."
                 : "Describe the mood and colors and we will generate 4 textless artwork options. Title and author stay real text on top."}
             </p>
 
             {/* Side selector */}
-            <div className="flex gap-1.5 bg-white/5 rounded-xl p-1">
+            <div className="flex gap-1.5 bg-[#423521]/6 rounded-xl p-1">
               <button
                 onClick={() => setAiCoverSide("front")}
-                className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "front" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white/70"}`}>
+                className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "front" ? "bg-[#7b5e3b] text-[#f7f2e4]" : "text-[#6d6354] hover:text-[#2f2618]"}`}>
                 {ar ? "الوجه الأمامي" : "Front Cover"}
               </button>
               <button
                 onClick={() => setAiCoverSide("back")}
-                className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "back" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white/70"}`}>
+                className={`flex-1 text-xs py-1.5 rounded-lg font-semibold transition-colors ${aiCoverSide === "back" ? "bg-[#7b5e3b] text-[#f7f2e4]" : "text-[#6d6354] hover:text-[#2f2618]"}`}>
                 {ar ? "الوجه الخلفي" : "Back Cover"}
               </button>
             </div>
@@ -1399,13 +1395,13 @@ export default function CoverDesigner() {
               placeholder={aiCoverSide === "front"
                 ? (ar ? "مثلاً: مدينة متوهجة تحت سماء مليئة بالنجوم، درجات بنفسجي وأزرق داكنة..." : "e.g. A glowing city under a starry sky, dark purple and blue tones...")
                 : (ar ? "مثلاً: تدرج داكن هادئ بأنماط هندسية ناعمة، بسيط وأنيق..." : "e.g. Soft geometric patterns on a dark gradient background, minimal and elegant...")}
-              className="w-full bg-white/5 border border-white/10 focus:border-violet-500/50 rounded-xl px-3 py-2.5 text-xs text-white/80 placeholder:text-white/25 resize-none outline-none leading-relaxed"
+              className="w-full bg-[#423521]/6 border border-[#423521]/15 focus:border-[#a06a2f]/50 rounded-xl px-3 py-2.5 text-xs text-[#2f2618] placeholder:text-[#9a9181] resize-none outline-none leading-relaxed"
             />
 
             {/* Quick prompt suggestions (English prompts: image models
                follow English direction far more reliably) */}
             <div className="space-y-1">
-              <p className="text-xs text-white/25">{ar ? "اقتراحات سريعة:" : "Quick suggestions:"}</p>
+              <p className="text-xs text-[#8a8070]">{ar ? "اقتراحات سريعة:" : "Quick suggestions:"}</p>
               <div className="flex flex-wrap gap-1">
                 {([
                   [ar ? "خيال علمي" : "Sci-fi futuristic", "Futuristic sci-fi scene, glowing structures, deep space palette"],
@@ -1417,7 +1413,7 @@ export default function CoverDesigner() {
                   <button
                     key={label}
                     onClick={() => setAiCoverPrompt(promptText)}
-                    className="text-xs px-2 py-1 bg-white/5 hover:bg-white/12 border border-white/8 rounded-lg text-white/50 hover:text-white/80 transition-colors"
+                    className="text-xs px-2 py-1 bg-[#423521]/6 hover:bg-[#423521]/12 border border-[#423521]/14 rounded-lg text-[#5c5142] hover:text-[#2f2618] transition-colors"
                   >
                     {label}
                   </button>
@@ -1428,7 +1424,7 @@ export default function CoverDesigner() {
             <button
               onClick={handleAiVariants}
               disabled={aiCoverLoading || !aiCoverPrompt.trim()}
-              className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-[#7b5e3b] hover:bg-[#6b5133] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
             >
               {aiCoverLoading
                 ? (<><Loader2 className="w-4 h-4 animate-spin" /> {ar ? "جاري التوليد..." : "Generating..."}</>)
@@ -1440,14 +1436,14 @@ export default function CoverDesigner() {
               <div className="grid grid-cols-2 gap-2">
                 {aiCoverLoading
                   ? Array.from({ length: 4 }, (_, i) => (
-                      <div key={i} className="aspect-[2/3] rounded-xl bg-white/5 border border-white/10 animate-pulse" />
+                      <div key={i} className="aspect-[2/3] rounded-xl bg-[#423521]/6 border border-[#423521]/15 animate-pulse" />
                     ))
                   : aiVariants.map((src, i) => (
                       <button
                         key={i}
                         onClick={() => applyAiVariant(src)}
                         title={ar ? "استخدم هذه اللوحة" : "Use this artwork"}
-                        className="group relative aspect-[2/3] rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/70 transition-colors"
+                        className="group relative aspect-[2/3] rounded-xl overflow-hidden border border-[#423521]/15 hover:border-[#a06a2f]/70 transition-colors"
                       >
                         <img src={src} alt="" className="w-full h-full object-cover" />
                         <span className="absolute inset-0 flex items-end justify-center pb-2 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity text-[11px] font-semibold text-white">
@@ -1458,24 +1454,24 @@ export default function CoverDesigner() {
               </div>
             )}
             {aiVariants.length > 0 && !aiCoverLoading && (
-              <p className="text-[11px] text-white/30 leading-relaxed">
+              <p className="text-[11px] text-[#7b7366] leading-relaxed">
                 {ar ? "اضغط على لوحة لوضعها على الغلاف. تقدر تعيد التوليد بوصف مختلف في أي وقت." : "Tap an artwork to place it on the cover. Regenerate with a different description anytime."}
               </p>
             )}
           </div>
 
           {/* Divider */}
-          <div className="border-t border-white/8" />
+          <div className="border-t border-[#423521]/14" />
 
           {/* Back Cover Text — manual entry */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-emerald-400" />
-              <p className="text-xs text-white/70 font-semibold uppercase tracking-widest">
+              <FileText className="w-4 h-4 text-[#a06a2f]" />
+              <p className="text-xs text-[#423521] font-semibold uppercase tracking-widest">
                 {ar ? "نص الغلاف الخلفي" : "Back Cover Text"}
               </p>
             </div>
-            <p className="text-xs text-white/35 leading-relaxed">
+            <p className="text-xs text-[#6d6354] leading-relaxed">
               {ar
                 ? "اكتب ملخّص الكتاب أو نصّ الغلاف الخلفي هنا، ثم أضِفه ليُوضع على الوجه الخلفي. تقدر تحرّكه وتنسّقه بعدها مثل أي نص."
                 : "Write your book summary or back-cover text here, then add it to place it on the back face. You can reposition and restyle it afterwards like any text block."}
@@ -1487,13 +1483,13 @@ export default function CoverDesigner() {
               dir={ar ? "rtl" : "ltr"}
               rows={7}
               placeholder={ar ? "اكتب نصّ الغلاف الخلفي هنا..." : "Type your back-cover text here..."}
-              className="w-full bg-white/5 border border-white/10 focus:border-emerald-500/50 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/25 outline-none resize-y leading-relaxed"
+              className="w-full bg-[#423521]/6 border border-[#423521]/15 focus:border-[#a06a2f]/50 rounded-xl px-3 py-2.5 text-sm text-[#2f2618] placeholder-[#9a9181] outline-none resize-y leading-relaxed"
             />
 
             <button
               onClick={handlePlaceBackCoverText}
               disabled={!backCoverText.trim()}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-[#292115] hover:bg-[#423521] disabled:opacity-40 disabled:cursor-not-allowed text-[#f7f2e4] text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors"
             >
               <FileText className="w-4 h-4" />
               {ar ? "أضِف إلى الغلاف الخلفي" : "Add to back cover"}
@@ -1512,9 +1508,9 @@ export default function CoverDesigner() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Face background color */}
         <div>
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2 capitalize">{activeFace} Background</p>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2 capitalize">{ar ? "خلفية هذا الوجه" : `${activeFace} Background`}</p>
           {activeFace === "spine" && coverSettings.spineSync && (
-            <p className="text-[10px] text-blue-400/60 mb-2">Auto-synced — change from Background panel to override</p>
+            <p className="text-[10px] text-[#a06a2f]/90 mb-2">Auto-synced — change from Background panel to override</p>
           )}
           <input
             type="color"
@@ -1527,7 +1523,7 @@ export default function CoverDesigner() {
           />
           <div className="flex flex-wrap gap-1.5 mt-2">
             {["#1a1a2e","#0f172a","#111827","#16213e","#0f3460","#1e1b4b","#3b0764","#164e63","#14532d","#7f1d1d","#000000","#ffffff"].map((c) => (
-              <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform"
+              <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-[#423521]/15 hover:scale-110 transition-transform"
                 onClick={() => {
                   if (activeFace === "spine") setCoverSettings((s) => ({ ...s, spineSync: false }));
                   setCoverSettings((s) => ({ ...s, [activeFace]: { ...s[activeFace], background: c } }));
@@ -1536,7 +1532,7 @@ export default function CoverDesigner() {
             ))}
           </div>
         </div>
-        <p className="text-xs text-white/20 text-center pt-2">Click an element<br />to edit its properties</p>
+        <p className="text-xs text-[#8a8070] text-center pt-2">{ar ? <>اضغط على أي عنصر<br />لتعدّل خصائصه</> : <>Click an element<br />to edit its properties</>}</p>
       </div>
     );
 
@@ -1544,21 +1540,21 @@ export default function CoverDesigner() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Element type badge + actions */}
         <div className="flex items-center justify-between">
-          <span className="text-xs bg-blue-600/30 text-blue-300 px-2 py-1 rounded-lg font-semibold capitalize">{selected.type}</span>
+          <span className="text-xs bg-[#7b5e3b]/15 text-[#6b5133] px-2 py-1 rounded-lg font-semibold capitalize">{selected.type}</span>
           <div className="flex gap-1">
-            <button onClick={duplicateSelected} aria-label="Duplicate element" className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"><Copy className="w-3.5 h-3.5" /></button>
-            <button onClick={deleteSelected} aria-label="Delete element" className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/50 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+            <button onClick={duplicateSelected} aria-label="Duplicate element" className="p-1.5 rounded-lg hover:bg-[#423521]/10 text-[#5c5142] hover:text-[#2f2618] transition-colors"><Copy className="w-3.5 h-3.5" /></button>
+            <button onClick={deleteSelected} aria-label="Delete element" className="p-1.5 rounded-lg hover:bg-[#b3402e]/12 text-[#5c5142] hover:text-[#b3402e] transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
           </div>
         </div>
 
         {/* Position & Size */}
         <div>
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Position & Size</p>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">{ar ? "الموضع والحجم" : "Position & Size"}</p>
           <div className="grid grid-cols-2 gap-2">
             {[["X", "x"], ["Y", "y"], ["W", "width"], ["H", "height"]].map(([label, key]) => (
-              <div key={key} className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-1.5">
-                <span className="text-xs text-white/30 w-4">{label}</span>
-                <input type="number" className="flex-1 bg-transparent text-xs text-white/80 outline-none w-0" value={Math.round((selected as any)[key])}
+              <div key={key} className="flex items-center gap-1.5 bg-[#423521]/6 rounded-lg px-2 py-1.5">
+                <span className="text-xs text-[#7b7366] w-4">{label}</span>
+                <input type="number" className="flex-1 bg-transparent text-xs text-[#2f2618] outline-none w-0" value={Math.round((selected as any)[key])}
                   onChange={(e) => updateElement(selected.id, { [key]: parseFloat(e.target.value) || 0 })}
                   onBlur={() => commitUpdate(selected.id, {})}
                 />
@@ -1571,8 +1567,8 @@ export default function CoverDesigner() {
         {selected.type === "text" && (
           <>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Font</p>
-              <select className="w-full bg-white/5 text-white/80 text-xs rounded-lg px-3 py-2 border border-white/10 outline-none mb-2"
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Font</p>
+              <select className="w-full bg-[#423521]/6 text-[#2f2618] text-xs rounded-lg px-3 py-2 border border-[#423521]/15 outline-none mb-2"
                 style={{ fontFamily: selected.fontFamily ? `"${selected.fontFamily}", sans-serif` : undefined }}
                 value={selected.fontFamily} onChange={(e) => commitUpdate(selected.id, { fontFamily: e.target.value })}>
                 <optgroup label={ar ? "خطوط عربية" : "Arabic fonts"}>
@@ -1593,7 +1589,7 @@ export default function CoverDesigner() {
               {/* live preview of the chosen font with the element's text */}
               <div
                 dir="auto"
-                className="mb-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white/85 truncate"
+                className="mb-2 rounded-lg border border-[#423521]/15 bg-[#423521]/6 px-3 py-2 text-[#2f2618] truncate"
                 style={{ fontFamily: `"${selected.fontFamily}", sans-serif`, fontSize: 17 }}
               >
                 {selected.content || (ar ? "معاينة الخط" : "Font preview")}
@@ -1606,39 +1602,39 @@ export default function CoverDesigner() {
                 </p>
               )}
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-1.5">
-                  <span className="text-xs text-white/30">Sz</span>
-                  <input type="number" className="flex-1 bg-transparent text-xs text-white/80 outline-none w-0" value={selected.fontSize}
+                <div className="flex items-center gap-1.5 bg-[#423521]/6 rounded-lg px-2 py-1.5">
+                  <span className="text-xs text-[#7b7366]">Sz</span>
+                  <input type="number" className="flex-1 bg-transparent text-xs text-[#2f2618] outline-none w-0" value={selected.fontSize}
                     onChange={(e) => commitUpdate(selected.id, { fontSize: parseInt(e.target.value) || 12 })} />
                 </div>
-                <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-1.5">
-                  <span className="text-xs text-white/30">Ls</span>
-                  <input type="number" className="flex-1 bg-transparent text-xs text-white/80 outline-none w-0" value={selected.letterSpacing || 0}
+                <div className="flex items-center gap-1.5 bg-[#423521]/6 rounded-lg px-2 py-1.5">
+                  <span className="text-xs text-[#7b7366]">Ls</span>
+                  <input type="number" className="flex-1 bg-transparent text-xs text-[#2f2618] outline-none w-0" value={selected.letterSpacing || 0}
                     onChange={(e) => commitUpdate(selected.id, { letterSpacing: parseFloat(e.target.value) || 0 })} />
                 </div>
               </div>
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Style</p>
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Style</p>
               <div className="flex gap-1.5">
-                <button onClick={() => commitUpdate(selected.id, { fontWeight: selected.fontWeight === "bold" ? "normal" : "bold" })} aria-label="Bold" className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontWeight === "bold" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}><Bold className="w-3.5 h-3.5" /></button>
-                <button onClick={() => commitUpdate(selected.id, { fontStyle: selected.fontStyle === "italic" ? "normal" : "italic" })} aria-label="Italic" className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontStyle === "italic" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}><Italic className="w-3.5 h-3.5" /></button>
+                <button onClick={() => commitUpdate(selected.id, { fontWeight: selected.fontWeight === "bold" ? "normal" : "bold" })} aria-label="Bold" className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontWeight === "bold" ? "bg-[#292115] text-[#f7f2e4]" : "bg-[#423521]/6 text-[#5c5142] hover:bg-[#423521]/10"}`}><Bold className="w-3.5 h-3.5" /></button>
+                <button onClick={() => commitUpdate(selected.id, { fontStyle: selected.fontStyle === "italic" ? "normal" : "italic" })} aria-label="Italic" className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-colors ${selected.fontStyle === "italic" ? "bg-[#292115] text-[#f7f2e4]" : "bg-[#423521]/6 text-[#5c5142] hover:bg-[#423521]/10"}`}><Italic className="w-3.5 h-3.5" /></button>
                 {(["left","center","right"] as Align[]).map((a) => (
-                  <button key={a} onClick={() => commitUpdate(selected.id, { textAlign: a })} aria-label={`Align ${a}`} className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${selected.textAlign === a ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
+                  <button key={a} onClick={() => commitUpdate(selected.id, { textAlign: a })} aria-label={`Align ${a}`} className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${selected.textAlign === a ? "bg-[#292115] text-[#f7f2e4]" : "bg-[#423521]/6 text-[#5c5142] hover:bg-[#423521]/10"}`}>
                     {a === "left" ? <AlignLeft className="w-3.5 h-3.5" /> : a === "center" ? <AlignCenter className="w-3.5 h-3.5" /> : <AlignRight className="w-3.5 h-3.5" />}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Color</p>
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Color</p>
               <input type="color" className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
                 value={selected.color || "#ffffff"}
                 onChange={(e) => commitUpdate(selected.id, { color: e.target.value })}
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {["#ffffff","#000000","#f1f5f9","#94a3b8","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"].map((c) => (
-                  <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform" onClick={() => commitUpdate(selected.id, { color: c })} aria-label={`Set text color to ${c}`} />
+                  <button key={c} style={{ background: c }} className="w-6 h-6 rounded-md border border-[#423521]/15 hover:scale-110 transition-transform" onClick={() => commitUpdate(selected.id, { color: c })} aria-label={`Set text color to ${c}`} />
                 ))}
               </div>
             </div>
@@ -1646,7 +1642,7 @@ export default function CoverDesigner() {
             {/* Text effects: preset row, then contextual sliders (the
                Kittl pattern: pick a look, refine with controls) */}
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">{ar ? "تأثيرات" : "Effects"}</p>
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">{ar ? "تأثيرات" : "Effects"}</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {([
                   ["none", ar ? "بدون" : "None"],
@@ -1664,12 +1660,12 @@ export default function CoverDesigner() {
                       onClick={() => commitUpdate(selected.id, fx === "none"
                         ? { effect: "none" }
                         : { effect: fx, effectIntensity: selected.effectIntensity ?? 50, effectColor: selected.effectColor || (fx === "neon" ? "#38bdf8" : fx === "hollow" ? "#ffffff" : "#000000") })}
-                      className={`flex flex-col items-center gap-1 py-2 rounded-lg border transition-colors ${active ? "bg-blue-600/25 border-blue-500/60" : "bg-white/5 border-white/8 hover:bg-white/10"}`}
+                      className={`flex flex-col items-center gap-1 py-2 rounded-lg border transition-colors ${active ? "bg-[#7b5e3b]/20 border-[#7b5e3b]/60" : "bg-[#423521]/6 border-[#423521]/14 hover:bg-[#423521]/10"}`}
                     >
                       <span style={{ fontSize: 15, fontWeight: 700, color: fx === "hollow" ? "transparent" : "#fff", lineHeight: 1, ...textEffectStyle(previewEl) }}>
                         {fx === "background" ? <span style={{ ...textEffectSpanStyle(previewEl), padding: "1px 5px" }}>Ag</span> : "Ag"}
                       </span>
-                      <span className="text-[9px] text-white/50">{label}</span>
+                      <span className="text-[9px] text-[#5c5142]">{label}</span>
                     </button>
                   );
                 })}
@@ -1678,16 +1674,16 @@ export default function CoverDesigner() {
                 <div className="mt-2 space-y-2">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-white/40">{ar ? "الشدة" : "Intensity"}</span>
-                      <span className="text-[10px] text-white/50 font-mono">{selected.effectIntensity ?? 50}</span>
+                      <span className="text-[10px] text-[#6d6354]">{ar ? "الشدة" : "Intensity"}</span>
+                      <span className="text-[10px] text-[#5c5142] font-mono">{selected.effectIntensity ?? 50}</span>
                     </div>
-                    <input type="range" min="0" max="100" value={selected.effectIntensity ?? 50} className="w-full accent-blue-500"
+                    <input type="range" min="0" max="100" value={selected.effectIntensity ?? 50} className="w-full accent-[#7b5e3b]"
                       onChange={(e) => updateElement(selected.id, { effectIntensity: parseInt(e.target.value) })}
                       onMouseUp={() => commitUpdate(selected.id, {})} />
                   </div>
                   {selected.effect !== "lift" && (
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-white/40 flex-shrink-0">{ar ? "لون التأثير" : "Effect color"}</span>
+                      <span className="text-[10px] text-[#6d6354] flex-shrink-0">{ar ? "لون التأثير" : "Effect color"}</span>
                       <input type="color" className="flex-1 h-7 rounded-lg border-0 cursor-pointer bg-transparent"
                         value={selected.effectColor || "#000000"}
                         onChange={(e) => commitUpdate(selected.id, { effectColor: e.target.value })} />
@@ -1699,20 +1695,20 @@ export default function CoverDesigner() {
               {!isArabicText(selected.content) ? (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-white/40">{ar ? "انحناء" : "Curve"}</span>
+                    <span className="text-[10px] text-[#6d6354]">{ar ? "انحناء" : "Curve"}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-white/50 font-mono">{selected.curve || 0}</span>
+                      <span className="text-[10px] text-[#5c5142] font-mono">{selected.curve || 0}</span>
                       {(selected.curve || 0) !== 0 && (
-                        <button onClick={() => commitUpdate(selected.id, { curve: 0 })} className="text-[9px] text-white/40 hover:text-white underline">{ar ? "صفر" : "reset"}</button>
+                        <button onClick={() => commitUpdate(selected.id, { curve: 0 })} className="text-[9px] text-[#6d6354] hover:text-[#2f2618] underline">{ar ? "صفر" : "reset"}</button>
                       )}
                     </div>
                   </div>
-                  <input type="range" min="-100" max="100" value={selected.curve || 0} className="w-full accent-blue-500"
+                  <input type="range" min="-100" max="100" value={selected.curve || 0} className="w-full accent-[#7b5e3b]"
                     onChange={(e) => updateElement(selected.id, { curve: parseInt(e.target.value) })}
                     onMouseUp={() => commitUpdate(selected.id, {})} />
                 </div>
               ) : (
-                <p className="text-[10px] text-white/25 mt-2 leading-relaxed">
+                <p className="text-[10px] text-[#8a8070] mt-2 leading-relaxed">
                   {ar ? "الانحناء غير متاح للنص العربي حفاظاً على اتصال الحروف" : "Curve is unavailable for Arabic text to keep letters joined"}
                 </p>
               )}
@@ -1724,21 +1720,21 @@ export default function CoverDesigner() {
         {selected.type === "image" && (
           <>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Fit</p>
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Fit</p>
               <div className="flex gap-1.5">
                 {(["cover","contain","fill"] as const).map((fit) => (
-                  <button key={fit} onClick={() => commitUpdate(selected.id, { objectFit: fit })} className={`flex-1 text-xs py-2 rounded-lg transition-colors ${selected.objectFit === fit ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>{fit}</button>
+                  <button key={fit} onClick={() => commitUpdate(selected.id, { objectFit: fit })} className={`flex-1 text-xs py-2 rounded-lg transition-colors ${selected.objectFit === fit ? "bg-[#292115] text-[#f7f2e4]" : "bg-[#423521]/6 text-[#5c5142] hover:bg-[#423521]/10"}`}>{fit}</button>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Opacity: {Math.round((selected.opacity ?? 1) * 100)}%</p>
-              <input type="range" min="0" max="1" step="0.01" value={selected.opacity ?? 1} className="w-full accent-blue-500"
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Opacity: {Math.round((selected.opacity ?? 1) * 100)}%</p>
+              <input type="range" min="0" max="1" step="0.01" value={selected.opacity ?? 1} className="w-full accent-[#7b5e3b]"
                 onChange={(e) => commitUpdate(selected.id, { opacity: parseFloat(e.target.value) })} />
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Border Radius: {selected.borderRadius ?? 0}px</p>
-              <input type="range" min="0" max="48" value={selected.borderRadius ?? 0} className="w-full accent-blue-500"
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Border Radius: {selected.borderRadius ?? 0}px</p>
+              <input type="range" min="0" max="48" value={selected.borderRadius ?? 0} className="w-full accent-[#7b5e3b]"
                 onChange={(e) => commitUpdate(selected.id, { borderRadius: parseInt(e.target.value) })} />
             </div>
           </>
@@ -1748,22 +1744,22 @@ export default function CoverDesigner() {
         {selected.type === "shape" && (
           <>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Fill Color</p>
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Fill Color</p>
               <input type="color" className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
                 value={selected.fill || "#ffffff"}
                 onChange={(e) => commitUpdate(selected.id, { fill: e.target.value })}
               />
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Stroke Color</p>
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Stroke Color</p>
               <input type="color" className="w-full h-10 rounded-xl border-0 cursor-pointer bg-transparent"
                 value={selected.stroke || "#ffffff"}
                 onChange={(e) => commitUpdate(selected.id, { stroke: e.target.value })}
               />
             </div>
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Stroke Width: {selected.strokeWidth ?? 0}</p>
-              <input type="range" min="0" max="10" value={selected.strokeWidth ?? 0} className="w-full accent-blue-500"
+              <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Stroke Width: {selected.strokeWidth ?? 0}</p>
+              <input type="range" min="0" max="10" value={selected.strokeWidth ?? 0} className="w-full accent-[#7b5e3b]"
                 onChange={(e) => commitUpdate(selected.id, { strokeWidth: parseInt(e.target.value) })} />
             </div>
           </>
@@ -1771,10 +1767,10 @@ export default function CoverDesigner() {
 
         {/* Layer controls */}
         <div>
-          <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">Layer</p>
+          <p className="text-xs text-[#6d6354] uppercase tracking-widest font-semibold mb-2">Layer</p>
           <div className="flex gap-1.5">
-            <button onClick={() => moveLayer(selected.id, "up")} className="flex-1 flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/12 rounded-lg text-xs text-white/60 transition-colors"><ChevronUp className="w-3.5 h-3.5" />Bring Up</button>
-            <button onClick={() => moveLayer(selected.id, "down")} className="flex-1 flex items-center justify-center gap-1 py-2 bg-white/5 hover:bg-white/12 rounded-lg text-xs text-white/60 transition-colors"><ChevronDown className="w-3.5 h-3.5" />Send Down</button>
+            <button onClick={() => moveLayer(selected.id, "up")} className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#423521]/6 hover:bg-[#423521]/12 rounded-lg text-xs text-[#4a4132] transition-colors"><ChevronUp className="w-3.5 h-3.5" />Bring Up</button>
+            <button onClick={() => moveLayer(selected.id, "down")} className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#423521]/6 hover:bg-[#423521]/12 rounded-lg text-xs text-[#4a4132] transition-colors"><ChevronDown className="w-3.5 h-3.5" />Send Down</button>
           </div>
         </div>
       </div>
@@ -1788,52 +1784,52 @@ export default function CoverDesigner() {
   return (
     <>
     <SEO title={t("cdSeo")} noindex />
-    <div className="flex flex-col h-[100dvh] md:h-screen bg-[#111] text-white overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className="flex flex-col h-[100dvh] md:h-screen bg-[#f4efe2] text-[#2f2618] overflow-hidden" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif" }}>
 
       {/* ── Top Bar ── */}
-      <div className="flex items-center gap-3 px-4 h-12 bg-[#1a1a1a] border-b border-white/8 flex-shrink-0 z-50">
+      <div className="flex items-center gap-3 px-4 h-12 bg-[#f4efe2] border-b border-[#423521]/15 flex-shrink-0 z-50">
         <Link href={`/books/${bookId}`}>
-          <button className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm transition-colors">
+          <button className="flex items-center gap-1.5 text-[#5c5142] hover:text-[#2f2618] text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">{t("cdBack")}</span>
           </button>
         </Link>
-        <div className="h-4 w-px bg-white/10" />
-        <h1 className="text-sm font-semibold text-white/80 flex-1 truncate">{book?.title || t("cdTitleFallback")}</h1>
+        <div className="h-4 w-px bg-[#423521]/10" />
+        <h1 className="text-[15px] font-bold text-[#2f2618] flex-1 truncate" style={{ fontFamily: "'Lora', 'Amiri', Georgia, serif" }}>{book?.title || t("cdTitleFallback")}</h1>
 
         {/* Face selector (desktop; phones get the chips row below) */}
-        <div className="hidden md:flex gap-1 bg-white/5 rounded-lg p-1">
+        <div className="hidden md:flex gap-1 bg-[#423521]/6 rounded-lg p-1">
           {(["front","back","spine"] as Face[]).map((f) => (
-            <button key={f} onClick={() => setActiveFace(f)} className={`text-xs px-3 py-1 rounded-md font-medium transition-colors ${activeFace === f ? "bg-white/20 text-white" : "text-white/40 hover:text-white"}`}>
+            <button key={f} onClick={() => setActiveFace(f)} className={`text-xs px-3 py-1 rounded-md font-medium transition-colors ${activeFace === f ? "bg-[#292115] text-[#f7f2e4]" : "text-[#5c5142] hover:text-[#2f2618]"}`}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
 
-        <div className="hidden md:block h-4 w-px bg-white/10" />
+        <div className="hidden md:block h-4 w-px bg-[#423521]/10" />
 
         {/* Undo/Redo */}
-        <button onClick={undo} disabled={historyIdx <= 0} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors" title="Undo" aria-label="Undo"><RotateCcw className="w-4 h-4" /></button>
-        <button onClick={redo} disabled={historyIdx >= history.length - 1} className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white disabled:opacity-25 transition-colors rotate-180" title="Redo" aria-label="Redo"><RotateCcw className="w-4 h-4" /></button>
+        <button onClick={undo} disabled={historyIdx <= 0} className="p-1.5 rounded-lg hover:bg-[#423521]/10 text-[#6d6354] hover:text-[#2f2618] disabled:opacity-25 transition-colors" title="Undo" aria-label="Undo"><RotateCcw className="w-4 h-4" /></button>
+        <button onClick={redo} disabled={historyIdx >= history.length - 1} className="p-1.5 rounded-lg hover:bg-[#423521]/10 text-[#6d6354] hover:text-[#2f2618] disabled:opacity-25 transition-colors rotate-180" title="Redo" aria-label="Redo"><RotateCcw className="w-4 h-4" /></button>
 
         {/* Zoom (desktop; phones pinch) */}
-        <div className="hidden md:flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1">
-          <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))} aria-label="Zoom out" className="text-white/40 hover:text-white text-sm w-4 text-center">−</button>
-          <span className="text-xs text-white/60 w-10 text-center">{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))} aria-label="Zoom in" className="text-white/40 hover:text-white text-sm w-4 text-center">+</button>
+        <div className="hidden md:flex items-center gap-1 bg-[#423521]/6 rounded-lg px-2 py-1">
+          <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))} aria-label="Zoom out" className="text-[#6d6354] hover:text-[#2f2618] text-sm w-4 text-center">−</button>
+          <span className="text-xs text-[#4a4132] w-10 text-center">{Math.round(zoom * 100)}%</span>
+          <button onClick={() => setZoom((z) => Math.min(2, z + 0.1))} aria-label="Zoom in" className="text-[#6d6354] hover:text-[#2f2618] text-sm w-4 text-center">+</button>
         </div>
 
-        <div className="hidden md:block h-4 w-px bg-white/10" />
+        <div className="hidden md:block h-4 w-px bg-[#423521]/10" />
         <button
           onClick={() => setShowGallery(true)}
-          className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
+          className="flex items-center gap-1.5 bg-[#423521]/8 hover:bg-[#423521]/15 border border-[#423521]/15 text-[#2f2618] text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
           title={ar ? "معرض القوالب" : "Template gallery"}
         >
           <LayoutTemplate className="w-3.5 h-3.5" />
           <span className="hidden md:inline">{ar ? "قوالب" : "Templates"}</span>
         </button>
         <div className="relative">
-          <button onClick={() => setExportMenuOpen((v) => !v)} disabled={exporting} className="flex items-center gap-1.5 bg-white/8 hover:bg-white/15 border border-white/10 text-white/80 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors">
+          <button onClick={() => setExportMenuOpen((v) => !v)} disabled={exporting} className="flex items-center gap-1.5 bg-[#423521]/8 hover:bg-[#423521]/15 border border-[#423521]/15 text-[#2f2618] text-xs font-medium rounded-lg px-3 py-1.5 transition-colors">
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             <span className="hidden md:inline">{ar ? "تصدير" : "Export"}</span>
             <ChevronDown className="w-3 h-3 opacity-60" />
@@ -1841,33 +1837,33 @@ export default function CoverDesigner() {
           {exportMenuOpen && (
             <>
               <div className="fixed inset-0 z-[120]" onClick={() => setExportMenuOpen(false)} />
-              <div className="absolute top-full mt-1.5 right-0 z-[121] w-60 bg-[#1e1e22] border border-white/12 rounded-xl shadow-2xl overflow-hidden py-1" dir={ar ? "rtl" : "ltr"}>
+              <div className="absolute top-full mt-1.5 right-0 z-[121] w-60 bg-[#fffdf7] border border-[#423521]/20 rounded-xl shadow-2xl overflow-hidden py-1" dir={ar ? "rtl" : "ltr"}>
                 {([
                   ["screen", ar ? "غلاف كامل للشاشة" : "Full wrap for screen", ar ? "PNG بدقة العرض" : "Screen-resolution PNG"],
                   ["print-front", ar ? "الوجه الأمامي للطباعة" : "Front cover for print", "1600 × 2400"],
                   ["print-wrap", ar ? "غلاف كامل للطباعة" : "Full wrap for print", ar ? "دقة KDP كاملة" : "Full KDP resolution"],
                 ] as ["screen" | "print-front" | "print-wrap", string, string][]).map(([preset, label, note]) => (
                   <button key={preset} onClick={() => doExport(preset)}
-                    className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-white/8 transition-colors text-start">
-                    <span className="text-xs text-white/85 font-medium">{label}</span>
-                    <span className="text-[10px] text-white/35 font-mono flex-shrink-0">{note}</span>
+                    className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-[#423521]/8 transition-colors text-start">
+                    <span className="text-xs text-[#2f2618] font-medium">{label}</span>
+                    <span className="text-[10px] text-[#6d6354] font-mono flex-shrink-0">{note}</span>
                   </button>
                 ))}
               </div>
             </>
           )}
         </div>
-        <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg px-3 py-1.5 transition-colors">
+        <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 bg-[#292115] hover:bg-[#423521] text-[#f7f2e4] text-xs font-semibold rounded-lg px-3 py-1.5 transition-colors">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-          <span className="hidden md:inline">Save</span>
+          <span className="hidden md:inline">{ar ? "حفظ" : "Save"}</span>
         </button>
       </div>
 
       {/* ── Mobile face chips ── */}
-      <div className="md:hidden flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] border-b border-white/8 flex-shrink-0">
+      <div className="md:hidden flex items-center justify-center gap-1.5 px-3 py-2 bg-[#f4efe2] border-b border-[#423521]/15 flex-shrink-0">
         {(["front","spine","back"] as Face[]).map((f) => (
           <button key={f} onClick={() => setActiveFace(f)}
-            className={`flex-1 max-w-[110px] text-xs py-2.5 rounded-lg font-semibold transition-colors ${activeFace === f ? "bg-white/20 text-white" : "bg-white/5 text-white/40"}`}>
+            className={`flex-1 max-w-[110px] text-xs py-2.5 rounded-lg font-semibold transition-colors ${activeFace === f ? "bg-[#292115] text-[#f7f2e4]" : "bg-[#423521]/8 text-[#5c5142]"}`}>
             {ar ? (f === "front" ? "أمامي" : f === "spine" ? "كعب" : "خلفي") : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
@@ -1877,13 +1873,13 @@ export default function CoverDesigner() {
       <div className="flex flex-1 overflow-hidden min-h-0">
 
         {/* ── Left Panel ── */}
-        <div className="w-[260px] bg-[#161616] border-r border-white/8 hidden md:flex flex-col flex-shrink-0 overflow-hidden">
+        <div className="w-[260px] bg-[#faf6ea] border-r border-[#423521]/14 hidden md:flex flex-col flex-shrink-0 overflow-hidden">
           {/* Panel tabs */}
-          <div className="flex border-b border-white/8 flex-shrink-0">
+          <div className="flex border-b border-[#423521]/14 flex-shrink-0">
             {([["text","T", Type],["images","I", ImageIcon],["shapes","S", Square],["layers","L", Layers],["background","B", Palette],["ai","AI", Sparkles]] as [typeof activePanel, string, any][]).map(([panel, short, Icon]) => (
               <button key={panel} onClick={() => setActivePanel(panel)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs transition-colors ${activePanel === panel ? (panel === "ai" ? "text-violet-400 border-b-2 border-violet-500" : "text-blue-400 border-b-2 border-blue-500") : "text-white/30 hover:text-white/60"}`}>
-                <Icon className={`w-4 h-4 ${panel === "ai" && activePanel !== "ai" ? "text-violet-400/50" : ""}`} />
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs transition-colors ${activePanel === panel ? (panel === "ai" ? "text-[#a06a2f] border-b-2 border-[#a06a2f]" : "text-[#7b5e3b] border-b-2 border-[#7b5e3b]") : "text-[#7b7366] hover:text-[#423521]"}`}>
+                <Icon className={`w-4 h-4 ${panel === "ai" && activePanel !== "ai" ? "text-[#a06a2f]/60" : ""}`} />
                 <span className="text-[9px] capitalize">{panel}</span>
               </button>
             ))}
@@ -1892,13 +1888,18 @@ export default function CoverDesigner() {
           <div className="flex-1 overflow-y-auto">
             {renderPanel()}
           </div>
+          {/* Desk clutter: lives in normal flow under the panel */}
+          <div aria-hidden className="flex items-end justify-between px-3 pb-2 pt-1 flex-shrink-0" style={{ pointerEvents: "none" }}>
+            <PaperBall size={26} rot={-15} />
+            <StickyNote ar={ar} size={84} rot={4} text={ar ? "غلافك أول انطباع" : "your cover is the first impression"} />
+          </div>
         </div>
 
         {/* ── Canvas (drop zone) ── */}
         <div
           ref={canvasRef}
-          className="flex-1 overflow-auto flex bg-[#111] relative p-3 md:p-6"
-          style={{ backgroundImage: "radial-gradient(circle, #1e1e1e 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+          className="flex-1 overflow-auto flex bg-[#e9e1cf] relative p-3 md:p-6"
+          style={{ backgroundImage: "radial-gradient(circle, #d8cdb4 1px, transparent 1px)", backgroundSize: "24px 24px" }}
           onClick={() => setSelectedId(null)}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -1907,11 +1908,11 @@ export default function CoverDesigner() {
         >
           {/* Drag overlay */}
           {isDraggingOver && (
-            <div className="absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ background: "rgba(59,130,246,0.12)", backdropFilter: "blur(2px)" }}>
-              <div className="flex flex-col items-center gap-3 bg-[#1a1a2e]/90 border-2 border-dashed border-blue-500/60 rounded-2xl px-10 py-8">
-                <ImageIcon className="w-10 h-10 text-blue-400 animate-bounce" />
-                <p className="text-sm text-blue-300 font-semibold">Drop image here</p>
-                <p className="text-xs text-white/40">Image will be added to the cover face under your cursor</p>
+            <div className="absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ background: "rgba(160,106,47,0.12)", backdropFilter: "blur(2px)" }}>
+              <div className="flex flex-col items-center gap-3 bg-[#fffdf7]/95 border-2 border-dashed border-[#a06a2f]/60 rounded-2xl px-10 py-8">
+                <ImageIcon className="w-10 h-10 text-[#a06a2f] animate-bounce" />
+                <p className="text-sm text-[#7b5e3b] font-semibold">{ar ? "أفلت الصورة هنا" : "Drop image here"}</p>
+                <p className="text-xs text-[#6d6354]">{ar ? "ستُضاف الصورة إلى الوجه الذي تحت مؤشرك" : "Image will be added to the cover face under your cursor"}</p>
               </div>
             </div>
           )}
@@ -1923,7 +1924,7 @@ export default function CoverDesigner() {
             <div style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s ease" }}>
               <div
                 ref={bookRef}
-                style={{ display: "flex", width: TOTAL_BOOK_W, height: FACE_H, boxShadow: "0 30px 80px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5)", borderRadius: 4, overflow: "hidden", cursor: "default" }}
+                style={{ display: "flex", width: TOTAL_BOOK_W, height: FACE_H, boxShadow: "0 26px 60px rgba(41,33,21,0.4), 0 10px 24px rgba(41,33,21,0.25)", borderRadius: 4, overflow: "hidden", cursor: "default" }}
               >
                 {/* Back */}
                 <FaceCanvas face="back" />
@@ -1937,9 +1938,9 @@ export default function CoverDesigner() {
         </div>
 
         {/* ── Right Properties Panel ── */}
-        <div className="w-[220px] bg-[#161616] border-l border-white/8 hidden md:flex flex-col flex-shrink-0 overflow-hidden min-h-0">
-          <div className="px-4 py-3 border-b border-white/8 flex-shrink-0">
-            <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Properties</p>
+        <div className="w-[220px] bg-[#faf6ea] border-l border-[#423521]/14 hidden md:flex flex-col flex-shrink-0 overflow-hidden min-h-0">
+          <div className="px-4 py-3 border-b border-[#423521]/14 flex-shrink-0">
+            <p className="text-xs font-semibold text-[#5c5142] uppercase tracking-widest">{ar ? "الخصائص" : "Properties"}</p>
           </div>
           {renderProperties()}
         </div>
@@ -1947,28 +1948,28 @@ export default function CoverDesigner() {
 
       {/* ── Mobile: selection context bar ── */}
       {selected && !mobileSheet && (
-        <div className="md:hidden flex items-center gap-1 px-2 py-1.5 bg-[#161616] border-t border-white/8 flex-shrink-0" dir={ar ? "rtl" : "ltr"}>
+        <div className="md:hidden flex items-center gap-1 px-2 py-1.5 bg-[#faf6ea] border-t border-[#423521]/14 flex-shrink-0" dir={ar ? "rtl" : "ltr"}>
           {selected.type === "text" && (
-            <button onClick={() => setEditingId(selected.id)} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-white/8 text-xs font-semibold text-white/85">
+            <button onClick={() => setEditingId(selected.id)} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#423521]/8 text-xs font-semibold text-[#2f2618]">
               <Type className="w-4 h-4" /> {ar ? "تحرير" : "Edit"}
             </button>
           )}
-          <button onClick={() => setMobileSheet("props")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-white/8 text-xs font-semibold text-white/85">
+          <button onClick={() => setMobileSheet("props")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#423521]/8 text-xs font-semibold text-[#2f2618]">
             <Palette className="w-4 h-4" /> {ar ? "خصائص" : "Style"}
           </button>
           <div className="flex-1" />
-          <button onClick={duplicateSelected} aria-label="Duplicate" className="p-2.5 rounded-lg text-white/60"><Copy className="w-[18px] h-[18px]" /></button>
-          <button onClick={() => moveLayer(selected.id, "up")} aria-label="Layer up" className="p-2.5 rounded-lg text-white/60"><ChevronUp className="w-[18px] h-[18px]" /></button>
-          <button onClick={() => moveLayer(selected.id, "down")} aria-label="Layer down" className="p-2.5 rounded-lg text-white/60"><ChevronDown className="w-[18px] h-[18px]" /></button>
-          <button onClick={deleteSelected} aria-label="Delete" className="p-2.5 rounded-lg text-red-400/90"><Trash2 className="w-[18px] h-[18px]" /></button>
+          <button onClick={duplicateSelected} aria-label="Duplicate" className="p-2.5 rounded-lg text-[#4a4132]"><Copy className="w-[18px] h-[18px]" /></button>
+          <button onClick={() => moveLayer(selected.id, "up")} aria-label="Layer up" className="p-2.5 rounded-lg text-[#4a4132]"><ChevronUp className="w-[18px] h-[18px]" /></button>
+          <button onClick={() => moveLayer(selected.id, "down")} aria-label="Layer down" className="p-2.5 rounded-lg text-[#4a4132]"><ChevronDown className="w-[18px] h-[18px]" /></button>
+          <button onClick={deleteSelected} aria-label="Delete" className="p-2.5 rounded-lg text-[#b3402e]"><Trash2 className="w-[18px] h-[18px]" /></button>
         </div>
       )}
 
       {/* ── Mobile: bottom panel tabs ── */}
-      <div className="md:hidden flex bg-[#161616] border-t border-white/8 flex-shrink-0" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="md:hidden flex bg-[#faf6ea] border-t border-[#423521]/14 flex-shrink-0" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         {([["text", Type],["images", ImageIcon],["shapes", Square],["layers", Layers],["background", Palette],["ai", Sparkles]] as [typeof activePanel, any][]).map(([panel, Icon]) => (
           <button key={panel} onClick={() => { setActivePanel(panel); setMobileSheet("panel"); }}
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 min-h-[52px] transition-colors ${mobileSheet === "panel" && activePanel === panel ? (panel === "ai" ? "text-violet-400" : "text-blue-400") : "text-white/35"}`}>
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 min-h-[52px] transition-colors ${mobileSheet === "panel" && activePanel === panel ? (panel === "ai" ? "text-[#a06a2f]" : "text-[#7b5e3b]") : "text-[#7b7366]"}`}>
             <Icon className="w-5 h-5" />
             <span className="text-[9px] capitalize">{panel === "background" ? (ar ? "خلفية" : "BG") : panel}</span>
           </button>
@@ -1978,18 +1979,18 @@ export default function CoverDesigner() {
       {/* ── Mobile: bottom sheet (panels + properties) ── */}
       {mobileSheet && (
         <div className="md:hidden fixed inset-0 z-[110]" onClick={() => setMobileSheet(null)}>
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-[#292115]/45" />
           <div
-            className="absolute bottom-0 left-0 right-0 max-h-[62dvh] bg-[#181818] rounded-t-2xl border-t border-white/12 flex flex-col shadow-2xl"
+            className="absolute bottom-0 left-0 right-0 max-h-[62dvh] bg-[#fffdf7] rounded-t-2xl border-t border-[#423521]/20 flex flex-col shadow-2xl"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-center pt-2"><div className="w-9 h-1 rounded-full bg-white/20" /></div>
+            <div className="flex items-center justify-center pt-2"><div className="w-9 h-1 rounded-full bg-[#423521]/25" /></div>
             <div className="flex items-center justify-between px-4 pt-1 pb-1" dir={ar ? "rtl" : "ltr"}>
-              <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">
+              <p className="text-xs font-semibold text-[#5c5142] uppercase tracking-widest">
                 {mobileSheet === "props" ? (ar ? "خصائص العنصر" : "Properties") : activePanel}
               </p>
-              <button onClick={() => setMobileSheet(null)} aria-label={ar ? "إغلاق" : "Close"} className="p-2 -m-1 text-white/50 text-base leading-none">✕</button>
+              <button onClick={() => setMobileSheet(null)} aria-label={ar ? "إغلاق" : "Close"} className="p-2 -m-1 text-[#5c5142] text-base leading-none">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
               {mobileSheet === "props" ? renderProperties() : renderPanel()}
@@ -2004,7 +2005,7 @@ export default function CoverDesigner() {
     {mockupUrl && (
       <div
         className="fixed inset-0 z-[140] flex flex-col items-center justify-center gap-8 p-6"
-        style={{ background: "rgba(8,8,10,0.94)", backdropFilter: "blur(16px)" }}
+        style={{ background: "rgba(26,20,12,0.95)", backdropFilter: "blur(16px)" }}
         onClick={() => setMockupUrl(null)}
         dir={ar ? "rtl" : "ltr"}
       >
@@ -2012,7 +2013,7 @@ export default function CoverDesigner() {
           <p className="text-lg font-bold text-white" style={{ letterSpacing: "-0.01em" }}>
             {ar ? "غلافك جاهز" : "Your cover is ready"}
           </p>
-          <p className="text-xs text-white/45 mt-1.5">
+          <p className="text-xs text-[#6d6354] mt-1.5">
             {ar ? "مرر فوق الكتاب لتراه من زاوية حقيقية" : "Hover the book to see it from a real angle"}
           </p>
         </div>
@@ -2023,7 +2024,7 @@ export default function CoverDesigner() {
         </div>
         <button
           onClick={() => setMockupUrl(null)}
-          className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
+          className="px-6 py-2.5 rounded-xl bg-[#f4efe2] text-[#292115] text-sm font-semibold hover:bg-[#e9e1cf] transition-colors"
         >
           {ar ? "متابعة التصميم" : "Keep designing"}
         </button>

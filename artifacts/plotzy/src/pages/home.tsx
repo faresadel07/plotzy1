@@ -188,13 +188,13 @@ export default function Home() {
   // return below). Desktop/tablet fall through to the existing landing
   // page, 100% untouched.
   const isPhone = useIsPhone();
-  const { data: sharedBooks = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerName: string | null }[]>({
+  const { data: sharedBooksRaw = [] } = useQuery<{ id: number; title: string; coverImage: string | null; role: string; ownerId?: number; ownerName: string | null }[]>({
     queryKey: ["/api/books/shared-with-me"],
     queryFn: () => fetch("/api/books/shared-with-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
     enabled: !!user,
     staleTime: 0,
   });
-  const { data: sharedByMe = [] } = useQuery<{ id: number; title: string; coverImage: string | null; collaborators: { userId: number; name: string | null; avatarUrl: string | null; role: string; joinedAt: string }[] }[]>({
+  const { data: sharedByMeRaw = [] } = useQuery<{ id: number; title: string; coverImage: string | null; collaborators: { id?: number; userId: number; name: string | null; avatarUrl: string | null; role: string; joinedAt: string }[]; pendingInvite?: { id: number; role: string } | null }[]>({
     queryKey: ["/api/books/shared-by-me"],
     queryFn: () => fetch("/api/books/shared-by-me", { credentials: "include" }).then(r => r.ok ? r.json() : []),
     enabled: !!user,
@@ -209,27 +209,41 @@ export default function Home() {
   };
 
   // ── Revoke a collaborator's access (You shared section) ──────────
-  // Two-tap confirm; the shared-by-me payload has no collaborator row
-  // id, so we resolve it from the owner-only collaborators list first.
+  // Two-tap confirm. Prefer the collaborator row id shipped with
+  // shared-by-me; older API payloads lack it, so fall back to resolving
+  // it from the owner-only collaborators list (pending invites count
+  // too: cancelling one uses the same DELETE).
   const [confirmRemove, setConfirmRemove] = useState<{ bookId: number; userId: number } | null>(null);
   const [removingCollab, setRemovingCollab] = useState(false);
   const qcHome = useQueryClient();
-  const handleRemoveCollaborator = async (sharedBookId: number, collabUserId: number) => {
+  // Guard against older API payloads that leak the owner's own pending
+  // invite row as a "collaborator": never show the owner to himself,
+  // and drop books that end up with nobody to list.
+  const sharedByMe = sharedByMeRaw
+    .map(b => ({ ...b, collaborators: b.collaborators.filter(c => c.userId !== (user as any)?.id) }))
+    .filter(b => b.collaborators.length > 0 || b.pendingInvite);
+  // Same guard for "shared with me": my own books can never be shared TO me.
+  const sharedBooks = sharedBooksRaw.filter(sb => sb.ownerId == null || sb.ownerId !== (user as any)?.id);
+  const handleRemoveCollaborator = async (sharedBookId: number, collabUserId: number, collabRowId?: number, kind: "collab" | "invite" = "collab") => {
     if (!confirmRemove || confirmRemove.bookId !== sharedBookId || confirmRemove.userId !== collabUserId) {
       setConfirmRemove({ bookId: sharedBookId, userId: collabUserId });
       return;
     }
     setRemovingCollab(true);
     try {
-      const listRes = await fetch(`/api/books/${sharedBookId}/collaborators`, { credentials: "include" });
-      if (!listRes.ok) throw new Error();
-      const data = await listRes.json();
-      const row = (data.collaborators || []).find((c: any) => c.userId === collabUserId);
-      if (!row) throw new Error();
-      const delRes = await fetch(`/api/books/${sharedBookId}/collaborators/${row.id}`, { method: "DELETE", credentials: "include" });
+      let rowId = collabRowId;
+      if (rowId == null) {
+        const listRes = await fetch(`/api/books/${sharedBookId}/collaborators`, { credentials: "include" });
+        if (!listRes.ok) throw new Error();
+        const data = await listRes.json();
+        const row = (data.collaborators || []).concat(data.pendingInvites || []).find((c: any) => c.userId === collabUserId);
+        if (!row) throw new Error();
+        rowId = row.id;
+      }
+      const delRes = await fetch(`/api/books/${sharedBookId}/collaborators/${rowId}`, { method: "DELETE", credentials: "include" });
       if (!delRes.ok) throw new Error();
       qcHome.invalidateQueries({ queryKey: ["/api/books/shared-by-me"] });
-      toast({ title: lang === "ar" ? "تمت إزالة المتعاون" : "Collaborator removed" });
+      toast({ title: kind === "invite" ? (lang === "ar" ? "تم إلغاء الدعوة" : "Invite cancelled") : (lang === "ar" ? "تمت إزالة المتعاون" : "Collaborator removed") });
     } catch {
       toast({ title: lang === "ar" ? "تعذّرت الإزالة، حاول مجدداً" : "Could not remove, try again", variant: "destructive" });
     } finally {
@@ -812,7 +826,7 @@ export default function Home() {
                           <button
                             type="button"
                             disabled={removingCollab && isConfirming}
-                            onClick={(e) => { e.stopPropagation(); handleRemoveCollaborator(book.id, c.userId); }}
+                            onClick={(e) => { e.stopPropagation(); handleRemoveCollaborator(book.id, c.userId, c.id); }}
                             onMouseLeave={() => { if (isConfirming && !removingCollab) setConfirmRemove(null); }}
                             className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold transition-all flex-shrink-0"
                             style={isConfirming
@@ -826,6 +840,32 @@ export default function Home() {
                         </div>
                       );
                     })}
+
+                    {/* Unredeemed invite: nobody joined yet, but the code is out there */}
+                    {book.pendingInvite && (() => {
+                      const inviteConfirming = confirmRemove?.bookId === book.id && confirmRemove?.userId === -1;
+                      return (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(122,94,59,0.05)", border: "1px dashed rgba(122,94,59,0.3)" }}>
+                          <span className="flex-1 truncate" style={{ color: "#8a8070", fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: lang === "ar" ? 13 : 15.5 }}>
+                            {lang === "ar" ? "(في دعوة معلّقة، ما انضم عليها أحد بعد)" : "(a pending invite, nobody joined yet)"}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={removingCollab && inviteConfirming}
+                            onClick={(e) => { e.stopPropagation(); handleRemoveCollaborator(book.id, -1, book.pendingInvite!.id, "invite"); }}
+                            onMouseLeave={() => { if (inviteConfirming && !removingCollab) setConfirmRemove(null); }}
+                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold transition-all flex-shrink-0"
+                            style={inviteConfirming
+                              ? { background: "rgba(179,64,46,0.12)", color: "#b3402e", border: "1px solid rgba(179,64,46,0.35)" }
+                              : { background: "transparent", color: "#9a9181", border: "1px solid transparent" }}
+                            title={lang === "ar" ? "إلغاء الدعوة" : "Cancel invite"}
+                          >
+                            <X className="w-3 h-3" />
+                            {inviteConfirming && (removingCollab ? (lang === "ar" ? "يلغي..." : "Cancelling...") : (lang === "ar" ? "تأكيد الإلغاء؟" : "Confirm cancel?"))}
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}

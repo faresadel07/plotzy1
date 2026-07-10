@@ -276,15 +276,19 @@ export async function registerRoutes(
       const userId = (req.user as any).id;
       const { db: dbConn } = await import("./db");
       const { bookCollaborators, books, users } = await import("../../../lib/db/src/schema");
-      const { eq } = await import("drizzle-orm");
+      const { eq, and, isNull } = await import("drizzle-orm");
+      // invite_code IS NULL: unredeemed invites live in this table under
+      // the OWNER's userId — without the filter an owner sees his own
+      // book listed as "shared with me".
       const rows = await dbConn.select({
         id: books.id, title: books.title, coverImage: books.coverImage,
         role: bookCollaborators.role, joinedAt: bookCollaborators.joinedAt,
+        ownerId: books.userId,
         ownerName: users.displayName,
       }).from(bookCollaborators)
         .innerJoin(books, eq(bookCollaborators.bookId, books.id))
         .leftJoin(users, eq(books.userId, users.id))
-        .where(eq(bookCollaborators.userId, userId));
+        .where(and(eq(bookCollaborators.userId, userId), isNull(bookCollaborators.inviteCode)));
       return res.json(rows);
     } catch (err) {
       logger.error({ err }, "Failed to fetch shared books");
@@ -304,9 +308,11 @@ export async function registerRoutes(
         bookId: books.id,
         bookTitle: books.title,
         bookCoverImage: books.coverImage,
+        collabId: bookCollaborators.id,
         collabUserId: bookCollaborators.userId,
         collabRole: bookCollaborators.role,
         collabJoinedAt: bookCollaborators.joinedAt,
+        collabInviteCode: bookCollaborators.inviteCode,
         collabName: users.displayName,
         collabAvatarUrl: users.avatarUrl,
       }).from(bookCollaborators)
@@ -316,14 +322,22 @@ export async function registerRoutes(
       const grouped = new Map<number, any>();
       for (const r of rows) {
         if (!grouped.has(r.bookId)) {
-          grouped.set(r.bookId, { id: r.bookId, title: r.bookTitle, coverImage: r.bookCoverImage, collaborators: [] });
+          grouped.set(r.bookId, { id: r.bookId, title: r.bookTitle, coverImage: r.bookCoverImage, collaborators: [], pendingInvite: null });
         }
+        // An unredeemed invite is stored as a row under the OWNER's own
+        // userId with invite_code set — that is not a collaborator, so
+        // surface it separately instead of listing the owner to himself.
+        if (r.collabUserId === userId && r.collabInviteCode) {
+          grouped.get(r.bookId).pendingInvite = { id: r.collabId, role: r.collabRole };
+          continue;
+        }
+        if (r.collabUserId === userId) continue;
         grouped.get(r.bookId).collaborators.push({
-          userId: r.collabUserId, name: r.collabName, avatarUrl: r.collabAvatarUrl,
+          id: r.collabId, userId: r.collabUserId, name: r.collabName, avatarUrl: r.collabAvatarUrl,
           role: r.collabRole, joinedAt: r.collabJoinedAt,
         });
       }
-      return res.json(Array.from(grouped.values()));
+      return res.json(Array.from(grouped.values()).filter(b => b.collaborators.length > 0 || b.pendingInvite));
     } catch (err) {
       logger.error({ err }, "Failed to fetch shared-by-me");
       return res.json([]);

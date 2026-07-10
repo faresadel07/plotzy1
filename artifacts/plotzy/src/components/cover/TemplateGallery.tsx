@@ -58,7 +58,7 @@ export function TemplateGallery({
         position: "fixed",
         inset: 0,
         zIndex: 130,
-        background: "rgba(8,8,10,0.92)",
+        background: "rgba(244,239,226,0.96)",
         backdropFilter: "blur(14px)",
         display: "flex",
         flexDirection: "column",
@@ -76,11 +76,11 @@ export function TemplateGallery({
         }}
       >
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em" }}>
-            <Sparkles size={16} style={{ color: "#d8b45a" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#2f2618", fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em" }}>
+            <Sparkles size={16} style={{ color: "#a06a2f" }} />
             {ar ? "اختر نقطة انطلاق غلافك" : "Pick your cover's starting point"}
           </div>
-          <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.55)", marginTop: 3 }}>
+          <div style={{ fontSize: 12.5, color: "#6d6354", marginTop: 3 }}>
             {ar
               ? "كل قالب معروض باسم كتابك فعلاً، وكل عنصر فيه يبقى قابلاً للتعديل"
               : "Every template is shown with your actual book title, and every element stays editable"}
@@ -97,9 +97,9 @@ export function TemplateGallery({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.14)",
-              color: "#fff",
+              background: "rgba(66,53,33,0.08)",
+              border: "1px solid rgba(66,53,33,0.2)",
+              color: "#2f2618",
               cursor: "pointer",
             }}
           >
@@ -131,9 +131,9 @@ export function TemplateGallery({
                 fontWeight: 700,
                 fontFamily: SF,
                 cursor: "pointer",
-                background: genre === g.id ? "#fff" : "rgba(255,255,255,0.06)",
-                color: genre === g.id ? "#000" : "rgba(255,255,255,0.75)",
-                border: `1px solid ${genre === g.id ? "#fff" : "rgba(255,255,255,0.14)"}`,
+                background: genre === g.id ? "#292115" : "rgba(66,53,33,0.06)",
+                color: genre === g.id ? "#f7f2e4" : "#4a4132",
+                border: `1px solid ${genre === g.id ? "#292115" : "rgba(66,53,33,0.2)"}`,
                 transition: "all 130ms",
               }}
             >
@@ -160,9 +160,9 @@ export function TemplateGallery({
             style={{
               aspectRatio: "2 / 3",
               borderRadius: 10,
-              border: "1.5px dashed rgba(255,255,255,0.28)",
-              background: "rgba(255,255,255,0.03)",
-              color: "rgba(255,255,255,0.7)",
+              border: "1.5px dashed rgba(122,94,59,0.45)",
+              background: "rgba(66,53,33,0.04)",
+              color: "#4a4132",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -238,12 +238,12 @@ function TemplateCard({
           aspectRatio: "2 / 3",
           borderRadius: 10,
           overflow: "hidden",
-          border: "1px solid rgba(255,255,255,0.12)",
-          boxShadow: "0 10px 26px -12px rgba(0,0,0,0.6)",
+          border: "1px solid rgba(66,53,33,0.18)",
+          boxShadow: "0 10px 26px -12px rgba(41,33,21,0.45)",
           position: "relative",
           transition: "transform 150ms ease, border-color 150ms",
         }}
-        className="group-hover:scale-[1.025] group-hover:!border-white/40"
+        className="group-hover:scale-[1.025] group-hover:!border-[#a06a2f]/60"
       >
         {/* scaled live face */}
         <div style={{ position: "absolute", inset: 0 }}>
@@ -320,7 +320,7 @@ function TemplateCard({
           </div>
         </div>
       </div>
-      <span style={{ fontSize: 11.5, fontWeight: 700, color: "rgba(255,255,255,0.72)" }}>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color: "#423521" }}>
         {ar ? template.nameAr : template.name}
       </span>
     </button>
