@@ -69,7 +69,7 @@ router.post("/api/billing/checkout", async (req, res) => {
     const user = await storage.getUserById((req.user as any).id);
     if (!user) return res.status(401).json({ message: "Not authenticated" });
 
-    const origin = process.env.PUBLIC_ORIGIN || "https://plotzy.co";
+    const origin = process.env.FRONTEND_ORIGIN || "https://www.plotzy.co";
     const body = {
       data: {
         type: "checkouts",
