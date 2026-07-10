@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { StickyNote } from "@/components/mobile/StickyNote";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { useLanguage } from "@/contexts/language-context";
@@ -361,6 +362,11 @@ export default function DiscoverPage() {
           <p style={{ fontFamily: ar ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: ar ? 15 : 19, color: "rgba(244,239,226,0.5)", margin: "0 0 6px", transform: "rotate(-1deg)", display: "inline-block" }}>
             {ar ? "(قهوتك، وكلاسيكية، وهدوء)" : "(a coffee, a classic, and quiet)"}
           </p>
+
+          {/* One useful sticky, in normal flow so it can't sit on copy */}
+          <div aria-hidden style={{ display: "flex", justifyContent: "flex-end", pointerEvents: "none", margin: "-4px 0 0" }}>
+            <StickyNote ar={ar} size={92} rot={5} text={ar ? "كل كتاب هون ملكية عامة، انسخ واقتبس براحتك" : "all public domain, quote freely"} />
+          </div>
 
           {/* Source toggle: Project Gutenberg (English) ⇄ Hindawi (Arabic) */}
           <div className="inline-flex flex-wrap justify-center items-center gap-1 p-1 rounded-2xl mb-8 max-w-full"

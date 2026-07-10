@@ -19,6 +19,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { StickyNote } from "@/components/mobile/StickyNote";
 import { NiceSelect } from "@/components/ui/nice-select";
 import { useLanguage } from "@/contexts/language-context";
 import {
@@ -179,6 +180,10 @@ export default function AudiolibraryPage() {
             <p style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 19, color: "#8a8070", margin: 0, transform: "rotate(-1deg)", display: "inline-block" }}>
               {ar ? "(سكّر عينيك واسمع)" : "(close your eyes and listen)"}
             </p>
+
+            <div aria-hidden style={{ display: "flex", justifyContent: "flex-end", pointerEvents: "none", margin: "-2px 0 0" }}>
+              <StickyNote ar={ar} size={92} rot={4} text={ar ? "بترجع تكمل من وين ما وقفت" : "you resume right where you stopped"} />
+            </div>
           </section>
 
           {/* ── Featured strip ── */}

@@ -13,6 +13,7 @@ import { useLocation } from "wouter";
 import { Search } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
+import { StickyNote } from "@/components/mobile/StickyNote";
 import { useLanguage } from "@/contexts/language-context";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { ContentRow } from "@/components/mobile/ContentRow";
@@ -52,6 +53,10 @@ export default function ComicsPage() {
           <p style={{ fontFamily: ar ? "'Aref Ruqaa', 'Amiri', serif" : "'Caveat', cursive", fontSize: ar ? 15 : 19, color: "#8a8070", margin: "8px 0 0", transform: "rotate(-1deg)", display: "inline-block" }}>
             {ar ? "(ولّع مع أبطال الخمسينات)" : "(heroes from the fifties, still flying)"}
           </p>
+
+          <div aria-hidden style={{ display: "flex", justifyContent: "flex-end", pointerEvents: "none", margin: "-6px 0 0" }}>
+            <StickyNote ar={ar} size={90} rot={-5} text={ar ? "اقلب الصفحات بالأسهم أو بالسحب" : "flip pages with arrows or a swipe"} />
+          </div>
         </header>
 
         {isPhone ? <PhoneShelves ar={ar} /> : <DesktopWall ar={ar} />}

@@ -78,7 +78,7 @@ const GENRES = [
 const genreKey = (g: string) => ("genre" + g.replace(/[^A-Za-z]/g, "")) as any;
 
 function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin: boolean; isFeatured: boolean }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const authorName = book.authorName || book.authorDisplayName || t("libAnonymous");
   const { mutate: setFeatured } = useSetFeaturedBook();
   const { mutate: deleteBook } = useAdminDeleteBook();
@@ -219,6 +219,9 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
                   <User style={{ width: 12, height: 12, color: TD }} />
                 )}
                 <span style={{ fontFamily: SF, fontSize: 11, color: TS, transition: "color 0.15s" }}>{authorName}</span>
+                <span style={{ fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: isRTL ? 10.5 : 12.5, color: "#a08a6a", whiteSpace: "nowrap" }}>
+                  {isRTL ? "(شوف ملفه)" : "(view profile)"}
+                </span>
               </div>
             </Link>
           ) : (
@@ -256,7 +259,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
 
 /* ── Featured Banner ───────────────────────────────────────── */
 function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boolean }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const authorName = book.authorName || book.authorDisplayName || t("libAnonymous");
   const { mutate: setFeatured } = useSetFeaturedBook();
   const { data: rating } = useBookRatingStats(book.id);
@@ -309,6 +312,10 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
                     onMouseEnter={e => { e.currentTarget.style.color = T; }}
                     onMouseLeave={e => { e.currentTarget.style.color = TS; }}
                   >{authorName}</span>
+                  {" "}
+                  <span style={{ fontFamily: "'Caveat', 'Aref Ruqaa', cursive", fontSize: isRTL ? 11 : 13.5, color: "#a08a6a" }}>
+                    {isRTL ? "(شوف ملفه)" : "(view profile)"}
+                  </span>
                 </Link>
               ) : authorName}
             </p>
