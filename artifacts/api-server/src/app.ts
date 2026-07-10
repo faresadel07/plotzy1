@@ -263,7 +263,13 @@ app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     Sentry.captureException(err);
   }
   if (res.headersSent) return next(err);
-  return res.status(status).json({ message });
+  // Never leak internal 5xx detail (DB constraint text, stack messages)
+  // to the client in production — those go to the log / Sentry only.
+  const clientMessage =
+    status >= 500 && process.env.NODE_ENV === "production"
+      ? "Internal Server Error"
+      : message;
+  return res.status(status).json({ message: clientMessage });
 });
 
 // Final safety net: any unhandled rejection or uncaught exception in the

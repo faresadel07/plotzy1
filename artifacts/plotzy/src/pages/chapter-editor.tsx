@@ -152,9 +152,11 @@ function htmlToPlainText(html: string): string {
   const withBreaks = html
     .replace(/<br\s*\/?\s*>/gi, "\n")
     .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, "\n\n");
-  const el = document.createElement("div");
-  el.innerHTML = withBreaks;
-  const text = el.textContent || "";
+  // DOMParser builds an inert document: scripts never run and
+  // <img onerror> never fires, unlike assigning to a live div.innerHTML.
+  // Collaborator-authored chapter HTML is untrusted here.
+  const doc = new DOMParser().parseFromString(withBreaks, "text/html");
+  const text = doc.body.textContent || "";
   return text.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 
@@ -1561,6 +1563,18 @@ export default function ChapterEditor() {
       const newWords = newText ? newText.split(/\s+/).filter(Boolean).length : 0;
 
       const wordsAdded = newWords - previousWords;
+
+      // Data-loss guard: never let a SILENT autosave overwrite a chapter
+      // that previously had words with empty content. Autosave snapshots
+      // don't create version history, so a transient bug that clears
+      // richPages while dirty would otherwise be unrecoverable. A manual
+      // save (options.silent === false) is still allowed to empty a
+      // chapter deliberately.
+      if (options.silent && newWords === 0 && previousWords > 0) {
+        autoSaveInFlightRef.current = false;
+        setAutoSaving(false);
+        return;
+      }
 
       await updateChapter.mutateAsync({ id: chapterId, bookId, title, content: currentContent });
 

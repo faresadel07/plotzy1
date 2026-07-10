@@ -219,7 +219,11 @@ router.patch(
 
 // ─── Daily Progress ─────────────────────────────────────────────────────────
 
-router.get("/api/books/:bookId/progress", async (req, res) => {
+// NOTE: the live daily-progress routes are registered in routes.ts
+// (app.get/app.post) which take precedence over this router copy; the
+// ownership gate lives there. These duplicates are kept gated too for
+// safety in case the registration order ever changes.
+router.get("/api/books/:bookId/progress", requireBookOwner, async (req, res) => {
   try {
     const bookId = Number(req.params.bookId);
     const progress = await storage.getDailyProgress(bookId);
@@ -230,11 +234,11 @@ router.get("/api/books/:bookId/progress", async (req, res) => {
   }
 });
 
-router.post("/api/books/:bookId/progress", async (req, res) => {
+router.post("/api/books/:bookId/progress", requireBookOwner, async (req, res) => {
   try {
     const bookId = Number(req.params.bookId);
     const { wordsAdded } = z
-      .object({ wordsAdded: z.number() })
+      .object({ wordsAdded: z.number().min(0).max(100000) })
       .strict()
       .parse(req.body);
     const record = await storage.updateDailyProgress(bookId, wordsAdded);

@@ -154,6 +154,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -458,14 +459,25 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   <button disabled={forgotLoading || !forgotEmail.includes("@")}
                     onClick={async () => {
                       setForgotLoading(true);
+                      setForgotError(false);
                       try {
-                        await fetch("/api/auth/forgot-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail }) });
+                        // The endpoint always 200s for valid input (anti
+                        // enumeration), so only a network error or a real
+                        // 5xx should surface a failure — never a silent
+                        // "sent" for a request that never reached the server.
+                        const res = await fetch("/api/auth/forgot-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail }) });
+                        if (!res.ok) throw new Error();
                         setForgotSent(true);
-                      } catch {} finally { setForgotLoading(false); }
+                      } catch { setForgotError(true); } finally { setForgotLoading(false); }
                     }}
                     style={{ width: "100%", padding: "12px 0", borderRadius: 10, background: "#f7f2e4", color: "#221b11", fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", opacity: forgotLoading ? 0.5 : 1 }}>
                     {forgotLoading ? (ar ? "جارٍ الإرسال..." : "Sending...") : (ar ? "إرسال رابط إعادة التعيين" : "Send Reset Link")}
                   </button>
+                  {forgotError && (
+                    <p style={{ fontFamily: SF, fontSize: 12.5, color: "#ef9a8a", margin: 0 }}>
+                      {ar ? "تعذّر الإرسال، تحقق من اتصالك وحاول مجدداً" : "Could not send, check your connection and try again"}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div style={{ textAlign: "center", padding: "20px 0" }}>

@@ -13,6 +13,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Printer, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const PAPER_SIZES: Record<string, { width: number; height: number; widthCm: number; heightCm: number; label: string; labelAr: string; icon: string }> = {
   a5:     { width: 559,  height: 794,  widthCm: 14.8, heightCm: 21.0, label: "Classic Novel",      labelAr: "رواية كلاسيكية",  icon: "" },
@@ -150,7 +151,12 @@ export function PrintPreview({
     };
 
     for (const block of blockList) {
-      const next = bufferHtml + block;
+      // Chapter HTML may be authored by a collaborator, so sanitize
+      // before it touches this attached measurement node — an
+      // <img onerror> in a raw block would otherwise execute here.
+      // Sanitizing also makes the measured height match the sanitized
+      // render the reader actually sees.
+      const next = bufferHtml + sanitizeHtml(block);
       host.innerHTML = next;
       // scrollHeight is the rendered height of the entire content,
       // regardless of overflow. If it exceeds the page body, we

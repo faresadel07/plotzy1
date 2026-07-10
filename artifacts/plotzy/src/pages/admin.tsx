@@ -2419,7 +2419,13 @@ function AuditLogTab() {
           </thead>
           <tbody>
             {data.logs.map((log: any) => {
-              const details = log.details ? JSON.parse(log.details) : null;
+              // One malformed audit-log row must not throw in render and
+              // blank the whole admin dashboard via the top error boundary.
+              let details: any = null;
+              if (log.details) {
+                try { details = JSON.parse(log.details); }
+                catch { details = { raw: String(log.details) }; }
+              }
               return (
                 <tr key={log.id}>
                   <td style={{ ...S.td, fontSize: 11, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>

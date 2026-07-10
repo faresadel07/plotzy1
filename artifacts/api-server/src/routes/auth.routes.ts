@@ -2,6 +2,9 @@ import { Router } from "express";
 import express from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+// A fixed valid cost-12 bcrypt hash (of a random string nobody knows),
+// used only to equalize login timing when an account is absent.
+const DUMMY_BCRYPT_HASH = "$2b$12$slQxcx99uGZaiDVeGmY9Gucyr01t5d3xKxCbuIGYhZqzZsM7TkSCK";
 import passport from "passport";
 import { OAuth2Client } from "google-auth-library";
 import { storage } from "../storage";
@@ -278,6 +281,10 @@ router.post("/api/auth/login", sensitiveAuthLimiter, async (req, res) => {
     }
     const user = await storage.getUserByEmail(email);
     if (!user || !user.passwordHash) {
+      // Run a dummy compare so a missing / OAuth-only account takes the
+      // same ~cost-12 time as a wrong password. Without this, response
+      // timing is an account-existence oracle.
+      await bcrypt.compare(password, DUMMY_BCRYPT_HASH);
       await recordLoginAttempt(email, clientIp, false);
       return res.status(401).json({ message: "Invalid email or password." });
     }
@@ -648,8 +655,10 @@ router.post("/api/auth/google/one-tap", async (req, res) => {
   }
 });
 
-// Google OAuth
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// Google OAuth. `state: true` makes passport store a random state in
+// the session and verify it on callback, binding the handshake against
+// login-CSRF (matching the LinkedIn/Microsoft flows).
+router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"], state: true } as any));
 
 // Strip any trailing slash(es). Without this, a FRONTEND_URL / APP_DOMAIN
 // configured with a trailing "/" (a very common ops mistake) makes the
@@ -666,7 +675,7 @@ const frontendUrl = (process.env.FRONTEND_URL || (process.env.NODE_ENV === "prod
 // `?auth=error` redirect instead of bubbling to the Express error handler
 // and returning a raw HTTP 500 to the user.
 router.get("/auth/google/callback", (req, res, next) => {
-  passport.authenticate("google", (err: unknown, user: Express.User | false) => {
+  passport.authenticate("google", { state: true } as any, (err: unknown, user: Express.User | false) => {
     if (err || !user) return res.redirect(`${frontendUrl}/?auth=error`);
     req.logIn(user, (loginErr) => {
       if (loginErr) return res.redirect(`${frontendUrl}/?auth=error`);
@@ -675,13 +684,13 @@ router.get("/auth/google/callback", (req, res, next) => {
   })(req, res, next);
 });
 
-// Apple OAuth (callback is POST)
-router.get("/auth/apple", passport.authenticate("apple"));
+// Apple OAuth (callback is POST). state binds the handshake like Google.
+router.get("/auth/apple", passport.authenticate("apple", { state: true } as any));
 
 router.post(
   "/auth/apple/callback",
   express.urlencoded({ extended: true }),
-  passport.authenticate("apple", { failureRedirect: "/?auth=error" }),
+  passport.authenticate("apple", { failureRedirect: "/?auth=error", state: true } as any),
   (req, res) => {
     res.redirect("/?auth=success");
   }

@@ -920,7 +920,9 @@ router.get("/api/admin/export/analytics.csv", requireAdmin, async (req, res) => 
 // ─── Book Collaboration ─────────────────────────────────────────────────────
 
 function generateInviteCode(): string {
-  return "PLOT-" + crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 6);
+  // 9 random bytes → 18 hex chars ≈ 72 bits, far beyond brute force
+  // (the old 24-bit code was weak for an access-granting token).
+  return "PLOT-" + crypto.randomBytes(9).toString("hex").toUpperCase();
 }
 
 // Create invite code (owner only)
@@ -964,6 +966,15 @@ router.post("/api/books/join", sensitiveAuthLimiter, async (req, res) => {
     const codeHash = hashToken(code.toUpperCase().trim());
     const [invite] = await db.select().from(bookCollaborators).where(eq(bookCollaborators.inviteCode, codeHash));
     if (!invite) return res.status(404).json({ message: "Invalid invite code" });
+
+    // Invites expire 30 days after creation so a leaked code can't be
+    // redeemed indefinitely. joinedAt is the row's creation time for a
+    // still-pending invite.
+    const created = invite.joinedAt ? new Date(invite.joinedAt).getTime() : 0;
+    if (created && Date.now() - created > 30 * 24 * 60 * 60 * 1000) {
+      await db.delete(bookCollaborators).where(eq(bookCollaborators.id, invite.id));
+      return res.status(410).json({ message: "This invite has expired. Ask the owner for a new one." });
+    }
 
     const book = await storage.getBook(invite.bookId);
     if (!book) return res.status(404).json({ message: "Book not found" });

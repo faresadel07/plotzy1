@@ -160,6 +160,17 @@ router.post("/api/webhooks/lemonsqueezy", async (req, res) => {
       return res.status(200).send("ok"); // ack so LS stops retrying
     }
 
+    // Defense-in-depth: today the store sells exactly one variant
+    // (Plotzy Pro). If a cheaper product is ever added to the same
+    // store, refuse to grant Pro for a subscription to any OTHER
+    // variant. Only enforced when we actually know the expected id.
+    const expectedVariant = process.env.LEMONSQUEEZY_VARIANT_ID;
+    const eventVariant = attrs.variant_id !== undefined ? String(attrs.variant_id) : null;
+    if (expectedVariant && eventVariant && eventVariant !== String(expectedVariant)) {
+      logger.warn({ name, eventVariant, expectedVariant }, "LS webhook for a different variant, ignoring");
+      return res.status(200).send("ok");
+    }
+
     const endDate = attrs.renews_at || attrs.ends_at || null;
 
     if (name === "subscription_payment_success") {

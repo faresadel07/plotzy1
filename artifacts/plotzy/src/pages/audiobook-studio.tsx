@@ -43,9 +43,11 @@ const VOICES: VoiceOption[] = [
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function htmlToPlain(html: string): string {
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return (div.textContent || "").replace(/\s+/g, " ").trim();
+  // DOMParser yields an inert document, so untrusted (collaborator)
+  // chapter HTML can't run scripts or fire <img onerror> during
+  // text extraction the way a live div.innerHTML would.
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
 }
 
 function extractChapterText(content: string): string {

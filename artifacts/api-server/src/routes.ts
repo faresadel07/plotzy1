@@ -2143,7 +2143,10 @@ export async function registerRoutes(
   });
 
   // ─── Daily Progress ────────────────────────────────────────────────────────
-  app.get('/api/books/:bookId/progress', async (req, res) => {
+  // requireBookOwner gates these so a caller can only read/write the
+  // writing-streak stats of a book they own — without it, any user could
+  // inflate or corrupt another writer's streaks, XP and analytics (IDOR).
+  app.get('/api/books/:bookId/progress', requireBookOwner, async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
       const progress = await storage.getDailyProgress(bookId);
@@ -2153,10 +2156,10 @@ export async function registerRoutes(
     }
   });
 
-  app.post('/api/books/:bookId/progress', async (req, res) => {
+  app.post('/api/books/:bookId/progress', requireBookOwner, async (req, res) => {
     try {
       const bookId = Number(req.params.bookId);
-      const { wordsAdded } = z.object({ wordsAdded: z.number() }).strict().parse(req.body);
+      const { wordsAdded } = z.object({ wordsAdded: z.number().min(0).max(100000) }).strict().parse(req.body);
       const record = await storage.updateDailyProgress(bookId, wordsAdded);
       return res.json(record);
     } catch (err) {
