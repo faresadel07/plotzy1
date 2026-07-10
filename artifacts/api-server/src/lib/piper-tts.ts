@@ -249,13 +249,31 @@ async function wavToMp3(wav: Buffer): Promise<Buffer> {
  * Throws on synthesis failure (invalid model, empty input, Piper crash,
  * etc.). Does NOT silently return zero bytes.
  */
+// Audiobook narration pace. Piper's neutral 1.0 reads noticeably
+// rushed for long-form listening; audiobook narrators sit ~10-15%
+// slower. Arabic needs a touch more room than English.
+export function narrationSpeedFor(voiceId?: string): number {
+  return voiceId === "kareem" ? 0.82 : 0.88;
+}
+
+// One Piper at a time. onnxruntime holds ~250MB per child process;
+// two concurrent previews on Railway's small instance OOM the box and
+// the edge reports "Application failed to respond". A promise chain
+// serializes every synthesis regardless of who asked.
+let synthQueue: Promise<unknown> = Promise.resolve();
+function enqueue<T>(job: () => Promise<T>): Promise<T> {
+  const run = synthQueue.then(job, job);
+  synthQueue = run.catch(() => {});
+  return run;
+}
+
 export async function synthesizeToMp3(opts: SynthesizeOptions): Promise<Buffer> {
   const text = (opts.text ?? "").trim();
   if (!text) {
     throw new Error("synthesizeToMp3: text is empty after trim");
   }
   const voice = resolveVoice(opts.voice ?? DEFAULT_VOICE_ID);
-  const wav = await runPiper(text, voice, opts.speed ?? 1.0);
+  const wav = await enqueue(() => runPiper(text, voice, opts.speed ?? 1.0));
   if (wav.length < 100) {
     // Piper should always produce at least a WAV header (44 bytes) +
     // some samples. < 100 bytes means something went wrong silently.

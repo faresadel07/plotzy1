@@ -2962,6 +2962,11 @@ Write the query letter specifically tailored to this publisher, mentioning why t
     if (!content) return "";
     try {
       const blocks = JSON.parse(content);
+      // v2 editor format: { v: 2, pages: "<p>html…<!-- PAGE_BREAK -->…" }.
+      // Without this branch the narrator read the raw JSON envelope.
+      if (blocks && typeof blocks === "object" && !Array.isArray(blocks) && typeof (blocks as any).pages === "string") {
+        return stripHtmlForTts((blocks as any).pages.split("<!-- PAGE_BREAK -->").join("\n\n"));
+      }
       if (Array.isArray(blocks)) {
         const joined = blocks
           .map((b: unknown) => {
@@ -3016,14 +3021,17 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       if (!chapter) return res.status(404).json({ message: "Chapter not found" });
 
       const fullText = extractChapterPlainText(chapter.content || "");
-      // Limit preview to first 500 characters (~60-90 seconds of audio).
-      // If the chapter has no narratable text (e.g. only image blocks),
-      // fall back to a brief placeholder so the user still hears the
-      // selected voice instead of a blank response.
-      const previewText = fullText.slice(0, 500) || `Preview of ${chapter.title || "Chapter"}`;
+      // Open with the chapter title (a narrator would), then the first
+      // ~500 characters of clean prose, cut at a sentence boundary so
+      // the preview never stops mid-word.
+      let excerpt = fullText.slice(0, 500);
+      const lastStop = Math.max(excerpt.lastIndexOf(". "), excerpt.lastIndexOf("\u061F "), excerpt.lastIndexOf("! "), excerpt.lastIndexOf(".\n"));
+      if (excerpt.length === 500 && lastStop > 200) excerpt = excerpt.slice(0, lastStop + 1);
+      const chTitle = (chapter.title || "").trim();
+      const previewText = [chTitle ? chTitle + "." : "", excerpt].filter(Boolean).join("\n\n") || `Preview of ${chapter.title || "Chapter"}`;
 
-      const { synthesizeToMp3 } = await import("./lib/piper-tts");
-      const mp3 = await synthesizeToMp3({ text: previewText, voice });
+      const { synthesizeToMp3, narrationSpeedFor } = await import("./lib/piper-tts");
+      const mp3 = await synthesizeToMp3({ text: previewText, voice, speed: narrationSpeedFor(voice) });
 
       if (mp3.length === 0) {
         return res.status(500).json({ message: "Synthesizer produced empty audio" });
@@ -3097,8 +3105,11 @@ Write the query letter specifically tailored to this publisher, mentioning why t
       let totalWords = 0;
       const chapterTexts: { chapter: typeof chaptersToExport[number]; text: string }[] = [];
       for (const chapter of chaptersToExport) {
-        const text = extractChapterPlainText(chapter.content || "");
-        if (!text) continue;
+        const body = extractChapterPlainText(chapter.content || "");
+        if (!body) continue;
+        // A narrator announces the chapter before reading it.
+        const title = (chapter.title || "").trim();
+        const text = title ? `${title}.\n\n${body}` : body;
         chapterTexts.push({ chapter, text });
         totalWords += countWords(text);
       }
@@ -3115,13 +3126,13 @@ Write the query letter specifically tailored to this publisher, mentioning why t
         });
       }
 
-      const { synthesizeToMp3, splitForTts, concatMp3Buffers } = await import("./lib/piper-tts");
+      const { synthesizeToMp3, splitForTts, concatMp3Buffers, narrationSpeedFor } = await import("./lib/piper-tts");
       const audioChunks: Buffer[] = [];
 
       for (const { text } of chapterTexts) {
         for (const segment of splitForTts(text)) {
           if (!segment) continue;
-          const buf = await synthesizeToMp3({ text: segment, voice });
+          const buf = await synthesizeToMp3({ text: segment, voice, speed: narrationSpeedFor(voice) });
           if (buf.length === 0) continue; // shouldn't happen — synthesizeToMp3 throws on empty — defensive
           audioChunks.push(buf);
         }
