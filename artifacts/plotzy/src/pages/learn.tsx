@@ -14,6 +14,7 @@ import { FinalExamCard } from "@/components/course/FinalExamCard";
 import { useAuth } from "@/contexts/auth-context";
 import { useLanguage } from "@/contexts/language-context";
 import { CourseSticky } from "@/components/course/CourseSticky";
+import { PaperBall } from "@/components/mobile/PaperBall";
 
 interface ModuleSummary {
   id: number;
@@ -222,6 +223,13 @@ export default function LearnPage() {
           )}
         </section>
 
+        {/* Crumpled drafts between the modules and the library, in
+            normal flow so they never touch a word */}
+        <div aria-hidden className="flex items-end justify-between -my-2" style={{ pointerEvents: "none" }}>
+          <PaperBall size={30} rot={-15} />
+          <PaperBall size={20} rot={28} style={{ marginBottom: 6 }} />
+        </div>
+
         {/* The Writer's Library: free downloadable craft books + worksheets */}
         <Link
           href="/learn/resources"
@@ -236,8 +244,8 @@ export default function LearnPage() {
             </span>
             <span className="mt-0.5 block text-sm text-muted-foreground">
               {isRTL
-                ? "كتب حرفة الكتابة الكلاسيكية وأوراق العمل القابلة للطباعة, كلها مجانية لك."
-                : "Classic craft books and printable worksheets, all free to download and keep."}
+                ? "كتب الحرفة الكلاسيكية, أوراق العمل القابلة للطباعة, وقاعة فيديو فيها أفضل دروس الإنترنت مرتبة حسب الموضوع."
+                : "Classic craft books, printable worksheets, and a video vault of the internet's best lessons sorted by topic."}
             </span>
           </span>
           {isRTL ? (

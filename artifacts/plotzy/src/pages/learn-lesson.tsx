@@ -19,6 +19,18 @@ import { apiRequest } from "@/lib/queryClient";
 import { APPLE_FONT, arField } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
 import { CourseSticky } from "@/components/course/CourseSticky";
+import { StickyNote } from "@/components/mobile/StickyNote";
+import { PaperBall } from "@/components/mobile/PaperBall";
+
+// Short handwritten margin notes, rotated deterministically by lesson
+// order so every lesson gets its own line without a random() call.
+const LESSON_NOTES: { en: string; ar: string }[] = [
+  { en: "read slow, write fast", ar: "اقرأ على مهل، واكتب بسرعة" },
+  { en: "your book needs this one", ar: "كتابك محتاج هاي بالذات" },
+  { en: "one idea is enough today", ar: "فكرة وحدة بتكفي اليوم" },
+  { en: "writers finish, that's the trick", ar: "الكاتب يكمّل، هذا كل السر" },
+  { en: "steal like an author", ar: "اتعلم من الكبار وخذ أسرارهم" },
+];
 
 interface LessonResponse {
   id: number;
@@ -196,6 +208,21 @@ export default function LearnLessonPage() {
             <article>
               <Markdown content={bodyContent} storageBase={lessonQ.data.slug} />
             </article>
+
+            {/* A margin note between the reading and the doing: one
+                short handwritten line, in normal flow so it can never
+                sit on top of the text. */}
+            <div aria-hidden className="flex items-end justify-between pt-1" style={{ pointerEvents: "none" }}>
+              <PaperBall size={26} rot={-18} style={{ marginBottom: 4 }} />
+              <StickyNote
+                ar={isRTL}
+                size={86}
+                rot={4}
+                text={(isRTL
+                  ? LESSON_NOTES[(lessonQ.data.orderInModule - 1) % LESSON_NOTES.length].ar
+                  : LESSON_NOTES[(lessonQ.data.orderInModule - 1) % LESSON_NOTES.length].en)}
+              />
+            </div>
 
             {/* The golden thread: bridge from the lesson into the
                 reader's own manuscript. */}

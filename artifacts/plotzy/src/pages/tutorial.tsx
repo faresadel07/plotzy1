@@ -13,13 +13,13 @@ import {
 } from "@/data/tutorial-guides";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG = "#221b11";
-const C2 = "#332a1b";
-const C3 = "#332a1b";
-const B = "rgba(244,239,226,0.07)";
-const T = "#f7f2e4";
-const TS = "rgba(244,239,226,0.55)";
-const TD = "rgba(244,239,226,0.25)";
+const BG = "#f4efe2";
+const C2 = "#fffdf7";
+const C3 = "#fffdf7";
+const B = "rgba(66,53,33,0.13)";
+const T = "#2f2618";
+const TS = "#5c5142";
+const TD = "#8a8070";
 
 const CATEGORIES: { id: string; labelKey: TranslationKey }[] = [
   { id: "all", labelKey: "tuCatAll" },
@@ -78,7 +78,7 @@ function FeaturedVideoCard({ onOpen }: { onOpen: () => void }) {
         style={{
           background: C2,
           borderRadius: 16,
-          border: `1px solid ${hovered ? "rgba(244,239,226,0.15)" : B}`,
+          border: `1px solid ${hovered ? "rgba(66,53,33,0.2)" : B}`,
           overflow: "hidden",
           cursor: "pointer",
           transition: "border-color 0.2s, transform 0.2s",
@@ -98,8 +98,8 @@ function FeaturedVideoCard({ onOpen }: { onOpen: () => void }) {
             width: 76,
             height: 76,
             borderRadius: "50%",
-            background: hovered ? "rgba(244,239,226,0.18)" : "rgba(244,239,226,0.1)",
-            border: "1px solid rgba(244,239,226,0.2)",
+            background: hovered ? "rgba(66,53,33,0.15)" : "rgba(66,53,33,0.13)",
+            border: "1px solid rgba(66,53,33,0.2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -178,7 +178,7 @@ function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => vo
       style={{
         background: C2,
         borderRadius: 12,
-        border: `1px solid ${hovered ? "rgba(244,239,226,0.15)" : B}`,
+        border: `1px solid ${hovered ? "rgba(66,53,33,0.2)" : B}`,
         overflow: "hidden",
         cursor: "pointer",
         transition: "border-color 0.2s, transform 0.2s",
@@ -257,7 +257,7 @@ function GuideCard({ guide, onClick }: { guide: TutorialGuide; onClick: () => vo
         </div>
         <span style={{
           display: "inline-block",
-          background: "rgba(244,239,226,0.06)",
+          background: "rgba(66,53,33,0.07)",
           border: `1px solid ${B}`,
           borderRadius: 20,
           padding: "2px 10px",
@@ -325,8 +325,8 @@ function VideoModal({ onClose }: { onClose: () => void }) {
             position: "absolute",
             top: -48,
             right: 0,
-            background: "rgba(244,239,226,0.1)",
-            border: "1px solid rgba(244,239,226,0.15)",
+            background: "rgba(66,53,33,0.13)",
+            border: "1px solid rgba(66,53,33,0.2)",
             borderRadius: "50%",
             width: 38,
             height: 38,
@@ -344,7 +344,7 @@ function VideoModal({ onClose }: { onClose: () => void }) {
           aspectRatio: "16/9",
           borderRadius: 14,
           overflow: "hidden",
-          background: "#221b11",
+          background: "#f4efe2",
           border: `1px solid ${B}`,
         }}>
           <iframe
@@ -426,8 +426,8 @@ function GuideModal({ guide, onClose }: { guide: TutorialGuide; onClose: () => v
             position: "fixed",
             top: 18,
             right: 18,
-            background: "rgba(244,239,226,0.12)",
-            border: "1px solid rgba(244,239,226,0.2)",
+            background: "rgba(66,53,33,0.15)",
+            border: "1px solid rgba(66,53,33,0.2)",
             borderRadius: "50%",
             width: 40,
             height: 40,
@@ -438,8 +438,8 @@ function GuideModal({ guide, onClose }: { guide: TutorialGuide; onClose: () => v
             zIndex: 2,
             transition: "background 0.2s",
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(244,239,226,0.22)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(244,239,226,0.12)"; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(66,53,33,0.16)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(66,53,33,0.15)"; }}
         >
           <X size={18} color={T} />
         </button>
@@ -448,7 +448,7 @@ function GuideModal({ guide, onClose }: { guide: TutorialGuide; onClose: () => v
         <div style={{ marginBottom: 28, textAlign: "center" }}>
           <span style={{
             display: "inline-block",
-            background: "rgba(244,239,226,0.06)",
+            background: "rgba(66,53,33,0.07)",
             border: `1px solid ${B}`,
             borderRadius: 20,
             padding: "3px 12px",
@@ -526,7 +526,7 @@ function GuideModal({ guide, onClose }: { guide: TutorialGuide; onClose: () => v
                       maxHeight: "min(70vh, 640px)",
                       display: "block",
                       objectFit: "contain",
-                      background: "#221b11",
+                      background: "#f4efe2",
                     }}
                   />
                 </div>
@@ -678,7 +678,7 @@ export default function TutorialPage() {
   }, []);
 
   return (
-    <Layout isLanding darkNav>
+    <Layout isLanding>
       <SEO
         title={t("tuSeoTitle")}
         description={t("tuSeoDesc")}
@@ -732,8 +732,8 @@ export default function TutorialPage() {
                     fontSize: 13,
                     fontWeight: isActive ? 600 : 400,
                     color: isActive ? T : TS,
-                    background: isActive ? "rgba(244,239,226,0.12)" : "rgba(244,239,226,0.04)",
-                    border: `1px solid ${isActive ? "rgba(244,239,226,0.2)" : B}`,
+                    background: isActive ? "rgba(66,53,33,0.15)" : "rgba(66,53,33,0.05)",
+                    border: `1px solid ${isActive ? "rgba(66,53,33,0.2)" : B}`,
                     borderRadius: 20,
                     padding: "6px 16px",
                     cursor: "pointer",

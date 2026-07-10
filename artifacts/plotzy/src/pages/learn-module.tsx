@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { APPLE_FONT, arField, moduleImage } from "@/lib/course-ui";
 import NotFound from "@/pages/not-found";
 import { CourseSticky } from "@/components/course/CourseSticky";
+import { GoldenRules } from "@/components/course/GoldenRules";
 
 interface ModuleResponse {
   id: number;
@@ -181,6 +182,9 @@ export default function LearnModulePage() {
                 />
               ))}
             </section>
+
+            {/* Handwritten module recap: the five rules worth keeping */}
+            <GoldenRules moduleSlug={moduleQ.data.slug} />
 
             {/* Module quiz CTA */}
             <section>

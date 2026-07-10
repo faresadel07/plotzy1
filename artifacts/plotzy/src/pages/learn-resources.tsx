@@ -1,12 +1,19 @@
 import { Link } from "wouter";
-import { BookOpen, Download, ExternalLink, ChevronRight, ChevronLeft, FileDown, Library } from "lucide-react";
+import { BookOpen, Download, ExternalLink, ChevronRight, ChevronLeft, FileDown, Library, Clapperboard } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { CourseBreadcrumb } from "@/components/course/CourseBreadcrumb";
+import { VideoEmbed } from "@/components/course/LessonBlocks";
 import { useLanguage } from "@/contexts/language-context";
 import { APPLE_FONT } from "@/lib/course-ui";
 import { LIBRARY, type LibraryBook } from "@/lib/course-library";
+import { VIDEO_VAULT, VAULT_VIDEO_COUNT } from "@/lib/course-video-vault";
 import { CourseSticky } from "@/components/course/CourseSticky";
+import { Mark } from "@/components/mobile/Marker";
+import { PaperBall } from "@/components/mobile/PaperBall";
+
+const SERIF = "'Lora', 'Amiri', Georgia, serif";
+const HAND = "'Caveat', 'Aref Ruqaa', cursive";
 
 // The course library: a shelf of free, legally shareable craft books
 // (public domain classics and CC BY texts) plus a pointer to the
@@ -93,6 +100,52 @@ export default function LearnResourcesPage() {
             {isRTL
               ? "كل كتاب هنا في الملكية العامة أو منشور برخصة المشاع الإبداعي, فهو حرّ للقراءة والتحميل والمشاركة. الكتب الكبيرة تفتح على مصدرها المجاني."
               : "Every book here is public domain or Creative Commons licensed, so it is free to read, download, and share. Larger books open at their free source."}
+          </p>
+        </section>
+
+        {/* ── The Video Vault ── */}
+        <section className="space-y-5 pt-4">
+          <div className="relative">
+            <div aria-hidden className="absolute -top-2 end-0 flex gap-1.5" style={{ pointerEvents: "none" }}>
+              <PaperBall size={30} rot={-14} />
+              <PaperBall size={20} rot={26} style={{ marginTop: 12 }} />
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border bg-secondary px-3 py-1 text-xs text-muted-foreground">
+              <Clapperboard className="h-3.5 w-3.5" aria-hidden />
+              {isRTL ? `قاعة الفيديو, ${VAULT_VIDEO_COUNT} درساً مصوراً` : `The Video Vault, ${VAULT_VIDEO_COUNT} watchable lessons`}
+            </div>
+            <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: SERIF }}>
+              {isRTL ? <>قاعة <Mark ar={isRTL}>الفيديو</Mark></> : <>The Video <Mark ar={isRTL}>Vault</Mark></>}
+            </h2>
+            <p className="mt-1" style={{ fontFamily: HAND, fontSize: isRTL ? 14.5 : 17, color: "#8a8070", transform: "rotate(-0.5deg)", display: "inline-block" }}>
+              {isRTL
+                ? "(أفضل ما وجدناه على الإنترنت كله، مرتب لك حسب الموضوع)"
+                : "(the best of the whole internet, sorted by topic for you)"}
+            </p>
+          </div>
+
+          {VIDEO_VAULT.map((topic) => (
+            <div key={topic.slug} className="space-y-3 pt-2">
+              <div className="flex items-baseline gap-2.5 flex-wrap">
+                <h3 className="text-lg font-semibold tracking-tight" style={{ fontFamily: SERIF }}>
+                  {loc(topic.label)}
+                </h3>
+                <span style={{ fontFamily: HAND, fontSize: isRTL ? 13 : 15.5, color: "#9a9181" }}>
+                  {loc(topic.note)}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {topic.videos.map((v) => (
+                  <VideoEmbed key={v.id} videoId={v.id} title={v.title} channel={v.channel} />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <p className="text-xs text-muted-foreground pt-2 leading-relaxed">
+            {isRTL
+              ? "كل فيديو هنا من قناة صانعه الرسمية ويعمل بالنقر عند الطلب, لا شيء يحمل قبل أن تختاره."
+              : "Every video here comes from its creator's official channel and loads only when you tap it."}
           </p>
         </section>
       </main>
