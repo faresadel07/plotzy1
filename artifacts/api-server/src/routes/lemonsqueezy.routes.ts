@@ -148,8 +148,11 @@ router.post("/api/webhooks/lemonsqueezy", async (req, res) => {
     // Resolve the user: prefer our custom_data id, fall back to the
     // stored subscription id (renewal webhooks omit custom data).
     let userId = Number.isFinite(customUserId) && customUserId > 0 ? customUserId : null;
-    if (!userId && subscriptionId) {
-      const [row] = await db.select({ id: users.id }).from(users).where(eq(users.lsSubscriptionId, subscriptionId));
+    // Invoice events (payment_success) carry the subscription id in
+    // attributes.subscription_id; subscription events carry it as data.id.
+    const subRef = String(attrs.subscription_id || subscriptionId || "");
+    if (!userId && subRef) {
+      const [row] = await db.select({ id: users.id }).from(users).where(eq(users.lsSubscriptionId, subRef));
       userId = row?.id ?? null;
     }
     if (!userId) {
@@ -159,23 +162,21 @@ router.post("/api/webhooks/lemonsqueezy", async (req, res) => {
 
     const endDate = attrs.renews_at || attrs.ends_at || null;
 
-    if (name === "subscription_created" || name === "subscription_updated" ||
-        name === "subscription_resumed" || name === "subscription_unpaused" ||
-        name === "subscription_payment_success") {
-      const status = String(attrs.status || "active");
-      const grants = ["active", "on_trial", "past_due"].includes(status);
-      const cancelled = status === "cancelled";
-      const expired = status === "expired";
+    if (name === "subscription_payment_success") {
+      // This event carries an INVOICE, not a subscription — its status
+      // is "paid", which the branch below would misread as a dead
+      // subscription and downgrade the user seconds after they paid
+      // (live-repro'd: created→active then payment_success→expired).
+      // A successful payment always means the subscription is alive.
       await db.update(users).set({
-        subscriptionTier: grants || cancelled ? "pro" : "free",
-        subscriptionStatus: expired ? "expired" : cancelled ? "canceled" : grants ? "active" : "expired",
+        subscriptionTier: "pro",
+        subscriptionStatus: "active",
         subscriptionPlan: "monthly",
-        subscriptionEndDate: endDate ? new Date(endDate) : null,
-        lsSubscriptionId: subscriptionId || undefined,
+        ...(endDate ? { subscriptionEndDate: new Date(endDate) } : {}),
         lsCustomerId: attrs.customer_id ? String(attrs.customer_id) : undefined,
       } as any).where(eq(users.id, userId));
 
-      if (name === "subscription_payment_success" && attrs.total !== undefined) {
+      if (attrs.total !== undefined) {
         // The payments table predates LS and has NOT NULL paypal_* refs;
         // store the LS invoice id in both so history and admin totals work.
         try {
@@ -193,6 +194,20 @@ router.post("/api/webhooks/lemonsqueezy", async (req, res) => {
           });
         } catch { /* receipt row is best-effort; it must not 500 the hook */ }
       }
+    } else if (name === "subscription_created" || name === "subscription_updated" ||
+               name === "subscription_resumed" || name === "subscription_unpaused") {
+      const status = String(attrs.status || "active");
+      const grants = ["active", "on_trial", "past_due"].includes(status);
+      const cancelled = status === "cancelled";
+      const expired = status === "expired";
+      await db.update(users).set({
+        subscriptionTier: grants || cancelled ? "pro" : "free",
+        subscriptionStatus: expired ? "expired" : cancelled ? "canceled" : grants ? "active" : "expired",
+        subscriptionPlan: "monthly",
+        subscriptionEndDate: endDate ? new Date(endDate) : null,
+        lsSubscriptionId: subscriptionId || undefined,
+        lsCustomerId: attrs.customer_id ? String(attrs.customer_id) : undefined,
+      } as any).where(eq(users.id, userId));
     } else if (name === "subscription_cancelled") {
       // Access survives until ends_at; getUserTier handles the expiry.
       await db.update(users).set({
