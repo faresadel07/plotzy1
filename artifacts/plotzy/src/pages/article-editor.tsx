@@ -37,6 +37,7 @@ import { Studio } from "@/components/studio/Studio";
 import { ClaudeIcon } from "@/components/studio/icons";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
+import { BlogOnboarding, type BlogBlueprint } from "@/components/BlogOnboarding";
 
 /* ── FontSize extension ─────────────────────────────────────────────── */
 const FontSize = Extension.create({
@@ -115,18 +116,18 @@ const TEXT_STYLES = [
 
 const CATEGORIES = [
   { label:"Writing Tips",       color:"#7b5e3b" },
-  { label:"Craft & Technique",  color:"#a78bfa" },
-  { label:"Publishing",         color:"#f472b6" },
-  { label:"Reading",            color:"#fbbf24" },
-  { label:"Inspiration",        color:"#34d399" },
-  { label:"Author Interviews",  color:"#60a5fa" },
-  { label:"Book Reviews",       color:"#2dd4bf" },
-  { label:"Industry News",      color:"#fb923c" },
-  { label:"Self-Publishing",    color:"#c084fc" },
-  { label:"Marketing",          color:"#f87171" },
-  { label:"Grammar & Style",    color:"#38bdf8" },
-  { label:"Research",           color:"#86efac" },
-  { label:"Other",              color:"#94a3b8" },
+  { label:"Craft & Technique",  color:"#8a6d45" },
+  { label:"Publishing",         color:"#7b5e3b" },
+  { label:"Reading",            color:"#8a6d45" },
+  { label:"Inspiration",        color:"#7b5e3b" },
+  { label:"Author Interviews",  color:"#8a6d45" },
+  { label:"Book Reviews",       color:"#7b5e3b" },
+  { label:"Industry News",      color:"#8a6d45" },
+  { label:"Self-Publishing",    color:"#7b5e3b" },
+  { label:"Marketing",          color:"#8a6d45" },
+  { label:"Grammar & Style",    color:"#7b5e3b" },
+  { label:"Research",           color:"#8a6d45" },
+  { label:"Other",              color:"#9a9181" },
 ];
 
 const WORD_GOALS = [
@@ -441,6 +442,7 @@ export default function ArticleEditor() {
   const [shareCopied, setShareCopied] = useState(false);
   const [dragOver, setDragOver]   = useState(false);
   const [wordGoal, setWordGoal]   = useState(1000);
+  const [showOnboard, setShowOnboard] = useState(false);
   const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [fontSize, setFontSize]   = useState(16);
   const [fontSizeInput, setFontSizeInput] = useState("16");
@@ -633,7 +635,42 @@ export default function ArticleEditor() {
       : "<p></p>";
     editor.commands.setContent(html, { emitUpdate: false });
     setContent(html);
-  }, [article, editor]);
+
+    // First-time guided setup: only for a genuinely empty post the writer
+    // has never set up before (per-article localStorage flag).
+    const plainLen = rawContent.replace(/<[^>]*>/g, "").trim().length;
+    const seenKey = `plotzy-blog-onboarded-${id}`;
+    const alreadySeen = (() => { try { return !!localStorage.getItem(seenKey); } catch { return false; } })();
+    if (plainLen === 0 && !article.articleCategory && !alreadySeen) {
+      setShowOnboard(true);
+    }
+  }, [article, editor, id]);
+
+  // Apply the guided-setup choices, and optionally drop in a matching outline.
+  const applyBlueprint = useCallback((bp: BlogBlueprint) => {
+    try { localStorage.setItem(`plotzy-blog-onboarded-${id}`, "1"); } catch {}
+    setShowOnboard(false);
+    setWordGoal(bp.goal);
+    if (bp.outline && editor) {
+      const O: Record<string, string[]> = {
+        howto:   ["Why this matters", "What you'll need", "Step by step", "Common mistakes", "Wrapping up"],
+        story:   ["The moment it started", "What changed", "What I learned", "Where I am now"],
+        opinion: ["The claim", "Why I believe it", "The other side", "So what?"],
+        review:  ["What it is", "What works", "What doesn't", "The verdict"],
+        list:    ["Intro", "1.", "2.", "3.", "The takeaway"],
+      };
+      const heads = O[bp.type] || O.story;
+      const html = heads.map((h, i) => i === 0
+        ? `<h2>${h}</h2><p></p>`
+        : `<h2>${h}</h2><p></p>`).join("");
+      editor.chain().focus().insertContent(html).run();
+    }
+  }, [id, editor]);
+
+  const dismissOnboard = useCallback(() => {
+    try { localStorage.setItem(`plotzy-blog-onboarded-${id}`, "1"); } catch {}
+    setShowOnboard(false);
+  }, [id]);
 
   /* ── save ── */
   const saveNow = useCallback(async (silent = false) => {
@@ -1143,18 +1180,19 @@ export default function ArticleEditor() {
               : <><SendIcon size={12}/> Publish</>}
           </button>
 
-          {/* Share button — only when the article is actually published */}
-          {(article as any)?.isPublished && (
-            <ArticleShareButton
-              articleId={String(id)}
-              article={article}
-              canvasWidth={containerW}
-              open={showShareMenu}
-              onOpenChange={setShowShareMenu}
-              copied={shareCopied}
-              onCopiedChange={setShareCopied}
-            />
-          )}
+          {/* Share button — always available so the writer can copy the
+              link, export a PDF, or post to Facebook / LinkedIn / X /
+              WhatsApp at any time (the public link goes live on publish). */}
+          <ArticleShareButton
+            articleId={String(id)}
+            article={article}
+            canvasWidth={containerW}
+            isPublished={!!(article as any)?.isPublished}
+            open={showShareMenu}
+            onOpenChange={setShowShareMenu}
+            copied={shareCopied}
+            onCopiedChange={setShareCopied}
+          />
         </div>
         {/* Spacer for fixed top bar */}
         <div style={{height:48}}/>
@@ -1648,7 +1686,7 @@ export default function ArticleEditor() {
             onClick={() => setDrawerOpen(false)}
             style={{
               position:"fixed",inset:0,zIndex:998,
-              background:"rgba(0,0,0,0.45)",
+              background:"rgba(41,33,21,0.35)",
               backdropFilter:"blur(2px)",
               transition:"opacity 0.2s",
             }}
@@ -1658,9 +1696,9 @@ export default function ArticleEditor() {
         <div style={{
           position:"fixed",top:0,right:0,bottom:0,
           width:340,zIndex:999,
-          background:"#0e0e12",
+          background:"#faf6ea",
           borderLeft:`1px solid ${B}`,
-          boxShadow: drawerOpen ? "-8px 0 40px rgba(0,0,0,0.6)" : "none",
+          boxShadow: drawerOpen ? "-8px 0 40px -12px rgba(41,33,21,0.4)" : "none",
           transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
           transition:"transform 0.28s cubic-bezier(0.4,0,0.2,1)",
           overflowY:"auto",scrollbarWidth:"none",
@@ -1668,9 +1706,12 @@ export default function ArticleEditor() {
         }}>
           {/* Drawer header */}
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 20px 14px",borderBottom:`1px solid ${B}`,flexShrink:0}}>
-            <span style={{fontFamily:SF,fontSize:13,fontWeight:700,color:T,letterSpacing:"-0.01em"}}>Settings</span>
-            <button onClick={() => setDrawerOpen(false)} style={{background:"none",border:"none",cursor:"pointer",color:TD,display:"flex",padding:4}}>
-              <X size={16}/>
+            <div>
+              <span style={{fontFamily:SERIF,fontSize:16,fontWeight:700,color:T,letterSpacing:"-0.01em"}}>Post settings</span>
+              <div style={{fontFamily:HAND,fontSize:14,color:TD,marginTop:-1}}>(everything about this post, in one place)</div>
+            </div>
+            <button onClick={() => setDrawerOpen(false)} title="Close" style={{background:"none",border:"none",cursor:"pointer",color:TS,display:"flex",padding:4}}>
+              <X size={18}/>
             </button>
           </div>
 
@@ -1679,20 +1720,20 @@ export default function ArticleEditor() {
             <button
               onClick={() => { setShowAI(true); setDrawerOpen(false); }}
               style={{
-                width:"100%",display:"flex",alignItems:"center",gap:10,
+                width:"100%",display:"flex",alignItems:"center",gap:11,
                 padding:"14px 16px",borderRadius:14,cursor:"pointer",
-                background:`linear-gradient(135deg,${ACC}1a 0%,rgba(122,94,59,0.08) 100%)`,
-                border:`1px solid ${ACC}35`,transition:"all 0.2s",
+                background:"#221b11",border:"none",transition:"all 0.2s",
+                boxShadow:"0 6px 18px -8px rgba(41,33,21,0.5)",
               }}
-              onMouseEnter={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}28 0%,rgba(122,94,59,0.14) 100%)`)}
-              onMouseLeave={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}1a 0%,rgba(122,94,59,0.08) 100%)`)}
+              onMouseEnter={e=>(e.currentTarget.style.background="#332617")}
+              onMouseLeave={e=>(e.currentTarget.style.background="#221b11")}
             >
-              <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <Sparkles size={16} color={ACC}/>
+              <div style={{width:38,height:38,borderRadius:11,background:"rgba(244,239,226,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <ClaudeIcon size={18}/>
               </div>
               <div style={{textAlign:"left"}}>
-                <div style={{fontFamily:SF,fontSize:12,fontWeight:700,color:T,marginBottom:2}}>AI Writing Assistant</div>
-                <div style={{fontFamily:SF,fontSize:10,color:TS}}>Polish · Expand · Translate · Rewrite</div>
+                <div style={{fontFamily:SERIF,fontSize:14,fontWeight:700,color:"#f4efe2",marginBottom:1}}>Write with Claude</div>
+                <div style={{fontFamily:SF,fontSize:10.5,color:"rgba(244,239,226,0.6)"}}>Polish, expand, brainstorm, translate</div>
               </div>
             </button>
 
@@ -1738,7 +1779,7 @@ export default function ArticleEditor() {
                   <span style={{fontFamily:SF,fontSize:10,color:progress>=100?"#34d399":TD}}>{progress}%</span>
                 </div>
                 {showGoalPicker && (
-                  <div style={{background:"#1a1a1a",border:`1px solid ${B}`,borderRadius:10,overflow:"hidden",marginBottom:8}}>
+                  <div style={{background:"#fffdf7",border:`1px solid ${B}`,borderRadius:10,overflow:"hidden",marginBottom:8}}>
                     {WORD_GOALS.map(g => (
                       <button key={g.value} onClick={()=>{setWordGoal(g.value);setShowGoalPicker(false);}}
                         style={{width:"100%",padding:"7px 12px",background:wordGoal===g.value?`${ACC}18`:"none",border:"none",borderBottom:`1px solid ${B2}`,cursor:"pointer",textAlign:"left",fontFamily:SF,fontSize:11,color:wordGoal===g.value?ACC:TS}}
@@ -1800,8 +1841,43 @@ export default function ArticleEditor() {
               <p style={{fontFamily:SF,fontSize:10,color:TD,marginTop:5}}>Enter or comma to add</p>
             </div>
 
+            {/* Publish readiness — a quick pre-flight before going live */}
+            <div style={{background:C1,borderRadius:14,border:`1px solid ${B}`,padding:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:11}}>
+                <CheckCircle2 size={11} color={TD}/>
+                <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:TD}}>Ready to publish?</span>
+              </div>
+              {(() => {
+                const checks = [
+                  { ok: (title||"").trim().length >= 8, label: "A clear title" },
+                  { ok: words >= 120, label: "At least a few paragraphs" },
+                  { ok: !!category, label: "A category chosen" },
+                  { ok: tags.length > 0, label: "One or more tags" },
+                  { ok: floatingImages.length > 0, label: "A cover or an image" },
+                ];
+                const done = checks.filter(c=>c.ok).length;
+                return (
+                  <>
+                    <div style={{fontFamily:HAND,fontSize:15,color:TS,marginBottom:8,transform:"rotate(-0.4deg)",display:"inline-block"}}>
+                      {done===checks.length ? "(all set, hit Publish!)" : `(${done} of ${checks.length} done)`}
+                    </div>
+                    <ul style={{listStyle:"none",margin:0,padding:0,display:"flex",flexDirection:"column",gap:7}}>
+                      {checks.map((c,i)=>(
+                        <li key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{width:15,height:15,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",background:c.ok?"#7b5e3b":"transparent",border:c.ok?"none":`1.5px solid ${B}`}}>
+                            {c.ok && <Check size={9} color="#f4efe2" strokeWidth={3}/>}
+                          </span>
+                          <span style={{fontFamily:SF,fontSize:11,color:c.ok?T:TD,textDecoration:"none"}}>{c.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                );
+              })()}
+            </div>
+
             {/* Writing Tips */}
-            <div style={{background:`${ACC}0d`,borderRadius:14,border:`1px solid ${ACC}22`,padding:16}}>
+            <div style={{background:"rgba(122,94,59,0.06)",borderRadius:14,border:"1px solid rgba(122,94,59,0.16)",padding:16}}>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:9}}>
                 <Sparkles size={11} color={ACC}/>
                 <span style={{fontFamily:SF,fontSize:9,fontWeight:700,letterSpacing:"0.09em",textTransform:"uppercase",color:ACC+"bb"}}>Writing Tips</span>
@@ -1816,7 +1892,7 @@ export default function ArticleEditor() {
                 ].map((tip,i) => (
                   <li key={i} style={{display:"flex",alignItems:"flex-start",gap:7}}>
                     <span style={{fontFamily:SF,fontSize:13,color:ACC,flexShrink:0,marginTop:-1}}>·</span>
-                    <span style={{fontFamily:SF,fontSize:10,color:TD,lineHeight:1.6}}>{tip}</span>
+                    <span style={{fontFamily:SF,fontSize:10.5,color:TS,lineHeight:1.6}}>{tip}</span>
                   </li>
                 ))}
               </ul>
@@ -1843,6 +1919,15 @@ export default function ArticleEditor() {
           </div>
         )}
 
+
+        {/* ── First-open guided setup (multiple choice, no blank fields) ── */}
+        {showOnboard && (
+          <BlogOnboarding
+            ar={isRTL}
+            onFinish={applyBlueprint}
+            onSkip={dismissOnboard}
+          />
+        )}
 
         {/* ── CLAUDE STUDIO (same panel as the book editor) ── */}
         <Studio
@@ -1920,6 +2005,7 @@ function ArticleShareButton({
   articleId,
   article,
   canvasWidth,
+  isPublished,
   open,
   onOpenChange,
   copied,
@@ -1928,6 +2014,7 @@ function ArticleShareButton({
   articleId: string;
   article: any;
   canvasWidth: number;
+  isPublished: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   copied: boolean;
@@ -2023,9 +2110,14 @@ function ArticleShareButton({
               fontFamily: SF,
             }}
           >
-            <div style={{ padding: "8px 10px 6px", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#2f2618", fontFamily: SERIF }}>
+            <div style={{ padding: "8px 10px 4px", fontSize: 12, fontWeight: 700, color: "#2f2618", fontFamily: SERIF }}>
               Share this article
             </div>
+            {!isPublished && (
+              <div style={{ padding: "0 10px 6px", fontFamily: HAND, fontSize: 14, color: "#a08a6a" }}>
+                (publish to make the link public)
+              </div>
+            )}
 
             <ShareItem onClick={copyLink}>
               {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} color="#4a4132" />}
