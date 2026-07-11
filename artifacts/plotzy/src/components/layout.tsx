@@ -797,6 +797,28 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               <p style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(244,239,226,0.15)', margin: 0, paddingTop: 2, borderLeft: '2px solid rgba(244,239,226,0.08)', paddingLeft: 10 }}>
                 "Every great story begins with a blank page."
               </p>
+
+              {/* Contact — the real mailboxes, visible where people look
+                  for them. All three forward to the team inbox. */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', margin: '0 0 2px', fontFamily: SF_FONT }}>
+                  Contact
+                </p>
+                {[
+                  { email: 'support@plotzy.co', note: 'help & questions' },
+                  { email: 'privacy@plotzy.co', note: 'privacy & data' },
+                  { email: 'legal@plotzy.co', note: 'copyright & DMCA' },
+                ].map(({ email, note }) => (
+                  <a key={email} href={`mailto:${email}`} style={{ ...FOOTER_LINK_STYLE, fontSize: 16 }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(244,239,226,0.55)')}
+                  >
+                    {email}
+                    <span style={{ marginInlineStart: 7, fontSize: 13, color: 'rgba(244,239,226,0.28)' }}>({note})</span>
+                  </a>
+                ))}
+              </div>
+
               <FooterSocialIcons />
             </div>
 
