@@ -691,22 +691,6 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
       </div>
       {renderItems(afterWriting)}
 
-      {/* Trust footnote — Writer Protection */}
-      <button
-        onClick={() => navigate("/protection")}
-        style={{
-          margin: "22px auto 0",
-          display: "flex", alignItems: "center", gap: 9,
-          flexDirection: ar ? "row-reverse" : "row",
-          background: "transparent", border: "none", cursor: "pointer",
-          padding: "10px 4px", fontFamily: SF,
-        }}
-      >
-        <ShieldCheck size={16} color="#7b7366" style={{ flexShrink: 0 }} />
-        <span style={{ fontSize: 13.5, color: "#7b7366" }}>
-          {ar ? "مخطوطتك تبقى ملكك دائماً. تعرّف على حماية الكاتب" : "Your manuscript always stays yours. See Writer Protection"}
-        </span>
-      </button>
     </section>
   );
 }
@@ -752,11 +736,12 @@ function CommunityStripDesktop({ ar }: { ar: boolean }) {
 }
 
 /* ── 6.5 Writer Protection band ────────────────────────────────────────
-   A quiet dark-espresso interlude between the feedback wall and the
-   course note. Words only, as Faris asked: light-brown type on the
-   dark sheet, four faces working together (Courier eyebrow, serif
-   headline, SF body, handwriting aside), one sticky note carrying the
-   promise that matters, and a plain link into the full page. */
+   The dark-espresso sheet right below the feature sketches, where the
+   one-line trust footnote used to sit. Words only, as Faris asked:
+   light-brown type on the dark sheet, and the honest protections
+   listed line by line in a rotation of four faces (SF, handwriting,
+   serif, Courier), one sticky note, and a plain link into the full
+   /protection page at the end. */
 
 function ProtectionBandDesktop({ ar }: { ar: boolean }) {
   const [, navigate] = useLocation();
@@ -766,6 +751,35 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
   const TAN = "#e6cda4";
   const TAN_SOFT = "rgba(222,196,155,0.85)";
   const TAN_DIM = "rgba(216,185,140,0.6)";
+  const MONO = "'Courier New', monospace";
+
+  /* The honest protections, one per line, cycling the four faces:
+     sf → hand → serif → mono. */
+  const LINES: { f: "sf" | "hand" | "serif" | "mono"; en: string; ar: string }[] = [
+    { f: "sf",    en: "Every word you write on Plotzy is 100% yours. We claim nothing.",            ar: "كل كلمة تكتبها في بلوتزي ملكك بالكامل. لا نطالب بأي حق فيها." },
+    { f: "hand",  en: "your drafts stay private until YOU hit publish",                             ar: "مسوداتك تبقى خاصة حتى تضغط أنت زر النشر" },
+    { f: "serif", en: "Your text never trains any AI model. Not ours, not anyone's.",               ar: "نصك لا يدرّب أي نموذج ذكاء اصطناعي. لا نماذجنا ولا نماذج غيرنا." },
+    { f: "mono",  en: "encrypted in transit. encrypted at rest.",                                   ar: "مشفر في الطريق. مشفر في التخزين." },
+    { f: "sf",    en: "Instant saves and a full version history, so not a word gets lost.",         ar: "حفظ لحظي وسجل إصدارات كامل، فلا تضيع كلمة واحدة." },
+    { f: "hand",  en: "export everything, anytime, PDF or DOCX",                                    ar: "صدّر كل شيء في أي وقت، PDF أو DOCX" },
+    { f: "serif", en: "We never sell your data and never share it with advertisers.",               ar: "لا نبيع بياناتك أبداً ولا نشاركها مع المعلنين." },
+    { f: "mono",  en: "delete everything in one click. no questions asked.",                        ar: "احذف كل شيء بضغطة واحدة. بلا أسئلة." },
+    { f: "sf",    en: "Collaborators see only the books you invite them into. Nothing else.",       ar: "المتعاونون يرون فقط الكتب التي تدعوهم إليها. لا شيء غيرها." },
+    { f: "hand",  en: "someone copies your published work? we stand with you",                      ar: "أحدهم نسخ عملك المنشور؟ نحن في صفك" },
+  ];
+
+  const lineStyle = (f: "sf" | "hand" | "serif" | "mono"): React.CSSProperties => {
+    switch (f) {
+      case "hand":
+        return { fontFamily: hand, fontSize: ar ? 18 : 22, color: "#d8b98c", transform: "rotate(-0.5deg)" };
+      case "serif":
+        return { fontFamily: serif, fontSize: ar ? 16.5 : 18, color: TAN, fontWeight: 600 };
+      case "mono":
+        return { fontFamily: MONO, fontSize: 14.5, letterSpacing: "0.04em", color: TAN_DIM, fontWeight: 700 };
+      default:
+        return { fontFamily: SF, fontSize: 16, color: TAN_SOFT };
+    }
+  };
 
   return (
     <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, maxWidth: 1150, marginBottom: 48, fontFamily: SF }}>
@@ -774,7 +788,7 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
         background: ESPRESSO,
         border: "1px solid rgba(66,53,33,0.3)",
         borderRadius: 24,
-        padding: "56px 48px 50px",
+        padding: "54px 48px 48px",
         textAlign: "center",
         boxShadow: "0 24px 50px -30px rgba(41,33,21,0.6)",
       }}>
@@ -783,71 +797,44 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
           ar={ar}
           size={98}
           rot={5}
-          text={ar ? "خاص حتى تنشره أنت" : "private until YOU publish"}
+          text={ar ? "ملكك 100%" : "100% yours. always."}
           style={{ position: "absolute", top: -34, insetInlineEnd: 30, zIndex: 3 }}
         />
 
-        {/* Font 1: Courier eyebrow */}
+        {/* Courier eyebrow */}
         <div style={{
-          fontFamily: "'Courier New', monospace",
+          fontFamily: MONO,
           fontSize: 12,
           fontWeight: 700,
           letterSpacing: "0.24em",
           textTransform: "uppercase",
           color: TAN_DIM,
-          marginBottom: 16,
+          marginBottom: 14,
         }}>
           {ar ? "حماية الكاتب" : "Writer Protection"}
         </div>
 
-        {/* Font 2: serif headline */}
+        {/* Serif headline */}
         <h2 style={{
           fontFamily: serif,
-          fontSize: ar ? 36 : 42,
+          fontSize: ar ? 34 : 40,
           fontWeight: 700,
           lineHeight: ar ? 1.4 : 1.12,
           letterSpacing: ar ? 0 : "-0.02em",
           color: TAN,
-          margin: "0 0 10px",
+          margin: "0 0 26px",
         }}>
           {ar ? "كلماتك تبقى لك. دائماً." : "Your words stay yours. Always."}
         </h2>
 
-        {/* Font 3: handwriting aside */}
-        <div style={{
-          fontFamily: hand,
-          fontSize: ar ? 17 : 21,
-          color: "#d8b98c",
-          marginBottom: 20,
-          transform: "rotate(-0.8deg)",
-          display: "inline-block",
-        }}>
-          {ar ? "(ليست شعارات، هكذا بُني بلوتزي)" : "(not slogans, it's how Plotzy is built)"}
+        {/* The protections, line by line, four faces taking turns. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 13, maxWidth: 620, margin: "0 auto 30px" }}>
+          {LINES.map((l, i) => (
+            <div key={i} style={{ lineHeight: 1.55, ...lineStyle(l.f) }}>
+              {ar ? l.ar : l.en}
+            </div>
+          ))}
         </div>
-
-        {/* Font 4: SF body */}
-        <p style={{
-          fontSize: 16,
-          lineHeight: 1.8,
-          color: TAN_SOFT,
-          maxWidth: 640,
-          margin: "0 auto 8px",
-        }}>
-          {ar
-            ? "كل ما تكتبه في بلوتزي ملكك بالكامل. مسوداتك تبقى خاصة حتى تقرر أنت نشرها، ونصك لا يُستخدم أبداً لتدريب أي نموذج ذكاء اصطناعي."
-            : "Everything you write on Plotzy belongs to you, one hundred percent. Your drafts stay private until you decide to publish, and your text is never used to train any AI model."}
-        </p>
-        <p style={{
-          fontSize: 16,
-          lineHeight: 1.8,
-          color: TAN_SOFT,
-          maxWidth: 640,
-          margin: "0 auto 28px",
-        }}>
-          {ar
-            ? "كلماتك مشفرة في الطريق وفي التخزين، وإذا غيّرت رأيك تحذف كل شيء بضغطة واحدة، بلا أسئلة."
-            : "Your words travel encrypted and sit encrypted, and if you ever change your mind, you delete everything in one click, no questions asked."}
-        </p>
 
         {/* The plain link into the full page. */}
         <button
@@ -1229,6 +1216,8 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
 
       <JourneyDesktop ar={ar} onStartWriting={onStartWriting} />
 
+      <ProtectionBandDesktop ar={ar} />
+
       {/* a couple of failed drafts before the community shelf */}
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
         <PaperBall size={48} rot={14} style={{ position: "absolute", top: -18, insetInlineEnd: 24 }} />
@@ -1243,8 +1232,6 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
       </div>
 
       <FeedbackWallDesktop ar={ar} />
-
-      <ProtectionBandDesktop ar={ar} />
 
       <CourseDesktop ar={ar} />
 
