@@ -2822,7 +2822,17 @@ export default function ChapterEditor() {
             e.preventDefault();
             setIsDraggingOver(false);
             const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
-            if (file) insertImageFromFile(file);
+            if (!file) return;
+            // Land the image on the page the cursor is actually OVER, not
+            // the last page that happened to have focus. Resolve the page
+            // from the drop coordinates; fall back to the active page only
+            // when dropped in the gap between pages.
+            const under = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+            const pageEl = under?.closest('[data-page-index]') as HTMLElement | null;
+            const droppedIdx = pageEl ? Number(pageEl.getAttribute('data-page-index')) : NaN;
+            const targetIdx = Number.isFinite(droppedIdx) ? droppedIdx : undefined;
+            if (targetIdx !== undefined) setActivePageIndex(targetIdx);
+            insertImageFromFile(file, targetIdx);
           }}
           style={isDraggingOver ? { outline: '2px dashed #7c6af7', outlineOffset: '-4px', borderRadius: 8 } : undefined}
         >
@@ -2917,6 +2927,7 @@ export default function ChapterEditor() {
               <div
                 key={`${chapterId}-page-${index}`}
                 className="relative w-full group"
+                data-page-index={index}
                 style={{ maxWidth: isPhone ? "100%" : dynPageW }}
                 ref={el => { pageElsRef.current[index] = el; }}
                 onClick={() => setActivePageIndex(index)}

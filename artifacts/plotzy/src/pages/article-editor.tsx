@@ -33,7 +33,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useLanguage } from "@/contexts/language-context";
-import { AIAssistant } from "@/components/ai-assistant";
+import { Studio } from "@/components/studio/Studio";
+import { ClaudeIcon } from "@/components/studio/icons";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 
@@ -59,15 +60,17 @@ const FontSize = Extension.create({
 
 /* ── Design tokens ──────────────────────────────────────────────────── */
 const SF  = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const BG  = "#0a0a0a";
-const C1  = "#111111";
-const C2  = "#161616";
-const B   = "rgba(255,255,255,0.07)";
-const B2  = "rgba(255,255,255,0.04)";
-const T   = "rgba(255,255,255,0.88)";
-const TS  = "rgba(255,255,255,0.45)";
-const TD  = "rgba(255,255,255,0.20)";
-const ACC = "#7c6af7";
+const BG  = "#f4efe2";
+const C1  = "#fffdf7";
+const C2  = "#faf6ea";
+const B   = "rgba(66,53,33,0.13)";
+const B2  = "rgba(66,53,33,0.07)";
+const T   = "#2f2618";
+const TS  = "#6d6354";
+const TD  = "#9a9181";
+const ACC = "#7b5e3b";
+const SERIF = "'Lora', 'Amiri', Georgia, serif";
+const HAND  = "'Caveat', 'Aref Ruqaa', cursive";
 
 /* ── Fonts ──────────────────────────────────────────────────────────── */
 const FONTS = [
@@ -111,7 +114,7 @@ const TEXT_STYLES = [
 ];
 
 const CATEGORIES = [
-  { label:"Writing Tips",       color:"#818cf8" },
+  { label:"Writing Tips",       color:"#7b5e3b" },
   { label:"Craft & Technique",  color:"#a78bfa" },
   { label:"Publishing",         color:"#f472b6" },
   { label:"Reading",            color:"#fbbf24" },
@@ -136,7 +139,7 @@ const WORD_GOALS = [
 
 const TEXT_COLORS = [
   "#ffffff","#e2e8f0","#94a3b8","#f87171","#fb923c",
-  "#fbbf24","#34d399","#60a5fa","#818cf8","#f472b6",
+  "#fbbf24","#34d399","#60a5fa","#7b5e3b","#f472b6",
   "#2dd4bf","#a78bfa","#ff6b6b","#ffd93d",
 ];
 
@@ -168,8 +171,8 @@ function Btn({ onClick, active, title, children }: {
       style={{
         display:"flex", alignItems:"center", justifyContent:"center",
         width:28, height:26, borderRadius:4, border:"none", cursor:"pointer",
-        background: active ? "rgba(255,255,255,0.15)" : hov ? "rgba(255,255,255,0.07)" : "transparent",
-        color: active ? "#fff" : TS, flexShrink:0, transition:"background 0.1s",
+        background: active ? "rgba(66,53,33,0.2)" : hov ? "rgba(66,53,33,0.09)" : "transparent",
+        color: active ? "#292115" : TS, flexShrink:0, transition:"background 0.1s",
       }}
     >{children}</button>
   );
@@ -208,7 +211,7 @@ function useCloseOnOutside(isOpen: boolean, close: () => void) {
 
 /* ── Resizable Image NodeView — full 8-handle system ────────────── */
 const _SF  = `-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`;
-const _ACC = `#7c6af7`;
+const _ACC = `#7b5e3b`;
 
 type HDir = { id:string; cursor:string; top?:number|string; bottom?:number|string; left?:number|string; right?:number|string; tx?:string; ty?:string; corner:boolean; dx:number; dy:number; };
 const HANDLES: HDir[] = [
@@ -314,9 +317,9 @@ function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeVie
             title="Drag to move"
             style={{ position:"absolute", top:8, left:8, width:28, height:28, borderRadius:7,
               background:"rgba(0,0,0,0.72)", backdropFilter:"blur(8px)",
-              border:"1px solid rgba(255,255,255,0.18)", cursor:"grab",
+              border:"1px solid #9a9181", cursor:"grab",
               display:"flex", alignItems:"center", justifyContent:"center", zIndex:50 }}>
-            <GripVertical size={14} color="rgba(255,255,255,0.8)"/>
+            <GripVertical size={14} color="#3a3020"/>
           </div>
         )}
 
@@ -331,11 +334,11 @@ function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeVie
               <button key={a} onMouseDown={e=>{e.preventDefault();updateAttributes({align:a});}}
                 style={{ width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  background:align===a?"rgba(124,106,247,0.4)":"transparent", color:"#fff" }}>
+                  background:align===a?"rgba(122,94,59,0.4)":"transparent", color:"#fff" }}>
                 {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
               </button>
             ))}
-            <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+            <div style={{width:1,height:14,background:"rgba(66,53,33,0.2)",margin:"0 2px"}}/>
             <button onMouseDown={e=>{e.preventDefault();updateAttributes({imgW:null,imgH:null});}}
               title="Reset size"
               style={{ height:24,padding:"0 9px",borderRadius:5,border:"none",cursor:"pointer",
@@ -343,7 +346,7 @@ function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeVie
                 color:"rgba(255,255,255,0.75)",whiteSpace:"nowrap" }}>
               Reset
             </button>
-            <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+            <div style={{width:1,height:14,background:"rgba(66,53,33,0.2)",margin:"0 2px"}}/>
             <button onMouseDown={e=>{e.preventDefault();deleteNode();}}
               title="Delete image"
               style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
@@ -535,6 +538,9 @@ export default function ArticleEditor() {
 
   /* ── tiptap ── */
   const [, forceUpdate] = useState(0);
+  // Studio (Claude) inserts into the live TipTap editor via a ref, exactly
+  // like the book editor. Keep it pointed at the current editor instance.
+  const claudeEditorRef = useRef<any>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -570,15 +576,21 @@ export default function ArticleEditor() {
           if (!src) return;
           const probe = new Image();
           probe.onload = () => {
-            const contW = editorContainerRef.current?.clientWidth || 620;
+            const cont = editorContainerRef.current;
+            const contW = cont?.clientWidth || 620;
             const maxW = contW * 0.5;
             const w = Math.round(Math.min(maxW, probe.naturalWidth));
             const h = Math.round((probe.naturalHeight / probe.naturalWidth) * w);
+            // Drop the image WHERE the cursor released, not pinned to the
+            // top — coordinates are relative to the scrolled content box.
+            const rect = cont?.getBoundingClientRect();
+            const dropX = rect ? (event as DragEvent).clientX - rect.left - w / 2 : Math.round((contW - w) / 2);
+            const dropY = rect ? (event as DragEvent).clientY - rect.top + (cont?.scrollTop || 0) - h / 2 : 40;
             setFloatingImages(prev => [...prev, {
               id: `fi-${Date.now()}-${Math.random().toString(36).slice(2)}`,
               src,
-              x: Math.round((contW - w) / 2),
-              y: 40,
+              x: Math.max(0, Math.round(Math.min(dropX, contW - w))),
+              y: Math.max(0, Math.round(dropY)),
               width: w,
               height: h,
               locked: false,
@@ -736,6 +748,7 @@ export default function ArticleEditor() {
 
   /* ── keep floatingImagesRef in sync ── */
   useEffect(() => { floatingImagesRef.current = floatingImages; }, [floatingImages]);
+  useEffect(() => { claudeEditorRef.current = editor; }, [editor]);
 
   /* editor container width is tracked via the setEditorContainerNode
      callback ref (attaches the observer when the node actually mounts —
@@ -987,7 +1000,7 @@ export default function ArticleEditor() {
     <Layout isLanding darkNav>
       <div style={{background:BG,minHeight:"100vh"}}>
         <div style={{
-          position:"sticky",top:0,zIndex:50,background:"rgba(10,10,10,0.97)",
+          position:"sticky",top:0,zIndex:50,background:"rgba(41,33,21,0.97)",
           backdropFilter:"blur(20px)",borderBottom:`1px solid ${B}`,
           padding:"0 24px",height:46,display:"flex",alignItems:"center",justifyContent:"space-between",
         }}>
@@ -1036,7 +1049,7 @@ export default function ArticleEditor() {
         {/* ── TOP BAR — fixed below Layout navbar (44px), always visible ── */}
         <div className="article-editor-topbar" style={{
           position:"fixed",top:44,left:0,right:0,zIndex:50,
-          background:"rgba(10,10,10,0.98)",backdropFilter:"blur(20px)",
+          background:"rgba(41,33,21,0.97)",backdropFilter:"blur(20px)",
           borderBottom:`1px solid ${B}`,
           padding:"0 16px",height:48,
           display:"flex",alignItems:"center",justifyContent:isPhone?"flex-start":"center",gap:6,
@@ -1046,9 +1059,9 @@ export default function ArticleEditor() {
           {/* Back */}
           <Link href="/">
             <button style={{display:"flex",alignItems:"center",background:"none",border:"none",cursor:"pointer",color:TS,padding:4,borderRadius:6,flexShrink:0}}
-              onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.06)")}
+              onMouseEnter={e=>(e.currentTarget.style.background="rgba(244,239,226,0.12)")}
               onMouseLeave={e=>(e.currentTarget.style.background="none")}>
-              <ArrowLeft size={15}/>
+              <ArrowLeft size={15} color={"rgba(244,239,226,0.7)"}/>
             </button>
           </Link>
 
@@ -1056,15 +1069,15 @@ export default function ArticleEditor() {
 
           {/* Label — hidden on mobile */}
           <div className="topbar-hide-mobile" style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
-            <FileText size={11} color={TD}/>
-            <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:TD}}>Blog Post</span>
+            <FileText size={11} color={"rgba(244,239,226,0.4)"}/>
+            <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(244,239,226,0.4)",fontFamily:"'Courier New',monospace"}}>Blog Post</span>
           </div>
 
           <div className="topbar-hide-mobile" style={{width:1,height:14,background:B,flexShrink:0}}/>
 
           {/* Stats — hidden on mobile to save space */}
           <span className="topbar-hide-mobile" style={{fontSize:11,color:TD,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{words.toLocaleString()} w</span>
-          <span className="topbar-hide-mobile" style={{fontSize:9,color:"rgba(255,255,255,0.1)",flexShrink:0}}>·</span>
+          <span className="topbar-hide-mobile" style={{fontSize:9,color:"rgba(66,53,33,0.14)",flexShrink:0}}>·</span>
           <span className="topbar-hide-mobile" style={{fontSize:11,color:TD,flexShrink:0}}>{readTime} min</span>
 
           <div className="topbar-hide-mobile" style={{width:1,height:14,background:B,flexShrink:0}}/>
@@ -1103,7 +1116,7 @@ export default function ArticleEditor() {
 
           {/* Settings */}
           <button onClick={() => setDrawerOpen(true)} title="Settings"
-            style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:drawerOpen?"rgba(255,255,255,0.1)":"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
+            style={{display:"flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:7,background:drawerOpen?"rgba(66,53,33,0.14)":"none",border:`1px solid ${B}`,cursor:"pointer",color:TS,flexShrink:0}}>
             <BarChart2 size={13}/>
           </button>
 
@@ -1111,7 +1124,7 @@ export default function ArticleEditor() {
 
           {/* Save button (shows Save / Saving… / Saved in place) */}
           <button onClick={() => saveNow(false)} disabled={saving}
-            style={{display:"flex",alignItems:"center",gap:5,padding:"6px 14px",borderRadius:7,cursor:"pointer",background:justSaved?"#34d399":"#fff",border:"none",fontFamily:SF,fontSize:12,fontWeight:600,color:justSaved?"#fff":"#000",transition:"all 0.2s",flexShrink:0}}>
+            style={{display:"flex",alignItems:"center",gap:5,padding:"6px 14px",borderRadius:7,cursor:"pointer",background:justSaved?"#7b5e3b":"#f4efe2",border:"none",fontFamily:SF,fontSize:12,fontWeight:700,color:justSaved?"#f4efe2":"#292115",transition:"all 0.2s",flexShrink:0}}>
             {saving ? <><Loader2 size={12} style={{animation:"spin 1s linear infinite"}}/> Saving…</>
               : justSaved ? <><CheckCircle2 size={12}/> Saved</>
               : <><Save size={12}/> Save</>}
@@ -1155,7 +1168,7 @@ export default function ArticleEditor() {
           style={{
             position:"fixed",top:92,left:0,right:0,zIndex:49, /* 44px Layout nav + 48px top bar */
             scrollbarWidth:"none",
-            background:"rgba(16,16,20,0.98)",backdropFilter:"blur(20px)",
+            background:"rgba(250,246,234,0.98)",backdropFilter:"blur(20px)",
             borderBottom:`1px solid ${B2}`,
             padding:"0 14px",height:44,
             display:"flex",alignItems:"center",justifyContent:isPhone?"flex-start":"center",gap:2,
@@ -1176,10 +1189,10 @@ export default function ArticleEditor() {
               style={{
                 display:"flex",alignItems:"center",gap:5,
                 padding:"0 8px",height:28,borderRadius:5,border:"none",cursor:"pointer",
-                background: styleOpen ? "rgba(255,255,255,0.12)" : "transparent",
+                background: styleOpen ? "rgba(66,53,33,0.16)" : "transparent",
                 color:TS, fontFamily:SF, fontSize:12, minWidth:100, whiteSpace:"nowrap",
               }}
-              onMouseEnter={e => { if(!styleOpen)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.07)"; }}
+              onMouseEnter={e => { if(!styleOpen)(e.currentTarget as HTMLElement).style.background="rgba(66,53,33,0.09)"; }}
               onMouseLeave={e => { if(!styleOpen)(e.currentTarget as HTMLElement).style.background="transparent"; }}
             >
               <span style={{flex:1,textAlign:"left"}}>{currentStyle()}</span>
@@ -1194,11 +1207,11 @@ export default function ArticleEditor() {
               style={{
                 display:"flex",alignItems:"center",gap:5,
                 padding:"0 8px",height:28,borderRadius:5,border:"none",cursor:"pointer",
-                background: fontOpen ? "rgba(255,255,255,0.12)" : "transparent",
+                background: fontOpen ? "rgba(66,53,33,0.16)" : "transparent",
                 color:TS, fontFamily: currentFont()?.ff || "Georgia, serif", fontSize:12,
                 minWidth:120, maxWidth:155, overflow:"hidden",
               }}
-              onMouseEnter={e => { if(!fontOpen)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.07)"; }}
+              onMouseEnter={e => { if(!fontOpen)(e.currentTarget as HTMLElement).style.background="rgba(66,53,33,0.09)"; }}
               onMouseLeave={e => { if(!fontOpen)(e.currentTarget as HTMLElement).style.background="transparent"; }}
             >
               <span style={{flex:1,textAlign:"left",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{currentFont()?.label || "Georgia"}</span>
@@ -1207,7 +1220,7 @@ export default function ArticleEditor() {
           </div>
 
           <div style={{display:"flex",alignItems:"center",gap:1,marginLeft:2}}>
-            <button onMouseDown={e=>{e.preventDefault();changeSize(-1);}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:18,height:26,background:"transparent",border:"none",cursor:"pointer",color:TS,borderRadius:3}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.07)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}><Minus size={10}/></button>
+            <button onMouseDown={e=>{e.preventDefault();changeSize(-1);}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:18,height:26,background:"transparent",border:"none",cursor:"pointer",color:TS,borderRadius:3}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(66,53,33,0.09)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}><Minus size={10}/></button>
             <input
               value={fontSizeInput}
               onChange={e => setFontSizeInput(e.target.value)}
@@ -1219,9 +1232,9 @@ export default function ArticleEditor() {
                 } else setFontSizeInput(String(fontSize));
               }}
               onKeyDown={e => { if(e.key==="Enter")(e.target as HTMLInputElement).blur(); }}
-              style={{width:30,height:26,background:"rgba(255,255,255,0.05)",border:`1px solid ${B}`,borderRadius:4,textAlign:"center",fontFamily:SF,fontSize:12,color:T,outline:"none"}}
+              style={{width:30,height:26,background:"rgba(66,53,33,0.06)",border:`1px solid ${B}`,borderRadius:4,textAlign:"center",fontFamily:SF,fontSize:12,color:T,outline:"none"}}
             />
-            <button onMouseDown={e=>{e.preventDefault();changeSize(1);}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:18,height:26,background:"transparent",border:"none",cursor:"pointer",color:TS,borderRadius:3}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.07)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}><Plus size={10}/></button>
+            <button onMouseDown={e=>{e.preventDefault();changeSize(1);}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:18,height:26,background:"transparent",border:"none",cursor:"pointer",color:TS,borderRadius:3}} onMouseEnter={e=>(e.currentTarget.style.background="rgba(66,53,33,0.09)")} onMouseLeave={e=>(e.currentTarget.style.background="transparent")}><Plus size={10}/></button>
           </div>
           <Sep/>
 
@@ -1241,16 +1254,16 @@ export default function ArticleEditor() {
               style={{
                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                 width:28,height:26,borderRadius:4,border:"none",cursor:"pointer",
-                background: colorOpen?"rgba(255,255,255,0.12)":"transparent",color:TS,gap:2,
+                background: colorOpen?"rgba(66,53,33,0.16)":"transparent",color:TS,gap:2,
               }}
-              onMouseEnter={e=>{if(!colorOpen)(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.07)";}}
+              onMouseEnter={e=>{if(!colorOpen)(e.currentTarget as HTMLElement).style.background="rgba(66,53,33,0.09)";}}
               onMouseLeave={e=>{if(!colorOpen)(e.currentTarget as HTMLElement).style.background="transparent";}}
             >
               <Type size={12}/>
               <div style={{width:14,height:3,borderRadius:2,background:editor?.getAttributes("textStyle")?.color||"#fff"}}/>
             </button>
           </div>
-          <Btn onClick={() => editor?.chain().focus().toggleHighlight({color:"rgba(124,106,247,0.25)"}).run()} active={editor?.isActive("highlight")} title="Highlight"><Highlighter size={13}/></Btn>
+          <Btn onClick={() => editor?.chain().focus().toggleHighlight({color:"rgba(122,94,59,0.25)"}).run()} active={editor?.isActive("highlight")} title="Highlight"><Highlighter size={13}/></Btn>
           <Sep/>
 
           {/* Group 5: Alignment */}
@@ -1282,10 +1295,10 @@ export default function ArticleEditor() {
               style={{
                 display:"flex",alignItems:"center",justifyContent:"center",
                 width:28,height:26,borderRadius:4,border:"none",cursor:"pointer",
-                background: editor?.isActive("link") ? "rgba(255,255,255,0.15)" : linkOpen ? "rgba(255,255,255,0.12)" : "transparent",
+                background: editor?.isActive("link") ? "rgba(66,53,33,0.2)" : linkOpen ? "rgba(66,53,33,0.16)" : "transparent",
                 color: editor?.isActive("link") ? "#fff" : TS,
               }}
-              onMouseEnter={e=>{if(!linkOpen&&!editor?.isActive("link"))(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.07)";}}
+              onMouseEnter={e=>{if(!linkOpen&&!editor?.isActive("link"))(e.currentTarget as HTMLElement).style.background="rgba(66,53,33,0.09)";}}
               onMouseLeave={e=>{if(!linkOpen&&!editor?.isActive("link"))(e.currentTarget as HTMLElement).style.background="transparent";}}
             >
               <LinkIcon size={13}/>
@@ -1295,9 +1308,9 @@ export default function ArticleEditor() {
             <button
               onMouseDown={e=>{e.preventDefault();inlineImgInputRef.current?.click();}}
               title="Upload image"
-              style={{display:"flex",alignItems:"center",gap:5,padding:"3px 10px",height:26,borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:500,color:TS,whiteSpace:"nowrap"}}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.12)";}}
-              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.07)";}}
+              style={{display:"flex",alignItems:"center",gap:5,padding:"3px 10px",height:26,borderRadius:6,background:"rgba(66,53,33,0.09)",border:"1px solid rgba(66,53,33,0.14)",cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:500,color:TS,whiteSpace:"nowrap"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(66,53,33,0.16)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(66,53,33,0.09)";}}
             >
               <ImageIcon size={12}/> Image
             </button>
@@ -1310,18 +1323,20 @@ export default function ArticleEditor() {
             <button
               onMouseDown={e=>{e.preventDefault(); setShowArticleSearch(s => !s); if(showArticleSearch){setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}}}
               title="Search (Ctrl+F)"
-              style={{display:"flex",alignItems:"center",padding:"5px 8px",borderRadius:7,background:showArticleSearch?"rgba(250,204,21,0.15)":"transparent",border:showArticleSearch?"1px solid rgba(250,204,21,0.3)":"1px solid transparent",color:showArticleSearch?"#fbbf24":"rgba(255,255,255,0.4)",cursor:"pointer"}}
+              style={{display:"flex",alignItems:"center",padding:"5px 8px",borderRadius:7,background:showArticleSearch?"rgba(250,204,21,0.15)":"transparent",border:showArticleSearch?"1px solid rgba(250,204,21,0.3)":"1px solid transparent",color:showArticleSearch?"#fbbf24":"#6d6354",cursor:"pointer"}}
             ><Search size={14}/></button>
             <button
               onMouseDown={e=>{e.preventDefault();setShowAI(true);}}
+              title="Claude"
               style={{
                 display:"flex",alignItems:"center",gap:6,
-                padding:"5px 14px",borderRadius:7,
-                background:showAI?`${ACC}2a`:`${ACC}1a`,border:`1px solid ${ACC}45`,
-                cursor:"pointer",fontFamily:SF,fontSize:11,fontWeight:600,color:ACC,whiteSpace:"nowrap",
+                padding:"6px 14px",borderRadius:9,
+                background:showAI?"#423521":"#221b11",border:"none",
+                cursor:"pointer",fontFamily:SF,fontSize:12,fontWeight:700,color:"#f4efe2",whiteSpace:"nowrap",
+                boxShadow:"0 4px 14px -6px rgba(41,33,21,0.5)",
               }}
             >
-              <Sparkles size={11}/> AI Writer
+              <ClaudeIcon size={14}/> Claude
             </button>
           </div>
         </div>
@@ -1338,7 +1353,7 @@ export default function ArticleEditor() {
               <button key={s.value}
                 onMouseDown={e=>{e.preventDefault();applyStyle(s.value);}}
                 style={{display:"block",width:"100%",padding:"7px 12px",textAlign:"left",background:"transparent",border:"none",cursor:"pointer",fontFamily:SF,fontSize:13,color:TS,borderRadius:6}}
-                onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.08)")}
+                onMouseEnter={e=>(e.currentTarget.style.background="rgba(66,53,33,0.1)")}
                 onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
               >{s.label}</button>
             ))}
@@ -1357,7 +1372,7 @@ export default function ArticleEditor() {
                     <button key={f.id}
                       onMouseDown={e=>{e.preventDefault();applyFont(f);}}
                       style={{display:"block",width:"100%",padding:"6px 12px",textAlign:"left",background:"transparent",border:"none",cursor:"pointer",fontFamily:f.ff,fontSize:13,color:TS,borderRadius:6}}
-                      onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.08)")}
+                      onMouseEnter={e=>(e.currentTarget.style.background="rgba(66,53,33,0.1)")}
                       onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
                     >{f.label}</button>
                   ))}
@@ -1378,7 +1393,7 @@ export default function ArticleEditor() {
                   style={{
                     width:22,height:22,borderRadius:5,cursor:"pointer",
                     background:c,
-                    border:`2px solid ${c==="#ffffff"?"rgba(255,255,255,0.25)":"transparent"}`,
+                    border:`2px solid ${c==="#ffffff"?"#8a8070":"transparent"}`,
                     outline:"none",
                   }}
                 />
@@ -1386,7 +1401,7 @@ export default function ArticleEditor() {
             </div>
             <button
               onMouseDown={e=>{e.preventDefault();editor?.chain().focus().unsetColor().run();setColorOpen(false);}}
-              style={{width:"100%",padding:"5px 8px",background:"rgba(255,255,255,0.05)",border:`1px solid ${B}`,borderRadius:6,cursor:"pointer",fontFamily:SF,fontSize:11,color:TD}}
+              style={{width:"100%",padding:"5px 8px",background:"rgba(66,53,33,0.06)",border:`1px solid ${B}`,borderRadius:6,cursor:"pointer",fontFamily:SF,fontSize:11,color:TD}}
             >Remove color</button>
           </div>
         )}
@@ -1408,7 +1423,7 @@ export default function ArticleEditor() {
               {editor?.isActive("link") && (
                 <button onMouseDown={e=>{e.preventDefault();editor?.chain().focus().unsetLink().run();setLinkOpen(false);}} style={{padding:"7px 12px",background:"rgba(248,113,113,0.15)",border:"1px solid rgba(248,113,113,0.3)",borderRadius:7,cursor:"pointer",fontFamily:SF,fontSize:12,color:"#f87171"}}>Remove</button>
               )}
-              <button onMouseDown={e=>{e.preventDefault();setLinkOpen(false);}} style={{padding:"7px 12px",background:"rgba(255,255,255,0.06)",border:`1px solid ${B}`,borderRadius:7,cursor:"pointer",fontFamily:SF,fontSize:12,color:TD}}>Cancel</button>
+              <button onMouseDown={e=>{e.preventDefault();setLinkOpen(false);}} style={{padding:"7px 12px",background:"rgba(66,53,33,0.08)",border:`1px solid ${B}`,borderRadius:7,cursor:"pointer",fontFamily:SF,fontSize:12,color:TD}}>Cancel</button>
             </div>
           </div>
         )}
@@ -1467,18 +1482,18 @@ export default function ArticleEditor() {
                       <button key={a} onClick={()=>setImgAlign(a)} title={`Align ${a}`}
                         style={{ width:26,height:24,borderRadius:5,border:"none",cursor:"pointer",
                           display:"flex",alignItems:"center",justifyContent:"center",
-                          background:imgAlign===a?"rgba(124,106,247,0.4)":"transparent",color:"#fff" }}>
+                          background:imgAlign===a?"rgba(122,94,59,0.4)":"transparent",color:"#fff" }}>
                         {a==="left"?<AlignLeft size={11}/>:a==="center"?<AlignCenter size={11}/>:<AlignRight size={11}/>}
                       </button>
                     ))}
-                    <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                    <div style={{width:1,height:14,background:"rgba(66,53,33,0.2)",margin:"0 2px"}}/>
                     <button onClick={()=>{setImgWidth(100);setImgHeight(null);}} title="Reset size"
                       style={{ height:24,padding:"0 9px",borderRadius:5,border:"none",cursor:"pointer",
                         background:"transparent",fontFamily:SF,fontSize:10,fontWeight:600,
                         color:"rgba(255,255,255,0.75)",whiteSpace:"nowrap" }}>
                       Reset
                     </button>
-                    <div style={{width:1,height:14,background:"rgba(255,255,255,0.15)",margin:"0 2px"}}/>
+                    <div style={{width:1,height:14,background:"rgba(66,53,33,0.2)",margin:"0 2px"}}/>
                     <button onClick={()=>fileInputRef.current?.click()} title="Change image"
                       style={{ width:24,height:24,borderRadius:5,border:"none",cursor:"pointer",
                         background:"transparent",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center" }}>
@@ -1589,14 +1604,14 @@ export default function ArticleEditor() {
 
           {/* Search bar */}
           {showArticleSearch && (
-            <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"rgba(0,0,0,0.6)",borderRadius:10,marginBottom:12,border:"1px solid rgba(255,255,255,0.08)"}}>
-              <Search size={14} style={{color:"rgba(255,255,255,0.3)",flexShrink:0}}/>
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"rgba(0,0,0,0.6)",borderRadius:10,marginBottom:12,border:"1px solid rgba(66,53,33,0.1)"}}>
+              <Search size={14} style={{color:"#7b7366",flexShrink:0}}/>
               <input autoFocus value={articleSearchQuery} onChange={e=>setArticleSearchQuery(e.target.value)}
                 placeholder="Search in article..." style={{flex:1,background:"transparent",border:"none",outline:"none",color:"#fff",fontSize:13,fontFamily:SF}}
                 onKeyDown={e=>{if(e.key==="Escape"){setShowArticleSearch(false);setArticleSearchQuery("");}}}/>
               {articleSearchCount>0&&<span style={{fontSize:11,color:"rgba(250,204,21,0.8)",flexShrink:0}}>{articleSearchCount} found</span>}
-              {articleSearchQuery&&articleSearchCount===0&&<span style={{fontSize:11,color:"rgba(255,255,255,0.3)",flexShrink:0}}>No results</span>}
-              <button onClick={()=>{setShowArticleSearch(false);setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}} style={{color:"rgba(255,255,255,0.3)"}}><X size={14}/></button>
+              {articleSearchQuery&&articleSearchCount===0&&<span style={{fontSize:11,color:"#7b7366",flexShrink:0}}>No results</span>}
+              <button onClick={()=>{setShowArticleSearch(false);setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}} style={{color:"#7b7366"}}><X size={14}/></button>
             </div>
           )}
 
@@ -1666,11 +1681,11 @@ export default function ArticleEditor() {
               style={{
                 width:"100%",display:"flex",alignItems:"center",gap:10,
                 padding:"14px 16px",borderRadius:14,cursor:"pointer",
-                background:`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`,
+                background:`linear-gradient(135deg,${ACC}1a 0%,rgba(122,94,59,0.08) 100%)`,
                 border:`1px solid ${ACC}35`,transition:"all 0.2s",
               }}
-              onMouseEnter={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}28 0%,rgba(124,106,247,0.14) 100%)`)}
-              onMouseLeave={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}1a 0%,rgba(124,106,247,0.08) 100%)`)}
+              onMouseEnter={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}28 0%,rgba(122,94,59,0.14) 100%)`)}
+              onMouseLeave={e=>(e.currentTarget.style.background=`linear-gradient(135deg,${ACC}1a 0%,rgba(122,94,59,0.08) 100%)`)}
             >
               <div style={{width:36,height:36,borderRadius:10,background:`${ACC}20`,border:`1px solid ${ACC}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                 <Sparkles size={16} color={ACC}/>
@@ -1816,7 +1831,7 @@ export default function ArticleEditor() {
             display:"flex",alignItems:"center",gap:8,
           }}>
             <button onClick={() => setFocusMode(false)} title="Exit focus mode"
-              style={{width:40,height:40,borderRadius:12,background:"rgba(20,20,24,0.9)",backdropFilter:"blur(12px)",border:`1px solid ${B}`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:TS,boxShadow:"0 4px 20px rgba(0,0,0,0.5)"}}>
+              style={{width:40,height:40,borderRadius:12,background:"#292115",backdropFilter:"blur(12px)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#f4efe2",boxShadow:"0 6px 18px -6px rgba(41,33,21,0.5)"}}>
               <Minimize2 size={15}/>
             </button>
             <button onClick={() => saveNow(false)} disabled={saving}
@@ -1829,21 +1844,14 @@ export default function ArticleEditor() {
         )}
 
 
-        {/* ── AI ASSISTANT PANEL ── */}
-        {showAI && (
-          <AIAssistant
-            bookId={id}
-            currentContent={stripHtml(content)}
-            onApply={text => {
-              if (editor) {
-                editor.chain().focus().insertContent(
-                  `<p>${text.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
-                ).run();
-              }
-            }}
-            onClose={() => setShowAI(false)}
-          />
-        )}
+        {/* ── CLAUDE STUDIO (same panel as the book editor) ── */}
+        <Studio
+          open={showAI}
+          onClose={() => setShowAI(false)}
+          bookId={id}
+          chapterId={undefined}
+          editorRef={claudeEditorRef}
+        />
 
         {/* ── GLOBAL STYLES ── */}
         <style>{`
@@ -1851,53 +1859,53 @@ export default function ArticleEditor() {
           @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
           .article-editor-content .ProseMirror {
-            outline:none; min-height:520px; caret-color:rgba(255,255,255,0.8);
+            outline:none; min-height:520px; caret-color:#3a3020;
             font-family:Georgia,'Times New Roman',serif;
-            font-size:1.08rem; line-height:2.0; color:rgba(255,255,255,0.65);
+            font-size:1.08rem; line-height:2.0; color:#4a4132;
           }
           .article-editor-content .ProseMirror > * + * { margin-top:0.8em; }
           .article-editor-content .ProseMirror p { margin:0 0 0.9em; }
-          .article-editor-content .ProseMirror h1 { font-size:2rem;font-weight:800;color:rgba(255,255,255,0.92);margin:1.4em 0 0.4em;line-height:1.2; }
-          .article-editor-content .ProseMirror h2 { font-size:1.5rem;font-weight:700;color:rgba(255,255,255,0.88);margin:1.2em 0 0.35em;line-height:1.25; }
-          .article-editor-content .ProseMirror h3 { font-size:1.2rem;font-weight:700;color:rgba(255,255,255,0.84);margin:1.1em 0 0.3em; }
-          .article-editor-content .ProseMirror h4 { font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.78);margin:1em 0 0.3em; }
+          .article-editor-content .ProseMirror h1 { font-size:2rem;font-weight:800;color:#2f2618;margin:1.4em 0 0.4em;line-height:1.2; }
+          .article-editor-content .ProseMirror h2 { font-size:1.5rem;font-weight:700;color:#2f2618;margin:1.2em 0 0.35em;line-height:1.25; }
+          .article-editor-content .ProseMirror h3 { font-size:1.2rem;font-weight:700;color:#3a3020;margin:1.1em 0 0.3em; }
+          .article-editor-content .ProseMirror h4 { font-size:1.05rem;font-weight:700;color:#423521;margin:1em 0 0.3em; }
           .article-editor-content .ProseMirror blockquote {
-            border-left:3px solid rgba(124,106,247,0.55);
+            border-left:3px solid rgba(122,94,59,0.55);
             margin:1.5em 0;padding:0.5em 0 0.5em 1.3em;
-            color:rgba(255,255,255,0.45);font-style:italic;
+            color:#6d6354;font-style:italic;
           }
           .article-editor-content .ProseMirror ul{list-style:disc;padding-left:1.6em;margin:0.7em 0;}
           .article-editor-content .ProseMirror ol{list-style:decimal;padding-left:1.6em;margin:0.7em 0;}
-          .article-editor-content .ProseMirror li{margin:0.25em 0;color:rgba(255,255,255,0.6);}
-          .article-editor-content .ProseMirror code{background:rgba(255,255,255,0.08);border-radius:4px;padding:2px 6px;font-family:'Courier Prime',monospace;font-size:0.88em;color:rgba(124,106,247,0.9);}
-          .article-editor-content .ProseMirror pre{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px;margin:1em 0;overflow-x:auto;}
-          .article-editor-content .ProseMirror pre code{background:none;padding:0;color:rgba(255,255,255,0.7);}
-          .article-editor-content .ProseMirror hr{border:none;border-top:1px solid rgba(255,255,255,0.09);margin:2em 0;}
-          .article-editor-content .ProseMirror a{color:#818cf8;text-decoration:underline;text-decoration-color:rgba(129,140,248,0.35);}
+          .article-editor-content .ProseMirror li{margin:0.25em 0;color:#4a4132;}
+          .article-editor-content .ProseMirror code{background:rgba(66,53,33,0.1);border-radius:4px;padding:2px 6px;font-family:'Courier Prime',monospace;font-size:0.88em;color:rgba(122,94,59,0.9);}
+          .article-editor-content .ProseMirror pre{background:rgba(66,53,33,0.05);border:1px solid rgba(66,53,33,0.09);border-radius:10px;padding:16px;margin:1em 0;overflow-x:auto;}
+          .article-editor-content .ProseMirror pre code{background:none;padding:0;color:#423521;}
+          .article-editor-content .ProseMirror hr{border:none;border-top:1px solid rgba(66,53,33,0.12);margin:2em 0;}
+          .article-editor-content .ProseMirror a{color:#7b5e3b;text-decoration:underline;text-decoration-color:rgba(122,94,59,0.35);}
           .article-editor-content .ProseMirror mark{border-radius:3px;padding:1px 3px;}
-          .article-editor-content .ProseMirror p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:rgba(255,255,255,0.12);pointer-events:none;float:left;height:0;}
+          .article-editor-content .ProseMirror p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:rgba(66,53,33,0.16);pointer-events:none;float:left;height:0;}
 
           /* Featured image: show toolbar & handles on hover */
           div:hover > .feat-img-toolbar { opacity:1 !important; }
           div:hover > .feat-img-handle { opacity:1 !important; }
 
-          .article-preview-body{font-family:Georgia,serif;font-size:1.08rem;line-height:2;color:rgba(255,255,255,0.55);}
-          .article-preview-body h1{font-size:2rem;font-weight:800;color:rgba(255,255,255,0.92);margin:1.4em 0 0.5em;}
-          .article-preview-body h2{font-size:1.5rem;font-weight:700;color:rgba(255,255,255,0.88);margin:1.2em 0 0.4em;}
-          .article-preview-body h3{font-size:1.2rem;font-weight:700;color:rgba(255,255,255,0.82);margin:1.1em 0 0.35em;}
-          .article-preview-body blockquote{border-left:3px solid rgba(124,106,247,0.5);margin:1.5em 0;padding:0.5em 0 0.5em 1.3em;color:rgba(255,255,255,0.4);font-style:italic;}
+          .article-preview-body{font-family:Georgia,serif;font-size:1.08rem;line-height:2;color:#5c5142;}
+          .article-preview-body h1{font-size:2rem;font-weight:800;color:#2f2618;margin:1.4em 0 0.5em;}
+          .article-preview-body h2{font-size:1.5rem;font-weight:700;color:#2f2618;margin:1.2em 0 0.4em;}
+          .article-preview-body h3{font-size:1.2rem;font-weight:700;color:#3a3020;margin:1.1em 0 0.35em;}
+          .article-preview-body blockquote{border-left:3px solid rgba(122,94,59,0.5);margin:1.5em 0;padding:0.5em 0 0.5em 1.3em;color:#6d6354;font-style:italic;}
           .article-preview-body ul,.article-preview-body ol{padding-left:1.6em;margin:0.7em 0;}
-          .article-preview-body code{background:rgba(255,255,255,0.08);border-radius:4px;padding:2px 6px;font-family:monospace;font-size:0.9em;}
-          .article-preview-body a{color:#818cf8;}
-          .article-preview-body hr{border:none;border-top:1px solid rgba(255,255,255,0.09);margin:2em 0;}
+          .article-preview-body code{background:rgba(66,53,33,0.1);border-radius:4px;padding:2px 6px;font-family:monospace;font-size:0.9em;}
+          .article-preview-body a{color:#7b5e3b;}
+          .article-preview-body hr{border:none;border-top:1px solid rgba(66,53,33,0.12);margin:2em 0;}
 
-          input::placeholder{color:rgba(255,255,255,0.18);}
-          input{color:rgba(255,255,255,0.7);}
-          textarea::placeholder{color:rgba(255,255,255,0.08);}
-          textarea{color:rgba(255,255,255,0.88);}
+          input::placeholder{color:#9a9181;}
+          input{color:#423521;}
+          textarea::placeholder{color:rgba(66,53,33,0.1);}
+          textarea{color:#2f2618;}
           ::-webkit-scrollbar{width:5px;height:5px;}
           ::-webkit-scrollbar-track{background:transparent;}
-          ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+          ::-webkit-scrollbar-thumb{background:rgba(66,53,33,0.14);border-radius:3px;}
         `}</style>
       </div>
     </Layout>
@@ -1927,7 +1935,7 @@ function ArticleShareButton({
 }) {
   const title = article?.title || "";
   const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif";
-  const B = "rgba(255,255,255,0.08)";
+  const B = "rgba(66,53,33,0.1)";
 
   const btnRef = useRef<HTMLButtonElement>(null);
   // The dropdown must render outside the toolbar — the toolbar uses
@@ -1974,6 +1982,7 @@ function ArticleShareButton({
     x: () => openExternal(`https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`),
     whatsapp: () => openExternal(`https://wa.me/?text=${encodeURIComponent((title || "") + " " + url)}`),
     linkedin: () => openExternal(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`),
+    facebook: () => openExternal(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`),
   };
 
   const downloadPdf = () => {
@@ -1990,8 +1999,8 @@ function ArticleShareButton({
         style={{
           display: "flex", alignItems: "center", gap: 5,
           padding: "6px 12px", borderRadius: 7, cursor: "pointer",
-          background: "rgba(255,255,255,0.06)", border: `1px solid ${B}`,
-          fontFamily: SF, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)",
+          background: "rgba(66,53,33,0.08)", border: `1px solid ${B}`,
+          fontFamily: SF, fontSize: 12, fontWeight: 600, color: "#3a3020",
           transition: "all 0.2s", flexShrink: 0,
         }}
       >
@@ -2009,45 +2018,50 @@ function ArticleShareButton({
             style={{
               position: "fixed", top: coords.top, right: coords.right,
               minWidth: 240, zIndex: 10001,
-              background: "#15151a", border: `1px solid ${B}`, borderRadius: 10,
-              boxShadow: "0 12px 32px rgba(0,0,0,0.6)", padding: 6,
+              background: "#fffdf7", border: `1px solid ${B}`, borderRadius: 12,
+              boxShadow: "0 16px 40px -12px rgba(41,33,21,0.45)", padding: 6,
               fontFamily: SF,
             }}
           >
-            <div style={{ padding: "8px 10px 6px", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
+            <div style={{ padding: "8px 10px 6px", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", color: "#2f2618", fontFamily: SERIF }}>
               Share this article
             </div>
 
             <ShareItem onClick={copyLink}>
-              {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} color="rgba(255,255,255,0.6)" />}
-              <span style={{ color: copied ? "#34d399" : "rgba(255,255,255,0.85)" }}>
+              {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} color="#4a4132" />}
+              <span style={{ color: copied ? "#6a8f5f" : "#2f2618" }}>
                 {copied ? "Link copied" : "Copy link"}
               </span>
             </ShareItem>
 
             <ShareItem onClick={downloadPdf}>
-              <Download size={13} color="rgba(255,255,255,0.6)" />
-              <span style={{ color: "rgba(255,255,255,0.85)" }}>Download as PDF</span>
+              <Download size={13} color="#4a4132" />
+              <span style={{ color: "#2f2618" }}>Download as PDF</span>
             </ShareItem>
 
-            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 6px" }} />
+            <div style={{ height: 1, background: "rgba(66,53,33,0.08)", margin: "4px 6px" }} />
 
             <ShareItem onClick={shareTo.x}>
-              <span style={{ width: 13, textAlign: "center", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>𝕏</span>
-              <span style={{ color: "rgba(255,255,255,0.85)" }}>Post on X</span>
+              <span style={{ width: 13, textAlign: "center", fontSize: 13, color: "#4a4132" }}>𝕏</span>
+              <span style={{ color: "#2f2618" }}>Post on X</span>
             </ShareItem>
 
             <ShareItem onClick={shareTo.whatsapp}>
-              <span style={{ width: 13, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#25d366" }}><Check size={12} strokeWidth={2.5} /></span>
-              <span style={{ color: "rgba(255,255,255,0.85)" }}>WhatsApp</span>
+              <span style={{ width: 13, textAlign: "center", color: "#25d366", fontWeight: 800, fontSize: 12 }}>W</span>
+              <span style={{ color: "#2f2618" }}>WhatsApp</span>
+            </ShareItem>
+
+            <ShareItem onClick={shareTo.facebook}>
+              <span style={{ width: 13, textAlign: "center", color: "#1877f2", fontWeight: 800, fontSize: 13 }}>f</span>
+              <span style={{ color: "#2f2618" }}>Facebook</span>
             </ShareItem>
 
             <ShareItem onClick={shareTo.linkedin}>
               <span style={{ width: 13, textAlign: "center", color: "#0a66c2", fontWeight: 700, fontSize: 12 }}>in</span>
-              <span style={{ color: "rgba(255,255,255,0.85)" }}>LinkedIn</span>
+              <span style={{ color: "#2f2618" }}>LinkedIn</span>
             </ShareItem>
 
-            <div style={{ padding: "8px 10px 4px", fontSize: 10, color: "rgba(255,255,255,0.3)", wordBreak: "break-all" }}>
+            <div style={{ padding: "8px 10px 4px", fontSize: 10, color: "#7b7366", wordBreak: "break-all" }}>
               {url.replace(/^https?:\/\//, "")}
             </div>
           </div>
@@ -2364,10 +2378,10 @@ function ShareItem({
       style={{
         display: "flex", alignItems: "center", gap: 10, width: "100%",
         padding: "8px 10px", borderRadius: 7, border: "none", cursor: "pointer",
-        background: hover ? "rgba(255,255,255,0.05)" : "transparent",
+        background: hover ? "rgba(66,53,33,0.06)" : "transparent",
         fontSize: 13, textAlign: "left", fontFamily: "inherit",
         transition: "background 0.15s",
-        color: accent || "rgba(255,255,255,0.85)",
+        color: accent || "#2f2618",
       }}
     >
       {children}
