@@ -67,9 +67,12 @@ interface StudioProps {
   bookId: number;
   chapterId: number | undefined;
   editorRef: React.RefObject<TipTapEditor | null>;
+  /** "article" adapts the copy and quick actions to blog writing
+   *  (the panel itself is identical). Defaults to "book". */
+  mode?: "book" | "article";
 }
 
-export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioProps) {
+export function Studio({ open, onClose, bookId, chapterId, editorRef, mode = "book" }: StudioProps) {
   const { lang, isRTL } = useLanguage();
   const ar = lang === "ar";
 
@@ -260,7 +263,10 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         // on screen instead of hiding behind the keyboard.
         height: "100dvh",
         insetInlineEnd: 0,
-        zIndex: 60,
+        // Above the site navbar (100) and the editors' settings drawers
+        // (999) — at 60 the navbar used to cover the panel's own header,
+        // hiding the close / new-chat / conversations buttons.
+        zIndex: 1200,
         width: isMobile ? "100vw" : 440,
         background: PANEL_BG,
         borderInlineStart: `1px solid ${BORDER_STRONG}`,
@@ -291,6 +297,7 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         <Drawer
           ar={ar}
           conversations={conversations}
+          currentBookId={bookId}
           activeId={activeConversation?.id ?? null}
           onSelect={(id) => {
             selectConversation(id);
@@ -320,7 +327,7 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         }}
       >
         {messages.length === 0 && !streamingText && (
-          <EmptyState ar={ar} onQuickAction={handleQuickAction} />
+          <EmptyState ar={ar} mode={mode} onQuickAction={handleQuickAction} />
         )}
 
         {messages.map((m) => (
@@ -336,7 +343,7 @@ export function Studio({ open, onClose, bookId, chapterId, editorRef }: StudioPr
         {/* While Claude is working but hasn't produced the first token
             yet, show a live "reading / thinking / shaping" status line so
             the writer sees progress instead of a dead pause. */}
-        {isSending && !streamingText && <ThinkingIndicator ar={ar} />}
+        {isSending && !streamingText && <ThinkingIndicator ar={ar} mode={mode} />}
 
         {streamingText && (
           <MessageBubble
@@ -682,6 +689,7 @@ function ModelMenu({
 function Drawer({
   ar,
   conversations,
+  currentBookId,
   activeId,
   onSelect,
   onPin,
@@ -692,6 +700,7 @@ function Drawer({
 }: {
   ar: boolean;
   conversations: ReturnType<typeof useStudio>["conversations"];
+  currentBookId: number;
   activeId: number | null;
   onSelect: (id: number) => void;
   onPin: (id: number, pinned: boolean) => void;
@@ -820,6 +829,25 @@ function Drawer({
                 >
                   {c.title ?? (ar ? "بلا عنوان" : "Untitled")}
                 </div>
+                {/* Source line — the list spans every book and blog
+                    post, so each row says where it lives. */}
+                <div
+                  style={{
+                    marginTop: 3,
+                    fontSize: 10,
+                    color: c.bookId === currentBookId ? "#B05730" : TEXT_MUTE,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {c.bookContentType === "article"
+                    ? (ar ? "مدونة" : "Blog")
+                    : (ar ? "كتاب" : "Book")}
+                  {" · "}
+                  {c.bookTitle || (ar ? "بلا عنوان" : "Untitled")}
+                  {c.bookId === currentBookId && (ar ? " (هنا)" : " (here)")}
+                </div>
                 <div
                   style={{
                     marginTop: 4,
@@ -933,22 +961,37 @@ function DrawerIconBtn({
 
 function EmptyState({
   ar,
+  mode,
   onQuickAction,
 }: {
   ar: boolean;
+  mode: "book" | "article";
   onQuickAction: (prompt: string) => void;
 }) {
+  const article = mode === "article";
   const quickActions = ar
-    ? [
-        { icon: <Sparkles size={13} />, label: "حسّن هذه الفقرة", prompt: "حسّن النصّ المظلَّل، احتفظ بنبرة الكاتب وامسح التعابير المكرّرة." },
-        { icon: <ArrowRight size={13} />, label: "أكمل من هنا", prompt: "أكمل المشهد من حيث وقفت، بنفس النبرة والأسلوب." },
-        { icon: <Lightbulb size={13} />, label: "اقترح مشهداً", prompt: "اقترح ثلاث أفكار لمشهد قصير يصلح أن يدخل هنا." },
-      ]
-    : [
-        { icon: <Sparkles size={13} />, label: "Polish this paragraph", prompt: "Polish the highlighted text. Keep my voice, cut anything repetitive, sharpen the rhythm." },
-        { icon: <ArrowRight size={13} />, label: "Continue from here", prompt: "Continue the scene from where it stops. Same voice, same pacing." },
-        { icon: <Lightbulb size={13} />, label: "Brainstorm a scene", prompt: "Give me three short scene ideas that could fit here." },
-      ];
+    ? article
+      ? [
+          { icon: <Sparkles size={13} />, label: "حسّن هذه الفقرة", prompt: "حسّن النصّ المظلَّل، احتفظ بنبرة الكاتب واحذف التعابير المكرّرة." },
+          { icon: <ArrowRight size={13} />, label: "أكمل من هنا", prompt: "أكمل المقال من حيث توقف، بنفس النبرة والأسلوب." },
+          { icon: <Lightbulb size={13} />, label: "اقترح عنواناً وافتتاحية", prompt: "اقترح خمسة عناوين لهذا المقال، مع افتتاحية من سطر واحد لكل عنوان." },
+        ]
+      : [
+          { icon: <Sparkles size={13} />, label: "حسّن هذه الفقرة", prompt: "حسّن النصّ المظلَّل، احتفظ بنبرة الكاتب وامسح التعابير المكرّرة." },
+          { icon: <ArrowRight size={13} />, label: "أكمل من هنا", prompt: "أكمل المشهد من حيث وقفت، بنفس النبرة والأسلوب." },
+          { icon: <Lightbulb size={13} />, label: "اقترح مشهداً", prompt: "اقترح ثلاث أفكار لمشهد قصير يصلح أن يدخل هنا." },
+        ]
+    : article
+      ? [
+          { icon: <Sparkles size={13} />, label: "Polish this paragraph", prompt: "Polish the highlighted text. Keep my voice, cut anything repetitive, sharpen the rhythm." },
+          { icon: <ArrowRight size={13} />, label: "Continue from here", prompt: "Continue the post from where it stops. Same voice, same pacing." },
+          { icon: <Lightbulb size={13} />, label: "Suggest a title and hook", prompt: "Suggest five title options for this post, each with a one-line opening hook." },
+        ]
+      : [
+          { icon: <Sparkles size={13} />, label: "Polish this paragraph", prompt: "Polish the highlighted text. Keep my voice, cut anything repetitive, sharpen the rhythm." },
+          { icon: <ArrowRight size={13} />, label: "Continue from here", prompt: "Continue the scene from where it stops. Same voice, same pacing." },
+          { icon: <Lightbulb size={13} />, label: "Brainstorm a scene", prompt: "Give me three short scene ideas that could fit here." },
+        ];
 
   return (
     <div
@@ -1012,8 +1055,12 @@ function EmptyState({
         }}
       >
         {ar
-          ? "أنا أعرف الكتاب. ظلّل فقرة، أو اطلب اقتراحاً مباشرةً."
-          : "I know the book. Highlight a paragraph, or just ask."}
+          ? article
+            ? "أنا أعرف المقال. ظلّل فقرة، أو اطلب اقتراحاً مباشرةً."
+            : "أنا أعرف الكتاب. ظلّل فقرة، أو اطلب اقتراحاً مباشرةً."
+          : article
+            ? "I know this post. Highlight a paragraph, or just ask."
+            : "I know the book. Highlight a paragraph, or just ask."}
       </div>
 
       <div
@@ -1083,9 +1130,28 @@ const THINKING_STEPS_AR = [
   "يراجع فصلك…",
   "يصيغ الردّ…",
 ];
+const THINKING_STEPS_ARTICLE_EN = [
+  "Reading your message…",
+  "Thinking it through…",
+  "Checking your post…",
+  "Shaping the reply…",
+];
+const THINKING_STEPS_ARTICLE_AR = [
+  "يقرأ رسالتك…",
+  "يفكّر…",
+  "يراجع مقالك…",
+  "يصيغ الردّ…",
+];
 
-function ThinkingIndicator({ ar }: { ar: boolean }) {
-  const steps = ar ? THINKING_STEPS_AR : THINKING_STEPS_EN;
+function ThinkingIndicator({ ar, mode }: { ar: boolean; mode: "book" | "article" }) {
+  const steps =
+    mode === "article"
+      ? ar
+        ? THINKING_STEPS_ARTICLE_AR
+        : THINKING_STEPS_ARTICLE_EN
+      : ar
+        ? THINKING_STEPS_AR
+        : THINKING_STEPS_EN;
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -1227,7 +1293,7 @@ function MessageBubble({
         <div style={{ display: "flex", gap: 6, paddingInlineStart: 4 }}>
           <SmallChip
             onClick={() => onInsert(message.content)}
-            title={ar ? "أدرج في الفصل" : "Insert at cursor"}
+            title={ar ? "أدرج عند المؤشر" : "Insert at cursor"}
           >
             {ar ? "أدرج" : "Insert"}
           </SmallChip>

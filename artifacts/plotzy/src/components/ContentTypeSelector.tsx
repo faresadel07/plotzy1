@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   BookOpen, FileText, ChevronRight, Loader2, X,
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BOOK_LANGUAGES } from "@/lib/i18n";
+import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 
 interface ContentTypeSelectorProps {
   open: boolean;
@@ -17,16 +18,14 @@ interface ContentTypeSelectorProps {
   onCreateBook: (data: { title: string; summary: string; authorName: string; language: string; genre?: string }) => Promise<void>;
   onCreateArticle: (data: { title: string; authorName: string; language: string; category: string }) => Promise<void>;
   isCreating: boolean;
+  /** Prefills the Author Name field (usually the signed-in user's
+   *  display name) so writers don't retype it on every new project. */
+  defaultAuthorName?: string;
   /** When set, clicking the Book card closes this picker and hands
    *  control to the parent so it can open the new 10-question
    *  BookCreationWizard instead of this dialog's simple book form. */
   onChooseBookWizard?: () => void;
 }
-
-const BLOG_CATEGORIES = [
-  "Writing Tips", "Craft & Technique", "Publishing", "Reading", "Inspiration",
-  "Author Interviews", "Book Reviews", "Self-Publishing", "Marketing", "Other",
-];
 
 const BOOK_GENRES = [
   "Fantasy", "Romance", "Mystery", "Thriller", "Science Fiction",
@@ -49,7 +48,7 @@ const BLOG_FEATURES = [
 export function ContentTypeSelector({
   open, onClose, lang, isRTL,
   onCreateBook, onCreateArticle, isCreating,
-  onChooseBookWizard,
+  onChooseBookWizard, defaultAuthorName,
 }: ContentTypeSelectorProps) {
   const [step, setStep] = useState<"choose" | "book" | "blog">("choose");
   const [title, setTitle] = useState("");
@@ -59,6 +58,14 @@ export function ContentTypeSelector({
   const [genre, setGenre] = useState("");
   const [blogCategory, setBlogCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill the author field each time the dialog opens (never
+  // overwrite something the writer already typed).
+  useEffect(() => {
+    if (open && defaultAuthorName) {
+      setAuthorName((prev) => prev || defaultAuthorName);
+    }
+  }, [open, defaultAuthorName]);
 
   const reset = () => {
     setStep("choose");
@@ -349,7 +356,7 @@ export function ContentTypeSelector({
               <ImageIcon size={14} color="#EFEFEF" style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: "#EFEFEF", margin: "0 0 2px" }}>Blog Editor includes</p>
-                <p style={{ fontSize: 11, color: "rgba(244,239,226,0.4)", margin: 0, lineHeight: 1.5 }}>Featured cover · Tags & categories · AI generation · Live preview · Auto-save</p>
+                <p style={{ fontSize: 11, color: "rgba(244,239,226,0.4)", margin: 0, lineHeight: 1.5 }}>Featured cover · Tags & categories · Claude assistant · Live preview · Auto-save</p>
               </div>
             </div>
             <div>

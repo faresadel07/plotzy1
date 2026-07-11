@@ -6,15 +6,14 @@ import { SEO } from "@/components/SEO";
 import { JsonLd } from "@/components/JsonLd";
 import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { useLanguage } from "@/contexts/language-context";
+import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 
 const SF = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
-const ACC = "#7c6af7";
+// Warm amber accent — the page sits on the site's dark-espresso canvas;
+// the old #7c6af7 purple was a leftover from the pre-warm design.
+const ACC = "#c99a5b";
 
-const CATEGORIES = [
-  "All", "Writing Tips", "Craft & Technique", "Publishing", "Reading",
-  "Inspiration", "Author Interviews", "Book Reviews", "Industry News",
-  "Self-Publishing", "Marketing", "Grammar & Style", "Research", "Other",
-];
+const CATEGORIES = ["All", ...BLOG_CATEGORIES];
 
 // Category VALUES stay English (they match the DB articleCategory and the
 // filter logic); only the display label is localized via catKey().
@@ -37,7 +36,7 @@ function parseArticleText(raw: string | null): string {
 export default function Blog() {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   const { data: articles = [], isLoading } = useQuery<any[]>({
     queryKey: ["published-articles"],
@@ -69,7 +68,7 @@ export default function Blog() {
       {/* Header */}
       <header style={{ borderBottom: "1px solid rgba(244,239,226,0.06)", padding: "48px 20px 40px", textAlign: "center" }}>
         <Link href="/">
-          <button style={{ position: "absolute", top: 16, left: 20, display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(244,239,226,0.4)", fontSize: 13 }}>
+          <button style={{ position: "absolute", top: 16, ...(isRTL ? { right: 20 } : { left: 20 }), display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", color: "rgba(244,239,226,0.4)", fontSize: 13 }}>
             <ArrowLeft size={15} /> {t("blHome")}
           </button>
         </Link>
@@ -97,7 +96,7 @@ export default function Blog() {
               style={{
                 padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: "pointer",
                 background: category === cat ? ACC : "rgba(244,239,226,0.04)",
-                color: category === cat ? "#f7f2e4" : "rgba(244,239,226,0.4)",
+                color: category === cat ? "#221b11" : "rgba(244,239,226,0.4)",
                 border: category === cat ? "none" : "1px solid rgba(244,239,226,0.06)",
                 transition: "all 0.15s",
               }}>

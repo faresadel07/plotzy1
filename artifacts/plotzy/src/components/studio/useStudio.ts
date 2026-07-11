@@ -3,8 +3,8 @@
 // What it owns:
 //   - the list of providers (fetched once on mount)
 //   - the per-day quota per provider (refreshed after every send)
-//   - the list of conversations for the current chapter (and book-
-//     level conversations with chapterId = null)
+//   - the list of ALL the user's conversations (across every book and
+//     blog post — the current scope only picks the default one)
 //   - the active conversation id + its messages
 //   - the in-flight streaming state (a partial assistant message
 //     being typed by the AI right now)
@@ -99,19 +99,20 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
     setQuotas(next);
   }, []);
 
+  // Deliberately UNFILTERED: the drawer shows every conversation the
+  // writer has, across all books and blog posts — start a chat in the
+  // book editor, find it again in the blog editor, and vice versa.
+  // Scoping only affects which conversation opens by default and where
+  // a NEW conversation is created.
   const loadConversations = useCallback(async () => {
-    const params = new URLSearchParams();
-    if (bookId) params.set("bookId", String(bookId));
-    if (chapterId) params.set("chapterId", String(chapterId));
-    const r = await fetch(
-      `/api/studio/conversations?${params.toString()}`,
-      { credentials: "include" },
-    );
+    const r = await fetch("/api/studio/conversations", {
+      credentials: "include",
+    });
     if (!r.ok) return;
     const data = await r.json();
     setConversations(data.conversations as StudioConversation[]);
     return data.conversations as StudioConversation[];
-  }, [bookId, chapterId]);
+  }, []);
 
   const loadMessages = useCallback(async (id: number) => {
     const r = await fetch(`/api/studio/conversations/${id}/messages`, {
@@ -133,11 +134,17 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
       await Promise.all([loadProviders(), loadQuotas()]);
       const convos = await loadConversations();
       if (cancelled) return;
-      // Default to the most recently active conversation if there is one,
-      // otherwise create a fresh empty conversation so the writer always
-      // sees a usable Studio on open.
-      if (convos && convos.length > 0) {
-        const first = convos[0];
+      // The list is global, but the DEFAULT conversation should belong
+      // to the book/post the writer is looking at: most recent one for
+      // this exact scope, else a fresh conversation here. Conversations
+      // from other books stay reachable through the drawer.
+      const scoped = (convos ?? []).filter(
+        (c) =>
+          c.bookId === bookId &&
+          (chapterId ? c.chapterId === chapterId : true),
+      );
+      if (scoped.length > 0) {
+        const first = scoped[0];
         setActiveId(first.id);
         setSelectedProviderId(first.lastProviderId);
         await loadMessages(first.id);
@@ -155,7 +162,9 @@ export function useStudio({ bookId, chapterId }: UseStudioArgs): UseStudioReturn
         if (r.ok) {
           const data = await r.json();
           const conv = data.conversation as StudioConversation;
-          setConversations([{ ...conv, messageCount: 0 }]);
+          // Prepend — the global list may already hold conversations
+          // from the writer's other books and posts.
+          setConversations((prev) => [{ ...conv, messageCount: 0 }, ...prev]);
           setActiveId(conv.id);
           setMessages([]);
         }

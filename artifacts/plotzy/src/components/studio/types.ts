@@ -54,6 +54,13 @@ export interface StudioConversation {
   messageCount: number;
   createdAt: string;
   updatedAt: string;
+  /** Title of the book / blog post this conversation belongs to —
+   *  the drawer lists conversations across all the writer's work, so
+   *  each row is labelled with its source. */
+  bookTitle?: string | null;
+  /** "book" | "article" — which kind of work the conversation is
+   *  scoped to (blog posts are books with contentType "article"). */
+  bookContentType?: string | null;
 }
 
 /** Attachment uploaded by the writer alongside a message. The backend

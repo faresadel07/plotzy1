@@ -38,6 +38,7 @@ import { ClaudeIcon } from "@/components/studio/icons";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { BlogOnboarding, type BlogBlueprint } from "@/components/BlogOnboarding";
+import { BLOG_CATEGORIES } from "@/lib/blog-categories";
 
 /* ── FontSize extension ─────────────────────────────────────────────── */
 const FontSize = Extension.create({
@@ -114,21 +115,10 @@ const TEXT_STYLES = [
   { label:"Blockquote",  value:"blockquote" },
 ];
 
-const CATEGORIES = [
-  { label:"Writing Tips",       color:"#7b5e3b" },
-  { label:"Craft & Technique",  color:"#8a6d45" },
-  { label:"Publishing",         color:"#7b5e3b" },
-  { label:"Reading",            color:"#8a6d45" },
-  { label:"Inspiration",        color:"#7b5e3b" },
-  { label:"Author Interviews",  color:"#8a6d45" },
-  { label:"Book Reviews",       color:"#7b5e3b" },
-  { label:"Industry News",      color:"#8a6d45" },
-  { label:"Self-Publishing",    color:"#7b5e3b" },
-  { label:"Marketing",          color:"#8a6d45" },
-  { label:"Grammar & Style",    color:"#7b5e3b" },
-  { label:"Research",           color:"#8a6d45" },
-  { label:"Other",              color:"#9a9181" },
-];
+const CATEGORIES = BLOG_CATEGORIES.map((label, i) => ({
+  label,
+  color: label === "Other" ? "#9a9181" : i % 2 === 0 ? "#7b5e3b" : "#8a6d45",
+}));
 
 const WORD_GOALS = [
   { value:300,  label:"Quick take · 300 words" },
@@ -138,10 +128,12 @@ const WORD_GOALS = [
   { value:5000, label:"Essay · 5,000 words" },
 ];
 
+// Ink first — the canvas is warm paper, so the palette starts from
+// readable dark tones (the old list led with white, invisible here).
 const TEXT_COLORS = [
-  "#ffffff","#e2e8f0","#94a3b8","#f87171","#fb923c",
-  "#fbbf24","#34d399","#60a5fa","#7b5e3b","#f472b6",
-  "#2dd4bf","#a78bfa","#ff6b6b","#ffd93d",
+  "#2f2618","#6d6354","#9a9181","#b91c1c","#c2410c",
+  "#b45309","#15803d","#1d4ed8","#7b5e3b","#be185d",
+  "#0f766e","#6d28d9","#dc2626","#a16207",
 ];
 
 /* ── Helpers ────────────────────────────────────────────────────────── */
@@ -152,7 +144,9 @@ const rtm = (t: string) => Math.max(1, Math.ceil(wc(t)/200));
 function readingLevel(text: string) {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length < 20) return { label:"—", color: TD };
-  const avg = words.reduce((s,w) => s + w.replace(/[^a-z]/gi,"").length, 0) / words.length;
+  // Count letters in any script (the old [^a-z] filter zeroed out
+  // Arabic words, so every Arabic post scored "Easy").
+  const avg = words.reduce((s,w) => s + w.replace(/[^\p{L}]/gu,"").length, 0) / words.length;
   if (avg < 4.5) return { label:"Easy",     color:"#34d399" };
   if (avg < 6.2) return { label:"Medium",   color:"#fbbf24" };
   return            { label:"Advanced",  color:"#f472b6" };
@@ -430,7 +424,6 @@ export default function ArticleEditor() {
   const featNatRef                = useRef({ w:0, h:0 });
   const [saving, setSaving]       = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showAI, setShowAI]           = useState(false);
   const [showArticleSearch, setShowArticleSearch] = useState(false);
@@ -532,11 +525,6 @@ export default function ArticleEditor() {
     obs.observe(node);
     editorRoRef.current = obs;
   }, [isPhone]);
-
-  /* ── AI image generation ── */
-  const [showImgAI, setShowImgAI]     = useState(false);
-  const [imgPrompt, setImgPrompt]     = useState("");
-  const [imgGenLoading, setImgGenLoading] = useState(false);
 
   /* ── tiptap ── */
   const [, forceUpdate] = useState(0);
@@ -644,28 +632,59 @@ export default function ArticleEditor() {
     if (plainLen === 0 && !article.articleCategory && !alreadySeen) {
       setShowOnboard(true);
     }
+
+    // Restore this post's word goal (picked in the guided setup or the
+    // settings drawer) — it used to silently reset to 1000 on reload.
+    try {
+      const savedGoal = Number(localStorage.getItem(`plotzy-blog-goal-${id}`));
+      if (savedGoal > 0) setWordGoal(savedGoal);
+    } catch {}
   }, [article, editor, id]);
+
+  // Persist the goal per post so it survives reloads.
+  const changeWordGoal = useCallback((goal: number) => {
+    setWordGoal(goal);
+    try { localStorage.setItem(`plotzy-blog-goal-${id}`, String(goal)); } catch {}
+  }, [id]);
 
   // Apply the guided-setup choices, and optionally drop in a matching outline.
   const applyBlueprint = useCallback((bp: BlogBlueprint) => {
     try { localStorage.setItem(`plotzy-blog-onboarded-${id}`, "1"); } catch {}
     setShowOnboard(false);
     setWordGoal(bp.goal);
+    try { localStorage.setItem(`plotzy-blog-goal-${id}`, String(bp.goal)); } catch {}
+
+    // Turn the tone / audience / type answers into a writing brief and
+    // store it in the post's summary — Claude's system prompt includes
+    // the summary, so the setup answers actually steer the AI instead
+    // of being thrown away.
+    const TYPE_L: Record<string, string> = { howto: "a how-to guide", story: "a personal story", opinion: "an opinion piece", review: "a review", list: "a list post" };
+    const TONE_L: Record<string, string> = { warm: "warm and personal", practical: "clear and practical", bold: "bold and honest", literary: "literary and slow" };
+    const AUD_L: Record<string, string> = { writers: "fellow writers", beginners: "beginners", general: "general readers", self: "the writer themself" };
+    const brief = `This post is ${TYPE_L[bp.type] ?? bp.type}, written in a ${TONE_L[bp.tone] ?? bp.tone} tone for ${AUD_L[bp.audience] ?? bp.audience}. Target length: about ${bp.goal} words.`;
+    (updateArticle.mutateAsync as any)({ id, summary: brief }).catch(() => {});
+
     if (bp.outline && editor) {
-      const O: Record<string, string[]> = {
+      const O_EN: Record<string, string[]> = {
         howto:   ["Why this matters", "What you'll need", "Step by step", "Common mistakes", "Wrapping up"],
         story:   ["The moment it started", "What changed", "What I learned", "Where I am now"],
         opinion: ["The claim", "Why I believe it", "The other side", "So what?"],
         review:  ["What it is", "What works", "What doesn't", "The verdict"],
         list:    ["Intro", "1.", "2.", "3.", "The takeaway"],
       };
+      const O_AR: Record<string, string[]> = {
+        howto:   ["لماذا هذا مهم", "ما الذي ستحتاجه", "خطوة بخطوة", "أخطاء شائعة", "الخلاصة"],
+        story:   ["اللحظة التي بدأ فيها كل شيء", "ما الذي تغيّر", "ما الذي تعلمته", "أين أنا الآن"],
+        opinion: ["الفكرة", "لماذا أؤمن بها", "الرأي الآخر", "وماذا بعد؟"],
+        review:  ["ما هو", "ما الذي ينجح", "ما الذي لا ينجح", "الحكم النهائي"],
+        list:    ["مقدمة", "1.", "2.", "3.", "الخلاصة"],
+      };
+      const O = article?.language === "ar" ? O_AR : O_EN;
       const heads = O[bp.type] || O.story;
-      const html = heads.map((h, i) => i === 0
-        ? `<h2>${h}</h2><p></p>`
-        : `<h2>${h}</h2><p></p>`).join("");
+      const html = heads.map((h) => `<h2>${h}</h2><p></p>`).join("");
       editor.chain().focus().insertContent(html).run();
     }
-  }, [id, editor]);
+  }, [id, editor, article?.language, updateArticle]);
 
   const dismissOnboard = useCallback(() => {
     try { localStorage.setItem(`plotzy-blog-onboarded-${id}`, "1"); } catch {}
@@ -687,7 +706,10 @@ export default function ArticleEditor() {
         articleContent: serializedContent,
         articleCategory: categoryRef.current,
         tags: tagsRef.current,
-        featuredImage: imgRef.current ?? undefined,
+        // null (not undefined) so REMOVING the cover image persists —
+        // undefined keys are dropped from the PATCH and the old image
+        // used to come back on reload.
+        featuredImage: imgRef.current,
       });
       if (!silent) {
         setJustSaved(true);
@@ -725,7 +747,14 @@ export default function ArticleEditor() {
     }
   }, [saveNow, article, toast]);
 
-  // Auto-save disabled — users save manually
+  /* ── Auto-save: 4s after the last change, silently. Manual Save
+     stays for peace of mind; this catches the closed-tab case. ── */
+  useEffect(() => {
+    if (!initialized.current) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => { void saveNow(true); }, 4000);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [content, title, category, tags, featuredImage, floatingImages, saveNow]);
 
   /* ── Ctrl+F search ── */
   useEffect(() => {
@@ -836,33 +865,6 @@ export default function ArticleEditor() {
     reader.readAsDataURL(file);
   };
 
-  const generateInlineImage = async () => {
-    if (!imgPrompt.trim()) return;
-    setImgGenLoading(true);
-    try {
-      const res = await fetch("/api/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ prompt: imgPrompt }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      const { url } = await res.json();
-      if (url) {
-        const probe = new Image();
-        probe.onload = () => insertFloatingImage(url, probe.naturalWidth, probe.naturalHeight);
-        probe.src = url;
-        setShowImgAI(false);
-        setImgPrompt("");
-        toast({ title: "Image added to article" });
-      }
-    } catch {
-      toast({ title: "Image generation failed", variant: "destructive" });
-    } finally {
-      setImgGenLoading(false);
-    }
-  };
-
   /* ── Voice dictation ── */
   const formatTime = (s: number) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 
@@ -915,34 +917,6 @@ export default function ArticleEditor() {
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
     if (recTimerRef.current) clearInterval(recTimerRef.current);
-  };
-
-  /* ── AI ── */
-  const generateAi = async () => {
-    if (!title.trim()) { toast({ variant:"destructive", title:"Add a title first" }); return; }
-    setAiLoading(true);
-    try {
-      const res = await fetch(`/api/books/${id}/generate-chapter`, {
-        method:"POST", headers:{"Content-Type":"application/json"}, credentials:"include",
-        body: JSON.stringify({
-          chapterTitle: title,
-          bookSummary: `Blog article: ${title}. Category: ${category || "General"}`,
-          authorName: article?.authorName || "the author",
-          language: article?.language || "en",
-          previousContent: stripHtml(content),
-        }),
-      });
-      if (!res.ok) throw new Error("AI request failed");
-      const data = await res.json();
-      if (editor && data.content) {
-        editor.chain().focus().insertContent(
-          `<p>${data.content.replace(/\n\n+/g,"</p><p>").replace(/\n/g,"<br>")}</p>`
-        ).run();
-      }
-      toast({ title:"AI content added!" });
-    } catch (err: any) {
-      toast({ variant:"destructive", title:"AI Error", description: err?.message });
-    } finally { setAiLoading(false); }
   };
 
   /* ── tiptap queries ── */
@@ -1010,8 +984,8 @@ export default function ArticleEditor() {
   /* ── dropdown shared styles ── */
   const dropStyle: React.CSSProperties = {
     position:"fixed", zIndex:9999,
-    background:"#1a1a22", border:`1px solid ${B}`,
-    borderRadius:10, boxShadow:"0 12px 40px rgba(0,0,0,0.8)",
+    background:C1, border:`1px solid ${B}`,
+    borderRadius:10, boxShadow:"0 12px 40px -8px rgba(41,33,21,0.35)",
     padding:4,
   };
 
@@ -1037,11 +1011,13 @@ export default function ArticleEditor() {
     <Layout isLanding darkNav>
       <div style={{background:BG,minHeight:"100vh"}}>
         <div style={{
-          position:"sticky",top:0,zIndex:50,background:"rgba(41,33,21,0.97)",
+          /* top:44 — the Layout navbar is fixed 44px tall; at top:0 it
+             used to cover this bar and hide "Back to editor". */
+          position:"sticky",top:44,zIndex:50,background:"rgba(41,33,21,0.97)",
           backdropFilter:"blur(20px)",borderBottom:`1px solid ${B}`,
           padding:"0 24px",height:46,display:"flex",alignItems:"center",justifyContent:"space-between",
         }}>
-          <button onClick={() => setShowPreview(false)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:13,color:TS}}>
+          <button onClick={() => setShowPreview(false)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:13,color:"rgba(244,239,226,0.75)"}}>
             <ArrowLeft size={14}/> Back to editor
           </button>
           <span style={{fontFamily:SF,fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:TD}}>Preview</span>
@@ -1298,7 +1274,7 @@ export default function ArticleEditor() {
               onMouseLeave={e=>{if(!colorOpen)(e.currentTarget as HTMLElement).style.background="transparent";}}
             >
               <Type size={12}/>
-              <div style={{width:14,height:3,borderRadius:2,background:editor?.getAttributes("textStyle")?.color||"#fff"}}/>
+              <div style={{width:14,height:3,borderRadius:2,background:editor?.getAttributes("textStyle")?.color||T}}/>
             </button>
           </div>
           <Btn onClick={() => editor?.chain().focus().toggleHighlight({color:"rgba(122,94,59,0.25)"}).run()} active={editor?.isActive("highlight")} title="Highlight"><Highlighter size={13}/></Btn>
@@ -1431,7 +1407,7 @@ export default function ArticleEditor() {
                   style={{
                     width:22,height:22,borderRadius:5,cursor:"pointer",
                     background:c,
-                    border:`2px solid ${c==="#ffffff"?"#8a8070":"transparent"}`,
+                    border:"2px solid transparent",
                     outline:"none",
                   }}
                 />
@@ -1642,13 +1618,13 @@ export default function ArticleEditor() {
 
           {/* Search bar */}
           {showArticleSearch && (
-            <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"rgba(0,0,0,0.6)",borderRadius:10,marginBottom:12,border:"1px solid rgba(66,53,33,0.1)"}}>
-              <Search size={14} style={{color:"#7b7366",flexShrink:0}}/>
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:C1,borderRadius:10,marginBottom:12,border:`1px solid ${B}`,boxShadow:"0 4px 14px -8px rgba(41,33,21,0.25)"}}>
+              <Search size={14} style={{color:TD,flexShrink:0}}/>
               <input autoFocus value={articleSearchQuery} onChange={e=>setArticleSearchQuery(e.target.value)}
-                placeholder="Search in article..." style={{flex:1,background:"transparent",border:"none",outline:"none",color:"#fff",fontSize:13,fontFamily:SF}}
+                placeholder="Search in article..." style={{flex:1,background:"transparent",border:"none",outline:"none",color:T,fontSize:13,fontFamily:SF}}
                 onKeyDown={e=>{if(e.key==="Escape"){setShowArticleSearch(false);setArticleSearchQuery("");}}}/>
-              {articleSearchCount>0&&<span style={{fontSize:11,color:"rgba(250,204,21,0.8)",flexShrink:0}}>{articleSearchCount} found</span>}
-              {articleSearchQuery&&articleSearchCount===0&&<span style={{fontSize:11,color:"#7b7366",flexShrink:0}}>No results</span>}
+              {articleSearchCount>0&&<span style={{fontSize:11,color:ACC,flexShrink:0}}>{articleSearchCount} found</span>}
+              {articleSearchQuery&&articleSearchCount===0&&<span style={{fontSize:11,color:TD,flexShrink:0}}>No results</span>}
               <button onClick={()=>{setShowArticleSearch(false);setArticleSearchQuery("");setArticleSearchCount(0);document.querySelectorAll("mark[data-search-highlight]").forEach(el=>{const p=el.parentNode;if(p){p.replaceChild(document.createTextNode(el.textContent||""),el);p.normalize();}});}} style={{color:"#7b7366"}}><X size={14}/></button>
             </div>
           )}
@@ -1781,7 +1757,7 @@ export default function ArticleEditor() {
                 {showGoalPicker && (
                   <div style={{background:"#fffdf7",border:`1px solid ${B}`,borderRadius:10,overflow:"hidden",marginBottom:8}}>
                     {WORD_GOALS.map(g => (
-                      <button key={g.value} onClick={()=>{setWordGoal(g.value);setShowGoalPicker(false);}}
+                      <button key={g.value} onClick={()=>{changeWordGoal(g.value);setShowGoalPicker(false);}}
                         style={{width:"100%",padding:"7px 12px",background:wordGoal===g.value?`${ACC}18`:"none",border:"none",borderBottom:`1px solid ${B2}`,cursor:"pointer",textAlign:"left",fontFamily:SF,fontSize:11,color:wordGoal===g.value?ACC:TS}}
                       >{g.label}</button>
                     ))}
@@ -1853,7 +1829,7 @@ export default function ArticleEditor() {
                   { ok: words >= 120, label: "At least a few paragraphs" },
                   { ok: !!category, label: "A category chosen" },
                   { ok: tags.length > 0, label: "One or more tags" },
-                  { ok: floatingImages.length > 0, label: "A cover or an image" },
+                  { ok: !!featuredImage || floatingImages.length > 0, label: "A cover or an image" },
                 ];
                 const done = checks.filter(c=>c.ok).length;
                 return (
@@ -1936,6 +1912,7 @@ export default function ArticleEditor() {
           bookId={id}
           chapterId={undefined}
           editorRef={claudeEditorRef}
+          mode="article"
         />
 
         {/* ── GLOBAL STYLES ── */}

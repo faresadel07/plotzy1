@@ -338,6 +338,7 @@ export default function Home() {
         onCreateBook={handleSelectorCreateBook}
         onCreateArticle={handleSelectorCreateArticle}
         isCreating={createBook.isPending}
+        defaultAuthorName={user?.displayName ?? ""}
         // Route the Book card straight to the 10-question wizard.
         // ContentTypeSelector closes itself on this callback and we
         // open the wizard next paint.
