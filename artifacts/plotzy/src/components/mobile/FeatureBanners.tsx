@@ -373,24 +373,8 @@ export function BookJourneyGrid({ ar, onStartWriting }: { ar: boolean; onStartWr
         {ar ? "وبعد ما تخلص:" : "and after the last page:"}
       </div>
       {renderItems(afterWriting)}
-
-      {/* Trust footnote — Writer Protection */}
-      <button
-        onClick={() => navigate("/protection")}
-        style={{
-          width: "100%", marginTop: 10,
-          display: "flex", alignItems: "center", gap: 9,
-          flexDirection: ar ? "row-reverse" : "row",
-          background: "transparent", border: "none", cursor: "pointer",
-          padding: "10px 4px", fontFamily: SF,
-        }}
-      >
-        <ShieldCheck size={15} color="#7b7366" style={{ flexShrink: 0 }} />
-        <span style={{ flex: 1, textAlign: ar ? "right" : "left", fontSize: 12, color: "#7b7366" }}>
-          {ar ? "مخطوطتك تبقى ملكك دائماً. تعرّف على حماية الكاتب" : "Your manuscript always stays yours. See Writer Protection"}
-        </span>
-        <Chevron size={14} color="rgba(66,53,33,0.45)" style={{ flexShrink: 0 }} />
-      </button>
+      {/* The Writer Protection trust line moved into its own
+          full-bleed band right after this section (ProtectionBand). */}
     </section>
   );
 }

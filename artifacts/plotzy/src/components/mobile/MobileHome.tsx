@@ -28,6 +28,7 @@ import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mob
 import { COMICS, comicCover } from "@/lib/comics";
 import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette";
 import { LibraryShowcase } from "./LibraryShowcase";
+import { ProtectionBandMobile } from "./ProtectionBand";
 import { SnippetsFan } from "./SnippetsFan";
 import { PaperBall } from "./PaperBall";
 import { StickyNote } from "./StickyNote";
@@ -210,8 +211,12 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         <SnippetsFan ar={ar} />
 
         {/* Everything your book needs — voice, publish, audiobook,
-            co-writing, plus the Writer Protection trust line. */}
+            co-writing. */}
         <BookJourneyGrid ar={ar} onStartWriting={onStartWriting} />
+
+        {/* Writer Protection — the full-bleed espresso pact, same as
+            the laptop landing: ten promises, four faces, Snape. */}
+        <ProtectionBandMobile ar={ar} />
 
         {/* Community shelf — reuse English + Arabic mix as a teaser row,
             linking to the real community library. */}

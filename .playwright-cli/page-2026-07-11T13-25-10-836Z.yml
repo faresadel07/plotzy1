@@ -1,0 +1,232 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - link "Taylor Rae" [ref=e6] [cursor=pointer]:
+        - /url: "#top"
+        - generic [ref=e7]: Taylor Rae
+      - generic [ref=e8]:
+        - link "Work" [ref=e9] [cursor=pointer]:
+          - /url: "#work"
+        - link "About" [ref=e10] [cursor=pointer]:
+          - /url: "#about"
+        - link "Experience" [ref=e11] [cursor=pointer]:
+          - /url: "#experience"
+      - link "Get in touch" [ref=e12] [cursor=pointer]:
+        - /url: mailto:hello@seeyounextsunday.com
+  - main [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - paragraph [ref=e16]:
+          - generic [ref=e17]: Taylor Rae
+          - generic [ref=e18]: Photographer and Videographer. NYC and LA
+        - heading "I don't just shoot content. I tell stories." [level=1] [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e22]: I
+            - generic [ref=e24]: don't
+            - generic [ref=e26]: just
+            - generic [ref=e28]: shoot
+            - generic [ref=e30]: content.
+          - generic [ref=e31]:
+            - generic [ref=e33]: I
+            - generic [ref=e35]: tell
+            - generic [ref=e37]: stories.
+        - paragraph [ref=e38]: Cinematic photo and video across entertainment, from red carpets and runways to sets and the moments between.
+        - generic [ref=e39]:
+          - link "View work" [ref=e41] [cursor=pointer]:
+            - /url: "#work"
+          - link "Get in touch" [ref=e42] [cursor=pointer]:
+            - /url: mailto:hello@seeyounextsunday.com
+      - img "Taylor Rae shooting an event in the French Alps" [ref=e44]
+    - region "Clients and stages" [ref=e45]:
+      - generic [ref=e46]:
+        - img "Tribeca Festival" [ref=e48]
+        - img "Vimeo" [ref=e50]
+        - img "Vogue" [ref=e52]
+        - img "NYLON" [ref=e54]
+        - img "MTV" [ref=e56]
+        - generic [ref=e58]: SXSW
+        - img "Dior" [ref=e60]
+        - img "Victoria's Secret" [ref=e62]
+        - img "Kiehl's" [ref=e64]
+        - img "Coachella" [ref=e66]
+        - generic [ref=e68]: Sundance Film Festival
+        - generic [ref=e70]: Westminster Kennel Club
+        - img [ref=e72]
+        - img [ref=e74]
+        - img [ref=e76]
+        - img [ref=e78]
+        - img [ref=e80]
+        - generic [ref=e82]: SXSW
+        - img [ref=e84]
+        - img [ref=e86]
+        - img [ref=e88]
+        - img [ref=e90]
+        - generic [ref=e92]: Sundance Film Festival
+        - generic [ref=e94]: Westminster Kennel Club
+    - generic [ref=e95]:
+      - heading "Selected work" [level=2] [ref=e97]
+      - link "Tribeca Festival, 25th Edition, Branded Content Producer Tribeca Festival, 25th Edition 2026 Branded Content Producer In-house content producer for the festival's milestone 25th edition. Red carpet coverage across 12 carpets, interviews with film teams from a festival featuring 143 filmmakers out of 44 countries, BTS, Getty selects and partner content across social, newsletter and web, from pre-festival through wrap." [ref=e99] [cursor=pointer]:
+        - /url: "mailto:hello@seeyounextsunday.com?subject=Portfolio request: Tribeca%20Festival%2C%2025th%20Edition"
+        - img "Tribeca Festival, 25th Edition, Branded Content Producer" [ref=e101]
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - heading "Tribeca Festival, 25th Edition" [level=3] [ref=e104]
+            - generic [ref=e105]: "2026"
+          - paragraph [ref=e106]: Branded Content Producer
+          - paragraph [ref=e107]: In-house content producer for the festival's milestone 25th edition. Red carpet coverage across 12 carpets, interviews with film teams from a festival featuring 143 filmmakers out of 44 countries, BTS, Getty selects and partner content across social, newsletter and web, from pre-festival through wrap.
+      - generic [ref=e108]:
+        - link "New York Fashion Week, Photographer and Videographer New York Fashion Week 2026 Photographer and Videographer 8 shows, 1 presentation and 1 pop up in 6 days. Runway, backstage and front of house for designers on the official CFDA schedule." [ref=e110] [cursor=pointer]:
+          - /url: "mailto:hello@seeyounextsunday.com?subject=Portfolio request: New%20York%20Fashion%20Week"
+          - img "New York Fashion Week, Photographer and Videographer" [ref=e112]
+          - generic [ref=e113]:
+            - heading "New York Fashion Week" [level=3] [ref=e114]
+            - generic [ref=e115]: "2026"
+          - paragraph [ref=e116]: Photographer and Videographer
+          - paragraph [ref=e117]: 8 shows, 1 presentation and 1 pop up in 6 days. Runway, backstage and front of house for designers on the official CFDA schedule.
+        - link "STARSTRUCK, Unit Stills Photographer STARSTRUCK 2026 Unit Stills Photographer On-set unit stills debut. Glam, BTS and rolling coverage, keeping the camera close and the set undisturbed." [ref=e119] [cursor=pointer]:
+          - /url: "mailto:hello@seeyounextsunday.com?subject=Portfolio request: STARSTRUCK"
+          - img "STARSTRUCK, Unit Stills Photographer" [ref=e121]
+          - generic [ref=e122]:
+            - heading "STARSTRUCK" [level=3] [ref=e123]
+            - generic [ref=e124]: "2026"
+          - paragraph [ref=e125]: Unit Stills Photographer
+          - paragraph [ref=e126]: On-set unit stills debut. Glam, BTS and rolling coverage, keeping the camera close and the set undisturbed.
+        - link "SXSW with Vimeo, Content Producer SXSW with Vimeo 2023 Content Producer Filmed and edited the Oscars watch party, guest interviews and weekend recaps, cut fast enough to post in real time." [ref=e128] [cursor=pointer]:
+          - /url: "mailto:hello@seeyounextsunday.com?subject=Portfolio request: SXSW%20with%20Vimeo"
+          - img "SXSW with Vimeo, Content Producer" [ref=e130]
+          - generic [ref=e131]:
+            - heading "SXSW with Vimeo" [level=3] [ref=e132]
+            - generic [ref=e133]: "2023"
+          - paragraph [ref=e134]: Content Producer
+          - paragraph [ref=e135]: Filmed and edited the Oscars watch party, guest interviews and weekend recaps, cut fast enough to post in real time.
+        - link "Westminster Kennel Club, 150th, Media Team Westminster Kennel Club, 150th 2026 Media Team Documenting agility, breed judging and everything in between for the 150th annual dog show." [ref=e137] [cursor=pointer]:
+          - /url: "mailto:hello@seeyounextsunday.com?subject=Portfolio request: Westminster%20Kennel%20Club%2C%20150th"
+          - img "Westminster Kennel Club, 150th, Media Team" [ref=e139]
+          - generic [ref=e140]:
+            - heading "Westminster Kennel Club, 150th" [level=3] [ref=e141]
+            - generic [ref=e142]: "2026"
+          - paragraph [ref=e143]: Media Team
+          - paragraph [ref=e144]: Documenting agility, breed judging and everything in between for the 150th annual dog show.
+        - link "TNGE, French Alps, Shooter and Editor TNGE, French Alps 2026 Shooter and Editor An off-piste event film in the French Alps, shot and delivered as social-first recaps." [ref=e146] [cursor=pointer]:
+          - /url: "mailto:hello@seeyounextsunday.com?subject=Portfolio request: TNGE%2C%20French%20Alps"
+          - img "TNGE, French Alps, Shooter and Editor" [ref=e148]
+          - generic [ref=e149]:
+            - heading "TNGE, French Alps" [level=3] [ref=e150]
+            - generic [ref=e151]: "2026"
+          - paragraph [ref=e152]: Shooter and Editor
+          - paragraph [ref=e153]: An off-piste event film in the French Alps, shot and delivered as social-first recaps.
+      - paragraph [ref=e155]: Full portfolios and the 2026 reel are available on request.
+    - region "By the numbers" [ref=e156]:
+      - generic [ref=e157]:
+        - generic [ref=e158]:
+          - paragraph [ref=e159]: 10+
+          - paragraph [ref=e160]: years around productions
+        - generic [ref=e161]:
+          - paragraph [ref=e162]: 20+
+          - paragraph [ref=e163]: brand and talent clients
+        - generic [ref=e164]:
+          - paragraph [ref=e165]: "12"
+          - paragraph [ref=e166]: red carpets at Tribeca 25
+        - generic [ref=e167]:
+          - paragraph [ref=e168]: "8"
+          - paragraph [ref=e169]: NYFW shows in 6 days
+    - region "Between assignments" [ref=e170]:
+      - generic [ref=e172]:
+        - heading "Between assignments" [level=2] [ref=e173]
+        - paragraph [ref=e174]: A few frames from studios, sets and the city between projects.
+      - generic [ref=e176]:
+        - img "On set at a studio shoot, seen between the columns" [ref=e177]
+        - img "Editorial food photography" [ref=e178]
+        - img "Taylor with her first film camera" [ref=e179]
+        - img "Shooting in the snow in Central Park" [ref=e180]
+    - generic [ref=e181]:
+      - img "Portrait of Taylor Rae" [ref=e183]
+      - generic [ref=e184]:
+        - heading "Both shooter and producer, storyteller and strategist." [level=2] [ref=e186]
+        - generic [ref=e187]:
+          - paragraph [ref=e188]: I specialize in cinematic, story-driven content within entertainment, from BTS to interviews, social-first to campaigns. I've worked cross-functionally with talent and their teams, including celebrities, influencers, founders and models, from boots on the ground at events and red carpet coverage to being on set.
+          - paragraph [ref=e189]: I'm equally inspired by capturing organic moments and the operations behind bringing those stories to life. My ability to bridge worlds is what makes me an asset to any team. Off set, I have volunteered as a scout leader and a school mentor.
+          - paragraph [ref=e190]: Work published by Vogue.com and NYLON. Featured coverage for Tribeca, Vimeo and Westminster Kennel Club.
+        - generic [ref=e191]:
+          - list [ref=e192]:
+            - listitem [ref=e193]: Photography
+            - listitem [ref=e194]: Videography
+            - listitem [ref=e195]: Unit stills and BTS
+            - listitem [ref=e196]: Red carpet interviews
+            - listitem [ref=e197]: Event coverage
+            - listitem [ref=e198]: Social-first content
+            - listitem [ref=e199]: Editing and post
+          - paragraph [ref=e200]: Seattle Central Community College
+    - generic [ref=e202]:
+      - heading "Experience" [level=2] [ref=e204]
+      - generic [ref=e205]:
+        - article [ref=e207]:
+          - paragraph [ref=e208]: "2026"
+          - heading "Branded Content Producer at Tribeca Festival" [level=3] [ref=e209]:
+            - text: Branded Content Producer
+            - generic [ref=e210]: at Tribeca Festival
+          - paragraph [ref=e211]: Primary liaison between Activations and Marketing. Owned partnership content across social, newsletter and web from pre-festival through wrap.
+        - article [ref=e213]:
+          - paragraph [ref=e214]: 2018 to present
+          - heading "Content Producer at Freelance" [level=3] [ref=e215]:
+            - text: Content Producer
+            - generic [ref=e216]: at Freelance
+          - paragraph [ref=e217]: Social strategy and production for 20+ clients, from iPhone-first coverage to professional stills and motion, plus monthly content calendars, shot lists and analytics.
+        - article [ref=e219]:
+          - paragraph [ref=e220]: 2022 to 2023
+          - heading "Content Producer at Vimeo" [level=3] [ref=e221]:
+            - text: Content Producer
+            - generic [ref=e222]: at Vimeo
+          - paragraph [ref=e223]: Supported the social team on LinkedIn, Instagram and TikTok, including Staff Picks selects and live event coverage at SXSW.
+        - article [ref=e225]:
+          - paragraph [ref=e226]: 2018 to 2021
+          - heading "Content Producer at MADE, INC" [level=3] [ref=e227]:
+            - text: Content Producer
+            - generic [ref=e228]: at MADE, INC
+          - paragraph [ref=e229]: BTS and sponsored content for a television actress with 6M+ YouTube subscribers, at events like Beautycon and the MTV Movie Awards. Work published by Vogue.com and NYLON.
+        - article [ref=e231]:
+          - paragraph [ref=e232]: 2015 to 2022
+          - heading "Experiential Marketing Manager at Freelance" [level=3] [ref=e233]:
+            - text: Experiential Marketing Manager
+            - generic [ref=e234]: at Freelance
+          - paragraph [ref=e235]: Managed 6 programs across LA, Seattle and NYC with teams of 3 to 20+, for brands from Skinny Pop to KeVita, including influencer campaigns and reporting.
+        - article [ref=e237]:
+          - paragraph [ref=e238]: 2018 to 2020
+          - heading "Festival Partnerships and Production at Mammoth Film Festival" [level=3] [ref=e239]:
+            - text: Festival Partnerships and Production
+            - generic [ref=e240]: at Mammoth Film Festival
+          - paragraph [ref=e241]: "Sponsorship outreach and pitching pre-festival, then on the ground with the PR team: prepping the carpet, slating talent and coordinating filmmaker relations."
+        - article [ref=e243]:
+          - paragraph [ref=e244]: "2016"
+          - heading "PR Intern at Anderson Group Public Relations" [level=3] [ref=e245]:
+            - text: PR Intern
+            - generic [ref=e246]: at Anderson Group Public Relations
+          - paragraph [ref=e247]: Press materials, EPKs, feature research and onsite red carpet support for a team of entertainment publicists.
+        - article [ref=e249]:
+          - paragraph [ref=e250]: 2012 to 2015
+          - heading "Event Production at Freelance" [level=3] [ref=e251]:
+            - text: Event Production
+            - generic [ref=e252]: at Freelance
+          - paragraph [ref=e253]: Production assistant, product specialist and brand ambassador at large scale events including Coachella, for brands such as Dior, Victoria's Secret and Kiehl's, plus gifting suites at Sundance and awards season.
+        - article [ref=e255]:
+          - paragraph [ref=e256]: Currently exploring new opportunities
+          - paragraph [ref=e257]: Open to part-time, full-time and contract work within entertainment. Full portfolios available on request.
+    - generic [ref=e258]:
+      - heading "Let's tell your story." [level=2] [ref=e260]
+      - paragraph [ref=e262]: Based in Brooklyn, working between New York and Los Angeles. If you need photo, video or editing, or know someone who does, I would love to connect.
+      - generic [ref=e263]:
+        - generic [ref=e264]:
+          - link "Get in touch" [ref=e266] [cursor=pointer]:
+            - /url: mailto:hello@seeyounextsunday.com
+          - link "LinkedIn" [ref=e267] [cursor=pointer]:
+            - /url: https://www.linkedin.com/in/tayloraec
+        - link "hello@seeyounextsunday.com" [ref=e268] [cursor=pointer]:
+          - /url: mailto:hello@seeyounextsunday.com
+      - paragraph [ref=e270]: Taylor Rae
+  - contentinfo [ref=e271]:
+    - generic [ref=e272]:
+      - paragraph [ref=e273]:
+        - generic [ref=e274]: Taylor Rae
+        - generic [ref=e275]: "2026"
+      - link "hello@seeyounextsunday.com" [ref=e276] [cursor=pointer]:
+        - /url: mailto:hello@seeyounextsunday.com
