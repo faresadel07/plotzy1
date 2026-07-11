@@ -796,10 +796,54 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
         <StickyNote
           ar={ar}
           size={98}
-          rot={5}
+          rot={-5}
           text={ar ? "ملكك 100%" : "100% yours. always."}
-          style={{ position: "absolute", top: -34, insetInlineEnd: 30, zIndex: 3 }}
+          style={{ position: "absolute", top: -34, insetInlineStart: 30, zIndex: 3 }}
         />
+
+        {/* Faris's own Severus Snape marker drawing, taped on the right
+            beside "Always". If you know, you know. */}
+        <div style={{ position: "absolute", top: 54, insetInlineEnd: 34, width: 150, transform: "rotate(2.5deg)", zIndex: 3 }} className="pt-band-snape">
+          <style>{`@media (max-width: 1050px) { .pt-band-snape { display: none !important; } }`}</style>
+          <div style={{ position: "relative" }}>
+            <div aria-hidden style={{
+              position: "absolute",
+              top: -9,
+              left: "50%",
+              transform: "translateX(-50%) rotate(-3deg)",
+              width: 52,
+              height: 16,
+              background: "rgba(214,196,150,0.5)",
+              border: "1px solid rgba(244,239,226,0.12)",
+              borderRadius: 2,
+              zIndex: 2,
+            }} />
+            <img
+              src="/images/snape-always.jpg"
+              alt={ar ? "رسمة سيفروس سنيب بريشة فارس" : "Severus Snape, drawn by Faris"}
+              loading="lazy"
+              draggable={false}
+              style={{
+                width: "100%",
+                display: "block",
+                borderRadius: 10,
+                border: "1px solid rgba(244,239,226,0.14)",
+                boxShadow: "0 18px 36px -16px rgba(0,0,0,0.6)",
+                userSelect: "none",
+              }}
+            />
+          </div>
+          <div style={{
+            marginTop: 7,
+            fontFamily: hand,
+            fontSize: ar ? 16 : 19,
+            color: "#d8b98c",
+            textAlign: "center",
+            transform: "rotate(-1deg)",
+          }}>
+            {ar ? "دائماً." : "always."}
+          </div>
+        </div>
 
         {/* Courier eyebrow */}
         <div style={{
