@@ -1,11 +1,36 @@
+// Writer Protection — warm literary print edition.
+//
+// This page used to be the last near-black (#0A0A0A) holdout after the
+// warm redesign. It now speaks the same paper language as the rest of
+// the site: cream canvas with a dot grid, serif headlines, handwritten
+// margin notes (Caveat / Aref Ruqaa), Faris's real sticky-note photo
+// carrying the three promises that matter most, masking-tape pillar
+// cards, and crumpled paper balls scattered around the edges.
+
+import { useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, X as XIcon } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/language-context";
 import type { TranslationKey } from "@/lib/i18n";
+import { StickyNote } from "@/components/mobile/StickyNote";
+import { PaperBall } from "@/components/mobile/PaperBall";
+import { ensureHomeFonts, HAND_AR, HAND_EN, SERIF_AR, SERIF_EN } from "@/components/mobile/fonts";
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
+
+/* Warm print tokens — same family as the blog/book editors. */
+const BG  = "#f4efe2";
+const C1  = "#fffdf7";
+const B   = "rgba(66,53,33,0.14)";
+const B2  = "rgba(66,53,33,0.08)";
+const T   = "#2f2618";
+const TS  = "#6d6354";
+const TD  = "#9a9181";
+const ACC = "#7b5e3b";
+const ESP = "#292115";
+const RED = "#a13c2c"; // warm brick for the "never" promises
 
 const PILLAR_KEYS: { title: TranslationKey; desc: TranslationKey }[] = [
   { title: "ptP1T", desc: "ptP1D" },
@@ -31,8 +56,18 @@ const TECH_KEYS: { title: TranslationKey; text: TranslationKey }[] = [
   { title: "ptTech5T", text: "ptTech5X" },
 ];
 
+/* Tiny rotations so the pillar cards read as pinned paper, not a grid
+   of identical rectangles. */
+const CARD_ROT = [-0.6, 0.45, -0.3, 0.55, 0.35, -0.5, 0.4, -0.35];
+
 export default function Protection() {
-  const { t } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
+  const ar = lang === "ar";
+  const SERIF = ar ? SERIF_AR : SERIF_EN;
+  const HAND = ar ? HAND_AR : HAND_EN;
+
+  useEffect(() => { ensureHomeFonts(); }, []);
+
   return (
     <Layout>
       <SEO
@@ -40,9 +75,22 @@ export default function Protection() {
         description={t("ptSeoDesc")}
       />
 
-      <div style={{ minHeight: "100vh", background: "#0A0A0A", color: "#f7f2e4", fontFamily: SF }}>
+      <div style={{
+        minHeight: "100vh",
+        background: BG,
+        backgroundImage: "radial-gradient(circle, rgba(66,53,33,0.05) 1px, transparent 1px)",
+        backgroundSize: "22px 22px",
+        color: T,
+        fontFamily: SF,
+        overflowX: "clip",
+      }}>
 
-        {/* ===== BACK BUTTON (fixed, top-left) ===== */}
+        {/* Decorations disappear on phones so they never crowd copy. */}
+        <style>{`
+          @media (max-width: 900px) { .pt-decor { display: none !important; } }
+        `}</style>
+
+        {/* ===== BACK BUTTON (fixed, top inline-start) ===== */}
         <button
           type="button"
           onClick={() => {
@@ -53,64 +101,82 @@ export default function Protection() {
           style={{
             position: "fixed",
             top: 76,
-            left: 20,
+            insetInlineStart: 20,
             zIndex: 50,
             display: "inline-flex",
             alignItems: "center",
             gap: 8,
             padding: "10px 16px",
             borderRadius: 999,
-            background: "rgba(20,20,20,0.85)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid rgba(244,239,226,0.1)",
-            color: "rgba(244,239,226,0.85)",
+            background: ESP,
+            border: "1px solid rgba(66,53,33,0.25)",
+            color: "#f4efe2",
             fontWeight: 600,
             fontSize: 13,
             cursor: "pointer",
             transition: "all 0.2s",
             fontFamily: SF,
+            boxShadow: "0 6px 16px -8px rgba(41,33,21,0.45)",
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(35,35,35,0.95)";
-            e.currentTarget.style.borderColor = "rgba(244,239,226,0.2)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(20,20,20,0.85)";
-            e.currentTarget.style.borderColor = "rgba(244,239,226,0.1)";
-          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#3a2f1e"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = ESP; }}
         >
-          <ArrowLeft style={{ width: 14, height: 14 }} />
+          <ArrowLeft style={{ width: 14, height: 14, transform: isRTL ? "scaleX(-1)" : undefined }} />
           {t("abBack")}
         </button>
 
         {/* ===== HERO ===== */}
-        <section style={{ padding: "60px 24px 32px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
+        <section style={{ position: "relative", padding: "72px 24px 36px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
+          {/* The promise that matters most, on Faris's real sticky note. */}
+          <div className="pt-decor" style={{ position: "absolute", top: 24, insetInlineEnd: -40, zIndex: 2 }}>
+            <StickyNote
+              ar={ar}
+              text={ar ? "كلماتك ملكك 100%" : "100% yours. always."}
+              size={104}
+              rot={6}
+            />
+          </div>
+          <div className="pt-decor" style={{ position: "absolute", bottom: -8, insetInlineStart: -26 }}>
+            <PaperBall size={44} rot={-18} />
+          </div>
+
           <p style={{
-            fontSize: 13,
-            fontWeight: 600,
-            letterSpacing: "0.18em",
+            fontFamily: "'Courier New', monospace",
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "rgba(244,239,226,0.45)",
-            marginBottom: 20,
+            color: TD,
+            marginBottom: 18,
           }}>
             {t("ptEyebrow")}
           </p>
           <h1 style={{
-            fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
-            fontWeight: 800,
-            lineHeight: 1.05,
-            letterSpacing: "-0.04em",
-            color: "#f7f2e4",
-            marginBottom: 24,
+            fontFamily: SERIF,
+            fontSize: "clamp(2.4rem, 6vw, 4.2rem)",
+            fontWeight: 700,
+            lineHeight: 1.08,
+            letterSpacing: "-0.02em",
+            color: T,
+            marginBottom: 14,
           }}>
             {t("ptHeroTitle")}
           </h1>
           <p style={{
-            fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
+            fontFamily: HAND,
+            fontSize: "clamp(1.15rem, 2vw, 1.45rem)",
+            color: ACC,
+            marginBottom: 18,
+            transform: "rotate(-0.6deg)",
+            display: "inline-block",
+          }}>
+            {ar ? "(نعني كل كلمة هنا)" : "(we mean every word of this)"}
+          </p>
+          <p style={{
+            fontSize: "clamp(1rem, 1.5vw, 1.2rem)",
             fontWeight: 400,
-            lineHeight: 1.6,
-            color: "rgba(244,239,226,0.55)",
+            lineHeight: 1.65,
+            color: TS,
             maxWidth: 620,
             margin: "0 auto",
           }}>
@@ -118,39 +184,60 @@ export default function Protection() {
           </p>
         </section>
 
-        {/* ===== PILLARS GRID ===== */}
-        <section style={{ padding: "16px 24px 40px", maxWidth: 1200, margin: "0 auto" }}>
+        {/* ===== PILLARS GRID — taped paper cards ===== */}
+        <section style={{ position: "relative", padding: "24px 24px 48px", maxWidth: 1200, margin: "0 auto" }}>
+          <div className="pt-decor" style={{ position: "absolute", top: 6, insetInlineStart: 34 }}>
+            <PaperBall size={30} rot={24} />
+          </div>
+          <div className="pt-decor" style={{ position: "absolute", bottom: 14, insetInlineEnd: 44 }}>
+            <PaperBall size={38} rot={-30} />
+          </div>
+
           <div style={{
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "center",
-            gap: 20,
+            gap: 22,
           }}>
             {PILLAR_KEYS.map((pillar, i) => (
               <div key={i} style={{
+                position: "relative",
                 flex: "1 1 280px",
                 maxWidth: 360,
-                background: "rgba(244,239,226,0.03)",
-                border: "1px solid rgba(244,239,226,0.08)",
-                borderRadius: 20,
-                padding: "28px 24px",
-                transition: "all 0.3s ease",
+                background: C1,
+                border: `1px solid ${B}`,
+                borderRadius: 14,
+                padding: "30px 24px 26px",
+                boxShadow: "0 10px 26px -18px rgba(41,33,21,0.35)",
+                transform: `rotate(${CARD_ROT[i % CARD_ROT.length]}deg)`,
+                transition: "transform 0.25s ease, box-shadow 0.25s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(244,239,226,0.05)";
-                e.currentTarget.style.borderColor = "rgba(244,239,226,0.14)";
-                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.transform = "rotate(0deg) translateY(-3px)";
+                e.currentTarget.style.boxShadow = "0 16px 32px -18px rgba(41,33,21,0.45)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(244,239,226,0.03)";
-                e.currentTarget.style.borderColor = "rgba(244,239,226,0.08)";
-                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.transform = `rotate(${CARD_ROT[i % CARD_ROT.length]}deg)`;
+                e.currentTarget.style.boxShadow = "0 10px 26px -18px rgba(41,33,21,0.35)";
               }}
               >
+                {/* Masking-tape strip pinning the card to the page. */}
+                <div aria-hidden style={{
+                  position: "absolute",
+                  top: -9,
+                  left: "50%",
+                  transform: `translateX(-50%) rotate(${i % 2 === 0 ? -2 : 2}deg)`,
+                  width: 58,
+                  height: 17,
+                  background: "rgba(214,196,150,0.55)",
+                  border: "1px solid rgba(66,53,33,0.10)",
+                  borderRadius: 2,
+                }} />
                 <h3 style={{
-                  fontSize: 17,
+                  fontFamily: SERIF,
+                  fontSize: 18,
                   fontWeight: 700,
-                  color: "#f7f2e4",
+                  color: T,
                   marginBottom: 10,
                   letterSpacing: "-0.01em",
                   lineHeight: 1.3,
@@ -160,8 +247,8 @@ export default function Protection() {
                 <p style={{
                   fontSize: 14,
                   fontWeight: 400,
-                  color: "rgba(244,239,226,0.55)",
-                  lineHeight: 1.6,
+                  color: TS,
+                  lineHeight: 1.65,
                   margin: 0,
                 }}>
                   {t(pillar.desc)}
@@ -171,36 +258,66 @@ export default function Protection() {
           </div>
         </section>
 
-        {/* ===== WHAT WE NEVER DO ===== */}
-        <section style={{
-          padding: "44px 24px",
-          background: "#0A0A0A",
-        }}>
-          <div style={{ maxWidth: 880, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
+        {/* ===== WHAT WE NEVER DO — a crumpled paper pact ===== */}
+        <section style={{ position: "relative", padding: "20px 24px 48px" }}>
+          <div className="pt-decor" style={{ position: "absolute", top: 40, insetInlineEnd: "8%", zIndex: 2 }}>
+            <StickyNote
+              ar={ar}
+              text={ar ? "الذكاء لا يتدرب على نصك" : "AI never trains on you"}
+              size={100}
+              rot={-5}
+            />
+          </div>
+
+          <div style={{
+            maxWidth: 880,
+            margin: "0 auto",
+            borderRadius: 20,
+            border: `1px solid ${B}`,
+            // Faris's real crumpled-paper photo under a cream wash — the
+            // pact reads like a promise written on rescued paper.
+            backgroundImage: "linear-gradient(rgba(246,240,226,0.55), rgba(246,240,226,0.55)), url(/images/crumpled-paper.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            boxShadow: "0 18px 40px -24px rgba(41,33,21,0.4)",
+            padding: "40px 28px 34px",
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 26 }}>
               <p style={{
-                fontSize: 13,
-                fontWeight: 600,
-                letterSpacing: "0.18em",
+                fontFamily: "'Courier New', monospace",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.22em",
                 textTransform: "uppercase",
-                color: "rgba(255,80,80,0.55)",
-                marginBottom: 16,
+                color: RED,
+                marginBottom: 12,
               }}>
                 {t("ptPromisesEyebrow")}
               </p>
               <h2 style={{
-                fontSize: "clamp(2rem, 4vw, 3rem)",
-                fontWeight: 800,
-                color: "#f7f2e4",
-                letterSpacing: "-0.03em",
-                lineHeight: 1.1,
-                marginBottom: 16,
+                fontFamily: SERIF,
+                fontSize: "clamp(1.9rem, 4vw, 2.8rem)",
+                fontWeight: 700,
+                color: T,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.12,
+                marginBottom: 8,
               }}>
                 {t("ptNeverTitle")}
               </h2>
               <p style={{
-                fontSize: 16,
-                color: "rgba(244,239,226,0.5)",
+                fontFamily: HAND,
+                fontSize: 19,
+                color: RED,
+                margin: "0 0 10px",
+                transform: "rotate(-0.5deg)",
+                display: "inline-block",
+              }}>
+                {ar ? "(وعود مكتوبة، لا كلام تسويق)" : "(promises in writing, not marketing)"}
+              </p>
+              <p style={{
+                fontSize: 15.5,
+                color: TS,
                 lineHeight: 1.6,
                 maxWidth: 520,
                 margin: "0 auto",
@@ -209,28 +326,33 @@ export default function Protection() {
               </p>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 720, margin: "0 auto" }}>
               {NEVER_KEYS.map((item, i) => (
                 <div key={i} style={{
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: 14,
-                  padding: "16px 20px",
-                  background: "rgba(244,239,226,0.02)",
-                  border: "1px solid rgba(255,80,80,0.12)",
-                  borderRadius: 14,
+                  gap: 12,
+                  padding: "13px 18px",
+                  background: "rgba(255,253,247,0.85)",
+                  border: `1px solid ${B2}`,
+                  borderRadius: 12,
                 }}>
                   <span style={{
                     flexShrink: 0,
-                    marginTop: 6,
-                    width: 6,
-                    height: 6,
+                    marginTop: 2,
+                    width: 18,
+                    height: 18,
                     borderRadius: "50%",
-                    background: "rgba(255,80,80,0.6)",
-                  }} />
+                    background: "rgba(161,60,44,0.12)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <XIcon size={11} color={RED} strokeWidth={3} />
+                  </span>
                   <p style={{
                     fontSize: 15,
-                    color: "rgba(244,239,226,0.78)",
+                    color: T,
                     lineHeight: 1.55,
                     margin: 0,
                     fontWeight: 400,
@@ -244,31 +366,47 @@ export default function Protection() {
         </section>
 
         {/* ===== TECHNICAL TRANSPARENCY ===== */}
-        <section style={{ padding: "44px 24px", maxWidth: 880, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <section style={{ position: "relative", padding: "24px 24px 48px", maxWidth: 880, margin: "0 auto" }}>
+          <div className="pt-decor" style={{ position: "absolute", top: 66, insetInlineStart: -74 }}>
+            <PaperBall size={34} rot={12} />
+          </div>
+
+          <div style={{ textAlign: "center", marginBottom: 26 }}>
             <p style={{
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: "0.18em",
+              fontFamily: "'Courier New', monospace",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.22em",
               textTransform: "uppercase",
-              color: "rgba(140,180,255,0.6)",
-              marginBottom: 16,
+              color: TD,
+              marginBottom: 12,
             }}>
               {t("ptTransparencyEyebrow")}
             </p>
             <h2 style={{
-              fontSize: "clamp(2rem, 4vw, 3rem)",
-              fontWeight: 800,
-              color: "#f7f2e4",
-              letterSpacing: "-0.03em",
-              lineHeight: 1.1,
-              marginBottom: 16,
+              fontFamily: SERIF,
+              fontSize: "clamp(1.9rem, 4vw, 2.8rem)",
+              fontWeight: 700,
+              color: T,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.12,
+              marginBottom: 8,
             }}>
               {t("ptTransparencyTitle")}
             </h2>
             <p style={{
-              fontSize: 16,
-              color: "rgba(244,239,226,0.5)",
+              fontFamily: HAND,
+              fontSize: 19,
+              color: ACC,
+              margin: "0 0 10px",
+              transform: "rotate(0.4deg)",
+              display: "inline-block",
+            }}>
+              {ar ? "(التفاصيل التقنية، بصراحة)" : "(the boring details, honestly)"}
+            </p>
+            <p style={{
+              fontSize: 15.5,
+              color: TS,
               lineHeight: 1.6,
               maxWidth: 520,
               margin: "0 auto",
@@ -277,34 +415,53 @@ export default function Protection() {
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {TECH_KEYS.map((b) => (
-              <TechBlock key={b.title} title={t(b.title)} text={t(b.text)} />
+              <TechBlock key={b.title} title={t(b.title)} text={t(b.text)} serif={SERIF} />
             ))}
           </div>
         </section>
 
         {/* ===== DMCA / COPYRIGHT ===== */}
-        <section style={{
-          padding: "44px 24px",
-          background: "#0A0A0A",
-        }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
+        <section style={{ position: "relative", padding: "20px 24px 48px" }}>
+          <div className="pt-decor" style={{ position: "absolute", bottom: 26, insetInlineEnd: "10%", zIndex: 2 }}>
+            <StickyNote
+              ar={ar}
+              text={ar ? "حقوقك؟ نحن معك" : "we fight for your rights"}
+              size={96}
+              rot={4}
+            />
+          </div>
+          <div className="pt-decor" style={{ position: "absolute", top: 30, insetInlineStart: "12%" }}>
+            <PaperBall size={26} rot={-8} />
+          </div>
+
+          <div style={{
+            maxWidth: 720,
+            margin: "0 auto",
+            textAlign: "center",
+            background: C1,
+            border: `1px solid ${B}`,
+            borderRadius: 18,
+            padding: "38px 28px",
+            boxShadow: "0 14px 32px -22px rgba(41,33,21,0.4)",
+          }}>
             <h2 style={{
-              fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
-              fontWeight: 800,
-              color: "#f7f2e4",
-              letterSpacing: "-0.03em",
+              fontFamily: SERIF,
+              fontSize: "clamp(1.7rem, 3.5vw, 2.3rem)",
+              fontWeight: 700,
+              color: T,
+              letterSpacing: "-0.02em",
               lineHeight: 1.15,
-              marginBottom: 16,
+              marginBottom: 14,
             }}>
               {t("ptDmcaTitle")}
             </h2>
             <p style={{
-              fontSize: 16,
-              color: "rgba(244,239,226,0.55)",
+              fontSize: 15.5,
+              color: TS,
               lineHeight: 1.65,
-              marginBottom: 28,
+              marginBottom: 24,
             }}>
               {t("ptDmcaBody")}
             </p>
@@ -316,12 +473,13 @@ export default function Protection() {
                 gap: 10,
                 padding: "14px 28px",
                 borderRadius: 999,
-                background: "#f7f2e4",
-                color: "#221b11",
+                background: ESP,
+                color: "#f4efe2",
                 fontWeight: 700,
                 fontSize: 14,
                 textDecoration: "none",
                 transition: "transform 0.2s",
+                boxShadow: "0 8px 20px -10px rgba(41,33,21,0.5)",
               }}
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
@@ -332,20 +490,21 @@ export default function Protection() {
         </section>
 
         {/* ===== CTA FOOTER ===== */}
-        <section style={{ padding: "44px 24px 60px", textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
+        <section style={{ padding: "24px 24px 72px", textAlign: "center", maxWidth: 720, margin: "0 auto" }}>
           <h2 style={{
-            fontSize: "clamp(1.8rem, 3.5vw, 2.5rem)",
-            fontWeight: 800,
-            color: "#f7f2e4",
-            letterSpacing: "-0.03em",
+            fontFamily: SERIF,
+            fontSize: "clamp(1.7rem, 3.5vw, 2.3rem)",
+            fontWeight: 700,
+            color: T,
+            letterSpacing: "-0.02em",
             lineHeight: 1.15,
-            marginBottom: 16,
+            marginBottom: 10,
           }}>
             {t("ptCtaTitle")}
           </h2>
           <p style={{
-            fontSize: 16,
-            color: "rgba(244,239,226,0.55)",
+            fontSize: 15.5,
+            color: TS,
             lineHeight: 1.65,
             marginBottom: 24,
           }}>
@@ -358,13 +517,14 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "#f7f2e4",
-              color: "#221b11",
+              background: ESP,
+              color: "#f4efe2",
               fontWeight: 700,
               fontSize: 14,
               textDecoration: "none",
+              boxShadow: "0 8px 20px -10px rgba(41,33,21,0.5)",
             }}>
-              {t("abStartWriting")} <ArrowRight style={{ width: 16, height: 16 }} />
+              {t("abStartWriting")} <ArrowRight style={{ width: 16, height: 16, transform: isRTL ? "scaleX(-1)" : undefined }} />
             </Link>
             <Link href="/privacy" style={{
               display: "inline-flex",
@@ -372,9 +532,9 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "rgba(244,239,226,0.05)",
-              border: "1px solid rgba(244,239,226,0.12)",
-              color: "rgba(244,239,226,0.85)",
+              background: C1,
+              border: `1px solid ${B}`,
+              color: TS,
               fontWeight: 600,
               fontSize: 14,
               textDecoration: "none",
@@ -387,9 +547,9 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: "rgba(244,239,226,0.05)",
-              border: "1px solid rgba(244,239,226,0.12)",
-              color: "rgba(244,239,226,0.85)",
+              background: C1,
+              border: `1px solid ${B}`,
+              color: TS,
               fontWeight: 600,
               fontSize: 14,
               textDecoration: "none",
@@ -404,18 +564,20 @@ export default function Protection() {
   );
 }
 
-function TechBlock({ title, text }: { title: string; text: string }) {
+function TechBlock({ title, text, serif }: { title: string; text: string; serif: string }) {
   return (
     <div style={{
-      padding: "24px 24px",
-      background: "rgba(244,239,226,0.02)",
-      border: "1px solid rgba(244,239,226,0.07)",
-      borderRadius: 16,
+      padding: "22px 24px",
+      background: C1,
+      border: `1px solid ${B}`,
+      borderRadius: 14,
+      boxShadow: "0 8px 22px -18px rgba(41,33,21,0.35)",
     }}>
       <h3 style={{
+        fontFamily: serif,
         fontSize: 17,
         fontWeight: 700,
-        color: "#f7f2e4",
+        color: T,
         marginBottom: 8,
         letterSpacing: "-0.01em",
       }}>
@@ -423,7 +585,7 @@ function TechBlock({ title, text }: { title: string; text: string }) {
       </h3>
       <p style={{
         fontSize: 14.5,
-        color: "rgba(244,239,226,0.6)",
+        color: TS,
         lineHeight: 1.65,
         margin: 0,
       }}>
