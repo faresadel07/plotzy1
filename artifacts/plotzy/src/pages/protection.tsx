@@ -1,12 +1,11 @@
-// Writer Protection — dark espresso edition.
+// Writer Protection — warm literary print edition.
 //
-// Faris saw the espresso protection band on the landing and asked for
-// the whole page in the same key: dark brown canvas, light-brown type,
-// serif headlines with handwritten margin notes (Caveat / Aref Ruqaa),
-// his real sticky-note photo, masking-tape pillar cards, crumpled
-// paper balls, the "never" pact still on the light crumpled-paper
-// photo (real paper on a dark desk), and his own Severus Snape
-// drawing beside the hero's "Always" — because always.
+// This page used to be the last near-black (#0A0A0A) holdout after the
+// warm redesign. It now speaks the same paper language as the rest of
+// the site: cream canvas with a dot grid, serif headlines, handwritten
+// margin notes (Caveat / Aref Ruqaa), Faris's real sticky-note photo
+// carrying the three promises that matter most, masking-tape pillar
+// cards, and crumpled paper balls scattered around the edges.
 
 import { useEffect } from "react";
 import { Link } from "wouter";
@@ -21,19 +20,17 @@ import { ensureHomeFonts, HAND_AR, HAND_EN, SERIF_AR, SERIF_EN } from "@/compone
 
 const SF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif";
 
-/* Dark espresso tokens — the landing protection band, page-sized.
-   Light browns on dark brown, nothing else. */
-const BG  = "#221b11";
-const C1  = "#332a1b";                       // lifted dark card
-const B   = "rgba(244,239,226,0.14)";
-const B2  = "rgba(244,239,226,0.08)";
-const T   = "#e6cda4";                       // headings
-const TS  = "rgba(222,196,155,0.85)";        // body
-const TD  = "rgba(216,185,140,0.55)";        // dim
-const ACC = "#d8b98c";                       // handwriting
+/* Warm print tokens — same family as the blog/book editors. */
+const BG  = "#f4efe2";
+const C1  = "#fffdf7";
+const B   = "rgba(66,53,33,0.14)";
+const B2  = "rgba(66,53,33,0.08)";
+const T   = "#2f2618";
+const TS  = "#6d6354";
+const TD  = "#9a9181";
+const ACC = "#7b5e3b";
 const ESP = "#292115";
-const PAPER = "#f4efe2";
-const RED = "#c9705a"; // warm brick, lightened for the dark canvas
+const RED = "#a13c2c"; // warm brick for the "never" promises
 
 const PILLAR_KEYS: { title: TranslationKey; desc: TranslationKey }[] = [
   { title: "ptP1T", desc: "ptP1D" },
@@ -72,7 +69,7 @@ export default function Protection() {
   useEffect(() => { ensureHomeFonts(); }, []);
 
   return (
-    <Layout darkNav>
+    <Layout>
       <SEO
         title={t("ptSeoTitle")}
         description={t("ptSeoDesc")}
@@ -81,7 +78,7 @@ export default function Protection() {
       <div style={{
         minHeight: "100vh",
         background: BG,
-        backgroundImage: "radial-gradient(circle, rgba(244,239,226,0.045) 1px, transparent 1px)",
+        backgroundImage: "radial-gradient(circle, rgba(66,53,33,0.05) 1px, transparent 1px)",
         backgroundSize: "22px 22px",
         color: T,
         fontFamily: SF,
@@ -111,18 +108,18 @@ export default function Protection() {
             gap: 8,
             padding: "10px 16px",
             borderRadius: 999,
-            background: PAPER,
-            border: "1px solid rgba(244,239,226,0.2)",
-            color: ESP,
+            background: ESP,
+            border: "1px solid rgba(66,53,33,0.25)",
+            color: "#f4efe2",
             fontWeight: 600,
             fontSize: 13,
             cursor: "pointer",
             transition: "all 0.2s",
             fontFamily: SF,
-            boxShadow: "0 6px 16px -8px rgba(0,0,0,0.5)",
+            boxShadow: "0 6px 16px -8px rgba(41,33,21,0.45)",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#fffdf7"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = PAPER; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#3a2f1e"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = ESP; }}
         >
           <ArrowLeft style={{ width: 14, height: 14, transform: isRTL ? "scaleX(-1)" : undefined }} />
           {t("abBack")}
@@ -131,58 +128,14 @@ export default function Protection() {
         {/* ===== HERO ===== */}
         <section style={{ position: "relative", padding: "72px 24px 36px", textAlign: "center", maxWidth: 880, margin: "0 auto" }}>
           {/* The promise that matters most, on Faris's real sticky note. */}
-          <div className="pt-decor" style={{ position: "absolute", top: 24, insetInlineStart: -44, zIndex: 2 }}>
+          <div className="pt-decor" style={{ position: "absolute", top: 24, insetInlineEnd: -40, zIndex: 2 }}>
             <StickyNote
               ar={ar}
               text={ar ? "كلماتك ملكك 100%" : "100% yours. always."}
               size={104}
-              rot={-5}
+              rot={6}
             />
           </div>
-
-          {/* Faris's own Severus Snape drawing, taped beside "Always".
-              If you know, you know. The artwork is his. */}
-          <div className="pt-decor" style={{ position: "absolute", top: 68, insetInlineEnd: -96, zIndex: 2, transform: "rotate(2.5deg)", width: 172 }}>
-            <div style={{ position: "relative" }}>
-              <div aria-hidden style={{
-                position: "absolute",
-                top: -9,
-                left: "50%",
-                transform: "translateX(-50%) rotate(-3deg)",
-                width: 58,
-                height: 17,
-                background: "rgba(214,196,150,0.5)",
-                border: "1px solid rgba(244,239,226,0.12)",
-                borderRadius: 2,
-                zIndex: 2,
-              }} />
-              <img
-                src="/images/snape-always.jpg"
-                alt={ar ? "رسمة سيفروس سنيب بريشة فارس" : "Severus Snape, drawn by Faris"}
-                loading="lazy"
-                draggable={false}
-                style={{
-                  width: "100%",
-                  display: "block",
-                  borderRadius: 10,
-                  border: "1px solid rgba(244,239,226,0.14)",
-                  boxShadow: "0 18px 36px -16px rgba(0,0,0,0.6)",
-                  userSelect: "none",
-                }}
-              />
-            </div>
-            <div style={{
-              marginTop: 8,
-              fontFamily: HAND,
-              fontSize: ar ? 16 : 19,
-              color: ACC,
-              textAlign: "center",
-              transform: "rotate(-1deg)",
-            }}>
-              {ar ? "دائماً." : "always."}
-            </div>
-          </div>
-
           <div className="pt-decor" style={{ position: "absolute", bottom: -8, insetInlineStart: -26 }}>
             <PaperBall size={44} rot={-18} />
           </div>
@@ -329,8 +282,6 @@ export default function Protection() {
             boxShadow: "0 18px 40px -24px rgba(41,33,21,0.4)",
             padding: "40px 28px 34px",
           }}>
-            {/* The pact card is REAL light paper on the dark desk, so
-                everything inside it stays ink-dark on purpose. */}
             <div style={{ textAlign: "center", marginBottom: 26 }}>
               <p style={{
                 fontFamily: "'Courier New', monospace",
@@ -338,7 +289,7 @@ export default function Protection() {
                 fontWeight: 700,
                 letterSpacing: "0.22em",
                 textTransform: "uppercase",
-                color: "#a13c2c",
+                color: RED,
                 marginBottom: 12,
               }}>
                 {t("ptPromisesEyebrow")}
@@ -347,7 +298,7 @@ export default function Protection() {
                 fontFamily: SERIF,
                 fontSize: "clamp(1.9rem, 4vw, 2.8rem)",
                 fontWeight: 700,
-                color: "#2f2618",
+                color: T,
                 letterSpacing: "-0.02em",
                 lineHeight: 1.12,
                 marginBottom: 8,
@@ -357,7 +308,7 @@ export default function Protection() {
               <p style={{
                 fontFamily: HAND,
                 fontSize: 19,
-                color: "#a13c2c",
+                color: RED,
                 margin: "0 0 10px",
                 transform: "rotate(-0.5deg)",
                 display: "inline-block",
@@ -366,7 +317,7 @@ export default function Protection() {
               </p>
               <p style={{
                 fontSize: 15.5,
-                color: "#6d6354",
+                color: TS,
                 lineHeight: 1.6,
                 maxWidth: 520,
                 margin: "0 auto",
@@ -383,7 +334,7 @@ export default function Protection() {
                   gap: 12,
                   padding: "13px 18px",
                   background: "rgba(255,253,247,0.85)",
-                  border: "1px solid rgba(66,53,33,0.1)",
+                  border: `1px solid ${B2}`,
                   borderRadius: 12,
                 }}>
                   <span style={{
@@ -397,11 +348,11 @@ export default function Protection() {
                     alignItems: "center",
                     justifyContent: "center",
                   }}>
-                    <XIcon size={11} color="#a13c2c" strokeWidth={3} />
+                    <XIcon size={11} color={RED} strokeWidth={3} />
                   </span>
                   <p style={{
                     fontSize: 15,
-                    color: "#2f2618",
+                    color: T,
                     lineHeight: 1.55,
                     margin: 0,
                     fontWeight: 400,
@@ -522,13 +473,13 @@ export default function Protection() {
                 gap: 10,
                 padding: "14px 28px",
                 borderRadius: 999,
-                background: PAPER,
-                color: ESP,
+                background: ESP,
+                color: "#f4efe2",
                 fontWeight: 700,
                 fontSize: 14,
                 textDecoration: "none",
                 transition: "transform 0.2s",
-                boxShadow: "0 8px 20px -10px rgba(0,0,0,0.55)",
+                boxShadow: "0 8px 20px -10px rgba(41,33,21,0.5)",
               }}
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.04)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
@@ -566,12 +517,12 @@ export default function Protection() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 999,
-              background: PAPER,
-              color: ESP,
+              background: ESP,
+              color: "#f4efe2",
               fontWeight: 700,
               fontSize: 14,
               textDecoration: "none",
-              boxShadow: "0 8px 20px -10px rgba(0,0,0,0.55)",
+              boxShadow: "0 8px 20px -10px rgba(41,33,21,0.5)",
             }}>
               {t("abStartWriting")} <ArrowRight style={{ width: 16, height: 16, transform: isRTL ? "scaleX(-1)" : undefined }} />
             </Link>

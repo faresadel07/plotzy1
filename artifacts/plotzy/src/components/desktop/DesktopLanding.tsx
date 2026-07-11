@@ -782,15 +782,15 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
   };
 
   return (
-    <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, maxWidth: 1150, marginBottom: 48, fontFamily: SF }}>
+    // Full-bleed espresso sheet — Faris: the dark must reach the page
+    // edges, not sit as a rounded box on the paper.
+    <section dir={ar ? "rtl" : "ltr"} style={{ position: "relative", marginBottom: 48, fontFamily: SF, background: ESPRESSO, borderTop: "1px solid rgba(66,53,33,0.35)", borderBottom: "1px solid rgba(66,53,33,0.35)" }}>
       <div style={{
         position: "relative",
-        background: ESPRESSO,
-        border: "1px solid rgba(66,53,33,0.3)",
-        borderRadius: 24,
-        padding: "54px 48px 48px",
+        maxWidth: 1150,
+        margin: "0 auto",
+        padding: "56px 40px 52px",
         textAlign: "center",
-        boxShadow: "0 24px 50px -30px rgba(41,33,21,0.6)",
       }}>
         {/* The one promise worth pinning, on the real sticky note. */}
         <StickyNote
@@ -798,7 +798,7 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
           size={98}
           rot={-5}
           text={ar ? "ملكك 100%" : "100% yours. always."}
-          style={{ position: "absolute", top: -34, insetInlineStart: 30, zIndex: 3 }}
+          style={{ position: "absolute", top: -26, insetInlineStart: 12, zIndex: 3 }}
         />
 
         {/* Faris's own Severus Snape marker drawing, taped on the right
