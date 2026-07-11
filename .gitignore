@@ -60,3 +60,6 @@ Thumbs.db
 
 # Local runtime logs (frontend / backend dev servers)
 *.log
+
+# playwright-cli session artifacts
+.playwright-cli/
