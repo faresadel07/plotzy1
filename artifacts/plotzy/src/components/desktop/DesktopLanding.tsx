@@ -751,6 +751,135 @@ function CommunityStripDesktop({ ar }: { ar: boolean }) {
   );
 }
 
+/* ── 6.5 Writer Protection band ────────────────────────────────────────
+   A quiet dark-espresso interlude between the feedback wall and the
+   course note. Words only, as Faris asked: light-brown type on the
+   dark sheet, four faces working together (Courier eyebrow, serif
+   headline, SF body, handwriting aside), one sticky note carrying the
+   promise that matters, and a plain link into the full page. */
+
+function ProtectionBandDesktop({ ar }: { ar: boolean }) {
+  const [, navigate] = useLocation();
+  const serif = ar ? SERIF_AR : SERIF_EN;
+  const hand = ar ? HAND_AR : HAND_EN;
+  /* Light browns tuned for the espresso sheet. */
+  const TAN = "#e6cda4";
+  const TAN_SOFT = "rgba(222,196,155,0.85)";
+  const TAN_DIM = "rgba(216,185,140,0.6)";
+
+  return (
+    <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, maxWidth: 1150, marginBottom: 48, fontFamily: SF }}>
+      <div style={{
+        position: "relative",
+        background: ESPRESSO,
+        border: "1px solid rgba(66,53,33,0.3)",
+        borderRadius: 24,
+        padding: "56px 48px 50px",
+        textAlign: "center",
+        boxShadow: "0 24px 50px -30px rgba(41,33,21,0.6)",
+      }}>
+        {/* The one promise worth pinning, on the real sticky note. */}
+        <StickyNote
+          ar={ar}
+          size={98}
+          rot={5}
+          text={ar ? "خاص حتى تنشره أنت" : "private until YOU publish"}
+          style={{ position: "absolute", top: -34, insetInlineEnd: 30, zIndex: 3 }}
+        />
+
+        {/* Font 1: Courier eyebrow */}
+        <div style={{
+          fontFamily: "'Courier New', monospace",
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "0.24em",
+          textTransform: "uppercase",
+          color: TAN_DIM,
+          marginBottom: 16,
+        }}>
+          {ar ? "حماية الكاتب" : "Writer Protection"}
+        </div>
+
+        {/* Font 2: serif headline */}
+        <h2 style={{
+          fontFamily: serif,
+          fontSize: ar ? 36 : 42,
+          fontWeight: 700,
+          lineHeight: ar ? 1.4 : 1.12,
+          letterSpacing: ar ? 0 : "-0.02em",
+          color: TAN,
+          margin: "0 0 10px",
+        }}>
+          {ar ? "كلماتك تبقى لك. دائماً." : "Your words stay yours. Always."}
+        </h2>
+
+        {/* Font 3: handwriting aside */}
+        <div style={{
+          fontFamily: hand,
+          fontSize: ar ? 17 : 21,
+          color: "#d8b98c",
+          marginBottom: 20,
+          transform: "rotate(-0.8deg)",
+          display: "inline-block",
+        }}>
+          {ar ? "(ليست شعارات، هكذا بُني بلوتزي)" : "(not slogans, it's how Plotzy is built)"}
+        </div>
+
+        {/* Font 4: SF body */}
+        <p style={{
+          fontSize: 16,
+          lineHeight: 1.8,
+          color: TAN_SOFT,
+          maxWidth: 640,
+          margin: "0 auto 8px",
+        }}>
+          {ar
+            ? "كل ما تكتبه في بلوتزي ملكك بالكامل. مسوداتك تبقى خاصة حتى تقرر أنت نشرها، ونصك لا يُستخدم أبداً لتدريب أي نموذج ذكاء اصطناعي."
+            : "Everything you write on Plotzy belongs to you, one hundred percent. Your drafts stay private until you decide to publish, and your text is never used to train any AI model."}
+        </p>
+        <p style={{
+          fontSize: 16,
+          lineHeight: 1.8,
+          color: TAN_SOFT,
+          maxWidth: 640,
+          margin: "0 auto 28px",
+        }}>
+          {ar
+            ? "كلماتك مشفرة في الطريق وفي التخزين، وإذا غيّرت رأيك تحذف كل شيء بضغطة واحدة، بلا أسئلة."
+            : "Your words travel encrypted and sit encrypted, and if you ever change your mind, you delete everything in one click, no questions asked."}
+        </p>
+
+        {/* The plain link into the full page. */}
+        <button
+          onClick={() => navigate("/protection")}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            fontFamily: SF,
+            fontSize: 15,
+            fontWeight: 600,
+            color: TAN,
+            textDecoration: "underline",
+            textDecorationColor: "rgba(230,205,164,0.45)",
+            textUnderlineOffset: 4,
+            padding: 4,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.textDecorationColor = TAN; }}
+          onMouseLeave={(e) => { e.currentTarget.style.textDecorationColor = "rgba(230,205,164,0.45)"; }}
+        >
+          <ShieldCheck size={15} style={{ flexShrink: 0 }} />
+          {ar ? "اقرأ صفحة حماية الكاتب كاملة" : "Read the full Writer Protection page"}
+          {ar ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 /* ── 7. Feedback hall of fame (three-column chat wall) ─────────────── */
 
 function FeedbackWallDesktop({ ar }: { ar: boolean }) {
@@ -1114,6 +1243,8 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
       </div>
 
       <FeedbackWallDesktop ar={ar} />
+
+      <ProtectionBandDesktop ar={ar} />
 
       <CourseDesktop ar={ar} />
 
