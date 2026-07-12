@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
-import { users, subscriptionPayments } from "../../../../lib/db/src/schema";
+import { users, subscriptionPayments, donations } from "../../../../lib/db/src/schema";
 import { logger } from "../lib/logger";
 
 // ─── Lemon Squeezy billing (merchant of record) ─────────────────────────────
@@ -20,6 +20,14 @@ const LS_API = "https://api.lemonsqueezy.com/v1";
 
 function lsConfigured() {
   return !!(process.env.LEMONSQUEEZY_API_KEY && process.env.LEMONSQUEEZY_STORE_ID && process.env.LEMONSQUEEZY_VARIANT_ID);
+}
+
+// Donations ride the same LS store through a SEPARATE single-payment
+// product ("Support Plotzy") so Apple Pay / Google Pay / cards work on
+// the donate page too. The exact amount the supporter picked is passed
+// as custom_price, so the product's list price is only a default.
+function lsDonateConfigured() {
+  return !!(process.env.LEMONSQUEEZY_API_KEY && process.env.LEMONSQUEEZY_STORE_ID && process.env.LEMONSQUEEZY_DONATE_VARIANT_ID);
 }
 
 async function lsFetch(path: string, init?: RequestInit) {
@@ -47,15 +55,75 @@ async function lsFetch(path: string, init?: RequestInit) {
 router.get("/api/billing/config", async (req, res) => {
   const testMode = process.env.LEMONSQUEEZY_TEST_MODE === "true";
   let enabled = lsConfigured();
-  if (enabled && testMode) {
+  let donate = lsDonateConfigured();
+  if ((enabled || donate) && testMode) {
     let isAdmin = false;
     if (req.isAuthenticated() && req.user) {
       const u = await storage.getUserById((req.user as any).id);
       isAdmin = (u as any)?.role === "admin";
     }
-    enabled = isAdmin;
+    enabled = enabled && isAdmin;
+    donate = donate && isAdmin;
   }
-  return res.json({ enabled, priceCents: 1099, testMode });
+  return res.json({ enabled, donate, priceCents: 1099, testMode });
+});
+
+// Create a one-time DONATION checkout for the amount the supporter
+// picked. Anonymous donations are allowed (same policy as the PayPal
+// flow), so no auth gate — but the amount is strictly validated and
+// the price is set server-side via custom_price. The LS checkout
+// itself shows Apple Pay / Google Pay / cards / PayPal depending on
+// the supporter's device.
+router.post("/api/donations/ls-checkout", async (req, res) => {
+  try {
+    if (!lsDonateConfigured()) return res.status(503).json({ message: "Donations checkout not configured" });
+
+    const amountCents = Number(req.body?.amountCents);
+    // Same window as the PayPal donation flow: $1 .. $10,000.
+    if (!Number.isInteger(amountCents) || amountCents < 100 || amountCents > 1_000_000) {
+      return res.status(400).json({ message: "Donation must be between $1 and $10,000." });
+    }
+
+    // Attach the signed-in user when there is one so the webhook can
+    // credit the donation to their account row (nicer admin labels).
+    let user: any = null;
+    if (req.isAuthenticated() && req.user) {
+      user = await storage.getUserById((req.user as any).id);
+    }
+
+    const origin = process.env.FRONTEND_ORIGIN || "https://www.plotzy.co";
+    const body = {
+      data: {
+        type: "checkouts",
+        attributes: {
+          custom_price: amountCents,
+          checkout_data: {
+            email: user?.email || undefined,
+            name: user?.displayName || undefined,
+            custom: {
+              kind: "donation",
+              ...(user ? { user_id: String(user.id) } : {}),
+            },
+          },
+          product_options: {
+            redirect_url: `${origin}/donate/thanks`,
+          },
+          checkout_options: {
+            button_color: "#292115",
+          },
+        },
+        relationships: {
+          store: { data: { type: "stores", id: String(process.env.LEMONSQUEEZY_STORE_ID) } },
+          variant: { data: { type: "variants", id: String(process.env.LEMONSQUEEZY_DONATE_VARIANT_ID) } },
+        },
+      },
+    };
+    const out = await lsFetch("/checkouts", { method: "POST", body: JSON.stringify(body) });
+    return res.json({ url: out?.data?.attributes?.url });
+  } catch (err) {
+    logger.error({ err }, "Failed to create LS donation checkout");
+    return res.status(500).json({ message: "Could not start the donation. Please try again." });
+  }
 });
 
 // Create a checkout for the signed-in user and hand its URL to the
@@ -144,6 +212,40 @@ router.post("/api/webhooks/lemonsqueezy", async (req, res) => {
     const customUserId = Number(event?.meta?.custom_data?.user_id);
     const attrs = event?.data?.attributes || {};
     const subscriptionId = String(event?.data?.id || "");
+
+    // ── Donations: one-time orders on the donate variant. Handled
+    // BEFORE the user-resolution below because donations are allowed
+    // from guests (no user to resolve). Guarded by BOTH the custom
+    // kind flag and the variant id so a Pro subscription's first
+    // order can never be double-counted as a donation.
+    if (name === "order_created") {
+      const isDonation = event?.meta?.custom_data?.kind === "donation";
+      const orderVariant = String(attrs?.first_order_item?.variant_id ?? "");
+      const donateVariant = String(process.env.LEMONSQUEEZY_DONATE_VARIANT_ID || "");
+      if (isDonation && donateVariant && orderVariant === donateVariant) {
+        const ref = `ls_${event?.data?.id || attrs.identifier || ""}`;
+        try {
+          // The donations table predates LS and has NOT NULL paypal_*
+          // refs; store the LS order id in both (same convention as
+          // subscriptionPayments).
+          await db.insert(donations).values({
+            userId: Number.isFinite(customUserId) && customUserId > 0 ? customUserId : null,
+            donorEmail: attrs.user_email ? String(attrs.user_email) : null,
+            donorName: attrs.user_name ? String(attrs.user_name) : null,
+            paypalOrderId: ref,
+            paypalCaptureId: ref,
+            amountCents: Number(attrs.total) || 0,
+            currency: String(attrs.currency || "USD"),
+            status: "completed",
+          });
+          logger.info({ ref, total: attrs.total }, "LS donation recorded");
+        } catch (e) {
+          // Best-effort receipt row; never make LS retry over it.
+          logger.error({ err: e, ref }, "Failed to record LS donation");
+        }
+      }
+      return res.status(200).send("ok");
+    }
 
     // Resolve the user: prefer our custom_data id, fall back to the
     // stored subscription id (renewal webhooks omit custom data).

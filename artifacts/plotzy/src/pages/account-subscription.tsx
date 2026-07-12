@@ -15,6 +15,7 @@ import { Layout } from "@/components/layout";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/auth-context";
 import { getPlanDetails, type PlanDetails } from "@/lib/checkout-plans";
+import { openLemonCheckout } from "@/lib/lemon";
 import {
   Dialog,
   DialogContent,
@@ -686,31 +687,7 @@ function formatDate(iso: string): string {
 // ─── Plotzy Pro via Lemon Squeezy ───────────────────────────────────────────
 // The checkout opens in a Lemon.js overlay on top of the page (cards,
 // Apple Pay, Google Pay, PayPal), so the writer never leaves Plotzy.
-
-let lemonJsLoading: Promise<void> | null = null;
-function ensureLemonJs(): Promise<void> {
-  if ((window as any).LemonSqueezy) return Promise.resolve();
-  if (!lemonJsLoading) {
-    lemonJsLoading = new Promise((resolve, reject) => {
-      const el = document.createElement("script");
-      el.src = "https://assets.lemonsqueezy.com/lemon.js";
-      el.defer = true;
-      el.onload = () => { try { (window as any).createLemonSqueezy?.(); } catch { /* older lemon.js self-initializes */ } resolve(); };
-      el.onerror = () => reject(new Error("lemon.js failed"));
-      document.head.appendChild(el);
-    });
-  }
-  return lemonJsLoading;
-}
-
-async function openLemonCheckout(url: string) {
-  try {
-    await ensureLemonJs();
-    const LS = (window as any).LemonSqueezy;
-    if (LS?.Url?.Open) { LS.Url.Open(url); return; }
-  } catch { /* fall through to a plain tab */ }
-  window.open(url, "_blank", "noopener");
-}
+// Helpers live in @/lib/lemon — shared with the donation card.
 
 function ManageBillingButton() {
   const { lang } = useLanguage();

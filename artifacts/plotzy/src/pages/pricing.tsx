@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { openLemonCheckout } from "@/lib/lemon";
 
 const SF =
   '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Arial, sans-serif';
@@ -133,6 +134,18 @@ export default function Pricing() {
 
   const [amount, setAmount] = useState<string>("25");
   const [config, setConfig] = useState<PayPalConfig | null>(null);
+  // Lemon Squeezy donations (Apple Pay / Google Pay / cards). Rendered
+  // above the PayPal options when the server has the donate variant
+  // configured; while the store runs on TEST keys only admins see it.
+  const [lsDonate, setLsDonate] = useState<{ donate: boolean; testMode: boolean } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/billing/config", { credentials: "include" })
+      .then((r) => r.json())
+      .then((c) => { if (!cancelled) setLsDonate({ donate: !!c.donate, testMode: !!c.testMode }); })
+      .catch(() => { if (!cancelled) setLsDonate({ donate: false, testMode: false }); });
+    return () => { cancelled = true; };
+  }, []);
 
   // Load the PayPal client ID once. If PayPal is not configured on
   // the server (no PAYPAL_CLIENT_ID env var), we still render the
@@ -374,6 +387,32 @@ export default function Pricing() {
               {t.methodLabel}
             </div>
 
+            {/* Apple Pay / Google Pay / cards via the Lemon Squeezy
+                checkout — the wallet-first option, above PayPal. The
+                wallet buttons themselves render inside the LS overlay
+                on devices that support them. */}
+            {lsDonate?.donate && (
+              <WalletDonateButton
+                amount={amount}
+                ar={lang === "ar"}
+                testMode={lsDonate.testMode}
+                onInvalid={() =>
+                  toast({
+                    title: t.invalid,
+                    description: t.minNote,
+                    variant: "destructive",
+                  })
+                }
+                onError={(message) =>
+                  toast({
+                    title: t.toastErrTitle,
+                    description: message,
+                    variant: "destructive",
+                  })
+                }
+              />
+            )}
+
             {config === null ? (
               <ButtonsSkeleton />
             ) : !config.enabled || !config.clientId ? (
@@ -593,6 +632,112 @@ export default function Pricing() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+// ── Wallet donations via Lemon Squeezy ─────────────────────────────
+//
+// One black wallet-style button that opens the Lemon Squeezy checkout
+// overlay with the picked amount (server-side custom_price). Inside
+// that checkout, Apple Pay appears on iPhones/Safari with a card in
+// the Wallet, Google Pay on Chrome/Android, and cards everywhere.
+function WalletDonateButton({
+  amount,
+  ar,
+  testMode,
+  onInvalid,
+  onError,
+}: {
+  amount: string;
+  ar: boolean;
+  testMode: boolean;
+  onInvalid: () => void;
+  onError: (message: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  const start = async () => {
+    const value = Number.parseFloat(amount);
+    if (!Number.isFinite(value) || value < 1) { onInvalid(); return; }
+    setBusy(true);
+    try {
+      const r = await fetch("/api/donations/ls-checkout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountCents: Math.round(value * 100) }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data?.url) throw new Error(data?.message || "Could not start the donation.");
+      await openLemonCheckout(data.url);
+    } catch (e) {
+      onError(e instanceof Error ? e.message : "Could not start the donation.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <button
+        type="button"
+        onClick={start}
+        disabled={busy}
+        style={{
+          width: "100%",
+          height: 48,
+          borderRadius: 12,
+          border: "1px solid rgba(244,239,226,0.2)",
+          background: "#000",
+          color: "#fff",
+          fontSize: 15,
+          fontWeight: 700,
+          fontFamily: "inherit",
+          cursor: busy ? "wait" : "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          opacity: busy ? 0.7 : 1,
+        }}
+      >
+        {busy
+          ? (ar ? "جارٍ فتح صفحة الدفع…" : "Opening secure checkout…")
+          : (ar ? "تبرّع عبر Apple Pay · Google Pay · بطاقة" : "Donate with Apple Pay · Google Pay · Card")}
+      </button>
+      <p
+        style={{
+          margin: "8px 0 0",
+          fontSize: 11.5,
+          color: "rgba(244,239,226,0.40)",
+          textAlign: "center",
+          letterSpacing: "0.02em",
+        }}
+      >
+        {testMode
+          ? (ar ? "وضع تجريبي مفعّل، لن يتم خصم أي مبلغ حقيقي." : "Test mode is active. No real money will move.")
+          : (ar
+              ? "دفع آمن عبر Lemon Squeezy. تظهر Apple Pay وGoogle Pay على الأجهزة الداعمة."
+              : "Secure checkout via Lemon Squeezy. Apple Pay and Google Pay appear on supported devices.")}
+      </p>
+      <div
+        aria-hidden
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          margin: "12px 0 0",
+          color: "rgba(244,239,226,0.35)",
+          fontSize: 11,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+        }}
+      >
+        <span style={{ flex: 1, height: 1, background: "rgba(244,239,226,0.12)" }} />
+        {ar ? "أو عبر PayPal" : "or with PayPal"}
+        <span style={{ flex: 1, height: 1, background: "rgba(244,239,226,0.12)" }} />
+      </div>
+    </div>
   );
 }
 
