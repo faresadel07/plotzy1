@@ -35,7 +35,10 @@ const BORDER = "rgba(66,53,33,0.13)";
 const BORDER_STRONG = "rgba(66,53,33,0.3)";
 const TEXT = "#2f2618";
 const MUTED = "#7b7366";
-const MUTED2 = "rgba(244,239,226,0.35)";
+// Dim ink for tertiary labels — this used to be a cream rgba left over
+// from the dark design, which made "Now Playing", disabled transport
+// buttons and chapter numbers nearly invisible on the paper page.
+const MUTED2 = "rgba(66,53,33,0.42)";
 const ACCENT = "#292115";
 // Soft tinted washes derived from ACCENT — kept as vars so we don't
 // scatter the same `rgba(244,239,226,...)` literals across the file.
@@ -449,11 +452,11 @@ export default function AudiolibraryPlayerPage() {
             {ar ? "المكتبة الصوتيّة" : "Audio Library"}
           </Link>
 
-          {/* Lockscreen-audio hint — centered on its own line so it
-              doesn't collide with the back link, and wraps cleanly on
-              narrow phones. Subtle CARD/BORDER treatment reads as a
-              helpful footnote instead of an urgent banner. */}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4, marginTop: -8 }}>
+          {/* Lockscreen-audio hint. Desktop: its own end-of-line row.
+              Phones: the standalone row left a big dead zone above the
+              fold, so the note is taped onto the cover's corner
+              instead (media queries below flip the two). */}
+          <div className="audio-sticky-desktop" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4, marginTop: -8 }}>
             <StickyNote
               ar={ar}
               size={104}
@@ -476,6 +479,7 @@ export default function AudiolibraryPlayerPage() {
             className="audio-player-top"
           >
             <style>{`
+              .audio-sticky-phone { display: none; }
               @media (max-width: 720px) {
                 .audio-player-top {
                   grid-template-columns: 1fr !important;
@@ -485,33 +489,48 @@ export default function AudiolibraryPlayerPage() {
                 .audio-player-top > div:first-child {
                   max-width: 260px;
                 }
+                .audio-sticky-desktop { display: none !important; }
+                .audio-sticky-phone { display: block; }
               }
             `}</style>
-            {/* Cover */}
-            <div
-              style={{
-                width: "100%",
-                aspectRatio: "1 / 1",
-                borderRadius: 16,
-                overflow: "hidden",
-                background: "linear-gradient(135deg, rgba(244,239,226,0.08), rgba(244,239,226,0.03))",
-                boxShadow: "0 18px 50px -14px rgba(41,33,21,0.4)",
-                border: `1px solid ${BORDER}`,
-                position: "relative",
-              }}
-            >
-              {book.coverUrl ? (
-                <img
-                  src={book.coverUrl}
-                  alt={book.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            {/* Cover (wrapper stays unclipped so the phone sticky can
+                overhang the corner; the inner div clips the artwork). */}
+            <div style={{ position: "relative", width: "100%" }}>
+              <div
+                style={{
+                  width: "100%",
+                  aspectRatio: "1 / 1",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  background: "linear-gradient(135deg, rgba(66,53,33,0.1), rgba(66,53,33,0.04))",
+                  boxShadow: "0 18px 50px -14px rgba(41,33,21,0.4)",
+                  border: `1px solid ${BORDER}`,
+                  position: "relative",
+                }}
+              >
+                {book.coverUrl ? (
+                  <img
+                    src={book.coverUrl}
+                    alt={book.title}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                ) : (
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <BookAudio size={64} color="rgba(66,53,33,0.35)" />
+                  </div>
+                )}
+              </div>
+              <div className="audio-sticky-phone" style={{ position: "absolute", top: -16, insetInlineEnd: -10, zIndex: 2 }}>
+                <StickyNote
+                  ar={ar}
+                  size={84}
+                  rot={6}
+                  text={ar
+                    ? "اقفل تلفونك، الصوت بيضل شغال"
+                    : "lock your phone, playback stays on"}
                 />
-              ) : (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <BookAudio size={64} color="rgba(244,239,226,0.4)" />
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Meta + transport */}
@@ -602,7 +621,7 @@ export default function AudiolibraryPlayerPage() {
                     width: "100%",
                     height: 6,
                     appearance: "none",
-                    background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${progressPct}%, rgba(244,239,226,0.10) ${progressPct}%, rgba(244,239,226,0.10) 100%)`,
+                    background: `linear-gradient(to right, ${ACCENT} 0%, ${ACCENT} ${progressPct}%, rgba(66,53,33,0.16) ${progressPct}%, rgba(66,53,33,0.16) 100%)`,
                     borderRadius: 999,
                     cursor: "pointer",
                     outline: "none",
@@ -775,7 +794,7 @@ export default function AudiolibraryPlayerPage() {
                   minWidth: 180,
                   padding: "8px 12px",
                   borderRadius: 10,
-                  background: "rgba(244,239,226,0.05)",
+                  background: ACCENT_WASH_SOFT,
                   border: `1px solid ${BORDER}`,
                   color: TEXT,
                   fontSize: 13,
@@ -1191,7 +1210,7 @@ export default function AudiolibraryPlayerPage() {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                       {Array.from({ length: 5 }).map((_, s) => (
-                        <Star key={s} size={11} color={s < r.stars ? "#f5c76b" : "rgba(244,239,226,0.15)"} fill={s < r.stars ? "#f5c76b" : "transparent"} />
+                        <Star key={s} size={11} color={s < r.stars ? "#f5c76b" : "rgba(66,53,33,0.25)"} fill={s < r.stars ? "#f5c76b" : "transparent"} />
                       ))}
                     </div>
                     {r.title && (
@@ -1273,16 +1292,18 @@ function PlayBtn({ onClick, isPlaying }: { onClick: () => void; isPlaying: boole
         width: 50, height: 50, borderRadius: "50%",
         background: TEXT,
         border: "none",
-        color: "#221b11",
+        // Paper-on-ink: the old #221b11 glyph was dark-on-dark and the
+        // play triangle all but disappeared inside the button.
+        color: "#f4efe2",
         cursor: "pointer",
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 18px rgba(244,239,226,0.18)",
+        boxShadow: "0 6px 18px -6px rgba(41,33,21,0.45)",
         transition: "transform 140ms",
       }}
       onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
       onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
     >
-      {isPlaying ? <Pause size={20} fill="#221b11" /> : <Play size={20} fill="#221b11" style={{ marginInlineStart: 2 }} />}
+      {isPlaying ? <Pause size={20} fill="#f4efe2" /> : <Play size={20} fill="#f4efe2" style={{ marginInlineStart: 2 }} />}
     </button>
   );
 }
@@ -1306,7 +1327,7 @@ function Menu({ children, onClose }: { children: React.ReactNode; onClose: () =>
           top: "calc(100% + 4px)",
           insetInlineEnd: 0,
           minWidth: 110,
-          background: "#1a1a1c",
+          background: CARD,
           border: `1px solid ${BORDER_STRONG}`,
           borderRadius: 10,
           padding: 4,
@@ -1327,14 +1348,14 @@ function MenuItem({ active, onClick, label }: { active: boolean; onClick: () => 
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         width: "100%", padding: "8px 12px",
-        background: active ? "rgba(244,239,226,0.06)" : "transparent",
+        background: active ? "rgba(66,53,33,0.1)" : "transparent",
         border: "none", borderRadius: 6,
         color: TEXT,
         cursor: "pointer", fontFamily: SF, fontSize: 12.5, fontWeight: 600,
         fontVariantNumeric: "tabular-nums",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(244,239,226,0.08)")}
-      onMouseLeave={(e) => (e.currentTarget.style.background = active ? "rgba(244,239,226,0.06)" : "transparent")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(66,53,33,0.13)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = active ? "rgba(66,53,33,0.1)" : "transparent")}
     >
       {label}
     </button>
@@ -1375,7 +1396,7 @@ function ActionChip({
         padding: "9px 14px",
         borderRadius: 999,
         background: active ? ACCENT_WASH_STRONG : CARD,
-        border: `1px solid ${active ? "rgba(244,239,226,0.32)" : BORDER}`,
+        border: `1px solid ${active ? "rgba(66,53,33,0.4)" : BORDER}`,
         color: active ? ACCENT : TEXT,
         fontFamily: SF,
         fontSize: 12.5,
@@ -1469,7 +1490,7 @@ function ExtraLink({ href, icon, title, sub }: { href: string; icon: React.React
       <div
         style={{
           width: 32, height: 32, borderRadius: 8,
-          background: "rgba(244,239,226,0.05)",
+          background: ACCENT_WASH_SOFT,
           display: "grid", placeItems: "center",
           flexShrink: 0,
         }}
