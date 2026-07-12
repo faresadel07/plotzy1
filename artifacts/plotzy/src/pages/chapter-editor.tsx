@@ -2439,7 +2439,7 @@ export default function ChapterEditor() {
                 button. On phones the label collapses so the icon still
                 fits next to Save / Search. */}
             <button
-              className="h-9 px-4 rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0"
+              className={`h-9 ${isPhone ? "px-2.5" : "px-4"} rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0`}
               style={{
                 background: aiChatOpen ? "#423521" : "#221b11",
                 color: "#f7f2e4",
@@ -2452,17 +2452,19 @@ export default function ChapterEditor() {
               data-testid="button-studio-topbar"
             >
               <ClaudeIcon size={16} />
-              Claude
+              {/* Phones: icon only — the label used to squeeze the More
+                  button out of the bar. */}
+              {!isPhone && "Claude"}
             </button>
 
             {autoSaving && (
               <span className="h-8 px-2 rounded-lg text-[10px] font-medium flex items-center gap-1 text-muted-foreground opacity-70">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                {ar ? "حفظ تلقائي..." : "Auto-saving..."}
+                {!isPhone && (ar ? "حفظ تلقائي..." : "Auto-saving...")}
               </span>
             )}
             <button
-              className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`h-8 ${isPhone ? "px-2.5" : "px-3.5"} rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 justSaved
                   ? "cursor-default"
                   : updateChapter.isPending
@@ -2472,15 +2474,16 @@ export default function ChapterEditor() {
               style={{ background: justSaved ? "#3a3020" : "#292115", color: "#f4efe2", boxShadow: "0 3px 10px rgba(41,33,21,0.3)" }}
               onClick={updateChapter.isPending || justSaved ? undefined : handleSave}
               disabled={updateChapter.isPending}
+              aria-label={updateChapter.isPending ? t("saving") : justSaved || !isDirty ? (ar ? "محفوظ" : "Saved") : (ar ? "حفظ" : "Save")}
               data-testid="button-save"
             >
               {updateChapter.isPending
-                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{t("saving")}</>
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{!isPhone && t("saving")}</>
                 : justSaved
-                  ? <><CheckCircle2 className="w-3.5 h-3.5" />{ar ? "محفوظ" : "Saved"}</>
+                  ? <><CheckCircle2 className="w-3.5 h-3.5" />{!isPhone && (ar ? "محفوظ" : "Saved")}</>
                   : isDirty
-                    ? <><Save className="w-3.5 h-3.5" />{ar ? "حفظ" : "Save"}</>
-                    : <><CheckCircle2 className="w-3.5 h-3.5 opacity-60" />{ar ? "محفوظ" : "Saved"}</>
+                    ? <><Save className="w-3.5 h-3.5" />{!isPhone && (ar ? "حفظ" : "Save")}</>
+                    : <><CheckCircle2 className="w-3.5 h-3.5 opacity-60" />{!isPhone && (ar ? "محفوظ" : "Saved")}</>
               }
             </button>
           </div>
