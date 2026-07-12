@@ -2439,7 +2439,7 @@ export default function ChapterEditor() {
                 button. On phones the label collapses so the icon still
                 fits next to Save / Search. */}
             <button
-              className={`h-9 ${isPhone ? "px-2.5" : "px-4"} rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0`}
+              className={`h-9 ${isPhone ? "px-3" : "px-4"} rounded-xl text-sm font-bold gap-2 flex items-center transition-all hover:-translate-y-px active:translate-y-0`}
               style={{
                 background: aiChatOpen ? "#423521" : "#221b11",
                 color: "#f7f2e4",
@@ -2452,9 +2452,9 @@ export default function ChapterEditor() {
               data-testid="button-studio-topbar"
             >
               <ClaudeIcon size={16} />
-              {/* Phones: icon only — the label used to squeeze the More
-                  button out of the bar. */}
-              {!isPhone && "Claude"}
+              {/* The label stays on phones too (Faris wants Claude named);
+                  the width for it came from the icon-only Save pill. */}
+              Claude
             </button>
 
             {autoSaving && (
