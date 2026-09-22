@@ -10,9 +10,8 @@
 //   4. English Classics — Gutenberg
 //   5. Arabic Library — Hindawi
 //   6. AI Writing Studio banner (official model logos)
-//   7. Community shelf placeholder → Community Library
-//   8. Donate banner
-//   9. bottom spacer so the floating tab bar never covers content
+//   7. Donate banner
+//   8. bottom spacer so the floating tab bar never covers content
 
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -218,15 +217,6 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
         {/* Writer Protection — the full-bleed espresso pact, same as
             the laptop landing: ten promises, four faces, Snape. */}
         <ProtectionBandMobile ar={ar} />
-
-        {/* Community shelf — reuse English + Arabic mix as a teaser row,
-            linking to the real community library. */}
-        <ContentRow
-          title={ar ? "من المجتمع" : "From the Community"}
-          books={[...ARABIC_BOOKS.slice(4), ...ENGLISH_BOOKS.slice(4)]}
-          ar={ar}
-          onSeeAll={() => navigate("/library")}
-        />
 
         {/* A stray draft ball before the feedback wall */}
         <div style={{ position: "relative", height: 0, zIndex: 3 }}>

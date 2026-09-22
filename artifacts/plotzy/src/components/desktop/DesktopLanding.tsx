@@ -19,7 +19,7 @@ import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR, ensureHomeFonts } from "@/compone
 import { Mark } from "@/components/mobile/Marker";
 import { PaperBall } from "@/components/mobile/PaperBall";
 import { StickyNote } from "@/components/mobile/StickyNote";
-import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "@/components/mobile/mobile-content";
+import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS } from "@/components/mobile/mobile-content";
 import { COMICS, comicCover } from "@/lib/comics";
 import { TESTIMONIALS } from "@/components/testimonials/testimonials-data";
 
@@ -695,46 +695,6 @@ function JourneyDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: (
   );
 }
 
-/* ── 6. From the community ─────────────────────────────────────────── */
-
-function CommunityStripDesktop({ ar }: { ar: boolean }) {
-  const [, navigate] = useLocation();
-  const books: MobileBook[] = [...ARABIC_BOOKS.slice(4), ...ENGLISH_BOOKS.slice(4)].slice(0, 8);
-  return (
-    <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, marginBottom: 44, fontFamily: SF }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-        <h2 style={{ fontFamily: ar ? SERIF_AR : SERIF_EN, fontSize: ar ? 28 : 30, fontWeight: 700, color: "#2f2618", margin: 0 }}>
-          {ar ? "من المجتمع" : "From the Community"}
-        </h2>
-        <button
-          onClick={() => navigate("/library")}
-          style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#7b7366", fontFamily: SF }}
-        >
-          {ar ? "عرض الكل ‹" : "See all ›"}
-        </button>
-      </div>
-      <div style={{ fontFamily: ar ? HAND_AR : HAND_EN, fontSize: ar ? 15 : 18, color: "#8a8070", marginBottom: 18, transform: "rotate(-0.8deg)", display: "inline-block" }}>
-        {ar ? "(كتب كتبها ناس متلك، من جوّا بلوتزي)" : "(books written by people like you, inside Plotzy)"}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 16 }}>
-        {books.map((b, i) => (
-          <button
-            key={i}
-            onClick={() => navigate(b.href)}
-            style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: ar ? "right" : "left", fontFamily: SF, minWidth: 0 }}
-          >
-            <div style={{ aspectRatio: "2 / 3", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(66,53,33,0.14)", boxShadow: "0 10px 22px -10px rgba(41,33,21,0.35)", background: "#e7dfcc", marginBottom: 8 }}>
-              <img src={b.cover} alt={b.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#2f2618", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.title}</div>
-            <div style={{ fontSize: 11.5, color: "#7b7366", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ar ? (b.genreAr || b.genre || b.author) : (b.genre || b.author)}</div>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 /* ── 6.5 Writer Protection band ────────────────────────────────────────
    The dark-espresso sheet right below the feature sketches, where the
    one-line trust footnote used to sit. Words only, as Faris asked:
@@ -1347,8 +1307,6 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1180, margin: "0 auto" }}>
         <PaperBall size={48} rot={14} style={{ position: "absolute", top: -18, insetInlineEnd: 24 }} />
       </div>
-
-      <CommunityStripDesktop ar={ar} />
 
       {/* A stray draft ball before the feedback wall */}
       <div style={{ position: "relative", height: 0, zIndex: 3, maxWidth: 1150, margin: "0 auto" }}>
