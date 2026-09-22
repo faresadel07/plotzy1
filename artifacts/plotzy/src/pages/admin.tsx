@@ -8,6 +8,7 @@ import { Users, BookOpen, Globe, FileText, Ticket, Settings, ArrowLeft, ChevronD
 import { SEO } from "@/components/SEO";
 import { adminFetch, adminFetchList, adminErrorText } from "@/lib/admin-api";
 import { TabBoundary } from "@/components/admin/TabBoundary";
+import { CommentsTab } from "@/components/admin/CommentsTab";
 import { useIsPhone } from "@/hooks/use-is-phone";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -2634,7 +2635,7 @@ type Tab =
   | "analytics" | "devices" | "engagement"
   | "revenue"
   | "users"
-  | "books" | "moderation" | "tutorials"
+  | "books" | "moderation" | "comments" | "tutorials"
   | "support"
   | "banner" | "social"
   | "system" | "audit" | "activity";
@@ -2653,6 +2654,7 @@ const NAV: { group: string; items: { id: Tab; label: string }[] }[] = [
   { group: "Content", items: [
     { id: "books",      label: "Books" },
     { id: "moderation", label: "Moderation" },
+    { id: "comments",   label: "Comments" },
     { id: "tutorials",  label: "Tutorials" },
   ] },
   { group: "Support", items: [{ id: "support", label: "Tickets" }] },
@@ -2681,6 +2683,7 @@ function renderTab(tab: Tab) {
     case "users":      return <UsersTab />;
     case "books":      return <BooksTab />;
     case "moderation": return <ModerationTab />;
+    case "comments":   return <CommentsTab />;
     case "tutorials":  return <TutorialsTab />;
     case "support":    return <SupportTab />;
     case "banner":     return <BannerTab />;

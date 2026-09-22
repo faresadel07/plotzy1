@@ -1,3 +1,7 @@
+// NOTE: this aggregator is NOT the live wiring. src/routes.ts imports and
+// mounts each router directly on the app; nothing imports this file. Kept
+// only because it documents the router set — do not add new routers here
+// expecting them to serve traffic.
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import booksRouter from "./books.routes";

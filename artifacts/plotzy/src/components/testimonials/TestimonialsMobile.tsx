@@ -8,6 +8,8 @@
 import { TESTIMONIALS } from "./testimonials-data";
 import { SERIF_EN, SERIF_AR, HAND_EN, HAND_AR } from "@/components/mobile/fonts";
 import { Mark } from "@/components/mobile/Marker";
+import { useCommunityComments, splitComments } from "@/components/community/use-community-comments";
+import { CommentCard, CommentComposer } from "@/components/community/CommentPieces";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 const INK = "#2f2618";
@@ -16,6 +18,10 @@ const MUTED = "#7b7366";
 
 export function TestimonialsMobile({ ar }: { ar: boolean }) {
   const serif = ar ? SERIF_AR : SERIF_EN;
+  // Live comments: pinned ones sit above the curated wall, the rest
+  // underneath it. The curated quotes never move.
+  const { data: comments } = useCommunityComments();
+  const { pinned, rest } = splitComments(comments);
 
   return (
     <section id="testimonials" style={{ marginBottom: 34, fontFamily: SF, scrollMarginTop: 60, padding: "0 16px" }} dir={ar ? "rtl" : "ltr"}>
@@ -40,6 +46,17 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
           {ar ? "(كلام حقيقي، من ناس حقيقيين، بإذنهم)" : "(real words, real people, with their permission)"}
         </span>
       </div>
+
+      {/* Write box, then pinned comments, then the curated wall. */}
+      <CommentComposer ar={ar} />
+
+      {pinned.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", marginBottom: 2 }}>
+          {pinned.map((c) => (
+            <CommentCard key={c.id} comment={c} ar={ar} breakInside={false} />
+          ))}
+        </div>
+      )}
 
       {/* The wall */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -134,6 +151,15 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
           );
         })}
       </div>
+
+      {/* Everything writers have posted since, newest first. */}
+      {rest.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", marginTop: 14 }}>
+          {rest.map((c) => (
+            <CommentCard key={c.id} comment={c} ar={ar} breakInside={false} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

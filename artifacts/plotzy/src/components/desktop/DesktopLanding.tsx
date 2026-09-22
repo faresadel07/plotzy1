@@ -22,6 +22,8 @@ import { StickyNote } from "@/components/mobile/StickyNote";
 import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS } from "@/components/mobile/mobile-content";
 import { COMICS, comicCover } from "@/lib/comics";
 import { TESTIMONIALS } from "@/components/testimonials/testimonials-data";
+import { useCommunityComments, splitComments } from "@/components/community/use-community-comments";
+import { CommentCard, CommentComposer } from "@/components/community/CommentPieces";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
@@ -956,6 +958,10 @@ function GreatWritersDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriti
 
 function FeedbackWallDesktop({ ar }: { ar: boolean }) {
   const serif = ar ? SERIF_AR : SERIF_EN;
+  // Live comments from writers. Pinned ones are the only additions
+  // allowed above the curated wall; the rest land underneath it.
+  const { data: comments } = useCommunityComments();
+  const { pinned, rest } = splitComments(comments);
   return (
     <section id="testimonials" dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, maxWidth: 1150, marginBottom: 48, fontFamily: SF, scrollMarginTop: 70 }}>
       <div style={{ textAlign: "center", marginBottom: 8 }}>
@@ -977,6 +983,20 @@ function FeedbackWallDesktop({ ar }: { ar: boolean }) {
           {ar ? "(كلام حقيقي، من ناس حقيقيين، بإذنهم)" : "(real words, real people, with their permission)"}
         </span>
       </div>
+
+      {/* Write box, then any admin-pinned comments, then the curated
+          wall — the curated quotes never move. */}
+      <div style={{ maxWidth: 640, margin: "0 auto 22px" }}>
+        <CommentComposer ar={ar} />
+      </div>
+
+      {pinned.length > 0 && (
+        <div style={{ columnCount: 3, columnGap: 16, marginBottom: 4 }}>
+          {pinned.map((c) => (
+            <CommentCard key={c.id} comment={c} ar={ar} />
+          ))}
+        </div>
+      )}
 
       {/* Masonry wall: CSS columns keep every card whole */}
       <div style={{ columnCount: 3, columnGap: 16 }}>
@@ -1067,6 +1087,15 @@ function FeedbackWallDesktop({ ar }: { ar: boolean }) {
           );
         })}
       </div>
+
+      {/* Everything writers have posted since, newest first. */}
+      {rest.length > 0 && (
+        <div style={{ columnCount: 3, columnGap: 16, marginTop: 4 }}>
+          {rest.map((c) => (
+            <CommentCard key={c.id} comment={c} ar={ar} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

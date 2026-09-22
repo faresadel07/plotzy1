@@ -36,6 +36,7 @@ import hindawiRouter, { syncHindawiCatalog, precacheHindawiTopBooks } from "./ro
 import adminRouter from "./routes/admin.routes";
 import miscRouter from "./routes/misc.routes";
 import courseRouter from "./routes/course.routes";
+import communityRouter from "./routes/community.routes";
 import studioRouter from "./routes/studio.routes";
 import publisherTrackerRouter from "./routes/publisher-tracker.routes";
 import audiolibraryRouter from "./routes/audiolibrary.routes";
@@ -3214,6 +3215,11 @@ Write the query letter specifically tailored to this publisher, mentioning why t
   // /api/certificates/:uuid verification endpoint. No prefix collisions
   // with existing routes — neither namespace was in use before this batch.
   app.use(courseRouter);
+
+  // ── Community comments (./routes/community.routes.ts) ──────────────
+  // The live half of the landing page feedback wall: public read, signed-in
+  // post, admin pin / hide / delete.
+  app.use(communityRouter);
 
   // ── The Studio routes (./routes/studio.routes.ts) ──────────────────
   // Multi-model AI companion under /api/studio/*. Streams chat

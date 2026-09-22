@@ -947,6 +947,41 @@ export const contentFlags = pgTable("content_flags", {
   index("idx_content_flags_book_id").on(t.bookId),
 ]);
 
+// ── Community Comments ───────────────────────────────────────────────────
+//
+// What writers say about Plotzy, posted from the landing page's feedback
+// wall. The curated TESTIMONIALS on the frontend are static and always
+// render first; rows here are the live additions underneath them, unless
+// an admin pins one — pinning is the only way a new comment is allowed
+// above the curated set.
+//
+// Removal is soft (`hidden`) so a moderation mistake is reversible and
+// nothing a writer wrote disappears from the database by accident.
+
+export const communityComments = pgTable("community_comments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  // Admin-pinned comments sort above everything, newest pin first.
+  pinned: boolean("pinned").notNull().default(false),
+  pinnedAt: timestamp("pinned_at"),
+  // Soft moderation: hidden rows vanish from the public wall but stay
+  // in the table (and in the admin panel) so they can be restored.
+  hidden: boolean("hidden").notNull().default(false),
+  hiddenAt: timestamp("hidden_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  // The public wall reads: not hidden, pinned first, then newest.
+  index("idx_community_comments_feed").on(t.hidden, t.pinned, t.createdAt),
+  index("idx_community_comments_user_id").on(t.userId),
+  // Belt and braces against an empty or essay-length comment slipping
+  // past the API validation.
+  check("community_comments_body_len", sql`char_length(${t.body}) BETWEEN 4 AND 600`),
+]);
+
+export type CommunityComment = typeof communityComments.$inferSelect;
+export type InsertCommunityComment = typeof communityComments.$inferInsert;
+
 // ── Email Verification Tokens ────────────────────────────────────────────
 
 export const emailVerificationTokens = pgTable("email_verification_tokens", {
