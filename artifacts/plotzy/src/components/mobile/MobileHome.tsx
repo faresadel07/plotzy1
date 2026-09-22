@@ -218,18 +218,19 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
             the laptop landing: ten promises, four faces, Snape. */}
         <ProtectionBandMobile ar={ar} />
 
-        {/* A stray draft ball before the feedback wall */}
+        {/* Drafts on the paper between the two dark bands. */}
         <div style={{ position: "relative", height: 0, zIndex: 3 }}>
-          <PaperBall size={46} rot={-18} style={{ position: "absolute", top: -10, insetInlineStart: 14 }} />
-          <StickyNote ar={ar} size={86} rot={4} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: -6, insetInlineEnd: -10 }} />
+          <PaperBall size={46} rot={-18} style={{ position: "absolute", top: 14, insetInlineStart: 14 }} />
+          <StickyNote ar={ar} size={86} rot={4} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: 18, insetInlineEnd: -10 }} />
         </div>
-
-        {/* The greats — "every one of them started with a blank page",
-            right before real writers' words below. */}
-        <GreatWritersMobile ar={ar} onStartWriting={onStartWriting} />
 
         {/* Social proof — real early testers, in their own words */}
         <TestimonialsMobile ar={ar} />
+
+        {/* The greats. Sits after the real writers so the page alternates
+            paper, dark, paper, dark — and the argument builds: people like
+            you, then the greats who also began at zero, then the course. */}
+        <GreatWritersMobile ar={ar} onStartWriting={onStartWriting} />
 
         {/* Free writing course, presented as its own book cover */}
         <CourseCoverMobile ar={ar} />
