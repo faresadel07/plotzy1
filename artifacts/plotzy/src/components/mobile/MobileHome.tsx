@@ -28,6 +28,7 @@ import { AUDIO_BOOKS, ENGLISH_BOOKS, ARABIC_BOOKS, type MobileBook } from "./mob
 import { COMICS, comicCover } from "@/lib/comics";
 import { PAPER, ESPRESSO, PAPER_ON_DARK, BORDER_PAPER, SPECKLE } from "./palette";
 import { LibraryShowcase } from "./LibraryShowcase";
+import { GreatWritersMobile } from "./GreatWriters";
 import { ProtectionBandMobile } from "./ProtectionBand";
 import { SnippetsFan } from "./SnippetsFan";
 import { PaperBall } from "./PaperBall";
@@ -232,6 +233,10 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
           <PaperBall size={46} rot={-18} style={{ position: "absolute", top: -10, insetInlineStart: 14 }} />
           <StickyNote ar={ar} size={86} rot={4} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: -6, insetInlineEnd: -10 }} />
         </div>
+
+        {/* The greats — "every one of them started with a blank page",
+            right before real writers' words below. */}
+        <GreatWritersMobile ar={ar} onStartWriting={onStartWriting} />
 
         {/* Social proof — real early testers, in their own words */}
         <TestimonialsMobile ar={ar} />

@@ -911,6 +911,87 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
   );
 }
 
+/* ── 6.8 The greats — "every one of them started with a blank page" ──
+   Faris's sepia collage of the great writers (Shakespeare, Rowling,
+   Dickens, Austen, Hemingway, Orwell, Christie), hung on the paper
+   like a taped poster next to the one line that carries the whole
+   site's promise. Sits right before the feedback wall on purpose:
+   the greats first, then real writers' words, then the course. */
+
+function GreatWritersDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
+  const serif = ar ? SERIF_AR : SERIF_EN;
+  const hand = ar ? HAND_AR : HAND_EN;
+  return (
+    <section dir={ar ? "rtl" : "ltr"} style={{ ...WRAP, maxWidth: 1050, marginBottom: 56, fontFamily: SF }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 64 }}>
+
+        {/* The poster, taped and slightly tilted. */}
+        <div style={{ flex: "0 0 360px", position: "relative", transform: "rotate(-1.5deg)" }}>
+          <div aria-hidden style={{
+            position: "absolute",
+            top: -12,
+            left: "50%",
+            transform: "translateX(-50%) rotate(-2.5deg)",
+            width: 92,
+            height: 24,
+            background: "rgba(214,196,150,0.65)",
+            border: "1px solid rgba(66,53,33,0.12)",
+            borderRadius: 2,
+            zIndex: 2,
+          }} />
+          <img
+            src="/images/great-writers.jpg"
+            alt={ar
+              ? "شكسبير، ج. ك. رولينغ، تشارلز ديكنز، جين أوستن، همنغواي، جورج أورويل وأغاثا كريستي"
+              : "Shakespeare, J.K. Rowling, Charles Dickens, Jane Austen, Hemingway, George Orwell and Agatha Christie"}
+            loading="lazy"
+            draggable={false}
+            style={{
+              width: "100%",
+              display: "block",
+              borderRadius: 16,
+              border: "1px solid rgba(66,53,33,0.22)",
+              boxShadow: "0 30px 60px -24px rgba(41,33,21,0.55)",
+              userSelect: "none",
+            }}
+          />
+          <PaperBall size={40} rot={-20} style={{ position: "absolute", bottom: -18, insetInlineEnd: -24 }} />
+        </div>
+
+        {/* The line. */}
+        <div style={{ flex: "1 1 0", minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTED, marginBottom: 14 }}>
+            {ar ? "في صحبة العظماء" : "In good company"}
+          </div>
+          <h2 style={{ fontFamily: serif, fontSize: ar ? 38 : 44, fontWeight: 700, lineHeight: ar ? 1.45 : 1.18, color: INK, margin: "0 0 12px" }}>
+            {ar
+              ? <>كل واحد منهم بدأ <Mark ar={ar}>بصفحة فارغة</Mark></>
+              : <>Every one of them started with <Mark ar={ar}>a blank page</Mark></>}
+          </h2>
+          <div style={{ fontFamily: hand, fontSize: ar ? 18 : 23, color: "#8a8070", marginBottom: 18, transform: "rotate(-0.8deg)", display: "inline-block" }}>
+            {ar ? "(ودورك جاي)" : "(you're next)"}
+          </div>
+          <p style={{ fontSize: 16.5, lineHeight: 1.75, color: MUTED, maxWidth: 460, margin: "0 0 26px" }}>
+            {ar
+              ? "لا أحد وُلد روائياً. صفحة بيضاء، وجملة أولى متعثرة، وإصرار على الرجوع كل يوم. هذا كل ما فرّقهم عن غيرهم، وهذا كل ما تحتاجه أنت."
+              : "Nobody was born a novelist. A blank page, a clumsy first sentence, and the stubbornness to come back every day. That is all that set them apart, and it is all you need."}
+          </p>
+          <button
+            onClick={onStartWriting}
+            style={{
+              background: ESPRESSO, color: PAPER_ON_DARK, border: "none", borderRadius: 999,
+              padding: "15px 32px", fontSize: 15.5, fontWeight: 700, fontFamily: SF, cursor: "pointer",
+              boxShadow: "0 12px 28px -8px rgba(41,33,21,0.5)",
+            }}
+          >
+            {ar ? "ابدأ صفحتك الأولى" : "Start your first page"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ── 7. Feedback hall of fame (three-column chat wall) ─────────────── */
 
 function FeedbackWallDesktop({ ar }: { ar: boolean }) {
@@ -1274,6 +1355,8 @@ export function DesktopSections({ ar, onStartWriting }: { ar: boolean; onStartWr
         <PaperBall size={54} rot={-18} style={{ position: "absolute", top: -14, insetInlineStart: 30 }} />
         <StickyNote ar={ar} size={106} rot={-6} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: -58, insetInlineEnd: -18 }} />
       </div>
+
+      <GreatWritersDesktop ar={ar} onStartWriting={onStartWriting} />
 
       <FeedbackWallDesktop ar={ar} />
 
