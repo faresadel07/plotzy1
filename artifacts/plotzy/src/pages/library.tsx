@@ -7,6 +7,8 @@ import { buildBreadcrumbSchema } from "@/lib/seo-schema";
 import { usePublishedBooks, useBookRatingStats, useFeaturedBook, useSetFeaturedBook, useAdminDeleteBook } from "@/hooks/use-public-library";
 import type { PublishedBook } from "@/hooks/use-public-library";
 import { useAuth } from "@/contexts/auth-context";
+import { GENRE_FILTERS, genreLabel, matchesGenre } from "@/lib/genres";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { useLanguage } from "@/contexts/language-context";
 import {
   BookOpen, Search, Eye, User, Loader2, Star, Heart,
@@ -30,24 +32,72 @@ const TD = "#9a9181";
 /* ── Like Button ───────────────────────────────────────────── */
 function LikeButton({ bookId }: { bookId: number }) {
   const { user } = useAuth();
+  const isPhone = useIsPhone();
   const qc = useQueryClient();
+  const { t } = useLanguage();
+  const key = ["/api/books", bookId, "like"] as const;
+
   const { data } = useQuery<{ liked: boolean; likesCount: number }>({
-    queryKey: ["/api/books", bookId, "like"],
+    queryKey: key,
     queryFn: () => fetch(`/api/books/${bookId}/like`, { credentials: "include" }).then(r => r.json()),
+    // Signed-out readers can see the count from the book payload; firing
+    // one request per card for them turned a 60-book page into 60 extra
+    // round trips that could not change anything.
+    enabled: !!user,
+    staleTime: 60_000,
   });
+
   const toggle = useMutation({
     mutationFn: () => fetch(`/api/books/${bookId}/like`, { method: data?.liked ? "DELETE" : "POST", credentials: "include" }).then(r => r.json()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/books", bookId, "like"] }),
+    // Optimistic: the heart answers the tap immediately instead of after
+    // a round trip plus a refetch, which is what made it feel dead on a
+    // phone connection.
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<{ liked: boolean; likesCount: number }>(key);
+      const nextLiked = !(prev?.liked ?? false);
+      qc.setQueryData(key, {
+        liked: nextLiked,
+        likesCount: Math.max(0, (prev?.likesCount ?? 0) + (nextLiked ? 1 : -1)),
+      });
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev);
+      toast({ title: t("libLikeFailed"), variant: "destructive" });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
   });
+
   const liked = data?.liked ?? false;
   const count = data?.likesCount ?? 0;
+
   return (
     <button
-      onClick={e => { e.preventDefault(); e.stopPropagation(); if (user) toggle.mutate(); }}
-      style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: user ? "pointer" : "default", padding: 0, fontSize: 11, fontFamily: SF, color: liked ? "#ef4444" : TD, transition: "color 0.2s" }}
+      onClick={e => {
+        e.preventDefault();
+        e.stopPropagation();
+        // A guest tap used to do nothing at all — no toast, no prompt.
+        if (!user) { window.dispatchEvent(new CustomEvent("open-auth-modal")); return; }
+        toggle.mutate();
+      }}
+      aria-pressed={liked}
+      aria-label={liked ? t("libUnlike") : t("libLike")}
+      title={liked ? t("libUnlike") : t("libLike")}
+      style={{
+        // A real 44px tap target with a visible chip, instead of a bare
+        // 13px grey outline that phone readers never noticed.
+        display: "inline-flex", alignItems: "center", gap: 6,
+        minHeight: 34, padding: "6px 12px", borderRadius: 999,
+        background: liked ? "rgba(239,68,68,0.10)" : "rgba(66,53,33,0.05)",
+        border: `1px solid ${liked ? "rgba(239,68,68,0.35)" : B}`,
+        cursor: "pointer", fontSize: 12.5, fontWeight: 600, fontFamily: SF,
+        color: liked ? "#dc2626" : TS,
+        transition: "background 0.15s, border-color 0.15s, color 0.15s",
+      }}
     >
-      <Heart style={{ width: 13, height: 13, fill: liked ? "#ef4444" : "none", transition: "all 0.2s" }} />
-      {count > 0 && count}
+      <Heart style={{ width: 15, height: 15, fill: liked ? "#dc2626" : "none", transition: "all 0.2s" }} />
+      <span style={{ fontVariantNumeric: "tabular-nums" }}>{count}</span>
     </button>
   );
 }
@@ -65,17 +115,16 @@ function Stars({ bookId }: { bookId: number }) {
 }
 
 /* ── Genre Pills ───────────────────────────────────────────── */
-const GENRES = [
-  "All", "Fiction", "Non-Fiction", "Fantasy", "Sci-Fi", "Mystery",
-  "Romance", "Thriller", "Horror", "Biography", "Self-Help", "Historical",
-  "Literary", "Adventure", "Poetry",
-];
+// Canonical ids from lib/genres. The old list held display strings and
+// was compared to book.genre exactly, so a book the wizard saved as
+// "scifi" could never be found by the "Sci-Fi" pill.
 
 /* ── Book Card ─────────────────────────────────────────────── */
 // Genre values stay English (they match book.genre in the DB and the
 // filter logic) but display through this i18n key so the pill labels
 // localize. "Non-Fiction" -> genreNonFiction, "Sci-Fi" -> genreSciFi.
-const genreKey = (g: string) => ("genre" + g.replace(/[^A-Za-z]/g, "")) as any;
+// Was: ("genre" + letters) as any — which produced unchecked keys like
+// "genrescifi" for real books and printed them raw on every card.
 
 function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin: boolean; isFeatured: boolean }) {
   const { t, isRTL } = useLanguage();
@@ -134,7 +183,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: SF, color: "#4a4132" }}>
                 <Eye style={{ width: 12, height: 12 }} />
-                {book.viewCount.toLocaleString()}
+                {Number(book.viewCount ?? 0).toLocaleString()}
               </div>
               <LikeButton bookId={book.id} />
               <Stars bookId={book.id} />
@@ -160,7 +209,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
               color: "#3a3020", borderRadius: 6,
               padding: "3px 8px", fontSize: 10, fontWeight: 600, fontFamily: SF,
             }}>
-              {t(genreKey(book.genre))}
+              {genreLabel(book.genre, t)}
             </div>
           )}
 
@@ -234,7 +283,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           {/* Stats row — always visible */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontFamily: SF, color: TD }}>
-              <Eye style={{ width: 11, height: 11 }} /> {book.viewCount.toLocaleString()}
+              <Eye style={{ width: 11, height: 11 }} /> {Number(book.viewCount ?? 0).toLocaleString()}
             </div>
             <LikeButton bookId={book.id} />
             <Stars bookId={book.id} />
@@ -244,7 +293,7 @@ function BookCard({ book, isAdmin, isFeatured }: { book: PublishedBook; isAdmin:
           {(book.genre || (book.language && book.language !== "en")) && (
             <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
               {book.genre && (
-                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px" }}>{t(genreKey(book.genre))}</span>
+                <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px" }}>{genreLabel(book.genre, t)}</span>
               )}
               {book.language && book.language !== "en" && (
                 <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", border: `1px solid ${B}`, borderRadius: 4, padding: "1px 6px", textTransform: "uppercase" }}>{book.language}</span>
@@ -300,7 +349,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 700, fontFamily: SF, color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 <Trophy style={{ width: 12, height: 12 }} /> {t("libFeatured")}
               </span>
-              {book.genre && <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", padding: "2px 8px", borderRadius: 4 }}>{t(genreKey(book.genre))}</span>}
+              {book.genre && <span style={{ fontSize: 10, fontFamily: SF, color: TD, background: "rgba(66,53,33,0.06)", padding: "2px 8px", borderRadius: 4 }}>{genreLabel(book.genre, t)}</span>}
             </div>
             <h2 style={{ fontFamily: "'Georgia', serif", fontSize: 22, fontWeight: 700, color: T, margin: "0 0 6px", lineHeight: 1.3 }}>{book.title}</h2>
             <p style={{ fontFamily: SF, fontSize: 13, color: TS, margin: "0 0 10px" }}>
@@ -324,7 +373,7 @@ function FeaturedBanner({ book, isAdmin }: { book: PublishedBook; isAdmin: boole
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontFamily: SF, color: TS }}>
-                <Eye style={{ width: 13, height: 13 }} /> {book.viewCount.toLocaleString()} {t("libReads")}
+                <Eye style={{ width: 13, height: 13 }} /> {Number(book.viewCount ?? 0).toLocaleString()} {t("libReads")}
               </span>
               {rating && rating.count > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontFamily: SF, color: TS }}>
@@ -378,9 +427,10 @@ export default function Library() {
   });
   const { data: featuredBook } = useFeaturedBook();
   const { user } = useAuth();
+  const isPhone = useIsPhone();
   const isAdmin = !!(user?.isAdmin);
   const [search, setSearch] = useState("");
-  const [genre, setGenre] = useState("All");
+  const [genre, setGenre] = useState<string>("all");
   // Default sort is "substantial" — books that look finished (real
   // cover, real summary, named author, some views) land at the top,
   // half-empty title-only stubs land at the bottom. This is what a
@@ -421,11 +471,11 @@ export default function Library() {
       .replace(/[ؤ]/g, "و")
       .replace(/[ئ]/g, "ي")
       .trim();
-  const queryWords = normalize(search).split(/s+/).filter(Boolean);
+  const queryWords = normalize(search).split(/\s+/).filter(Boolean);
   const filtered = books?.filter(b => {
     const haystack = normalize(b.title + " " + (b.authorName || b.authorDisplayName || ""));
     const matchSearch = queryWords.length === 0 || queryWords.every(w => haystack.includes(w));
-    const matchGenre = genre === "All" || b.genre === genre;
+    const matchGenre = matchesGenre(b.genre, genre);
     return matchSearch && matchGenre;
   }).sort((a, b) => {
     if (sort === "popular") return (b.viewCount || 0) - (a.viewCount || 0);
@@ -436,7 +486,7 @@ export default function Library() {
     return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
   });
 
-  const hasFilter = !!(search || genre !== "All");
+  const hasFilter = !!(search || genre !== "all");
   const isEmpty = !isLoading && (!filtered || filtered.length === 0);
 
   return (
@@ -447,7 +497,7 @@ export default function Library() {
       />
       <JsonLd data={buildBreadcrumbSchema([{ name: "Community Library", path: "/library" }])} />
       <div style={{ background: BG, minHeight: "100vh", fontFamily: SF }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: isPhone ? "22px 16px 72px" : "40px 24px 80px" }}>
 
           {/* Header */}
           <div style={{ marginBottom: 36 }}>
@@ -463,12 +513,12 @@ export default function Library() {
           </div>
 
           {/* Featured Book */}
-          {user && featuredBook && !hasFilter && (
+          {featuredBook && !hasFilter && (
             <FeaturedBanner book={featuredBook} isAdmin={isAdmin} />
           )}
 
           {/* Published Series */}
-          {user && publicSeries.length > 0 && !hasFilter && (
+          {publicSeries.length > 0 && !hasFilter && (
             <div style={{ marginBottom: 40 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,106,247,0.12)", border: "1px solid rgba(124,106,247,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -498,7 +548,7 @@ export default function Library() {
                     >
                       {/* Mini stacked covers */}
                       <div style={{ position: "relative", width: 48, height: 64, flexShrink: 0 }}>
-                        {s.books.slice(0, 3).reverse().map((b, i) => (
+                        {(s.books || []).slice(0, 3).reverse().map((b, i) => (
                           <div key={b.id} style={{
                             position: "absolute",
                             top: i * 3, left: i * 4,
@@ -538,7 +588,7 @@ export default function Library() {
           )}
 
           {/* Search + Filters — only when signed in */}
-          {user && <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
+          {<div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
             {/* Search */}
             <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
               <Search style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", width: 15, height: 15, color: TD }} />
@@ -549,26 +599,49 @@ export default function Library() {
                 style={{
                   width: "100%", padding: "10px 12px 10px 36px", borderRadius: 10,
                   background: C2, border: `1px solid ${B}`, color: T,
-                  fontFamily: SF, fontSize: 13, outline: "none", boxSizing: "border-box",
+                  fontFamily: SF, fontSize: 16, outline: "none", boxSizing: "border-box",
                 }}
               />
             </div>
 
-            {/* Genre pills */}
-            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-              {GENRES.map(g => (
-                <button
-                  key={g}
-                  onClick={() => setGenre(g)}
-                  style={{
-                    padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-                    fontFamily: SF, cursor: "pointer", transition: "all 0.15s",
-                    background: genre === g ? "#292115" : "transparent",
-                    color: genre === g ? "#f7f2e4" : TD,
-                    border: genre === g ? "none" : `1px solid ${B}`,
-                  }}
-                >{t(genreKey(g))}</button>
-              ))}
+            {/* Genre pills. On a phone these used to wrap into five rows
+                and push every book below the fold, so there they scroll
+                sideways in a single row instead. */}
+            <div
+              style={{
+                display: "flex", gap: 6, alignItems: "center",
+                flexWrap: isPhone ? "nowrap" : "wrap",
+                overflowX: isPhone ? "auto" : "visible",
+                scrollbarWidth: "none",
+                WebkitOverflowScrolling: "touch",
+                margin: isPhone ? "0 -16px" : undefined,
+                padding: isPhone ? "2px 16px" : undefined,
+              }}
+            >
+              {GENRE_FILTERS.map(g => {
+                const active = genre === g.id;
+                const label = (() => {
+                  const translated = t(g.i18n);
+                  return translated === g.i18n ? g.en : translated;
+                })();
+                return (
+                  <button
+                    key={g.id}
+                    onClick={() => setGenre(g.id)}
+                    style={{
+                      flex: "0 0 auto",
+                      // 36px keeps the pill a comfortable touch target.
+                      minHeight: 36, padding: "8px 15px", borderRadius: 20,
+                      fontSize: 12.5, fontWeight: 500,
+                      fontFamily: SF, cursor: "pointer", transition: "all 0.15s",
+                      background: active ? "#292115" : "transparent",
+                      color: active ? "#f7f2e4" : TS,
+                      border: active ? "none" : `1px solid ${B}`,
+                      whiteSpace: "nowrap",
+                    }}
+                  >{label}</button>
+                );
+              })}
             </div>
 
             {/* Sort — cycles substantial ▸ recent ▸ popular */}
@@ -594,52 +667,18 @@ export default function Library() {
           </div>}
 
           {/* Results count */}
-          {user && books && books.length > 0 && !isEmpty && (
+          {books && books.length > 0 && !isEmpty && (
             <p style={{ fontSize: 12, color: TD, marginBottom: 20 }}>
               <span style={{ color: TS, fontWeight: 600 }}>{filtered?.length ?? 0}</span> {t("libWorksPublished")}
               {hasFilter && ` ${t("libFiltered")}`}
             </p>
           )}
 
-          {/* Content */}
-          {!user ? (
-            /* ── Sign-in prompt for unauthenticated users ── */
-            <div style={{
-              textAlign: "center", padding: "80px 24px",
-              background: C1, border: `1px solid ${B}`, borderRadius: 16,
-            }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: 16, margin: "0 auto 20px",
-                background: "#fffdf7", border: `1px solid ${B}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <BookOpen style={{ width: 28, height: 28, color: "#8a8070" }} />
-              </div>
-              <h3 style={{ fontFamily: SF, fontSize: 20, fontWeight: 700, color: T, margin: "0 0 8px" }}>
-                {t("libSignInTitle")}
-              </h3>
-              <p style={{ fontFamily: SF, fontSize: 14, color: TD, margin: "0 0 28px", maxWidth: 420, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
-                {t("libSignInBody")}
-              </p>
-              <button
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent("open-auth-modal"));
-                }}
-                style={{
-                  padding: "12px 36px", borderRadius: 10, background: "#292115", color: "#f7f2e4",
-                  fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer",
-                  transition: "opacity 0.15s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-              >
-                {t("libSignIn")}
-              </button>
-              <p style={{ fontFamily: SF, fontSize: 12, color: TD, marginTop: 14 }}>
-                {t("libFreeNoCard")}
-              </p>
-            </div>
-          ) : isLoading ? (
+          {/* Content. Published books are public — a signed-out reader
+              used to be shown a sign-in wall here instead of the library
+              the page advertises. The invitation now comes after the
+              books, not instead of them. */}
+          {isLoading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "100px 0" }}>
               <Loader2 style={{ width: 24, height: 24, color: TD, animation: "spin 1s linear infinite" }} />
             </div>
@@ -667,6 +706,35 @@ export default function Library() {
                   isFeatured={featuredBook?.id === book.id}
                 />
               ))}
+            </div>
+          )}
+
+          {/* The invitation, after the reading — not in front of it. */}
+          {!user && books && books.length > 0 && (
+            <div style={{
+              marginTop: 40, textAlign: "center",
+              background: C1, border: `1px solid ${B}`, borderRadius: 16,
+              padding: isPhone ? "28px 20px" : "36px 28px",
+            }}>
+              <h3 style={{ fontFamily: SF, fontSize: isPhone ? 17 : 19, fontWeight: 700, color: T, margin: "0 0 8px" }}>
+                {t("libSignInTitle")}
+              </h3>
+              <p style={{ fontFamily: SF, fontSize: 14, color: TS, margin: "0 auto 20px", maxWidth: 420, lineHeight: 1.65 }}>
+                {t("libSignInBody")}
+              </p>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("open-auth-modal"))}
+                style={{
+                  minHeight: 44, padding: "12px 32px", borderRadius: 10,
+                  background: "#292115", color: "#f7f2e4",
+                  fontFamily: SF, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer",
+                }}
+              >
+                {t("libSignIn")}
+              </button>
+              <p style={{ fontFamily: SF, fontSize: 12, color: TD, marginTop: 12 }}>
+                {t("libFreeNoCard")}
+              </p>
             </div>
           )}
 

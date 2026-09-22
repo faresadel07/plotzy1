@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useContentProtection } from "@/hooks/use-content-protection";
 import { useLanguage } from "@/contexts/language-context";
 import { useIsPhone } from "@/hooks/use-is-phone";
+import { useReaderPrefs, useReadingPosition, THEME_COLORS, FONT_MIN, FONT_MAX, type ReaderTheme } from "@/hooks/use-reader-prefs";
 
 /* ─── Content Parser ─────────────────────────────────────── */
 
@@ -164,7 +165,7 @@ function StarRating({ bookId, currentAvg, count }: { bookId: number; currentAvg:
   const [selected, setSelected] = useState(0);
   const rateBook = useRateBook();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const display = hovered || selected || currentAvg;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
@@ -200,7 +201,7 @@ function CommentsSection({ bookId }: { bookId: number }) {
   const addComment = useAddBookComment();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [content, setContent] = useState("");
   const [guestName, setGuestName] = useState("");
 
@@ -252,7 +253,7 @@ function CommentsSection({ bookId }: { bookId: number }) {
               style={{ background: "#f9f7f4", border: "1px solid #e4ddd4", borderRadius: 12, padding: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                 <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e4ddd4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#555" }}>
-                  {c.authorName.charAt(0).toUpperCase()}
+                  {(c.authorName || "?").charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 600, color: "#222" }}>{c.authorName}</p>
@@ -271,11 +272,15 @@ function CommentsSection({ bookId }: { bookId: number }) {
 /* ─── Two-column paginated book spread ───────────────────── */
 
 const PAGE_PADDING_V = 52;
-const PAGE_PADDING_H = 48;
+/** Margin on each side of the text block, inside every page. */
+const PAGE_MARGIN = 34;
 const SPINE_W = 4;
 const FOOTER_H = 40;
 
 interface BookSpreadProps {
+  /** Reader-chosen body size in px. */
+  fontSize: number;
+  theme: ReaderTheme;
   chapters: any[];
   spreadIndex: number;
   totalSpreads: number;
@@ -284,8 +289,9 @@ interface BookSpreadProps {
   onNext: () => void;
 }
 
-function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPrev, onNext }: BookSpreadProps) {
-  const { t } = useLanguage();
+function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPrev, onNext, fontSize, theme }: BookSpreadProps) {
+  const colors = THEME_COLORS[theme];
+  const { t, isRTL } = useLanguage();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [containerW, setContainerW] = useState(0);
@@ -293,27 +299,29 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
   const [measured, setMeasured] = useState(false);
 
   /* Build full book content as React nodes with chapter breaks */
-  const bookContent = chapters.map((ch, i) => {
+  const bookContent = useMemo(() => chapters.map((ch, i) => {
     const html = parseContentAsHtml(ch?.content);
     const plainText = parseContent(ch?.content);
-    const isRTL = isArabicText(plainText);
-    const fontFam = isRTL
+    // The direction of THIS chapter's prose, which is not necessarily the
+    // UI direction — an Arabic reader can open an English book.
+    const contentRTL = isArabicText(plainText);
+    const fontFam = contentRTL
       ? "'Amiri', 'Scheherazade New', 'Traditional Arabic', serif"
       : "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
     // Determine if title is just a number (like "1", "2") -- skip showing it separately
     const titleIsNumber = ch?.title && /^\d+$/.test(ch.title.trim());
-    const chapterLabel = titleIsNumber ? `Chapter ${ch.title}` : `Chapter ${i + 1}`;
+    const chapterLabel = titleIsNumber ? `${t("rbChapter")} ${ch.title}` : `${t("rbChapter")} ${i + 1}`;
     const showTitle = ch?.title && !titleIsNumber;
 
     return (
-      <div key={ch.id} style={{ direction: isRTL ? "rtl" : "ltr" }}>
+      <div key={ch.id} id={`spread-chapter-${ch.id}`} style={{ direction: contentRTL ? "rtl" : "ltr" }}>
         {/* Chapter header */}
-        <div style={{ textAlign: "center", marginBottom: 28, marginTop: i === 0 ? 0 : 48, breakAfter: "avoid" as any }}>
-          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: "#b0a898", fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
+        <div style={{ textAlign: "center", marginBottom: 28, marginTop: i === 0 ? 0 : 48, breakInside: "avoid" as any, breakAfter: "avoid-column" as any }}>
+          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.25em", textTransform: "uppercase", color: colors.muted, fontFamily: "Georgia, serif", marginBottom: showTitle ? 10 : 16 }}>
             {chapterLabel}
           </p>
           {showTitle && (
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1c1410", fontFamily: "'Georgia', 'Palatino Linotype', serif", lineHeight: 1.3, margin: "0 0 16px", direction: isArabicText(ch.title) ? "rtl" : "ltr" }}>
+            <h2 style={{ fontSize: Math.round(fontSize * 1.28), fontWeight: 700, color: colors.ink, fontFamily: "'Georgia', 'Palatino Linotype', serif", lineHeight: 1.3, margin: "0 0 16px", direction: contentRTL ? "rtl" : "ltr" }}>
               {ch.title}
             </h2>
           )}
@@ -325,17 +333,17 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
           <div
             className="book-reader-content"
             data-chapter-id={ch.id}
-            style={{ fontFamily: fontFam, fontSize: 14, lineHeight: 1.85, color: "#1c1410", textAlign: "justify", letterSpacing: isRTL ? "0" : "0.008em", hyphens: "auto" as any }}
+            style={{ fontFamily: fontFam, fontSize, lineHeight: 1.85, color: colors.ink, textAlign: "justify", letterSpacing: contentRTL ? "0" : "0.008em", hyphens: "auto" as any }}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
           />
         ) : (
           <p style={{ color: "#bbb", fontStyle: "italic", fontFamily: "Georgia, serif", textAlign: "center", padding: "32px 0", fontSize: 13 }}>
-            This chapter has no content yet.
+            {t("rbNoContent")}
           </p>
         )}
       </div>
     );
-  });
+  }), [chapters, t, fontSize, colors]);
 
   /* Measure container and compute total spreads */
   useEffect(() => {
@@ -373,7 +381,9 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
         if (!innerRef.current) return;
         const scrollW = innerRef.current.scrollWidth;
         /* Each "page" column = (w - SPINE_W) / 2  wide, two columns = one spread = w */
-        const spreads = Math.max(1, Math.round(scrollW / w));
+        // ceil, not round: with round, a book needing 2.4 spreads reported
+        // 2 and the final 40% could not be reached by any control.
+        const spreads = Math.max(1, Math.ceil(scrollW / w - 0.02));
         onTotalSpreads(spreads);
         setMeasured(true);
       });
@@ -391,9 +401,12 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
       if (target) ro.unobserve(target);
       ro.disconnect();
     };
-  }, [chapters]);
+  }, [chapters, fontSize]);
 
-  const translateX = containerW > 0 ? -(spreadIndex * containerW) : 0;
+  // In an RTL document the multicol overflow extends to the LEFT of the
+  // origin, so the page turn has to slide the other way. Without this the
+  // Arabic UI showed blank pages from spread 1 onwards.
+  const translateX = containerW > 0 ? (isRTL ? 1 : -1) * spreadIndex * containerW : 0;
 
   /* Page numbers for footer */
   const leftPage = spreadIndex * 2 + 1;
@@ -402,6 +415,7 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
   return (
     <div
       ref={wrapperRef}
+      id="spread-viewport"
       style={{
         width: containerW > 0 ? containerW : "100%",
         maxWidth: "100%",
@@ -421,13 +435,13 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
       <div style={{
         position: "absolute", left: 0, top: 0, bottom: 0,
         width: `calc(50% - ${SPINE_W / 2}px)`,
-        background: "linear-gradient(to left, #f5f1ea 0%, #faf7f2 100%)",
+        background: `linear-gradient(to left, ${colors.pageAlt} 0%, ${colors.page} 100%)`,
       }} />
       {/* Right page background */}
       <div style={{
         position: "absolute", right: 0, top: 0, bottom: 0,
         width: `calc(50% - ${SPINE_W / 2}px)`,
-        background: "linear-gradient(to right, #f5f1ea 0%, #faf7f2 100%)",
+        background: `linear-gradient(to right, ${colors.pageAlt} 0%, ${colors.page} 100%)`,
       }} />
       {/* Spine */}
       <div style={{
@@ -457,28 +471,29 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
         style={{
           position: "absolute",
           top: 0,
-          left: 0,
+          insetInlineStart: 0,
           height: "100%",
-          /* Two columns per spread — gap includes spine + inner margins */
-          columnWidth: containerW > 0 ? `${(containerW - SPINE_W - PAGE_PADDING_H * 2) / 2}px` : "45%",
-          columnGap: SPINE_W + PAGE_PADDING_H * 2,
+          /* Exactly two columns per box; the gap is twice the margin so the
+             page grid repeats cleanly across every spread. */
+          columnCount: 2,
+          columnGap: PAGE_MARGIN * 2,
           columnFill: "auto",
           /* Animate page turns */
           transform: `translateX(${translateX}px)`,
           transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-          /* Padding inside each column */
-          padding: `${PAGE_PADDING_V}px 0 ${FOOTER_H + 8}px`,
+          padding: `${PAGE_PADDING_V}px ${PAGE_MARGIN}px ${FOOTER_H + 8}px`,
           opacity: measured ? 1 : 0,
-          /* Wide enough to hold all columns */
-          width: "max-content",
-          minWidth: "100%",
+          /* Exactly one spread wide. The extra columns overflow sideways,
+             which is what makes a whole-box translate land on a page every
+             time. */
+          width: containerW > 0 ? containerW : "100%",
           boxSizing: "border-box",
         }}
       >
-        {/* Page padding applied to left/right of the content area */}
-        <style>{`
-          .book-col-inner > * { padding-left: ${PAGE_PADDING_H}px; padding-right: 0; }
-        `}</style>
+        {/* No per-child padding: in a multicol box a fragmented element
+            only gets padding on its first and last fragment, which is why
+            the right-hand page used to run flush into the book's edge.
+            The margins come from the column geometry instead. */}
         <div
           className="book-col-inner"
           style={{ columnWidth: "inherit", columnGap: "inherit", display: "contents" }}
@@ -487,16 +502,16 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
         </div>
       </div>
 
-      {/* ── Left-side tap area: go to previous spread ── */}
+      {/* ── Outer-start tap area: previous spread (mirrors in RTL) ── */}
       {spreadIndex > 0 && (
         <div
           onClick={onPrev}
           title={t("rbPrevPages")}
           style={{
-            position: "absolute", left: 0, top: 0, bottom: FOOTER_H,
-            width: "22%", zIndex: 5, cursor: "w-resize",
+            position: "absolute", insetInlineStart: 0, top: 0, bottom: FOOTER_H,
+            width: "22%", zIndex: 5, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "flex-start",
-            paddingLeft: 8,
+            paddingInlineStart: 8,
           }}
         >
           <div
@@ -541,17 +556,17 @@ function BookSpread({ chapters, spreadIndex, totalSpreads, onTotalSpreads, onPre
       {containerW > 0 && (
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: FOOTER_H, zIndex: 4, display: "flex", pointerEvents: "none" }}>
           <div style={{
-            flex: 1, display: "flex", alignItems: "center", paddingLeft: PAGE_PADDING_H,
+            flex: 1, display: "flex", alignItems: "center", paddingInlineStart: PAGE_MARGIN,
             borderTop: "1px solid rgba(180,170,155,0.3)",
-            background: "linear-gradient(to left, #f5f1ea 0%, #faf7f2 100%)",
+            background: `linear-gradient(to left, ${colors.pageAlt} 0%, ${colors.page} 100%)`,
           }}>
             <span style={{ fontSize: 10, color: "#c0b8ae", fontFamily: "Georgia, serif", letterSpacing: "0.1em" }}>{leftPage}</span>
           </div>
           <div style={{ width: SPINE_W, background: "linear-gradient(180deg, #c2b9ae 0%, #a89d92 40%, #c2b9ae 100%)" }} />
           <div style={{
-            flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: PAGE_PADDING_H,
+            flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingInlineEnd: PAGE_MARGIN,
             borderTop: "1px solid rgba(180,170,155,0.3)",
-            background: "linear-gradient(to right, #f5f1ea 0%, #faf7f2 100%)",
+            background: `linear-gradient(to right, ${colors.pageAlt} 0%, ${colors.page} 100%)`,
           }}>
             <span style={{ fontSize: 10, color: "#c0b8ae", fontFamily: "Georgia, serif", letterSpacing: "0.1em" }}>{rightPage}</span>
           </div>
@@ -583,6 +598,16 @@ export default function ReadBook() {
   // beautiful on tablet/desktop but would compress each column into a
   // 150-px sliver on a 375 px iPhone screen.
   const isPhone = useIsPhone();
+  // Type size, page theme, and where this reader stopped last time.
+  const { prefs, setFontSize, setTheme } = useReaderPrefs();
+  const { load: loadPos, save: savePos } = useReadingPosition(bookId);
+  const [showTypeMenu, setShowTypeMenu] = useState(false);
+  // Swipe bookkeeping + the current page's nav functions, published by
+  // the phone branch so the container's touch handler can call them.
+  const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const phoneNextRef = useRef<(() => void) | null>(null);
+  const phonePrevRef = useRef<(() => void) | null>(null);
+  const [restored, setRestored] = useState(false);
   const [showToc, setShowToc] = useState(false);
   // Phone-only: the top bar collapses Share / Notes / meta into one
   // "More" sheet so the 52px bar never crams six controls.
@@ -594,10 +619,7 @@ export default function ReadBook() {
   const [viewCounted, setViewCounted] = useState(false);
   const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [currentPageInChapter, setCurrentPageInChapter] = useState(0);
-  const [showPageNav, setShowPageNav] = useState(false);
-  const [jumpInput, setJumpInput] = useState("");
-  const [jumpEditing, setJumpEditing] = useState(false);
-  const scrubberRef = useRef<HTMLDivElement>(null);
+  // (the old scrubber / jump-to-page state was never wired to anything)
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
   const [commentHintDismissed, setCommentHintDismissed] = useState(false);
   const { data: inlineComments = [] } = useBookInlineComments(bookId);
@@ -605,7 +627,7 @@ export default function ReadBook() {
   const resolveInlineComment = useResolveInlineComment();
 
   const [, navigate] = useLocation();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
 
   // Redirect articles to /blog/:id
   useEffect(() => {
@@ -618,11 +640,16 @@ export default function ReadBook() {
     if (book && !viewCounted) { incrementView.mutate(bookId); setViewCounted(true); }
   }, [book, bookId, viewCounted]);
 
-  const sortedChapters = chapters
-    ? [...chapters].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    : [];
+  // Memoised: these used to be plain consts, so every render produced a
+  // new array identity. That fed the effect below, which set state, which
+  // re-rendered — a permanent ~2 Hz loop that re-sanitised the entire book
+  // (DOMPurify over every chapter) twice a second.
+  const sortedChapters = useMemo(
+    () => (chapters ? [...chapters].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : []),
+    [chapters],
+  );
 
-  const authorName = book?.authorName || (book as any)?.authorDisplayName || "Anonymous";
+  const authorName = book?.authorName || (book as any)?.authorDisplayName || t("rbAnonymous");
 
   // ── Reader units: front matter + chapters + back matter ────────────────
   // The author's bookPages (copyright / dedication / epigraph / aboutAuthor)
@@ -642,12 +669,15 @@ export default function ReadBook() {
     aboutAuthor?: string;
   };
 
-  const readerUnits: ReaderUnit[] = [];
-  if (bookPages.copyright?.trim())  readerUnits.push({ kind: "front-copyright",  content: bookPages.copyright });
-  if (bookPages.dedication?.trim()) readerUnits.push({ kind: "front-dedication", content: bookPages.dedication });
-  if (bookPages.epigraph?.trim())   readerUnits.push({ kind: "front-epigraph",   content: bookPages.epigraph });
-  sortedChapters.forEach((ch, i) => readerUnits.push({ kind: "chapter", chapter: ch, chapterIndex: i }));
-  if (bookPages.aboutAuthor?.trim()) readerUnits.push({ kind: "back-about-author", content: bookPages.aboutAuthor });
+  const readerUnits: ReaderUnit[] = useMemo(() => {
+    const units: ReaderUnit[] = [];
+    if (bookPages.copyright?.trim())   units.push({ kind: "front-copyright",   content: bookPages.copyright });
+    if (bookPages.dedication?.trim())  units.push({ kind: "front-dedication",  content: bookPages.dedication });
+    if (bookPages.epigraph?.trim())    units.push({ kind: "front-epigraph",    content: bookPages.epigraph });
+    sortedChapters.forEach((ch, i) => units.push({ kind: "chapter", chapter: ch, chapterIndex: i }));
+    if (bookPages.aboutAuthor?.trim()) units.push({ kind: "back-about-author", content: bookPages.aboutAuthor });
+    return units;
+  }, [sortedChapters, bookPages.copyright, bookPages.dedication, bookPages.epigraph, bookPages.aboutAuthor]);
 
   // Labels used in both the TOC and the current-chapter footer line.
   const unitLabel = (unit: ReaderUnit): string => {
@@ -663,6 +693,22 @@ export default function ReadBook() {
     return t("rbAboutAuthor");
   };
 
+  // Jump the desktop spread to whichever page a chapter starts on. The
+  // Contents panel used to only set phone state, so on a laptop clicking
+  // a chapter closed the drawer and did nothing at all.
+  const goToChapter = useCallback((chapterId: number) => {
+    const el = document.getElementById(`spread-chapter-${chapterId}`);
+    const box = document.getElementById("spread-viewport");
+    if (!el || !box) return false;
+    const boxRect = box.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    // Where the chapter sits relative to the current scroll offset.
+    const offsetWithin = (isRTL ? boxRect.right - elRect.right : elRect.left - boxRect.left);
+    const target = spreadIndex + Math.floor(offsetWithin / boxRect.width + 0.001);
+    setSpreadIndex(Math.max(0, Math.min(target, totalSpreads - 1)));
+    return true;
+  }, [isRTL, spreadIndex, totalSpreads]);
+
   const goSpread = useCallback((idx: number) => {
     setSpreadIndex(Math.max(0, Math.min(idx, totalSpreads - 1)));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -672,54 +718,57 @@ export default function ReadBook() {
   /* Keyboard navigation */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (jumpEditing) return;
-      if (e.key === "ArrowRight") goSpread(spreadIndex + 1);
-      if (e.key === "ArrowLeft") goSpread(spreadIndex - 1);
+      const el = e.target as HTMLElement | null;
+      // Never steal keys from a comment box.
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      // In Arabic the book turns the other way, so the arrows swap.
+      const forward = isRTL ? "ArrowLeft" : "ArrowRight";
+      const back = isRTL ? "ArrowRight" : "ArrowLeft";
+      if (e.key === forward || e.key === "PageDown") { e.preventDefault(); goSpread(spreadIndex + 1); }
+      if (e.key === back || e.key === "PageUp") { e.preventDefault(); goSpread(spreadIndex - 1); }
+      if (e.key === "Home") { e.preventDefault(); goSpread(0); }
+      if (e.key === "End") { e.preventDefault(); goSpread(totalSpreads - 1); }
+      if (e.key === "Escape") setShowToc(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [spreadIndex, goSpread, jumpEditing]);
+  }, [spreadIndex, goSpread, isRTL, totalSpreads]);
 
-  /* Scrubber click handler */
-  const handleScrubberClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    goSpread(Math.round(ratio * (totalSpreads - 1)));
-  }, [totalSpreads, goSpread]);
-
-  /* Jump to page handler */
-  const handleJumpSubmit = useCallback((val: string) => {
-    const n = parseInt(val.trim(), 10);
-    if (!isNaN(n)) {
-      // Convert 1-based page number to spread index (each spread = 2 pages)
-      const spread = Math.max(0, Math.min(totalSpreads - 1, Math.ceil(n / 2) - 1));
-      goSpread(spread);
-    }
-    setJumpEditing(false);
-    setJumpInput("");
-  }, [totalSpreads, goSpread]);
-
-  const leftPage = spreadIndex * 2 + 1;
-  const rightPage = spreadIndex * 2 + 2;
-  const totalPages = totalSpreads * 2;
   const pct = totalSpreads > 1 ? Math.round((spreadIndex / (totalSpreads - 1)) * 100) : 100;
 
-  /* ─── Collect chapter content DOM refs for inline comments ─── */
-  const [chapterRefs, setChapterRefs] = useState<Map<number, HTMLElement>>(new Map());
-  const chapterIds = useMemo(() => sortedChapters.map(ch => ch.id), [sortedChapters]);
-
+  // Pick the reader back up where they stopped. Desktop restores the
+  // spread once the book has been measured; phone restores the unit and
+  // page as soon as the units exist.
   useEffect(() => {
-    // Collect all .book-reader-content[data-chapter-id] elements
-    const timer = setTimeout(() => {
-      const map = new Map<number, HTMLElement>();
-      document.querySelectorAll<HTMLElement>(".book-reader-content[data-chapter-id]").forEach(el => {
-        const id = Number(el.dataset.chapterId);
-        if (id && !map.has(id)) map.set(id, el);
-      });
-      if (map.size > 0) setChapterRefs(map);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [sortedChapters, spreadIndex]);
+    if (restored) return;
+    const pos = loadPos();
+    if (!pos) { setRestored(true); return; }
+    if (isPhone) {
+      if (readerUnits.length === 0) return;
+      if (typeof pos.unit === "number") setCurrentChapterIdx(Math.min(pos.unit, readerUnits.length - 1));
+      if (typeof pos.page === "number") setCurrentPageInChapter(Math.max(0, pos.page));
+      setRestored(true);
+    } else {
+      if (totalSpreads <= 1) return;
+      if (typeof pos.spread === "number") setSpreadIndex(Math.min(Math.max(0, pos.spread), totalSpreads - 1));
+      setRestored(true);
+    }
+  }, [restored, isPhone, readerUnits.length, totalSpreads, loadPos]);
+
+  // Remember the position as the reader moves (only after the restore
+  // pass, so we never overwrite a saved spot with the initial 0).
+  useEffect(() => {
+    if (!restored) return;
+    savePos(isPhone
+      ? { unit: currentChapterIdx, page: currentPageInChapter }
+      : { spread: spreadIndex });
+  }, [restored, isPhone, spreadIndex, currentChapterIdx, currentPageInChapter, savePos]);
+
+  /* The notes layer anchors to the DOM itself, so the old 500 ms timer
+     that collected chapter elements into state served nothing except to
+     re-render the page forever. Gone. */
+  const chapterIds = useMemo(() => sortedChapters.map(ch => ch.id), [sortedChapters]);
+  const hasChapters = sortedChapters.length > 0;
 
   if (bookLoading || chaptersLoading) {
     return (
@@ -791,7 +840,7 @@ export default function ReadBook() {
           {!isPhone && ratingStats && ratingStats.count > 0 && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#666" }}>
               <Star style={{ width: 11, height: 11, fill: "#888", color: "#888" }} />
-              <span style={{ fontWeight: 700, color: "#aaa" }}>{ratingStats.avg.toFixed(1)}</span>
+              <span style={{ fontWeight: 700, color: "#aaa" }}>{Number(ratingStats.avg ?? 0).toFixed(1)}</span>
             </div>
           )}
 
@@ -815,6 +864,68 @@ export default function ReadBook() {
             <span>{t("rbShare") || (t("rbBy") === "بقلم" ? "شارك" : "Share")}</span>
           </button>
           )}
+
+          {/* Type size + page theme. A reader who needs bigger text
+              should not have to zoom the whole browser. */}
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              onClick={() => setShowTypeMenu(v => !v)}
+              aria-label={t("rbTypeSettings")}
+              title={t("rbTypeSettings")}
+              style={{ display: "flex", alignItems: "center", gap: 5, background: showTypeMenu ? "rgba(255,255,255,0.08)" : "none", border: "none", color: showTypeMenu ? "#ddd" : "#666", cursor: "pointer", fontSize: 12, padding: isPhone ? "8px" : "5px 10px", borderRadius: 6 }}
+            >
+              <span style={{ fontFamily: "Georgia, serif", fontWeight: 700, fontSize: isPhone ? 17 : 15, lineHeight: 1 }}>Aa</span>
+            </button>
+            {showTypeMenu && (
+              <>
+                <div onClick={() => setShowTypeMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 70 }} />
+                <div
+                  style={{
+                    position: "absolute", top: "calc(100% + 8px)", insetInlineEnd: 0, zIndex: 71,
+                    width: 232, background: "#211f1c", border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 12, padding: 14, boxShadow: "0 18px 40px rgba(0,0,0,0.55)",
+                  }}
+                >
+                  <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b645a", marginBottom: 8 }}>
+                    {t("rbTextSize")}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                    <button
+                      onClick={() => setFontSize(prefs.fontSize - 1)}
+                      disabled={prefs.fontSize <= FONT_MIN}
+                      aria-label={t("rbSmaller")}
+                      style={{ flex: 1, height: 36, borderRadius: 8, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: prefs.fontSize <= FONT_MIN ? "#4a453e" : "#ddd", cursor: prefs.fontSize <= FONT_MIN ? "default" : "pointer", fontFamily: "Georgia, serif", fontSize: 13 }}
+                    >A−</button>
+                    <span style={{ minWidth: 34, textAlign: "center", fontSize: 12.5, color: "#aaa", fontVariantNumeric: "tabular-nums" }}>{prefs.fontSize}</span>
+                    <button
+                      onClick={() => setFontSize(prefs.fontSize + 1)}
+                      disabled={prefs.fontSize >= FONT_MAX}
+                      aria-label={t("rbLarger")}
+                      style={{ flex: 1, height: 36, borderRadius: 8, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: prefs.fontSize >= FONT_MAX ? "#4a453e" : "#ddd", cursor: prefs.fontSize >= FONT_MAX ? "default" : "pointer", fontFamily: "Georgia, serif", fontSize: 19 }}
+                    >A+</button>
+                  </div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b645a", marginBottom: 8 }}>
+                    {t("rbPageTheme")}
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {([["paper", t("rbThemePaper")], ["sepia", t("rbThemeSepia")], ["night", t("rbThemeNight")]] as const).map(([id, label]) => (
+                      <button
+                        key={id}
+                        onClick={() => setTheme(id)}
+                        style={{
+                          flex: 1, padding: "9px 4px", borderRadius: 8, cursor: "pointer",
+                          background: THEME_COLORS[id].page,
+                          color: THEME_COLORS[id].ink,
+                          border: prefs.theme === id ? "2px solid #d9cdb8" : "1px solid rgba(255,255,255,0.12)",
+                          fontSize: 11, fontWeight: 600, fontFamily: "Georgia, serif",
+                        }}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           <button onClick={() => setShowToc(!showToc)}
             aria-label={t("rbContents")}
@@ -878,7 +989,7 @@ export default function ReadBook() {
               {ratingStats && ratingStats.count > 0 && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                   <Star style={{ width: 11, height: 11, fill: "#888", color: "#888" }} />
-                  <span style={{ fontWeight: 700, color: "#aaa" }}>{ratingStats.avg.toFixed(1)}</span>
+                  <span style={{ fontWeight: 700, color: "#aaa" }}>{Number(ratingStats.avg ?? 0).toFixed(1)}</span>
                 </span>
               )}
               {sortedChapters.length > 0 && (
@@ -961,7 +1072,18 @@ export default function ReadBook() {
                     // For chapter units keep the running number; for front/back matter show a dash.
                     const numberCell = unit.kind === "chapter" ? String(unit.chapterIndex + 1) : "·";
                     return (
-                      <button key={i} onClick={() => { setCurrentChapterIdx(i); setCurrentPageInChapter(0); setShowToc(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      <button key={i} onClick={() => {
+                        setCurrentChapterIdx(i);
+                        setCurrentPageInChapter(0);
+                        setShowToc(false);
+                        // On a laptop the spread is driven by spreadIndex, so jump
+                        // it to where this chapter begins — the panel used to set
+                        // phone-only state and do nothing here.
+                        if (!isPhone && unit.kind === "chapter") {
+                          requestAnimationFrame(() => goToChapter(unit.chapter.id));
+                        }
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
                         style={{ textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, display: "flex", alignItems: "center", gap: 10, border: "none", background: isActive ? "rgba(255,255,255,0.08)" : "transparent", color: isActive ? "#fff" : "#555", cursor: "pointer", fontFamily: "Georgia, serif", fontStyle: isMatter ? "italic" : "normal" }}
                         onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = "#ccc"; }}
                         onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = "#555"; }}
@@ -1038,7 +1160,7 @@ export default function ReadBook() {
                                 <img src={c.authorAvatarUrl} alt={c.authorName || ""} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
                               ) : (
                                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(250,204,21,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#facc15" }}>
-                                  {c.authorName[0]?.toUpperCase()}
+                                  {(c.authorName || "?").charAt(0).toUpperCase()}
                                 </div>
                               )}
                               <span style={{ fontSize: 11, fontWeight: 600, color: "#bbb" }}>{c.authorName}</span>
@@ -1110,6 +1232,25 @@ export default function ReadBook() {
            layout. ── */}
       <div
         className="read-book-container"
+        // Swipe to turn pages on touch. Horizontal intent only — a
+        // vertical drag is a scroll and must stay one.
+        onTouchStart={isPhone ? (e) => {
+          const tch = e.touches[0];
+          touchRef.current = { x: tch.clientX, y: tch.clientY, t: Date.now() };
+        } : undefined}
+        onTouchEnd={isPhone ? (e) => {
+          const start = touchRef.current;
+          touchRef.current = null;
+          if (!start) return;
+          const tch = e.changedTouches[0];
+          const dx = tch.clientX - start.x;
+          const dy = tch.clientY - start.y;
+          if (Date.now() - start.t > 800) return;          // a slow drag is not a swipe
+          if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+          // Swiping left goes forward in LTR, backward in RTL.
+          const forward = isRTL ? dx > 0 : dx < 0;
+          (forward ? phoneNextRef : phonePrevRef).current?.();
+        } : undefined}
         style={{
           maxWidth: isPhone ? 700 : 1120,
           margin: "0 auto",
@@ -1128,6 +1269,8 @@ export default function ReadBook() {
                 CSS columns, page-turn animation, keyboard nav via
                 the goSpread effect above. */}
             <BookSpread
+              fontSize={prefs.fontSize}
+              theme={prefs.theme}
               chapters={sortedChapters}
               spreadIndex={spreadIndex}
               totalSpreads={totalSpreads}
@@ -1190,7 +1333,7 @@ export default function ReadBook() {
               const isRTL = isArabicText(plainText);
               const titleIsNumber = isChapter && ch!.title && /^\d+$/.test(ch!.title.trim());
               const chapterLabel = isChapter
-                ? (titleIsNumber ? `Chapter ${ch!.title}` : `Chapter ${unit.chapterIndex + 1}`)
+                ? (titleIsNumber ? `${t("rbChapter")} ${ch!.title}` : `${t("rbChapter")} ${unit.chapterIndex + 1}`)
                 : unitLabel(unit);
               const showTitle = isChapter && ch!.title && !titleIsNumber;
               const fontFam = isRTL
@@ -1220,18 +1363,30 @@ export default function ReadBook() {
                   setCurrentPageInChapter(p => p - 1);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 } else if (currentChapterIdx > 0) {
-                  setCurrentChapterIdx(p => p - 1);
-                  setCurrentPageInChapter(999); // clamps to last page of previous unit
+                  // Land on the LAST page of the previous unit. This used
+                  // to set 999 and rely on a clamp at render time, so the
+                  // state stayed 999 and Previous then had to be pressed
+                  // ~997 times before anything moved.
+                  const prevIdx = currentChapterIdx - 1;
+                  const prevUnit = readerUnits[prevIdx];
+                  const prevPages = prevUnit && prevUnit.kind === "chapter"
+                    ? splitHtmlIntoPages(parseContentAsHtml(prevUnit.chapter.content), 250).length
+                    : 1;
+                  setCurrentChapterIdx(prevIdx);
+                  setCurrentPageInChapter(Math.max(0, prevPages - 1));
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }
               };
 
               const isVeryFirst = currentChapterIdx === 0 && isFirstPage;
               const isVeryLast = currentChapterIdx >= readerUnits.length - 1 && isLastPage;
+              // Hand the current page's navigation to the swipe handler.
+              phoneNextRef.current = isVeryLast ? null : goNextPage;
+              phonePrevRef.current = isVeryFirst ? null : goPrevPage;
 
               // Shared page-shell styles used by both chapter and matter pages.
               const pageShell: React.CSSProperties = {
-                background: "#faf7f2",
+                background: THEME_COLORS[prefs.theme].page,
                 border: "1px solid rgba(0,0,0,0.08)",
                 borderRadius: 4,
                 padding: "40px clamp(16px, 5vw, 56px) 32px",
@@ -1244,7 +1399,7 @@ export default function ReadBook() {
               return (
                 <div>
                   {isChapter ? (
-                    <div id={`chapter-${ch!.id}`} style={pageShell}>
+                    <div id={`chapter-${ch!.id}`} className="read-book-phone-page" style={pageShell}>
                       {/* Chapter header — only on first page of chapter */}
                       {isFirstPage && (
                         <div style={{ textAlign: "center", marginBottom: 36 }}>
@@ -1265,7 +1420,7 @@ export default function ReadBook() {
                           className="book-reader-content"
                           data-chapter-id={ch!.id}
                           style={{
-                            fontFamily: fontFam, fontSize: 15, lineHeight: 1.9,
+                            fontFamily: fontFam, fontSize: prefs.fontSize, lineHeight: 1.9,
                             color: "#1c1410", textAlign: "justify",
                             letterSpacing: isRTL ? "0" : "0.01em",
                           }}
@@ -1372,9 +1527,11 @@ export default function ReadBook() {
         .inline-comment-highlight:hover { background: rgba(250, 204, 21, 0.4) !important; }
       `}</style>
 
-      {/* Inline Comments Layer */}
-      {bookId > 0 && chapterRefs.size > 0 && (
-        <InlineCommentsLayer bookId={bookId} chapterRefs={chapterRefs} chapterIds={chapterIds} onFirstSelection={() => setCommentHintDismissed(true)} />
+      {/* Inline Comments Layer — it anchors to the DOM by itself, so it no
+          longer waits on a 500 ms ref-collection pass that also happened to
+          re-render the page forever. */}
+      {bookId > 0 && hasChapters && (
+        <InlineCommentsLayer bookId={bookId} chapterIds={chapterIds} onFirstSelection={() => setCommentHintDismissed(true)} />
       )}
 
       {/* Margin hint — select text to comment */}
@@ -1445,7 +1602,7 @@ function MatterPage({
   authorName: string;
   pageShell: React.CSSProperties;
 }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const GEORGIA = "'Georgia', 'Palatino Linotype', 'Book Antiqua', serif";
   // Preserve line breaks but keep simple text-only rendering — these fields
   // are plain-text inputs.

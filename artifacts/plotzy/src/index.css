@@ -810,6 +810,17 @@ html, body {
   }
 }
 
+/* ── Reader: phone-only (matches useIsPhone PHONE_BREAKPOINT = 700) ── */
+@media (max-width: 700px) {
+  .read-book-phone-page .book-reader-content {
+    font-size: inherit !important;
+    line-height: 1.7 !important;
+  }
+  .read-book-container {
+    padding: 0 10px !important;
+  }
+}
+
 /* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
   /* Home page feature cards */
@@ -833,18 +844,12 @@ html, body {
     width: 280px !important;
   }
 
-  /* Read book: reduce padding */
-  .book-reader-content {
-    font-size: 16px !important;
-    line-height: 1.7 !important;
-  }
-  .read-book-container {
-    padding: 0 8px !important;
-  }
-  .read-book-container > div > div {
-    padding: 20px 18px !important;
-    margin-top: 16px !important;
-  }
+  /* Read book: these are PHONE-ONLY rules. They used to live in this
+     768px block while the reader switches layouts at 700px (useIsPhone),
+     so tablets and narrow laptop windows got the phone paddings applied
+     ON TOP of the two-page spread — it wrecked the column geometry and
+     the footer. They now live in a 700px block below, and they are
+     scoped so they can never reach inside the spread. */
 
   /* Cover designer: not usable on mobile, show message */
   .cover-designer-mobile-warn {

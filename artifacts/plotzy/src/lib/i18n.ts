@@ -590,6 +590,10 @@ export const translations: Record<Language, Record<string, string>> = {
     libSearchPlaceholder: "Search by title or author...",
     libNewest: "Newest",
     libPopular: "Popular",
+    libSubstantial: "Most complete",
+    libLike: "Like this book",
+    libUnlike: "Remove your like",
+    libLikeFailed: "Could not save your like. Try again.",
     libWorksPublished: "works published",
     libFiltered: "(filtered)",
     libNoResults: "No results found",
@@ -722,6 +726,15 @@ export const translations: Record<Language, Record<string, string>> = {
     rbCommentFailed: "Failed to post comment",
     rbReaderComments: "Reader Comments",
     rbYourNameOptional: "Your name (optional)",
+    rbShare: "Share",
+    rbTypeSettings: "Text size and page colour",
+    rbTextSize: "Text size",
+    rbSmaller: "Smaller text",
+    rbLarger: "Larger text",
+    rbPageTheme: "Page",
+    rbThemePaper: "Paper",
+    rbThemeSepia: "Sepia",
+    rbThemeNight: "Night",
     rbShareThoughts: "Share your thoughts…",
     rbPost: "Post",
     rbNoComments: "No comments yet, be the first!",
@@ -1257,6 +1270,7 @@ export const translations: Record<Language, Record<string, string>> = {
     genreLiterary: "Literary",
     genreAdventure: "Adventure",
     genrePoetry: "Poetry",
+    genreOther: "Other",
   },
   ar: {
     appName: "بلوتزي",
@@ -1756,6 +1770,10 @@ export const translations: Record<Language, Record<string, string>> = {
     libSearchPlaceholder: "ابحث بالعنوان أو الكاتب...",
     libNewest: "الأحدث",
     libPopular: "الأكثر شعبية",
+    libSubstantial: "الأكمل أولاً",
+    libLike: "أعجبني هذا الكتاب",
+    libUnlike: "إلغاء الإعجاب",
+    libLikeFailed: "تعذّر حفظ الإعجاب. حاول مرة أخرى.",
     libWorksPublished: "عمل منشور",
     libFiltered: "(مُصفّى)",
     libNoResults: "لا توجد نتائج",
@@ -1888,6 +1906,15 @@ export const translations: Record<Language, Record<string, string>> = {
     rbCommentFailed: "فشل نشر التعليق",
     rbReaderComments: "تعليقات القرّاء",
     rbYourNameOptional: "اسمك (اختياري)",
+    rbShare: "شارك",
+    rbTypeSettings: "حجم النص ولون الصفحة",
+    rbTextSize: "حجم النص",
+    rbSmaller: "نص أصغر",
+    rbLarger: "نص أكبر",
+    rbPageTheme: "الصفحة",
+    rbThemePaper: "ورقي",
+    rbThemeSepia: "بنّي",
+    rbThemeNight: "ليلي",
     rbShareThoughts: "شارك أفكارك…",
     rbPost: "نشر",
     rbNoComments: "لا توجد تعليقات بعد، كن أول من يعلّق!",
@@ -2423,6 +2450,7 @@ export const translations: Record<Language, Record<string, string>> = {
     genreLiterary: "أدبي",
     genreAdventure: "مغامرة",
     genrePoetry: "شعر",
+    genreOther: "أخرى",
   },
   fr: {
     appName: "Plotzy",
@@ -3694,6 +3722,14 @@ export function getT(lang: Language) {
     if (dict?.[key]) return dict[key];
     const en = translations.en as Record<string, string>;
     if (en[key]) return en[key];
+    // A missing key falls through to the key itself, which is how
+    // "libSubstantial" and "rbShare" ended up printed on the live site.
+    // Callers that wrote `t("x") || "Fallback"` were never reached,
+    // because the key string is truthy. Shout about it in development
+    // so it is caught here instead of by a reader.
+    if (import.meta.env?.DEV) {
+      console.warn(`[i18n] missing translation key: "${key}" — it will render as-is.`);
+    }
     return key;
   };
 }

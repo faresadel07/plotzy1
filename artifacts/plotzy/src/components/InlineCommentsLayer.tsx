@@ -10,7 +10,9 @@ import { textOffsetFromCaret, caretFromTextOffset, assertOffsetsConsistent } fro
 
 interface Props {
   bookId: number;
-  chapterRefs: Map<number, HTMLElement>;
+  /** Ids of the chapters currently on screen. The layer finds the actual
+   *  elements itself; it never used a passed-in element map, so that prop
+   *  is gone along with the render loop that produced it. */
   chapterIds: number[];
   onFirstSelection?: () => void;
 }
