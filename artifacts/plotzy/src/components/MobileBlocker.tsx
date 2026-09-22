@@ -31,6 +31,7 @@ const MOBILE_READY_PATTERNS: RegExp[] = [
   /^\/books\/[^/]+\/audiobook($|\/)/,       // audiobook studio — already responsive (phase 4)
   /^\/books\/[^/]+\/find-publishers($|\/)/, // publish flow — already responsive (phase 4)
   /^\/books\/[^/]+\/cover-designer($|\/)/,  // cover designer — full touch UI: pinch zoom, bottom sheets, pointer drag (phase 5)
+  /^\/admin($|\/)/,               // admin panel — collapsible section nav, scrollable tables (phase 6)
 ];
 
 function isDesktopOnlyRoute(pathname: string): boolean {

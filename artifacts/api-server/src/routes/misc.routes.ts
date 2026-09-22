@@ -4,7 +4,7 @@ import { storage } from "../storage";
 import { requireAdmin, requireBookOwner, requireAuth } from "../middleware/auth";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users } from "../../../../lib/db/src/schema";
+import { professionals, quoteRequests, researchItems as researchItemsTable, arcRecipients as arcRecipientsTable, adminAuditLogs, bookCollaborators, books, users, subscriptionPayments } from "../../../../lib/db/src/schema";
 import { desc, sql, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { memoize, invalidate as invalidateMemoryCache } from "../lib/memory-cache";
@@ -405,9 +405,13 @@ router.post("/api/admin/support/:id/reply", requireAdmin, async (req, res) => {
       body,
     }).returning();
 
-    // 2. Mark ticket as replied (if still open) and as read.
+    // 2. Mark the ticket as awaiting the writer and as read.
+    //    "replied" is NOT in support_messages_status_chk (open | pending |
+    //    closed | resolved), so writing it made every admin reply fail with
+    //    a 23514 check violation → 500. "pending" is the intended meaning:
+    //    we answered, the ball is in the writer's court.
     await db.update(supportMessages)
-      .set({ status: ticket.status === "closed" ? "closed" : "replied", read: true })
+      .set({ status: ticket.status === "closed" ? "closed" : "pending", read: true })
       .where(eq(supportMessages.id, ticketId));
 
     // 3. In-app notification — only if the ticket is from a signed-in user.
@@ -566,12 +570,45 @@ router.get("/api/admin/users", requireAdmin, async (req, res) => {
   }
 });
 
+// Deleting a writer is irreversible: the email is gone, and the cascades
+// take their payment history and audit trail with it. The guards below
+// exist so that can only ever happen deliberately.
 router.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+    const adminId = (req.user as any).id as number;
+    if (id === adminId) {
+      return res.status(400).json({ message: "You cannot delete your own account from here." });
+    }
+
+    const target = await storage.getUserById(id);
+    if (!target) return res.status(404).json({ message: "User not found" });
+    if ((target as any).role === "admin") {
+      return res.status(400).json({ message: "Remove the admin role before deleting this account." });
+    }
+
+    // Paid accounts carry financial history that cascades away with the
+    // row. Suspending keeps the record; deleting needs ?force=1.
+    const [{ paid }] = await db
+      .select({ paid: sql<number>`count(*)::int` })
+      .from(subscriptionPayments)
+      .where(eq(subscriptionPayments.userId, id));
+    if (paid > 0 && req.query.force !== "1") {
+      return res.status(409).json({
+        message: `This account has ${paid} payment record${paid === 1 ? "" : "s"}. Suspend it instead, or confirm a forced delete.`,
+        code: "HAS_PAYMENTS",
+        payments: paid,
+      });
+    }
+
     await storage.deleteUser(id);
-    await logAdminAction((req.user as any).id, "user_delete", "user", id);
+    await logAdminAction(adminId, "user_delete", "user", id, {
+      email: (target as any).email ?? null,
+      forced: req.query.force === "1",
+      paymentsDestroyed: paid,
+    });
     return res.json({ success: true });
   } catch (err) {
     logRouteError(req, err, "misc.routes");
@@ -583,13 +620,43 @@ router.patch("/api/admin/users/:id/subscription", requireAdmin, async (req, res)
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    const { subscriptionStatus, subscriptionPlan, subscriptionEndDate } = req.body;
-    const updated = await storage.updateUser(id, {
-      subscriptionStatus: subscriptionStatus ?? null,
-      subscriptionPlan: subscriptionPlan ?? null,
-      subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate) : null,
+    // Validated because subscription_status carries a CHECK constraint —
+    // an arbitrary string used to surface as an opaque 500.
+    const bodySchema = z.object({
+      subscriptionStatus: z.enum(["free_trial", "active", "canceled", "expired"]).nullable().optional(),
+      subscriptionPlan: z.string().max(40).nullable().optional(),
+      subscriptionEndDate: z.union([z.string(), z.number()]).nullable().optional(),
+      // Explicit tier control; defaults below keep tier in sync with status.
+      subscriptionTier: z.enum(["free", "pro"]).optional(),
     });
-    await logAdminAction((req.user as any).id, "user_grant_subscription", "user", id, { subscriptionStatus, subscriptionPlan });
+    const parsed = bodySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0]?.message || "Invalid subscription payload" });
+    }
+    const { subscriptionStatus, subscriptionPlan, subscriptionEndDate, subscriptionTier } = parsed.data;
+
+    // Only write the fields the caller actually sent. The old handler
+    // coerced every missing field to null, so a partial update silently
+    // wiped the other two.
+    const patch: Record<string, unknown> = {};
+    if (subscriptionStatus !== undefined) patch.subscriptionStatus = subscriptionStatus;
+    if (subscriptionPlan !== undefined) patch.subscriptionPlan = subscriptionPlan;
+    if (subscriptionEndDate !== undefined) {
+      patch.subscriptionEndDate = subscriptionEndDate ? new Date(subscriptionEndDate) : null;
+    }
+    // subscription_tier is what every feature gate reads. Granting a plan
+    // without it left the writer on free limits despite an "active" badge.
+    if (subscriptionTier !== undefined) patch.subscriptionTier = subscriptionTier;
+    else if (subscriptionStatus !== undefined) {
+      patch.subscriptionTier = subscriptionStatus === "active" || subscriptionStatus === "free_trial" ? "pro" : "free";
+    }
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ message: "Nothing to update" });
+    }
+
+    const updated = await storage.updateUser(id, patch as any);
+    if (!updated) return res.status(404).json({ message: "User not found" });
+    await logAdminAction((req.user as any).id, "user_grant_subscription", "user", id, patch);
     return res.json({ success: true, user: updated });
   } catch (err) {
     logRouteError(req, err, "misc.routes");
@@ -597,12 +664,16 @@ router.patch("/api/admin/users/:id/subscription", requireAdmin, async (req, res)
   }
 });
 
-// ── Admin: books (delete any published book) ────────────────────────────
+// ── Admin: books (remove a published book from the library) ─────────────
+// Soft delete on purpose: this used to hard-delete the row, cascading away
+// every chapter, rating and flag with no way back. The app already has a
+// trash/restore convention (books.isDeleted), so an admin takedown is now
+// recoverable exactly like a writer's own delete.
 router.delete("/api/admin/books/:id", requireAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    await storage.deleteBook(id);
+    await storage.updateBook(id, { isDeleted: true, isPublished: false } as any);
     await logAdminAction((req.user as any).id, "book_delete", "book", id);
     return res.json({ success: true });
   } catch (err) {
@@ -641,12 +712,23 @@ router.get("/api/social-links", async (_req, res) => {
 
 router.post("/api/admin/social-links", requireAdmin, async (req, res) => {
   try {
-    const { instagram, linkedin, youtube, twitter, tiktok } = req.body;
-    await storage.setSetting("social_instagram", instagram?.trim() || null);
-    await storage.setSetting("social_linkedin", linkedin?.trim() || null);
-    await storage.setSetting("social_youtube", youtube?.trim() || null);
-    await storage.setSetting("social_twitter", twitter?.trim() || null);
-    await storage.setSetting("social_tiktok", tiktok?.trim() || null);
+    // Non-string input used to throw on .trim() and surface as a 500.
+    const linkSchema = z.string().max(300).nullish();
+    const parsed = z.object({
+      instagram: linkSchema, linkedin: linkSchema, youtube: linkSchema,
+      twitter: linkSchema, tiktok: linkSchema,
+    }).safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Social links must be text values." });
+    }
+    const { instagram, linkedin, youtube, twitter, tiktok } = parsed.data;
+    await Promise.all([
+      storage.setSetting("social_instagram", instagram?.trim() || null),
+      storage.setSetting("social_linkedin", linkedin?.trim() || null),
+      storage.setSetting("social_youtube", youtube?.trim() || null),
+      storage.setSetting("social_twitter", twitter?.trim() || null),
+      storage.setSetting("social_tiktok", tiktok?.trim() || null),
+    ]);
     await logAdminAction((req.user as any).id, "social_links_update", "settings", null, { instagram, linkedin, youtube, twitter, tiktok });
     return res.json({ success: true });
   } catch (err) {
@@ -658,10 +740,20 @@ router.post("/api/admin/social-links", requireAdmin, async (req, res) => {
 // ── Admin: banner management ─────────────────────────────────────────────
 router.post("/api/admin/banner", requireAdmin, async (req, res) => {
   try {
-    const { message, color } = req.body;
-    if (!message?.trim()) return res.status(400).json({ message: "Message required" });
-    await storage.setSetting("banner_message", message.trim());
-    await storage.setSetting("banner_color", color || "default");
+    const parsed = z.object({
+      message: z.string().min(1).max(500),
+      color: z.enum(["default", "info", "success", "warning", "danger"]).optional(),
+    }).safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ message: "A banner needs a message of up to 500 characters." });
+    }
+    const message = parsed.data.message;
+    const color = parsed.data.color;
+    if (!message.trim()) return res.status(400).json({ message: "Message required" });
+    await Promise.all([
+      storage.setSetting("banner_message", message.trim()),
+      storage.setSetting("banner_color", color || "default"),
+    ]);
     await logAdminAction((req.user as any).id, "banner_update", "banner", null, { message: message.trim(), color });
     return res.json({ success: true });
   } catch (err) {
@@ -765,8 +857,17 @@ router.patch("/api/admin/support/:id", requireAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
-    const { read, status } = req.body;
-    const msg = await storage.updateSupportMessage(id, { read, status });
+    // status is CHECK-constrained in Postgres; an unexpected value used to
+    // come back as an opaque 500 instead of a clear 400.
+    const parsed = z.object({
+      read: z.boolean().optional(),
+      status: z.enum(["open", "pending", "closed", "resolved"]).optional(),
+    }).safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid ticket update" });
+    }
+    const msg = await storage.updateSupportMessage(id, parsed.data);
+    if (!msg) return res.status(404).json({ message: "Ticket not found" });
     return res.json(msg);
   } catch (err) {
     logRouteError(req, err, "misc.routes");

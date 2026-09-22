@@ -754,6 +754,18 @@ html, body {
   .admin-two-col { grid-template-columns: 1fr !important; }
 }
 
+/* ── Admin on phones ──
+   The panel is now reachable below 700px. Tables keep their own
+   overflow-x wrappers; these rules stop the surrounding chrome (stat
+   grid, charts, modals) from forcing the page itself sideways. */
+@media (max-width: 700px) {
+  .admin-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .admin-two-col { grid-template-columns: 1fr !important; }
+  /* recharts measures its parent; without a hard cap a wide chart can
+     push the body wider than the viewport. */
+  .recharts-responsive-container { max-width: 100% !important; }
+}
+
 /* ── Terms + Privacy — stack TOC above content on mobile ── */
 @media (max-width: 768px) {
   .terms-grid {

@@ -27,41 +27,51 @@ router.get("/api/admin/analytics/overview", async (_req, res) => {
     const day7 = new Date(now); day7.setDate(day7.getDate() - 7);
     const day30 = new Date(now); day30.setDate(day30.getDate() - 30);
 
-    // User counts
-    const [totalUsers] = await db.select({ c: count() }).from(users);
-    const [newUsersToday] = await db.select({ c: count() }).from(users).where(gte(users.createdAt, day1));
-    const [newUsersWeek] = await db.select({ c: count() }).from(users).where(gte(users.createdAt, day7));
-    const [newUsersMonth] = await db.select({ c: count() }).from(users).where(gte(users.createdAt, day30));
+    // One round-trip per query, but all twelve in flight together. Run
+    // sequentially this handler alone made twelve trips to Postgres and
+    // was the slowest thing in the panel.
+    const [
+      [totalUsers], [newUsersToday], [newUsersWeek], [newUsersMonth],
+      [totalBooks], [publishedBooks], [totalChapters],
+      [wordsMonth],
+      dauResult, wauResult, mauResult,
+      [openTickets],
+    ] = await Promise.all([
+      db.select({ c: count() }).from(users),
+      db.select({ c: count() }).from(users).where(gte(users.createdAt, day1)),
+      db.select({ c: count() }).from(users).where(gte(users.createdAt, day7)),
+      db.select({ c: count() }).from(users).where(gte(users.createdAt, day30)),
 
-    // Book counts
-    const [totalBooks] = await db.select({ c: count() }).from(books);
-    const [publishedBooks] = await db.select({ c: count() }).from(books).where(eq(books.isPublished, true));
-    const [totalChapters] = await db.select({ c: count() }).from(chapters);
+      db.select({ c: count() }).from(books),
+      db.select({ c: count() }).from(books).where(eq(books.isPublished, true)),
+      db.select({ c: count() }).from(chapters),
 
-    // Writing activity (words written across all users in last 30 days)
-    const [wordsMonth] = await db.select({ total: sum(dailyProgress.wordCount) }).from(dailyProgress)
-      .where(gte(dailyProgress.createdAt, day30));
+      // Words written across all users in the last 30 days
+      db.select({ total: sum(dailyProgress.wordCount) }).from(dailyProgress)
+        .where(gte(dailyProgress.createdAt, day30)),
 
-    // Active users (users who wrote in last 1/7/30 days via daily_progress)
-    const dauResult = await db.execute(sql`
-      SELECT COUNT(DISTINCT dp.book_id) FROM daily_progress dp
-      INNER JOIN books b ON b.id = dp.book_id
-      WHERE dp.created_at >= ${day1.toISOString()} AND b.user_id IS NOT NULL
-    `);
-    const wauResult = await db.execute(sql`
-      SELECT COUNT(DISTINCT b.user_id) FROM daily_progress dp
-      INNER JOIN books b ON b.id = dp.book_id
-      WHERE dp.created_at >= ${day7.toISOString()} AND b.user_id IS NOT NULL
-    `);
-    const mauResult = await db.execute(sql`
-      SELECT COUNT(DISTINCT b.user_id) FROM daily_progress dp
-      INNER JOIN books b ON b.id = dp.book_id
-      WHERE dp.created_at >= ${day30.toISOString()} AND b.user_id IS NOT NULL
-    `);
+      // Active WRITERS in the last 1/7/30 days. DAU used to count
+      // DISTINCT book_id, so one writer with three books read as three
+      // daily actives and DAU could exceed MAU.
+      db.execute(sql`
+        SELECT COUNT(DISTINCT b.user_id) FROM daily_progress dp
+        INNER JOIN books b ON b.id = dp.book_id
+        WHERE dp.created_at >= ${day1.toISOString()} AND b.user_id IS NOT NULL
+      `),
+      db.execute(sql`
+        SELECT COUNT(DISTINCT b.user_id) FROM daily_progress dp
+        INNER JOIN books b ON b.id = dp.book_id
+        WHERE dp.created_at >= ${day7.toISOString()} AND b.user_id IS NOT NULL
+      `),
+      db.execute(sql`
+        SELECT COUNT(DISTINCT b.user_id) FROM daily_progress dp
+        INNER JOIN books b ON b.id = dp.book_id
+        WHERE dp.created_at >= ${day30.toISOString()} AND b.user_id IS NOT NULL
+      `),
 
-    // Open support tickets
-    const [openTickets] = await db.select({ c: count() }).from(supportMessages)
-      .where(eq(supportMessages.status, "open"));
+      db.select({ c: count() }).from(supportMessages)
+        .where(eq(supportMessages.status, "open")),
+    ]);
 
     return res.json({
       totalUsers: totalUsers.c,

@@ -39,7 +39,11 @@ const url = parsed.toString();
 
 export const pool = new Pool({
   connectionString: url,
-  max: 5,
+  // 5 was too tight: the admin panel alone opens ~10 concurrent queries,
+  // each of which ALSO needs a connection for passport's deserializeUser.
+  // Checkouts timed out, deserializeUser threw, the request 401'd, and the
+  // frontend treated that as "signed out" and bounced the admin home.
+  max: 15,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
   ssl: { rejectUnauthorized: false },

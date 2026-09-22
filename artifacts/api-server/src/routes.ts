@@ -664,16 +664,11 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/books/:id/feature", requireAdmin, async (req, res) => {
-    try {
-      const bookId = Number(req.params.id);
-      const { feature } = z.object({ feature: z.boolean() }).strict().parse(req.body);
-      await storage.setFeaturedBook(feature ? bookId : null);
-      return res.json({ success: true });
-    } catch (err) {
-      return res.status(500).json({ message: "Internal error" });
-    }
-  });
+  // POST /api/admin/books/:id/feature lives in routes/books.routes.ts.
+  // A second copy used to be registered here without the
+  // cache.invalidate("public:featured") call, so whichever won the
+  // registration race decided whether featuring a book actually showed up
+  // on the site until the cache expired.
 
   // ── Published articles ──
   app.get("/api/public/articles", async (_req, res) => {
