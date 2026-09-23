@@ -10,8 +10,10 @@ import { HAND_AR, HAND_EN, SERIF_AR, SERIF_EN } from "./fonts";
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
-/** Sampled from great-writers.jpg. */
-const BG = "#241109";
+/** Measured from great-writers.jpg: the average of 20 edge pixels. The
+ *  old eyeballed #241109 was a shade lighter and redder than the
+ *  photograph, which is why its rectangle showed. */
+const BG = "#200d05";
 const TAN = "#e6cda4";
 const TAN_SOFT = "rgba(222,196,155,0.88)";
 const TAN_DIM = "rgba(216,185,140,0.6)";
@@ -47,8 +49,15 @@ export function GreatWritersMobile({ ar, onStartWriting }: { ar: boolean; onStar
           display: "block",
           margin: "0 auto 24px",
           userSelect: "none",
-          WebkitMaskImage: "radial-gradient(118% 110% at 50% 45%, #000 60%, transparent 100%)",
-          maskImage: "radial-gradient(118% 110% at 50% 45%, #000 60%, transparent 100%)",
+          // Two intersected linear gradients feather all four sides; a
+          // radial wide enough to keep the faces opaque leaves corners
+          // at ~90% alpha, which still draws a visible rectangle.
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%), linear-gradient(to bottom, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%), linear-gradient(to bottom, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%)",
+          WebkitMaskComposite: "source-in",
+          maskComposite: "intersect",
         }}
       />
 

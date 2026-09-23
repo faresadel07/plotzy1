@@ -27,9 +27,24 @@ import { CommentCard, CommentComposer } from "@/components/community/CommentPiec
 
 const SF = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif';
 
-/* Sampled from great-writers.jpg so the poster's own background and the
-   band behind it are the same colour. */
-const GREATS_BG = "#241109";
+/* Measured from great-writers.jpg (average of 20 edge pixels) so the
+   band behind it are the same colour. The old #241109 was eyeballed and
+   sat a shade lighter and redder than the photograph, which is exactly
+   why its rectangle showed. */
+const GREATS_BG = "#200d05";
+
+/* Feather every side of the poster into the band. Two linear gradients
+   intersected beat one radial: a radial wide enough to keep the faces
+   opaque leaves the corners at ~90% alpha, and a 90% edge over even a
+   perfectly matched background still draws a visible rectangle. */
+const GREATS_FEATHER = {
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%), linear-gradient(to bottom, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%)",
+  maskImage:
+    "linear-gradient(to right, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%), linear-gradient(to bottom, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%)",
+  WebkitMaskComposite: "source-in",
+  maskComposite: "intersect",
+} as const;
 
 /* ── Shared bits ───────────────────────────────────────────────────── */
 
@@ -887,10 +902,11 @@ function ProtectionBandDesktop({ ar }: { ar: boolean }) {
 function GreatWritersDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriting: () => void }) {
   const serif = ar ? SERIF_AR : SERIF_EN;
   const hand = ar ? HAND_AR : HAND_EN;
-  // The poster's own background is #281208, so the band is painted to
-  // match: the photograph melts into the page instead of sitting on it
-  // as a pasted rectangle. Type goes light-brown, same family as the
-  // Writer Protection band.
+  // The band is painted in the photograph's own measured edge colour
+  // (GREATS_BG) and the poster's sides are feathered into it, so the
+  // image melts into the page instead of sitting on it as a pasted
+  // rectangle. Type goes light-brown, same family as the Writer
+  // Protection band.
   const TAN = "#e6cda4";
   const TAN_SOFT = "rgba(222,196,155,0.88)";
   const TAN_DIM = "rgba(216,185,140,0.6)";
@@ -923,10 +939,7 @@ function GreatWritersDesktop({ ar, onStartWriting }: { ar: boolean; onStartWriti
               width: "100%",
               display: "block",
               userSelect: "none",
-              // A soft feather on all four sides so the photograph has no
-              // visible rectangle against the matching background.
-              WebkitMaskImage: "radial-gradient(115% 108% at 50% 45%, #000 62%, transparent 100%)",
-              maskImage: "radial-gradient(115% 108% at 50% 45%, #000 62%, transparent 100%)",
+              ...GREATS_FEATHER,
             }}
           />
         </div>
