@@ -11,6 +11,7 @@ import { Extension, Node } from "@tiptap/core";
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import type { Editor } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
+import { fontFamilyFor } from "@/lib/editor-fonts";
 
 // ── Resizable Image NodeView ─────────────────────────────────────────────────
 function ResizableImageView({ node, updateAttributes, selected }: NodeViewProps) {
@@ -451,25 +452,7 @@ interface RichChapterEditorProps {
   padding?: string;
 }
 
-const FONT_FAMILY_MAP: Record<string, string> = {
-  "eb-garamond":       "'EB Garamond', serif",
-  "cormorant":         "'Cormorant Garamond', serif",
-  "libre-baskerville": "'Libre Baskerville', serif",
-  "lora":              "'Lora', serif",
-  "merriweather":      "'Merriweather', serif",
-  "source-serif":      "'Source Serif 4', serif",
-  "playfair":          "'Playfair Display', serif",
-  "crimson":           "'Crimson Text', serif",
-  "inter":             "'Inter', sans-serif",
-  "open-sans":         "'Open Sans', sans-serif",
-  "poppins":           "'Poppins', sans-serif",
-  "montserrat":        "'Montserrat', sans-serif",
-  "courier-prime":     "'Courier Prime', monospace",
-  "special-elite":     "'Special Elite', cursive",
-  "arabic-sans":       "'Cairo', sans-serif",
-  "arabic-serif":      "'Amiri', serif",
-  "arabic-naskh":      "'Noto Naskh Arabic', serif",
-};
+// Font resolution lives in lib/editor-fonts.ts — see the note there.
 
 export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProps>(({
   initialContent,
@@ -492,12 +475,10 @@ export const RichChapterEditor = forwardRef<RichEditorRef, RichChapterEditorProp
   checkOverflowOnMount = false,
   padding = "48px 72px",
 }, ref) => {
-  // The two Arabic fonts (Cairo, Amiri) are bundled on the server so the
-  // PDF embeds whichever the user picks and renders identically here.
-  // For a Latin pick on Arabic content, default the Arabic glyphs to
-  // Cairo (matches the PDF's default).
+  // For a Latin pick on Arabic content, default the Arabic glyphs to a
+  // readable naskh rather than letting the browser choose.
   const arabicFallback = "'Cairo', 'Amiri', 'Noto Naskh Arabic', serif";
-  const resolvedFont = `${FONT_FAMILY_MAP[fontFamily] || "'EB Garamond', serif"}, ${arabicFallback}`;
+  const resolvedFont = `${fontFamilyFor(fontFamily)}, ${arabicFallback}`;
   // When the book's chosen font IS an Arabic font, the user expects the
   // whole chapter to switch to it. Stored content can carry inline
   // font-family marks (from the toolbar or earlier defaults) that beat

@@ -2,26 +2,9 @@ import { useRef, useState } from "react";
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, Settings2, Ruler, Minus, Plus, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import type { BookPreferences } from "@/shared/schema";
+import { EDITOR_FONTS } from "@/lib/editor-fonts";
 
-const FONT_OPTIONS = [
-  { id: "eb-garamond",       label: "EB Garamond",          labelAr: "جارامون",        fontFamily: "'EB Garamond', serif" },
-  { id: "cormorant",         label: "Cormorant Garamond",   labelAr: "كورمورانت",       fontFamily: "'Cormorant Garamond', serif" },
-  { id: "playfair",          label: "Playfair Display",     labelAr: "بلايفير",        fontFamily: "'Playfair Display', serif" },
-  { id: "lora",              label: "Lora",                 labelAr: "لورا",           fontFamily: "'Lora', serif" },
-  { id: "crimson",           label: "Crimson Text",         labelAr: "كريمسون",        fontFamily: "'Crimson Text', serif" },
-  { id: "merriweather",      label: "Merriweather",         labelAr: "ميريويذر",       fontFamily: "'Merriweather', serif" },
-  { id: "libre-baskerville", label: "Libre Baskerville",    labelAr: "باسكيرفيل",      fontFamily: "'Libre Baskerville', serif" },
-  { id: "source-serif",      label: "Source Serif 4",       labelAr: "سورس سيريف",     fontFamily: "'Source Serif 4', serif" },
-  { id: "inter",             label: "Inter",                labelAr: "إنتر",           fontFamily: "'Inter', sans-serif" },
-  { id: "open-sans",         label: "Open Sans",            labelAr: "أوبن سانس",      fontFamily: "'Open Sans', sans-serif" },
-  { id: "poppins",           label: "Poppins",              labelAr: "بوبينز",         fontFamily: "'Poppins', sans-serif" },
-  { id: "montserrat",        label: "Montserrat",           labelAr: "مونتسيرات",      fontFamily: "'Montserrat', sans-serif" },
-  { id: "courier-prime",     label: "Courier Prime",        labelAr: "كورير برايم",    fontFamily: "'Courier Prime', monospace" },
-  { id: "special-elite",     label: "Special Elite",        labelAr: "سبيشل إليت",     fontFamily: "'Special Elite', cursive" },
-  { id: "arabic-sans",       label: "Cairo",                labelAr: "القاهرة",        fontFamily: "'Cairo', sans-serif" },
-  { id: "arabic-serif",      label: "Amiri",                labelAr: "أميري",          fontFamily: "'Amiri', serif" },
-  { id: "arabic-naskh",      label: "Noto Naskh Arabic",    labelAr: "نوتو نسخ",       fontFamily: "'Noto Naskh Arabic', serif" },
-];
+const FONT_OPTIONS = EDITOR_FONTS;
 
 const FONT_SIZE_STEPS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 32, 36, 42, 48];
 

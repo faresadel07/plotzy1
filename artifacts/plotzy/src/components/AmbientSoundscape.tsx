@@ -50,7 +50,7 @@ export function AmbientSoundscape() {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[340px] p-5 rounded-2xl border-border/50 bg-background/90 backdrop-blur-2xl shadow-2xl"
+        className="z-[120] w-[min(340px,calc(100vw-24px))] p-5 rounded-2xl border-border/50 bg-background/90 backdrop-blur-2xl shadow-2xl"
         align="end"
         sideOffset={10}
       >

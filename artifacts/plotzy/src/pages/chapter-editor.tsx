@@ -19,7 +19,7 @@ import { RichChapterEditor } from "@/components/RichChapterEditor";
 import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingImageOverlay";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Loader2, Trash2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Palette, PlusCircle, X, FileText, Mic, Square, Eye, EyeOff, BookOpen, Image as ImageIcon, CheckCircle2, Layers, Printer, ChevronLeft, ChevronRight, AlignCenter, History, RotateCcw, RotateCw, Clock, PanelRight, BookMarked, ChevronDown, LayoutGrid, Pencil, Search, Hash, Sparkles, ChevronUp } from "lucide-react";
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { PrintPreview } from "@/components/chapter-editor/PrintPreview";
 import { PageSetupModal } from "@/components/chapter-editor/PageSetupModal";
@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 import { useTheme } from "next-themes";
 import { type BookPreferences } from "@/shared/schema";
-import { PageStylePicker, PAGE_STYLES } from "@/components/page-style-picker";
+import { PageStylePicker, PAGE_STYLES, PAGE_STYLE_INK, pageStylePaintsSurface, type PageStyleId } from "@/components/page-style-picker";
 import { useIsPhone } from "@/hooks/use-is-phone";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { EDITOR_FONTS } from "@/lib/editor-fonts";
 
 const FONT_MAP: Record<string, string> = {
   "serif": "font-serif",
@@ -53,50 +54,9 @@ const FONT_MAP: Record<string, string> = {
   "mono": "font-mono",
 };
 
-const FONT_STYLE_MAP: Record<string, React.CSSProperties> = {
-  // Serif
-  "eb-garamond":       { fontFamily: "'EB Garamond', serif" },
-  "cormorant":         { fontFamily: "'Cormorant Garamond', serif" },
-  "playfair":          { fontFamily: "'Playfair Display', serif" },
-  "lora":              { fontFamily: "'Lora', serif" },
-  "merriweather":      { fontFamily: "'Merriweather', serif" },
-  "libre-baskerville": { fontFamily: "'Libre Baskerville', serif" },
-  "crimson":           { fontFamily: "'Crimson Text', serif" },
-  "source-serif":      { fontFamily: "'Source Serif 4', serif" },
-  "georgia":           { fontFamily: "Georgia, serif" },
-  "times":             { fontFamily: "'Times New Roman', serif" },
-  // Sans-serif
-  "inter":             { fontFamily: "'Inter', sans-serif" },
-  "roboto":            { fontFamily: "'Roboto', sans-serif" },
-  "open-sans":         { fontFamily: "'Open Sans', sans-serif" },
-  "montserrat":        { fontFamily: "'Montserrat', sans-serif" },
-  "poppins":           { fontFamily: "'Poppins', sans-serif" },
-  "nunito":            { fontFamily: "'Nunito', sans-serif" },
-  "oswald":            { fontFamily: "'Oswald', sans-serif" },
-  "lexend":            { fontFamily: "'Lexend', sans-serif" },
-  "raleway":           { fontFamily: "'Raleway', sans-serif" },
-  "dm-sans":           { fontFamily: "'DM Sans', sans-serif" },
-  "plus-jakarta":      { fontFamily: "'Plus Jakarta Sans', sans-serif" },
-  "space-grotesk":     { fontFamily: "'Space Grotesk', sans-serif" },
-  // Display
-  "lobster":           { fontFamily: "'Lobster', cursive" },
-  "pacifico":          { fontFamily: "'Pacifico', cursive" },
-  "comfortaa":         { fontFamily: "'Comfortaa', cursive" },
-  "special-elite":     { fontFamily: "'Special Elite', cursive" },
-  // Handwriting
-  "caveat":            { fontFamily: "'Caveat', cursive" },
-  "architects-daughter": { fontFamily: "'Architects Daughter', cursive" },
-  // Monospace
-  "courier-prime":     { fontFamily: "'Courier Prime', monospace" },
-  "courier-new":       { fontFamily: "'Courier New', monospace" },
-  "roboto-mono":       { fontFamily: "'Roboto Mono', monospace" },
-  "ibm-plex-mono":     { fontFamily: "'IBM Plex Mono', monospace" },
-  "space-mono":        { fontFamily: "'Space Mono', monospace" },
-  // Arabic
-  "arabic-sans":       { fontFamily: "'Cairo', sans-serif" },
-  "arabic-serif":      { fontFamily: "'Amiri', serif" },
-  "arabic-naskh":      { fontFamily: "'Noto Naskh Arabic', serif" },
-};
+const FONT_STYLE_MAP: Record<string, React.CSSProperties> = Object.fromEntries(
+  EDITOR_FONTS.map(f => [f.id, { fontFamily: f.fontFamily }]),
+);
 
 const LINE_HEIGHT_MAP: Record<string, string> = {
   "tight":    "1.30",  // compact, like dense reference books
@@ -512,6 +472,8 @@ export default function ChapterEditor() {
   const [showEditorSearch, setShowEditorSearch] = useState(false);
   const [editorSearchQuery, setEditorSearchQuery] = useState("");
   const [editorSearchCount, setEditorSearchCount] = useState(0);
+  const [editorSearchIndex, setEditorSearchIndex] = useState(0);
+  const searchRangesRef = useRef<Range[]>([]);
   // Phone-only: collapses the crowded center toolbar into a "More" sheet.
   const [moreToolsOpen, setMoreToolsOpen] = useState(false);
   const [showStoryBible, setShowStoryBible] = useState(false);
@@ -1160,10 +1122,11 @@ export default function ChapterEditor() {
     if (!editorEl) return;
 
     const query = editorSearchQuery.toLowerCase();
-    const isWordChar = (c: string) => /\w/.test(c);
     const ranges: Range[] = [];
 
-    // Walk all text nodes in editor
+    // Walk all text nodes in editor. Substring matching, not whole-word: a
+    // writer searching "myst" expects to land on "mystery", and the old
+    // \w-based word-boundary test never matched Arabic letters at all.
     const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
     let textNode;
     while ((textNode = walker.nextNode())) {
@@ -1171,19 +1134,17 @@ export default function ChapterEditor() {
       const lower = text.toLowerCase();
       let idx = lower.indexOf(query);
       while (idx !== -1) {
-        const cb = idx > 0 ? lower[idx - 1] : " ";
-        const ca = idx + query.length < lower.length ? lower[idx + query.length] : " ";
-        if (!isWordChar(cb) && !isWordChar(ca)) {
-          const range = new Range();
-          range.setStart(textNode, idx);
-          range.setEnd(textNode, idx + query.length);
-          ranges.push(range);
-        }
-        idx = lower.indexOf(query, idx + 1);
+        const range = new Range();
+        range.setStart(textNode, idx);
+        range.setEnd(textNode, idx + query.length);
+        ranges.push(range);
+        idx = lower.indexOf(query, idx + query.length);
       }
     }
 
     setEditorSearchCount(ranges.length);
+    searchRangesRef.current = ranges;
+    setEditorSearchIndex(0);
 
     // Apply CSS Custom Highlight
     if (ranges.length > 0 && (CSS as any).highlights) {
@@ -1199,6 +1160,24 @@ export default function ChapterEditor() {
       }
     }
   }, [editorSearchQuery, showEditorSearch, richPages]);
+
+  /**
+   * Step to the next/previous match.
+   *
+   * This used to call `window.find()`, which does not exist on iOS Safari or
+   * Android Chrome — the bar reported "12 found" and Enter did nothing on
+   * every phone. Walking our own ranges works everywhere.
+   */
+  const gotoSearchMatch = (delta: number) => {
+    const ranges = searchRangesRef.current;
+    if (!ranges.length) return;
+    const next = (editorSearchIndex + delta + ranges.length) % ranges.length;
+    setEditorSearchIndex(next);
+    ranges[next].startContainer.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if ((CSS as any).highlights) {
+      (CSS as any).highlights.set("editor-search-current", new (window as any).Highlight(ranges[next]));
+    }
+  };
 
   useEffect(() => {
     if (book?.bookPreferences) setPrefs(book.bookPreferences as BookPreferences);
@@ -1731,6 +1710,23 @@ export default function ChapterEditor() {
   }, [isDirty]);
 
 
+  /**
+   * Apply a page style and save it.
+   *
+   * A style that paints its own surface (Sepia, Kraft, Night Paper, …) has to
+   * clear any explicit bgColor/textColor/pageTheme first, or the page keeps
+   * the old colour and the writer sees the checkmark move while the page does
+   * not. Pattern-only styles (lined, dotted, graph, …) are designed to sit on
+   * top of whatever colour is already there, so they leave it alone.
+   */
+  const applyPageStyle = (styleId: PageStyleId) => {
+    const newPrefs: BookPreferences = pageStylePaintsSurface(styleId)
+      ? { ...prefs, pageStyle: styleId, bgColor: undefined, textColor: undefined, pageTheme: undefined }
+      : { ...prefs, pageStyle: styleId };
+    setPrefs(newPrefs);
+    handleSavePrefs(newPrefs);
+  };
+
   const handleSavePrefs = async (newPrefs: BookPreferences) => {
     const newFont = newPrefs.fontFamily;
     // The font that existing unfrozen blocks are currently RENDERED with
@@ -1932,7 +1928,26 @@ export default function ChapterEditor() {
 
   // ── Rich Media Handling ───────────────────────────────────────────────────
 
+  /**
+   * Add the picture as a block in the flow, directly after the page the
+   * writer was last on.
+   *
+   * Phones use this instead of a floating image: FloatingImageOverlay is
+   * desktop-only (its coordinates live in the printed page's geometry), so a
+   * floating image inserted on a phone was invisible and unremovable — the
+   * writer picked a photo and nothing at all appeared.
+   */
+  const insertInlineImage = (src: string, pageIdx: number) => {
+    setPages(prev => {
+      const next = [...prev];
+      next.splice(Math.min(pageIdx + 1, next.length), 0, { type: 'image', content: src, widthPct: 100, align: 'center' });
+      return next;
+    });
+    setIsDirty(true);
+  };
+
   const insertFloatingImage = (src: string, naturalW: number, naturalH: number, pageIdx: number) => {
+    if (isPhone) { insertInlineImage(src, pageIdx); return; }
     const maxW = dynPageW * 0.5;
     const w = Math.min(maxW, naturalW > 0 ? naturalW : maxW);
     const aspectRatio = naturalH > 0 ? naturalW / naturalH : 4 / 3;
@@ -2033,21 +2048,29 @@ export default function ChapterEditor() {
   const dynMarginB = pageDims.marginBottom;
   const clampedZoom = zoom / 100;
 
-  // ── Page theme color resolution ───────────────────────────────────────────
-  // pageTheme overrides bgColor/textColor unless user explicitly set bgColor
-  const pageThemeDef = PAGE_THEMES.find(t => t.id === (effectivePrefs.pageTheme || "white"));
+  // ── Page surface resolution ───────────────────────────────────────────────
+  // Only an *explicitly chosen* page theme counts. This used to fall back to
+  // "white", which always resolved to #ffffff and therefore always beat the
+  // page style's own colour — that is why picking Sepia, Kraft, Night Paper,
+  // Blueprint or Dark Academia appeared to do nothing at all.
+  const pageThemeDef = effectivePrefs.pageTheme
+    ? PAGE_THEMES.find(t => t.id === effectivePrefs.pageTheme)
+    : undefined;
 
   // Page style background pattern (from saved preference)
   const activePageStyleDef = PAGE_STYLES.find(s => s.id === (effectivePrefs.pageStyle || "blank"));
   const bgPatternCSS = activePageStyleDef ? activePageStyleDef.background(isDark) : {};
 
-  // Manuscript uses its own background color unless user has set a custom one
-  // pageTheme takes precedence when set
+  // Precedence: a colour the writer typed in > a theme they picked >
+  // the surface colour that belongs to the page style they picked.
   const resolvedBgColor = effectivePrefs.bgColor
     || pageThemeDef?.bg
     || (bgPatternCSS as any).backgroundColor;
   const resolvedTextColor = effectivePrefs.textColor
     || pageThemeDef?.text
+    // Dark surfaces have to carry their ink with them or the chapter is
+    // black text on a black page.
+    || PAGE_STYLE_INK[(effectivePrefs.pageStyle || "blank") as PageStyleId]
     || undefined;
 
   const editorOuterStyle: React.CSSProperties = {
@@ -2109,7 +2132,14 @@ export default function ChapterEditor() {
         <div
           role="alert"
           style={{
-            position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)",
+            // Anchored to the bottom on a phone: at 92vw and top:12 it covered
+            // the whole top bar, so Save, More and Claude were untappable until
+            // the banner was dismissed.
+            position: "fixed",
+            ...(isPhone
+              ? { bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)", top: "auto" as const }
+              : { top: 12 }),
+            left: "50%", transform: "translateX(-50%)",
             zIndex: 60, maxWidth: "min(560px, 92vw)", padding: "10px 14px",
             display: "flex", alignItems: "center", gap: 12,
             background: "#332a1b", color: "#f4f4f5",
@@ -2175,7 +2205,7 @@ export default function ChapterEditor() {
 
       {/* Editor Header */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl transition-opacity duration-500 ${isFocusMode ? "opacity-20 hover:opacity-100 bg-[#f4efe2]/70 border-transparent" : ""}`}
+        className={`sticky top-0 z-50 backdrop-blur-xl transition-opacity duration-500 ${isFocusMode ? (isPhone ? "bg-[#f4efe2]/70 border-transparent" : "opacity-20 hover:opacity-100 bg-[#f4efe2]/70 border-transparent") : ""}`}
         style={{ backgroundColor: isFocusMode ? undefined : "rgba(244,239,226,0.94)", borderBottom: "1px solid rgba(66,53,33,0.14)" }}
       >
         <div className="max-w-6xl mx-auto px-3 sm:px-5 h-12 flex items-center justify-between relative z-10 gap-2">
@@ -2328,7 +2358,7 @@ export default function ChapterEditor() {
                 <PageStylePicker
                   currentStyle={prefs.pageStyle || "blank"}
                   isDark={isDark}
-                  onSelect={(styleId) => { const newPrefs = { ...prefs, pageStyle: styleId }; setPrefs(newPrefs); handleSavePrefs(newPrefs); }}
+                  onSelect={applyPageStyle}
                   onClose={() => setShowPageStylePicker(false)}
                 />
               )}
@@ -2521,9 +2551,9 @@ export default function ChapterEditor() {
                 // fold into the sheet on phones to keep the bar clean.
                 ...(isPhone ? [
                   { Icon: Search, label: ar ? "بحث" : "Search",                action: () => setShowEditorSearch(true) },
-                  { Icon: EyeOff, label: ar ? "تركيز" : "Focus",               action: () => setIsFocusMode(true) },
+                  { Icon: EyeOff, label: ar ? "تركيز" : "Focus",               action: () => setIsFocusMode(v => !v) },
                 ] : []),
-                { Icon: LayoutGrid,  label: ar ? "الصفحات" : "Pages",       action: () => setShowPagePanel(true) },
+                { Icon: LayoutGrid,  label: ar ? "الصفحات" : "Pages",       action: () => setShowPagePanel(v => !v) },
                 { Icon: BookOpen,    label: ar ? "مرجع القصة" : "Story",    action: () => setShowStoryBible(true) },
                 { Icon: ImageIcon,   label: ar ? "صورة" : "Image",          action: () => fileInputRef.current?.click() },
                 { Icon: Palette,     label: ar ? "الإعدادات" : "Settings",  action: () => setShowCustomizer(true) },
@@ -2545,7 +2575,11 @@ export default function ChapterEditor() {
               ))}
               {/* Ambient sound — a self-contained control, given its own cell */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "10px 6px 12px", borderRadius: 16, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff" }}>
-                <AmbientSoundscape />
+                {/* Deliberately does NOT close the sheet. Closing it unmounts
+                  this trigger in the same commit, and Radix loses the open
+                  state with it — the popover never appears. It opens on top
+                  instead: its content is z-[120], above the sheet's z-[70]. */}
+              <AmbientSoundscape />
                 <span style={{ fontSize: 11, fontWeight: 600 }}>{ar ? "صوت" : "Sound"}</span>
               </div>
             </div>
@@ -2556,11 +2590,11 @@ export default function ChapterEditor() {
       {/* Page Style picker — rendered standalone so it needs no inline
           anchor. Bottom sheet on phones, top-right panel on desktop. */}
       {showPageStylePicker && (
-        <div className="fixed top-14 right-4 z-[80]">
+        <div className="fixed top-14 right-4">
           <PageStylePicker
             currentStyle={prefs.pageStyle || "blank"}
             isDark={isDark}
-            onSelect={(styleId) => { const newPrefs = { ...prefs, pageStyle: styleId }; setPrefs(newPrefs); handleSavePrefs(newPrefs); }}
+            onSelect={applyPageStyle}
             onClose={() => setShowPageStylePicker(false)}
           />
         </div>
@@ -2626,30 +2660,46 @@ export default function ChapterEditor() {
             autoFocus value={editorSearchQuery}
             onChange={e => setEditorSearchQuery(e.target.value)}
             placeholder={ar ? "ابحث في النص..." : "Search in text..."}
-            className="flex-1 bg-transparent border-none outline-none text-sm"
-            style={{ color: "#fff" }}
+            className="flex-1 min-w-0 bg-transparent border-none outline-none"
+            // 16px or iOS Safari zooms the whole editor on focus.
+            style={{ color: "#fff", fontSize: 16 }}
             onKeyDown={e => {
               if (e.key === "Escape") { setShowEditorSearch(false); setEditorSearchQuery(""); }
               if (e.key === "Enter" && editorSearchQuery.length >= 2) {
-                // Use browser native find to jump to and highlight
-                (window as any).find(editorSearchQuery, false, false, true);
+                e.preventDefault();
+                gotoSearchMatch(e.shiftKey ? -1 : 1);
               }
             }}
           />
           {editorSearchCount > 0 && (
             <>
-              <span className="text-xs shrink-0" style={{ color: "rgba(250,204,21,0.8)" }}>{editorSearchCount} {ar ? "نتيجة" : "found"}</span>
-              <button onClick={() => (window as any).find(editorSearchQuery, false, false, true)}
-                className="text-xs px-2 py-0.5 rounded" style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)" }}>
-                {ar ? "التالي" : "Next"} ↓
+              <span className="text-xs shrink-0 tabular-nums" style={{ color: "rgba(250,204,21,0.8)" }}>
+                {editorSearchIndex + 1}/{editorSearchCount}
+              </span>
+              <button
+                onClick={() => gotoSearchMatch(-1)}
+                aria-label={ar ? "السابق" : "Previous match"}
+                className={`shrink-0 rounded flex items-center justify-center active:bg-white/15 ${isPhone ? "w-11 h-11" : "w-9 h-9"}`}
+                style={{ color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)" }}>
+                <ChevronUp className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => gotoSearchMatch(1)}
+                aria-label={ar ? "التالي" : "Next match"}
+                className={`shrink-0 rounded flex items-center justify-center active:bg-white/15 ${isPhone ? "w-11 h-11" : "w-9 h-9"}`}
+                style={{ color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.06)" }}>
+                <ChevronDown className="w-4 h-4" />
               </button>
             </>
           )}
           {editorSearchQuery && editorSearchCount === 0 && (
             <span className="text-xs shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>{ar ? "لا نتائج" : "No results"}</span>
           )}
-          <button onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); if ((CSS as any).highlights) (CSS as any).highlights.clear(); }}
-            style={{ color: "rgba(255,255,255,0.3)" }}><X className="w-3.5 h-3.5" /></button>
+          <button
+            onClick={() => { setShowEditorSearch(false); setEditorSearchQuery(""); setEditorSearchCount(0); searchRangesRef.current = []; if ((CSS as any).highlights) (CSS as any).highlights.clear(); }}
+            aria-label={ar ? "إغلاق البحث" : "Close search"}
+            className={`shrink-0 flex items-center justify-center rounded active:bg-white/15 ${isPhone ? "w-11 h-11" : "w-9 h-9"}`}
+            style={{ color: "rgba(255,255,255,0.4)" }}><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -2659,17 +2709,27 @@ export default function ChapterEditor() {
       {/* ── Pages Thumbnail Sidebar ── */}
       {showPagePanel && !isPrintView && (
         <div
-          className="flex-shrink-0 overflow-y-auto flex flex-col items-center gap-2 py-3 px-2 border-r"
+          className={`overflow-y-auto flex flex-col items-center gap-2 py-3 px-2 ${isPhone ? "fixed inset-y-0 start-0 z-[85] shadow-2xl" : "flex-shrink-0 border-r"}`}
           style={{
             width: '92px',
             background: 'rgba(0,0,0,0.7)',
             borderColor: 'rgba(255,255,255,0.07)',
             backdropFilter: 'blur(8px)',
+            paddingBottom: isPhone ? 'calc(env(safe-area-inset-bottom, 0px) + 12px)' : undefined,
           }}
         >
-          <span className="text-[9px] font-semibold tracking-widest uppercase mb-1 opacity-30" style={{ color: '#fff' }}>
-            {ar ? "الصفحات" : "Pages"}
-          </span>
+          <div className="w-full flex items-center justify-between mb-1 px-0.5">
+            <span className="text-[9px] font-semibold tracking-widest uppercase opacity-30" style={{ color: '#fff' }}>
+              {ar ? "الصفحات" : "Pages"}
+            </span>
+            <button
+              onClick={() => setShowPagePanel(false)}
+              aria-label={ar ? "إغلاق" : "Close"}
+              className="w-7 h-7 -me-1 rounded-md flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 active:bg-white/15 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
           {pages.map((pageContent, index) => {
             const pageText = getPageText(pageContent);
             const isActive = activePageIndex === index;
@@ -3917,12 +3977,15 @@ export default function ChapterEditor() {
 
       {/* ── Reference Panel (fixed-height flex sidebar) ── */}
       <div
-        className="flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+        className={`flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${
+          isPhone && showRefPanel ? "fixed inset-0 z-[85]" : "flex-shrink-0"
+        }`}
         style={{
-          width: showRefPanel ? '380px' : '0',
-          minWidth: showRefPanel ? '380px' : '0',
+          width: isPhone ? (showRefPanel ? '100%' : '0') : (showRefPanel ? '380px' : '0'),
+          minWidth: isPhone ? undefined : (showRefPanel ? '380px' : '0'),
           background: 'hsl(var(--background))',
-          borderLeft: showRefPanel ? '1px solid hsl(var(--border)/40%)' : 'none',
+          borderLeft: !isPhone && showRefPanel ? '1px solid hsl(var(--border)/40%)' : 'none',
+          paddingBottom: isPhone && showRefPanel ? 'env(safe-area-inset-bottom, 0px)' : undefined,
         }}
       >
         {/* Panel Header */}
@@ -4174,7 +4237,7 @@ export default function ChapterEditor() {
                           {snap.content.length} {ar ? "حرف" : "chars"}
                         </p>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <div className={`flex gap-1 transition-opacity flex-shrink-0 ${isPhone ? "" : "opacity-0 group-hover:opacity-100"}`}>
                         <Button
                           variant="ghost"
                           size="icon"

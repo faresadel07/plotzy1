@@ -10,6 +10,7 @@ import {
   BookOpen, Book, Layers, FileText, TextSelect,
   SlidersHorizontal, X,
 } from "lucide-react";
+import { EDITOR_FONTS, fontCategoryOrder } from "@/lib/editor-fonts";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -17,50 +18,7 @@ function Sep() {
   return <div className="w-px h-5 bg-black/10 mx-0.5 flex-shrink-0" />;
 }
 
-const FONT_OPTIONS = [
-  // ── Serif ──────────────────────────────────────────────────────────────
-  { id: "eb-garamond",       label: "EB Garamond",         fontFamily: "'EB Garamond', serif",           category: "Serif" },
-  { id: "cormorant",         label: "Cormorant Garamond",  fontFamily: "'Cormorant Garamond', serif",    category: "Serif" },
-  { id: "playfair",          label: "Playfair Display",    fontFamily: "'Playfair Display', serif",      category: "Serif" },
-  { id: "lora",              label: "Lora",                fontFamily: "'Lora', serif",                  category: "Serif" },
-  { id: "merriweather",      label: "Merriweather",        fontFamily: "'Merriweather', serif",          category: "Serif" },
-  { id: "libre-baskerville", label: "Libre Baskerville",   fontFamily: "'Libre Baskerville', serif",     category: "Serif" },
-  { id: "crimson",           label: "Crimson Text",        fontFamily: "'Crimson Text', serif",          category: "Serif" },
-  { id: "source-serif",      label: "Source Serif 4",      fontFamily: "'Source Serif 4', serif",        category: "Serif" },
-  { id: "georgia",           label: "Georgia",             fontFamily: "Georgia, serif",                 category: "Serif" },
-  { id: "times",             label: "Times New Roman",     fontFamily: "'Times New Roman', serif",       category: "Serif" },
-  // ── Sans-serif ─────────────────────────────────────────────────────────
-  { id: "inter",             label: "Inter",               fontFamily: "'Inter', sans-serif",            category: "Sans-serif" },
-  { id: "roboto",            label: "Roboto",              fontFamily: "'Roboto', sans-serif",           category: "Sans-serif" },
-  { id: "open-sans",         label: "Open Sans",           fontFamily: "'Open Sans', sans-serif",        category: "Sans-serif" },
-  { id: "montserrat",        label: "Montserrat",          fontFamily: "'Montserrat', sans-serif",       category: "Sans-serif" },
-  { id: "poppins",           label: "Poppins",             fontFamily: "'Poppins', sans-serif",          category: "Sans-serif" },
-  { id: "nunito",            label: "Nunito",              fontFamily: "'Nunito', sans-serif",           category: "Sans-serif" },
-  { id: "oswald",            label: "Oswald",              fontFamily: "'Oswald', sans-serif",           category: "Sans-serif" },
-  { id: "lexend",            label: "Lexend",              fontFamily: "'Lexend', sans-serif",           category: "Sans-serif" },
-  { id: "raleway",           label: "Raleway",             fontFamily: "'Raleway', sans-serif",          category: "Sans-serif" },
-  { id: "dm-sans",           label: "DM Sans",             fontFamily: "'DM Sans', sans-serif",          category: "Sans-serif" },
-  { id: "plus-jakarta",      label: "Plus Jakarta Sans",   fontFamily: "'Plus Jakarta Sans', sans-serif",category: "Sans-serif" },
-  { id: "space-grotesk",     label: "Space Grotesk",       fontFamily: "'Space Grotesk', sans-serif",    category: "Sans-serif" },
-  // ── Display ────────────────────────────────────────────────────────────
-  { id: "lobster",           label: "Lobster",             fontFamily: "'Lobster', cursive",             category: "Display" },
-  { id: "pacifico",          label: "Pacifico",            fontFamily: "'Pacifico', cursive",            category: "Display" },
-  { id: "comfortaa",         label: "Comfortaa",           fontFamily: "'Comfortaa', cursive",           category: "Display" },
-  { id: "special-elite",     label: "Special Elite",       fontFamily: "'Special Elite', cursive",       category: "Display" },
-  // ── Handwriting ────────────────────────────────────────────────────────
-  { id: "caveat",            label: "Caveat",              fontFamily: "'Caveat', cursive",              category: "Handwriting" },
-  { id: "architects-daughter", label: "Architects Daughter", fontFamily: "'Architects Daughter', cursive", category: "Handwriting" },
-  // ── Monospace ──────────────────────────────────────────────────────────
-  { id: "courier-prime",     label: "Courier Prime",       fontFamily: "'Courier Prime', monospace",     category: "Monospace" },
-  { id: "courier-new",       label: "Courier New",         fontFamily: "'Courier New', monospace",       category: "Monospace" },
-  { id: "roboto-mono",       label: "Roboto Mono",         fontFamily: "'Roboto Mono', monospace",       category: "Monospace" },
-  { id: "ibm-plex-mono",     label: "IBM Plex Mono",       fontFamily: "'IBM Plex Mono', monospace",     category: "Monospace" },
-  { id: "space-mono",        label: "Space Mono",          fontFamily: "'Space Mono', monospace",        category: "Monospace" },
-  // ── Arabic ─────────────────────────────────────────────────────────────
-  { id: "arabic-sans",       label: "Cairo",               fontFamily: "'Cairo', sans-serif",            category: "Arabic" },
-  { id: "arabic-serif",      label: "Amiri",               fontFamily: "'Amiri', serif",                 category: "Arabic" },
-  { id: "arabic-naskh",      label: "Noto Naskh Arabic",   fontFamily: "'Noto Naskh Arabic', serif",     category: "Arabic" },
-];
+const FONT_OPTIONS = EDITOR_FONTS;
 
 const TEXT_STYLES = [
   { label: "Normal text",  value: "paragraph" },
@@ -1043,7 +1001,8 @@ export function RichWritingToolbar({
       {fontDropOpen && fontDropRect && (() => {
         const q = fontSearch.trim().toLowerCase();
         const filtered = q ? FONT_OPTIONS.filter(f => f.label.toLowerCase().includes(q)) : FONT_OPTIONS;
-        const categories = q ? ["Results"] : ["Serif", "Sans-serif", "Display", "Handwriting", "Monospace", "Arabic"];
+        const arabicFirst = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+        const categories: string[] = q ? ["Results"] : fontCategoryOrder(arabicFirst);
         const getGroup = (cat: string) => cat === "Results" ? filtered : filtered.filter(f => f.category === cat);
         const textCol = isDark || isFocusMode ? "#e9e2d0" : "#221b11";
         const catCol  = isDark || isFocusMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)";

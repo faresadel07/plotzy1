@@ -39,6 +39,7 @@ import { FloatingImageOverlay, type FloatingImage } from "@/components/FloatingI
 import { AmbientSoundscape } from "@/components/AmbientSoundscape";
 import { BlogOnboarding, type BlogBlueprint } from "@/components/BlogOnboarding";
 import { BLOG_CATEGORIES } from "@/lib/blog-categories";
+import { EDITOR_FONTS } from "@/lib/editor-fonts";
 
 /* ── FontSize extension ─────────────────────────────────────────────── */
 const FontSize = Extension.create({
@@ -75,33 +76,12 @@ const SERIF = "'Lora', 'Amiri', Georgia, serif";
 const HAND  = "'Caveat', 'Aref Ruqaa', cursive";
 
 /* ── Fonts ──────────────────────────────────────────────────────────── */
-const FONTS = [
-  { id:"georgia",        label:"Georgia",            ff:"Georgia, serif",                        cat:"Serif" },
-  { id:"lora",           label:"Lora",               ff:"'Lora', serif",                         cat:"Serif" },
-  { id:"merriweather",   label:"Merriweather",        ff:"'Merriweather', serif",                 cat:"Serif" },
-  { id:"playfair",       label:"Playfair Display",    ff:"'Playfair Display', serif",             cat:"Serif" },
-  { id:"eb-garamond",    label:"EB Garamond",         ff:"'EB Garamond', serif",                  cat:"Serif" },
-  { id:"cormorant",      label:"Cormorant Garamond",  ff:"'Cormorant Garamond', serif",           cat:"Serif" },
-  { id:"libre",          label:"Libre Baskerville",   ff:"'Libre Baskerville', serif",            cat:"Serif" },
-  { id:"source-serif",   label:"Source Serif 4",      ff:"'Source Serif 4', serif",               cat:"Serif" },
-  { id:"crimson",        label:"Crimson Text",        ff:"'Crimson Text', serif",                 cat:"Serif" },
-  { id:"inter",          label:"Inter",               ff:"'Inter', sans-serif",                   cat:"Sans" },
-  { id:"open-sans",      label:"Open Sans",           ff:"'Open Sans', sans-serif",               cat:"Sans" },
-  { id:"poppins",        label:"Poppins",             ff:"'Poppins', sans-serif",                 cat:"Sans" },
-  { id:"dm-sans",        label:"DM Sans",             ff:"'DM Sans', sans-serif",                 cat:"Sans" },
-  { id:"space-grotesk",  label:"Space Grotesk",       ff:"'Space Grotesk', sans-serif",           cat:"Sans" },
-  { id:"montserrat",     label:"Montserrat",          ff:"'Montserrat', sans-serif",              cat:"Sans" },
-  { id:"raleway",        label:"Raleway",             ff:"'Raleway', sans-serif",                 cat:"Sans" },
-  { id:"nunito",         label:"Nunito",              ff:"'Nunito', sans-serif",                  cat:"Sans" },
-  { id:"lexend",         label:"Lexend",              ff:"'Lexend', sans-serif",                  cat:"Sans" },
-  { id:"caveat",         label:"Caveat",              ff:"'Caveat', cursive",                     cat:"Handwriting" },
-  { id:"special-elite",  label:"Special Elite",       ff:"'Special Elite', cursive",              cat:"Handwriting" },
-  { id:"courier-prime",  label:"Courier Prime",       ff:"'Courier Prime', monospace",            cat:"Mono" },
-  { id:"roboto-mono",    label:"Roboto Mono",         ff:"'Roboto Mono', monospace",              cat:"Mono" },
-  { id:"arabic-sans",    label:"Cairo (Arabic)",      ff:"'Cairo', sans-serif",                   cat:"Arabic" },
-  { id:"arabic-serif",   label:"Amiri (Arabic)",      ff:"'Amiri', serif",                        cat:"Arabic" },
-  { id:"arabic-naskh",   label:"Noto Naskh Arabic",   ff:"'Noto Naskh Arabic', serif",            cat:"Arabic" },
-];
+const FONTS = EDITOR_FONTS.map(f => ({
+  id: f.id,
+  label: f.label,
+  ff: f.fontFamily,
+  cat: f.category === "Sans-serif" ? "Sans" : f.category === "Monospace" ? "Mono" : f.category,
+}));
 
 const FONT_SIZES = [11,12,13,14,15,16,17,18,20,22,24,28,32,36,40,48];
 

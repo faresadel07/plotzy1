@@ -8,6 +8,7 @@
 // page the moment you let go.
 
 import { useState } from "react";
+import { useIsPhone } from "@/hooks/use-is-phone";
 import { NiceSelect } from "@/components/ui/nice-select";
 import {
   X,
@@ -80,6 +81,7 @@ export function PageSetupModal({
   onClose,
 }: PageSetupModalProps) {
   const [tab, setTab] = useState<Tab>("paper");
+  const isPhone = useIsPhone();
 
   // Palette ─────────────────────────────────────────────────────────
   const bg = isDark ? "#1a1a1c" : "#ffffff";
@@ -113,7 +115,7 @@ export function PageSetupModal({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 16,
+        padding: isPhone ? 0 : 16,
         fontFamily: SF,
         animation: "psm-fade 160ms ease-out",
       }}
@@ -145,11 +147,12 @@ export function PageSetupModal({
         style={{
           background: bg,
           color: text,
-          borderRadius: 22,
-          border: `1px solid ${border}`,
+          borderRadius: isPhone ? 0 : 22,
+          border: isPhone ? "none" : `1px solid ${border}`,
           width: "100%",
-          maxWidth: 940,
-          maxHeight: "calc(100vh - 32px)",
+          maxWidth: isPhone ? "100%" : 940,
+          maxHeight: isPhone ? "100dvh" : "calc(100vh - 32px)",
+          height: isPhone ? "100dvh" : undefined,
           display: "grid",
           gridTemplateRows: "auto 1fr auto",
           boxShadow:
@@ -196,9 +199,10 @@ export function PageSetupModal({
             onClick={onClose}
             aria-label={ar ? "إغلاق" : "Close"}
             style={{
-              width: 30,
-              height: 30,
+              width: isPhone ? 44 : 30,
+              height: isPhone ? 44 : 30,
               borderRadius: 10,
+              flexShrink: 0,
               border: "none",
               background: "transparent",
               color: textDim,
@@ -219,20 +223,24 @@ export function PageSetupModal({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "200px 1fr",
+            gridTemplateColumns: isPhone ? "1fr" : "200px 1fr",
+            gridTemplateRows: isPhone ? "auto 1fr" : undefined,
             minHeight: 0,
           }}
         >
-          {/* Sidebar */}
+          {/* Sidebar — a scrolling tab strip on a phone, a column on desktop. */}
           <nav
             style={{
-              padding: "16px 12px",
-              borderInlineEnd: `1px solid ${border}`,
+              padding: isPhone ? "10px 12px" : "16px 12px",
+              borderInlineEnd: isPhone ? "none" : `1px solid ${border}`,
+              borderBottom: isPhone ? `1px solid ${border}` : "none",
               background: subtleBg,
               display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              overflowY: "auto",
+              flexDirection: isPhone ? "row" : "column",
+              gap: isPhone ? 6 : 2,
+              overflowX: isPhone ? "auto" : undefined,
+              overflowY: isPhone ? "hidden" : "auto",
+              flexShrink: 0,
             }}
             className="psm-scroll"
           >
@@ -734,6 +742,7 @@ function PageNumberTab({
   accent: string;
   isDark: boolean;
 }) {
+  const isPhone = useIsPhone();
   if (prefs.showPageNumbers === false) {
     return (
       <div
@@ -875,7 +884,7 @@ function PageNumberTab({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: isPhone ? "repeat(3, 1fr)" : "repeat(4, 1fr)",
             gap: 8,
           }}
         >
@@ -1048,7 +1057,7 @@ function PageNumberTab({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
+            gridTemplateColumns: isPhone ? "repeat(4, 1fr)" : "repeat(7, 1fr)",
             gap: 8,
           }}
         >

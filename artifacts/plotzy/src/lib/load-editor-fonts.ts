@@ -4,13 +4,16 @@
  * and avoids layout shift from font-display: swap.
  */
 
+import { GOOGLE_FONT_SPECS } from "./editor-fonts";
+
 let loaded = false;
 
-const EDITOR_FONTS_URL =
-  "https://fonts.googleapis.com/css2?" +
-  [
+/** Families used by surfaces outside the editor font catalogue. */
+const EXTRA_FAMILIES = [
     "family=Architects+Daughter",
     "family=Amiri:ital,wght@0,400;0,700;1,400;1,700",
+    "family=Almarai:wght@300;400;700;800",
+    "family=Aref+Ruqaa:wght@400;700",
     "family=Cairo:wght@300;400;500;600;700",
     "family=Caveat:wght@400..700",
     "family=Comfortaa:wght@300..700",
@@ -32,7 +35,14 @@ const EDITOR_FONTS_URL =
     "family=Lora:ital,wght@0,400..700;1,400..700",
     "family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900",
     "family=Montserrat:ital,wght@0,100..900;1,100..900",
+    "family=El+Messiri:wght@400..700",
+    "family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700",
+    "family=Markazi+Text:wght@400..700",
     "family=Noto+Naskh+Arabic:wght@400..700",
+    "family=Readex+Pro:wght@300..700",
+    "family=Reem+Kufi:wght@400..700",
+    "family=Scheherazade+New:wght@400;700",
+    "family=Tajawal:wght@300;400;500;700",
     "family=Nunito:ital,wght@0,200..1000;1,200..1000",
     "family=Open+Sans:ital,wght@0,300..800;1,300..800",
     "family=Oswald:wght@200..700",
@@ -50,7 +60,11 @@ const EDITOR_FONTS_URL =
     "family=Space+Grotesk:wght@300..700",
     "family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700",
     "family=Special+Elite",
-  ].join("&") +
+];
+
+const EDITOR_FONTS_URL =
+  "https://fonts.googleapis.com/css2?" +
+  Array.from(new Set([...GOOGLE_FONT_SPECS, ...EXTRA_FAMILIES])).sort().join("&") +
   "&display=swap";
 
 export function loadEditorFonts(): void {

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { X, Check, RotateCcw, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import type { BookPreferences } from "@/shared/schema";
+import { EDITOR_FONTS } from "@/lib/editor-fonts";
 
 interface BookCustomizerProps {
   preferences: BookPreferences;
@@ -31,10 +32,12 @@ const DEFAULTS = {
 // ── Font Definitions ─────────────────────────────────────────────────────────
 
 const FONT_CATEGORIES = [
-  { id: "serif",      label: "Serif",      labelAr: "سيريف"     },
-  { id: "sans",       label: "Sans",       labelAr: "سانس"      },
-  { id: "typewriter", label: "Typewriter", labelAr: "آلة كاتبة" },
-  { id: "arabic",     label: "Arabic",     labelAr: "عربي"      },
+  { id: "Serif",       label: "Serif",       labelAr: "سيريف"      },
+  { id: "Sans-serif",  label: "Sans",        labelAr: "سانس"       },
+  { id: "Arabic",      label: "Arabic",      labelAr: "عربي"       },
+  { id: "Display",     label: "Display",     labelAr: "عرض"        },
+  { id: "Handwriting", label: "Handwriting", labelAr: "خط يد"      },
+  { id: "Monospace",   label: "Typewriter",  labelAr: "آلة كاتبة"  },
 ] as const;
 
 type FontCategoryId = typeof FONT_CATEGORIES[number]["id"];
@@ -54,38 +57,17 @@ interface FontDef {
 const DEFAULT_SAMPLE_EN = "The forest breathed quietly under moonlight.";
 const DEFAULT_SAMPLE_AR = "تنفست الغابة بهدوء تحت ضوء القمر.";
 
-const FONTS: FontDef[] = [
-  // ── Serif ──────────────────────────────────────────────────────────────────
-  { id: "eb-garamond",      label: "EB Garamond",      labelAr: "جارامون",   desc: "Timeless • Literary",   descAr: "كلاسيكي أدبي",    category: "serif", fontFamily: "'EB Garamond', serif",         sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "cormorant",        label: "Cormorant Garamond", labelAr: "كورمورانت", desc: "Elegant • Refined",    descAr: "أنيق ورفيع",     category: "serif", fontFamily: "'Cormorant Garamond', serif",  sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "playfair",         label: "Playfair Display",  labelAr: "بلايفير",   desc: "Dramatic • Headlines", descAr: "درامي وجريء",    category: "serif", fontFamily: "'Playfair Display', serif",    sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "lora",             label: "Lora",              labelAr: "لورا",      desc: "Contemporary • Warm",  descAr: "معاصر ودافئ",    category: "serif", fontFamily: "'Lora', serif",                sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "crimson",          label: "Crimson Text",      labelAr: "كريمسون",   desc: "Literary • Warm",      descAr: "أدبي ودافئ",     category: "serif", fontFamily: "'Crimson Text', serif",        sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "merriweather",     label: "Merriweather",      labelAr: "ميريويذر",  desc: "Reader-Friendly",      descAr: "مريح للقراءة",  category: "serif", fontFamily: "'Merriweather', serif",        sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "libre-baskerville", label: "Libre Baskerville", labelAr: "باسكرفيل", desc: "Academic • Sharp",     descAr: "أكاديمي وحاد",   category: "serif", fontFamily: "'Libre Baskerville', serif",   sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "source-serif",     label: "Source Serif 4",    labelAr: "سورس سيريف", desc: "Clear • Professional", descAr: "واضح ومهني",    category: "serif", fontFamily: "'Source Serif 4', serif",      sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-
-  // ── Sans-serif ─────────────────────────────────────────────────────────────
-  { id: "inter",         label: "Inter",             labelAr: "إنتر",       desc: "Modern • Neutral",   descAr: "عصري ومحايد",   category: "sans", fontFamily: "'Inter', sans-serif",             sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "open-sans",     label: "Open Sans",         labelAr: "أوبن سانس",  desc: "Clean • Readable",   descAr: "نظيف ومقروء",    category: "sans", fontFamily: "'Open Sans', sans-serif",         sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "poppins",       label: "Poppins",           labelAr: "بوبينز",     desc: "Rounded • Friendly", descAr: "مستدير وودي",   category: "sans", fontFamily: "'Poppins', sans-serif",           sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "montserrat",    label: "Montserrat",        labelAr: "مونتسيرات",  desc: "Geometric • Bold",   descAr: "هندسي وجريء",   category: "sans", fontFamily: "'Montserrat', sans-serif",        sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "plus-jakarta",  label: "Plus Jakarta Sans", labelAr: "جاكرتا",     desc: "Contemporary • Tech", descAr: "معاصر وتقني",  category: "sans", fontFamily: "'Plus Jakarta Sans', sans-serif", sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "space-grotesk", label: "Space Grotesk",     labelAr: "سبيس",       desc: "Quirky • Distinctive", descAr: "مميز وفريد",  category: "sans", fontFamily: "'Space Grotesk', sans-serif",     sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-
-  // ── Typewriter ─────────────────────────────────────────────────────────────
-  { id: "courier-prime", label: "Courier Prime", labelAr: "كورير برايم", desc: "Screenplay • Classic", descAr: "سيناريو كلاسيكي", category: "typewriter", fontFamily: "'Courier Prime', monospace", sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "special-elite", label: "Special Elite", labelAr: "سبيشل إليت",  desc: "Vintage • Gritty",     descAr: "عتيق ومميز",    category: "typewriter", fontFamily: "'Special Elite', cursive",   sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "roboto-mono",   label: "Roboto Mono",   labelAr: "روبوتو مونو", desc: "Clean • Precise",      descAr: "نظيف ودقيق",    category: "typewriter", fontFamily: "'Roboto Mono', monospace",   sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "space-mono",    label: "Space Mono",    labelAr: "سبيس مونو",   desc: "Retro • Digital",      descAr: "رقمي كلاسيكي", category: "typewriter", fontFamily: "'Space Mono', monospace",    sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-
-  // ── Arabic ─────────────────────────────────────────────────────────────────
-  // Only Cairo + Amiri: both are bundled as TTFs on the server so they
-  // embed into the PDF and render identically to the editor. (Noto Naskh
-  // was removed — it is not embeddable, so it would not match the PDF.)
-  { id: "arabic-sans",  label: "Cairo", labelAr: "القاهرة", desc: "Modern Arabic",  descAr: "عربي عصري",    category: "arabic", fontFamily: "'Cairo', sans-serif", sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-  { id: "arabic-serif", label: "Amiri", labelAr: "أميري",   desc: "Classic Arabic", descAr: "عربي كلاسيكي", category: "arabic", fontFamily: "'Amiri', serif",     sampleEn: DEFAULT_SAMPLE_EN, sampleAr: DEFAULT_SAMPLE_AR },
-];
+const FONTS: FontDef[] = EDITOR_FONTS.map(f => ({
+  id: f.id,
+  label: f.label,
+  labelAr: f.labelAr,
+  desc: f.desc ?? "",
+  descAr: f.descAr ?? "",
+  category: f.category,
+  fontFamily: f.fontFamily,
+  sampleEn: DEFAULT_SAMPLE_EN,
+  sampleAr: DEFAULT_SAMPLE_AR,
+}))
 
 // ── Controls ─────────────────────────────────────────────────────────────────
 
@@ -255,7 +237,7 @@ export function BookCustomizer({ preferences, onSave, onClose, onPreview, liveSa
 
   const [activeTab, setActiveTab] = useState<FontCategoryId>(() => {
     const found = FONTS.find(f => f.id === (prefs.fontFamily || DEFAULTS.fontFamily));
-    return found?.category ?? "serif";
+    return found?.category ?? "Serif";
   });
 
   const currentFont = FONTS.find(f => f.id === prefs.fontFamily) ?? FONTS[0];
@@ -285,7 +267,7 @@ export function BookCustomizer({ preferences, onSave, onClose, onPreview, liveSa
 
   const handleReset = () => {
     setPrefs(DEFAULTS);
-    setActiveTab("serif");
+    setActiveTab("Serif");
     setTimeout(() => onPreview?.(DEFAULTS), 0);
   };
 
@@ -417,7 +399,7 @@ export function BookCustomizer({ preferences, onSave, onClose, onPreview, liveSa
             <div className="space-y-1.5">
               {filteredFonts.map(font => {
                 const isSelected = prefs.fontFamily === font.id;
-                const isArabicCat = font.category === "arabic";
+                const isArabicCat = font.category === "Arabic";
                 const displaySample = isArabicCat ? font.sampleAr : (ar ? font.sampleAr : font.sampleEn);
                 return (
                   <button

@@ -72,10 +72,28 @@ export function PrintPreview({
   const pageBg = resolvedBgColor || "#FFFEF8";
 
   const ps = PAPER_SIZES[prefs.paperSize || "trade"];
-  const MAX_SPREAD_W = Math.min(window.innerWidth - 48, 1200);
-  const spreadRawW = ps.width * 2 + 6;
+
+  const [viewport, setViewport] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  useEffect(() => {
+    const onResize = () => setViewport({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, []);
+
+  // One page per view below 700px. Two 576pt pages side by side inside a
+  // 390px phone scaled the type down to about four pixels.
+  const isNarrow = viewport.w < 700;
+  const perSpread = isNarrow ? 1 : 2;
+  const bindingW = perSpread === 2 ? 6 : 0;
+
+  const MAX_SPREAD_W = Math.min(viewport.w - (isNarrow ? 20 : 48), 1200);
+  const spreadRawW = ps.width * perSpread + bindingW;
   const pvScaleW = Math.min(1, MAX_SPREAD_W / spreadRawW);
-  const MAX_SPREAD_H = Math.max(280, window.innerHeight - 56 - 2 - 64 - 96);
+  const MAX_SPREAD_H = Math.max(280, viewport.h - 56 - 2 - 64 - (isNarrow ? 118 : 96));
   const pvScaleH = Math.min(1, MAX_SPREAD_H / ps.height);
   const pvScale = Math.min(pvScaleW, pvScaleH);
   const pvPageW = Math.round(ps.width * pvScale);
@@ -197,7 +215,7 @@ export function PrintPreview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages.length]);
 
-  const maxSpread = Math.max(0, Math.ceil(pages.length / 2) - 1);
+  const maxSpread = Math.max(0, Math.ceil(pages.length / perSpread) - 1);
   const totalWords = pages.join(" ").replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
   const readMins = Math.max(1, Math.round(totalWords / 200));
   const progressPct = maxSpread > 0 ? (currentSpread / maxSpread) * 100 : 100;
@@ -208,9 +226,11 @@ export function PrintPreview({
   // visual right one, so [right=even, left=odd]. This is the only
   // place we have to think about direction; the rest of the renderer
   // can use these two indices opaquely.
-  const startIdx = currentSpread * 2;
-  const leftIdx  = isRTL ? startIdx + 1 : startIdx;
-  const rightIdx = isRTL ? startIdx     : startIdx + 1;
+  const startIdx = currentSpread * perSpread;
+  // Single-page mode has no second leaf, so rightIdx is deliberately out of
+  // range and the binding and right page are not rendered at all.
+  const leftIdx  = perSpread === 1 ? startIdx : (isRTL ? startIdx + 1 : startIdx);
+  const rightIdx = perSpread === 1 ? -1       : (isRTL ? startIdx     : startIdx + 1);
 
   const leftHtml  = leftIdx  >= 0 ? pages[leftIdx]  : undefined;
   const rightHtml = rightIdx >= 0 ? pages[rightIdx] : undefined;
@@ -282,7 +302,7 @@ export function PrintPreview({
       `}</style>
 
       {/* Top Bar (uses UI language) */}
-      <div style={{ height: "56px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2rem", flexShrink: 0 }}>
+      <div style={{ height: "56px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: isNarrow ? "8px" : undefined, padding: isNarrow ? "0 0.75rem" : "0 2rem", flexShrink: 0, overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <BookOpen style={{ width: "15px", height: "15px", color: "rgba(255,255,255,0.22)", flexShrink: 0 }} />
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -349,7 +369,7 @@ export function PrintPreview({
               className="pv-spread-anim"
               style={{
                 display: "flex",
-                width: pvPageW * 2 + 6,
+                width: pvPageW * perSpread + bindingW,
                 height: pvPageH,
                 flexShrink: 0,
                 boxShadow: "0 48px 120px rgba(0,0,0,0.85), 0 16px 40px rgba(0,0,0,0.55)",
@@ -370,8 +390,8 @@ export function PrintPreview({
                 renderPageContent,
               })}
 
-              {/* Binding */}
-              <div
+              {/* Binding — only exists when there are two leaves. */}
+              {perSpread === 2 && <div
                 style={{
                   width: "6px",
                   height: pvPageH,
@@ -379,11 +399,11 @@ export function PrintPreview({
                   background: "linear-gradient(to right, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.05) 70%, rgba(0,0,0,0.14) 100%)",
                   boxShadow: "inset 2px 0 8px rgba(0,0,0,0.18), inset -2px 0 8px rgba(0,0,0,0.10)",
                 }}
-              />
+              />}
 
               {/* RIGHT visual page. Its inside edge (toward the binding)
                   is on its LEFT side. */}
-              {renderBookPage({
+              {perSpread === 2 && renderBookPage({
                 side: "right",
                 pageNum: rightPageNum,
                 html: rightHtml,
@@ -411,14 +431,18 @@ export function PrintPreview({
                 type="button"
                 onClick={() => setCurrentSpread((s) => Math.max(0, s - 1))}
                 disabled={currentSpread === 0}
-                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 14px", borderRadius: "100px", border: `1px solid ${currentSpread === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.14)"}`, background: "transparent", color: currentSpread === 0 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.55)", fontSize: "11px", cursor: currentSpread === 0 ? "not-allowed" : "pointer", transition: "all 0.2s", letterSpacing: "0.03em" }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", minHeight: isNarrow ? 44 : undefined, padding: isNarrow ? "0 18px" : "6px 14px", borderRadius: "100px", border: `1px solid ${currentSpread === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.14)"}`, background: "transparent", color: currentSpread === 0 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.55)", fontSize: isNarrow ? "13px" : "11px", cursor: currentSpread === 0 ? "not-allowed" : "pointer", transition: "all 0.2s", letterSpacing: "0.03em" }}
               >
                 {isRTL ? <ChevronRight style={{ width: "12px", height: "12px" }} /> : <ChevronLeft style={{ width: "12px", height: "12px" }} />}
                 {ar ? "السابق" : "Prev"}
               </button>
 
               <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                {Array.from({ length: maxSpread + 1 }).map((_, i) => (
+                {maxSpread > 14 ? (
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", fontVariantNumeric: "tabular-nums", minWidth: 54, textAlign: "center" }}>
+                    {currentSpread + 1} / {maxSpread + 1}
+                  </span>
+                ) : Array.from({ length: maxSpread + 1 }).map((_, i) => (
                   <button
                     key={i}
                     type="button"
@@ -433,15 +457,17 @@ export function PrintPreview({
                 type="button"
                 onClick={() => setCurrentSpread((s) => Math.min(maxSpread, s + 1))}
                 disabled={currentSpread >= maxSpread}
-                style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 14px", borderRadius: "100px", border: `1px solid ${currentSpread >= maxSpread ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.14)"}`, background: "transparent", color: currentSpread >= maxSpread ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.55)", fontSize: "11px", cursor: currentSpread >= maxSpread ? "not-allowed" : "pointer", transition: "all 0.2s", letterSpacing: "0.03em" }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", minHeight: isNarrow ? 44 : undefined, padding: isNarrow ? "0 18px" : "6px 14px", borderRadius: "100px", border: `1px solid ${currentSpread >= maxSpread ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.14)"}`, background: "transparent", color: currentSpread >= maxSpread ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.55)", fontSize: isNarrow ? "13px" : "11px", cursor: currentSpread >= maxSpread ? "not-allowed" : "pointer", transition: "all 0.2s", letterSpacing: "0.03em" }}
               >
                 {ar ? "التالي" : "Next"}
                 {isRTL ? <ChevronLeft style={{ width: "12px", height: "12px" }} /> : <ChevronRight style={{ width: "12px", height: "12px" }} />}
               </button>
 
-              <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", marginLeft: "4px" }}>
-                ← →  ·  Esc
-              </span>
+              {!isNarrow && (
+                <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.12)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif", marginLeft: "4px" }}>
+                  ← →  ·  Esc
+                </span>
+              )}
             </div>
           </div>
         )}
