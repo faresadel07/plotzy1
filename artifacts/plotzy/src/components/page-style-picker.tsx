@@ -283,12 +283,17 @@ export function PageStylePicker({ currentStyle, isDark, onSelect, onClose }: Pag
       dir={ar ? "rtl" : "ltr"}
       className={cn(
         "z-[200] border-border/60 shadow-2xl overflow-hidden flex flex-col",
+        // Both variants position themselves against the viewport. They must
+        // NOT be wrapped in a positioned parent: `position: fixed` creates a
+        // stacking context on its own, even at `z-index: auto`, which would
+        // trap this z-[200] inside a box that paints at 0 — below the editor
+        // page's z-10, so the chapter would draw straight over the sheet.
         isPhone
           // Phone: a full-width bottom sheet. The trigger lives inside the
           // editor's horizontally-scrollable top bar, so an absolutely
           // positioned popover would be clipped/overflow off-screen.
           ? "fixed inset-x-0 bottom-0 w-full rounded-t-2xl border-t"
-          : "absolute top-full right-0 mt-2 w-[380px] rounded-2xl border",
+          : "fixed top-14 end-4 w-[380px] rounded-2xl border",
       )}
       style={{
         background: isDark

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRoute, Link, useLocation } from "wouter";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { loadEditorFonts } from "@/lib/load-editor-fonts";
@@ -1727,6 +1728,19 @@ export default function ChapterEditor() {
     handleSavePrefs(newPrefs);
   };
 
+  /**
+   * Lift a panel out of the editor body on a phone.
+   *
+   * The body row is `relative z-10`, which makes it a stacking context, so a
+   * panel rendered inside it can never paint above the sticky header (z-50)
+   * however large its own z-index is — a `z-[85]` child resolves to 10 from
+   * the outside. On desktop these panels are genuine flex columns in that
+   * row and must stay there; on a phone they are full-screen overlays, so
+   * they go to <body> where their z-index means what it says.
+   */
+  const phoneOverlay = (node: React.ReactNode): React.ReactNode =>
+    isPhone && typeof document !== "undefined" ? createPortal(node, document.body) : node;
+
   const handleSavePrefs = async (newPrefs: BookPreferences) => {
     const newFont = newPrefs.fontFamily;
     // The font that existing unfrozen blocks are currently RENDERED with
@@ -2590,14 +2604,15 @@ export default function ChapterEditor() {
       {/* Page Style picker — rendered standalone so it needs no inline
           anchor. Bottom sheet on phones, top-right panel on desktop. */}
       {showPageStylePicker && (
-        <div className="fixed top-14 right-4">
-          <PageStylePicker
-            currentStyle={prefs.pageStyle || "blank"}
-            isDark={isDark}
-            onSelect={applyPageStyle}
-            onClose={() => setShowPageStylePicker(false)}
-          />
-        </div>
+        // No wrapper: the picker positions itself against the viewport, and a
+        // `position: fixed` parent would create a stacking context that traps
+        // its z-[200] (and the scrim's z-[199]) at 0 — under the editor page.
+        <PageStylePicker
+          currentStyle={prefs.pageStyle || "blank"}
+          isDark={isDark}
+          onSelect={applyPageStyle}
+          onClose={() => setShowPageStylePicker(false)}
+        />
       )}
 
       {/* ── Rich Writing Toolbar (Google Docs style) ── */}
@@ -2707,7 +2722,7 @@ export default function ChapterEditor() {
       <div className="flex flex-1 overflow-hidden relative z-10">
 
       {/* ── Pages Thumbnail Sidebar ── */}
-      {showPagePanel && !isPrintView && (
+      {showPagePanel && !isPrintView && phoneOverlay(
         <div
           className={`overflow-y-auto flex flex-col items-center gap-2 py-3 px-2 ${isPhone ? "fixed inset-y-0 start-0 z-[85] shadow-2xl" : "flex-shrink-0 border-r"}`}
           style={{
@@ -3976,6 +3991,7 @@ export default function ChapterEditor() {
       </AlertDialog>
 
       {/* ── Reference Panel (fixed-height flex sidebar) ── */}
+      {phoneOverlay(
       <div
         className={`flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${
           isPhone && showRefPanel ? "fixed inset-0 z-[85]" : "flex-shrink-0"
@@ -4115,6 +4131,7 @@ export default function ChapterEditor() {
           </span>
         </div>
       </div>
+      )}
 
       </div>{/* end body flex row */}
 
