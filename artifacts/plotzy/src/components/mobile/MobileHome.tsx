@@ -220,8 +220,11 @@ export function MobileHome({ onStartWriting }: { onStartWriting: () => void }) {
 
         {/* Drafts on the paper between the two dark bands. */}
         <div style={{ position: "relative", height: 0, zIndex: 3 }}>
-          <PaperBall size={46} rot={-18} style={{ position: "absolute", top: 14, insetInlineStart: 14 }} />
-          <StickyNote ar={ar} size={86} rot={4} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: 18, insetInlineEnd: -10 }} />
+          {/* Both sit at the height of the testimonials title, so they are
+              nudged out of its way: the ball rides higher, the note hangs
+              further off the edge. */}
+          <PaperBall size={46} rot={-18} style={{ position: "absolute", top: -6, insetInlineStart: 10 }} />
+          <StickyNote ar={ar} size={86} rot={4} text={ar ? "ولا كلمة بتضيع" : "not a word gets lost"} style={{ position: "absolute", top: 4, insetInlineEnd: -18 }} />
         </div>
 
         {/* Social proof — real early testers, in their own words */}

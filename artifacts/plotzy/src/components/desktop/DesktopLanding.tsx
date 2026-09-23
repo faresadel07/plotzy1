@@ -998,12 +998,8 @@ function FeedbackWallDesktop({ ar }: { ar: boolean }) {
         </span>
       </div>
 
-      {/* Write box, then any admin-pinned comments, then the curated
-          wall — the curated quotes never move. */}
-      <div style={{ maxWidth: 640, margin: "0 auto 22px" }}>
-        <CommentComposer ar={ar} />
-      </div>
-
+      {/* Admin-pinned comments, then the curated wall. The curated
+          quotes never move. */}
       {pinned.length > 0 && (
         <div style={{ columnCount: 3, columnGap: 16, marginBottom: 4 }}>
           {pinned.map((c) => (
@@ -1110,6 +1106,12 @@ function FeedbackWallDesktop({ ar }: { ar: boolean }) {
           ))}
         </div>
       )}
+
+      {/* The invitation to add your own, last. Reading the wall comes
+          first; an empty form at the top was the opposite of that. */}
+      <div style={{ maxWidth: 560, margin: "26px auto 0" }}>
+        <CommentComposer ar={ar} />
+      </div>
     </section>
   );
 }

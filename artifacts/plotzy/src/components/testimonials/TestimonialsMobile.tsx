@@ -30,7 +30,11 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: MUTED, marginBottom: 12 }}>
           {ar ? "لا تاخذ الكلام مننا" : "Don't take our word for it"}
         </div>
-        <h2 style={{ fontFamily: serif, fontSize: ar ? 30 : 34, fontWeight: 700, lineHeight: ar ? 1.45 : 1.15, color: INK, margin: "0 0 12px" }}>
+        {/* The paper ball sits at the left edge and the sticky note hangs
+            off the right one, both at this height. A full-width title ran
+            straight underneath them, so "F" and the last letters were
+            buried. Capping the width lets it wrap between them instead. */}
+        <h2 style={{ fontFamily: serif, fontSize: ar ? 28 : 31, fontWeight: 700, lineHeight: ar ? 1.45 : 1.2, color: INK, margin: "0 auto 12px", maxWidth: 232 }}>
           {ar
             ? <>قاعة <Mark ar={ar}>مشاهير</Mark> الفيدباك</>
             : <>Feedback <Mark ar={ar}>hall of fame</Mark></>}
@@ -46,9 +50,6 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
           {ar ? "(كلام حقيقي، من ناس حقيقيين، بإذنهم)" : "(real words, real people, with their permission)"}
         </span>
       </div>
-
-      {/* Write box, then pinned comments, then the curated wall. */}
-      <CommentComposer ar={ar} />
 
       {pinned.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", marginBottom: 2 }}>
@@ -160,6 +161,12 @@ export function TestimonialsMobile({ ar }: { ar: boolean }) {
           ))}
         </div>
       )}
+
+      {/* The invitation to add your own, last. Reading the wall comes
+          first; an empty form at the top was the opposite of that. */}
+      <div style={{ marginTop: 18 }}>
+        <CommentComposer ar={ar} />
+      </div>
     </section>
   );
 }

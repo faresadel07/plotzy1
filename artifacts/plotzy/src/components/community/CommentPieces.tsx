@@ -2,9 +2,9 @@
 // write box, and the avatar. Both the laptop wall and the phone wall use
 // these so a comment looks and behaves the same everywhere.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Pin, Loader2 } from "lucide-react";
+import { Pin, Loader2, PenLine } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { usePostComment, timeAgo, type CommunityComment } from "./use-community-comments";
 
@@ -17,6 +17,25 @@ const CARD = "#fffdf7";
 const BORDER = "rgba(66,53,33,0.13)";
 const ESPRESSO = "#292115";
 const MAX_LEN = 600;
+
+/** The collapsed one-line invitation that stands in for the write box. */
+const triggerStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 9,
+  width: "100%",
+  minHeight: 46,
+  padding: "12px 18px",
+  background: "transparent",
+  border: `1px dashed ${BORDER}`,
+  borderRadius: 999,
+  color: MUTED,
+  fontFamily: SF,
+  fontSize: 14,
+  fontWeight: 600,
+  textAlign: "center",
+};
 
 /** The commenter's own profile picture, with their initial as the
  *  fallback — provider avatar URLs expire and would otherwise leave a
@@ -104,40 +123,43 @@ export function CommentCard({
   );
 }
 
-/** The write box. Signed-out visitors get a gentle prompt instead. */
+/**
+ * The write box, collapsed to a single line until it is wanted.
+ *
+ * It used to sit open at the top of the wall, so the first thing anyone
+ * saw was an empty form and a Post button rather than what other writers
+ * had said. Now it lives under the wall as one quiet line, and only
+ * becomes a form when somebody taps it.
+ */
 export function CommentComposer({ ar }: { ar: boolean }) {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const post = usePostComment();
+  const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const boxRef = useRef<HTMLTextAreaElement>(null);
 
   const trimmed = text.trim();
   const canPost = trimmed.length >= 4 && trimmed.length <= MAX_LEN && !post.isPending;
 
+  // Focus the box on the frame after it appears, so the keyboard opens
+  // in the same gesture that opened the form.
+  useEffect(() => {
+    if (open) boxRef.current?.focus();
+  }, [open]);
+
   if (!user) {
     return (
-      <div
+      <button
+        onClick={() => navigate("/")}
         dir={ar ? "rtl" : "ltr"}
-        style={{
-          background: CARD, border: `1px dashed ${BORDER}`, borderRadius: 16,
-          padding: "18px 20px", marginBottom: 20, textAlign: "center", fontFamily: SF,
-        }}
+        style={{ ...triggerStyle, cursor: "pointer" }}
       >
-        <div style={{ fontSize: 14.5, color: MUTED, marginBottom: 12, lineHeight: 1.6 }}>
-          {ar ? "سجّل دخولك لتشارك رأيك مع الكتّاب هنا." : "Sign in to share your own words with the writers here."}
-        </div>
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            background: ESPRESSO, color: "#f4efe2", border: "none", borderRadius: 999,
-            padding: "10px 24px", fontSize: 14, fontWeight: 700, fontFamily: SF, cursor: "pointer",
-          }}
-        >
-          {ar ? "تسجيل الدخول" : "Sign in"}
-        </button>
-      </div>
+        <PenLine size={15} style={{ flexShrink: 0, opacity: 0.55 }} />
+        <span>{ar ? "سجّل دخولك لتشارك رأيك" : "Sign in to share what you think"}</span>
+      </button>
     );
   }
 
@@ -147,18 +169,35 @@ export function CommentComposer({ ar }: { ar: boolean }) {
       await post.mutateAsync(trimmed);
       setText("");
       setDone(true);
+      setOpen(false);
       setTimeout(() => setDone(false), 4000);
     } catch (e) {
       setError(e instanceof Error ? e.message : (ar ? "تعذّر النشر." : "Could not post."));
     }
   };
 
+  if (!open) {
+    return (
+      <div dir={ar ? "rtl" : "ltr"}>
+        <button onClick={() => setOpen(true)} style={{ ...triggerStyle, cursor: "pointer" }}>
+          <PenLine size={15} style={{ flexShrink: 0, opacity: 0.55 }} />
+          <span>{ar ? "شاركنا رأيك بالموقع" : "Share what you think of Plotzy"}</span>
+        </button>
+        {done && (
+          <div style={{ marginTop: 8, fontSize: 13, color: "#3f7d4e", textAlign: "center", fontFamily: SF }}>
+            {ar ? "تم النشر، شكراً لك." : "Posted. Thank you."}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       dir={ar ? "rtl" : "ltr"}
       style={{
         background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16,
-        padding: "16px 18px", marginBottom: 20, fontFamily: SF,
+        padding: "16px 18px", fontFamily: SF,
         boxShadow: "0 10px 26px -20px rgba(41,33,21,0.4)",
       }}
     >
@@ -166,6 +205,7 @@ export function CommentComposer({ ar }: { ar: boolean }) {
         <CommentAvatar url={user.avatarUrl ?? null} name={user.displayName || user.email || "?"} size={40} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <textarea
+            ref={boxRef}
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, MAX_LEN))}
             placeholder={ar ? "اكتب رأيك عن بلوتزي…" : "Share what Plotzy has been like for you…"}
@@ -181,29 +221,37 @@ export function CommentComposer({ ar }: { ar: boolean }) {
             <span style={{ fontSize: 12, color: DIM, fontVariantNumeric: "tabular-nums" }}>
               {trimmed.length}/{MAX_LEN}
             </span>
-            <button
-              onClick={submit}
-              disabled={!canPost}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 7,
-                background: canPost ? ESPRESSO : "rgba(66,53,33,0.12)",
-                color: canPost ? "#f4efe2" : MUTED,
-                border: "none", borderRadius: 999, padding: "9px 22px",
-                fontSize: 14, fontWeight: 700, fontFamily: SF,
-                cursor: canPost ? "pointer" : "not-allowed",
-              }}
-            >
-              {post.isPending && <Loader2 size={14} className="animate-spin" />}
-              {ar ? "انشر" : "Post"}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* A form that opens on a tap needs a way back out of it. */}
+              <button
+                onClick={() => { setOpen(false); setText(""); setError(null); }}
+                style={{
+                  background: "transparent", color: MUTED, border: "none",
+                  borderRadius: 999, padding: "9px 14px",
+                  fontSize: 14, fontWeight: 600, fontFamily: SF, cursor: "pointer",
+                }}
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                onClick={submit}
+                disabled={!canPost}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  background: canPost ? ESPRESSO : "rgba(66,53,33,0.12)",
+                  color: canPost ? "#f4efe2" : MUTED,
+                  border: "none", borderRadius: 999, padding: "9px 22px",
+                  fontSize: 14, fontWeight: 700, fontFamily: SF,
+                  cursor: canPost ? "pointer" : "not-allowed",
+                }}
+              >
+                {post.isPending && <Loader2 size={14} className="animate-spin" />}
+                {ar ? "انشر" : "Post"}
+              </button>
+            </div>
           </div>
           {error && (
             <div style={{ marginTop: 8, fontSize: 13, color: "#a13c2c", lineHeight: 1.5 }}>{error}</div>
-          )}
-          {done && !error && (
-            <div style={{ marginTop: 8, fontSize: 13, color: "#3f7d4e" }}>
-              {ar ? "تم النشر، شكراً لك." : "Posted — thank you."}
-            </div>
           )}
         </div>
       </div>
