@@ -32,7 +32,6 @@ function getInitials(name?: string | null, email?: string | null): string {
 
 const NAV_ITEMS: { href: string; key: string }[] = [
   { href: "/",              key: "myLibrary" },
-  { href: "/tutorial",      key: "navTutorial" },
   { href: "/writing-guide", key: "navGuide" },
   { href: "/course",        key: "navCourse" },
   { href: "/audiolibrary",  key: "navAudioLibrary" },
@@ -847,7 +846,6 @@ export function Layout({ children, isLanding, isFullDark, lightNav, noScroll, da
               { label: 'Free Writing Course', href: '/course' },
               { label: 'Plotzy Academy',      href: '/learn' },
               { label: 'Writing Guide',       href: '/writing-guide' },
-              { label: 'Tutorial Videos',     href: '/tutorial' },
               { label: 'FAQ',                 href: '/faq' },
             ]} />
 

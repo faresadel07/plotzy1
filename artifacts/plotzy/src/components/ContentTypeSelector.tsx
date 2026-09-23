@@ -30,19 +30,19 @@ interface ContentTypeSelectorProps {
 const BOOK_GENRES = [
   "Fantasy", "Romance", "Mystery", "Thriller", "Science Fiction",
   "Historical Fiction", "Horror", "Literary Fiction", "Adventure",
-  "Biography", "Self-Help", "Young Adult", "Children's", "Other",
+  "Biography", "Self Help", "Young Adult", "Children's", "Other",
 ];
 
 const BOOK_FEATURES = [
-  { icon: Layers, text: "Chapter-by-chapter workspace" },
+  { icon: Layers, text: "A workspace built around chapters" },
   { icon: ImageIcon, text: "Full cover designer" },
-  { icon: AlignLeft, text: "Lore & outline tools" },
+  { icon: AlignLeft, text: "Lore and outline tools" },
 ];
 
 const BLOG_FEATURES = [
-  { icon: FileText, text: "Single-page rich editor" },
+  { icon: FileText, text: "One page, a full rich editor" },
   { icon: ImageIcon, text: "Featured cover image" },
-  { icon: Tag, text: "Tags & categories for SEO" },
+  { icon: Tag, text: "Tags and categories for SEO" },
 ];
 
 export function ContentTypeSelector({
@@ -160,7 +160,7 @@ export function ContentTypeSelector({
                   <ArrowLeft size={12} /> Back
                 </button>
                 <h2 style={{ fontSize: 21, fontWeight: 800, color: "#f7f2e4", margin: 0 }}>New Blog Post</h2>
-                <p style={{ fontSize: 13, color: "rgba(244,239,226,0.38)", marginTop: 3 }}>Single-page article with SEO tools</p>
+                <p style={{ fontSize: 13, color: "rgba(244,239,226,0.38)", marginTop: 3 }}>A single article page with SEO tools</p>
               </>
             )}
           </div>
@@ -219,7 +219,7 @@ export function ContentTypeSelector({
               <div style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(244,239,226,0.07)", border: "1px solid rgba(244,239,226,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
                 <PenLine size={17} color="#EFEFEF" />
               </div>
-              <p style={{ color: "#f7f2e4", fontWeight: 700, fontSize: 14, margin: "0 0 9px" }}>Blog / Article</p>
+              <p style={{ color: "#f7f2e4", fontWeight: 700, fontSize: 14, margin: "0 0 9px" }}>Blog Article</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 5 }}>
                 {BLOG_FEATURES.map(({ icon: Icon, text }) => (
                   <li key={text} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(244,239,226,0.38)" }}>

@@ -1,24 +1,23 @@
-// Book Creation Wizard, full version.
+// Book Creation Wizard.
 //
-// Replaces the old 3-step onboarding-wizard.tsx with a researched
-// 10-question flow that gives the AI Studio enough context to actually
-// be useful from page 1, and gives the writer a real plan instead of
-// a blank cursor.
+// Six questions, every one a tap, asked before a writer commits to a
+// project. The answers seed the AI Studio's context and the book's own
+// word goal, so a wrong answer here follows the writer for months. That
+// is why each step constrains the next: the format decides which genres
+// and reader ages are even offered, and the length slider can never be
+// dragged outside what that format actually means.
 //
 // Question set was drawn from what literary agents, professional
-// editors, and the major writing tools (Sudowrite Story Bible,
-// Reedsy Book Editor, NaNoWriMo planner) ask before a writer commits
-// to a project. Order is sequential: each step needs the previous
-// answer to render correctly (length defaults change with format +
-// audience; setting only appears for fiction; etc.).
+// editors, and the major writing tools (Sudowrite Story Bible, Reedsy
+// Book Editor, NaNoWriMo planner) ask before a writer starts.
 //
-// Design rules (per user feedback):
+// House rules for the copy in this file:
 //   - No em-dashes or en-dashes anywhere in user-facing copy
 //   - No emoji
 //   - Bilingual EN + AR for every label, helper, and option
-//   - One question per screen; cannot advance until answered (where
-//     required); back button always available
-//   - Smart defaults so the writer can fly through if they want
+//   - Western digits in both languages, matching the rest of Plotzy
+//   - One question per screen, back always available, smart defaults so
+//     a writer who does not care can tap through in seconds
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -27,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import {
   BookOpen, ArrowRight, ArrowLeft, Loader2, Wand2, Check,
   Feather, Newspaper, User, Baby, Globe2, Calendar,
-  Target, Eye, Lightbulb, Pencil,
+  Target, Users, Lightbulb, Pencil, Tag,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { useToast } from "@/hooks/use-toast";
@@ -56,84 +55,194 @@ interface BookCreationWizardProps {
   onCreate: (answers: WizardAnswers) => Promise<void>;
 }
 
-// ─── Static data ─────────────────────────────────────────────────────
+// ─── Formats ─────────────────────────────────────────────────────────
+//
+// `words` is the whole contract for the length step: the slider's own
+// bounds and its three presets come from here, so the tagline a writer
+// reads on step 1 and the range they get on step 4 can never disagree.
+// `audiences` is the same idea for the reader step.
 
-const FORMATS: Array<{ id: BookFormat; label: string; labelAr: string; tagline: string; taglineAr: string; icon: React.ReactNode; defaultWords: number }> = [
-  { id: "novel",       label: "Novel",            labelAr: "رواية",         tagline: "40,000 words or more, 160 pages and up",  taglineAr: "40,000 كلمة فأكثر، 160 صفحة فأكثر",   icon: <BookOpen size={20} />,   defaultWords: 80_000 },
-  { id: "novella",     label: "Novella",          labelAr: "رواية قصيرة",   tagline: "17,500 to 40,000 words, 70 to 160 pages", taglineAr: "17,500 إلى 40,000 كلمة، 70 إلى 160 صفحة", icon: <Feather size={20} />,    defaultWords: 25_000 },
-  { id: "short_story", label: "Short Story",      labelAr: "قصّة قصيرة",    tagline: "Under 17,500 words, under 70 pages",      taglineAr: "أقل من 17,500 كلمة، أقل من 70 صفحة",   icon: <Pencil size={20} />,     defaultWords: 7_500 },
-  { id: "nonfiction",  label: "Non Fiction",      labelAr: "كتاب فكري",      tagline: "Guide, essay, how to",                    taglineAr: "دليل، مقالة، شرح",                      icon: <Newspaper size={20} />,  defaultWords: 60_000 },
-  { id: "memoir",      label: "Memoir",           labelAr: "سيرة ذاتية",     tagline: "Your story in your voice",                taglineAr: "حكايتك بصوتك",                          icon: <User size={20} />,       defaultWords: 70_000 },
-  { id: "children",    label: "Children's Book",  labelAr: "كتاب أطفال",     tagline: "Under 12,000 words, under 48 pages",      taglineAr: "أقل من 12,000 كلمة، أقل من 48 صفحة",   icon: <Baby size={20} />,       defaultWords: 8_000 },
+interface FormatDef {
+  id: BookFormat;
+  label: string; labelAr: string;
+  tagline: string; taglineAr: string;
+  icon: React.ReactNode;
+  words: { min: number; max: number; default: number; short: number; medium: number; long: number };
+  audiences: BookAudience[];
+  /** Fiction branch asks for a setting; the rest are asked their purpose. */
+  narrative: boolean;
+}
+
+const ADULT_AUDIENCES: BookAudience[] = ["middle_grade", "ya", "new_adult", "adult"];
+
+const FORMATS: FormatDef[] = [
+  {
+    id: "novel", label: "Novel", labelAr: "رواية",
+    tagline: "40,000 words and up", taglineAr: "40,000 كلمة فأكثر",
+    icon: <BookOpen size={20} />, narrative: true, audiences: ADULT_AUDIENCES,
+    words: { min: 40_000, max: 150_000, default: 80_000, short: 50_000, medium: 80_000, long: 120_000 },
+  },
+  {
+    id: "novella", label: "Novella", labelAr: "رواية قصيرة",
+    tagline: "17,500 to 40,000 words", taglineAr: "من 17,500 إلى 40,000 كلمة",
+    icon: <Feather size={20} />, narrative: true, audiences: ADULT_AUDIENCES,
+    words: { min: 17_500, max: 40_000, default: 25_000, short: 20_000, medium: 28_000, long: 38_000 },
+  },
+  {
+    id: "short_story", label: "Short Story", labelAr: "قصّة قصيرة",
+    tagline: "Up to 17,500 words", taglineAr: "حتى 17,500 كلمة",
+    icon: <Pencil size={20} />, narrative: true, audiences: ADULT_AUDIENCES,
+    words: { min: 1_000, max: 17_500, default: 7_500, short: 3_000, medium: 7_500, long: 15_000 },
+  },
+  {
+    id: "nonfiction", label: "Non Fiction", labelAr: "كتاب فكري",
+    tagline: "A guide, a study, or an argument", taglineAr: "دليل أو دراسة أو طرح فكرة",
+    icon: <Newspaper size={20} />, narrative: false, audiences: ADULT_AUDIENCES,
+    words: { min: 15_000, max: 150_000, default: 60_000, short: 30_000, medium: 60_000, long: 100_000 },
+  },
+  {
+    id: "memoir", label: "Memoir", labelAr: "سيرة ذاتية",
+    tagline: "Your own story in your own voice", taglineAr: "حكايتك بصوتك أنت",
+    icon: <User size={20} />, narrative: false, audiences: ["ya", "new_adult", "adult"],
+    words: { min: 20_000, max: 150_000, default: 70_000, short: 40_000, medium: 70_000, long: 110_000 },
+  },
+  {
+    id: "children", label: "Children's Book", labelAr: "كتاب أطفال",
+    tagline: "From a picture book to a first chapter book", taglineAr: "من كتاب مصوّر إلى أول كتاب فصول",
+    icon: <Baby size={20} />, narrative: true, audiences: ["children", "middle_grade"],
+    words: { min: 200, max: 12_000, default: 1_000, short: 600, medium: 1_500, long: 8_000 },
+  },
 ];
 
-// Tap-only replacement for the old free-text "topic" question: what is
-// the book trying to do for its reader? The English label is what the
-// AI summary stores (prompts stay compact in English).
-const NONFICTION_GOALS: Array<{ id: string; label: string; labelAr: string; sub: string; subAr: string }> = [
-  { id: "teach",    label: "Teach a practical skill",      labelAr: "تعليم مهارة عمليّة",   sub: "Step by step, hands on",            subAr: "خطوة بخطوة وبشكل تطبيقي" },
-  { id: "guide",    label: "Guide through a process",      labelAr: "دليل يشرح طريقاً",      sub: "From starting point to result",     subAr: "من نقطة البداية حتى النتيجة" },
-  { id: "share",    label: "Share experience and lessons", labelAr: "مشاركة تجربة ودروس",   sub: "What worked and what did not",      subAr: "ما نجح وما لم ينجح" },
-  { id: "inspire",  label: "Inspire and motivate",         labelAr: "إلهام وتحفيز",          sub: "Change how the reader thinks",      subAr: "تغيير طريقة تفكير القارئ" },
-  { id: "document", label: "Document knowledge",           labelAr: "توثيق معرفة",           sub: "Organize a field or a story",       subAr: "تنظيم مجال أو حكاية" },
-  { id: "life",     label: "Tell a life story",            labelAr: "سرد قصّة حياة",         sub: "Memoir and personal history",       subAr: "سيرة وذكريات شخصيّة" },
+const formatDef = (id: BookFormat) => FORMATS.find((f) => f.id === id)!;
+
+// ─── Genres, one vocabulary per branch ───────────────────────────────
+
+interface Option { id: string; label: string; labelAr: string; sub?: string; subAr?: string }
+
+const FICTION_GENRES: Option[] = [
+  { id: "fantasy",      label: "Fantasy",         labelAr: "خيال" },
+  { id: "scifi",        label: "Science Fiction", labelAr: "خيال علمي" },
+  { id: "romance",      label: "Romance",         labelAr: "رومانسي" },
+  { id: "mystery",      label: "Mystery",         labelAr: "غموض" },
+  { id: "thriller",     label: "Thriller",        labelAr: "إثارة" },
+  { id: "literary",     label: "Literary",        labelAr: "أدبي" },
+  { id: "historical",   label: "Historical",      labelAr: "تاريخي" },
+  { id: "horror",       label: "Horror",          labelAr: "رعب" },
+  { id: "contemporary", label: "Contemporary",    labelAr: "معاصر" },
+  { id: "adventure",    label: "Adventure",       labelAr: "مغامرة" },
+  { id: "dystopian",    label: "Dystopian",       labelAr: "ديستوبيا" },
+  { id: "other",        label: "Something else",  labelAr: "شيء آخر" },
 ];
 
-const FICTION_GENRES = [
-  { id: "fantasy",          label: "Fantasy",          labelAr: "خيال" },
-  { id: "scifi",            label: "Science Fiction",  labelAr: "خيال علمي" },
-  { id: "romance",          label: "Romance",          labelAr: "رومانسي" },
-  { id: "mystery",          label: "Mystery",          labelAr: "غموض" },
-  { id: "thriller",         label: "Thriller",         labelAr: "إثارة" },
-  { id: "literary",         label: "Literary",         labelAr: "أدبي" },
-  { id: "historical",       label: "Historical",       labelAr: "تاريخي" },
-  { id: "horror",           label: "Horror",           labelAr: "رعب" },
-  { id: "contemporary",     label: "Contemporary",     labelAr: "معاصر" },
-  { id: "adventure",        label: "Adventure",        labelAr: "مغامرة" },
-  { id: "dystopian",        label: "Dystopian",        labelAr: "ديستوبيا" },
-  { id: "other",            label: "Other",            labelAr: "أخرى" },
-];
-const NONFICTION_GENRES = [
-  { id: "self_help",        label: "Self Help",        labelAr: "تطوير ذاتي" },
-  { id: "business",         label: "Business",         labelAr: "أعمال" },
-  { id: "biography",        label: "Biography",        labelAr: "سيرة" },
-  { id: "history",          label: "History",          labelAr: "تاريخ" },
-  { id: "science",          label: "Science",          labelAr: "علوم" },
-  { id: "philosophy",       label: "Philosophy",       labelAr: "فلسفة" },
-  { id: "religion",         label: "Religion",         labelAr: "دين" },
-  { id: "psychology",       label: "Psychology",       labelAr: "علم نفس" },
-  { id: "essay",            label: "Essays",           labelAr: "مقالات" },
-  { id: "travel",           label: "Travel",           labelAr: "رحلات" },
-  { id: "cooking",          label: "Cooking",          labelAr: "طبخ" },
-  { id: "other",            label: "Other",            labelAr: "أخرى" },
+const NONFICTION_GENRES: Option[] = [
+  { id: "self_help",  label: "Self Help",       labelAr: "تطوير ذاتي" },
+  { id: "business",   label: "Business",        labelAr: "أعمال" },
+  { id: "biography",  label: "Biography",       labelAr: "سيرة" },
+  { id: "history",    label: "History",         labelAr: "تاريخ" },
+  { id: "science",    label: "Science",         labelAr: "علوم" },
+  { id: "philosophy", label: "Philosophy",      labelAr: "فلسفة" },
+  { id: "religion",   label: "Religion",        labelAr: "دين" },
+  { id: "psychology", label: "Psychology",      labelAr: "علم نفس" },
+  { id: "essay",      label: "Essays",          labelAr: "مقالات" },
+  { id: "travel",     label: "Travel",          labelAr: "رحلات" },
+  { id: "cooking",    label: "Cooking",         labelAr: "طبخ" },
+  { id: "other",      label: "Something else",  labelAr: "شيء آخر" },
 ];
 
-const AUDIENCES: Array<{ id: BookAudience; label: string; labelAr: string; age: string; ageAr: string }> = [
-  { id: "children",     label: "Children",     labelAr: "أطفال",      age: "Ages 5 to 8",    ageAr: "من 5 إلى 8" },
-  { id: "middle_grade", label: "Middle Grade", labelAr: "ما قبل المراهقة", age: "Ages 8 to 12",   ageAr: "من 8 إلى 12" },
-  { id: "ya",           label: "Young Adult",  labelAr: "يافعين",      age: "Ages 13 to 18",  ageAr: "من 13 إلى 18" },
-  { id: "new_adult",    label: "New Adult",    labelAr: "شباب",        age: "Ages 18 to 25",  ageAr: "من 18 إلى 25" },
-  { id: "adult",        label: "Adult",        labelAr: "كبار",        age: "Ages 18 and up", ageAr: "18 فأكثر" },
+// A children's book is a narrative, but none of the adult fiction
+// genres describe one. Offering Horror and Dystopian to someone writing
+// a picture book was the clearest sign the old branch was wrong.
+const CHILDREN_GENRES: Option[] = [
+  { id: "picture_book", label: "Picture Book",        labelAr: "كتاب مصوّر" },
+  { id: "bedtime",      label: "Bedtime Story",       labelAr: "قصّة ما قبل النوم" },
+  { id: "adventure",    label: "Adventure",           labelAr: "مغامرة" },
+  { id: "animals",      label: "Animals",             labelAr: "حيوانات" },
+  { id: "fable",        label: "Fable with a Lesson", labelAr: "حكاية بمغزى" },
+  { id: "fantasy",      label: "Fantasy",             labelAr: "خيال" },
+  { id: "educational",  label: "Learning Concepts",   labelAr: "تعليم ومفاهيم" },
+  { id: "family",       label: "Family and Friends",  labelAr: "عائلة وأصدقاء" },
+  { id: "humour",       label: "Funny Story",         labelAr: "قصّة مضحكة" },
+  { id: "rhyme",        label: "Rhyming Story",       labelAr: "قصّة بقافية" },
+  { id: "heroes",       label: "History and Heroes",  labelAr: "تاريخ وأبطال" },
+  { id: "other",        label: "Something else",      labelAr: "شيء آخر" },
 ];
 
-const SETTINGS_FICTION: Array<{ id: string; label: string; labelAr: string }> = [
-  { id: "contemporary", label: "Contemporary, today",         labelAr: "معاصرة، اليوم" },
-  { id: "historical",   label: "Historical, real past period", labelAr: "تاريخية، حقبة حقيقية" },
-  { id: "future",       label: "Future or sci fi",            labelAr: "المستقبل أو خيال علمي" },
-  { id: "fantasy",      label: "Invented fantasy world",      labelAr: "عالم خيالي مبتكر" },
-  { id: "alt_reality",  label: "Alternate reality",           labelAr: "واقع موازٍ" },
+function genresFor(format: BookFormat): Option[] {
+  if (format === "children") return CHILDREN_GENRES;
+  return formatDef(format).narrative ? FICTION_GENRES : NONFICTION_GENRES;
+}
+
+// ─── Readers ─────────────────────────────────────────────────────────
+
+const AUDIENCES: Array<Option & { id: BookAudience }> = [
+  { id: "children",     label: "Children",     labelAr: "أطفال",           sub: "Ages 5 to 8",    subAr: "من 5 إلى 8 سنوات" },
+  { id: "middle_grade", label: "Middle Grade", labelAr: "ما قبل المراهقة", sub: "Ages 8 to 12",   subAr: "من 8 إلى 12 سنة" },
+  { id: "ya",           label: "Young Adult",  labelAr: "يافعون",          sub: "Ages 13 to 18",  subAr: "من 13 إلى 18 سنة" },
+  { id: "new_adult",    label: "New Adult",    labelAr: "شباب",            sub: "Ages 18 to 25",  subAr: "من 18 إلى 25 سنة" },
+  { id: "adult",        label: "Adult",        labelAr: "كبار",            sub: "Ages 18 and up", subAr: "18 سنة فأكثر" },
 ];
 
-// Words per printed trade-paperback page. Used everywhere length is
-// shown in pages alongside word count.
-const WORDS_PER_PAGE = 250;
+// ─── Story world / purpose ───────────────────────────────────────────
 
-// Helper: words to readable "X,XXX words (~Y pages)"
-function fmtLength(words: number, ar: boolean): string {
-  const pages = Math.round(words / WORDS_PER_PAGE);
-  return ar
-    ? `${words.toLocaleString("ar-EG")} كلمة (حوالي ${pages.toLocaleString("ar-EG")} صفحة)`
-    : `${words.toLocaleString("en-US")} words (about ${pages.toLocaleString("en-US")} pages)`;
+const SETTINGS_FICTION: Option[] = [
+  { id: "contemporary", label: "Today, the real world",   labelAr: "اليوم، في العالم الواقعي" },
+  { id: "historical",   label: "A real period in history", labelAr: "حقبة حقيقية من التاريخ" },
+  { id: "future",       label: "The future",              labelAr: "المستقبل" },
+  { id: "fantasy",      label: "An invented world",       labelAr: "عالم من ابتكارك" },
+  { id: "alt_reality",  label: "Our world, changed",      labelAr: "عالمنا لكن مختلفاً" },
+  { id: "undecided",    label: "Not decided yet",         labelAr: "لم أقرّر بعد" },
+];
+
+const SETTINGS_CHILDREN: Option[] = [
+  { id: "home_school", label: "Home and school",     labelAr: "البيت والمدرسة" },
+  { id: "nature",      label: "Forest, sea or farm", labelAr: "الغابة أو البحر أو المزرعة" },
+  { id: "imaginary",   label: "An imaginary world",  labelAr: "عالم خيالي" },
+  { id: "city",        label: "A town or a city",    labelAr: "بلدة أو مدينة" },
+  { id: "space",       label: "Space and the stars", labelAr: "الفضاء والنجوم" },
+  { id: "long_ago",    label: "Long ago",            labelAr: "قديم الزمان" },
+];
+
+const PURPOSES: Option[] = [
+  { id: "teach",    label: "Teach a practical skill",      labelAr: "تعليم مهارة عمليّة",  sub: "Step by step, hands on",        subAr: "خطوة بخطوة وبشكل تطبيقي" },
+  { id: "guide",    label: "Guide through a process",      labelAr: "دليل يشرح طريقاً",     sub: "From starting point to result", subAr: "من نقطة البداية حتى النتيجة" },
+  { id: "share",    label: "Share experience and lessons", labelAr: "مشاركة تجربة ودروس",  sub: "What worked and what did not",  subAr: "ما نجح وما لم ينجح" },
+  { id: "inspire",  label: "Inspire and motivate",         labelAr: "إلهام وتحفيز",         sub: "Change how the reader thinks",  subAr: "تغيير طريقة تفكير القارئ" },
+  { id: "document", label: "Document knowledge",           labelAr: "توثيق معرفة",          sub: "Organise a field or a story",   subAr: "تنظيم مجال أو حكاية" },
+  { id: "life",     label: "Tell a life story",            labelAr: "سرد قصّة حياة",        sub: "Memoir and personal history",   subAr: "سيرة وذكريات شخصيّة" },
+];
+
+// ─── Length maths ────────────────────────────────────────────────────
+
+/**
+ * Printed pages for a word count.
+ *
+ * A single 250 words per page figure is right for an adult trade
+ * paperback and badly wrong for children: it told a writer their
+ * 800 word picture book was three pages long. Picture books carry very
+ * little text per page and print in eight page signatures; a first
+ * chapter book sits in between.
+ */
+export function estimatePages(format: BookFormat, words: number): number {
+  if (format === "children") {
+    if (words <= 1_500) return Math.max(16, Math.round(words / 30 / 8) * 8);
+    return Math.max(24, Math.round(words / 150));
+  }
+  return Math.max(1, Math.round(words / 250));
+}
+
+/** "80,000 words (about 320 pages)" in either language, Western digits. */
+function fmtLength(format: BookFormat, words: number, ar: boolean): string {
+  const w = words.toLocaleString("en-US");
+  const p = estimatePages(format, words).toLocaleString("en-US");
+  return ar ? `${w} كلمة (حوالي ${p} صفحة)` : `${w} words (about ${p} pages)`;
+}
+
+/** Slider step that stays usable across a 200 word and a 150,000 word range. */
+function sliderStep(max: number): number {
+  if (max <= 12_000) return 100;
+  if (max <= 40_000) return 500;
+  return 1_000;
 }
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -143,52 +252,32 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   const ar = lang === "ar";
   const { toast } = useToast();
 
-  // ── Form state ──
-  // Every answer is a TAP: no free-text questions anywhere in the
-  // wizard. The book starts untitled (renaming lives in the editor and
-  // the long-press sheet) and the author name defaults to the account.
-  const [step, setStep] = useState<number>(1);
+  // Every answer is a tap: no free-text questions anywhere. The book
+  // starts untitled (renaming lives in the editor and the long-press
+  // sheet) and the author name falls back to the account server-side.
+  const [step, setStep] = useState(1);
   const [format, setFormat] = useState<BookFormat | null>(null);
-  const [genre, setGenre] = useState<string>("");
+  const [genre, setGenre] = useState("");
   const [audience, setAudience] = useState<BookAudience | null>(null);
-  const [targetWords, setTargetWords] = useState<number>(80_000);
-  const [setting, setSetting] = useState<string>("");
-  const [topic, setTopic] = useState("");
-  const [daysPerWeek, setDaysPerWeek] = useState<number>(5);
+  const [targetWords, setTargetWords] = useState(80_000);
+  const [lengthTouched, setLengthTouched] = useState(false);
+  const [setting, setSetting] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [daysPerWeek, setDaysPerWeek] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ── Derived ──
-  const isFiction = format && !["nonfiction", "memoir"].includes(format);
-  const isChildren = format === "children";
-
-  // Six steps total. Setting (fiction) and Goal (non-fiction) share
-  // the same slot; both branches advance to the schedule step after.
+  const def = format ? formatDef(format) : null;
+  const isNarrative = !!def?.narrative;
   const totalSteps = 6;
 
-  // Auto-advance: tapping a card on a pure-choice step moves straight
-  // to the next question after a beat, so the selection registers
-  // visually first. Sliders and multi-input steps keep the button.
+  // Tapping a card on a pure-choice step moves to the next question
+  // after a beat, so the selection registers visually first.
   const advance = (apply: () => void) => {
     apply();
-    window.setTimeout(() => {
-      setStep((s) => (s < totalSteps ? s + 1 : s));
-    }, 240);
+    window.setTimeout(() => setStep((s) => (s < totalSteps ? s + 1 : s)), 240);
   };
 
-  // Default word goal as the writer crosses through the first three
-  // steps; only nudges if they haven't manually touched it.
-  useEffect(() => {
-    if (!format) return;
-    const base = FORMATS.find((f) => f.id === format)?.defaultWords ?? 80_000;
-    let adjusted = base;
-    if (audience === "ya" && isFiction && format === "novel") adjusted = 70_000;
-    if (audience === "middle_grade" && isFiction) adjusted = 35_000;
-    if (audience === "children") adjusted = isChildren ? 800 : 5_000;
-    setTargetWords(adjusted);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [format, audience]);
-
-  // Reset everything when the dialog opens fresh.
+  // Reset when the dialog opens fresh.
   useEffect(() => {
     if (!open) return;
     setStep(1);
@@ -196,74 +285,102 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
     setGenre("");
     setAudience(null);
     setTargetWords(80_000);
+    setLengthTouched(false);
     setSetting("");
-    setTopic("");
+    setPurpose("");
     setDaysPerWeek(5);
   }, [open]);
 
-  // Daily word goal recomputes as the writer changes Q5 / Q10.
+  // Changing the format resets the answers that depend on it, because a
+  // genre or a reader age from the previous branch may not exist in the
+  // new one. Without this, switching Novel to Children's Book kept a
+  // "Dystopian, adult" answer that its own option list never offers.
+  useEffect(() => {
+    if (!format) return;
+    const d = formatDef(format);
+    setGenre((g) => (genresFor(format).some((x) => x.id === g) ? g : ""));
+    setAudience((a) => (a && d.audiences.includes(a) ? a : null));
+    setSetting((s) => {
+      const list = format === "children" ? SETTINGS_CHILDREN : SETTINGS_FICTION;
+      return list.some((x) => x.id === s) ? s : "";
+    });
+    // A length the writer chose by hand is theirs to keep, but it still
+    // has to be legal for the new format.
+    setTargetWords((w) =>
+      lengthTouched ? Math.min(d.words.max, Math.max(d.words.min, w)) : d.words.default,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [format]);
+
+  // The reader's age nudges the suggested length, but never overrides a
+  // length the writer set themselves.
+  useEffect(() => {
+    if (!format || !audience || lengthTouched) return;
+    const d = formatDef(format);
+    let suggested = d.words.default;
+    if (format === "novel" && audience === "ya") suggested = 70_000;
+    if (format === "novel" && audience === "middle_grade") suggested = 40_000;
+    setTargetWords(Math.min(d.words.max, Math.max(d.words.min, suggested)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audience]);
+
+  const setLength = (v: number) => {
+    setLengthTouched(true);
+    setTargetWords(v);
+  };
+
+  // 26 weeks is six months; daysPerWeek is the writer's real commitment.
   const dailyWordGoal = useMemo(() => {
     if (!targetWords || !daysPerWeek) return 0;
-    // 6-month target by default; the writer adjusts via daysPerWeek
-    // and the implied weeks-per-target. 26 weeks * daysPerWeek = the
-    // total writing days they're committing.
-    const totalDays = 26 * daysPerWeek;
-    return Math.max(50, Math.round(targetWords / totalDays));
+    return Math.max(50, Math.round(targetWords / (26 * daysPerWeek)));
   }, [targetWords, daysPerWeek]);
 
-  // ── Navigation ──
-
-  /** Steps the writer must answer to be allowed to advance. */
   const canAdvance = useMemo(() => {
     switch (step) {
       case 1: return !!format;
       case 2: return !!genre;
       case 3: return !!audience;
       case 4: return targetWords > 0;
-      case 5: return isFiction ? !!setting : !!topic;
+      case 5: return isNarrative ? !!setting : !!purpose;
       case 6: return daysPerWeek > 0;
       default: return true;
     }
-  }, [step, format, genre, audience, targetWords, setting, topic, daysPerWeek, isFiction]);
+  }, [step, format, genre, audience, targetWords, setting, purpose, daysPerWeek, isNarrative]);
 
   const next = () => {
     if (!canAdvance) return;
-    if (step >= totalSteps) {
-      void submit();
-      return;
-    }
+    if (step >= totalSteps) { void submit(); return; }
     setStep((s) => s + 1);
   };
-  const back = () => {
-    if (step <= 1) return;
-    setStep((s) => s - 1);
-  };
+  const back = () => setStep((s) => (s > 1 ? s - 1 : s));
 
   const submit = async () => {
-    if (!format || !genre || !audience) {
+    if (!format || !genre || !audience || (isNarrative ? !setting : !purpose)) {
       toast({
         variant: "destructive",
         title: ar ? "معلومات ناقصة" : "Some answers are missing",
         description: ar
-          ? "ارجع وتأكّد أن كل الأسئلة المطلوبة فيها جواب."
-          : "Go back and make sure every required question has an answer.",
+          ? "ارجع وتأكّد أن كل سؤال فيه جواب."
+          : "Go back and make sure every question has an answer.",
       });
       return;
     }
     setIsSubmitting(true);
     try {
+      const purposeDef = PURPOSES.find((p) => p.id === purpose);
+      const settingList = format === "children" ? SETTINGS_CHILDREN : SETTINGS_FICTION;
+      const settingDef = settingList.find((s) => s.id === setting);
       await onCreate({
         format,
-        // No typing anywhere in the wizard: the book starts untitled
-        // (named later in the editor) and the author name falls back
-        // to the account's display name server-side.
         title: "",
         authorName: "",
         genre,
         audience,
         targetWords,
-        setting: isFiction ? setting : undefined,
-        topic: !isFiction ? topic : undefined,
+        // English labels, not raw ids: the Studio reads these straight
+        // into its prompt, where "alt_reality" means nothing.
+        setting: isNarrative ? settingDef?.label : undefined,
+        topic: !isNarrative ? purposeDef?.label : undefined,
         daysPerWeek,
         dailyWordGoal,
       });
@@ -276,29 +393,41 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
   // ── Render ──
 
   const stepVariants: Variants = {
-    hidden: { opacity: 0, x: isRTL ? -20 : 20 },
+    hidden:  { opacity: 0, x: isRTL ? -20 : 20 },
     visible: { opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] } },
     exit:    { opacity: 0, x: isRTL ? 20 : -20, transition: { duration: 0.15 } },
   };
 
+  const audienceOptions = AUDIENCES.filter((a) => !def || def.audiences.includes(a.id));
+  const settingOptions = format === "children" ? SETTINGS_CHILDREN : SETTINGS_FICTION;
+  const L = def?.words;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
-        // Phone (<640px): a true full-screen sheet — pinned to the
-        // viewport, no centering transform, dynamic-viewport height so
-        // the soft keyboard and short screens can never clip the
-        // Continue/Create footer (the body scrolls instead).
+        // Radix focuses the first focusable child on open. On a grid of
+        // option cards that painted a ring around the first one, which
+        // reads as a selection that was never made.
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        // Phone (<640px): a true full-screen sheet, pinned to the
+        // viewport with no centering transform, dynamic-viewport height
+        // so a short screen can never clip the footer.
         className="sm:max-w-3xl sm:rounded-3xl p-0 border-0 shadow-2xl overflow-hidden bg-card max-sm:left-0 max-sm:top-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:h-[100dvh] max-sm:max-w-none max-sm:rounded-none"
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="flex flex-col sm:min-h-[560px] max-sm:h-full">
-          {/* Header strip with step counter + progress */}
+        <div className="flex flex-col sm:min-h-[600px] max-sm:h-full">
+          {/* Header: step counter and progress */}
           <header className="px-5 sm:px-8 pb-4 border-b border-border/40 pt-6 max-sm:pt-[calc(env(safe-area-inset-top)+14px)]">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-xs font-bold tracking-widest uppercase text-muted-foreground">
+            {/* The dialog's own close button is pinned to the physical
+                right (`absolute right-4`), which does not mirror in RTL.
+                So the padding that keeps that corner clear is physical
+                too: in English it protects the step counter, in Arabic it
+                protects the title. */}
+            <div className="flex items-center justify-between gap-3 mb-3 pr-7">
+              <div className="text-[11px] font-bold tracking-[0.18em] uppercase text-muted-foreground">
                 {ar ? "إنشاء كتاب" : "Create a Book"}
               </div>
-              <div className="text-xs text-muted-foreground tabular-nums">
+              <div className="text-[11px] text-muted-foreground tabular-nums shrink-0">
                 {ar ? `الخطوة ${step} من ${totalSteps}` : `Step ${step} of ${totalSteps}`}
               </div>
             </div>
@@ -310,17 +439,19 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
             </div>
           </header>
 
-          {/* Body: one question per screen. min-h-0 + overflow lets it
-              scroll inside the sheet instead of pushing the footer off. */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-10 flex flex-col">
+          {/* Body: one question per screen, scrolls inside the sheet. */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 py-6 sm:px-8 sm:py-9 flex flex-col">
             <AnimatePresence mode="wait">
+
               {step === 1 && (
-                <motion.section key="s1" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+                <motion.section key="format" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
+                    eyebrow={ar ? "النوع" : "Format"}
+                    icon={<BookOpen size={14} />}
                     title={ar ? "ما نوع الكتاب الذي تكتبه؟" : "What kind of book are you writing?"}
-                    sub={ar ? "هذا يحدّد طول الكتاب ونوع الأسئلة التي ستليها." : "This sets your length target and the questions that follow."}
+                    sub={ar ? "يحدّد هذا طول الكتاب والأسئلة التي ستليه." : "This sets your length target and the questions that follow."}
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <OptionGrid cols={2}>
                     {FORMATS.map((f) => (
                       <Choice
                         key={f.id}
@@ -331,111 +462,141 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                         icon={f.icon}
                       />
                     ))}
-                  </div>
+                  </OptionGrid>
                 </motion.section>
               )}
 
               {step === 2 && (
-                <motion.section key="s3" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+                <motion.section key="genre" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
-                    title={ar ? "أيّ نوع أدبي يناسب؟" : "Which genre fits best?"}
-                    sub={ar ? "اختر الأقرب. يمكنك إضافة نوع فرعي لاحقاً." : "Pick the closest one. You can add a subgenre later."}
+                    eyebrow={ar ? "التصنيف" : "Genre"}
+                    icon={<Tag size={14} />}
+                    title={ar ? "أيّ تصنيف يناسب كتابك؟" : "Which genre fits your book?"}
+                    sub={ar ? "اختر الأقرب. يمكنك تغييره في أي وقت." : "Pick the closest one. You can change it any time."}
                   />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {(isFiction ? FICTION_GENRES : NONFICTION_GENRES).map((g) => (
-                      <Pill
+                  <OptionGrid cols={3}>
+                    {genresFor(format!).map((g) => (
+                      <Chip
                         key={g.id}
                         active={genre === g.id}
                         onClick={() => advance(() => setGenre(g.id))}
                         label={ar ? g.labelAr : g.label}
                       />
                     ))}
-                  </div>
+                  </OptionGrid>
                 </motion.section>
               )}
 
               {step === 3 && (
-                <motion.section key="s4" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+                <motion.section key="audience" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
+                    eyebrow={ar ? "القارئ" : "Reader"}
+                    icon={<Users size={14} />}
                     title={ar ? "لمن هذا الكتاب؟" : "Who is this book for?"}
-                    sub={ar ? "الفئة العمريّة المستهدفة. تحدّد الطول واللغة المناسبة." : "Target age range. This shapes length and tone defaults."}
-                    icon={<Eye size={16} />}
+                    sub={ar
+                      ? "الفئة العمريّة المستهدفة. تحدّد الطول واللغة المناسبة."
+                      : "The age you are writing for. It shapes length and tone."}
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {AUDIENCES.map((a) => (
+                  <OptionGrid cols={2}>
+                    {audienceOptions.map((a) => (
                       <Choice
                         key={a.id}
                         active={audience === a.id}
                         onClick={() => advance(() => setAudience(a.id))}
                         title={ar ? a.labelAr : a.label}
-                        sub={ar ? a.ageAr : a.age}
+                        sub={ar ? a.subAr : a.sub}
                       />
                     ))}
-                  </div>
+                  </OptionGrid>
                 </motion.section>
               )}
 
-              {step === 4 && (
-                <motion.section key="s5" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 4 && L && (
+                <motion.section key="length" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
+                    eyebrow={ar ? "الطول" : "Length"}
+                    icon={<Target size={14} />}
                     title={ar ? "ما الطول الذي تستهدفه؟" : "What length are you aiming for?"}
-                    sub={ar ? "اقتراحنا مناسب لنوعك. عدّله إن أردت." : "We pre-filled a typical length for your format. Adjust if you want."}
-                    icon={<Target size={16} />}
+                    sub={ar
+                      ? "اخترنا لك طولاً معتاداً لنوعك. عدّله كما تريد."
+                      : "We picked a typical length for your format. Adjust it however you like."}
                   />
-                  <div className="max-w-xl space-y-5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{ar ? "عدد الكلمات" : "Word count"}</span>
-                      <span className="font-semibold tabular-nums">{fmtLength(targetWords, ar)}</span>
+
+                  <div className="max-w-xl w-full space-y-6">
+                    {/* Current value, large and unmistakable */}
+                    <div className="rounded-2xl border border-border bg-muted/30 px-5 py-4">
+                      <div className="text-[11px] font-bold tracking-[0.16em] uppercase text-muted-foreground mb-1">
+                        {ar ? "الهدف" : "Target"}
+                      </div>
+                      <div className="text-[32px] leading-none font-bold tabular-nums text-foreground">
+                        {targetWords.toLocaleString("en-US")}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1.5">
+                        {ar
+                          ? `كلمة، حوالي ${estimatePages(format!, targetWords).toLocaleString("en-US")} صفحة مطبوعة`
+                          : `words, about ${estimatePages(format!, targetWords).toLocaleString("en-US")} printed pages`}
+                      </div>
                     </div>
-                    <input
-                      type="range"
-                      min={isChildren ? 500 : 5_000}
-                      max={150_000}
-                      step={1_000}
-                      value={targetWords}
-                      onChange={(e) => setTargetWords(Number(e.target.value))}
-                      className="w-full accent-foreground"
-                    />
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { label: ar ? "قصير" : "Short",  v: isChildren ? 1_500  : 30_000 },
-                        { label: ar ? "متوسّط" : "Medium", v: isChildren ? 8_000  : 80_000 },
-                        { label: ar ? "طويل" : "Long",   v: isChildren ? 12_000 : 120_000 },
-                      ].map((p) => (
-                        <button
-                          key={p.label}
-                          onClick={() => setTargetWords(p.v)}
-                          className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                            Math.abs(targetWords - p.v) < 1000
-                              ? "bg-foreground text-background border-foreground"
-                              : "bg-card border-border hover:border-muted-foreground"
-                          }`}
-                        >
-                          {p.label}
-                          <span className="block opacity-60 text-[10px] font-normal mt-0.5">
-                            {p.v.toLocaleString(ar ? "ar-EG" : "en-US")} {ar ? "كلمة" : "words"}
-                          </span>
-                          <span className="block opacity-60 text-[10px] font-normal">
-                            {ar
-                              ? `حوالي ${Math.round(p.v / WORDS_PER_PAGE).toLocaleString("ar-EG")} صفحة`
-                              : `about ${Math.round(p.v / WORDS_PER_PAGE).toLocaleString("en-US")} pages`}
-                          </span>
-                        </button>
-                      ))}
+
+                    <div>
+                      <input
+                        type="range"
+                        aria-label={ar ? "عدد الكلمات المستهدف" : "Target word count"}
+                        min={L.min}
+                        max={L.max}
+                        step={sliderStep(L.max)}
+                        value={targetWords}
+                        onChange={(e) => setLength(Number(e.target.value))}
+                        className="w-full accent-foreground h-6"
+                      />
+                      <div className="flex justify-between text-[11px] text-muted-foreground tabular-nums mt-1">
+                        <span>{L.min.toLocaleString("en-US")}</span>
+                        <span>{L.max.toLocaleString("en-US")}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {([
+                        { key: "short",  label: ar ? "قصير"   : "Short",  v: L.short },
+                        { key: "medium", label: ar ? "متوسّط" : "Medium", v: L.medium },
+                        { key: "long",   label: ar ? "طويل"   : "Long",   v: L.long },
+                      ] as const).map((p) => {
+                        const on = Math.abs(targetWords - p.v) < sliderStep(L.max);
+                        return (
+                          <button
+                            key={p.key}
+                            onClick={() => setLength(p.v)}
+                            aria-pressed={on}
+                            className={`min-h-[68px] px-3 py-3 rounded-xl border text-center transition-colors duration-150 ${
+                              on
+                                ? "bg-foreground text-background border-foreground"
+                                : "bg-card border-border hover:border-muted-foreground/50 active:bg-muted/50"
+                            }`}
+                          >
+                            <span className="block text-[13px] font-semibold leading-none">{p.label}</span>
+                            <span className="block text-[11px] tabular-nums opacity-65 mt-1.5 leading-none">
+                              {p.v.toLocaleString("en-US")}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </motion.section>
               )}
 
-              {step === 5 && isFiction && (
-                <motion.section key="s5-f" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 5 && isNarrative && (
+                <motion.section key="setting" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
-                    title={ar ? "أين ومتى تدور القصّة؟" : "Where and when is your story set?"}
-                    sub={ar ? "الإطار الزماني والمكاني." : "Time and place that frame the story."}
-                    icon={<Globe2 size={16} />}
+                    eyebrow={ar ? "العالم" : "World"}
+                    icon={<Globe2 size={14} />}
+                    title={format === "children"
+                      ? (ar ? "أين تدور الحكاية؟" : "Where does the story happen?")
+                      : (ar ? "أين ومتى تدور القصّة؟" : "Where and when is your story set?")}
+                    sub={ar ? "الإطار الذي تعيش فيه الأحداث." : "The world the events live in."}
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {SETTINGS_FICTION.map((s) => (
+                  <OptionGrid cols={2}>
+                    {settingOptions.map((s) => (
                       <Choice
                         key={s.id}
                         active={setting === s.id}
@@ -443,96 +604,148 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
                         title={ar ? s.labelAr : s.label}
                       />
                     ))}
-                  </div>
+                  </OptionGrid>
                 </motion.section>
               )}
 
-              {step === 5 && !isFiction && (
-                <motion.section key="s5-nf" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+              {step === 5 && !isNarrative && (
+                <motion.section key="purpose" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
-                    title={ar ? "ما هدف كتابك؟" : "What should your book do for the reader?"}
-                    sub={ar ? "اختر الأقرب. الذكاء يستخدمه ليخصّص كل اقتراح لك." : "Pick the closest. The AI uses this to tailor every suggestion."}
-                    icon={<Lightbulb size={16} />}
+                    eyebrow={ar ? "الهدف" : "Purpose"}
+                    icon={<Lightbulb size={14} />}
+                    title={ar ? "ما الذي يقدّمه كتابك لقارئه؟" : "What should your book do for the reader?"}
+                    sub={ar ? "اختر الأقرب. يستخدمه الذكاء ليخصّص كل اقتراح لك." : "Pick the closest. The AI uses this to tailor every suggestion."}
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {NONFICTION_GOALS.map((g) => (
+                  <OptionGrid cols={2}>
+                    {PURPOSES.map((p) => (
                       <Choice
-                        key={g.id}
-                        active={topic === g.label}
-                        onClick={() => advance(() => setTopic(g.label))}
-                        title={ar ? g.labelAr : g.label}
-                        sub={ar ? g.subAr : g.sub}
+                        key={p.id}
+                        active={purpose === p.id}
+                        onClick={() => advance(() => setPurpose(p.id))}
+                        title={ar ? p.labelAr : p.label}
+                        sub={ar ? p.subAr : p.sub}
                       />
                     ))}
-                  </div>
+                  </OptionGrid>
                 </motion.section>
               )}
 
               {step === 6 && (
-                <motion.section key="s7" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
+                <motion.section key="schedule" variants={stepVariants} initial="hidden" animate="visible" exit="exit" className="flex flex-col gap-6 flex-1">
                   <Q
-                    title={ar ? "ما هو جدول الكتابة؟" : "What's your writing schedule?"}
-                    sub={ar ? "نحسب لك هدف الكلمات اليومي بناءً على هدف 6 أشهر." : "We'll calculate a daily word goal based on a 6 month target."}
-                    icon={<Calendar size={16} />}
+                    eyebrow={ar ? "الجدول" : "Schedule"}
+                    icon={<Calendar size={14} />}
+                    title={ar ? "كم يوماً في الأسبوع ستكتب؟" : "How many days a week will you write?"}
+                    sub={ar
+                      ? "نحسب لك هدفاً يوميّاً يوصلك إلى مسوّدة كاملة خلال ستة أشهر."
+                      : "We turn that into a daily goal that reaches a full draft in six months."}
                   />
-                  <div className="max-w-xl space-y-5">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">{ar ? "أيام الكتابة في الأسبوع" : "Writing days per week"}</span>
-                        <span className="font-semibold tabular-nums">{daysPerWeek}</span>
+
+                  <div className="max-w-xl w-full space-y-6">
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setDaysPerWeek(d)}
+                          aria-pressed={daysPerWeek === d}
+                          aria-label={ar ? `${d} أيام في الأسبوع` : `${d} days per week`}
+                          className={`h-12 rounded-xl border text-sm font-bold tabular-nums transition-colors duration-150 ${
+                            daysPerWeek === d
+                              ? "bg-foreground text-background border-foreground"
+                              : "bg-card border-border text-foreground hover:border-muted-foreground/50 active:bg-muted/50"
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-muted/30 px-5 py-4">
+                      <div className="text-[11px] font-bold tracking-[0.16em] uppercase text-muted-foreground mb-1">
+                        {ar ? "هدفك اليومي" : "Your daily goal"}
                       </div>
-                      <input
-                        type="range"
-                        min={1}
-                        max={7}
-                        step={1}
-                        value={daysPerWeek}
-                        onChange={(e) => setDaysPerWeek(Number(e.target.value))}
-                        className="w-full accent-foreground"
-                      />
-                      <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums mt-1">
-                        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+                      <div className="text-[32px] leading-none font-bold tabular-nums text-foreground">
+                        {dailyWordGoal.toLocaleString("en-US")}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1.5">
+                        {ar
+                          ? `كلمة في اليوم، ${daysPerWeek} أيام في الأسبوع.`
+                          : `words a day, ${daysPerWeek} days a week.`}
                       </div>
                     </div>
-                    <div className="rounded-xl p-4 bg-muted/40 border border-border">
-                      <div className="text-xs text-muted-foreground mb-1">
-                        {ar ? "هدف يومي" : "Daily goal"}
+
+                    {/* A last look at every answer, so a wrong tap is caught
+                        here rather than six months into the draft. */}
+                    <div className="rounded-2xl border border-border overflow-hidden">
+                      <div className="px-4 py-2.5 bg-muted/40 text-[11px] font-bold tracking-[0.16em] uppercase text-muted-foreground border-b border-border">
+                        {ar ? "ملخّص كتابك" : "Your book"}
                       </div>
-                      <div className="text-3xl font-bold tabular-nums">
-                        {dailyWordGoal.toLocaleString(ar ? "ar-EG" : "en-US")}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {ar
-                          ? `كلمة في اليوم. مسوّدة كاملة في 6 أشهر تقريباً (${targetWords.toLocaleString("ar-EG")} كلمة).`
-                          : `words per day. Full draft in about 6 months (${targetWords.toLocaleString("en-US")} words).`}
-                      </div>
+                      <dl className="divide-y divide-border/60">
+                        <SummaryRow
+                          label={ar ? "النوع" : "Format"}
+                          value={ar ? def!.labelAr : def!.label}
+                          onEdit={() => setStep(1)} editLabel={ar ? "تغيير" : "Change"}
+                        />
+                        <SummaryRow
+                          label={ar ? "التصنيف" : "Genre"}
+                          value={(() => { const g = genresFor(format!).find((x) => x.id === genre); return ar ? g?.labelAr ?? "" : g?.label ?? ""; })()}
+                          onEdit={() => setStep(2)} editLabel={ar ? "تغيير" : "Change"}
+                        />
+                        <SummaryRow
+                          label={ar ? "القارئ" : "Reader"}
+                          value={(() => { const a = AUDIENCES.find((x) => x.id === audience); return ar ? a?.labelAr ?? "" : a?.label ?? ""; })()}
+                          onEdit={() => setStep(3)} editLabel={ar ? "تغيير" : "Change"}
+                        />
+                        <SummaryRow
+                          label={ar ? "الطول" : "Length"}
+                          value={fmtLength(format!, targetWords, ar)}
+                          onEdit={() => setStep(4)} editLabel={ar ? "تغيير" : "Change"}
+                        />
+                        <SummaryRow
+                          label={isNarrative ? (ar ? "العالم" : "World") : (ar ? "الهدف" : "Purpose")}
+                          value={(() => {
+                            if (isNarrative) { const s = settingOptions.find((x) => x.id === setting); return ar ? s?.labelAr ?? "" : s?.label ?? ""; }
+                            const p = PURPOSES.find((x) => x.id === purpose); return ar ? p?.labelAr ?? "" : p?.label ?? "";
+                          })()}
+                          onEdit={() => setStep(5)} editLabel={ar ? "تغيير" : "Change"}
+                        />
+                      </dl>
                     </div>
                   </div>
                 </motion.section>
               )}
+
             </AnimatePresence>
           </div>
 
-          {/* Footer: Back / Next */}
-          <footer className="px-5 sm:px-8 py-4 sm:py-5 max-sm:pb-[calc(env(safe-area-inset-bottom)+14px)] border-t border-border/40 flex items-center justify-between bg-card">
+          {/* Footer: back and forward */}
+          <footer className="px-5 sm:px-8 py-4 sm:py-5 max-sm:pb-[calc(env(safe-area-inset-bottom)+14px)] border-t border-border/40 flex items-center justify-between gap-3 bg-card">
             {step > 1 ? (
-              <Button variant="ghost" onClick={back} className="rounded-xl">
-                {isRTL ? <ArrowRight className="w-4 h-4 mr-1.5" /> : <ArrowLeft className="w-4 h-4 mr-1.5" />}
+              <Button variant="ghost" onClick={back} className="rounded-xl h-11 px-4">
+                {isRTL ? <ArrowRight className="w-4 h-4 ms-0 me-1.5" /> : <ArrowLeft className="w-4 h-4 me-1.5" />}
                 {ar ? "رجوع" : "Back"}
               </Button>
             ) : (
-              <Button variant="ghost" className="rounded-xl opacity-0 pointer-events-none">Back</Button>
+              <span aria-hidden="true" />
             )}
             {step < totalSteps ? (
-              <Button onClick={next} disabled={!canAdvance} className="rounded-xl px-8 py-5 bg-foreground hover:bg-foreground/90 text-background font-semibold">
+              <Button
+                onClick={next}
+                disabled={!canAdvance}
+                className="rounded-xl h-11 px-7 bg-foreground hover:bg-foreground/90 text-background font-semibold"
+              >
                 {ar ? "التالي" : "Continue"}
-                {isRTL ? <ArrowLeft className="w-4 h-4 ml-1.5" /> : <ArrowRight className="w-4 h-4 ml-1.5" />}
+                {isRTL ? <ArrowLeft className="w-4 h-4 ms-1.5" /> : <ArrowRight className="w-4 h-4 ms-1.5" />}
               </Button>
             ) : (
-              <Button onClick={submit} disabled={!canAdvance || isSubmitting} className="rounded-xl px-8 py-5 bg-foreground hover:bg-foreground/90 text-background font-semibold">
+              <Button
+                onClick={submit}
+                disabled={!canAdvance || isSubmitting}
+                className="rounded-xl h-11 px-7 bg-foreground hover:bg-foreground/90 text-background font-semibold"
+              >
                 {isSubmitting
-                  ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" />{ar ? "جارٍ الإنشاء..." : "Creating..."}</>
-                  : <><Wand2 className="w-4 h-4 mr-1.5" />{ar ? "أنشئ الكتاب" : "Create Book"}</>}
+                  ? <><Loader2 className="w-4 h-4 me-1.5 animate-spin" />{ar ? "جارٍ الإنشاء..." : "Creating..."}</>
+                  : <><Wand2 className="w-4 h-4 me-1.5" />{ar ? "أنشئ الكتاب" : "Create Book"}</>}
               </Button>
             )}
           </footer>
@@ -544,15 +757,30 @@ export function BookCreationWizard({ open, onClose, onCreate }: BookCreationWiza
 
 // ─── Sub-components ──────────────────────────────────────────────────
 
-function Q({ title, sub, icon }: { title: string; sub?: string; icon?: React.ReactNode }) {
+function Q({ eyebrow, title, sub, icon }: { eyebrow: string; title: string; sub?: string; icon?: React.ReactNode }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2 text-muted-foreground text-xs font-bold tracking-wider uppercase">
-        {icon && icon}
-        <span>{}</span>
+      <div className="flex items-center gap-1.5 mb-2.5 text-muted-foreground text-[11px] font-bold tracking-[0.18em] uppercase">
+        {icon}
+        <span>{eyebrow}</span>
       </div>
-      <h2 className="text-2xl md:text-[28px] font-bold leading-tight text-foreground tracking-tight">{title}</h2>
-      {sub && <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-2xl">{sub}</p>}
+      <h2 className="text-[22px] sm:text-[27px] font-bold leading-[1.25] text-foreground tracking-tight text-balance">
+        {title}
+      </h2>
+      {sub && <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-xl">{sub}</p>}
+    </div>
+  );
+}
+
+/**
+ * One grid for every option step so card widths, gaps and column counts
+ * never drift between questions. Two columns for cards, three for chips,
+ * both collapsing to a comfortable phone layout.
+ */
+function OptionGrid({ cols, children }: { cols: 2 | 3; children: React.ReactNode }) {
+  return (
+    <div className={cols === 2 ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "grid grid-cols-2 sm:grid-cols-3 gap-2.5"}>
+      {children}
     </div>
   );
 }
@@ -569,34 +797,45 @@ function Choice({
   return (
     <button
       onClick={onClick}
-      className={`group p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer flex items-start gap-3 ${
+      aria-pressed={active}
+      // min-height keeps a card with a subtitle and one without the same
+      // size, so a row never looks ragged.
+      className={`relative min-h-[64px] w-full ps-4 pe-10 py-3.5 rounded-xl border text-start flex items-center gap-3 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
         active
-          ? "border-foreground bg-foreground/[0.03] ring-2 ring-foreground/15"
-          : "border-border hover:border-muted-foreground/40 hover:bg-muted/30"
+          ? "border-foreground bg-foreground/[0.04] ring-1 ring-foreground/20"
+          : "border-border hover:border-muted-foreground/45 hover:bg-muted/25 active:bg-muted/40"
       }`}
     >
       {icon && (
-        <div className={`shrink-0 p-2 rounded-lg ${active ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}>
+        <span className={`shrink-0 w-9 h-9 rounded-lg grid place-items-center transition-colors ${
+          active ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
+        }`}>
           {icon}
-        </div>
+        </span>
       )}
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-foreground text-sm leading-snug">{title}</div>
-        {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
-      </div>
-      {active && <Check className="w-4 h-4 text-foreground shrink-0 mt-1" />}
+      <span className="flex-1 min-w-0">
+        <span className="block font-semibold text-foreground text-[14.5px] leading-snug">{title}</span>
+        {sub && <span className="block text-[12.5px] text-muted-foreground mt-0.5 leading-snug">{sub}</span>}
+      </span>
+      {active && (
+        <span className="absolute top-1/2 -translate-y-1/2 end-3 w-5 h-5 rounded-full bg-foreground grid place-items-center">
+          <Check className="w-3 h-3 text-background" strokeWidth={3} />
+        </span>
+      )}
     </button>
   );
 }
 
-function Pill({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+/** Genre chips. Equal height and full cell width so the grid stays even. */
+function Chip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+      aria-pressed={active}
+      className={`min-h-[48px] w-full px-3 py-2.5 rounded-xl border text-[13.5px] font-semibold leading-snug transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
         active
           ? "bg-foreground text-background border-foreground"
-          : "bg-transparent text-foreground border-border hover:border-muted-foreground/60"
+          : "bg-card text-foreground border-border hover:border-muted-foreground/50 active:bg-muted/40"
       }`}
     >
       {label}
@@ -604,6 +843,17 @@ function Pill({ active, onClick, label }: { active: boolean; onClick: () => void
   );
 }
 
-// Touch unused icon so tree-shake doesn't complain in dev. The icon
-// is kept around for future use (a User-flagged "author" shortcut).
-void User;
+function SummaryRow({ label, value, onEdit, editLabel }: { label: string; value: string; onEdit: () => void; editLabel: string }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5">
+      <dt className="text-xs text-muted-foreground w-20 shrink-0">{label}</dt>
+      <dd className="text-[13px] font-medium text-foreground flex-1 min-w-0 truncate">{value}</dd>
+      <button
+        onClick={onEdit}
+        className="text-xs font-semibold text-muted-foreground hover:text-foreground shrink-0 px-2 py-1 rounded-md hover:bg-muted/60 active:bg-muted transition-colors"
+      >
+        {editLabel}
+      </button>
+    </div>
+  );
+}

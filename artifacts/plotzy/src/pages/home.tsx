@@ -5,7 +5,7 @@ import { SEO } from "@/components/SEO";
 import { AuthModal } from "@/components/auth-modal";
 import { useBooks, useCreateBook, useGenerateCover, useTrashBook, useDuplicateBook, useUpdateBook } from "@/hooks/use-books";
 import { SeriesSection } from "@/components/SeriesSection";
-import { BookCreationWizard, type WizardAnswers } from "@/components/BookCreationWizard";
+import { BookCreationWizard, estimatePages, type WizardAnswers } from "@/components/BookCreationWizard";
 import { ContentTypeSelector } from "@/components/ContentTypeSelector";
 import { BookOpen, Plus, Trash2, Users, UserPlus, Search, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -127,11 +127,13 @@ export default function Home() {
       // fine but English keys keep the prompt compact).
       const lines: string[] = [];
       lines.push(`Format: ${formatLabelEn[answers.format] || answers.format}`);
-      lines.push(`Genre: ${answers.genre}`);
+      // "other" is the writer opting out of the list, not a genre. Writing
+      // it into the prompt told the Studio the book's genre was "other".
+      if (answers.genre && answers.genre !== "other") lines.push(`Genre: ${answers.genre}`);
       lines.push(`Audience: ${ageLabelEn[answers.audience] || answers.audience}`);
-      lines.push(`Target length: ${answers.targetWords.toLocaleString("en-US")} words (about ${Math.round(answers.targetWords / 250)} pages)`);
+      lines.push(`Target length: ${answers.targetWords.toLocaleString("en-US")} words (about ${estimatePages(answers.format, answers.targetWords)} pages)`);
       if (answers.setting) lines.push(`Setting: ${answers.setting}`);
-      if (answers.topic) lines.push(`Topic: ${answers.topic}`);
+      if (answers.topic) lines.push(`Purpose: ${answers.topic}`);
       lines.push(`Schedule: ${answers.daysPerWeek} days/week, daily goal ${answers.dailyWordGoal.toLocaleString("en-US")} words`);
       const summary = lines.join("\n");
 

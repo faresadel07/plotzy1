@@ -43,7 +43,6 @@ const ReadBook = lazy(() => import("@/pages/read-book"));
 const AuthorProfile = lazy(() => import("@/pages/author-profile"));
 const SupportPage = lazy(() => import("@/pages/support"));
 const AdminPage = lazy(() => import("@/pages/admin"));
-const TutorialPage = lazy(() => import("@/pages/tutorial"));
 const DiscoverPage = lazy(() => import("@/pages/discover"));
 const GutenbergReader = lazy(() => import("@/pages/gutenberg-reader"));
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
@@ -360,7 +359,6 @@ function Router() {
         <Route path="/discover/:id" component={GutenbergReader} />
         <Route path="/authors/:userId" component={AuthorProfile} />
         <Route path="/writing-guide" component={WritingGuide} />
-        <Route path="/tutorial" component={TutorialPage} />
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/terms" component={TermsOfService} />
         <Route path="/protection" component={Protection} />
