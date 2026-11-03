@@ -20,6 +20,7 @@ import MobileBlocker from "@/components/MobileBlocker";
 import GoogleOneTap from "@/components/GoogleOneTap";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Check } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 
 /* Eager: landing page (must load instantly) */
 import Home from "@/pages/home";
@@ -436,6 +437,7 @@ function App() {
                   <Toaster />
                   <CookieBanner />
                   <MobileBlocker />
+                  <Analytics />
                 </TooltipProvider>
               </AuthProvider>
             </LanguageProvider>
